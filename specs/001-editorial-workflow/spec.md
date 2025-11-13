@@ -9,7 +9,24 @@
 
 This feature implements a complete AI-assisted editorial workflow system for Refugies.info, enabling content managers and editors to efficiently process, classify, rewrite, and publish content with AI assistance while maintaining full human oversight and control.
 
-The system follows a linear four-stage pipeline: **Import → Sort → Rewrite → Export**, with human validation at each critical decision point. This POC will be developed over 2 sprints (1 month total) to validate the full workflow with real editorial team members.
+The system follows a linear four-stage pipeline: **Import → Sort → Rewrite → Export**, with human validation at each critical decision point.
+
+### Development Phases
+
+- **POC Phase** (Sprints 1-2, 1 month): Validate full workflow with real editorial team members. Focus on learning and iteration. Skip automated tests and minimize AI documentation. Use Supabase free tier, Letta Cloud, manual Vercel deployment. Implement Supabase Auth by step 2 for multi-user testing.
+
+- **MVP Phase** (Post-POC): Add full RBAC, CI/CD pipeline, observability, and UI polish based on POC learnings. Still no comprehensive testing or detailed documentation.
+
+- **V1 Phase** (Post-MVP, production-ready): Add comprehensive test suites, detailed AI agent documentation, production-grade monitoring, and performance optimization.
+
+### Tech Stack
+
+- **Frontend**: Next.js (App Router) with Tailwind CSS v4, Radix UI primitives, and shadcn/ui components
+- **Backend**: Letta Cloud with custom tools wrapping Supabase Client (direct SQL queries, no ORM)
+- **Database**: Supabase with direct SQL queries via Supabase Client
+- **Monorepo**: Turborepo with /apps (frontend, backend) and /packages (shared, supabase-client, database)
+- **Authentication**: Supabase Auth with role-based access control (editor, reviewer, admin)
+- **Deployment**: Vercel (frontend), Letta Cloud (orchestration), Supabase (database/auth)
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -64,7 +81,24 @@ As an editor, I want to request AI-generated rewrites of content in plain langua
 
 ---
 
-### User Story 4 - Validate and Export Approved Content (Priority: P4)
+### User Story 4 - Map and Validate Document Metadata (Priority: P4)
+
+As an editor, I want to validate and map document metadata (pricing, dates, public status, related structures) before publishing, so that content is correctly contextualized for publication and integration with Refugies.info systems.
+
+**Why this priority**: Metadata validation is a mandatory pre-publication step per human-in-the-loop principle. It ensures content is properly structured for downstream publishing systems.
+
+**Independent Test**: Can be tested by selecting approved content items, validating metadata fields, and verifying that export is blocked if metadata is incomplete.
+
+**Acceptance Scenarios**:
+
+1. **Given** I have approved content items, **When** I navigate to the metadata mapping interface, **Then** I see all required metadata fields with current values (or empty if not set)
+2. **Given** I am mapping metadata, **When** I update metadata fields, **Then** my changes are saved with my editor attribution and timestamp
+3. **Given** I have incomplete metadata, **When** I attempt to export, **Then** the system blocks export and shows which metadata fields are required
+4. **Given** I have completed metadata mapping, **When** I mark metadata as validated, **Then** the content is ready for export
+
+---
+
+### User Story 5 - Validate and Export Approved Content (Priority: P5)
 
 As a reviewer, I want to validate approved content meets quality standards and export it to the publication database, so that finalized content can be integrated into the Refugies.info publishing workflow.
 
@@ -81,7 +115,7 @@ As a reviewer, I want to validate approved content meets quality standards and e
 
 ---
 
-### User Story 5 - Track Workflow Progress and Analytics (Priority: P5)
+### User Story 6 - Track Workflow Progress and Analytics (Priority: P6)
 
 As a team lead, I want to view dashboard analytics showing content volume at each workflow stage and editor productivity metrics, so that I can measure workflow efficiency and identify bottlenecks.
 
@@ -91,21 +125,18 @@ As a team lead, I want to view dashboard analytics showing content volume at eac
 
 **Acceptance Scenarios**:
 
-1. **Given** content is distributed across workflow stages, **When** I view the workflow dashboard, **Then** I see item counts for each stage (Imported, Classified, Rewritten, Approved, Exported)
-2. **Given** editors have processed content, **When** I view editor analytics, **Then** I see metrics for each editor (items reviewed, average time per item, approval rate)
-3. **Given** AI has generated classifications and rewrites, **When** I view AI performance metrics, **Then** I see acceptance rates for AI suggestions and common rejection reasons
-4. **Given** I select a date range, **When** I filter the dashboard, **Then** all metrics update to show only activity within that timeframe
+1. **Given** content is distributed across workflow stages, **When** I view the workflow dashboard, **Then** I see item counts for each stage (Imported, Classified, Rewritten, Metadata-Validated, Approved, Exported)
 
 ---
 
 ### Edge Cases
 
-- **Empty or malformed import files**: What happens when a user uploads an empty JSON file or a file with missing required fields? System should validate and provide specific error messages without crashing.
-- **AI service unavailable**: How does the system handle Letta API timeouts or errors? Users should be able to retry failed AI operations and continue working with manual classification/editing.
-- **Concurrent editing conflicts**: What happens when two editors modify the same content item simultaneously? System should detect conflicts and prompt for conflict resolution.
-- **Large batch operations**: How does the system handle classification or export of 1000+ items? Operations should be queued and processed in batches with progress indicators.
-- **Partial workflow completion**: What happens to content that is imported and classified but never rewritten? System should allow export of any content with minimum required fields, regardless of workflow stage completion.
-- **Data retention and deletion**: How long should draft versions and rejected AI suggestions be retained? System should implement configurable retention policies for audit data.
+- **Empty or malformed import files**: System MUST validate and provide specific error messages without crashing. Invalid files are rejected with clear field-level error indicators.
+- **AI service unavailable**: System MUST retry failed Letta operations automatically with exponential backoff (up to 3 retries). If all retries fail, editors can manually retry or complete the task manually (fallback to manual workflow).
+- **Concurrent editing conflicts**: System MUST use pessimistic locking - first editor locks the item; other editors must wait or are blocked from editing until the lock is released.
+- **Large batch operations**: System MUST support batch operations of 100-500 items during POC. Operations are queued and processed in batches with progress indicators. Limit can be increased in MVP based on learnings.
+- **Partial workflow completion**: System MUST allow export of any content with minimum required fields, regardless of workflow stage completion. Content can be imported and sorted without rewrite, then exported.
+- **Data retention and deletion**: System MUST retain all draft versions and rejected AI suggestions indefinitely for audit trail, recovery, and analytics purposes. No automatic deletion of transient data.
 
 ## Requirements *(mandatory)*
 
@@ -157,6 +188,15 @@ As a team lead, I want to view dashboard analytics showing content volume at eac
 - **FR-027**: System MUST attribute all actions to specific users or AI agents for accountability
 - **FR-028**: System MUST provide audit trail query interface for compliance and debugging
 
+#### Content Revision & Rollback Requirements (All Stages)
+
+- **FR-029**: System MUST create an immutable revision record for every content mutation (AI rewrite, human edit, classification change)
+- **FR-030**: System MUST display revision timeline with chronological list of all changes, actor, and timestamp
+- **FR-031**: System MUST provide side-by-side diff view comparing any two revisions
+- **FR-032**: System MUST allow one-click rollback to any prior version with confirmation dialog
+- **FR-033**: Rollback action MUST create a new revision record (preserving full history, not deleting)
+- **FR-034**: System MUST make revision data queryable for analytics (e.g., average revisions per content item, acceptance rates)
+
 ### Key Entities
 
 - **Content Item**: Represents a single piece of content moving through the workflow. Key attributes: unique ID, title, body text, source metadata, current workflow stage, classification data (tags, category, quality score), rewrite versions, approval status, audit trail.
@@ -169,9 +209,23 @@ As a team lead, I want to view dashboard analytics showing content volume at eac
 
 - **Content Version**: Represents a snapshot of content at a specific point in time. Key attributes: version ID, content item ID, version number, content body, metadata, created timestamp, created by (user or agent).
 
+- **Content Revision**: Represents an immutable record of every content mutation. Key attributes: revision ID, content item ID, revision number, action type (rewrite/edit/classification), previous state, new state, change summary, created timestamp, created by (user or agent).
+
 - **Export Record**: Tracks content that has been exported to publication database. Key attributes: export ID, content item ID, exported version ID, export timestamp, exporting user, destination table/system.
 
-- **User/Editor**: Represents a human user of the system. Key attributes: user ID, name, role (content manager/editor/reviewer/team lead), email. Note: Authentication is deferred to MVP phase per POC pragmatism principle.
+- **User/Editor**: Represents a human user of the system. Key attributes: user ID, name, role (content manager/editor/reviewer/team lead), email. Authentication via Supabase Auth with role-based access control (editor, reviewer, admin).
+
+## Clarifications
+
+### Session 2025-11-13
+
+- Q: Metadata schema definition → A: TBD - to be defined and documented soon (pricing, dates, public status, related structures, etc.)
+- Q: Concurrent editing conflict resolution → A: Pessimistic locking - First editor locks the item; others must wait or are blocked
+- Q: AI service failure recovery → A: Automatic retry with exponential backoff + manual retry option (up to 3 retries; fallback to manual workflow)
+- Q: Scalability limits for batch operations → A: 100-500 items per batch during POC; can increase in MVP based on learnings
+- Q: Data retention policy for drafts/rejected suggestions → A: Indefinite retention - Keep all drafts and rejected suggestions forever for audit trail and recovery
+
+---
 
 ## Success Criteria *(mandatory)*
 
@@ -187,3 +241,6 @@ As a team lead, I want to view dashboard analytics showing content volume at eac
 - **SC-008**: Zero instances of content being published without explicit human approval during POC testing
 - **SC-009**: At least 3 editorial team members successfully process 20+ content items each through the full workflow during POC validation
 - **SC-010**: Editorial team reports at least 40% time savings on content processing tasks compared to current manual workflow (measured via user survey)
+- **SC-011**: Revision timeline displays all changes with actor and timestamp; editors can rollback to any prior version in under 5 seconds
+- **SC-012**: 100% of content mutations create immutable revision records with no data loss or history deletion
+- **SC-013**: Editors report confidence in experimenting with content knowing they can easily revert mistakes (measured via user survey)
