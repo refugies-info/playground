@@ -1,20 +1,18 @@
 <!--
-Sync Impact Report (v1.3.0):
-- Version: 1.2.5 → 1.3.0 (MINOR: added Principle 9 for multi-language & versioning database schema design)
+Sync Impact Report (v1.3.1):
+- Version: 1.3.0 → 1.3.1 (PATCH: clarified content lifecycle management and conversational refinement)
 - Amended: 2025-11-17
 - Changes:
-  • Added Principle 9: "Multi-Language & Versioning Database Schema (POC Foundation)"
-  • Principle 9 mandates database schema design for multi-language support during POC, even though translation implementation deferred to MVP2
-  • Schema requirements: language_code column, source_revision_id tracking, composite unique constraints, indexes for language queries
-  • French (fr) designated as source language; POC uses 'fr' exclusively
-  • Renamed former Principle 9 to Principle 10: "Translation Architecture (Future-Proof, Deferred to MVP2)"
-  • All subsequent principles remain unchanged (no renumbering needed; only added new principle)
-- Rationale: Retrofitting multi-language support after POC requires expensive schema migrations. Designing upfront ensures seamless scaling to translation workflows in MVP2 without data rewriting.
+  • Updated Principle 1: Added explicit requirement for content lifecycle states (draft/published/archived) with human control over transitions
+  • Updated Principle 3: Clarified workflow stages (Ingestion & Import, Quality Gating, Rewrite, Metadata Mapping, Export) and noted content lifecycle is cross-cutting concern
+  • Updated Principle 4: Added requirement for multi-turn conversational refinement via Letta agents (iterative adjustment requests and tracking)
+  • Rationale: Two new user stories (P6: AI Chatbot Discussion, P7: Publication State Management) require explicit constitutional support
+- Spec alignment:
+  ✅ spec.md - User Stories 6-7 and FR-023-034 added for chatbot discussion and publication state management
+  ✅ README.md - Updated workflow description and sprint plans to reflect new stages
 - Templates requiring updates:
-  ✅ spec.md - already aligned (no translation features in POC)
-  ⚠ plan-template.md - add database schema design tasks for language_code and source_revision_id columns
-  ⚠ tasks-template.md - add schema design and index creation tasks to POC database setup stage
-  ⚠ README.md - update to reference Principle 9 schema design requirements
+  ⚠ plan-template.md - add publication state management and conversational refinement to architecture section
+  ⚠ tasks-template.md - add tasks for publication state transitions and chatbot conversation tracking
 - Follow-up: TODO(METADATA_SCHEMA) - Specific metadata fields to be defined and documented soon
 -->
 
@@ -22,7 +20,7 @@ Sync Impact Report (v1.3.0):
 
 **Project Name**: Content Playground  
 **Organization**: Refugies.info  
-**Version**: 1.3.0  
+**Version**: 1.3.1  
 **Ratification Date**: 2025-11-12  
 **Last Amended**: 2025-11-17
 
@@ -53,9 +51,9 @@ This constitution applies to:
 
 ### Principle 1: Human-in-the-Loop Supremacy
 
-**Rule**: AI MUST assist, never replace, human editorial judgment. Every AI-generated output (classification, rewrite, validation) MUST be reviewable and editable by human editors before final approval. Editors MUST validate and map document metadata (pricing, dates, public status, related structures, etc.) before publishing.
+**Rule**: AI MUST assist, never replace, human editorial judgment. Every AI-generated output (classification, rewrite, validation) MUST be reviewable and editable by human editors before final approval. Editors MUST validate and map document metadata (pricing, dates, public status, related structures, etc.) before publishing. Editors MUST have explicit control over content lifecycle states (draft, published, archived).
 
-**Rationale**: The editorial team retains full control and accountability for published content. AI accelerates work but does not make final decisions. Metadata validation ensures content is correctly contextualized for publication and integration with Refugies.info systems. This ensures content quality, brand consistency, and legal compliance.
+**Rationale**: The editorial team retains full control and accountability for published content. AI accelerates work but does not make final decisions. Metadata validation ensures content is correctly contextualized for publication and integration with Refugies.info systems. Content lifecycle management (draft/published/archived) ensures editors can manage work-in-progress content, control publication timing, and maintain historical records. This ensures content quality, brand consistency, and legal compliance.
 
 **Implementation Requirements**:
 
@@ -67,6 +65,9 @@ This constitution applies to:
 - Metadata validation MUST be a mandatory step in the export workflow (cannot export without metadata approval)
 - System MUST track which metadata fields were validated/mapped by which editor and when
 - Metadata schema MUST be configurable to support different content types and metadata requirements
+- System MUST support content lifecycle states: draft (work-in-progress), published (visible/exported), archived (hidden but retained)
+- Editors MUST be able to transition content between states (save as draft, publish, archive, restore) with explicit action and timestamp
+- State transitions MUST be tracked with editor attribution for audit trail
 - TODO(METADATA_SCHEMA): Specific metadata fields (pricing, dates, public status, related structures, etc.) to be defined and documented soon
 
 ---
@@ -95,13 +96,14 @@ This constitution applies to:
 
 ### Principle 3: Workflow Stage Independence
 
-**Rule**: Each workflow stage (Import, Sort, Rewrite, Export) MUST function as an independently testable and deployable unit. User stories MUST be prioritized (P1, P2, P3) and each MUST deliver standalone value.
+**Rule**: Each workflow stage (Ingestion & Import, Quality Gating, Rewrite, Metadata Mapping, Export) MUST function as an independently testable and deployable unit. User stories MUST be prioritized (P0-P7) and each MUST deliver standalone value. Content lifecycle management (draft/published/archived states) is a cross-cutting concern orthogonal to workflow stages.
 
-**Rationale**: Enables incremental delivery, parallel development, and early validation. Teams can ship Import + Sort as MVP1 without waiting for Rewrite completion. Reduces risk and accelerates feedback loops.
+**Rationale**: Enables incremental delivery, parallel development, and early validation. Teams can ship Ingestion + Quality Gating as MVP1 without waiting for Rewrite completion. Reduces risk and accelerates feedback loops. Content lifecycle states provide editors with flexible control independent of workflow progression.
 
 **Implementation Requirements**:
 
-- Database schema MUST support partial workflow completion (e.g., items can be imported and sorted without rewrite)
+- Database schema MUST support partial workflow completion (e.g., items can be ingested and quality-gated without rewrite)
+- Content lifecycle states (draft/published/archived) MUST be independent of workflow stage (editors can save draft at any stage, publish when ready)
 - API contracts MUST be versioned per stage
 - Each stage MUST have independent test suites
 - Feature specs MUST define acceptance criteria per user story, not per entire feature
@@ -119,6 +121,8 @@ This constitution applies to:
 
 - Define specialized Letta agents: `classifier-agent`, `rewrite-agent`, `validator-agent`
 - Use Letta's memory system for context persistence across user sessions
+- Letta agents MUST support multi-turn conversational refinement, allowing editors to iteratively request adjustments (e.g., "make it more formal", "simplify terminology") and receive AI suggestions in real-time
+- Conversational refinement MUST track all iterations as separate versions with editor request and AI response for audit trail
 - Implementation Requirements MUST be articulated at CRUD granularity for every core domain entity (courses, sessions, providers, and similar catalog entities) so engineers can translate requirements directly into Supabase tables and Letta tools
 - Create custom Letta tools that wrap Supabase Client for CRUD operations (read, write, update, delete) across those entities
 - Custom tools MUST execute direct SQL queries for performance and control
@@ -361,10 +365,12 @@ This constitution was ratified on **2025-11-12** by the Content Playground proje
 
 **Amendment (v1.3.0)** on **2025-11-17**: Added Principle 9 "Multi-Language & Versioning Database Schema (POC Foundation)" to mandate database schema design for multi-language support during POC, even though translation implementation is deferred to MVP2. Schema MUST include language_code and source_revision_id columns, composite unique constraints, and indexes for efficient language queries. French (fr) is designated source language; POC uses 'fr' exclusively. Renamed former Principle 9 to Principle 10. Rationale: Designing for multi-language upfront prevents expensive schema migrations later and enables seamless scaling to translation workflows in MVP2.
 
+**Amendment (v1.3.1)** on **2025-11-17**: Clarified Principle 1 to explicitly mandate content lifecycle state management (draft/published/archived) with human control over state transitions and audit trail tracking. Updated Principle 3 to clarify workflow stages (Ingestion & Import, Quality Gating, Rewrite, Metadata Mapping, Export) and note that content lifecycle management is a cross-cutting concern orthogonal to workflow progression. Updated Principle 4 to add requirement for multi-turn conversational refinement via Letta agents, allowing editors to iteratively request adjustments and receive AI suggestions in real-time, with all iterations tracked for audit trail. Rationale: Two new user stories (P6: AI-Assisted Iterative Refinement via Chatbot, P7: Manage Content Publication States) require explicit constitutional support for content lifecycle and conversational AI capabilities.
+
 **Signed**:  
 Jeremie (Developer)
 SpecKit AI Assistant (Constitution Author)
 
 ---
 
-## End of Constitution v1.3.0
+## End of Constitution v1.3.1

@@ -154,6 +154,41 @@ As a team lead, I want to view dashboard analytics showing content volume at eac
 
 ---
 
+### User Story 6 - AI-Assisted Iterative Refinement via Chatbot Discussion (Priority: P6) 🎯 POC
+
+As an editor, I want to discuss content rewrites with an AI chatbot, request alternative suggestions, and iteratively refine the output through conversation, so that I can achieve the exact tone and clarity I need without manual rewriting.
+
+**Why this priority**: This enhances the rewrite workflow by enabling conversational refinement. Instead of binary accept/reject, editors can request specific adjustments (tone, length, terminology) and get AI suggestions in real-time.
+
+**Independent Test**: Can be tested by selecting a content item, requesting a rewrite, then engaging in a multi-turn conversation with the AI agent to request alternative phrasings, tone adjustments, or specific terminology changes, and verifying that suggestions are generated and tracked.
+
+**Acceptance Scenarios**:
+
+1. **Given** I have an AI-generated rewrite, **When** I request a specific adjustment (e.g., "make it more formal" or "simplify the terminology"), **Then** the AI generates an alternative version addressing my feedback
+2. **Given** I am in a rewrite refinement conversation, **When** I request multiple iterations, **Then** each iteration is tracked as a separate version with my request and the AI's response
+3. **Given** I have refined a rewrite through multiple iterations, **When** I select the best version, **Then** that version is marked as approved and ready for metadata mapping
+4. **Given** I am unsatisfied with all AI suggestions, **When** I request manual editing mode, **Then** I can edit the content directly without further AI involvement
+
+---
+
+### User Story 7 - Manage Content Publication States (Priority: P7) 🎯 POC
+
+As an editor, I want to manage the publication state of content items (draft, published, archived), so that I can control when content becomes visible and manage the lifecycle of published items.
+
+**Why this priority**: This enables editors to save work-in-progress content as drafts, publish finalized content, and archive outdated content. It provides full content lifecycle management beyond the linear workflow.
+
+**Independent Test**: Can be tested by creating a content item, saving it as draft, publishing it, and then archiving it, verifying that state transitions are tracked and that published/archived items are visible in appropriate views.
+
+**Acceptance Scenarios**:
+
+1. **Given** I am editing a content item, **When** I click "Save as Draft", **Then** the content is saved with state="draft" and is not visible to end users
+2. **Given** I have a draft content item with complete metadata, **When** I click "Publish", **Then** the content state changes to "published" and is exported to the publication database
+3. **Given** I have published content, **When** I click "Archive", **Then** the content state changes to "archived" and is hidden from the active content list but remains in history
+4. **Given** I am viewing the content list, **When** I filter by state (draft/published/archived), **Then** I see only items matching the selected state
+5. **Given** I have archived content, **When** I click "Restore", **Then** the content state changes back to "published" and is visible again
+
+---
+
 ### Edge Cases
 
 - **Invalid config files**: System MUST validate config file format and provide specific error messages without crashing. Invalid configs are rejected with clear field-level error indicators.
@@ -207,49 +242,67 @@ As a team lead, I want to view dashboard analytics showing content volume at eac
 - **FR-021**: System MUST support multiple rewrite iterations (reject and request alternative version)
 - **FR-022**: System MUST track rewrite status (Original, AI-Draft, Edited, Approved, Rejected) for each content item
 
+#### AI-Assisted Iterative Refinement via Chatbot (Sprint 2, POC)
+
+- **FR-023**: System MUST enable editors to request specific rewrite adjustments via conversational interface (e.g., "make it more formal", "simplify terminology")
+- **FR-024**: System MUST invoke Letta rewrite agent to generate alternative versions based on editor feedback
+- **FR-025**: System MUST track all refinement iterations as separate versions with editor request and AI response
+- **FR-026**: System MUST allow editors to select the best version from refinement iterations and mark it as approved
+- **FR-027**: System MUST provide fallback to manual editing mode if editors are unsatisfied with all AI suggestions
+
+#### Content Publication State Management (Sprint 2, POC)
+
+- **FR-028**: System MUST support content publication states: draft, published, archived
+- **FR-029**: System MUST allow editors to save content as draft (not visible to end users)
+- **FR-030**: System MUST allow editors to publish draft content (exported to publication database and visible)
+- **FR-031**: System MUST allow editors to archive published content (hidden from active list but retained in history)
+- **FR-032**: System MUST allow editors to restore archived content back to published state
+- **FR-033**: System MUST provide filtering by publication state (draft/published/archived) in content list
+- **FR-034**: System MUST track state transitions with timestamp and editor attribution
+
 #### Metadata Mapping Stage (Sprint 2, POC)
 
-- **FR-023**: System MUST provide metadata mapping interface for editors to validate and map document metadata before export
-- **FR-024**: System MUST track which metadata fields were validated/mapped by which editor and when
-- **FR-025**: System MUST block export if required metadata fields are incomplete or unmapped
-- **FR-026**: System MUST support configurable metadata schema to accommodate different content types
+- **FR-035**: System MUST provide metadata mapping interface for editors to validate and map document metadata before export
+- **FR-036**: System MUST track which metadata fields were validated/mapped by which editor and when
+- **FR-037**: System MUST block export if required metadata fields are incomplete or unmapped
+- **FR-038**: System MUST support configurable metadata schema to accommodate different content types
 
 #### Export Stage (Sprint 2, POC)
 
-- **FR-027**: System MUST validate content items have required fields before allowing export
-- **FR-028**: System MUST write approved content to Supabase publication tables with full audit trail
-- **FR-029**: System MUST include metadata in exports: original source, AI modifications applied, human approvals, flag decisions, version history
-- **FR-030**: System MUST prevent duplicate exports of the same content version
-- **FR-031**: System MUST provide export history log showing all exported items with timestamps
+- **FR-039**: System MUST validate content items have required fields before allowing export
+- **FR-040**: System MUST write approved content to Supabase publication tables with full audit trail
+- **FR-041**: System MUST include metadata in exports: original source, AI modifications applied, human approvals, flag decisions, version history
+- **FR-042**: System MUST prevent duplicate exports of the same content version
+- **FR-043**: System MUST provide export history log showing all exported items with timestamps
 
 #### Dashboard Analytics (Sprint 2, POC)
 
-- **FR-032**: System MUST display dashboard showing content volume at each POC workflow stage (Ingested, Quality-Gated, Imported, Rewritten, Metadata-Validated, Approved, Exported)
-- **FR-033**: System MUST calculate and display editor productivity metrics (items processed per editor, average time per stage, approval rates)
-- **FR-034**: System MUST display time-to-completion metrics for content items through each workflow stage
+- **FR-044**: System MUST display dashboard showing content volume at each POC workflow stage (Ingested, Quality-Gated, Imported, Rewritten, Metadata-Validated, Approved, Exported)
+- **FR-045**: System MUST calculate and display editor productivity metrics (items processed per editor, average time per stage, approval rates)
+- **FR-046**: System MUST display time-to-completion metrics for content items through each workflow stage
 
 #### Human-in-the-Loop Requirements (POC)
 
-- **FR-035**: System MUST require explicit human approval before any AI suggestion is finalized
-- **FR-036**: System MUST never auto-publish or auto-export content without human validation
-- **FR-037**: System MUST display clear visual indicators distinguishing AI-generated content from human-edited content
-- **FR-038**: System MUST allow editors to override any AI suggestion at any workflow stage
+- **FR-047**: System MUST require explicit human approval before any AI suggestion is finalized
+- **FR-048**: System MUST never auto-publish or auto-export content without human validation
+- **FR-049**: System MUST display clear visual indicators distinguishing AI-generated content from human-edited content
+- **FR-050**: System MUST allow editors to override any AI suggestion at any workflow stage
 
 #### Audit and Traceability Requirements (POC)
 
-- **FR-039**: System MUST log every content state change with action type, actor (human or AI agent), timestamp, and previous/new state
-- **FR-040**: System MUST maintain version history for all content items showing evolution through POC workflow stages
-- **FR-041**: System MUST attribute all actions to specific users or AI agents for accountability
-- **FR-042**: System MUST provide audit trail query interface for compliance and debugging
+- **FR-051**: System MUST log every content state change with action type, actor (human or AI agent), timestamp, and previous/new state
+- **FR-052**: System MUST maintain version history for all content items showing evolution through POC workflow stages
+- **FR-053**: System MUST attribute all actions to specific users or AI agents for accountability
+- **FR-054**: System MUST provide audit trail query interface for compliance and debugging
 
 #### Content Revision & Rollback Requirements (POC)
 
-- **FR-043**: System MUST create an immutable revision record for every content mutation (AI rewrite, human edit, flag override)
-- **FR-044**: System MUST display revision timeline with chronological list of all changes, actor, and timestamp
-- **FR-045**: System MUST provide side-by-side diff view comparing any two revisions
-- **FR-046**: System MUST allow one-click rollback to any prior version with confirmation dialog
-- **FR-047**: Rollback action MUST create a new revision record (preserving full history, not deleting)
-- **FR-048**: System MUST make revision data queryable for analytics (e.g., average revisions per content item, acceptance rates)
+- **FR-055**: System MUST create an immutable revision record for every content mutation (AI rewrite, human edit, flag override)
+- **FR-056**: System MUST display revision timeline with chronological list of all changes, actor, and timestamp
+- **FR-057**: System MUST provide side-by-side diff view comparing any two revisions
+- **FR-058**: System MUST allow one-click rollback to any prior version with confirmation dialog
+- **FR-059**: Rollback action MUST create a new revision record (preserving full history, not deleting)
+- **FR-060**: System MUST make revision data queryable for analytics (e.g., average revisions per content item, acceptance rates)
 
 ### Key Entities
 

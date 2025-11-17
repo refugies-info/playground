@@ -99,7 +99,25 @@ All interactions between AI and humans are **logged and auditable** via immutabl
 
 ---
 
-## 🗄️ Database Schema Design for Multi-Language Support (POC Foundation)
+## � Content Lifecycle Management
+
+Beyond the linear workflow stages, editors have flexible control over content publication states:
+
+- **Draft**: Work-in-progress content saved locally, not visible to end users
+- **Published**: Content exported to publication database and visible to end users
+- **Archived**: Published content hidden from active list but retained in history for reference and recovery
+
+Editors can transition content between states at any point in the workflow:
+- Save content as draft at any workflow stage
+- Publish when ready (independent of workflow completion)
+- Archive outdated content while maintaining full history
+- Restore archived content back to published state
+
+State transitions are tracked with editor attribution and timestamp for full audit trail.
+
+---
+
+## �🗄️ Database Schema Design for Multi-Language Support (POC Foundation)
 
 While translation implementation is deferred to MVP2, the database schema is designed during POC to support multi-language content and revision versioning:
 
@@ -137,6 +155,8 @@ This design enables seamless scaling to translation workflows in MVP2 without ex
 - **As a system operator**, I can ingest data from RCO API streams and config files so that the editorial team has clean, normalized input data.
 - **As an editor**, I can review AI quality assessments and flags so that I can quickly identify which content is ready for editorial work.
 - **As an editor**, I can review AI rewrites and accept or modify them so that I can produce clear, accessible content faster.
+- **As an editor**, I can discuss content rewrites with an AI chatbot and iteratively refine the output through conversation so that I can achieve the exact tone and clarity I need.
+- **As an editor**, I can manage the publication state of content items (draft, published, archived) so that I can control when content becomes visible and manage the lifecycle of published items.
 - **As an editor**, I can validate and map document metadata (pricing, dates, public status, related structures) before publishing.
 - **As a reviewer**, I can approve and export validated versions with complete metadata and audit trail for publication.
 - **As a team lead**, I can monitor progress across all stages (ingestion, quality gating, rewrite, metadata mapping, export) with analytics.
