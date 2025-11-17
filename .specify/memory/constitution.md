@@ -1,15 +1,20 @@
 <!--
-Sync Impact Report (v1.1.6):
-- Version: 1.1.5 → 1.1.6 (PATCH: added metadata mapping requirement to Principle 1)
-- Amended: 2025-11-13
+Sync Impact Report (v1.3.0):
+- Version: 1.2.5 → 1.3.0 (MINOR: added Principle 9 for multi-language & versioning database schema design)
+- Amended: 2025-11-17
 - Changes:
-  • Updated Principle 1: Added metadata mapping/validation as mandatory pre-publication step
-  • Clarified: Editors MUST check and map document metadata (pricing, dates, public status, related structures) before publishing
-  • Specified: Metadata validation is part of human-in-the-loop approval workflow
+  • Added Principle 9: "Multi-Language & Versioning Database Schema (POC Foundation)"
+  • Principle 9 mandates database schema design for multi-language support during POC, even though translation implementation deferred to MVP2
+  • Schema requirements: language_code column, source_revision_id tracking, composite unique constraints, indexes for language queries
+  • French (fr) designated as source language; POC uses 'fr' exclusively
+  • Renamed former Principle 9 to Principle 10: "Translation Architecture (Future-Proof, Deferred to MVP2)"
+  • All subsequent principles remain unchanged (no renumbering needed; only added new principle)
+- Rationale: Retrofitting multi-language support after POC requires expensive schema migrations. Designing upfront ensures seamless scaling to translation workflows in MVP2 without data rewriting.
 - Templates requiring updates:
-  ⚠ spec-template.md - add metadata mapping acceptance criteria
-  ⚠ plan-template.md - add metadata validation to Constitution Check
-  ⚠ tasks-template.md - add metadata mapping tasks to export stage
+  ✅ spec.md - already aligned (no translation features in POC)
+  ⚠ plan-template.md - add database schema design tasks for language_code and source_revision_id columns
+  ⚠ tasks-template.md - add schema design and index creation tasks to POC database setup stage
+  ⚠ README.md - update to reference Principle 9 schema design requirements
 - Follow-up: TODO(METADATA_SCHEMA) - Specific metadata fields to be defined and documented soon
 -->
 
@@ -17,9 +22,9 @@ Sync Impact Report (v1.1.6):
 
 **Project Name**: Content Playground  
 **Organization**: Refugies.info  
-**Version**: 1.1.6  
+**Version**: 1.3.0  
 **Ratification Date**: 2025-11-12  
-**Last Amended**: 2025-11-13
+**Last Amended**: 2025-11-17
 
 ---
 
@@ -38,6 +43,7 @@ This constitution applies to:
 - Database schema and data flow between Next.js frontend, Letta backend, and Supabase
 - Custom Letta tools for Supabase access (replacing MCP)
 - Editorial workflow implementation (Import → Sort → Rewrite → Export)
+- Data ingestion pipelines that transform heterogeneous external sources (e.g., RCO, DI) into relational structures usable by AI workflows
 - Content revision history and rollback mechanisms
 - Authentication and authorization for team members
 
@@ -65,7 +71,29 @@ This constitution applies to:
 
 ---
 
-### Principle 2: Workflow Stage Independence
+### Principle 2: Unified Data Ingestion & Normalization Pipeline with Multiple Source Types
+
+**Rule**: The system MUST include a unified data ingestion pipeline that converts heterogeneous upstream sources into a normalized relational representation that AI workflows, editors, and Supabase tooling can rely on. **POC sources**: automated API streams (RCO) and config file-based manual sources. **MVP+ sources**: file uploads (JSON/CSV), web forms, and future sources. Automated sources MUST be triggered automatically when new or updated data is detected at the source. All ingested data MUST be normalized through the same relational schema with unified provenance tracking. Letta AI agents MUST automatically assess quality and flag newly ingested content items without requiring manual intervention.
+
+**Rationale**: AI workflows only add value if upstream data is trustworthy, deduplicated, and aligned with the relational schema, regardless of source type. A unified ingestion process that handles both automated and manual sources prevents downstream chaos, maintains consistent provenance, and keeps Supabase ready for multi-source expansion. Automatic triggering and AI-driven quality gating eliminate manual bottlenecks and ensure rapid, consistent processing of incoming data from any source.
+
+**Implementation Requirements**:
+
+- **POC - Automated Sources**: Deliver at least one end-to-end ingestion job for the initial automated source (RCO API stream) that extracts raw data, validates fields, normalizes records into Supabase tables, and logs provenance. Ingestion job MUST be triggered automatically when new RCO data is detected (polling, CRON, or webhook, TBD...).
+- **POC - Manual Sources**: System MUST load data source configurations from YAML/JSON config files (e.g., `/config/sources.yaml`). Config files MUST define source connection parameters, field mappings, and validation rules. Manual ingestion via config files MUST normalize data through the same schema and provenance tracking as automated sources (source = "config_file", source_record_id = config source ID + record ID).
+- **Unified Normalization**: All ingested data (from any source type) MUST be normalized into a unified relational structure with consistent `source_system`, `source_record_id`, and ingestion timestamp fields for audit trail and AI context.
+- **Automatic AI quality gating**: Upon successful ingestion from any source, Letta classifier agent MUST automatically analyze newly ingested content items to: (1) assess data quality and completeness to determine if content is suitable for downstream editorial workflow; (2) generate suggested tags, categories, and quality scores; (3) flag items as "accepted" (sufficient quality to proceed) or "rejected" (insufficient quality, requires source remediation). System MUST store AI reasoning/justification for each flag decision. Results MUST be stored as "pending" flags for human review. Editors MUST be able to view AI reasoning, accept/reject flags, and manually re-flag items with their own justification.
+- **Multi-source readiness**: Design ingestion contracts so additional sources (DI, future providers, new file formats) plug into the same pipeline without rewriting downstream logic; every record MUST persist `source_system`, `source_record_id`, and ingestion timestamps.
+- Supabase schema MUST remain relational yet flexible: use lookup tables/JSON columns only when necessary, and document how each entity maps back to raw source structures.
+- Ingestion jobs MUST support incremental updates, deduplication, and idempotent re-runs (no duplicate rows on retries).
+- Pipeline MUST surface validation errors with actionable logs/metrics so editors know when a source failed to import.
+- Provenance data MUST be available to Letta agents so AI-generated suggestions can reference origin context.
+- New sources MUST include connector-specific sanity checks before being marked production-ready.
+- **MVP Phase (post POC)**: Ingestion pipeline MUST handle already-imported but updated content items from any source. When source data is re-ingested with changes, system MUST detect updates (via `source_record_id` and content hash), create new normalized records, and trigger automatic re-classification via Letta. Updated content MUST be marked as "updated" in audit trail with link to prior version for comparison.
+
+---
+
+### Principle 3: Workflow Stage Independence
 
 **Rule**: Each workflow stage (Import, Sort, Rewrite, Export) MUST function as an independently testable and deployable unit. User stories MUST be prioritized (P1, P2, P3) and each MUST deliver standalone value.
 
@@ -81,7 +109,7 @@ This constitution applies to:
 
 ---
 
-### Principle 3: Letta-First AI Orchestration with Custom Tools
+### Principle 4: Letta-First AI Orchestration with Custom Tools
 
 **Rule**: All AI logic, task delegation, and conversational workflows MUST be implemented using Letta agents. Direct LLM API calls (OpenAI, Anthropic, etc.) are prohibited except within Letta agent definitions. Supabase access MUST use custom Letta tools that wrap direct SQL queries, not external MCP servers.
 
@@ -91,7 +119,8 @@ This constitution applies to:
 
 - Define specialized Letta agents: `classifier-agent`, `rewrite-agent`, `validator-agent`
 - Use Letta's memory system for context persistence across user sessions
-- Create custom Letta tools that wrap Supabase Client for CRUD operations (read, write, update, delete)
+- Implementation Requirements MUST be articulated at CRUD granularity for every core domain entity (courses, sessions, providers, and similar catalog entities) so engineers can translate requirements directly into Supabase tables and Letta tools
+- Create custom Letta tools that wrap Supabase Client for CRUD operations (read, write, update, delete) across those entities
 - Custom tools MUST execute direct SQL queries for performance and control
 - Custom tools MUST enforce row-level security and audit logging
 - Frontend MUST communicate with Letta via REST API, not directly with LLMs
@@ -99,7 +128,7 @@ This constitution applies to:
 
 ---
 
-### Principle 4: Data Auditability and Traceability
+### Principle 5: Data Auditability and Traceability
 
 **Rule**: Every AI action, human edit, and state transition MUST be logged with timestamp, user attribution, and version history. Content lineage from import to export MUST be traceable.
 
@@ -115,7 +144,7 @@ This constitution applies to:
 
 ---
 
-### Principle 5: Monorepo Simplicity with Clear Boundaries
+### Principle 6: Monorepo Simplicity with Clear Boundaries
 
 **Rule**: Use a Turborepo-based monorepo structure with clear separation between frontend (Next.js), backend (Letta + custom tools), and shared types. Avoid microservices, separate repositories, or over-engineered abstractions during POC and MVP phases. Database access MUST use direct Supabase queries (no ORM). Frontend UI MUST use Tailwind CSS v4, Radix UI primitives, and shadcn/ui components.
 
@@ -123,36 +152,21 @@ This constitution applies to:
 
 **Implementation Requirements**:
 
-- Repository structure (Turborepo standard):
-
-  ```text
-  /apps
-    /frontend      # Next.js app (UI, API routes for frontend-only logic)
-    /backend       # Letta agent definitions, custom tool implementations
-  /packages
-    /shared        # TypeScript types, constants, utilities
-    /supabase-client  # Supabase client wrapper with direct SQL queries
-    /database      # Supabase migrations, schema definitions (SQL)
-  /docs            # Architecture, API contracts, runbooks
-  ```
-
+- Repository structure must follow Turborepo standard & best practices
 - Use Turborepo for monorepo task orchestration and caching
 - Database queries MUST use Supabase Client with direct SQL (no ORM)
 - Frontend styling MUST use Tailwind CSS v4 for utility-first design
 - Frontend UI components MUST use shadcn/ui (built on Radix UI primitives) for accessibility and composability
 - All interactive components MUST leverage Radix UI's accessible foundations
-- Shared types MUST be exported from `/packages/shared` and imported by apps/backend
-- Supabase client wrapper in `/packages/supabase-client` for reuse across apps
 - No circular dependencies between packages
-- Each app and package MUST have independent test suite
 
 ---
 
-### Principle 6: POC-to-MVP Pragmatism with Staged Authentication
+### Principle 7: POC-to-MVP Pragmatism with Staged Authentication
 
 **Rule**: Optimize for learning and iteration during POC (1 month, 2 sprints). Avoid premature optimization, complex abstractions, or production-grade infrastructure. Transition to MVP standards only after POC validation. Authentication MUST be implemented by POC step 2 to enable multi-user testing.
 
-**Rationale**: POC goal is to validate the full workflow (Import → Sort → Rewrite → Export) with real users. Over-engineering delays feedback and wastes effort on features that may not survive user testing. Early authentication enables team collaboration during POC.
+**Rationale**: POC goal is to validate the full workflow (Import → Sort → Rewrite → Metadata mapping / validation → Export) with real users. Over-engineering delays feedback and wastes effort on features that may not survive user testing. Early authentication enables team collaboration during POC.
 
 **Implementation Requirements**:
 
@@ -191,7 +205,7 @@ This constitution applies to:
 
 ---
 
-### Principle 7: Content Revision & Rollback as Core Feature
+### Principle 8: Content Revision & Rollback as Core Feature
 
 **Rule**: Every content mutation (AI rewrite, human edit, classification change) MUST create an immutable revision record. Team members MUST be able to view full revision history and rollback to any prior version with a single action.
 
@@ -213,17 +227,42 @@ This constitution applies to:
 
 ---
 
-### Principle 8: Translation Architecture (Future-Proof, Deferred to V2)
+### Principle 9: Multi-Language & Versioning Database Schema (POC Foundation)
+
+**Rule**: Database schema MUST be designed from POC phase to support multi-language content and revision versioning, even though translation functionality is deferred to MVP2. French (fr) MUST be the designated source language. Every content item MUST track language and revision metadata to enable future translation workflows without schema migration.
+
+**Rationale**: Retrofitting multi-language and versioning support after POC requires expensive schema migrations and data rewriting. Designing for these concepts upfront (even if unused during POC) ensures the system can scale to translation workflows seamlessly. French as source of truth prevents cascading translation errors and maintains content integrity across languages.
+
+**Implementation Requirements**:
+
+- **POC Phase** (schema design, no translation implementation):
+  - Content tables MUST include `language_code` column (default: 'fr' for French source)
+  - Content tables MUST include `source_revision_id` column (references `content_revisions.id` for translation lineage tracking)
+  - `content_revisions` table MUST include `language_code` column to track which language each revision belongs to
+  - `content_revisions` table MUST include `source_revision_id` column (NULL for source language, set for translations)
+  - Composite unique constraint: `(content_id, language_code, revision_number)` to prevent duplicate revisions per language
+  - Indexes on `(language_code, created_at)` for efficient language-specific queries
+  - Schema documentation MUST explain translation lineage (source revisions → translation revisions)
+  - Letta custom tools MUST enforce language and revision metadata on every content mutation
+  
+- **MVP2 Phase** (translation implementation):
+  - Translator workflows will query `source_revision_id` to identify which source revisions have been translated
+  - Translation history queries will filter by `language_code` and `source_revision_id`
+  - No schema changes required; only new UI and Letta translator agent
+  
+- **Constraint**: POC MUST use `language_code = 'fr'` exclusively; no translation UI or workflows during POC/MVP1
+
+---
+
+### Principle 10: Translation Architecture (Future-Proof, Deferred to MVP2)
 
 **Rule**: System architecture MUST support multi-language translation workflows as a core concept, but translation functionality is deferred to V2 phase (post-V1). French (fr) MUST be the source of truth for all content. Translation MUST be revision-based: translators work from specific source revisions, not live content. Translators MUST have visibility into translation history and AI-assisted translation suggestions.
 
 **Rationale**: Refugies.info serves multilingual audiences. While POC/MVP/V1 focus on single-language editorial workflows, the system MUST be architected to support translation from day one. Revision-based translation ensures consistency and auditability. French as source of truth prevents cascading errors across language chains.
 
-**Implementation Requirements (V2 Phase)**:
+**Implementation Requirements (V2 Phase, TDB use it for reference)**:
 
-- Database schema MUST include `translation_revisions` table with:
-  - `id`, `source_content_id`, `source_revision_id`, `target_language`, `translator_id`, `translation_status` (draft, in-progress, approved, published)
-  - `translated_body`, `translation_notes`, `created_at`, `updated_at`
+- Database schema MUST include `translation_revisions`
   - Link to source revision (immutable reference, never follows live content)
 - UI MUST provide translator workflows:
   - View source revision with full context and translation history
@@ -281,10 +320,10 @@ This constitution applies to:
 
 This constitution informs the following SpecKit templates:
 
-- **spec-template.md**: User stories MUST be prioritized and independently testable (Principle 2); revision history acceptance criteria required (Principle 7); translation architecture deferred to V2 (Principle 8)
-- **plan-template.md**: Constitution Check section validates compliance (All Principles); revision tracking and rollback capabilities (Principle 7); translation schema design (Principle 8)
-- **tasks-template.md**: Tasks MUST be organized by user story for independent implementation (Principle 2); include revision/rollback tasks (Principle 7); translation schema tasks deferred to V2 (Principle 8)
-- **checklist-template.md**: Checklists MUST include audit trail verification (Principle 4) and revision history verification (Principle 7); translation schema readiness (Principle 8)
+- **spec-template.md**: Data ingestion requirements (Principle 2); workflow stage independence and prioritized user stories (Principle 3); revision history acceptance criteria required (Principle 8); translation architecture deferred to V2 (Principle 9)
+- **plan-template.md**: Constitution Check section validates compliance (All Principles); ingestion pipeline design (Principle 2); revision tracking and rollback capabilities (Principle 8); translation schema design (Principle 9)
+- **tasks-template.md**: Ingestion/connector tasks (Principle 2); tasks organized by user story for independent implementation (Principle 3); include revision/rollback tasks (Principle 8); translation schema tasks deferred to V2 (Principle 9)
+- **checklist-template.md**: Ingestion pipeline readiness (Principle 2); audit trail verification (Principle 5) and revision history verification (Principle 8); translation schema readiness (Principle 9)
 
 ---
 
@@ -306,10 +345,26 @@ This constitution was ratified on **2025-11-12** by the Content Playground proje
 
 **Amendment (v1.1.6)** on **2025-11-13**: Updated Principle 1 to add metadata mapping/validation as mandatory pre-publication step. Editors MUST check and map document metadata (pricing, dates, public status, related structures) before publishing. Metadata validation is part of human-in-the-loop approval workflow and export stage.
 
+**Amendment (v1.1.7)** on **2025-11-17**: Clarified Principle 3 Implementation Requirements to mandate CRUD-level coverage for key domain entities (content items, courses, sessions, providers, etc.) so Supabase tables and Letta tools remain actionable.
+
+**Amendment (v1.2.0)** on **2025-11-17**: Added Principle 9 to require a multi-source data ingestion & normalization pipeline (starting with RCO at POC, expanding to DI and others) and updated template relationships accordingly.
+
+**Amendment (v1.2.1)** on **2025-11-17**: Expanded Principle 9 to mandate automatic pipeline triggering (polling or webhook), automatic Letta-driven classification of newly ingested content, and MVP-phase handling of already-imported but updated content with change detection and re-classification.
+
+**Amendment (v1.2.2)** on **2025-11-17**: Reordered principles for logical flow—Data Ingestion & Normalization Pipeline moved from Principle 9 to Principle 2 (foundational). All subsequent principles renumbered accordingly (Workflow Stage Independence 2→3, Letta-First 3→4, Data Auditability 4→5, Monorepo 5→6, POC-to-MVP 6→7, Content Revision 7→8, Translation 8→9).
+
+**Amendment (v1.2.3)** on **2025-11-17**: Clarified Principle 2 "Automatic AI sorting & quality gating" to separate concerns: (1) data ingestion handles deterministic storage; (2) AI sorting agent assesses quality/completeness and gates content; (3) AI flags items as "accepted" or "rejected" with reasoning. Added requirement for editors to review AI reasoning and manually re-flag items.
+
+**Amendment (v1.2.4)** on **2025-11-17**: Unified Principle 2 to handle multiple source types in single ingestion pipeline. Clarified that ingestion accepts both automated sources (API streams like RCO) and manual sources (JSON/CSV file uploads, web form entry). All sources normalize through same relational schema with unified provenance tracking. Manual sources tracked as source="manual_upload" or source="manual_entry". Quality gating applies uniformly to all ingested data.
+
+**Amendment (v1.2.5)** on **2025-11-17**: Clarified POC vs MVP source types in Principle 2. POC sources: RCO API streams + config file-based manual sources (YAML/JSON). MVP+ sources: file uploads (JSON/CSV) + web forms + future sources. Updated POC - Manual Sources requirement to specify config files instead of file uploads/web forms. Config files define source connection parameters, field mappings, validation rules. Manual sources tracked as source="config_file".
+
+**Amendment (v1.3.0)** on **2025-11-17**: Added Principle 9 "Multi-Language & Versioning Database Schema (POC Foundation)" to mandate database schema design for multi-language support during POC, even though translation implementation is deferred to MVP2. Schema MUST include language_code and source_revision_id columns, composite unique constraints, and indexes for efficient language queries. French (fr) is designated source language; POC uses 'fr' exclusively. Renamed former Principle 9 to Principle 10. Rationale: Designing for multi-language upfront prevents expensive schema migrations later and enables seamless scaling to translation workflows in MVP2.
+
 **Signed**:  
 Jeremie (Developer)
 SpecKit AI Assistant (Constitution Author)
 
 ---
 
-## End of Constitution v1.1.6
+## End of Constitution v1.3.0
