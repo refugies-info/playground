@@ -1,28 +1,22 @@
 <!--
-Sync Impact Report (v1.3.1):
-- Version: 1.3.0 → 1.3.1 (PATCH: clarified content lifecycle management and conversational refinement)
-- Amended: 2025-11-17
+Sync Impact Report (v1.3.4):
+- Version: 1.3.3 → 1.3.4 (PATCH: referenced roadmap doc as governance artifact)
+- Amended: 2025-11-18
 - Changes:
-  • Updated Principle 1: Added explicit requirement for content lifecycle states (draft/published/archived) with human control over transitions
-  • Updated Principle 3: Clarified workflow stages (Ingestion & Import, Quality Gating, Rewrite, Metadata Mapping, Export) and noted content lifecycle is cross-cutting concern
-  • Updated Principle 4: Added requirement for multi-turn conversational refinement via Letta agents (iterative adjustment requests and tracking)
-  • Rationale: Two new user stories (P6: AI Chatbot Discussion, P7: Publication State Management) require explicit constitutional support
-- Spec alignment:
-  ✅ spec.md - User Stories 6-7 and FR-023-034 added for chatbot discussion and publication state management
-  ✅ README.md - Updated workflow description and sprint plans to reflect new stages
+  • Scope references roadmap file for milestone context
+  • Relationship to Templates section calls out `documentation/roadmaps/roadmap-mvp.md`
 - Templates requiring updates:
-  ⚠ plan-template.md - add publication state management and conversational refinement to architecture section
-  ⚠ tasks-template.md - add tasks for publication state transitions and chatbot conversation tracking
-- Follow-up: TODO(METADATA_SCHEMA) - Specific metadata fields to be defined and documented soon
+  ⚠ plan-template.md – link roadmap checkpoints in Constitution Check
+- Follow-up: TODO(METADATA_SCHEMA) – Define concrete metadata fields
 -->
 
 # Project Constitution: Content Playground
 
 **Project Name**: Content Playground  
 **Organization**: Refugies.info  
-**Version**: 1.3.1  
+**Version**: 1.3.4  
 **Ratification Date**: 2025-11-12  
-**Last Amended**: 2025-11-17
+**Last Amended**: 2025-11-18
 
 ---
 
@@ -40,10 +34,11 @@ This constitution applies to:
 - AI agent design and orchestration using Letta
 - Database schema and data flow between Next.js frontend, Letta backend, and Supabase
 - Custom Letta tools for Supabase access (replacing MCP)
-- Editorial workflow implementation (Import → Sort → Rewrite → Export)
+- Editorial workflow implementation (Ingest → Sort → Rewrite → Check metadata → Save → Publish)
 - Data ingestion pipelines that transform heterogeneous external sources (e.g., RCO, DI) into relational structures usable by AI workflows
 - Content revision history and rollback mechanisms
 - Authentication and authorization for team members
+- Companion roadmap execution tracked in `documentation/roadmaps/roadmap-mvp.md`
 
 ---
 
@@ -96,9 +91,9 @@ This constitution applies to:
 
 ### Principle 3: Workflow Stage Independence
 
-**Rule**: Each workflow stage (Ingestion & Import, Quality Gating, Rewrite, Metadata Mapping, Export) MUST function as an independently testable and deployable unit. User stories MUST be prioritized (P0-P7) and each MUST deliver standalone value. Content lifecycle management (draft/published/archived states) is a cross-cutting concern orthogonal to workflow stages.
+**Rule**: Each workflow stage (Ingest, Sort, Rewrite, Check metadata, Save, Publish) MUST function as an independently testable and deployable unit. User stories MUST be prioritized (P0-P7) and each MUST deliver standalone value. Content lifecycle management (draft/published/archived states) is a cross-cutting concern orthogonal to workflow stages.
 
-**Rationale**: Enables incremental delivery, parallel development, and early validation. Teams can ship Ingestion + Quality Gating as MVP1 without waiting for Rewrite completion. Reduces risk and accelerates feedback loops. Content lifecycle states provide editors with flexible control independent of workflow progression.
+**Rationale**: Enables incremental delivery, parallel development, and early validation. Teams can ship Ingest + Sort as MVP1 without waiting for Rewrite completion, then layer metadata checks, save, and publish gates progressively. Reduces risk and accelerates feedback loops. Content lifecycle states provide editors with flexible control independent of workflow progression.
 
 **Implementation Requirements**:
 
@@ -168,9 +163,9 @@ This constitution applies to:
 
 ### Principle 7: POC-to-MVP Pragmatism with Staged Authentication
 
-**Rule**: Optimize for learning and iteration during POC (1 month, 2 sprints). Avoid premature optimization, complex abstractions, or production-grade infrastructure. Transition to MVP standards only after POC validation. Authentication MUST be implemented by POC step 2 to enable multi-user testing.
+**Rule**: Optimize for learning and iteration during POC (1 month, 2 sprints). Avoid premature optimization, complex abstractions, or production-grade infrastructure. Transition to MVP standards only after POC validation. Authentication MUST be Supabase Auth from project kickoff so every environment, even day-one spikes, operates under real user identities.
 
-**Rationale**: POC goal is to validate the full workflow (Import → Sort → Rewrite → Metadata mapping / validation → Export) with real users. Over-engineering delays feedback and wastes effort on features that may not survive user testing. Early authentication enables team collaboration during POC.
+**Rationale**: POC goal is to validate the full workflow (Ingest → Sort → Rewrite → Check metadata → Save → Publish) with real users. Using Supabase Auth from the start guarantees consistent audit trails, multi-user readiness, and avoids rework replacing placeholder IDs mid-sprint. Over-engineering elsewhere still wastes effort on features that may not survive user testing.
 
 **Implementation Requirements**:
 
@@ -178,8 +173,7 @@ This constitution applies to:
   - Use Letta Cloud (hosted) instead of self-hosted Letta
   - Use Supabase free tier with simple schema (no complex indexing or partitioning)
   - Hardcode reasonable defaults (e.g., single language, single content type)
-  - **Step 1 (Sprint 1)**: Basic placeholder user ID for single-user testing
-  - **Step 2 (Sprint 1-2 transition)**: Add Supabase Auth with basic role support (editor, reviewer)
+  - **Day 1**: Provision Supabase Auth with editor/reviewer roles and integrate into frontend + Letta tools
   - Manual deployment to Vercel (no CI/CD required)
   - Basic UI (functional, not polished)
   - Direct SQL queries via Supabase Client (no ORM)
@@ -328,6 +322,7 @@ This constitution informs the following SpecKit templates:
 - **plan-template.md**: Constitution Check section validates compliance (All Principles); ingestion pipeline design (Principle 2); revision tracking and rollback capabilities (Principle 8); translation schema design (Principle 9)
 - **tasks-template.md**: Ingestion/connector tasks (Principle 2); tasks organized by user story for independent implementation (Principle 3); include revision/rollback tasks (Principle 8); translation schema tasks deferred to V2 (Principle 9)
 - **checklist-template.md**: Ingestion pipeline readiness (Principle 2); audit trail verification (Principle 5) and revision history verification (Principle 8); translation schema readiness (Principle 9)
+- **documentation/roadmaps/roadmap-mvp.md**: Operational milestone sequencing (POC sprints, MVP translations) MUST stay aligned with constitutional principles and update when principles change
 
 ---
 
