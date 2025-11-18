@@ -254,6 +254,39 @@ Manages shared dependencies and scripts:
 }
 ```
 
+## Sprint 0: Project Bootstrap Checklist
+
+Before Sprint 1 development begins, complete the following setup tasks:
+
+**Infrastructure Setup**:
+- ✅ Create Supabase project (free tier)
+- ✅ Set up Letta Cloud account (free tier)
+- ✅ Create GitHub repository with main branch protection
+- ✅ Configure Vercel project (optional for Sprint 1, required for Sprint 2)
+
+**Local Development Environment**:
+- ✅ Install Node.js 18+ and npm/yarn
+- ✅ Clone repository and run `npm install`
+- ✅ Verify `turbo build` completes successfully
+- ✅ Verify `turbo dev` starts without errors
+
+**Team Setup**:
+- ✅ Jeremie: Set up frontend development environment
+- ✅ Luis: Set up database/backend development environment
+- ✅ Both: Review Constitution v1.4.0 and this documentation
+- ✅ Both: Agree on shared types and API contracts (documented in `/packages/shared`)
+
+**Documentation**:
+- ✅ Read Constitution v1.4.0 (`.specify/memory/constitution.md`)
+- ✅ Read Sprint 1 Spec (`specs/002-turborepo-scaffolding/spec.md`)
+- ✅ Read this Monorepo Structure guide
+- ✅ Understand Sprint 1 scope (monorepo + frontend scaffold + schema design)
+- ✅ Understand Sprint 2 scope (Letta agents + Supabase Auth + ingestion pipeline)
+
+**Status**: Sprint 0 complete when all items are checked and team is ready to begin Sprint 1
+
+---
+
 ## Development Workflow
 
 ### For Jeremie (Frontend)
@@ -282,8 +315,9 @@ Manages shared dependencies and scripts:
 4. **Call Letta classifier** (Sprint 2+):
 
    ```typescript
-   // Call Letta classifier via REST API
-   const response = await fetch('http://localhost:8000/classify', {
+   // Call Letta classifier via REST API (Sprint 2+)
+   // This example shows the expected integration pattern
+   const response = await fetch('/api/classify', {
      method: 'POST',
      body: JSON.stringify({ content_id: item.id })
    });

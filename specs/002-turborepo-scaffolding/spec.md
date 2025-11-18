@@ -1,10 +1,10 @@
-# Feature Specification: POC Sprint 1 – Turborepo + Scaffolding
+# Feature Specification: POC Sprint 0 – Turborepo + Scaffolding
 
 **Feature Branch**: `002-turborepo-scaffolding`  
 **Created**: 2025-11-18  
 **Status**: Draft  
 **Constitution Version**: v1.4.0 (Simplified for 2-person team)  
-**Input**: User description: "POC sprint 1: Turborepo + scaffolding - Initialize monorepo, Supabase project, Letta Cloud agents, and Supabase Auth (editor/reviewer roles wired to frontend + tools)."
+**Input**: User description: "POC Sprint 0: Turborepo + scaffolding - Initialize monorepo with 2 workspaces, set up Next.js frontend scaffold with Tailwind + shadcn/ui, define shared types, and design Supabase schema. Letta agents and Supabase Auth integration deferred to Sprint 1."
 
 ## Clarifications
 
@@ -147,7 +147,7 @@ As a frontend developer, I need to initialize a Next.js app (latest version, app
 ## Dependencies & Constraints
 
 - **External Dependencies**: Turborepo, Node.js, npm/yarn, Next.js, Tailwind CSS V4, shadcn/ui
-- **Constraint**: POC phase explicitly excludes automated tests (manual testing only per Constitution v1.1.3)
+- **Constraint**: POC phase explicitly excludes automated tests (manual testing only per Constitution v1.4.0)
 - **Constraint**: POC phase minimizes documentation (code comments only, no detailed .md files beyond setup)
 - **Constraint**: Monorepo structure is foundational—no feature code, only empty workspace scaffolding
 - **Constraint**: Next.js frontend is UI scaffold only—no authentication, data fetching, or business logic in this sprint
