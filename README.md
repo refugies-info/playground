@@ -12,18 +12,21 @@ It ingests data from multiple sources, automatically sorts and clarifies content
 ### Core Pipeline
 
 ```
-Import → Sort → Re-write → Export
+Ingestion & Import → Quality Gating → Rewrite → Metadata Mapping → Export
 ```
 
 Each stage is designed to be transparent, auditable, and collaborative — ensuring automation never replaces editorial judgment.
+
+**Key Principle**: Data ingestion is unified (RCO API + config files during POC) with automatic quality gating via AI before editorial work begins.
 
 ---
 
 ## 🎯 Objectives
 
-- Build a **proof-of-concept (POC)** for an end-to-end editorial pipeline enriched by AI  
-- Test integration between **Letta (AI orchestration)** and **Supabase (data persistence)** via MCP  
-- Provide a **Next.js frontend** for human editors to review and validate AI suggestions  
+- Build a **proof-of-concept (POC)** for an end-to-end editorial pipeline enriched by AI (French-only)
+- Test integration between **Letta (AI orchestration)** and **Supabase (data persistence)** with custom tools
+- Provide a **Next.js frontend** for human editors to review and validate AI suggestions
+- Architect database schema to support future multi-language translation (V2+) without implementation in POC/MVP/V1
 - Prepare for future integration with the official Refugies.info publishing systems
 
 ---
@@ -40,45 +43,92 @@ Each stage is designed to be transparent, auditable, and collaborative — ensur
 | Layer | Tool / Framework | Purpose |
 |-------|------------------|----------|
 | **Frontend** | [Next.js (App Router)](https://nextjs.org) | User interface for editors |
+| **Styling** | [Tailwind CSS v4](https://tailwindcss.com) | Utility-first CSS framework |
+| **UI Components** | [shadcn/ui](https://ui.shadcn.com) + [Radix UI](https://www.radix-ui.com) | Accessible, composable component library |
 | **Backend / AI Orchestration** | [Letta Cloud](https://www.letta.com) | Agent-based AI orchestration |
 | **Database** | [Supabase](https://supabase.com) | Storage for imported / validated content |
-| **AI ↔ DB Bridge** | MCP (Model Context Protocol) | Secure, structured access between Letta and Supabase |
+| **AI ↔ DB Bridge** | Letta Custom Tools | Direct Supabase queries via custom Letta tools |
+| **Authentication** | [Supabase Auth](https://supabase.com/docs/guides/auth) | User authentication and role-based access control |
 | **Language** | TypeScript | Unified across all layers |
-| **Package Manager** | pnpm | Monorepo package management |
-| **ORM / Query Builder** | Drizzle | Lightweight schema management |
+| **Monorepo** | [Turborepo](https://turbo.build/repo) | Monorepo package management and task orchestration |
+| **Database Queries** | Raw SQL / Supabase Client | Direct Supabase queries (no ORM) |
 
 ---
 
 ## 🧩 Workflow Description
 
-### 1️⃣ Import
-- Ingest data from APIs, JSON, or CSV files  
-- Normalize and store entries in Supabase
+### 1️⃣ Ingestion & Import
+- Ingest data from **RCO API streams** (automated) and **config files** (manual) during POC
+- Normalize and store entries in Supabase with full provenance tracking (`source_system`, `source_record_id`, timestamp)
+- Support for file uploads and web forms deferred to MVP phase
 
-### 2️⃣ Sort
-- AI-based classification, quality scoring, and tagging of imported items  
-- Human review of suggested topics and categories
+### 2️⃣ Quality Gating
+- Letta classifier agent automatically assesses data quality and completeness
+- AI flags items as "accepted" (sufficient quality to proceed) or "rejected" (needs source remediation)
+- Editors review AI reasoning, accept/reject flags, and can manually override with justification
+- Prevents low-quality data from wasting editorial effort
 
-### 3️⃣ Re-write
-- Letta agents rewrite content for clarity and readability  
+### 3️⃣ Rewrite
+- Letta rewrite agent generates plain-language versions of accepted-flagged content
 - Editors review, annotate, and approve or modify results
+- Support for multiple rewrite iterations
 
-### 4️⃣ Export
-- Export validated content back to Supabase or other publishing endpoints  
+### 4️⃣ Metadata Mapping
+- Editors validate and map document metadata (pricing, dates, public status, related structures)
+- Metadata validation is mandatory before publishing
+- System tracks which metadata fields were validated/mapped by which editor and when
+
+### 5️⃣ Export
+- Export validated content with complete metadata and audit trail back to Supabase or other publishing endpoints
 - Prepare integration with Refugies.info data pipelines
 
 ---
 
 ## 🧱 AI Architecture
 
-- **Letta** handles orchestration, task delegation, and conversational logic  
-- **Supabase** stores all documents, metadata, and validation states  
-- Specialized **Letta Agents** include:  
-  - `clarifier-agent` — rewrites content for readability  
-  - `classifier-agent` — sorts and tags imported data  
-  - `validator-agent` — checks structure and quality  
+- **Letta** handles orchestration, task delegation, and conversational logic with memory management across sessions
+- **Custom Letta Tools** provide direct Supabase access for CRUD operations, row-level security, and audit logging
+- **Supabase** stores all documents, metadata, validation states, revision history, and audit trails
+- Specialized **Letta Agents** include:
+  - `classifier-agent` — assesses data quality and flags items as accepted/rejected with reasoning
+  - `rewrite-agent` — generates plain-language rewrites of accepted content
+  - `validator-agent` — checks structure, completeness, and metadata before export
+- **Authentication** handled by Supabase Auth with role-based access control (editor, reviewer, admin)
 
-All interactions between AI and humans are **logged and auditable**.
+All interactions between AI and humans are **logged and auditable** via immutable revision records with full change history, actor attribution, and timestamps.
+
+---
+
+## � Content Lifecycle Management
+
+Beyond the linear workflow stages, editors have flexible control over content publication states:
+
+- **Draft**: Work-in-progress content saved locally, not visible to end users
+- **Published**: Content exported to publication database and visible to end users
+- **Archived**: Published content hidden from active list but retained in history for reference and recovery
+
+Editors can transition content between states at any point in the workflow:
+- Save content as draft at any workflow stage
+- Publish when ready (independent of workflow completion)
+- Archive outdated content while maintaining full history
+- Restore archived content back to published state
+
+State transitions are tracked with editor attribution and timestamp for full audit trail.
+
+---
+
+## �🗄️ Database Schema Design for Multi-Language Support (POC Foundation)
+
+While translation implementation is deferred to MVP2, the database schema is designed during POC to support multi-language content and revision versioning:
+
+- **Language tracking**: All content tables include `language_code` column (default: 'fr' for French source)
+- **Translation lineage**: Content and revision tables include `source_revision_id` column to track which source revision a translation is based on
+- **Revision language tracking**: `content_revisions` table tracks which language each revision belongs to
+- **Uniqueness constraints**: Composite unique constraint on `(content_id, language_code, revision_number)` prevents duplicate revisions per language
+- **Query performance**: Indexes on `(language_code, created_at)` for efficient language-specific queries
+- **POC constraint**: POC uses `language_code = 'fr'` exclusively; no translation UI or workflows
+
+This design enables seamless scaling to translation workflows in MVP2 without expensive schema migrations.
 
 ---
 
@@ -87,25 +137,29 @@ All interactions between AI and humans are **logged and auditable**.
 ### Timeline
 🗓️ 1 month total — **2 sprints (2 weeks each)**
 
-#### Sprint 1 → Import & Sort
-- Implement import pipeline and Supabase schema  
-- Integrate Letta classification logic via MCP  
-- Build initial UI for data review and validation  
+#### Sprint 1 → Ingestion & Quality Gating
+- Implement unified ingestion pipeline (RCO API + config files) with Supabase schema
+- Integrate Letta classifier agent for automatic quality assessment and flagging
+- Build UI for editors to review AI flags, see reasoning, and manually override
+- Implement database schema with language_code and source_revision_id columns
 
-#### Sprint 2 → Re-write & Export
-- Add rewriting agent and collaborative editor interface  
-- Enable validation workflow and export process  
-- Deliver functional end-to-end demo  
+#### Sprint 2 → Rewrite, Metadata Mapping & Export
+- Add Letta rewrite agent and collaborative editor interface for content rewriting
+- Enable metadata mapping and validation workflow with editor attribution tracking
+- Enable export process with complete audit trail and deliver functional end-to-end demo  
 
 ---
 
 ## 🧩 Core User Stories
 
-- **As a content manager**, I can import data files so that the editorial team can process them.  
-- **As an editor**, I can view AI-sorted data to focus on relevant content.  
-- **As an editor**, I can review AI rewrites and accept or modify them.  
-- **As a reviewer**, I can approve and export validated versions for publication.  
-- **As a team lead**, I can monitor progress across all stages (import, sort, rewrite, export).
+- **As a system operator**, I can ingest data from RCO API streams and config files so that the editorial team has clean, normalized input data.
+- **As an editor**, I can review AI quality assessments and flags so that I can quickly identify which content is ready for editorial work.
+- **As an editor**, I can review AI rewrites and accept or modify them so that I can produce clear, accessible content faster.
+- **As an editor**, I can discuss content rewrites with an AI chatbot and iteratively refine the output through conversation so that I can achieve the exact tone and clarity I need.
+- **As an editor**, I can manage the publication state of content items (draft, published, archived) so that I can control when content becomes visible and manage the lifecycle of published items.
+- **As an editor**, I can validate and map document metadata (pricing, dates, public status, related structures) before publishing.
+- **As a reviewer**, I can approve and export validated versions with complete metadata and audit trail for publication.
+- **As a team lead**, I can monitor progress across all stages (ingestion, quality gating, rewrite, metadata mapping, export) with analytics.
 
 ---
 
@@ -113,9 +167,27 @@ All interactions between AI and humans are **logged and auditable**.
 
 | Phase | Milestone | Description |
 |--------|------------|-------------|
-| **POC** | MVP prototype | Basic end-to-end functionality |
-| **MVP 1** | Improved UX + collaboration | Real-time validation and feedback |
-| **MVP 2** | Integration | Connected to Refugies.info publishing system |
+| **POC** | MVP prototype | Basic end-to-end functionality (French only) | Auth (Sprint 2) |
+| **MVP 1** | Improved UX + collaboration | Real-time validation and feedback (French only) |
+| **MVP 2** | Integration | Connected to Refugies.info publishing system (French only) |
+| **V1** | Production-ready | Comprehensive testing, monitoring, optimization (French only) |
+| **V2** | Multi-language support | Translation workflows, revision-based translation, AI translator agent |
+
+### Translation Architecture (V2+)
+
+While POC/MVP/V1 focus on single-language (French) editorial workflows, the system is architected to support multi-language translation:
+
+- **French (fr)** is the source of truth for all content
+- **Revision-based translation**: Translators work from specific source revisions, not live content
+- **Translator workflows** (V2):
+  - View source revision with full context and translation history
+  - Create new translation version from specific source revision
+  - See what has already been translated for this source revision
+  - Access AI-assisted translation suggestions via Letta translator agent
+  - Publish translated version for target language independently
+- **Letta translator agent** provides iterative translation refinement with context awareness
+- **Translation requires explicit approval** (no auto-publish)
+- **Translation history** is queryable for analytics and consistency tracking
 
 ---
 
