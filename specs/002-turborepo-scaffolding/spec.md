@@ -3,7 +3,7 @@
 **Feature Branch**: `002-turborepo-scaffolding`  
 **Created**: 2025-11-18  
 **Status**: Draft  
-**Constitution Version**: v1.4.0 (Simplified for 2-person team)  
+**Constitution Version**: v1.4.1 (Simplified for 2-person team)  
 **Input**: User description: "POC Sprint 0: Turborepo + scaffolding - Initialize monorepo with 2 workspaces, set up Next.js frontend scaffold with Tailwind + shadcn/ui, define shared types, and design Supabase schema. Letta agents and Supabase Auth integration deferred to Sprint 1."
 
 ## Clarifications
@@ -76,10 +76,10 @@ As a frontend developer, I need to initialize a Next.js app (latest version, app
 
 **Acceptance Scenarios**:
 
-1. **Given** Next.js app is initialized in `/apps/frontend`, **When** running `npm run dev`, **Then** frontend server starts on localhost without errors
+1. **Given** Next.js app is initialized in `/apps/frontend`, **When** running `pnpm dev`, **Then** frontend server starts on localhost without errors
 2. **Given** Tailwind CSS V4 is configured, **When** checking CSS output, **Then** styles are compiled from CSS imports (no config file)
 3. **Given** shadcn is configured, **When** running `npx shadcn-ui add button`, **Then** component is installed successfully and can be imported
-4. **Given** frontend app is built, **When** running `npm run build`, **Then** production build completes without errors
+4. **Given** frontend app is built, **When** running `pnpm build`, **Then** production build completes without errors
 
 ### Edge Cases
 
