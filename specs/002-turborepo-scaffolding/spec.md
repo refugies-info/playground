@@ -16,6 +16,9 @@
 - **Q: Should we simplify the Constitution for a 2-person POC team?**
   - **A**: Yes. Constitution updated to v1.4.0 with simplified principles: (1) Manual CSV/JSON ingestion only (no automatic API triggering), (2) Two-stage workflow (Ingest + Sort), (3) Single Letta classifier agent, (4) Minimal audit trail, (5) 2-workspace monorepo, (6) Manual testing only, (7) French-only content. Rationale: Reduces scope and complexity, enables rapid iteration, defers multi-stage workflow and advanced features to Sprint 2+ based on learnings.
 
+- **Q: Do we need `/packages/letta-tools` workspace in Sprint 1?**
+  - **A**: No. Letta tools created directly in Letta Cloud UI for Sprint 1. Frontend calls Letta REST API. Defer `/packages/letta-tools` to MVP phase when patterns stabilize. Rationale: Keeps Sprint 1 minimal, avoids premature abstraction, allows learning before committing to tool structure.
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--
@@ -53,11 +56,11 @@ As a developer, I need to install monorepo dependencies and verify that all work
 
 **Why this priority**: Validates monorepo is functional before other teams begin work on Supabase, Letta, and frontend features.
 
-**Independent Test**: Can be fully tested by running `npm install` (or yarn), then `turbo build`, and verifying all workspaces compile without errors.
+**Independent Test**: Can be fully tested by running `pnpm install`, then `turbo build`, and verifying all workspaces compile without errors.
 
 **Acceptance Scenarios**:
 
-1. **Given** a fresh clone of the repository, **When** running `npm install`, **Then** all dependencies resolve without conflicts
+1. **Given** a fresh clone of the repository, **When** running `pnpm install`, **Then** all dependencies resolve without conflicts
 2. **Given** dependencies are installed, **When** running `turbo build`, **Then** all workspaces build successfully
 3. **Given** build completes, **When** checking workspace outputs, **Then** each workspace has valid build artifacts
 
@@ -115,6 +118,12 @@ As a frontend developer, I need to initialize a Next.js app (latest version, app
 - **FR-012**: System MUST initialize `/packages/shared` with core TypeScript types (User, ContentItem, ContentRevision, ContentFlag, MetadataMapping)
 - **FR-013**: System MUST export types for use by frontend and backend teams
 
+#### Supabase Integration
+
+- **FR-014**: System MUST initialize Supabase client in `/apps/frontend/lib/supabase.ts` with anon and service role keys
+- **FR-015**: System MUST configure environment variables (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY)
+- **FR-016**: System MUST export both `supabaseClient` (for reads via anon key) and `supabaseServer` (for writes/API routes via service role key)
+
 ### Key Entities
 
 - **Workspace**: A package or application within the monorepo (e.g., `/apps/frontend`, `/packages/shared`), with its own `package.json` and build configuration
@@ -124,18 +133,21 @@ As a frontend developer, I need to initialize a Next.js app (latest version, app
 ### Measurable Outcomes
 
 - **SC-001**: Monorepo initialization completes in under 5 minutes with all workspaces properly configured
-- **SC-002**: `npm install` resolves all dependencies without conflicts
+- **SC-002**: `pnpm install` resolves all dependencies without conflicts
 - **SC-003**: `turbo build` completes successfully for all workspaces in under 2 minutes
 - **SC-004**: `turbo dev` starts all development servers without port conflicts
 - **SC-005**: New developers can clone and build the monorepo in under 10 minutes following README instructions
-- **SC-006**: Next.js frontend dev server starts in under 5 seconds from `npm run dev`
+- **SC-006**: Next.js frontend dev server starts in under 5 seconds from `pnpm dev`
 - **SC-007**: Tailwind CSS compiles all styles without requiring a config file
-- **SC-008**: shadcn CLI can install components with a single command (`npx shadcn-ui add [component]`)
+- **SC-008**: shadcn CLI can install components with a single command (`pnpm dlx shadcn-ui add [component]`)
 - **SC-009**: Next.js production build completes successfully with no warnings or errors
+- **SC-010**: Supabase client initializes without errors when environment variables are configured
+- **SC-011**: Both `supabaseClient` and `supabaseServer` can be imported from `/apps/frontend/lib/supabase.ts`
+- **SC-012**: Environment variables are properly loaded from `.env.local` file
 
 ## Assumptions
 
-- Node.js 18+ and npm/yarn are installed on all developer machines
+- Node.js 18+ and pnpm are installed on all developer machines
 - Developers have basic Git knowledge for cloning and branching
 - Turborepo is the chosen monorepo tool (already decided in tech stack)
 - Next.js latest version supports app router (current standard)
@@ -143,10 +155,12 @@ As a frontend developer, I need to initialize a Next.js app (latest version, app
 - shadcn CLI is compatible with Next.js app router
 - Team structure: 2 developers (Luis: backend/database, Jeremie: frontend)
 - Backend code and database migrations can live outside Turborepo workspaces for Sprint 1
+- Supabase project is provisioned and accessible (created during Sprint 0 bootstrap)
+- Supabase API keys (anon and service role) are available for configuration
 
 ## Dependencies & Constraints
 
-- **External Dependencies**: Turborepo, Node.js, npm/yarn, Next.js, Tailwind CSS V4, shadcn/ui
+- **External Dependencies**: Turborepo, Node.js, pnpm, Next.js, Tailwind CSS V4, shadcn/ui, @supabase/supabase-js
 - **Constraint**: POC phase explicitly excludes automated tests (manual testing only per Constitution v1.4.0)
 - **Constraint**: POC phase minimizes documentation (code comments only, no detailed .md files beyond setup)
 - **Constraint**: Monorepo structure is foundational—no feature code, only empty workspace scaffolding

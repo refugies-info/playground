@@ -211,15 +211,15 @@ Defines build tasks and caching strategy:
 
 ```bash
 # Build all workspaces
-npm run build
+pnpm build
 turbo build
 
 # Start development servers
-npm run dev
+pnpm dev
 turbo dev
 
 # Lint all workspaces
-npm run lint
+pnpm lint
 turbo lint
 
 # Run specific workspace
@@ -265,8 +265,8 @@ Before Sprint 1 development begins, complete the following setup tasks:
 - ✅ Configure Vercel project (optional for Sprint 1, required for Sprint 2)
 
 **Local Development Environment**:
-- ✅ Install Node.js 18+ and npm/yarn
-- ✅ Clone repository and run `npm install`
+- ✅ Install Node.js 18+ and pnpm
+- ✅ Clone repository and run `pnpm install`
 - ✅ Verify `turbo build` completes successfully
 - ✅ Verify `turbo dev` starts without errors
 
@@ -287,6 +287,153 @@ Before Sprint 1 development begins, complete the following setup tasks:
 
 ---
 
+## Supabase Integration Pattern (Hybrid Approach)
+
+Sprint 0-1 uses a **hybrid approach** for optimal balance between simplicity and security:
+
+### Architecture
+
+**Direct Supabase Client** (for reads):
+- Frontend imports `@supabase/supabase-js`
+- Direct queries for lists, views, searches
+- Protected by Supabase RLS policies
+- Fast, no extra network hop
+
+**API Routes** (for writes and Letta calls):
+- `/api/content/*` - Create/update/delete operations
+- `/api/classify` - Letta classifier calls
+- `/api/flags` - Flag management
+- Uses service role key (server-side only)
+- Secure, auditable
+
+### Setup
+
+**1. Environment Variables** (`apps/frontend/.env.local`):
+
+```bash
+# Public (safe to expose to browser)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
+
+# Private (server-side only)
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...
+```
+
+**2. Supabase Client** (`apps/frontend/lib/supabase.ts`):
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+// Client for reads (uses anon key)
+export const supabaseClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+// Server-side client (uses service role key)
+export const supabaseServer = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+```
+
+**3. Read Example** (`apps/frontend/app/page.tsx`):
+
+```typescript
+'use client';
+import { supabaseClient } from '@/lib/supabase';
+
+export default function ContentList() {
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    // Direct Supabase read (protected by RLS)
+    supabaseClient
+      .from('content_items')
+      .select('*')
+      .eq('language_code', 'fr')
+      .then(({ data }) => setItems(data || []));
+  }, []);
+
+  return <div>{items.map(item => <div key={item.id}>{item.original_text}</div>)}</div>;
+}
+```
+
+**4. Write Example** (`apps/frontend/app/api/content/route.ts`):
+
+```typescript
+import { supabaseServer } from '@/lib/supabase';
+
+export async function POST(request: Request) {
+  const body = await request.json();
+
+  // Server-side write (uses service role key)
+  const { data, error } = await supabaseServer
+    .from('content_items')
+    .insert([
+      {
+        original_text: body.text,
+        language_code: 'fr',
+        source_system: 'manual_upload',
+        source_record_id: body.id,
+        created_by: body.userId,
+      },
+    ])
+    .select();
+
+  if (error) return Response.json({ error: error.message }, { status: 400 });
+  return Response.json(data);
+}
+```
+
+**5. Letta Call Example** (`apps/frontend/app/api/classify/route.ts`):
+
+```typescript
+import { supabaseServer } from '@/lib/supabase';
+
+export async function POST(request: Request) {
+  const { contentId } = await request.json();
+
+  // Read content from Supabase
+  const { data: content } = await supabaseServer
+    .from('content_items')
+    .select('*')
+    .eq('id', contentId)
+    .single();
+
+  // Call Letta classifier (Sprint 1+)
+  const response = await fetch('https://api.letta.com/v1/agents/classifier/run', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${process.env.LETTA_API_KEY}` },
+    body: JSON.stringify({ content: content.original_text }),
+  });
+
+  const { flag_status, reasoning } = await response.json();
+
+  // Write flag to Supabase
+  await supabaseServer
+    .from('content_flags')
+    .insert([
+      {
+        content_id: contentId,
+        flag_status,
+        ai_reasoning: reasoning,
+      },
+    ]);
+
+  return Response.json({ flag_status, reasoning });
+}
+```
+
+### Security Notes
+
+- **RLS Policies**: Supabase RLS protects direct reads (anon key can only see own data)
+- **Service Role Key**: Never expose in frontend code, only in API routes
+- **API Routes**: Always validate input and check user permissions
+- **Audit Trail**: All writes via API routes are logged with user attribution
+
+---
+
 ## Development Workflow
 
 ### For Jeremie (Frontend)
@@ -294,7 +441,7 @@ Before Sprint 1 development begins, complete the following setup tasks:
 1. **Start development server**:
 
    ```bash
-   npm run dev
+   pnpm dev
    # Frontend runs on http://localhost:3000
    ```
 
@@ -302,8 +449,8 @@ Before Sprint 1 development begins, complete the following setup tasks:
 
    ```bash
    cd apps/frontend
-   npx shadcn-ui add button
-   npx shadcn-ui add input
+   pnpm dlx shadcn-ui add button
+   pnpm dlx shadcn-ui add input
    ```
 
 3. **Import shared types**:
@@ -327,7 +474,7 @@ Before Sprint 1 development begins, complete the following setup tasks:
 5. **Build for production**:
 
    ```bash
-   npm run build
+   pnpm build
    ```
 
 ### For Luis (Backend & Letta)
@@ -337,8 +484,8 @@ Before Sprint 1 development begins, complete the following setup tasks:
    - Include content_items, content_flags, users tables
    - Test locally with Supabase CLI
 
-2. **Develop Letta classifier agent** (Sprint 2+):
-   - Define agent in `/apps/backend` (deferred to Sprint 2)
+2. **Develop Letta classifier agent** (Sprint 1+):
+   - Create agent configuration in Letta Cloud (not in repo)
    - Create custom tools wrapping Supabase Client
    - Deploy to Letta Cloud
 
@@ -352,10 +499,6 @@ Before Sprint 1 development begins, complete the following setup tasks:
    - Export from `/packages/shared/src/index.ts`
    - Ensure types match database schema
 
-5. **Coordinate with frontend**:
-   - Communicate Letta REST API endpoints
-   - Agree on request/response formats
-   - Share AI reasoning format for UI display
 
 ## Sprint 1 Exit Criteria
 
@@ -376,12 +519,9 @@ Once Ingest + Sort is validated with real users, the monorepo expands to support
 ```text
 content-playground/
 ├── apps/
-│   ├── frontend/                 # Existing (enhanced with Ingest UI)
-│   └── backend/                  # NEW: Letta agent definitions
+│   └── frontend/                 # Existing (enhanced with Ingest UI + Letta integration)
 ├── packages/
-│   ├── shared/                   # Existing (expanded types)
-│   ├── letta-tools/              # NEW: Custom Letta tools for Supabase
-│   └── supabase-client/          # NEW: Database client wrapper (optional)
+│   └── shared/                   # Existing (expanded types)
 ├── migrations/                   # Existing (RLS policies, indexes added)
 └── ...
 ```
@@ -389,16 +529,17 @@ content-playground/
 ### Sprint 2 Additions
 
 **Luis (Backend & Letta)**:
-- **`/apps/backend`**: Letta classifier agent definition + REST API server
-- **`/packages/letta-tools`**: Custom tools wrapping Supabase Client for data access
 - **`/migrations`**: Add RLS policies, indexes, and Supabase Auth schema
 - Deploy classifier agent to Letta Cloud
+- Create Letta classifier agent configuration (stored in Letta Cloud, not in repo)
+- Create custom Letta tools directly in Letta Cloud UI (no repo code for Sprint 1)
 
 **Jeremie (Frontend)**:
 - Add Ingest UI (CSV/JSON upload form)
 - Add Sort UI (flag review, manual override interface)
-- Integrate Letta classifier REST API calls
+- Integrate Letta classifier REST API calls from frontend
 - Display AI reasoning and enable editor overrides
+- Handle all Letta agent orchestration from frontend app
 
 **Both**:
 - Define Letta REST API contract (endpoints, request/response formats)
@@ -420,7 +561,7 @@ content-playground/
 ```bash
 # Clear node_modules and reinstall
 rm -rf node_modules
-npm install
+pnpm install
 ```
 
 ### Turborepo cache issues
@@ -429,7 +570,7 @@ npm install
 # Clear Turborepo cache
 turbo prune --docker
 rm -rf .turbo
-npm run build
+pnpm build
 ```
 
 ### Port conflicts

@@ -14,9 +14,9 @@ Sync Impact Report (v1.3.4):
 
 **Project Name**: Content Playground  
 **Organization**: Refugies.info  
-**Version**: 1.4.0  
+**Version**: 1.4.1  
 **Ratification Date**: 2025-11-12  
-**Last Amended**: 2025-11-18  
+**Last Amended**: 2025-11-19  
 **POC Team Size**: 2 developers (Luis: backend/database, Jeremie: frontend)
 
 ---
@@ -149,11 +149,12 @@ This constitution applies to:
 **Implementation Requirements (POC)**:
 
 - **Workspaces**: `/apps/frontend` (Next.js), `/packages/shared` (TypeScript types).
-- **Non-Workspace**: `/migrations` folder for Supabase schema (Luis).
-- **Backend Code**: Letta agent definitions and custom tools deferred to Sprint 2 (`/apps/backend`).
-- **Database Access**: Direct Supabase Client with SQL queries (no ORM).
+- **Non-Workspace**: `/migrations` folder for Supabase schema design (deferred to Sprint 1).
+- **Package Manager**: pnpm for all dependency management and task execution.
+- **Supabase Integration**: Supabase client initialized in `/apps/frontend/lib/supabase.ts` with anon and service role keys. Direct Supabase queries via client (no ORM). Database schema creation and RLS policies deferred to Sprint 1.
+- **Letta Integration**: Letta agents and tools configured in Letta Cloud (not in repo). Frontend app handles all Letta orchestration via REST API.
 - **Frontend UI**: Tailwind CSS v4 + shadcn/ui (Radix UI primitives) for accessibility.
-- **Deferred to Sprint 2**: `/apps/backend`, `/packages/supabase-client`, `/packages/letta-tools` workspaces.
+- **Deferred to MVP**: `/packages/letta-tools` workspace for versioned custom Letta tools (if needed after patterns stabilize).
 
 ---
 
@@ -319,10 +320,12 @@ This constitution was ratified on **2025-11-12** by the Content Playground proje
 
 **Amendment (v1.4.0)** on **2025-11-18**: Simplified Constitution for 2-person POC team (Luis + Jeremie). Principle 2 (Data Ingestion): Manual CSV/JSON upload only, no automatic API triggering. Principle 3 (Workflow): Two-stage POC (Ingest + Sort), defer Rewrite/Metadata/Publish to Sprint 2. Principle 4 (Letta): Single classifier agent only, defer rewriter/translator to Sprint 2. Principle 5 (Audit): Minimal audit trail (content_items + content_flags tables), defer comprehensive audit tables to MVP. Principle 6 (Monorepo): 2 workspaces (`/apps/frontend`, `/packages/shared`) + `/migrations` folder, defer `/apps/backend` and `/packages/letta-tools` to Sprint 2. Principle 7 (Pragmatism): Focus on Ingest + Sort validation, skip CI/CD and comprehensive testing. Principle 8 (Revision): Defer to Sprint 2 when Rewrite stage is added. Principle 9 (Multi-Language): French-only POC with `language_code` column for future expansion. Rationale: Reduce scope and complexity for small team, enable rapid iteration, defer multi-stage workflow and advanced features to Sprint 2+ based on learnings.
 
+**Amendment (v1.4.1)** on **2025-11-19**: Updated Principle 6 to explicitly include Supabase client setup in Sprint 0 (`lib/supabase.ts` with anon and service role keys). Added pnpm as required package manager. Clarified database schema creation and RLS policies deferred to Sprint 1. Removed `/apps/backend` workspace entirely (Letta agents configured in Letta Cloud). Deferred `/packages/letta-tools` to MVP phase. Rationale: Supabase client setup is foundational for frontend development; database schema is Luis's responsibility in Sprint 1.
+
 **Signed**:  
 Jeremie (Developer)
 SpecKit AI Assistant (Constitution Author)
 
 ---
 
-## End of Constitution v1.4.0
+## End of Constitution v1.4.1
