@@ -1,0 +1,17 @@
+{
+  "workspaces": {
+    "packages/shared": {
+      "entry": ["index.ts"],
+      "project": ["**/*.ts"]
+    },
+    "apps/frontend": {
+      "entry": [
+        "src/app/layout.tsx",
+        "src/app/page.tsx",
+        "src/lib/supabase.ts"
+      ],
+      "project": ["src/**/*.ts", "src/**/*.tsx"]
+    }
+  },
+  "ignore": ["node_modules", "dist", "build", ".next", "coverage", ".turbo"]
+}
