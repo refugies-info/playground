@@ -14,9 +14,10 @@ Sync Impact Report (v1.3.4):
 
 **Project Name**: Content Playground  
 **Organization**: Refugies.info  
-**Version**: 1.3.4  
+**Version**: 1.4.1  
 **Ratification Date**: 2025-11-12  
-**Last Amended**: 2025-11-18
+**Last Amended**: 2025-11-19  
+**POC Team Size**: 2 developers (Luis: backend/database, Jeremie: frontend)
 
 ---
 
@@ -67,188 +68,143 @@ This constitution applies to:
 
 ---
 
-### Principle 2: Unified Data Ingestion & Normalization Pipeline with Multiple Source Types
+### Principle 2: Data Ingestion & Quality Gating (POC Simplified)
 
-**Rule**: The system MUST include a unified data ingestion pipeline that converts heterogeneous upstream sources into a normalized relational representation that AI workflows, editors, and Supabase tooling can rely on. **POC sources**: automated API streams (RCO) and config file-based manual sources. **MVP+ sources**: file uploads (JSON/CSV), web forms, and future sources. Automated sources MUST be triggered automatically when new or updated data is detected at the source. All ingested data MUST be normalized through the same relational schema with unified provenance tracking. Letta AI agents MUST automatically assess quality and flag newly ingested content items without requiring manual intervention.
+**Rule**: The system MUST include a data ingestion pipeline that normalizes content into Supabase and automatically assesses quality via Letta classifier. **POC scope**: Manual CSV/JSON upload only (no automatic API triggering). Single source (RCO) for POC. All ingested data MUST be normalized with provenance tracking. Letta classifier MUST automatically flag quality on ingestion.
 
-**Rationale**: AI workflows only add value if upstream data is trustworthy, deduplicated, and aligned with the relational schema, regardless of source type. A unified ingestion process that handles both automated and manual sources prevents downstream chaos, maintains consistent provenance, and keeps Supabase ready for multi-source expansion. Automatic triggering and AI-driven quality gating eliminate manual bottlenecks and ensure rapid, consistent processing of incoming data from any source.
+**Rationale**: POC goal is to validate the Ingest + Sort workflow with real users. Keeping ingestion simple (manual upload) reduces complexity and lets Luis focus on Letta quality gating. Multi-source expansion and automatic triggering deferred to MVP. Provenance tracking ensures audit trail and enables future expansion.
 
-**Implementation Requirements**:
+**Implementation Requirements (POC)**:
 
-- **POC - Automated Sources**: Deliver at least one end-to-end ingestion job for the initial automated source (RCO API stream) that extracts raw data, validates fields, normalizes records into Supabase tables, and logs provenance. Ingestion job MUST be triggered automatically when new RCO data is detected (polling, CRON, or webhook, TBD...).
-- **POC - Manual Sources**: System MUST load data source configurations from YAML/JSON config files (e.g., `/config/sources.yaml`). Config files MUST define source connection parameters, field mappings, and validation rules. Manual ingestion via config files MUST normalize data through the same schema and provenance tracking as automated sources (source = "config_file", source_record_id = config source ID + record ID).
-- **Unified Normalization**: All ingested data (from any source type) MUST be normalized into a unified relational structure with consistent `source_system`, `source_record_id`, and ingestion timestamp fields for audit trail and AI context.
-- **Automatic AI quality gating**: Upon successful ingestion from any source, Letta classifier agent MUST automatically analyze newly ingested content items to: (1) assess data quality and completeness to determine if content is suitable for downstream editorial workflow; (2) generate suggested tags, categories, and quality scores; (3) flag items as "accepted" (sufficient quality to proceed) or "rejected" (insufficient quality, requires source remediation). System MUST store AI reasoning/justification for each flag decision. Results MUST be stored as "pending" flags for human review. Editors MUST be able to view AI reasoning, accept/reject flags, and manually re-flag items with their own justification.
-- **Multi-source readiness**: Design ingestion contracts so additional sources (DI, future providers, new file formats) plug into the same pipeline without rewriting downstream logic; every record MUST persist `source_system`, `source_record_id`, and ingestion timestamps.
-- Supabase schema MUST remain relational yet flexible: use lookup tables/JSON columns only when necessary, and document how each entity maps back to raw source structures.
-- Ingestion jobs MUST support incremental updates, deduplication, and idempotent re-runs (no duplicate rows on retries).
-- Pipeline MUST surface validation errors with actionable logs/metrics so editors know when a source failed to import.
-- Provenance data MUST be available to Letta agents so AI-generated suggestions can reference origin context.
-- New sources MUST include connector-specific sanity checks before being marked production-ready.
-- **MVP Phase (post POC)**: Ingestion pipeline MUST handle already-imported but updated content items from any source. When source data is re-ingested with changes, system MUST detect updates (via `source_record_id` and content hash), create new normalized records, and trigger automatic re-classification via Letta. Updated content MUST be marked as "updated" in audit trail with link to prior version for comparison.
+- **POC - Manual Ingestion Only**: Editors upload CSV/JSON files via frontend UI. System normalizes records into Supabase `content_items` table with fields: `id`, `source_system` (always "manual_upload" for POC), `source_record_id`, `original_text`, `language_code` ('fr'), `created_at`, `created_by`.
+- **Unified Normalization**: All ingested data MUST include `source_system`, `source_record_id`, and ingestion timestamp for audit trail.
+- **Automatic AI Quality Gating**: Upon successful ingestion, Letta classifier agent MUST automatically analyze content items to: (1) assess data quality/completeness; (2) flag items as "accepted" (proceed to Sort) or "rejected" (needs remediation). System MUST store AI reasoning. Results stored as `content_flags` table with: `id`, `content_id`, `flag_status` (accepted/rejected), `ai_reasoning`, `created_at`.
+- **Editor Review**: Editors MUST be able to view AI flags, reasoning, and manually override flags with justification.
+- **Deferred to MVP**: Automatic API triggering (RCO, DI), config file sources, multi-source expansion, incremental updates, re-classification of updated content.
 
 ---
 
-### Principle 3: Workflow Stage Independence
-
-**Rule**: Each workflow stage (Ingest, Sort, Rewrite, Check metadata, Save, Publish) MUST function as an independently testable and deployable unit. User stories MUST be prioritized (P0-P7) and each MUST deliver standalone value. Content lifecycle management (draft/published/archived states) is a cross-cutting concern orthogonal to workflow stages.
-
-**Rationale**: Enables incremental delivery, parallel development, and early validation. Teams can ship Ingest + Sort as MVP1 without waiting for Rewrite completion, then layer metadata checks, save, and publish gates progressively. Reduces risk and accelerates feedback loops. Content lifecycle states provide editors with flexible control independent of workflow progression.
-
-**Implementation Requirements**:
-
-- Database schema MUST support partial workflow completion (e.g., items can be ingested and quality-gated without rewrite)
-- Content lifecycle states (draft/published/archived) MUST be independent of workflow stage (editors can save draft at any stage, publish when ready)
-- API contracts MUST be versioned per stage
-- Each stage MUST have independent test suites
-- Feature specs MUST define acceptance criteria per user story, not per entire feature
-- Tasks MUST be organized by user story to enable independent implementation
+**MVP Phase (post POC)**:
+- Add RCO API stream with automatic polling/webhook triggering
+- Add config file-based manual sources (YAML/JSON)
+- Add file upload (CSV/JSON) via web form
+- Handle already-imported but updated content with change detection and re-classification
 
 ---
 
-### Principle 4: Letta-First AI Orchestration with Custom Tools
+### Principle 3: Two-Stage POC Workflow (Simplified)
 
-**Rule**: All AI logic, task delegation, and conversational workflows MUST be implemented using Letta agents. Direct LLM API calls (OpenAI, Anthropic, etc.) are prohibited except within Letta agent definitions. Supabase access MUST use custom Letta tools that wrap direct SQL queries, not external MCP servers.
+**Rule**: POC MUST focus on two workflow stages: (1) **Ingest** (manual CSV/JSON upload), (2) **Sort** (Letta classifier quality gating). Rewrite, metadata mapping, save, and publish stages deferred to Sprint 2+. Content lifecycle management (draft/published/archived) is independent of workflow stages.
 
-**Rationale**: Letta provides memory management, multi-agent orchestration, and auditability that raw LLM calls cannot. Custom tools keep the system self-contained and reduce external dependencies while maintaining full control over data access patterns. Direct SQL queries via Supabase Client provide simplicity and performance without ORM abstraction overhead.
+**Rationale**: POC goal is to validate Ingest + Sort with real users in 2 sprints. Limiting scope to 2 stages reduces complexity, lets Luis and Jeremie focus on core AI quality gating, and enables rapid iteration. Deferred stages can be added incrementally in Sprint 2+ without rework.
 
-**Implementation Requirements**:
+**Implementation Requirements (POC)**:
 
-- Define specialized Letta agents: `classifier-agent`, `rewrite-agent`, `validator-agent`
-- Use Letta's memory system for context persistence across user sessions
-- Letta agents MUST support multi-turn conversational refinement, allowing editors to iteratively request adjustments (e.g., "make it more formal", "simplify terminology") and receive AI suggestions in real-time
-- Conversational refinement MUST track all iterations as separate versions with editor request and AI response for audit trail
-- Implementation Requirements MUST be articulated at CRUD granularity for every core domain entity (courses, sessions, providers, and similar catalog entities) so engineers can translate requirements directly into Supabase tables and Letta tools
-- Create custom Letta tools that wrap Supabase Client for CRUD operations (read, write, update, delete) across those entities
-- Custom tools MUST execute direct SQL queries for performance and control
-- Custom tools MUST enforce row-level security and audit logging
-- Frontend MUST communicate with Letta via REST API, not directly with LLMs
-- Agent prompts and configurations MUST be version-controlled in repository
+- **Stage 1 - Ingest**: Editors upload CSV/JSON files. System normalizes into `content_items` table with provenance.
+- **Stage 2 - Sort**: Letta classifier automatically flags quality. Editors review flags and can manually override.
+- **Deferred to Sprint 2**: Rewrite (AI-assisted content refinement), Metadata mapping (editor validation), Save (draft/published states), Publish (export).
+- Database schema MUST support partial workflow (items can be ingested and flagged without rewrite).
+- Content lifecycle states (draft/published) can be added in Sprint 2 independently of workflow stages.
 
 ---
 
-### Principle 5: Data Auditability and Traceability
+### Principle 4: Letta Classifier Agent (POC Simplified)
 
-**Rule**: Every AI action, human edit, and state transition MUST be logged with timestamp, user attribution, and version history. Content lineage from import to export MUST be traceable.
+**Rule**: POC MUST use one Letta agent: `classifier-agent` for quality gating. Direct LLM API calls prohibited. Custom Letta tools wrap Supabase Client for data access.
 
-**Rationale**: Editorial workflows require accountability for legal, quality, and operational reasons. Audit trails enable debugging, compliance reporting, and understanding how content evolved.
+**Rationale**: POC focuses on Ingest + Sort. Single classifier agent is sufficient. Multi-agent orchestration (rewriter, translator) deferred to Sprint 2+. Custom tools keep system self-contained and provide full control over data access.
 
-**Implementation Requirements**:
+**Implementation Requirements (POC)**:
 
-- Database MUST include audit tables: `content_history`, `ai_actions_log`, `editor_actions_log`
-- Every content mutation MUST record: `action_type`, `actor_id` (human or agent), `timestamp`, `previous_state`, `new_state`
-- UI MUST display version history and diff views for editors
-- Export stage MUST include metadata: original source, AI modifications, human approvals
-- Logs MUST be queryable for analytics (e.g., "How often are AI rewrites accepted without edits?")
-
----
-
-### Principle 6: Monorepo Simplicity with Clear Boundaries
-
-**Rule**: Use a Turborepo-based monorepo structure with clear separation between frontend (Next.js), backend (Letta + custom tools), and shared types. Avoid microservices, separate repositories, or over-engineered abstractions during POC and MVP phases. Database access MUST use direct Supabase queries (no ORM). Frontend UI MUST use Tailwind CSS v4, Radix UI primitives, and shadcn/ui components.
-
-**Rationale**: Turborepo provides efficient task orchestration, caching, and parallel builds for small teams. Direct SQL queries eliminate ORM abstraction overhead and provide full control over data access patterns. Tailwind v4 + Radix UI + shadcn/ui provides modern, accessible, and composable UI components with minimal configuration. Clear boundaries prevent tight coupling while maintaining single-repo benefits.
-
-**Implementation Requirements**:
-
-- Repository structure must follow Turborepo standard & best practices
-- Use Turborepo for monorepo task orchestration and caching
-- Database queries MUST use Supabase Client with direct SQL (no ORM)
-- Frontend styling MUST use Tailwind CSS v4 for utility-first design
-- Frontend UI components MUST use shadcn/ui (built on Radix UI primitives) for accessibility and composability
-- All interactive components MUST leverage Radix UI's accessible foundations
-- No circular dependencies between packages
+- **Classifier Agent Only**: Deploy single Letta agent to assess content quality/completeness on ingestion. Agent returns: flag_status (accepted/rejected) + reasoning.
+- **Custom Letta Tools**: Create tools that wrap Supabase Client for reading content_items and writing content_flags. Tools execute direct SQL queries.
+- **Tool Security**: Custom tools MUST enforce row-level security and log all queries.
+- **Frontend Integration**: Frontend calls Letta classifier via REST API (not direct LLM calls).
+- **Agent Config**: Agent prompts and configurations version-controlled in `/apps/backend` (deferred to Sprint 2).
+- **Deferred to Sprint 2**: Rewriter agent, translator agent, multi-turn conversational refinement, memory system.
 
 ---
 
-### Principle 7: POC-to-MVP Pragmatism with Staged Authentication
+### Principle 5: Basic Audit Trail (POC Simplified)
 
-**Rule**: Optimize for learning and iteration during POC (1 month, 2 sprints). Avoid premature optimization, complex abstractions, or production-grade infrastructure. Transition to MVP standards only after POC validation. Authentication MUST be Supabase Auth from project kickoff so every environment, even day-one spikes, operates under real user identities.
+**Rule**: POC MUST track basic audit trail: ingestion events and AI flag decisions. Full version history and analytics deferred to MVP.
 
-**Rationale**: POC goal is to validate the full workflow (Ingest → Sort → Rewrite → Check metadata → Save → Publish) with real users. Using Supabase Auth from the start guarantees consistent audit trails, multi-user readiness, and avoids rework replacing placeholder IDs mid-sprint. Over-engineering elsewhere still wastes effort on features that may not survive user testing.
+**Rationale**: POC needs to track who uploaded what and what AI flagged. Comprehensive audit tables and analytics are over-engineered for POC. Can be added in MVP based on learnings.
 
-**Implementation Requirements**:
+**Implementation Requirements (POC)**:
 
-- **POC Phase** (Sprints 1-2):
-  - Use Letta Cloud (hosted) instead of self-hosted Letta
-  - Use Supabase free tier with simple schema (no complex indexing or partitioning)
-  - Hardcode reasonable defaults (e.g., single language, single content type)
-  - **Day 1**: Provision Supabase Auth with editor/reviewer roles and integrate into frontend + Letta tools
-  - Manual deployment to Vercel (no CI/CD required)
-  - Basic UI (functional, not polished)
-  - Direct SQL queries via Supabase Client (no ORM)
-  - **Skip automated tests** (manual testing only) to reduce token costs and development overhead
-  - **Minimize AI documentation** (focus on code comments, not detailed AI docs) to reduce bloat
-  - **DO NOT**: Write complex unit tests, integration test suites, or e2e test frameworks
-  - **DO NOT**: Create overkill .md documentation files for AI agent behaviors, prompts, or memory patterns
-
-- **MVP Phase** (Post-POC):
-  - Implement full role-based access control (editor, reviewer, admin)
-  - Add CI/CD pipeline (GitHub Actions → Vercel)
-  - Optimize database schema based on POC learnings
-  - Polish UI/UX based on user feedback
-  - Add observability (logging, error tracking)
-  - Deploy to Vercel with production configuration
-
-- **V1 Phase** (Post-MVP, production-ready):
-  - **Add comprehensive test suites** (unit, integration, e2e) based on validated patterns
-  - **Document AI agent behaviors** (prompts, memory patterns, tool interactions) with detailed .md files
-  - Implement production-grade monitoring and error handling
-  - Optimize performance based on real usage data
-
-- **Transition Criteria**:
-  - POC → MVP1: Full workflow validated with 3+ real editorial team members using authenticated access
-  - MVP1 → MVP2: 50+ content items processed end-to-end, <5% error rate
-  - MVP → V1: Patterns stable, ready for comprehensive testing and documentation
+- **Minimal Audit**: `content_items` table includes `created_by`, `created_at`, `source_system`, `source_record_id`.
+- **Flag Audit**: `content_flags` table includes `created_at`, `ai_reasoning`, `flag_status`.
+- **Manual Overrides**: Track when editors override AI flags (add `editor_id`, `override_reason` to `content_flags`).
+- **Deferred to MVP**: Comprehensive `content_history` table, `ai_actions_log`, `editor_actions_log`, version diffs, analytics queries.
 
 ---
 
-### Principle 8: Content Revision & Rollback as Core Feature
+### Principle 6: Minimal Monorepo for 2-Person Team (POC)
 
-**Rule**: Every content mutation (AI rewrite, human edit, classification change) MUST create an immutable revision record. Team members MUST be able to view full revision history and rollback to any prior version with a single action.
+**Rule**: POC MUST use 2-workspace Turborepo: `/apps/frontend` (Jeremie) + `/packages/shared` (both). Backend code and migrations live outside workspaces in `/migrations` folder. Expand to full 5-workspace structure in Sprint 2 if needed.
 
-**Rationale**: Editorial workflows are iterative and exploratory. Editors need confidence to experiment knowing they can revert mistakes or compare versions. Revision history also serves as an audit trail for compliance and learning (e.g., "which rewrites do editors typically accept?").
+**Rationale**: 2-person team doesn't need full 5-workspace complexity. Minimal structure reduces overhead, lets Jeremie and Luis focus on core features. Can expand incrementally in Sprint 2.
 
-**Implementation Requirements**:
+**Implementation Requirements (POC)**:
 
-- Database schema MUST include `content_revisions` table with:
-  - `id`, `content_id`, `revision_number`, `created_at`, `created_by`, `action_type` (rewrite, edit, classification)
-  - `previous_state`, `new_state` (full content snapshots or diffs)
-  - `change_summary` (human-readable description of what changed)
-- UI MUST display revision timeline with:
-  - Chronological list of all changes with actor and timestamp
-  - Side-by-side diff view comparing any two revisions
-  - One-click rollback button (with confirmation) to restore prior version
-- Rollback action MUST create a new revision record (not delete history)
-- Revision data MUST be queryable for analytics (e.g., "average revisions per content item")
-- Letta custom tools MUST enforce revision creation on every state change
+- **Workspaces**: `/apps/frontend` (Next.js), `/packages/shared` (TypeScript types).
+- **Non-Workspace**: `/migrations` folder for Supabase schema design (deferred to Sprint 1).
+- **Package Manager**: pnpm for all dependency management and task execution.
+- **Supabase Integration**: Supabase client initialized in `/apps/frontend/lib/supabase.ts` with anon and service role keys. Direct Supabase queries via client (no ORM). Database schema creation and RLS policies deferred to Sprint 1.
+- **Letta Integration**: Letta agents and tools configured in Letta Cloud (not in repo). Frontend app handles all Letta orchestration via REST API.
+- **Frontend UI**: Tailwind CSS v4 + shadcn/ui (Radix UI primitives) for accessibility.
+- **Deferred to MVP**: `/packages/letta-tools` workspace for versioned custom Letta tools (if needed after patterns stabilize).
 
 ---
 
-### Principle 9: Multi-Language & Versioning Database Schema (POC Foundation)
+### Principle 7: POC Pragmatism (2-Sprint Focused)
 
-**Rule**: Database schema MUST be designed from POC phase to support multi-language content and revision versioning, even though translation functionality is deferred to MVP2. French (fr) MUST be the designated source language. Every content item MUST track language and revision metadata to enable future translation workflows without schema migration.
+**Rule**: POC (Sprints 1-2) MUST focus on validating Ingest + Sort workflow with real users. Avoid premature optimization, over-engineering, or production-grade infrastructure. Supabase Auth from day 1 for consistent audit trails.
 
-**Rationale**: Retrofitting multi-language and versioning support after POC requires expensive schema migrations and data rewriting. Designing for these concepts upfront (even if unused during POC) ensures the system can scale to translation workflows seamlessly. French as source of truth prevents cascading translation errors and maintains content integrity across languages.
+**Rationale**: POC goal is to validate 2-stage workflow (Ingest + Sort) with real editorial team. Keep scope tight, iterate fast, learn from users. Multi-stage workflow expansion happens in Sprint 2+.
 
-**Implementation Requirements**:
+**Implementation Requirements (POC)**:
 
-- **POC Phase** (schema design, no translation implementation):
-  - Content tables MUST include `language_code` column (default: 'fr' for French source)
-  - Content tables MUST include `source_revision_id` column (references `content_revisions.id` for translation lineage tracking)
-  - `content_revisions` table MUST include `language_code` column to track which language each revision belongs to
-  - `content_revisions` table MUST include `source_revision_id` column (NULL for source language, set for translations)
-  - Composite unique constraint: `(content_id, language_code, revision_number)` to prevent duplicate revisions per language
-  - Indexes on `(language_code, created_at)` for efficient language-specific queries
-  - Schema documentation MUST explain translation lineage (source revisions → translation revisions)
-  - Letta custom tools MUST enforce language and revision metadata on every content mutation
-  
-- **MVP2 Phase** (translation implementation):
-  - Translator workflows will query `source_revision_id` to identify which source revisions have been translated
-  - Translation history queries will filter by `language_code` and `source_revision_id`
-  - No schema changes required; only new UI and Letta translator agent
-  
-- **Constraint**: POC MUST use `language_code = 'fr'` exclusively; no translation UI or workflows during POC/MVP1
+- **Infrastructure**: Letta Cloud (hosted), Supabase free tier, manual Vercel deployment.
+- **Authentication**: Supabase Auth from day 1 with editor role (skip reviewer/admin for POC).
+- **Database**: Simple schema (no complex indexing), direct SQL queries (no ORM).
+- **UI**: Functional, not polished. Tailwind + shadcn/ui for basic styling.
+- **Testing**: Manual testing only (no automated tests).
+- **Documentation**: Code comments only (no detailed AI docs).
+- **DO NOT**: Complex unit tests, integration suites, e2e frameworks, overkill .md documentation.
+- **Deferred to MVP**: CI/CD, full RBAC, observability, UI polish, comprehensive testing, detailed AI docs.
+
+**Transition Criteria**:
+- POC → Sprint 2: Ingest + Sort validated with 2-person team (Luis + Jeremie)
+- Sprint 2 → MVP: Rewrite + Metadata stages added, 20+ items processed, <5% error rate
+
+---
+
+### Principle 8: Content Revision (Deferred to Sprint 2)
+
+**Rule**: Revision tracking and rollback deferred to Sprint 2+. POC focuses on Ingest + Sort only.
+
+**Rationale**: POC doesn't include Rewrite stage, so revision tracking is not needed yet. Can be added in Sprint 2 when Rewrite is implemented.
+
+**Implementation Requirements (POC)**:
+
+- **Deferred**: `content_revisions` table, revision timeline UI, rollback functionality, revision analytics.
+- **Sprint 2+**: Implement full revision tracking when Rewrite stage is added.
+
+---
+
+### Principle 9: French-Only Content (POC Simplified)
+
+**Rule**: POC uses French (fr) exclusively. Multi-language support deferred to MVP2+. Database schema includes `language_code` column for future expansion but POC uses 'fr' only.
+
+**Rationale**: POC focuses on Ingest + Sort workflow. Single language reduces complexity. Multi-language expansion can be added in MVP2 without schema migration if `language_code` column is present from day 1.
+
+**Implementation Requirements (POC)**:
+
+- **Schema Design**: `content_items` table includes `language_code` column (default: 'fr').
+- **POC Constraint**: All content uses `language_code = 'fr'`. No translation UI or workflows.
+- **Deferred to MVP2**: Multi-language support, translator workflows, translation schema (source_revision_id, translation_revisions table).
 
 ---
 
@@ -362,10 +318,14 @@ This constitution was ratified on **2025-11-12** by the Content Playground proje
 
 **Amendment (v1.3.1)** on **2025-11-17**: Clarified Principle 1 to explicitly mandate content lifecycle state management (draft/published/archived) with human control over state transitions and audit trail tracking. Updated Principle 3 to clarify workflow stages (Ingestion & Import, Quality Gating, Rewrite, Metadata Mapping, Export) and note that content lifecycle management is a cross-cutting concern orthogonal to workflow progression. Updated Principle 4 to add requirement for multi-turn conversational refinement via Letta agents, allowing editors to iteratively request adjustments and receive AI suggestions in real-time, with all iterations tracked for audit trail. Rationale: Two new user stories (P6: AI-Assisted Iterative Refinement via Chatbot, P7: Manage Content Publication States) require explicit constitutional support for content lifecycle and conversational AI capabilities.
 
+**Amendment (v1.4.0)** on **2025-11-18**: Simplified Constitution for 2-person POC team (Luis + Jeremie). Principle 2 (Data Ingestion): Manual CSV/JSON upload only, no automatic API triggering. Principle 3 (Workflow): Two-stage POC (Ingest + Sort), defer Rewrite/Metadata/Publish to Sprint 2. Principle 4 (Letta): Single classifier agent only, defer rewriter/translator to Sprint 2. Principle 5 (Audit): Minimal audit trail (content_items + content_flags tables), defer comprehensive audit tables to MVP. Principle 6 (Monorepo): 2 workspaces (`/apps/frontend`, `/packages/shared`) + `/migrations` folder, defer `/apps/backend` and `/packages/letta-tools` to Sprint 2. Principle 7 (Pragmatism): Focus on Ingest + Sort validation, skip CI/CD and comprehensive testing. Principle 8 (Revision): Defer to Sprint 2 when Rewrite stage is added. Principle 9 (Multi-Language): French-only POC with `language_code` column for future expansion. Rationale: Reduce scope and complexity for small team, enable rapid iteration, defer multi-stage workflow and advanced features to Sprint 2+ based on learnings.
+
+**Amendment (v1.4.1)** on **2025-11-19**: Updated Principle 6 to explicitly include Supabase client setup in Sprint 0 (`lib/supabase.ts` with anon and service role keys). Added pnpm as required package manager. Clarified database schema creation and RLS policies deferred to Sprint 1. Removed `/apps/backend` workspace entirely (Letta agents configured in Letta Cloud). Deferred `/packages/letta-tools` to MVP phase. Rationale: Supabase client setup is foundational for frontend development; database schema is Luis's responsibility in Sprint 1.
+
 **Signed**:  
 Jeremie (Developer)
 SpecKit AI Assistant (Constitution Author)
 
 ---
 
-## End of Constitution v1.3.1
+## End of Constitution v1.4.1
