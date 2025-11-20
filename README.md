@@ -197,6 +197,47 @@ Complete guides and architecture documentation available in the [documentation/]
 
 ---
 
+## 🎨 Component Architecture
+
+This project follows a **design-system-first approach** with clear separation between reusable design system components and page-specific feature components.
+
+- **Design System** (`/packages/ui`): Centralized, reusable UI primitives and components
+- **Feature Components** (`/apps/frontend/src/components`): Page-specific and feature-specific components
+
+For detailed guidelines on component placement, structure, and best practices, see:
+- **Quick Reference** (30 seconds): [Component Quick Reference](./documentation/frontend/component-quick-reference.md)
+- **Comprehensive Guide**: [Component Strategy](./documentation/frontend/component-strategy.md)
+
+---
+
+## 📚 Documentation Strategy
+
+This project maintains comprehensive documentation organized by **tech stack and project domains**, with clear guidelines for LLMs on creating and maintaining documentation.
+
+**Documentation Structure** (`/documentation`):
+- **Frontend** — Next.js, Tailwind CSS, shadcn/ui, component architecture
+- **Database** — Supabase, PostgreSQL, migrations, RLS policies
+- **AI** — Letta Cloud integration, custom tools, agent workflows
+- **Guides** — How-to guides for setup, deployment, development
+- **Architecture** — System design, tech stack, monorepo structure
+- **Reference** — Quick lookup (commands, environment variables, glossary)
+- **Internal** — LLM guidelines and implementation notes
+- **Workflows** — Feature-specific processes
+- **Troubleshooting** — Common issues and solutions
+
+**Key Rules for LLMs**:
+- ✅ Create `.md` files **ONLY** for long-term valuable content
+- ✅ **Always ask permission** before creating documentation
+- ✅ **Strictly respect** the `/documentation` folder structure
+- ❌ No `.md` files at project root or documentation root (except `README.md`)
+- ❌ No `/docs` folder (all documentation goes in `/documentation`)
+
+For detailed guidelines on documentation creation, see [**documentation-strategy.md**](./documentation/internal/documentation-strategy.md).
+
+**Start exploring**: [Documentation Index](./documentation/README.md)
+
+---
+
 ## 🗺️ Roadmap
 
 | Phase | Milestone | Description |

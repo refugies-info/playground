@@ -19,8 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
+      "@/*": ["./*"],
       "@shared": ["../../packages/shared/src"],
+      "@refugies/ui": ["../../packages/ui/src"],
       "@shared/*": ["../../packages/shared/src/*"]
     }
   },
