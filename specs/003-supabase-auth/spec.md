@@ -11,7 +11,7 @@
 ### Session 2025-11-20
 
 - **Q: What is the scope of auth implementation for POC?**
-  - **A**: POC focuses on Supabase Auth integration with role-based access control (RBAC) for three roles: editor, reviewer, admin. Multi-factor authentication (MFA) and social login deferred to MVP. Rationale: Enables core editorial workflow validation with minimal complexity.
+  - **A**: POC focuses on Supabase Auth integration with role-based access control (RBAC) for two roles: editor, admin. Multi-factor authentication (MFA) and social login deferred to MVP. Rationale: Enables core editorial workflow validation with minimal complexity.
 
 - **Q: Should we implement auth in the frontend, backend, or both?**
   - **A**: Both. Frontend handles login/logout UI and session management via Supabase client. Backend (Letta agents) uses service role key for privileged operations. Supabase RLS (Row-Level Security) enforces authorization at database level. Rationale: Aligns with Constitution principle of human-in-the-loop and security-first design.
@@ -36,6 +36,9 @@
 
 - **Q: When should the system check for role changes - on every API request or only on page reload?**
   - **A**: On every API request (Option A). System validates user's current role on each API call. Role changes take effect immediately. Rationale: Most secure approach - prevents privilege escalation if role is downgraded while user is active.
+
+- **Q: Should we implement the REVIEWER role in POC?**
+  - **A**: No. Cancel the REVIEWER role entirely. POC will use only two roles: EDITOR and ADMIN. Rationale: Simplifies implementation and testing. Editorial workflow can be validated with just editors and admins. Reviewer functionality (content approval) can be deferred to MVP or handled by admins. Reduces scope and complexity for POC validation.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -75,20 +78,20 @@ As an editor, I need to sign up with my email and password, verify my email, and
 
 ---
 
-### User Story 2 - Reviewer Reviews Content with Elevated Permissions (Priority: P1)
+### User Story 2 - Admin Manages Users and Roles (Priority: P1)
 
-As a reviewer, I need to log in with my reviewer credentials and access content that editors have submitted for review so that I can approve or reject edits.
+As an admin, I need to create users, assign roles (editor, admin), and manage permissions so that the editorial team can be onboarded and access controlled appropriately.
 
-**Why this priority**: Reviewer role is essential for the editorial workflow. Without reviewer access, content cannot progress through approval stages.
+**Why this priority**: Admin features enable team management and are essential for POC validation. Admins can manage editors and control access.
 
-**Independent Test**: Can be fully tested by verifying reviewer login succeeds, reviewer can view submitted content that editors cannot see, and reviewer can perform review actions (approve/reject).
+**Independent Test**: Can be fully tested by verifying admin can create users, assign roles, and that role-based access control is enforced at the database level.
 
 **Acceptance Scenarios**:
 
-1. **Given** I am a reviewer, **When** I log in, **Then** I see only content submitted for review (not all drafts)
-2. **Given** I am viewing submitted content, **When** I click "Approve", **Then** the content status changes and editors are notified
-3. **Given** I am viewing submitted content, **When** I click "Reject", **Then** the content is returned to editor with feedback
-4. **Given** I am a reviewer, **When** I try to edit content directly, **Then** I am denied access (read-only for reviewers)
+1. **Given** I am an admin, **When** I navigate to the user management page, **Then** I see a list of all users and their roles
+2. **Given** I am an admin, **When** I create a new user and assign the "editor" role, **Then** the user receives an invitation email with temporary password and login link
+3. **Given** I am an admin, **When** I change a user's role from "editor" to "admin", **Then** their permissions are updated immediately
+4. **Given** I am an admin, **When** I deactivate a user, **Then** they can no longer log in
 
 ---
 
@@ -107,25 +110,6 @@ As an editor, I need to sign in with my Google account so that I can quickly acc
 3. **Given** I have previously signed in with Google, **When** I click "Sign in with Google" again, **Then** I am logged in without re-authorizing
 4. **Given** I sign in with Google, **When** I check my profile, **Then** my email and name are populated from my Google account
 5. **Given** I have both email/password and Google accounts linked, **When** I log in via either method, **Then** I access the same account and see my content
-
----
-
-### User Story 4 - Admin Manages Users and Roles (Priority: P2)
-
-As an admin, I need to create users, assign roles (editor, reviewer, admin), and manage permissions so that the editorial team can be onboarded and access controlled appropriately.
-
-**Why this priority**: Admin features enable team management but are not blocking for initial POC validation. Can be tested with manual user creation initially.
-
-**Independent Test**: Can be fully tested by verifying admin can create users, assign roles, and that role-based access control is enforced at the database level.
-
-**Acceptance Scenarios**:
-
-1. **Given** I am an admin, **When** I navigate to the user management page, **Then** I see a list of all users and their roles
-2. **Given** I am an admin, **When** I create a new user and assign the "editor" role, **Then** the user receives an invitation email with temporary password and login link (per clarification Q3)
-3. **Given** I am an admin, **When** I change a user's role from "editor" to "reviewer", **Then** their permissions are updated immediately
-4. **Given** I am an admin, **When** I deactivate a user, **Then** they can no longer log in
-
----
 
 ### Edge Cases
 
@@ -174,11 +158,10 @@ As an admin, I need to create users, assign roles (editor, reviewer, admin), and
 
 #### Authorization & Role-Based Access Control (RBAC)
 
-- **FR-013**: System MUST support three roles: editor, reviewer, admin
+- **FR-013**: System MUST support two roles: editor, admin
 - **FR-014**: System MUST enforce role-based access control at the database level using Supabase RLS policies
-- **FR-015**: System MUST allow editors to create, edit, and submit content for review
-- **FR-016**: System MUST allow reviewers to view submitted content and approve/reject edits
-- **FR-017**: System MUST allow admins to create users, assign roles, and manage permissions
+- **FR-015**: System MUST allow editors to create and edit content
+- **FR-016**: System MUST allow admins to create users, assign roles, and manage permissions
 - **FR-018**: System MUST prevent unauthorized access to protected endpoints and data
 
 #### Session Management
@@ -194,7 +177,7 @@ As an admin, I need to create users, assign roles (editor, reviewer, admin), and
 - **FR-024**: Frontend MUST display "Sign in with Google" button on login/signup pages
 - **FR-025**: Frontend MUST display user profile with logout option and account linking status
 - **FR-026**: Frontend MUST redirect unauthenticated users to login page
-- **FR-027**: Frontend MUST display role-specific UI elements (e.g., "Approve" button only for reviewers)
+- **FR-027**: Frontend MUST display role-specific UI elements (e.g., admin-only user management panel)
 - **FR-028**: Frontend MUST display account linking options (connect/disconnect Google from email account)
 
 #### Backend Integration
@@ -209,11 +192,11 @@ As an admin, I need to create users, assign roles (editor, reviewer, admin), and
 - **SC-001**: Local Supabase environment works: `supabase start` launches successfully, all migrations apply, `supabase db reset` works
 - **SC-002**: Database schema is complete: User, AuthSession, AuditLog, OAuthProvider tables exist with correct columns and foreign keys
 - **SC-003**: RLS policies are enforced: users can only access their own data; admins can access all data; policies prevent unauthorized access
-- **SC-004**: All five user stories (DB setup, email/password signup/login, Google OAuth login, reviewer access, admin management) are independently testable and pass manual testing
+- **SC-004**: All four user stories (DB setup, email/password signup/login, Google OAuth login, admin management) are independently testable and pass manual testing
 - **SC-005**: Email/password authentication flow works end-to-end: signup → verification → login → dashboard access
 - **SC-006**: Google OAuth flow works end-to-end: click button → Google consent → redirect → dashboard access
 - **SC-007**: Account linking works: user can sign up with email, then link Google account; both methods access same account
-- **SC-008**: Role-based access control is enforced: editors cannot access reviewer-only content, reviewers cannot edit content
+- **SC-008**: Role-based access control is enforced: editors cannot access admin-only features, admins have full access
 - **SC-009**: Session management is secure: tokens are stored in HTTP-only cookies, expired tokens are handled gracefully
 - **SC-010**: All authentication events are logged with user ID, action (email_signup, email_login, google_login, account_link), timestamp, and outcome
 - **SC-011**: Password reset flow works end-to-end: user requests reset → email is sent → link is valid for 24 hours → password is updated
@@ -225,7 +208,7 @@ As an admin, I need to create users, assign roles (editor, reviewer, admin), and
 
 - **id** (UUID): Unique identifier (from Supabase Auth)
 - **email** (string): User email address (unique)
-- **role** (enum): One of [editor, reviewer, admin]
+- **role** (enum): One of [editor, admin]
 - **created_at** (timestamp): Account creation time
 - **updated_at** (timestamp): Last profile update
 - **is_active** (boolean): Whether user can log in

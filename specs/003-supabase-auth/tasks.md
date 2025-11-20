@@ -59,15 +59,15 @@ Phase 8 (Polish & Cross-Cutting)
 
 ### Setup Tasks
 
-- [ ] T001 Initialize Supabase project and test connection (verify `.supabase/config.toml` exists and connection works)
-- [ ] T002 Install Supabase CLI locally (`brew install supabase` on macOS, verify `supabase --version` works)
-- [ ] T003 Create `/migrations` directory in project root for SQL migration files
-- [ ] T004 Create `.supabase/config.toml` with local Supabase configuration (database URL, auth settings)
-- [ ] T005 Create `.supabase/seed.sql` with optional seed data for local development (test users, roles)
-- [ ] T006 Add Supabase environment variables to `.env.local` (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY)
-- [ ] T007 Create `.env.example` with template for required environment variables
-- [ ] T008 Update `.gitignore` to exclude `.supabase/` and `.env.local` files
-- [ ] T009 Create `README.md` in `/specs/003-supabase-auth/` with setup instructions and architecture overview
+- [x] T001 Initialize Supabase project and test connection (verify `.supabase/config.toml` exists and connection works)
+- [x] T002 Install Supabase CLI locally (`brew install supabase` on macOS, verify `supabase --version` works)
+- [x] T003 Create `/migrations` directory in project root for SQL migration files
+- [x] T004 Create `.supabase/config.toml` with local Supabase configuration (database URL, auth settings)
+- [x] T005 Create `.supabase/seed.sql` with optional seed data for local development (test users, roles)
+- [x] T006 Add Supabase environment variables to `.env.local` (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY)
+- [x] T007 Create `.env.example` with template for required environment variables
+- [x] T008 Update `.gitignore` to exclude `.supabase/` and `.env.local` files
+- [x] T009 Create `README.md` in `/specs/003-supabase-auth/` with setup instructions and architecture overview
 
 ---
 
@@ -79,39 +79,39 @@ Phase 8 (Polish & Cross-Cutting)
 
 ### Shared Types & Constants
 
-- [ ] T010 [P] Create `/packages/shared/src/types/auth.ts` with TypeScript interfaces:
+- [x] T010 [P] Create `/packages/shared/src/types/auth.ts` with TypeScript interfaces:
   - `User` (id, email, role, created_at, updated_at, is_active)
   - `AuthSession` (id, user_id, token, expires_at, created_at)
   - `OAuthProvider` (id, user_id, provider, provider_user_id, provider_email, created_at, updated_at)
   - `AuthError` (code, message)
 
-- [ ] T011 [P] Create `/packages/shared/src/types/audit.ts` with TypeScript interfaces:
+- [x] T011 [P] Create `/packages/shared/src/types/audit.ts` with TypeScript interfaces:
   - `AuditLog` (id, user_id, action, status, details, created_at)
   - `AuditAction` enum (email_signup, email_login, google_login, logout, password_reset, account_link, account_unlink, role_change)
   - `AuditStatus` enum (success, failure)
 
-- [ ] T012 [P] Create `/packages/shared/src/constants/roles.ts` with role definitions:
-  - `ROLES` constant: { EDITOR: 'editor', REVIEWER: 'reviewer', ADMIN: 'admin' }
+- [x] T012 [P] Create `/packages/shared/src/constants/roles.ts` with role definitions:
+  - `ROLES` constant: { EDITOR: 'editor', ADMIN: 'admin' }
   - `ROLE_PERMISSIONS` mapping (which actions each role can perform)
 
-- [ ] T013 [P] Create `/packages/shared/src/index.ts` to export all types and constants
+- [x] T013 [P] Create `/packages/shared/src/index.ts` to export all types and constants
 
 ### Supabase Client & Auth Utilities
 
-- [ ] T014 Create `/apps/frontend/src/lib/supabase.ts` with Supabase client initialization:
+- [x] T014 Create `/apps/frontend/src/lib/supabase.ts` with Supabase client initialization:
   - Initialize with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
   - Configure cookie options: `httpOnly: true`, `secure: true`, `sameSite: 'lax'`
   - Export client instance for use in frontend
 
-- [ ] T015 Create `/apps/frontend/src/lib/auth.ts` with auth utility functions:
+- [x] T015 Create `/apps/frontend/src/lib/auth.ts` with auth utility functions:
   - `signUp(email, password)` – calls Supabase Auth signup
   - `signIn(email, password)` – calls Supabase Auth login
   - `signOut()` – clears session and logs out
   - `getCurrentUser()` – returns current authenticated user
   - `isAuthenticated()` – returns boolean
-  - `getUserRole()` – returns user's role (editor, reviewer, admin)
+  - `getUserRole()` – returns user's role (editor, admin)
 
-- [ ] T016 Create `/apps/frontend/src/middleware.ts` for route protection:
+- [x] T016 Create `/apps/frontend/src/middleware.ts` for route protection:
   - Middleware to check authentication on protected routes
   - Redirect unauthenticated users to `/login`
   - Attach user info to request for use in pages
@@ -171,7 +171,7 @@ Phase 8 (Polish & Cross-Cutting)
   - Run `supabase db reset` and verify database resets to initial state
 
 - [ ] T022 [US0] Create `.supabase/seed.sql` with test data:
-  - Insert test users (editor, reviewer, admin roles)
+  - Insert test users (editor, admin roles)
   - Insert test OAuth provider records
   - Insert test audit log entries
   - Verify seed data loads on `supabase db reset`

@@ -33,7 +33,7 @@ Each stage is designed to be transparent, auditable, and collaborative — ensur
 
 ## 👥 Target Users
 
-- **Editorial team members** at Refugies.info (writers, translators, reviewers)  
+- **Editorial team members** at Refugies.info (writers, translators)  
 - Goal: reduce repetitive editing tasks while keeping full control over content quality and clarity
 
 ---
@@ -93,7 +93,7 @@ Each stage is designed to be transparent, auditable, and collaborative — ensur
   - `classifier-agent` — assesses data quality and flags items as accepted/rejected with reasoning
   - `rewrite-agent` — generates plain-language rewrites of accepted content
   - `validator-agent` — checks structure, completeness, and metadata before export
-- **Authentication** handled by Supabase Auth with role-based access control (editor, reviewer, admin)
+- **Authentication** handled by Supabase Auth with role-based access control (editor, admin)
 
 All interactions between AI and humans are **logged and auditable** via immutable revision records with full change history, actor attribution, and timestamps.
 
@@ -132,6 +132,40 @@ This design enables seamless scaling to translation workflows in MVP2 without ex
 
 ---
 
+## 🚀 Quick Start: Local Supabase Setup
+
+Get the local development environment running in 3 steps:
+
+```bash
+# 1. Start Supabase
+supabase start
+
+# 2. Configure environment variables
+# Copy credentials from supabase start output to apps/frontend/.env.local
+
+# 3. Access Supabase Studio
+# Open http://127.0.0.1:54323 in your browser
+```
+
+**Full documentation**: See [documentation/supabase.md](./documentation/supabase.md)
+
+**Service URLs**:
+- API: http://127.0.0.1:54321
+- Studio: http://127.0.0.1:54323
+- Database: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+
+---
+
+## 📚 Documentation
+
+Complete guides and architecture documentation available in the [documentation/](./documentation/) directory:
+
+- **[Supabase Local Development](./documentation/supabase.md)** — Setup, configuration, migrations, troubleshooting
+- **[Documentation Index](./documentation/README.md)** — All available guides and resources
+- **[Monorepo Structure](./documentation/monorepo-structure.md)** — Project organization and dependencies
+
+---
+
 ## 🧭 Development Plan
 
 ### Timeline
@@ -158,7 +192,7 @@ This design enables seamless scaling to translation workflows in MVP2 without ex
 - **As an editor**, I can discuss content rewrites with an AI chatbot and iteratively refine the output through conversation so that I can achieve the exact tone and clarity I need.
 - **As an editor**, I can manage the publication state of content items (draft, published, archived) so that I can control when content becomes visible and manage the lifecycle of published items.
 - **As an editor**, I can validate and map document metadata (pricing, dates, public status, related structures) before publishing.
-- **As a reviewer**, I can approve and export validated versions with complete metadata and audit trail for publication.
+- **As an admin**, I can manage users, assign roles, and control access permissions.
 - **As a team lead**, I can monitor progress across all stages (ingestion, quality gating, rewrite, metadata mapping, export) with analytics.
 
 ---
