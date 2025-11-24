@@ -21,20 +21,62 @@ export interface Extras {
 }
 
 // Basic types
-export interface Civilite { _text: string; attributes?: LheoAttributeGroup; }
-export interface Nom { _text: string; attributes?: LheoAttributeGroup; }
-export interface Prenom { _text: string; attributes?: LheoAttributeGroup; }
-export interface Ligne { _text: string; attributes?: LheoAttributeGroup; }
-export interface Denomination { _text: string; attributes?: LheoAttributeGroup; }
-export interface Codepostal { _text: string; attributes?: LheoAttributeGroup; }
-export interface Ville { _text: string; attributes?: LheoAttributeGroup; }
-export interface Departement { _text: string; attributes?: LheoAttributeGroup; }
-export interface CodeInseeCommune { _text: string; attributes?: LheoAttributeGroup; }
-export interface CodeInseeCanton { _text: string; attributes?: LheoAttributeGroup; }
-export interface Region { _text: string; attributes?: LheoAttributeGroup; }
-export interface Pays { _text: string; attributes?: LheoAttributeGroup; }
-export interface Latitude { _text: string; attributes?: LheoAttributeGroup; }
-export interface Longitude { _text: string; attributes?: LheoAttributeGroup; }
+export interface Civilite {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface Nom {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface Prenom {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface Ligne {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface Denomination {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface Codepostal {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface Ville {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface Departement {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface CodeInseeCommune {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface CodeInseeCanton {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface Region {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface Pays {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface Latitude {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface Longitude {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface Geolocalisation {
   latitude: Latitude;
@@ -58,7 +100,10 @@ export interface Adresse {
   attributes?: LheoAttributeGroup;
 }
 
-export interface NumTel { _text: string; attributes?: LheoAttributeGroup; }
+export interface NumTel {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface Telfixe {
   numtel: NumTel[]; // 1 to 3
@@ -78,9 +123,15 @@ export interface Fax {
   attributes?: LheoAttributeGroup;
 }
 
-export interface Courriel { _text: string; attributes?: LheoAttributeGroup; }
+export interface Courriel {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
-export interface UrlWeb { _text: string; attributes?: LheoAttributeGroup; }
+export interface UrlWeb {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface Web {
   urlweb: UrlWeb[]; // 1 to 3
@@ -103,8 +154,14 @@ export interface Coordonnees {
   attributes?: LheoAttributeGroup;
 }
 
-export interface Siret { _text: string; attributes?: LheoAttributeGroup; }
-export interface CodeUai { _text: string; attributes?: LheoAttributeGroup; }
+export interface Siret {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface CodeUai {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface TypeContact {
   _text: string;
@@ -238,7 +295,10 @@ export interface Certification {
   attributes?: LheoAttributeGroup;
 }
 
-export interface CodeElu { _text: string; attributes?: LheoAttributeGroup; }
+export interface CodeElu {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface CodeTypeFormation {
   "code-CPF"?: CodeCpf;
@@ -348,8 +408,14 @@ export interface DureeCycle {
 }
 
 // Session related types
-export interface Debut { _text: string; attributes?: LheoAttributeGroup; }
-export interface Fin { _text: string; attributes?: LheoAttributeGroup; }
+export interface Debut {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface Fin {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface Periode {
   debut: Debut;
@@ -364,22 +430,46 @@ export interface AdresseInscription {
   attributes?: LheoAttributeGroup;
 }
 
-export interface ModalitesInscription { _text: string; attributes?: LheoAttributeGroup; }
+export interface ModalitesInscription {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface PeriodeInscription {
   periode: Periode;
   attributes?: LheoAttributeGroup;
 }
 
-export interface EtatRecrutement { _text: "1" | "2" | "3"; attributes?: LheoAttributeGroup; }
+export interface EtatRecrutement {
+  _text: "1" | "2" | "3";
+  attributes?: LheoAttributeGroup;
+}
 
-export interface ModaliteRecrutement { _text: "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"; attributes?: LheoAttributeGroup; }
+export interface ModaliteRecrutement {
+  _text: "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+  attributes?: LheoAttributeGroup;
+}
 
-export interface ADistance { _text: "0" | "1"; attributes?: LheoAttributeGroup; }
-export interface NbPlaces { _text: number; attributes?: LheoAttributeGroup; }
-export interface HeureDebut { _text: string; attributes?: LheoAttributeGroup; }
-export interface HeureFin { _text: string; attributes?: LheoAttributeGroup; }
-export interface Commentaire { _text: string; attributes?: LheoAttributeGroup; }
+export interface ADistance {
+  _text: "0" | "1";
+  attributes?: LheoAttributeGroup;
+}
+export interface NbPlaces {
+  _text: number;
+  attributes?: LheoAttributeGroup;
+}
+export interface HeureDebut {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface HeureFin {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface Commentaire {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface Recrutement {
   "modalite-recrutement": ModaliteRecrutement;
@@ -410,9 +500,18 @@ export interface ContactSession {
   attributes?: LheoAttributeGroup;
 }
 
-export interface ReferenceCodeRncp { _text: string; attributes?: LheoAttributeGroup; }
-export interface ReferenceCodeCertifinfo { _text: string; attributes?: LheoAttributeGroup; }
-export interface ReferenceCodeRs { _text: string; attributes?: LheoAttributeGroup; }
+export interface ReferenceCodeRncp {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface ReferenceCodeCertifinfo {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface ReferenceCodeRs {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface ReferenceCertification {
   "reference-code-RNCP"?: ReferenceCodeRncp;
@@ -422,8 +521,14 @@ export interface ReferenceCertification {
   attributes?: LheoAttributeGroup;
 }
 
-export interface LibelleBloc { _text: string; attributes?: LheoAttributeGroup; }
-export interface CodeBloc { _text: string; attributes?: LheoAttributeGroup; }
+export interface LibelleBloc {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface CodeBloc {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface BlocCompetences {
   "libelle-bloc": LibelleBloc;
@@ -432,7 +537,10 @@ export interface BlocCompetences {
   attributes?: LheoAttributeGroup;
 }
 
-export interface ValidationBlocs { _text: "0" | "1" | "2"; attributes?: LheoAttributeGroup; }
+export interface ValidationBlocs {
+  _text: "0" | "1" | "2";
+  attributes?: LheoAttributeGroup;
+}
 
 export interface BlocsCompetences {
   "validation-blocs": ValidationBlocs;
@@ -442,15 +550,42 @@ export interface BlocsCompetences {
   attributes?: LheoAttributeGroup;
 }
 
-export interface TypeCycle { _text: "0" | "1"; attributes?: LheoAttributeGroup; }
-export interface AnneeCycle { _text: number; attributes?: LheoAttributeGroup; }
-export interface EffectifMinimal { _text: number; attributes?: LheoAttributeGroup; }
-export interface CapaciteSimultanee { _text: number; attributes?: LheoAttributeGroup; }
-export interface CapaciteCumulee { _text: number; attributes?: LheoAttributeGroup; }
-export interface TypeAlternance { _text: "0" | "1" | "2"; attributes?: LheoAttributeGroup; }
-export interface UniteRythmeAlternance { _text: "0" | "1" | "2" | "3" | "4"; attributes?: LheoAttributeGroup; }
-export interface UnitesEntreprise { _text: number; attributes?: LheoAttributeGroup; }
-export interface UnitesCentre { _text: number; attributes?: LheoAttributeGroup; }
+export interface TypeCycle {
+  _text: "0" | "1";
+  attributes?: LheoAttributeGroup;
+}
+export interface AnneeCycle {
+  _text: number;
+  attributes?: LheoAttributeGroup;
+}
+export interface EffectifMinimal {
+  _text: number;
+  attributes?: LheoAttributeGroup;
+}
+export interface CapaciteSimultanee {
+  _text: number;
+  attributes?: LheoAttributeGroup;
+}
+export interface CapaciteCumulee {
+  _text: number;
+  attributes?: LheoAttributeGroup;
+}
+export interface TypeAlternance {
+  _text: "0" | "1" | "2";
+  attributes?: LheoAttributeGroup;
+}
+export interface UniteRythmeAlternance {
+  _text: "0" | "1" | "2" | "3" | "4";
+  attributes?: LheoAttributeGroup;
+}
+export interface UnitesEntreprise {
+  _text: number;
+  attributes?: LheoAttributeGroup;
+}
+export interface UnitesCentre {
+  _text: number;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface RythmeAlternance {
   "unite-rythme-alternance": UniteRythmeAlternance;
@@ -501,7 +636,10 @@ export interface AdresseInformation {
   attributes?: LheoAttributeGroup;
 }
 
-export interface DateLheo { _text: string; attributes?: LheoAttributeGroup; }
+export interface DateLheo {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface DateInformation {
   date: DateLheo;
@@ -549,8 +687,26 @@ export interface CodeModalitePedagogique {
   attributes?: LheoAttributeGroup;
 }
 
-export interface TypeEquipement { _text: "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11"; attributes?: LheoAttributeGroup; }
-export interface CoutIndicatifEquipement { _text: number; attributes?: LheoAttributeGroup; }
+export interface TypeEquipement {
+  _text:
+    | "0"
+    | "1"
+    | "2"
+    | "3"
+    | "4"
+    | "5"
+    | "6"
+    | "7"
+    | "8"
+    | "9"
+    | "10"
+    | "11";
+  attributes?: LheoAttributeGroup;
+}
+export interface CoutIndicatifEquipement {
+  _text: number;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface Equipement {
   "type-equipement": TypeEquipement;
@@ -624,7 +780,10 @@ export interface SiretFormateur extends Siret {
   extras?: Extras[];
 }
 
-export interface RaisonSocialeFormateur { _text: string; attributes?: LheoAttributeGroup; }
+export interface RaisonSocialeFormateur {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface ContactFormateur {
   "type-contact"?: TypeContact;
@@ -654,8 +813,35 @@ export interface OrganismeFormateur {
   attributes?: LheoAttributeGroup;
 }
 
-export interface CodeFinanceur { _text: "11" | "12" | "13" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "15" | "10" | "0" | "14" | "16" | "17" | "18" | "19" | "20" | "1"; attributes?: LheoAttributeGroup; }
-export interface NbPlacesFinancees { _text: number; attributes?: LheoAttributeGroup; }
+export interface CodeFinanceur {
+  _text:
+    | "11"
+    | "12"
+    | "13"
+    | "2"
+    | "3"
+    | "4"
+    | "5"
+    | "6"
+    | "7"
+    | "8"
+    | "9"
+    | "15"
+    | "10"
+    | "0"
+    | "14"
+    | "16"
+    | "17"
+    | "18"
+    | "19"
+    | "20"
+    | "1";
+  attributes?: LheoAttributeGroup;
+}
+export interface NbPlacesFinancees {
+  _text: number;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface OrganismeFinanceur {
   "code-financeur": CodeFinanceur;
@@ -664,9 +850,18 @@ export interface OrganismeFinanceur {
   attributes?: LheoAttributeGroup;
 }
 
-export interface LibelleEnseignement { _text: string; attributes?: LheoAttributeGroup; }
-export interface TypeEnseignement { _text: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10"; attributes?: LheoAttributeGroup; }
-export interface Obligatoire { _text: "0" | "1"; attributes?: LheoAttributeGroup; }
+export interface LibelleEnseignement {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface TypeEnseignement {
+  _text: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10";
+  attributes?: LheoAttributeGroup;
+}
+export interface Obligatoire {
+  _text: "0" | "1";
+  attributes?: LheoAttributeGroup;
+}
 
 export interface Enseignement {
   "libelle-enseignement": LibelleEnseignement;
@@ -721,12 +916,18 @@ export interface Action {
   attributes?: LheoAttributeGroup;
 }
 
-export interface NumeroActivite { _text: string; attributes?: LheoAttributeGroup; }
+export interface NumeroActivite {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 export interface SiretOrganismeFormation extends Siret {
   extras?: Extras[];
 }
 
-export interface RaisonSociale { _text: string; attributes?: LheoAttributeGroup; }
+export interface RaisonSociale {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface CoordonneesOrganisme {
   coordonnees: Coordonnees;
@@ -741,7 +942,10 @@ export interface ContactOrganisme {
   attributes?: LheoAttributeGroup;
 }
 
-export interface RenseignementsSpecifiques { _text: string; attributes?: LheoAttributeGroup; }
+export interface RenseignementsSpecifiques {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
 
 export interface CodeUaiOrganismeFormation extends CodeUai {
   extras?: Extras[];
@@ -761,11 +965,23 @@ export interface OrganismeFormationResponsable {
   attributes?: LheoAttributeGroup;
 }
 
-export interface IdentifiantModule { _text: string; attributes?: LheoAttributeGroup; }
-export interface Positionnement { _text: "1" | "2"; attributes?: LheoAttributeGroup; }
+export interface IdentifiantModule {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface Positionnement {
+  _text: "1" | "2";
+  attributes?: LheoAttributeGroup;
+}
 
-export interface ReferenceModule { _text: string; attributes?: LheoAttributeGroup; }
-export interface TypeModule { _text: "0" | "1" | "2"; attributes?: LheoAttributeGroup; }
+export interface ReferenceModule {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+export interface TypeModule {
+  _text: "0" | "1" | "2";
+  attributes?: LheoAttributeGroup;
+}
 
 export interface SousModule {
   "reference-module": ReferenceModule;
