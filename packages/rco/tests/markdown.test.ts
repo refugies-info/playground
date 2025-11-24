@@ -2,35 +2,14 @@ import fs from "fs";
 import path from "path";
 import { describe, expect, it } from "vitest";
 import {
-  convertXmlToJson,
   convertXmlToMarkdownWithFrontmatter,
-  convertXmlToYaml,
   extractMarkdownContent,
-  parseLheoXml,
-} from "../src/index";
+} from "../src/markdown";
 
 const sampleXmlPath = path.join(__dirname, "sample.xml");
 const sampleXml = fs.readFileSync(sampleXmlPath, "utf-8");
 
-describe("RCO Package", () => {
-  it("should parse Lhéo XML", () => {
-    const result = parseLheoXml(sampleXml);
-    expect(result).toBeDefined();
-    expect(result.lheo).toBeDefined();
-  });
-
-  it("should convert XML to JSON", () => {
-    const json = convertXmlToJson(sampleXml) as any;
-    expect(json.lheo).toBeDefined();
-    expect(json.lheo["offre-formation"]).toBeDefined();
-  });
-
-  it("should convert XML to YAML", () => {
-    const yaml = convertXmlToYaml(sampleXml);
-    expect(yaml).toContain("lheo:");
-    expect(yaml).toContain("offre-formation:");
-  });
-
+describe("Markdown Module", () => {
   it("should extract Markdown content", () => {
     const markdown = extractMarkdownContent(sampleXml);
     expect(markdown).toContain("# Formation Français Langue Étrangère");
