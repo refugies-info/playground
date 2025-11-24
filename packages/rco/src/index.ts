@@ -1,17 +1,18 @@
 import { XMLParser } from "fast-xml-parser";
 import YAML from "yaml";
+import { Lheo } from "./lheo-types";
 
-export interface LheoData {
-  [key: string]: any;
-}
+export { Lheo };
 
 const parser = new XMLParser({
   ignoreAttributes: false,
-  attributeNamePrefix: "@_",
+  attributeNamePrefix: "",
+  attributesGroupName: "attributes",
+  textNodeName: "_text",
 });
 
-export function parseLheoXml(xmlString: string): LheoData {
-  return parser.parse(xmlString);
+export function parseLheoXml(xmlString: string): Lheo {
+  return parser.parse(xmlString) as Lheo;
 }
 
 export function convertXmlToJson(xmlString: string): object {
