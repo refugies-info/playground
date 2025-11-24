@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 /**
  * POST /api/classify
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
         {
           error: "Missing required fields: contentId, text",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -41,13 +41,13 @@ export async function POST(request: NextRequest) {
           reasoning: "Letta integration not yet implemented",
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Classification error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

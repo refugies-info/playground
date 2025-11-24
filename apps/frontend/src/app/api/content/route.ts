@@ -1,6 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-
 import type { ContentItem } from "@shared/types";
+import { type NextRequest, NextResponse } from "next/server";
 
 /**
  * POST /api/content
@@ -17,7 +16,7 @@ export async function POST(request: NextRequest) {
         {
           error: "Missing required fields: originalText, sourceRecordId",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -41,13 +40,13 @@ export async function POST(request: NextRequest) {
         message: "Content ingestion stub - implementation deferred to Sprint 1",
         contentItem,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Content ingestion error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -62,6 +61,6 @@ export async function GET() {
       message: "Content retrieval stub - implementation deferred to Sprint 1",
       items: [],
     },
-    { status: 200 }
+    { status: 200 },
   );
 }

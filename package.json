@@ -7,17 +7,13 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "lint": "eslint . --fix",
+    "lint": "biome check --write .",
+    "format": "biome format --write .",
     "type-check": "turbo type-check",
     "knip": "knip"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@typescript-eslint/eslint-plugin": "^8.47.0",
-    "@typescript-eslint/parser": "^8.47.0",
-    "eslint": "^9.39.1",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-unused-imports": "^4.3.0",
+    "@biomejs/biome": "^2.3.7",
     "knip": "^5.70.0",
     "postcss": "^8.5.6",
     "turbo": "^2.6.1"

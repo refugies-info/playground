@@ -6,7 +6,6 @@
   "types": "./src/index.ts",
   "scripts": {
     "test": "vitest run",
-    "lint": "eslint .",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
