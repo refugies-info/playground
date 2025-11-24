@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noConsole: Fine for early warnings */
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
