@@ -14,7 +14,7 @@ if (typeof window === "undefined") {
   for (const envVar of requiredEnvVars) {
     if (!process.env[envVar]) {
       console.warn(
-        `Warning: Missing environment variable ${envVar}. This may cause runtime errors.`
+        `Warning: Missing environment variable ${envVar}. This may cause runtime errors.`,
       );
     }
   }
