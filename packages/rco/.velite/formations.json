@@ -1,0 +1,15 @@
+[
+  {
+    "lheo": {
+      "offre-formation": {
+        "formation": {
+          "intitule-formation": "Formation Français Langue Étrangère",
+          "objectif-formation": "Apprendre le français niveau A1.\n      Objectifs détaillés :\n      - Comprendre des phrases simples\n      - Se présenter",
+          "contenu-formation": "Module 1 : Les bases\n      Module 2 : La vie quotidienne"
+        }
+      },
+      "@_xmlns": "http://lheo.gouv.fr/2.3"
+    },
+    "content": "<h1>Formation Français Langue Étrangère</h1>\n<h2>Objectifs</h2>\n<p>Apprendre le français niveau A1.\nObjectifs détaillés :\n- Comprendre des phrases simples\n- Se présenter</p>\n<h2>Contenu</h2>\n<p>Module 1 : Les bases\nModule 2 : La vie quotidienne</p>"
+  }
+]
