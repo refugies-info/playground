@@ -20,6 +20,104 @@ export interface Extras {
   [key: string]: any;
 }
 
+// Basic types
+export interface Civilite { _text: string; attributes?: LheoAttributeGroup; }
+export interface Nom { _text: string; attributes?: LheoAttributeGroup; }
+export interface Prenom { _text: string; attributes?: LheoAttributeGroup; }
+export interface Ligne { _text: string; attributes?: LheoAttributeGroup; }
+export interface Denomination { _text: string; attributes?: LheoAttributeGroup; }
+export interface Codepostal { _text: string; attributes?: LheoAttributeGroup; }
+export interface Ville { _text: string; attributes?: LheoAttributeGroup; }
+export interface Departement { _text: string; attributes?: LheoAttributeGroup; }
+export interface CodeInseeCommune { _text: string; attributes?: LheoAttributeGroup; }
+export interface CodeInseeCanton { _text: string; attributes?: LheoAttributeGroup; }
+export interface Region { _text: string; attributes?: LheoAttributeGroup; }
+export interface Pays { _text: string; attributes?: LheoAttributeGroup; }
+export interface Latitude { _text: string; attributes?: LheoAttributeGroup; }
+export interface Longitude { _text: string; attributes?: LheoAttributeGroup; }
+
+export interface Geolocalisation {
+  latitude: Latitude;
+  longitude: Longitude;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface Adresse {
+  denomination?: Denomination;
+  ligne: Ligne[]; // 1 to 4
+  codepostal: Codepostal;
+  ville: Ville;
+  departement?: Departement;
+  "code-INSEE-commune"?: CodeInseeCommune;
+  "code-INSEE-canton"?: CodeInseeCanton;
+  region?: Region;
+  pays?: Pays;
+  geolocalisation?: Geolocalisation;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface NumTel { _text: string; attributes?: LheoAttributeGroup; }
+
+export interface Telfixe {
+  numtel: NumTel[]; // 1 to 3
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface Portable {
+  numtel: NumTel[]; // 1 to 3
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface Fax {
+  numtel: NumTel[]; // 1 to 3
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface Courriel { _text: string; attributes?: LheoAttributeGroup; }
+
+export interface UrlWeb { _text: string; attributes?: LheoAttributeGroup; }
+
+export interface Web {
+  urlweb: UrlWeb[]; // 1 to 3
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface Coordonnees {
+  civilite?: Civilite;
+  nom?: Nom;
+  prenom?: Prenom;
+  ligne?: Ligne[]; // 0 to 3
+  adresse?: Adresse;
+  telfixe?: Telfixe;
+  portable?: Portable;
+  fax?: Fax;
+  courriel?: Courriel;
+  web?: Web;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface Siret { _text: string; attributes?: LheoAttributeGroup; }
+export interface CodeUai { _text: string; attributes?: LheoAttributeGroup; }
+
+export interface TypeContact {
+  _text: string;
+  attributes?: LheoAttributeGroup;
+}
+
+export interface ContactFormation {
+  "type-contact"?: TypeContact;
+  coordonnees: Coordonnees;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
 export interface CodeFormacode {
   _text: string;
   attributes?: LheoAttributeGroup;
@@ -70,29 +168,6 @@ export interface ContenuFormation {
 
 export interface Certifiante {
   _text: "0" | "1";
-  attributes?: LheoAttributeGroup;
-}
-
-export interface TypeContact {
-  _text: string;
-  attributes?: LheoAttributeGroup;
-}
-
-export interface Coordonnees {
-  // Assuming structure based on usage in other contexts or generic XSD pattern
-  // The XSD snippet didn't fully detail Coordonnees but it's referenced.
-  // We will infer common fields or use 'any' for now if not fully clear,
-  // but based on typical Lheo, it usually has address, phone, email etc.
-  // Let's use a generic structure for now or refine if we see more.
-  // Actually, let's look at what we saw: "lheo:coordonnees" is an element.
-  // I will define a placeholder and we can refine if needed.
-  [key: string]: any;
-}
-
-export interface ContactFormation {
-  "type-contact"?: TypeContact;
-  coordonnees: Coordonnees;
-  extras?: Extras[];
   attributes?: LheoAttributeGroup;
 }
 
@@ -163,9 +238,11 @@ export interface Certification {
   attributes?: LheoAttributeGroup;
 }
 
+export interface CodeElu { _text: string; attributes?: LheoAttributeGroup; }
+
 export interface CodeTypeFormation {
   "code-CPF"?: CodeCpf;
-  "code-ELU"?: any; // Not fully seen but referenced
+  "code-ELU"?: CodeElu;
   extras?: Extras[];
   attributes?: LheoAttributeGroup;
 }
@@ -189,11 +266,6 @@ export interface CodeNiveauSortie {
     | "16"
     | "17"
     | "18";
-  attributes?: LheoAttributeGroup;
-}
-
-export interface UrlWeb {
-  _text: string;
   attributes?: LheoAttributeGroup;
 }
 
@@ -243,9 +315,17 @@ export interface PriseEnChargeFraisPossible {
   attributes?: LheoAttributeGroup;
 }
 
+export interface SiretLieuFormation extends Siret {
+  extras?: Extras[];
+}
+
+export interface CodeUaiLieuFormation extends CodeUai {
+  extras?: Extras[];
+}
+
 export interface LieuDeFormation {
-  "SIRET-lieu-formation"?: any;
-  "code-UAI-lieu-formation"?: any;
+  "SIRET-lieu-formation"?: SiretLieuFormation;
+  "code-UAI-lieu-formation"?: CodeUaiLieuFormation;
   coordonnees: Coordonnees;
   extras?: Extras[];
   attributes?: LheoAttributeGroup;
@@ -257,52 +337,195 @@ export interface ModalitesEntreesSorties {
 }
 
 export interface UrlAction {
-  urlweb: UrlWeb[]; // Assuming similar structure to UrlFormation
-  attributes?: LheoAttributeGroup;
-}
-
-export interface DureeCycle {
-  _text: string; // Assuming simple text or similar
-  attributes?: LheoAttributeGroup;
-}
-
-export interface Session {
-  periode?: any;
-  adresse?: any;
-  "adresse-inscription"?: any;
-  "modalites-inscription"?: any;
-  "etat-recrutement"?: any;
+  urlweb: UrlWeb[]; // 1 to 3
   extras?: Extras[];
   attributes?: LheoAttributeGroup;
 }
 
-export interface AdresseInformation {
-  // Placeholder
-  [key: string]: any;
+export interface DureeCycle {
+  _text: number;
+  attributes?: LheoAttributeGroup;
 }
 
+// Session related types
+export interface Debut { _text: string; attributes?: LheoAttributeGroup; }
+export interface Fin { _text: string; attributes?: LheoAttributeGroup; }
+
+export interface Periode {
+  debut: Debut;
+  fin: Fin;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface AdresseInscription {
+  adresse: Adresse;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface ModalitesInscription { _text: string; attributes?: LheoAttributeGroup; }
+
+export interface PeriodeInscription {
+  periode: Periode;
+  attributes?: LheoAttributeGroup;
+}
+
+export interface EtatRecrutement { _text: "1" | "2" | "3"; attributes?: LheoAttributeGroup; }
+
+export interface ModaliteRecrutement { _text: "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"; attributes?: LheoAttributeGroup; }
+
+export interface ADistance { _text: "0" | "1"; attributes?: LheoAttributeGroup; }
+export interface NbPlaces { _text: number; attributes?: LheoAttributeGroup; }
+export interface HeureDebut { _text: string; attributes?: LheoAttributeGroup; }
+export interface HeureFin { _text: string; attributes?: LheoAttributeGroup; }
+export interface Commentaire { _text: string; attributes?: LheoAttributeGroup; }
+
+export interface Recrutement {
+  "modalite-recrutement": ModaliteRecrutement;
+  "code-perimetre-recrutement"?: CodePerimetreRecrutement;
+  "infos-perimetre-recrutement"?: InfosPerimetreRecrutement;
+  "a-distance"?: ADistance;
+  adresse?: Adresse;
+  urlweb?: UrlWeb;
+  "nb-places"?: NbPlaces;
+  periode?: Periode;
+  "heure-debut"?: HeureDebut;
+  "heure-fin"?: HeureFin;
+  commentaire?: Commentaire;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface UrlSession {
+  urlweb: UrlWeb[]; // 1 to 3
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface ContactSession {
+  "type-contact"?: TypeContact;
+  coordonnees: Coordonnees;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface ReferenceCodeRncp { _text: string; attributes?: LheoAttributeGroup; }
+export interface ReferenceCodeCertifinfo { _text: string; attributes?: LheoAttributeGroup; }
+export interface ReferenceCodeRs { _text: string; attributes?: LheoAttributeGroup; }
+
+export interface ReferenceCertification {
+  "reference-code-RNCP"?: ReferenceCodeRncp;
+  "reference-code-CERTIFINFO"?: ReferenceCodeCertifinfo;
+  "reference-code-RS"?: ReferenceCodeRs;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface LibelleBloc { _text: string; attributes?: LheoAttributeGroup; }
+export interface CodeBloc { _text: string; attributes?: LheoAttributeGroup; }
+
+export interface BlocCompetences {
+  "libelle-bloc": LibelleBloc;
+  "code-bloc": CodeBloc;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface ValidationBlocs { _text: "0" | "1" | "2"; attributes?: LheoAttributeGroup; }
+
+export interface BlocsCompetences {
+  "validation-blocs": ValidationBlocs;
+  "reference-certification": ReferenceCertification;
+  "bloc-competences": BlocCompetences[];
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface TypeCycle { _text: "0" | "1"; attributes?: LheoAttributeGroup; }
+export interface AnneeCycle { _text: number; attributes?: LheoAttributeGroup; }
+export interface EffectifMinimal { _text: number; attributes?: LheoAttributeGroup; }
+export interface CapaciteSimultanee { _text: number; attributes?: LheoAttributeGroup; }
+export interface CapaciteCumulee { _text: number; attributes?: LheoAttributeGroup; }
+export interface TypeAlternance { _text: "0" | "1" | "2"; attributes?: LheoAttributeGroup; }
+export interface UniteRythmeAlternance { _text: "0" | "1" | "2" | "3" | "4"; attributes?: LheoAttributeGroup; }
+export interface UnitesEntreprise { _text: number; attributes?: LheoAttributeGroup; }
+export interface UnitesCentre { _text: number; attributes?: LheoAttributeGroup; }
+
+export interface RythmeAlternance {
+  "unite-rythme-alternance": UniteRythmeAlternance;
+  "unites-entreprise": UnitesEntreprise;
+  "unites-centre": UnitesCentre;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface Alternance {
+  "type-alternance": TypeAlternance;
+  "rythme-alternance"?: RythmeAlternance;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface Cycle {
+  "type-cycle": TypeCycle;
+  "annee-cycle"?: AnneeCycle[];
+  "effectif-minimal"?: EffectifMinimal;
+  "capacite-simultanee"?: CapaciteSimultanee;
+  "capacite-cumulee"?: CapaciteCumulee;
+  alternance?: Alternance;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface Session {
+  periode: Periode;
+  "adresse-inscription": AdresseInscription;
+  "modalites-inscription"?: ModalitesInscription;
+  "periode-inscription"?: PeriodeInscription;
+  "etat-recrutement"?: EtatRecrutement;
+  recrutement?: Recrutement[];
+  "url-session"?: UrlSession;
+  "contact-session"?: ContactSession[];
+  "reference-certification"?: ReferenceCertification[];
+  "blocs-competences"?: BlocsCompetences[];
+  cycle?: Cycle[];
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+// Action related types
+export interface AdresseInformation {
+  adresse: Adresse;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface DateLheo { _text: string; attributes?: LheoAttributeGroup; }
+
 export interface DateInformation {
-  // Placeholder
-  [key: string]: any;
+  date: DateLheo;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
 }
 
 export interface Restauration {
-  _text: "0" | "1"; // Assuming boolean-like
+  _text: string; // 1-250 chars
   attributes?: LheoAttributeGroup;
 }
 
 export interface Hebergement {
-  _text: "0" | "1";
+  _text: string; // 1-250 chars
   attributes?: LheoAttributeGroup;
 }
 
 export interface Transport {
-  _text: "0" | "1";
+  _text: string; // 1-250 chars
   attributes?: LheoAttributeGroup;
 }
 
 export interface AccesHandicapes {
-  _text: "0" | "1";
+  _text: string; // 1-250 chars
   attributes?: LheoAttributeGroup;
 }
 
@@ -312,7 +535,7 @@ export interface LangueFormation {
 }
 
 export interface ModalitesRecrutement {
-  _text: "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+  _text: string; // max 3000 chars
   attributes?: LheoAttributeGroup;
 }
 
@@ -326,10 +549,13 @@ export interface CodeModalitePedagogique {
   attributes?: LheoAttributeGroup;
 }
 
+export interface TypeEquipement { _text: "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11"; attributes?: LheoAttributeGroup; }
+export interface CoutIndicatifEquipement { _text: number; attributes?: LheoAttributeGroup; }
+
 export interface Equipement {
-  "type-equipement": any;
-  "cout-indicatif-equipement"?: any;
-  commentaire?: any;
+  "type-equipement": TypeEquipement;
+  "cout-indicatif-equipement"?: CoutIndicatifEquipement;
+  commentaire?: Commentaire;
   extras?: Extras[];
   attributes?: LheoAttributeGroup;
 }
@@ -340,7 +566,7 @@ export interface FraisRestants {
 }
 
 export interface CodePerimetreRecrutement {
-  _text: string;
+  _text: "0" | "1" | "2" | "3" | "4" | "5" | "6";
   attributes?: LheoAttributeGroup;
 }
 
@@ -350,12 +576,12 @@ export interface InfosPerimetreRecrutement {
 }
 
 export interface PrixHoraireTtc {
-  _text: number; // Assuming numeric
+  _text: string; // XSD says string 1-6 chars
   attributes?: LheoAttributeGroup;
 }
 
 export interface PrixTotalTtc {
-  _text: number;
+  _text: string; // XSD says string 1-10 chars
   attributes?: LheoAttributeGroup;
 }
 
@@ -385,36 +611,68 @@ export interface DetailConditionsPriseEnCharge {
 }
 
 export interface Conventionnement {
-  _text: string;
+  _text: "0" | "1";
   attributes?: LheoAttributeGroup;
 }
 
 export interface DureeConventionnee {
-  _text: string;
+  _text: number;
   attributes?: LheoAttributeGroup;
 }
 
-export interface OrganismeFormateur {
-  "SIRET-formateur": any;
-  "raison-sociale-formateur": any;
-  "contact-formateur"?: any[];
-  potentiel?: any;
-  "code-UAI-formateur"?: any;
-  "reference-certification"?: any[];
+export interface SiretFormateur extends Siret {
+  extras?: Extras[];
+}
+
+export interface RaisonSocialeFormateur { _text: string; attributes?: LheoAttributeGroup; }
+
+export interface ContactFormateur {
+  "type-contact"?: TypeContact;
+  coordonnees: Coordonnees;
   extras?: Extras[];
   attributes?: LheoAttributeGroup;
 }
 
-export interface OrganismeFinanceur {
-  // Placeholder
-  [key: string]: any;
+export interface CodeUaiFormateur extends CodeUai {
+  extras?: Extras[];
 }
 
+export interface Potentiel {
+  "code-FORMACODE": CodeFormacode[]; // 1 to 25
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface OrganismeFormateur {
+  "SIRET-formateur": SiretFormateur;
+  "raison-sociale-formateur": RaisonSocialeFormateur;
+  "contact-formateur"?: ContactFormateur[];
+  potentiel?: Potentiel;
+  "code-UAI-formateur"?: CodeUaiFormateur;
+  "reference-certification"?: ReferenceCertification[];
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface CodeFinanceur { _text: "11" | "12" | "13" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "15" | "10" | "0" | "14" | "16" | "17" | "18" | "19" | "20" | "1"; attributes?: LheoAttributeGroup; }
+export interface NbPlacesFinancees { _text: number; attributes?: LheoAttributeGroup; }
+
+export interface OrganismeFinanceur {
+  "code-financeur": CodeFinanceur;
+  "nb-places-financees"?: NbPlacesFinancees;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface LibelleEnseignement { _text: string; attributes?: LheoAttributeGroup; }
+export interface TypeEnseignement { _text: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10"; attributes?: LheoAttributeGroup; }
+export interface Obligatoire { _text: "0" | "1"; attributes?: LheoAttributeGroup; }
+
 export interface Enseignement {
-  "libelle-enseignement": any;
-  "type-enseignement": any;
-  obligatoire: any;
-  commentaire?: any;
+  "libelle-enseignement": LibelleEnseignement;
+  "type-enseignement": TypeEnseignement;
+  obligatoire: Obligatoire;
+  commentaire?: Commentaire;
   extras?: Extras[];
   attributes?: LheoAttributeGroup;
 }
@@ -463,16 +721,67 @@ export interface Action {
   attributes?: LheoAttributeGroup;
 }
 
+export interface NumeroActivite { _text: string; attributes?: LheoAttributeGroup; }
+export interface SiretOrganismeFormation extends Siret {
+  extras?: Extras[];
+}
+
+export interface RaisonSociale { _text: string; attributes?: LheoAttributeGroup; }
+
+export interface CoordonneesOrganisme {
+  coordonnees: Coordonnees;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface ContactOrganisme {
+  "type-contact"?: TypeContact;
+  coordonnees: Coordonnees;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface RenseignementsSpecifiques { _text: string; attributes?: LheoAttributeGroup; }
+
+export interface CodeUaiOrganismeFormation extends CodeUai {
+  extras?: Extras[];
+}
+
 export interface OrganismeFormationResponsable {
-  "numero-activite": any;
-  "SIRET-organisme-formation": any;
+  "numero-activite": NumeroActivite;
+  "SIRET-organisme-formation": SiretOrganismeFormation;
   "nom-organisme": NomOrganisme;
-  "raison-sociale": any;
-  "coordonnees-organisme": any;
-  "contact-organisme": any[];
-  "renseignements-specifiques"?: any;
-  potentiel?: any;
-  "code-UAI-organisme-formation"?: any;
+  "raison-sociale": RaisonSociale;
+  "coordonnees-organisme": CoordonneesOrganisme;
+  "contact-organisme": ContactOrganisme[];
+  "renseignements-specifiques"?: RenseignementsSpecifiques;
+  potentiel?: Potentiel;
+  "code-UAI-organisme-formation"?: CodeUaiOrganismeFormation;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface IdentifiantModule { _text: string; attributes?: LheoAttributeGroup; }
+export interface Positionnement { _text: "1" | "2"; attributes?: LheoAttributeGroup; }
+
+export interface ReferenceModule { _text: string; attributes?: LheoAttributeGroup; }
+export interface TypeModule { _text: "0" | "1" | "2"; attributes?: LheoAttributeGroup; }
+
+export interface SousModule {
+  "reference-module": ReferenceModule;
+  "type-module": TypeModule;
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface SousModules {
+  "sous-module": SousModule[];
+  extras?: Extras[];
+  attributes?: LheoAttributeGroup;
+}
+
+export interface ModulesPrerequis {
+  "reference-module": ReferenceModule[];
   extras?: Extras[];
   attributes?: LheoAttributeGroup;
 }
@@ -494,10 +803,10 @@ export interface Formation {
   "url-formation"?: UrlFormation;
   action: Action[];
   "organisme-formation-responsable": OrganismeFormationResponsable;
-  "identifiant-module"?: any;
-  positionnement?: any;
-  "sous-modules"?: any;
-  "modules-prerequis"?: any;
+  "identifiant-module"?: IdentifiantModule;
+  positionnement?: Positionnement;
+  "sous-modules"?: SousModules;
+  "modules-prerequis"?: ModulesPrerequis;
   extras?: Extras[];
   attributes?: LheoAttributeGroup;
 }
@@ -512,4 +821,8 @@ export interface Lheo {
   offres: Offres;
   extras?: Extras[];
   attributes?: LheoRootAttributes;
+}
+
+export interface LheoDocument {
+  lheo: Lheo;
 }
