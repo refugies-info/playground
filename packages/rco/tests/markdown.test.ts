@@ -6,23 +6,23 @@ import {
   extractMarkdownContent,
 } from "../src/markdown";
 
-const sampleXmlPath = path.join(__dirname, "sample.xml");
+const sampleXmlPath = path.join(__dirname, "../samples/rco.xml");
 const sampleXml = fs.readFileSync(sampleXmlPath, "utf-8");
 
 describe("Markdown Module", () => {
-  it("should extract Markdown content", () => {
-    const markdown = extractMarkdownContent(sampleXml);
-    expect(markdown).toContain("# Formation Français Langue Étrangère");
+  it("should extract Markdown content", async () => {
+    const markdown = await extractMarkdownContent(sampleXml);
+    expect(markdown).toContain("# Cours de français langue d'intégration");
     expect(markdown).toContain("## Objectifs");
-    expect(markdown).toContain("Apprendre le français niveau A1.");
+    expect(markdown).toContain("L'objectif du cours de Français Langue d'Intégration est d'apporter de l'aide dans les processus de socialisation des populations migrantes par l'apprentissage du français.");
     expect(markdown).toContain("## Contenu");
-    expect(markdown).toContain("Module 1 : Les bases");
+    expect(markdown).toContain("Proposition de cours de niveau A1, A2, B1, de cours de conversation, de cours d'alphabétisation.");
   });
 
-  it("should convert XML to Markdown with Frontmatter", () => {
-    const result = convertXmlToMarkdownWithFrontmatter(sampleXml);
+  it("should convert XML to Markdown with Frontmatter", async () => {
+    const result = await convertXmlToMarkdownWithFrontmatter(sampleXml);
     expect(result).toContain("---");
     expect(result).toContain("lheo:");
-    expect(result).toContain("# Formation Français Langue Étrangère");
+    expect(result).toContain("# Cours de français langue d'intégration");
   });
 });

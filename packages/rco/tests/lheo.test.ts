@@ -3,12 +3,12 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { parseLheoXml } from "../src/lheo";
 
-const sampleXmlPath = path.join(__dirname, "sample.xml");
+const sampleXmlPath = path.join(__dirname, "../samples/rco.xml");
 const sampleXml = fs.readFileSync(sampleXmlPath, "utf-8");
 
 describe("LHEO Module", () => {
-  it("should parse Lhéo XML", () => {
-    const result = parseLheoXml(sampleXml);
+  it("should parse Lhéo XML", async () => {
+    const result = await parseLheoXml(sampleXml);
     expect(result).toBeDefined();
     expect(result.lheo).toBeDefined();
   });
