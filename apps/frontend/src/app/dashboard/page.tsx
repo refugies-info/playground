@@ -43,12 +43,12 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
               <Image
                 src="/logo-ri.svg"
-                alt="Refugies.info"
+                alt="Réfugiés.info"
                 width={50}
                 height={50}
               />
               <span className="flex flex-col">
-                Refugies.info
+                Réfugiés.info
                 <span className="text-gray-600 text-sm font-normal">
                   Content Playground
                 </span>

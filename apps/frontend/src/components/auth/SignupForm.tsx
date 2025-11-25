@@ -98,7 +98,7 @@ export function SignupForm({ onSubmit }: SignupFormProps) {
           <Input
             label="Email"
             type="email"
-            placeholder="rosa@refugies.info"
+            placeholder="rosa@Réfugiés.info"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required

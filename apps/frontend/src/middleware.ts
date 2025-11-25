@@ -29,6 +29,15 @@ export function middleware(request: NextRequest) {
   // Get session token from cookies
   const sessionToken = request.cookies.get("sb-auth-token")?.value;
 
+  // Handle root path "/"
+  if (pathname === "/") {
+    if (sessionToken) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    } else {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+  }
+
   // If accessing protected route without session, redirect to login
   if (isProtectedRoute && !sessionToken) {
     const loginUrl = new URL("/login", request.url);
