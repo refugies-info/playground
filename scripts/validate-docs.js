@@ -18,6 +18,7 @@ const fs = require("fs");
 const path = require("path");
 
 const ALLOWED_PATTERNS = [
+  "AGENTS.md",
   "README.md",
   "DOCUMENTATION_GUIDELINES.md",
   "documentation/**/*.md",

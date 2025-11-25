@@ -7,17 +7,24 @@ const nextConfig: NextConfig = {
 
 // Validate required environment variables at build time
 if (typeof window === "undefined") {
-  const requiredEnvVars = [
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-  ];
+  const requiredEnvVars = ["NEXT_PUBLIC_SUPABASE_URL"];
 
   for (const envVar of requiredEnvVars) {
     if (!process.env[envVar]) {
       console.warn(
-        `Warning: Missing environment variable ${envVar}. This may cause runtime errors.`,
+        `Warning: Missing environment variable ${envVar}. This may cause runtime errors.`
       );
     }
+  }
+
+  // Check for either anon key (legacy) or publishable key (new)
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+    !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  ) {
+    console.warn(
+      "Warning: Missing Supabase key. Please define NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    );
   }
 }
 
