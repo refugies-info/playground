@@ -4,10 +4,9 @@ Documentation for Supabase, PostgreSQL, and database-related topics including mi
 
 ## Contents
 
+- **[Migrations](./migrations.md)** — Creating, testing, and managing database migrations
+- **[RLS Policies](./rls-policies.md)** — Row-level security design and implementation
 - **[Seed Data Setup](./seed-data.md)** — Test users for local development
-- **[Migrations](./migrations.md)** — Migration strategy and patterns (coming soon)
-- **[RLS Policies](./rls-policies.md)** — Row-level security implementation (coming soon)
-- **[Query Patterns](./query-patterns.md)** — SQL patterns and best practices (coming soon)
 
 ## Tech Stack
 

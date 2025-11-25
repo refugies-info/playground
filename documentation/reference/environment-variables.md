@@ -97,6 +97,25 @@ Environment variables are configuration values that change between environments 
 - **Default**: `info` (production), `debug` (development)
 - **Description**: Minimum log level to display
 
+### `NEXT_PUBLIC_SIGNUP_ENABLED`
+
+- **Type**: Boolean (string "true"/"false")
+- **Required**: No
+- **Default**: `false`
+- **Description**: Feature flag that controls whether the signup page displays the account creation form.
+- **Usage**: Set to `true` when you want to allow self-serve account creation (e.g., during internal testing). Leave as `false` in production to require admins to create accounts manually. Consumed in the auth pages and login form via `@/config/features`.
+
+---
+
+### Activating signup temporarily
+
+1. Edit your local `.env.local` (or Vercel environment settings) and set:
+   ```bash
+   NEXT_PUBLIC_SIGNUP_ENABLED=true
+   ```
+2. Restart the Next.js dev server (`pnpm dev`) so the new flag is picked up. For production, trigger a redeploy after updating the environment variable.
+3. When testing is over, remove the variable or set it back to `false` to hide the signup form again.
+
 ---
 
 ## Database Configuration

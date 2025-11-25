@@ -5,7 +5,7 @@ This document describes how to set up test users in the local Supabase developme
 ## Overview
 
 The seed setup creates two types of users:
-- **2 Bootstrap Admin users** created via migration (luis, jeremie)
+- **5 Bootstrap Admin users** created via migration (luis, jeremie, margot, nour, julie)
 - **3 Editor users** created via seed data (alice, claudia, xavier)
 
 **Security Note**: No plaintext passwords are stored in version control. Passwords must be set manually via Supabase Studio.
@@ -86,51 +86,56 @@ The seed file creates:
 
 ## Auth User Creation
 
-Auth users (with passwords) are created separately using the `seed-auth-users.sh` script.
+Auth users (with passwords) are created separately in Supabase Studio or via the Supabase Auth API.
 
 This is necessary because:
 1. **Passwords are hashed** by Supabase Auth and cannot be stored directly in the database
 2. **Auth users are managed by Supabase Auth service**, not the public.users table
 3. **The public.users table** stores user metadata (email, role, timestamps)
 
+### Creating Auth Users in Supabase Studio
+
+1. Open http://127.0.0.1:54323
+2. Go to **Authentication** → **Users**
+3. Click **Create User** (top right)
+4. Enter email and password
+5. Click **Create User**
+
+The auth user will be automatically linked to the database user by email address.
+
 ## Resetting Everything
 
-To reset both the database and auth users:
+To reset the database and start fresh:
 
 ```bash
 # Stop Supabase
 supabase stop
 
-# Reset the database (removes all data)
+# Reset the database (removes all data and re-runs migrations)
 supabase db reset
 
 # Start again
 supabase start
-
-# Recreate auth users
-./scripts/seed-auth-users.sh
 ```
+
+After resetting, recreate auth users in Supabase Studio:
+1. Open http://127.0.0.1:54323
+2. Go to **Authentication** → **Users**
+3. Click **Create User** for each test user
+4. Enter email and password
 
 ## Troubleshooting
 
-### "User already exists" error
-
-If you see this error when running the seed script, it means the user was already created. This is safe to ignore.
-
-To force recreate users, reset Supabase first:
-
-```bash
-supabase db reset
-./scripts/seed-auth-users.sh
-```
-
 ### Users in database but not in Auth
 
-If you see users in the `public.users` table but cannot log in, the auth users weren't created. Run:
+If you see users in the `public.users` table but cannot log in, the auth users weren't created in Supabase Auth.
 
-```bash
-./scripts/seed-auth-users.sh
-```
+**Solution**: Create auth users manually in Supabase Studio:
+1. Open http://127.0.0.1:54323
+2. Go to **Authentication** → **Users**
+3. Click **Create User** for each test user
+4. Enter email and password
+5. Click **Create User**
 
 ### Cannot connect to Supabase
 

@@ -1,9 +1,8 @@
 /**
- * Shared Types and Constants
- * Exported from @content-playground/shared package
+ * Shared Types
+ * Central export point for all type definitions
  */
 
-// Auth types
 export type {
   User,
   AuthSession,
@@ -18,4 +17,6 @@ export type {
   LinkOAuthRequest,
   UnlinkOAuthRequest,
   CurrentUserResponse,
-} from "./types/auth";
+} from "./auth";
+
+export type { User as UserType } from "./user";

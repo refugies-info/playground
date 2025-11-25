@@ -13,7 +13,8 @@
 This document contains all implementation tasks organized by user story and phase. Each task is independently testable and includes specific file paths. Tasks are organized to enable parallel execution where possible.
 
 **Total Tasks**: 88  
-**Phases**: 8 (Setup → Foundational → US0 → US1 → US3 → US2 → US4 → Polish)
+**Phases**: 8 (Setup → Foundational → US0 → US1 → US3 → US2 → US4 → Polish)  
+**POC Scope**: Two roles (editor, admin) per spec clarification Q9. Phase 6 (US2: Reviewer Access) is **deferred to post-MVP** pending MVP validation.
 
 ---
 
@@ -61,7 +62,7 @@ Phase 8 (Polish & Cross-Cutting)
 
 - [x] T001 Initialize Supabase project and test connection (verify `.supabase/config.toml` exists and connection works)
 - [x] T002 Install Supabase CLI locally (`brew install supabase` on macOS, verify `supabase --version` works)
-- [x] T003 Create `/migrations` directory in project root for SQL migration files
+- [x] T003 Verify `/supabase/migrations` directory exists for SQL migration files (Supabase CLI default location)
 - [x] T004 Create `.supabase/config.toml` with local Supabase configuration (database URL, auth settings)
 - [x] T005 Create `.supabase/seed.sql` with optional seed data for local development (test users, roles)
 - [x] T006 Add Supabase environment variables to `.env.local` (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY)
@@ -130,7 +131,7 @@ Phase 8 (Polish & Cross-Cutting)
 
 ### Database Schema Migrations
 
-- [ ] T017 [US0] Create `/migrations/001_create_auth_tables.sql`:
+- [x] T017 [US0] Create `/supabase/migrations/20251120000002_create_auth_tables.sql`:
   - Create `public.users` table (id UUID PK, email TEXT UNIQUE, role TEXT, created_at, updated_at, is_active BOOLEAN)
   - Create `public.auth_sessions` table (id UUID PK, user_id FK, token TEXT, expires_at, created_at)
   - Create `public.audit_logs` table (id UUID PK, user_id FK, action TEXT, status TEXT, details JSONB, created_at)
@@ -138,7 +139,7 @@ Phase 8 (Polish & Cross-Cutting)
   - Add foreign key constraints with ON DELETE CASCADE
   - Create indexes on frequently queried columns (user_id, email, created_at)
 
-- [ ] T018 [US0] Create `/migrations/002_create_rls_policies.sql`:
+- [x] T018 [US0] Create `/supabase/migrations/20251120000003_create_rls_policies.sql`:
   - Enable RLS on all tables
   - **User table policies**:
     - Users can SELECT/UPDATE their own row
@@ -151,7 +152,7 @@ Phase 8 (Polish & Cross-Cutting)
   - **OAuthProvider table policies**:
     - Users can SELECT/DELETE their own OAuth providers
 
-- [ ] T019 [US0] Create `/migrations/003_create_audit_triggers.sql`:
+- [x] T019 [US0] Create `/supabase/migrations/20251120000004_create_audit_triggers.sql`:
   - Create trigger to log auth events to `audit_logs` table
   - Trigger fires on INSERT to `auth_sessions` (log login events)
   - Trigger fires on DELETE from `auth_sessions` (log logout events)
@@ -159,24 +160,24 @@ Phase 8 (Polish & Cross-Cutting)
 
 ### Local Supabase Setup
 
-- [ ] T020 [US0] Configure local Supabase with `supabase init`:
+- [x] T020 [US0] Configure local Supabase with `supabase init`:
   - Initialize Supabase project in repo root
   - Verify `.supabase/config.toml` is created with correct settings
   - Set database password and JWT secret
 
-- [ ] T021 [US0] Test local Supabase startup:
+- [x] T021 [US0] Test local Supabase startup:
   - Run `supabase start` and verify all services start (PostgreSQL, Auth, Realtime, Storage)
   - Verify migrations apply automatically
   - Verify schema is created correctly
   - Run `supabase db reset` and verify database resets to initial state
 
-- [ ] T022 [US0] Create `.supabase/seed.sql` with test data:
+- [x] T022 [US0] Create `.supabase/seed.sql` with test data:
   - Insert test users (editor, admin roles)
   - Insert test OAuth provider records
   - Insert test audit log entries
   - Verify seed data loads on `supabase db reset`
 
-- [ ] T023 [US0] Document database setup in `/specs/003-supabase-auth/quickstart.md`:
+- [x] T023 [US0] Document database setup in `/specs/003-supabase-auth/quickstart.md`:
   - Step-by-step guide for developers to set up local Supabase
   - Commands: `supabase start`, `supabase db reset`, `supabase link`
   - How to create new migrations
@@ -197,14 +198,14 @@ Phase 8 (Polish & Cross-Cutting)
 
 ### Frontend Components
 
-- [ ] T024 [P] [US1] Create `/apps/frontend/src/components/auth/LoginForm.tsx`:
+- [x] T024 [P] [US1] Create `/apps/frontend/src/components/auth/LoginForm.tsx`:
   - Form with email and password fields
   - Submit button to call `signIn(email, password)`
   - Error message display for failed login
   - Link to password reset page
   - Link to signup page
 
-- [ ] T025 [P] [US1] Create `/apps/frontend/src/components/auth/SignupForm.tsx`:
+- [x] T025 [P] [US1] Create `/apps/frontend/src/components/auth/SignupForm.tsx`:
   - Form with email and password fields
   - Password strength validation (8+ chars, uppercase, number)
   - Submit button to call `signUp(email, password)`
@@ -212,48 +213,48 @@ Phase 8 (Polish & Cross-Cutting)
   - Success message: "Verification email sent"
   - Link to login page
 
-- [ ] T026 [P] [US1] Create `/apps/frontend/src/components/auth/PasswordResetForm.tsx`:
+- [x] T026 [P] [US1] Create `/apps/frontend/src/components/auth/PasswordResetForm.tsx`:
   - Form with email field
   - Submit button to call `resetPassword(email)`
   - Success message: "Reset link sent to email"
   - Link back to login
 
-- [ ] T027 [P] [US1] Create `/apps/frontend/src/components/ui/Button.tsx` (shadcn/ui):
-  - Reusable button component with variants (primary, secondary, danger)
+- [x] T027 [P] [US1] Create design system components in `/packages/ui/src/primitives/`:
+  - Button.tsx with variants (primary, secondary, danger, outline, ghost)
   - Loading state with spinner
   - Disabled state
 
-- [ ] T028 [P] [US1] Create `/apps/frontend/src/components/ui/Input.tsx` (shadcn/ui):
+- [x] T028 [P] [US1] Create design system Input component in `/packages/ui/src/primitives/`:
   - Reusable input component with label, error message, placeholder
   - Support for email, password, text types
 
-- [ ] T029 [P] [US1] Create `/apps/frontend/src/components/ui/Card.tsx` (shadcn/ui):
-  - Reusable card component for forms and content
+- [x] T029 [P] [US1] Create design system Card components in `/packages/ui/src/primitives/`:
+  - Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter
 
 ### Frontend Pages
 
-- [ ] T030 [US1] Create `/apps/frontend/src/app/(auth)/login/page.tsx`:
+- [x] T030 [US1] Create `/apps/frontend/src/app/(auth)/login/page.tsx`:
   - Display LoginForm component
   - Redirect to dashboard if already authenticated
   - Tailwind CSS styling with shadcn/ui components
 
-- [ ] T031 [US1] Create `/apps/frontend/src/app/(auth)/signup/page.tsx`:
+- [x] T031 [US1] Create `/apps/frontend/src/app/(auth)/signup/page.tsx`:
   - Display SignupForm component
   - Redirect to dashboard if already authenticated
   - Tailwind CSS styling
 
-- [ ] T032 [US1] Create `/apps/frontend/src/app/(auth)/password-reset/page.tsx`:
+- [x] T032 [US1] Create `/apps/frontend/src/app/(auth)/password-reset/page.tsx`:
   - Display PasswordResetForm component
   - Handle reset token from URL query parameter
   - Allow user to enter new password
 
-- [ ] T033 [US1] Create `/apps/frontend/src/app/(auth)/callback/page.tsx`:
+- [x] T033 [US1] Create `/apps/frontend/src/app/(auth)/callback/page.tsx`:
   - Handle OAuth and email verification callbacks
   - Extract token from URL
   - Verify email or complete OAuth flow
   - Redirect to dashboard on success
 
-- [ ] T034 [US1] Create `/apps/frontend/src/app/dashboard/page.tsx`:
+- [x] T034 [US1] Create `/apps/frontend/src/app/dashboard/page.tsx`:
   - Protected page (requires authentication)
   - Display welcome message with user email
   - Display logout button
@@ -261,22 +262,30 @@ Phase 8 (Polish & Cross-Cutting)
 
 ### Backend Integration
 
-- [ ] T035 [US1] Configure Supabase Auth settings:
+- [x] T035 [US1] Configure Supabase Auth settings:
   - Enable email/password authentication
   - Configure email provider (SMTP or Supabase default)
   - Set email verification required
   - Set password reset link validity to 24 hours
   - Configure JWT expiration (1 hour) and refresh token validity (7 days)
 
-- [ ] T036 [US1] Create API route `/apps/frontend/src/app/api/auth/logout/route.ts`:
+- [x] T036 [US1] Create API route `/apps/frontend/src/app/api/auth/logout/route.ts`:
   - Handle logout requests
   - Clear session cookie
   - Return success response
 
-- [ ] T037 [US1] Create API route `/apps/frontend/src/app/api/auth/user/route.ts`:
+- [x] T037 [US1] Create API route `/apps/frontend/src/app/api/auth/user/route.ts`:
   - Return current authenticated user info
   - Include user ID, email, role
   - Require authentication
+
+### Code Quality & Validation
+
+- [x] T037a [US1] Code cleanup and validation:
+  - Remove unused files and exports
+  - Fix knip.json configuration
+  - Validation passing (✅ No rogue .md files)
+  - Note: Unused dependencies are false positives (used by shadcn/ui)
 
 ### Manual Testing
 

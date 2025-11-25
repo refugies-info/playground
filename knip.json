@@ -1,17 +1,17 @@
 {
   "workspaces": {
     "packages/shared": {
-      "entry": ["index.ts"],
-      "project": ["**/*.ts"]
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/ui": {
+      "project": ["src/**/*.ts", "src/**/*.tsx"]
     },
     "apps/frontend": {
-      "entry": [
-        "src/app/layout.tsx",
-        "src/app/page.tsx",
-        "src/lib/supabase.ts"
-      ],
+      "entry": ["src/lib/supabase.ts", "src/lib/auth.ts"],
       "project": ["src/**/*.ts", "src/**/*.tsx"]
     }
   },
-  "ignore": ["node_modules", "dist", "build", ".next", "coverage", ".turbo"]
+  "ignore": ["node_modules", "dist", "build", ".next", "coverage", ".turbo"],
+  "ignoreDependencies": ["husky"]
 }

@@ -231,7 +231,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
           <Input
             label="Email"
             type="email"
-            placeholder="you@example.com"
+            placeholder="rosa@refugies.info"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
