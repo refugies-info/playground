@@ -1,5 +1,5 @@
 import { parseLheoXml } from "./lheo";
 
-export const convertXmlToJson = (xmlString: string): object => {
+export const lheoXmlToJson = (xmlString: string) => {
   return parseLheoXml(xmlString);
 };
