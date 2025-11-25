@@ -1,13 +1,13 @@
 import { parseLheoXml } from "./lheo";
 import { convertXmlToYaml } from "./yaml";
 
-export async function extractMarkdownContent(
+export const extractMarkdownContent = async (
   xmlString: string
-): Promise<string> {
+): Promise<string> => {
   const json = await parseLheoXml(xmlString);
 
   // Helper to find nodes recursively
-  function findNodes(obj: any, key: string): any[] {
+  const findNodes = (obj: any, key: string): any[] => {
     let results: any[] = [];
     if (!obj) return results;
 
@@ -28,14 +28,14 @@ export async function extractMarkdownContent(
       }
     }
     return results;
-  }
+  };
 
   // Helper to get text content from potentially object with _text property
-  function getText(node: any): string {
+  const getText = (node: any): string => {
     if (typeof node === "string") return node;
     if (node && typeof node === "object" && node._text) return node._text;
     return "";
-  }
+  };
 
   const intitules = findNodes(json, "intitule-formation");
   const objectifs = findNodes(json, "objectif-formation");
@@ -56,12 +56,12 @@ export async function extractMarkdownContent(
   }
 
   return markdown;
-}
+};
 
-export async function convertXmlToMarkdownWithFrontmatter(
+export const convertXmlToMarkdownWithFrontmatter = async (
   xmlString: string
-): Promise<string> {
+): Promise<string> => {
   const yaml = await convertXmlToYaml(xmlString);
   const markdownBody = await extractMarkdownContent(xmlString);
   return `---\n${yaml}---\n\n${markdownBody}`;
-}
+};
