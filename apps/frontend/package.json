@@ -9,6 +9,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@refugies/ui": "workspace:*",
     "@shared/types": "workspace:*",
     "@supabase/supabase-js": "^2.83.0",
     "next": "16.0.3",
