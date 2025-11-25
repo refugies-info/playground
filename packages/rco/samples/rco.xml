@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lheo xmlns="http://lheo.gouv.fr/2.3">
+	<offres>
+		<formation numero="01_GE335067" ref="755" datecrea="20240312" datemaj="20241213" href="https://formation.grandest.fr/accueil/formations/113663">
+			<domaine-formation>
+				<code-FORMACODE ref="V14" tag="principal">15235</code-FORMACODE>
+			</domaine-formation>
+			<intitule-formation>Cours de français langue d'intégration</intitule-formation>
+			<objectif-formation>&lt;p&gt;L'objectif du cours de Français Langue d'Intégration est d'apporter de l'aide dans les processus de socialisation des populations migrantes par l'apprentissage du français. Il s'agit de développer les compétences communicatives orales et écrites afin de favoriser l'autonomie de la personne, d'aider l'apprenant à s'approprier l'environnement social et les règles de la vie en France, de le rendre indépendant grâce à son travail et de le sensibiliser à la culture française.&lt;br /&gt;&lt;br /&gt;&lt;/p&gt;</objectif-formation>
+			<resultats-attendus>attestation de suivi ou de présence</resultats-attendus>
+			<contenu-formation>&lt;p&gt;Proposition de cours de niveau A1, A2, B1, de cours de conversation, de cours d'alphabétisation.&lt;br /&gt;&lt;/p&gt;</contenu-formation>
+			<certifiante>0</certifiante>
+			<contact-formation tag="principal">
+				<type-contact>4</type-contact>
+				<coordonnees>
+					<nom>Accueil</nom>
+					<prenom>Service</prenom>
+					<telfixe>
+						<numtel>0300000000</numtel>
+					</telfixe>
+					<courriel>accueil@xxx.fr</courriel>
+				</coordonnees>
+			</contact-formation>
+			<parcours-de-formation>1</parcours-de-formation>
+			<code-niveau-entree>1</code-niveau-entree>
+			<objectif-general-formation>5</objectif-general-formation>
+			<certification/>
+			<code-niveau-sortie>1</code-niveau-sortie>
+			<url-formation>
+				<urlweb>https://formation.grandest.fr/accueil/formations/113663</urlweb>
+			</url-formation>
+			<action numero="01_GE1716206" datemaj="20241213" datecrea="20240312">
+				<rythme-formation>Nombre d'heures variant par semaine selon le groupe de niveau.</rythme-formation>
+				<code-public-vise ref="V14">81022</code-public-vise>
+				<code-public-vise ref="V14">81023</code-public-vise>
+				<code-public-vise ref="V14">81042</code-public-vise>
+				<niveau-entree-obligatoire>1</niveau-entree-obligatoire>
+				<modalites-alternance>Aucun rythme d alternance declare.</modalites-alternance>
+				<modalites-enseignement>0</modalites-enseignement>
+				<conditions-specifiques>Positionnement selon niveau par le CIDFF</conditions-specifiques>
+				<prise-en-charge-frais-possible>0</prise-en-charge-frais-possible>
+				<lieu-de-formation tag="principal">
+					<coordonnees>
+						<adresse>
+							<denomination>Maison de quartier</denomination>
+							<ligne>95 Rue de Mulhouse</ligne>
+							<codepostal>68300</codepostal>
+							<ville>Saint-Louis</ville>
+							<departement>68</departement>
+							<code-INSEE-commune>68297</code-INSEE-commune>
+							<region>44</region>
+							<pays>FR</pays>
+							<geolocalisation>
+								<latitude>47.592185</latitude>
+								<longitude>7.55682</longitude>
+							</geolocalisation>
+						</adresse>
+					</coordonnees>
+				</lieu-de-formation>
+				<modalites-entrees-sorties>1</modalites-entrees-sorties>
+				<session numero="GE1716206" ref="1922">
+					<periode>
+						<debut>20240101</debut>
+						<fin>20261218</fin>
+					</periode>
+					<adresse-inscription>
+						<adresse>
+							<denomination>Maison de quartier</denomination>
+							<ligne>95 Rue de Mulhouse</ligne>
+							<codepostal>68300</codepostal>
+							<ville>Saint-Louis</ville>
+							<code-INSEE-commune>68297</code-INSEE-commune>
+						</adresse>
+					</adresse-inscription>
+					<modalites-inscription>FLI niveau A1.1</modalites-inscription>
+					<periode-inscription>
+						<periode>
+							<debut>20240101</debut>
+							<fin>20261218</fin>
+						</periode>
+					</periode-inscription>
+					<etat-recrutement>1</etat-recrutement>
+					<contact-session tag="principal">
+						<type-contact>3</type-contact>
+						<coordonnees>
+							<nom>Robert-Tissot</nom>
+							<prenom>Frederique</prenom>
+							<telfixe>
+								<numtel>0700000000</numtel>
+							</telfixe>
+							<courriel>fle@yyy.fr</courriel>
+						</coordonnees>
+					</contact-session>
+					<reference-certification/>
+				</session>
+				<acces-handicapes>Oui</acces-handicapes>
+				<conventionnement>1</conventionnement>
+				<organisme-formateur numero="01_GE305705" tag="principal">
+					<SIRET-formateur>
+						<SIRET>77897285100068</SIRET>
+					</SIRET-formateur>
+					<raison-sociale-formateur>Centre socio-culturel de Saint-Louis</raison-sociale-formateur>
+					<contact-formateur tag="principal">
+						<type-contact>4</type-contact>
+						<coordonnees>
+							<nom>Accueil</nom>
+							<prenom>Service</prenom>
+							<ligne>Accueil</ligne>
+							<telfixe>
+								<numtel>0300000000</numtel>
+							</telfixe>
+							<courriel>accueil@zzz.fr</courriel>
+						</coordonnees>
+					</contact-formateur>
+					<reference-certification/>
+				</organisme-formateur>
+				<organisme-financeur>
+					<code-financeur>19</code-financeur>
+					<nb-places-financees>10</nb-places-financees>
+					<extras info="specificites">
+						<extra info="code-public-vise" ref="V14">81022</extra>
+						<extra info="code-public-vise" ref="V14">81023</extra>
+						<extra info="code-public-vise" ref="V14">81042</extra>
+						<extra info="programme-financeur">ASL</extra>
+						<extra info="ref-action-marche-financeur">BOP 104</extra>
+					</extras>
+				</organisme-financeur>
+				<extras info="dispositif">
+					<extra info="contrat-apprentissage">0</extra>
+					<extra info="contrat-professionnalisation">0</extra>
+				</extras>
+			</action>
+			<organisme-formation-responsable numero="01_GE305705" ref="755" href="https://formation.grandest.fr/organisme/fiche/4298">
+				<numero-activite>00000000000</numero-activite>
+				<SIRET-organisme-formation>
+					<SIRET>77897285100068</SIRET>
+				</SIRET-organisme-formation>
+				<nom-organisme>CSC Espace des Lys</nom-organisme>
+				<raison-sociale>Centre socio-culturel de Saint-Louis</raison-sociale>
+				<coordonnees-organisme>
+					<coordonnees>
+						<adresse>
+							<denomination>CSC Espace des Lys</denomination>
+							<ligne>56 Rue du Docteur Marcel Hurst</ligne>
+							<codepostal>68300</codepostal>
+							<ville>Saint-Louis</ville>
+							<departement>68</departement>
+							<code-INSEE-commune>68297</code-INSEE-commune>
+							<region>44</region>
+							<pays>FR</pays>
+							<geolocalisation>
+								<latitude>47.577706</latitude>
+								<longitude>7.556829</longitude>
+							</geolocalisation>
+						</adresse>
+						<telfixe>
+							<numtel>0300000000</numtel>
+						</telfixe>
+						<courriel>direction@aaa.fr</courriel>
+					</coordonnees>
+				</coordonnees-organisme>
+				<contact-organisme tag="principal">
+					<type-contact>4</type-contact>
+					<coordonnees>
+						<nom>Accueil</nom>
+						<prenom>Service</prenom>
+						<ligne>Accueil</ligne>
+						<telfixe>
+							<numtel>0300000000</numtel>
+						</telfixe>
+						<courriel>accueil@bbb.fr</courriel>
+					</coordonnees>
+				</contact-organisme>
+				<extras info="categorie-organisme">
+					<extra info="code-categorie-organisme">13</extra>
+				</extras>
+			</organisme-formation-responsable>
+		</formation>
+		<extras info="flux-intercarif">
+			<extra info="date-export">20251101</extra>
+			<extra info="heure-export">062847</extra>
+		</extras>
+	</offres>
+</lheo>
