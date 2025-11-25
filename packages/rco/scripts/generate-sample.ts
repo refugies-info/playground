@@ -2,8 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { convertXmlToMarkdownWithFrontmatter } from "../src/index";
 
-const sampleXmlPath = path.join(__dirname, "../tests/sample.xml");
-const outputDir = path.join(__dirname, "../content/formations");
+const sampleXmlPath = path.join(__dirname, "../samples/sample.xml");
+const outputDir = path.join(__dirname, "../output");
 const outputPath = path.join(outputDir, "sample.md");
 
 if (!fs.existsSync(outputDir)) {
