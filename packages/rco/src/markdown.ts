@@ -1,8 +1,10 @@
 import { parseLheoXml } from "./lheo";
 import { convertXmlToYaml } from "./yaml";
 
-export function extractMarkdownContent(xmlString: string): string {
-  const json = parseLheoXml(xmlString);
+export async function extractMarkdownContent(
+  xmlString: string
+): Promise<string> {
+  const json = await parseLheoXml(xmlString);
 
   // Helper to find nodes recursively
   function findNodes(obj: any, key: string): any[] {
@@ -56,8 +58,10 @@ export function extractMarkdownContent(xmlString: string): string {
   return markdown;
 }
 
-export function convertXmlToMarkdownWithFrontmatter(xmlString: string): string {
-  const yaml = convertXmlToYaml(xmlString);
-  const markdownBody = extractMarkdownContent(xmlString);
+export async function convertXmlToMarkdownWithFrontmatter(
+  xmlString: string
+): Promise<string> {
+  const yaml = await convertXmlToYaml(xmlString);
+  const markdownBody = await extractMarkdownContent(xmlString);
   return `---\n${yaml}---\n\n${markdownBody}`;
 }

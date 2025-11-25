@@ -1,7 +1,7 @@
 import YAML from "yaml";
 import { parseLheoXml } from "./lheo";
 
-export function convertXmlToYaml(xmlString: string): string {
-  const json = parseLheoXml(xmlString);
+export async function convertXmlToYaml(xmlString: string): Promise<string> {
+  const json = await parseLheoXml(xmlString);
   return YAML.stringify(json);
 }
