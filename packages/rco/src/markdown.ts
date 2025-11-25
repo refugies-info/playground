@@ -2,7 +2,7 @@ import { parseLheoXml } from "./lheo";
 import { lheoXmlToYaml } from "./yaml";
 
 export const extractMarkdownContent = async (
-  xmlString: string
+  xmlString: string,
 ): Promise<string> => {
   const json = await parseLheoXml(xmlString);
 
@@ -59,7 +59,7 @@ export const extractMarkdownContent = async (
 };
 
 export const lheoXmlToMarkdownWithFrontmatter = async (
-  xmlString: string
+  xmlString: string,
 ): Promise<string> => {
   const yaml = await lheoXmlToYaml(xmlString);
   const markdownBody = await extractMarkdownContent(xmlString);

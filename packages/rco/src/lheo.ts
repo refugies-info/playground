@@ -64,7 +64,7 @@ const parser = new XMLParser({
 });
 
 export const parseLheoXml = async (
-  xmlString: string
+  xmlString: string,
 ): Promise<LheoDocument> => {
   const { XmlDocument, XsdValidator } = await import("libxml2-wasm");
   const fs = await import("node:fs");

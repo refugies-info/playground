@@ -8,7 +8,7 @@ const sampleXml = fs.readFileSync(sampleXmlPath, "utf-8");
 
 describe("JSON Module", () => {
   it("should convert XML to JSON", async () => {
-    const json = (await lheoXmlToJson(sampleXml)) as any;
+    const json = await lheoXmlToJson(sampleXml);
     expect(json.lheo).toBeDefined();
     expect(json.lheo.offres.formation).toBeDefined();
   });
