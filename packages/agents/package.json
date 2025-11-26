@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@letta-ai/letta-client": "^1.2.0",
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "gray-matter": "^4.0.3",
+    "rco": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

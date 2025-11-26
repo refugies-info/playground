@@ -12,7 +12,7 @@ async function main() {
   } catch (error) {
     console.error(
       "Error listing agents (expected if server is not running):",
-      error instanceof Error ? error.message : String(error)
+      error instanceof Error ? error.message : String(error),
     );
   }
 }
