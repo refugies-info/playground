@@ -1,13 +1,13 @@
 /** biome-ignore-all lint/suspicious/noConsole: It's fine for a script */
-import { LettaService } from "../src/index";
+import { createLettaClient, listAgents } from "../src/index";
 
 async function main() {
-  console.log("Initializing LettaService...");
-  const service = new LettaService();
+  console.log("Initializing Letta client...");
+  const client = createLettaClient();
 
   try {
     console.log("Listing agents...");
-    const agents = await service.listAgents();
+    const agents = await listAgents(client);
     console.log("Agents:", agents);
   } catch (error) {
     console.error(

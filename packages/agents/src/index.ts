@@ -1,1 +1,1 @@
-export * from "./letta-client";
+export * from "./letta";
