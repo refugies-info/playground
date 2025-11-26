@@ -20,6 +20,16 @@ async function main() {
   try {
     const markdown = await checkCompliance(client, xmlContent);
 
+    // Write output to file
+    const outputDir = path.resolve(__dirname, "../output");
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    const outputPath = path.join(outputDir, "rco-compliance.md");
+    fs.writeFileSync(outputPath, markdown, "utf-8");
+
+    console.log(`\nOutput written to: ${outputPath}`);
     console.log("\n========== COMPLIANCE RESULT ==========\n");
     console.log(markdown);
     console.log("========================================\n");

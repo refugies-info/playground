@@ -31,6 +31,11 @@ export const checkCompliance = async (
     throw new Error("COMPLIANCE_AGENT_ID is not defined");
   }
 
+  // Clear previous messages before each call
+  await client.agents.messages.reset(agentId, {
+    add_default_initial_messages: true,
+  });
+
   const response = await client.agents.messages.create(agentId, {
     messages: [
       {
