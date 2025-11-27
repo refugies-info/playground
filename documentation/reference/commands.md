@@ -23,10 +23,10 @@ PORT=3001 pnpm dev
 
 ```bash
 # Check TypeScript errors
-pnpm type-check
+pnpm check:types
 
 # Watch mode (continuous checking)
-pnpm type-check --watch
+pnpm check:types --watch
 ```
 
 ### Linting & Formatting
@@ -411,6 +411,7 @@ alias gl="git log --oneline"
 ## Troubleshooting
 
 **Port already in use?**
+
 ```bash
 # Find process on port 3000
 lsof -ti:3000
@@ -420,6 +421,7 @@ lsof -ti:3000 | xargs kill -9
 ```
 
 **Dependencies not installing?**
+
 ```bash
 # Clear cache and reinstall
 pnpm store prune
@@ -428,6 +430,7 @@ pnpm install
 ```
 
 **Build failing?**
+
 ```bash
 # Clean build
 pnpm clean
@@ -435,10 +438,11 @@ pnpm install
 pnpm build
 
 # Check for TypeScript errors
-pnpm type-check
+pnpm check:types
 ```
 
 **Supabase won't start?**
+
 ```bash
 # Check Docker is running
 docker ps

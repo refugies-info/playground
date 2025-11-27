@@ -45,6 +45,7 @@ pnpm supabase:start
 ```
 
 This starts the local Supabase instance. You'll see output with:
+
 - API URL (usually `http://localhost:54321`)
 - Anon key
 - Service role key
@@ -70,7 +71,7 @@ The frontend will be available at `http://localhost:3000`.
 pnpm dev
 
 # Run type checking
-pnpm type-check
+pnpm check:types
 
 # Run linting
 pnpm lint
@@ -117,8 +118,8 @@ Run tasks in specific workspaces:
 # Run dev in frontend only
 pnpm --filter @refugies/frontend dev
 
-# Run type-check in all packages
-pnpm type-check
+# Run check:types in all packages
+pnpm check:types
 ```
 
 ---
@@ -142,7 +143,7 @@ pnpm type-check
 
 ```bash
 # Check for TypeScript errors
-pnpm type-check
+pnpm check:types
 
 # Fix formatting issues
 pnpm format
@@ -153,6 +154,7 @@ pnpm format
 ## Common Issues
 
 **Port already in use?**
+
 ```bash
 # Kill process on port 3000
 lsof -ti:3000 | xargs kill -9
@@ -162,6 +164,7 @@ lsof -ti:54321 | xargs kill -9
 ```
 
 **Dependencies not installing?**
+
 ```bash
 # Clear pnpm cache
 pnpm store prune
@@ -172,6 +175,7 @@ pnpm install
 ```
 
 **Supabase won't start?**
+
 ```bash
 # Check Docker is running
 docker ps
