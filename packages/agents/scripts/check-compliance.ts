@@ -28,6 +28,7 @@ async function main() {
 
     const outputPath = path.join(outputDir, "rco-compliance.md");
     fs.writeFileSync(outputPath, markdown, "utf-8");
+    console.log("Output written to:", outputPath);
   } catch (error) {
     console.error(
       "Error calling checkCompliance:",
