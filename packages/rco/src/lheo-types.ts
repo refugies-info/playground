@@ -17,7 +17,7 @@ export interface LheoRootAttributes extends LheoAttributeGroup {
 }
 
 export interface Extras {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Basic types

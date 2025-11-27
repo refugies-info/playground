@@ -4,11 +4,11 @@
  */
 
 import type {
-  User,
   AuthSession,
-  SignUpRequest,
-  SignInRequest,
   CurrentUserResponse,
+  SignInRequest,
+  SignUpRequest,
+  User,
 } from "@shared";
 
 import { supabaseClient } from "./supabase";
@@ -74,7 +74,9 @@ export async function signIn(request: SignInRequest): Promise<{
             id: data.session.user.id,
             user_id: data.session.user.id,
             token: data.session.access_token,
-            expires_at: new Date(data.session.expires_at! * 1000).toISOString(),
+            expires_at: data.session.expires_at
+              ? new Date(data.session.expires_at * 1000).toISOString()
+              : undefined,
             created_at: new Date().toISOString(),
           }
         : null,
@@ -137,13 +139,15 @@ export async function getCurrentUser(): Promise<CurrentUserResponse> {
             id: session.user.id,
             user_id: session.user.id,
             token: session.access_token,
-            expires_at: new Date(session.expires_at! * 1000).toISOString(),
+            expires_at: session.expires_at
+              ? new Date(session.expires_at * 1000).toISOString()
+              : undefined,
             created_at: new Date().toISOString(),
           }
         : null,
       isAuthenticated: !!user,
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       user: null,
       session: null,

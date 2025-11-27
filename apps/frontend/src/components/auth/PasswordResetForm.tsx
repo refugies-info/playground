@@ -1,9 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
-import Link from "next/link";
-
 import {
   Button,
   Card,
@@ -13,6 +9,9 @@ import {
   CardTitle,
   Input,
 } from "@refugies/ui";
+
+import Link from "next/link";
+import { useState } from "react";
 
 interface PasswordResetFormProps {
   onSubmit?: (email: string) => Promise<void>;
@@ -38,7 +37,7 @@ export function PasswordResetForm({ onSubmit }: PasswordResetFormProps) {
       setEmail("");
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to send reset link"
+        err instanceof Error ? err.message : "Failed to send reset link",
       );
     } finally {
       setIsLoading(false);

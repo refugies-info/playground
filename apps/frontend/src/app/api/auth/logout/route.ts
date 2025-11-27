@@ -14,14 +14,14 @@ export async function POST(request: NextRequest) {
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
         { error: "Missing or invalid authorization header" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     // Create response and clear auth cookie
     const response = NextResponse.json(
       { message: "Successfully logged out" },
-      { status: 200 }
+      { status: 200 },
     );
 
     // Clear the Supabase auth cookie
@@ -34,10 +34,11 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
+    // biome-ignore lint/suspicious/noConsole: For debugging
     console.error("Logout error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

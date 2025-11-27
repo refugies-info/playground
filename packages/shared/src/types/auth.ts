@@ -22,7 +22,7 @@ export interface AuthSession {
   id: string; // UUID
   user_id: string; // FK to User
   token: string; // JWT token
-  expires_at: string; // ISO 8601 timestamp
+  expires_at: string | undefined; // ISO 8601 timestamp
   created_at: string; // ISO 8601 timestamp
 }
 

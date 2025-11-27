@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import { PasswordResetForm, PasswordConfirmForm } from "@/components/auth";
+import { PasswordConfirmForm, PasswordResetForm } from "@/components/auth";
 import { resetPassword, updatePassword } from "@/lib/auth";
 
 export default function PasswordResetPage() {

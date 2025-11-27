@@ -12,7 +12,7 @@ if (typeof window === "undefined") {
   for (const envVar of requiredEnvVars) {
     if (!process.env[envVar]) {
       console.warn(
-        `Warning: Missing environment variable ${envVar}. This may cause runtime errors.`
+        `Warning: Missing environment variable ${envVar}. This may cause runtime errors.`,
       );
     }
   }
@@ -23,7 +23,7 @@ if (typeof window === "undefined") {
     !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   ) {
     console.warn(
-      "Warning: Missing Supabase key. Please define NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY."
+      "Warning: Missing Supabase key. Please define NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY.",
     );
   }
 }
