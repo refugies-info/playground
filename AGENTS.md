@@ -54,15 +54,17 @@ content-playground/
 ### 1. Package Management
 
 - Always use `pnpm`.
-- Install dependencies: `pnpm install`
-- Add dependencies: `pnpm add <package> --filter <workspace>` (e.g., `pnpm add date-fns --filter frontend`)
+- **Install dependencies**: `pnpm install`
+- **Add dependencies**: `pnpm add <package> --filter <workspace>` (e.g., `pnpm add date-fns --filter frontend`)
+- **Check for outdated packages**: `pnpm check:outdated` (uses `taze` to check and update dependencies recursively)
+- **Audit dependencies**: `pnpm audit`
 
 ### 2. Running the Project
 
 - **Dev Server**: `pnpm dev` (starts all apps)
 - **Build**: `pnpm build`
 - **Lint/Format**: `pnpm lint` / `pnpm format` (uses Biome)
-- **Type Check**: `pnpm type-check`
+- **Type Check**: `pnpm check:types`
 
 ### 3. Coding Conventions
 

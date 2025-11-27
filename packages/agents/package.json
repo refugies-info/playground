@@ -6,7 +6,7 @@
   "types": "./src/index.ts",
   "scripts": {
     "test": "vitest run",
-    "type-check": "tsc --noEmit"
+    "check:types": "tsc --noEmit"
   },
   "dependencies": {
     "@letta-ai/letta-client": "^1.3.1",

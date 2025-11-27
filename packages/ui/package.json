@@ -26,7 +26,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "type-check": "tsc --noEmit"
+    "check:types": "tsc --noEmit"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.0.2",

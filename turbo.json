@@ -15,7 +15,7 @@
       "outputs": [],
       "cache": true
     },
-    "type-check": {
+    "check:types": {
       "outputs": [],
       "cache": true
     }

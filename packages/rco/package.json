@@ -6,7 +6,7 @@
   "types": "./src/index.ts",
   "scripts": {
     "test": "vitest run",
-    "type-check": "tsc --noEmit",
+    "check:types": "tsc --noEmit",
     "generate-json": "tsx scripts/generate-json.ts",
     "generate-md": "tsx scripts/generate-md.ts"
   },

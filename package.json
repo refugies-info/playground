@@ -7,7 +7,7 @@
   "scripts": {
     "build": "turbo build",
     "check:outdated": "pnpx taze -r",
-    "check:types": "turbo type-check",
+    "check:types": "turbo check:types",
     "dev": "turbo dev",
     "format": "biome format --write .",
     "knip": "knip",

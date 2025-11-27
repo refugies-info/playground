@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "tsc --noEmit",
-    "type-check": "tsc --noEmit"
+    "check:types": "tsc --noEmit"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
