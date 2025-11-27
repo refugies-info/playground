@@ -1,9 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
-import Link from "next/link";
-
 import {
   Button,
   Card,
@@ -13,6 +9,9 @@ import {
   CardTitle,
   Input,
 } from "@refugies/ui";
+
+import Link from "next/link";
+import { useState } from "react";
 
 interface PasswordConfirmFormProps {
   onSubmit?: (password: string) => Promise<void>;
@@ -70,7 +69,7 @@ export function PasswordConfirmForm({ onSubmit }: PasswordConfirmFormProps) {
       setConfirmPassword("");
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Echec de la reinitialisation"
+        err instanceof Error ? err.message : "Echec de la reinitialisation",
       );
     } finally {
       setIsLoading(false);

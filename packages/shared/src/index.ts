@@ -5,17 +5,17 @@
 
 // Auth types
 export type {
-  User,
-  AuthSession,
-  OAuthProvider,
   AuthError,
-  SignUpRequest,
+  AuthSession,
+  CurrentUserResponse,
+  LinkOAuthRequest,
+  OAuthProvider,
+  OAuthSignInResponse,
+  PasswordResetConfirmRequest,
+  PasswordResetRequest,
   SignInRequest,
   SignInResponse,
-  PasswordResetRequest,
-  PasswordResetConfirmRequest,
-  OAuthSignInResponse,
-  LinkOAuthRequest,
+  SignUpRequest,
   UnlinkOAuthRequest,
-  CurrentUserResponse,
+  User,
 } from "./types/auth";

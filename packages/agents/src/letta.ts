@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { Letta } from "@letta-ai/letta-client";
+import type { AssistantMessage } from "@letta-ai/letta-client/resources/agents.js";
 import matter from "gray-matter";
 
 export interface LettaConfig {
@@ -24,7 +25,7 @@ export const getAgent = async (client: Letta, agentId: string) => {
 
 export const checkCompliance = async (
   client: Letta,
-  xmlContent: string
+  xmlContent: string,
 ): Promise<string> => {
   const agentId = process.env.COMPLIANCE_AGENT_ID;
   if (!agentId) {
@@ -46,13 +47,17 @@ export const checkCompliance = async (
   });
 
   const messages = response.messages;
-  const lastMessage = [...messages].reverse().find((m: any) => m.content);
+  const lastMessage = [...messages]
+    .reverse()
+    .find(
+      ({ message_type }) => message_type === "assistant_message",
+    ) as AssistantMessage;
 
   if (!lastMessage) {
     throw new Error("No message with content found in response");
   }
 
-  const content = (lastMessage as any).content;
+  const content = lastMessage.content;
   const messageContent =
     typeof content === "string" ? content : JSON.stringify(content);
 

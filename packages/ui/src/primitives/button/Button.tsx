@@ -1,6 +1,5 @@
-import * as React from "react";
-
 import { cva, type VariantProps } from "class-variance-authority";
+import * as React from "react";
 
 import { cn } from "../../utils";
 
@@ -27,7 +26,7 @@ const buttonVariants = cva(
       variant: "primary",
       size: "md",
     },
-  }
+  },
 );
 
 export interface ButtonProps
@@ -39,7 +38,7 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     { className, variant, size, isLoading, disabled, children, ...props },
-    ref
+    ref,
   ) => (
     <button
       className={cn(buttonVariants({ variant, size, className }))}
@@ -49,6 +48,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     >
       {isLoading ? (
         <span className="flex items-center gap-2">
+          {/** biome-ignore lint/a11y/noSvgWithoutTitle: Not needed in POC */}
           <svg
             className="animate-spin h-4 w-4"
             xmlns="http://www.w3.org/2000/svg"
@@ -75,7 +75,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         children
       )}
     </button>
-  )
+  ),
 );
 Button.displayName = "Button";
 

@@ -1,9 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
-import Link from "next/link";
-
 import {
   Button,
   Card,
@@ -13,6 +9,9 @@ import {
   CardTitle,
   Input,
 } from "@refugies/ui";
+
+import Link from "next/link";
+import { useState } from "react";
 
 interface SignupFormProps {
   onSubmit?: (email: string, password: string) => Promise<void>;

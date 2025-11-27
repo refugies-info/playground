@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Button } from "@refugies/ui";
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-
-import { Button } from "@refugies/ui";
+import { useState } from "react";
 
 import { signOut } from "@/lib/auth";
 
@@ -22,12 +21,14 @@ export default function DashboardPage() {
       }
 
       // Clear middleware cookie so protected routes lock again
+      // biome-ignore lint/suspicious/noDocumentCookie: For clearing auth cookie
       document.cookie = "sb-auth-token=; path=/; max-age=0; SameSite=Lax";
 
       // Give the browser a moment to persist the cookie change
       await new Promise((resolve) => setTimeout(resolve, 50));
       router.push("/login");
     } catch (err) {
+      // biome-ignore lint/suspicious/noConsole: For debugging
       console.error("Logout failed:", err);
     } finally {
       setIsLoading(false);

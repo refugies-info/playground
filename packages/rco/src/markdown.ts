@@ -1,4 +1,9 @@
 import { parseLheoXml } from "./lheo";
+import type {
+  ContenuFormation,
+  IntituleFormation,
+  ObjectifFormation,
+} from "./lheo-types";
 import { lheoXmlToYaml } from "./yaml";
 
 export const extractMarkdownContent = async (
@@ -7,39 +12,46 @@ export const extractMarkdownContent = async (
   const json = await parseLheoXml(xmlString);
 
   // Helper to find nodes recursively
-  const findNodes = (obj: any, key: string): any[] => {
-    let results: any[] = [];
-    if (!obj) return results;
+  const findNodes = <T>(obj: unknown, key: string): T[] => {
+    let results: T[] = [];
+    if (!obj || typeof obj !== "object") return results;
 
-    if (obj[key]) {
+    const record = obj as Record<string, unknown>;
+
+    if (key in record) {
+      const value = record[key];
       // If the node itself is an array (due to isArray=true), spread it
-      if (Array.isArray(obj[key])) {
-        results = results.concat(obj[key]);
+      if (Array.isArray(value)) {
+        results = results.concat(value as T[]);
       } else {
-        results.push(obj[key]);
+        results.push(value as T);
       }
     }
 
-    if (typeof obj === "object") {
-      for (const k in obj) {
-        if (typeof obj[k] === "object") {
-          results = results.concat(findNodes(obj[k], key));
-        }
+    for (const k in record) {
+      const value = record[k];
+      if (typeof value === "object" && value !== null) {
+        results = results.concat(findNodes<T>(value, key));
       }
     }
     return results;
   };
 
   // Helper to get text content from potentially object with _text property
-  const getText = (node: any): string => {
+  const getText = (node: unknown): string => {
     if (typeof node === "string") return node;
-    if (node && typeof node === "object" && node._text) return node._text;
+    if (node && typeof node === "object" && "_text" in node) {
+      const record = node as Record<string, unknown>;
+      if (typeof record._text === "string") {
+        return record._text;
+      }
+    }
     return "";
   };
 
-  const intitules = findNodes(json, "intitule-formation");
-  const objectifs = findNodes(json, "objectif-formation");
-  const contenus = findNodes(json, "contenu-formation");
+  const intitules = findNodes<IntituleFormation>(json, "intitule-formation");
+  const objectifs = findNodes<ObjectifFormation>(json, "objectif-formation");
+  const contenus = findNodes<ContenuFormation>(json, "contenu-formation");
 
   let markdown = "";
 

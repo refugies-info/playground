@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "turbo build",
-    "check:outdated": "pnpx taze -r",
+    "check:outdated": "pnpx taze -r --maturity-period",
     "check:types": "turbo check:types",
     "clean:branches": "pnpx git-removed-branches --prune --force",
     "dev": "turbo dev",
@@ -27,9 +27,9 @@
     "validate": "pnpm validate:docs && pnpm knip"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.7",
+    "@biomejs/biome": "2.3.6",
     "husky": "^9.1.7",
-    "knip": "5.70.1",
+    "knip": "^5.70.0",
     "postcss": "^8.5.6",
     "turbo": "^2.6.1"
   }

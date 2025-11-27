@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/** biome-ignore-all lint/suspicious/noConsole: Fine for test scripts */
 
 /**
  * Validate Documentation Structure
@@ -14,8 +15,8 @@
  * - .specify/** (all subdirectories)
  */
 
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const ALLOWED_PATTERNS = [
   "AGENTS.md",
@@ -52,7 +53,7 @@ function isAllowed(filePath) {
   for (const pattern of ALLOWED_PATTERNS) {
     if (pattern.includes("**")) {
       const dir = pattern.split("/")[0];
-      if (relativePath.startsWith(dir + "/")) {
+      if (relativePath.startsWith(`${dir}/`)) {
         return true;
       }
     }

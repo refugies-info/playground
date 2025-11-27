@@ -1,6 +1,6 @@
 export * from "./button";
-export * from "./input";
 export * from "./card";
+export * from "./input";
 export * from "./table/table";
 export * from "./data-table/data-table";
 export * from "./data-table/data-table-pagination";

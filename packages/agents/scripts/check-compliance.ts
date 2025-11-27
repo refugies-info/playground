@@ -32,7 +32,7 @@ async function main() {
   } catch (error) {
     console.error(
       "Error calling checkCompliance:",
-      error instanceof Error ? error.message : String(error)
+      error instanceof Error ? error.message : String(error),
     );
   }
 }
