@@ -6,12 +6,12 @@
   "packageManager": "pnpm@9.15.9",
   "scripts": {
     "build": "turbo build",
+    "check:outdated": "pnpx taze -r",
+    "check:types": "turbo type-check",
     "dev": "turbo dev",
     "format": "biome format --write .",
     "knip": "knip",
-    "lint": "biome check --write .",
-    "taze": "pnpx taze -r",
-    "type-check": "turbo type-check"
+    "lint": "biome check --write ."
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.7",
