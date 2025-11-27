@@ -167,7 +167,7 @@ This constitution applies to:
 **Implementation Requirements (POC)**:
 
 - **Infrastructure**: Letta Cloud (hosted), Supabase free tier, manual Vercel deployment.
-- **Authentication**: Supabase Auth from day 1 with editor role (skip reviewer/admin for POC).
+- **Authentication**: Supabase Auth from day 1 with editor and admin roles (POC uses two-role system).
 - **Database**: Simple schema (no complex indexing), direct SQL queries (no ORM).
 - **UI**: Functional, not polished. Tailwind + shadcn/ui for basic styling.
 - **Testing**: Manual testing only (no automated tests).

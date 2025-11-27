@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Editorial workflow platform for Refugies.info content management",
   "private": true,
-  "packageManager": "pnpm@9.15.9",
+  "packageManager": "pnpm@10.23.0",
   "scripts": {
     "build": "turbo build",
     "check:outdated": "pnpx taze -r",
@@ -11,10 +11,13 @@
     "dev": "turbo dev",
     "format": "biome format --write .",
     "knip": "knip",
-    "lint": "biome check --write ."
+    "lint": "biome check --write .",
+    "validate:docs": "node scripts/validate-docs.js",
+    "validate": "pnpm validate:docs && pnpm knip"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.7",
+    "husky": "^9.1.7",
     "knip": "^5.70.2",
     "postcss": "^8.5.6",
     "turbo": "^2.6.1"

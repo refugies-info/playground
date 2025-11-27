@@ -39,3 +39,8 @@ coverage/
 # OS
 .DS_Store
 Thumbs.db
+
+# Supabase
+.supabase/
+.supabase.local/
+supabase/functions/node_modules/

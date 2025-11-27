@@ -33,7 +33,7 @@ Each stage is designed to be transparent, auditable, and collaborative — ensur
 
 ## 👥 Target Users
 
-- **Editorial team members** at Refugies.info (writers, translators, reviewers)  
+- **Editorial team members** at Refugies.info (writers, translators)  
 - Goal: reduce repetitive editing tasks while keeping full control over content quality and clarity
 
 ---
@@ -93,7 +93,7 @@ Each stage is designed to be transparent, auditable, and collaborative — ensur
   - `classifier-agent` — assesses data quality and flags items as accepted/rejected with reasoning
   - `rewrite-agent` — generates plain-language rewrites of accepted content
   - `validator-agent` — checks structure, completeness, and metadata before export
-- **Authentication** handled by Supabase Auth with role-based access control (editor, reviewer, admin)
+- **Authentication** handled by Supabase Auth with role-based access control (editor, admin)
 
 All interactions between AI and humans are **logged and auditable** via immutable revision records with full change history, actor attribution, and timestamps.
 
@@ -132,6 +132,40 @@ This design enables seamless scaling to translation workflows in MVP2 without ex
 
 ---
 
+## 🚀 Quick Start: Local Supabase Setup
+
+Get the local development environment running in 3 steps:
+
+```bash
+# 1. Start Supabase
+supabase start
+
+# 2. Configure environment variables
+# Copy credentials from supabase start output to apps/frontend/.env.local
+
+# 3. Access Supabase Studio
+# Open http://127.0.0.1:54323 in your browser
+```
+
+**Full documentation**: See [documentation/supabase.md](./documentation/supabase.md)
+
+**Service URLs**:
+- API: http://127.0.0.1:54321
+- Studio: http://127.0.0.1:54323
+- Database: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+
+---
+
+## 📚 Documentation
+
+Complete guides and architecture documentation available in the [documentation/](./documentation/) directory:
+
+- **[Supabase Local Development](./documentation/supabase.md)** — Setup, configuration, migrations, troubleshooting
+- **[Documentation Index](./documentation/README.md)** — All available guides and resources
+- **[Monorepo Structure](./documentation/monorepo-structure.md)** — Project organization and dependencies
+
+---
+
 ## 🧭 Development Plan
 
 ### Timeline
@@ -158,8 +192,49 @@ This design enables seamless scaling to translation workflows in MVP2 without ex
 - **As an editor**, I can discuss content rewrites with an AI chatbot and iteratively refine the output through conversation so that I can achieve the exact tone and clarity I need.
 - **As an editor**, I can manage the publication state of content items (draft, published, archived) so that I can control when content becomes visible and manage the lifecycle of published items.
 - **As an editor**, I can validate and map document metadata (pricing, dates, public status, related structures) before publishing.
-- **As a reviewer**, I can approve and export validated versions with complete metadata and audit trail for publication.
+- **As an admin**, I can manage users, assign roles, and control access permissions.
 - **As a team lead**, I can monitor progress across all stages (ingestion, quality gating, rewrite, metadata mapping, export) with analytics.
+
+---
+
+## 🎨 Component Architecture
+
+This project follows a **design-system-first approach** with clear separation between reusable design system components and page-specific feature components.
+
+- **Design System** (`/packages/ui`): Centralized, reusable UI primitives and components
+- **Feature Components** (`/apps/frontend/src/components`): Page-specific and feature-specific components
+
+For detailed guidelines on component placement, structure, and best practices, see:
+- **Quick Reference** (30 seconds): [Component Quick Reference](./documentation/frontend/component-quick-reference.md)
+- **Comprehensive Guide**: [Component Strategy](./documentation/frontend/component-strategy.md)
+
+---
+
+## 📚 Documentation Strategy
+
+This project maintains comprehensive documentation organized by **tech stack and project domains**, with clear guidelines for LLMs on creating and maintaining documentation.
+
+**Documentation Structure** (`/documentation`):
+- **Frontend** — Next.js, Tailwind CSS, shadcn/ui, component architecture
+- **Database** — Supabase, PostgreSQL, migrations, RLS policies
+- **AI** — Letta Cloud integration, custom tools, agent workflows
+- **Guides** — How-to guides for setup, deployment, development
+- **Architecture** — System design, tech stack, monorepo structure
+- **Reference** — Quick lookup (commands, environment variables, glossary)
+- **Internal** — LLM guidelines and implementation notes
+- **Workflows** — Feature-specific processes
+- **Troubleshooting** — Common issues and solutions
+
+**Key Rules for LLMs**:
+- ✅ Create `.md` files **ONLY** for long-term valuable content
+- ✅ **Always ask permission** before creating documentation
+- ✅ **Strictly respect** the `/documentation` folder structure
+- ❌ No `.md` files at project root or documentation root (except `README.md`)
+- ❌ No `/docs` folder (all documentation goes in `/documentation`)
+
+For detailed guidelines on documentation creation, see [**documentation-strategy.md**](./documentation/internal/documentation-strategy.md).
+
+**Start exploring**: [Documentation Index](./documentation/README.md)
 
 ---
 

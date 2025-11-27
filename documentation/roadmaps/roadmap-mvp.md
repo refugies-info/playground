@@ -8,7 +8,7 @@ Goal: validate the six-stage editorial workflow on real RCO data with Supabase A
 
 ### 1.a Sprint 1 – "Turborepo Init, Ingest, Sort"
 
-1. **Turborepo + scaffolding** – Initialize monorepo, Supabase project, Letta Cloud agents, and Supabase Auth (editor/reviewer roles wired to frontend + tools).
+1. **Turborepo + scaffolding** – Initialize monorepo, Supabase project, Letta Cloud agents, and Supabase Auth (editor/admin roles wired to frontend + tools).
 2. **Ingest** – Build RCO ingestion + config-driven manual sources with provenance, idempotency, validation surfacing; seed dashboards for ingestion health.
 3. **Sort / quality gate** – Letta classifier auto-flags content, stores reasoning, exposes manual override UI + filters; Next.js list view MUST let editors filter items, inspect AI rationale inline, and re-flag items with attribution.
 

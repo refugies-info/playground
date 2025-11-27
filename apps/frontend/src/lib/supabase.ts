@@ -33,17 +33,45 @@ const env = getSupabaseEnv();
  * Use for read operations in components and client-side code.
  * Row-level security (RLS) enforces access control.
  */
-export const supabaseClient = createClient(env.url, env.anonKey);
+export const supabaseClient = createClient(env.url, env.anonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    flowType: "pkce",
+    storage: typeof window !== "undefined" ? window.localStorage : undefined,
+  },
+  global: {
+    headers: {
+      "X-Client-Info": "supabase-js/web",
+    },
+  },
+});
 
 /**
  * Server-side Supabase client (service role key)
  * Use ONLY in Next.js API routes for write operations.
  * NEVER expose this key to the client.
+ *
+ * This is only exported for use in API routes (server-side only).
+ * Do NOT import this in client components.
  */
-export const supabaseServer = createClient(env.url, env.serviceRoleKey, {
-  auth: {
-    persistSession: false,
-  },
-});
+export const getSupabaseServer = () => {
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_SECRET ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!serviceRoleKey) {
+    throw new Error(
+      "SUPABASE_SERVICE_ROLE_KEY is required for server-side operations"
+    );
+  }
+
+  return createClient(env.url, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+    },
+  });
+};
 
 export type { SupabaseEnv };

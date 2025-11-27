@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Content Playground",
-  description: "Editorial workflow platform for Refugies.info",
+  description: "Editorial workflow platform for Réfugiés.info",
 };
 
 export default function RootLayout({
