@@ -41,6 +41,7 @@ export const getDispositifsPipeline = (): Document[] => [
   {
     $project: {
       _id: 0,
+      id: { $toString: "$_id" },
       titreInformatif: "$translations.fr.content.titreInformatif",
       titreMarque: "$translations.fr.content.titreMarque",
       location: "$metadatas.location",
