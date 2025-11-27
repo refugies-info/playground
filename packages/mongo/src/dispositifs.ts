@@ -1,35 +1,40 @@
 import type { Document } from "mongodb";
 
 export const getDispositifsPipeline = (): Document[] => [
-  // 1. Filter first (Standard best practice)
+  // 1. Filter first
   {
-    $match: { status: "Actif" },
+    $match: { status: "Actif", typeContenu: "dispositif" }
   },
 
-  // 2. SAFER LOOKUP: This limits matches to exactly 1 per document
+  // 2. LOOKUP (Fixed)
   {
     $lookup: {
       from: "structures",
-      let: { sponsorId: "$mainSponsor" }, // Define variable from local field
+      let: { sponsorId: "$mainSponsor" },
       pipeline: [
         {
           $match: {
-            $expr: { $eq: ["$oid", "$$sponsorId"] }, // Match foreign field to variable
-          },
+            $expr: {
+              // CRITICAL FIX: Use "$_id" (the actual DB field), not "$oid"
+              $eq: ["$_id", "$$sponsorId"]
+            }
+          }
         },
-        { $limit: 1 }, // <--- THE KEY FIX: Stop looking after 1 match
-        { $project: { nom: 1, acronyme: 1, _id: 0 } }, // Optimization: Only fetch needed fields
+        // Optimization: Stop after 1 match and only return what we need
+        // This makes the query significantly faster
+        { $limit: 1 },
+        { $project: { nom: 1, acronyme: 1, _id: 0 } }
       ],
-      as: "mainSponsorInfo",
-    },
+      as: "mainSponsorInfo"
+    }
   },
 
-  // 3. Unwind (Now safe because array size is always 0 or 1)
+  // 3. Unwind (Flattens the array created by lookup)
   {
     $unwind: {
       path: "$mainSponsorInfo",
-      preserveNullAndEmptyArrays: true,
-    },
+      preserveNullAndEmptyArrays: true
+    }
   },
 
   // 4. Project (Clean flat structure)
@@ -40,19 +45,20 @@ export const getDispositifsPipeline = (): Document[] => [
       titreMarque: "$translations.fr.content.titreMarque",
       location: "$metadatas.location",
 
-      // Clean Array Logic
+      // Keep your existing array logic
       city: {
         $filter: {
           input: { $ifNull: ["$map.city", []] },
           as: "item",
-          cond: { $ne: ["$$item", null] },
-        },
+          cond: { $ne: ["$$item", null] }
+        }
       },
 
+      // Now these will populate correctly
       mainSponsorNom: "$mainSponsorInfo.nom",
-      mainSponsorAcronyme: "$mainSponsorInfo.acronyme",
-    },
-  },
+      mainSponsorAcronyme: "$mainSponsorInfo.acronyme"
+    }
+  }
 ];
 
 import { getMongoDb } from "./client";
