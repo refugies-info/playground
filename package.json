@@ -4,6 +4,12 @@
   "description": "Editorial workflow platform for Refugies.info content management",
   "private": true,
   "packageManager": "pnpm@10.23.0",
+  "pnpm": {
+    "overrides": {
+      "undici-types": "6.18.2",
+      "vite": "5.4.19"
+    }
+  },
   "scripts": {
     "build": "turbo build",
     "check:outdated": "pnpx taze -r",
