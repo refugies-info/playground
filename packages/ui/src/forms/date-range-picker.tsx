@@ -6,7 +6,6 @@ import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 
 import { Button } from "../primitives/button/Button";
-import { cn } from "../utils/cn";
 
 interface DateRangePickerProps {
   from?: Date;
