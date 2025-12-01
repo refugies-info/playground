@@ -2,8 +2,6 @@
 
 import type { Column } from "@tanstack/react-table";
 import * as React from "react";
-import { cn } from "../../utils/cn";
-import { Button } from "../button/Button";
 
 interface DataTableFacetedFilterProps<TData, TValue> {
   column?: Column<TData, TValue>;

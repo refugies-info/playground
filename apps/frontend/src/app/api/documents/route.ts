@@ -56,12 +56,16 @@ export async function GET(
 
   // Apply sorting
   documents.sort((a, b) => {
-    let aValue: any = a[sortBy as keyof MockDocument];
-    let bValue: any = b[sortBy as keyof MockDocument];
+    let aValue: string | number = a[sortBy as keyof MockDocument] as
+      | string
+      | number;
+    let bValue: string | number = b[sortBy as keyof MockDocument] as
+      | string
+      | number;
 
-    if (typeof aValue === "string") {
+    if (typeof aValue === "string" && typeof bValue === "string") {
       aValue = aValue.toLowerCase();
-      bValue = (bValue as string).toLowerCase();
+      bValue = bValue.toLowerCase();
     }
 
     if (aValue < bValue) {
