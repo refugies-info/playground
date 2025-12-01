@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { generateMockDocuments } from "@/lib/mock/documents";
 import type { MockDocument } from "@shared/types";
+import { type NextRequest, NextResponse } from "next/server";
+import { generateMockDocuments } from "@/lib/mock/documents";
 
 interface PaginatedResponse {
   data: MockDocument[];
@@ -11,7 +11,7 @@ interface PaginatedResponse {
 }
 
 export async function GET(
-  request: NextRequest
+  request: NextRequest,
 ): Promise<NextResponse<PaginatedResponse>> {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 500));

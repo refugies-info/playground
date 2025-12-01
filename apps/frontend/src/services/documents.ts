@@ -1,5 +1,5 @@
-import { generateMockDocuments } from "@/lib/mock/documents";
 import type { MockDocument } from "@shared/types";
+import { generateMockDocuments } from "@/lib/mock/documents";
 
 export interface GetDocumentsParams {
   page?: number;

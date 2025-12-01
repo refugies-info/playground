@@ -3,7 +3,7 @@ import type { Document } from "mongodb";
 export const getDispositifsPipeline = (): Document[] => [
   // 1. Filter first
   {
-    $match: { status: "Actif", typeContenu: "dispositif" }
+    $match: { status: "Actif", typeContenu: "dispositif" },
   },
 
   // 2. LOOKUP (Fixed)
@@ -16,25 +16,25 @@ export const getDispositifsPipeline = (): Document[] => [
           $match: {
             $expr: {
               // CRITICAL FIX: Use "$_id" (the actual DB field), not "$oid"
-              $eq: ["$_id", "$$sponsorId"]
-            }
-          }
+              $eq: ["$_id", "$$sponsorId"],
+            },
+          },
         },
         // Optimization: Stop after 1 match and only return what we need
         // This makes the query significantly faster
         { $limit: 1 },
-        { $project: { nom: 1, acronyme: 1, _id: 0 } }
+        { $project: { nom: 1, acronyme: 1, _id: 0 } },
       ],
-      as: "mainSponsorInfo"
-    }
+      as: "mainSponsorInfo",
+    },
   },
 
   // 3. Unwind (Flattens the array created by lookup)
   {
     $unwind: {
       path: "$mainSponsorInfo",
-      preserveNullAndEmptyArrays: true
-    }
+      preserveNullAndEmptyArrays: true,
+    },
   },
 
   // 4. Project (Clean flat structure)
@@ -51,15 +51,15 @@ export const getDispositifsPipeline = (): Document[] => [
         $filter: {
           input: { $ifNull: ["$map.city", []] },
           as: "item",
-          cond: { $ne: ["$$item", null] }
-        }
+          cond: { $ne: ["$$item", null] },
+        },
       },
 
       // Now these will populate correctly
       mainSponsorNom: "$mainSponsorInfo.nom",
-      mainSponsorAcronyme: "$mainSponsorInfo.acronyme"
-    }
-  }
+      mainSponsorAcronyme: "$mainSponsorInfo.acronyme",
+    },
+  },
 ];
 
 import { getMongoDb } from "./client";

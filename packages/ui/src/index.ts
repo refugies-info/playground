@@ -1,8 +1,8 @@
 // Primitives
-export * from "./primitives";
 
 // Forms
 export * from "./forms";
+export * from "./primitives";
 
 // Utils
 export * from "./utils";
