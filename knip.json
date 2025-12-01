@@ -10,8 +10,25 @@
     "apps/frontend": {
       "entry": ["src/lib/supabase.ts", "src/lib/auth.ts"],
       "project": ["src/**/*.ts", "src/**/*.tsx"]
+    },
+    "packages/agents": {
+      "entry": ["scripts/*.ts"],
+      "project": ["src/**/*.ts", "scripts/*.ts"]
+    },
+    "packages/rco": {
+      "entry": ["scripts/*.ts"],
+      "project": ["src/**/*.ts", "scripts/*.ts"]
     }
   },
-  "ignore": ["node_modules", "dist", "build", ".next", "coverage", ".turbo"],
-  "ignoreDependencies": ["husky"]
+  "ignore": [
+    "node_modules",
+    "dist",
+    "build",
+    ".next",
+    "coverage",
+    ".turbo",
+    "packages/rco/.velite",
+    "packages/rco/src/lheo-types.ts"
+  ],
+  "ignoreDependencies": ["husky", "tsx", "zod", "velite"]
 }

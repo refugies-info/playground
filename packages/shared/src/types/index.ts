@@ -20,3 +20,5 @@ export type {
 } from "./auth";
 
 export type { User as UserType } from "./user";
+
+export type { DocumentStatus, DocumentState, MockDocument } from "./document";
