@@ -9,7 +9,10 @@
       "undici-types": "6.18.2",
       "vite": "5.4.19",
       "caniuse-lite": "1.0.30001756"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   },
   "scripts": {
     "build": "turbo build",
