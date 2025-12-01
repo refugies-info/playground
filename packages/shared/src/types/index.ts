@@ -18,7 +18,5 @@ export type {
   UnlinkOAuthRequest,
   User,
 } from "./auth";
-
+export type { DocumentState, DocumentStatus, MockDocument } from "./document";
 export type { User as UserType } from "./user";
-
-export type { DocumentStatus, DocumentState, MockDocument } from "./document";

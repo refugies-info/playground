@@ -1,4 +1,8 @@
-import { MockDocument, DocumentStatus, DocumentState } from "@shared/types";
+import type {
+  DocumentState,
+  DocumentStatus,
+  MockDocument,
+} from "@shared/types";
 import { SeededRandom } from "./seededRandom";
 
 const SOURCES = ["RCO", "Manual", "API"];

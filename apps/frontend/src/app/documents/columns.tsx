@@ -1,8 +1,8 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
-import { MockDocument } from "@shared/types";
-import { DataTableColumnHeader, Button } from "@refugies/ui/primitives";
+import { Button, DataTableColumnHeader } from "@refugies/ui/primitives";
+import type { MockDocument } from "@shared/types";
+import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
 export const columns: ColumnDef<MockDocument>[] = [

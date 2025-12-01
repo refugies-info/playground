@@ -1,4 +1,4 @@
-import { getDocuments, type GetDocumentsParams } from "@/services/documents";
+import { type GetDocumentsParams, getDocuments } from "@/services/documents";
 import { DocumentsList } from "./documents-list";
 
 interface PageProps {

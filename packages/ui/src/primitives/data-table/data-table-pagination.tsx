@@ -1,7 +1,7 @@
 "use client";
 
+import type { Table } from "@tanstack/react-table";
 import * as React from "react";
-import { Table } from "@tanstack/react-table";
 
 import { Button } from "../button/Button";
 
@@ -90,7 +90,7 @@ export function DataTablePagination<TData>({
               >
                 {page + 1}
               </Button>
-            )
+            ),
           )}
         </div>
 

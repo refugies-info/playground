@@ -1,10 +1,10 @@
 "use client";
 
+import { DataTable } from "@refugies/ui/primitives";
+import type { MockDocument } from "@shared/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { DataTable } from "@refugies/ui/primitives";
 import { columns } from "./columns";
-import type { MockDocument } from "@shared/types";
 
 interface DocumentsListProps {
   initialDocuments: MockDocument[];

@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
-import { Column } from "@tanstack/react-table";
+import type { Column } from "@tanstack/react-table";
+import type * as React from "react";
 
 import { cn } from "../../utils/cn";
 import { Button } from "../button/Button";
