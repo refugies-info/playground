@@ -12,11 +12,11 @@
       "project": ["src/**/*.ts", "src/**/*.tsx"]
     },
     "packages/agents": {
-      "entry": ["src/index.ts", "scripts/*.ts"],
+      "entry": ["scripts/*.ts"],
       "project": ["src/**/*.ts", "scripts/*.ts"]
     },
     "packages/rco": {
-      "entry": ["src/index.ts", "scripts/*.ts"],
+      "entry": ["scripts/*.ts"],
       "project": ["src/**/*.ts", "scripts/*.ts"]
     }
   },

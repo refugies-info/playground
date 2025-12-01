@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "description": "Editorial workflow platform for Refugies.info content management",
   "private": true,
-  "packageManager": "pnpm@10.23.0",
+  "packageManager": "pnpm@10.24.0",
   "pnpm": {
     "overrides": {
       "undici-types": "6.18.2",
-      "vite": "5.4.19"
+      "vite": "5.4.19",
+      "caniuse-lite": "1.0.30001756"
     }
   },
   "scripts": {
@@ -24,7 +25,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.3.7",
     "husky": "^9.1.7",
-    "knip": "^5.70.2",
+    "knip": "5.70.1",
     "postcss": "^8.5.6",
     "turbo": "^2.6.1"
   }
