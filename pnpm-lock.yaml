@@ -34,6 +34,9 @@ importers:
       '@playground/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@playground/supabase':
+        specifier: workspace:*
+        version: link:../../packages/supabase
       '@playground/ui':
         specifier: workspace:*
         version: link:../../packages/ui

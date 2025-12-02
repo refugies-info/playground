@@ -9,7 +9,7 @@
 import type { CurrentUserResponse } from "@playground/shared-types";
 import { type NextRequest, NextResponse } from "next/server";
 
-import { getSupabaseServer } from "@/lib/supabase";
+import { getSupabaseServer } from "@playground/supabase";
 
 export async function GET(request: NextRequest) {
   try {

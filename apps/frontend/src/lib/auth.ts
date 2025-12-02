@@ -11,7 +11,7 @@ import type {
   User,
 } from "@playground/shared-types";
 
-import { supabaseClient } from "./supabase";
+import { supabaseClient } from "@playground/supabase";
 
 /**
  * Sign up with email and password
