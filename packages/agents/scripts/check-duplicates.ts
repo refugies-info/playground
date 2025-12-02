@@ -2,7 +2,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseLheoXml } from "rco";
-import { checkCompliance, createLettaClient } from "../src/index";
+import { checkDuplicates, createLettaClient } from "../src/index";
 
 async function main() {
   const xmlPath = path.resolve(__dirname, "../../rco/samples/rco.xml");
@@ -16,9 +16,9 @@ async function main() {
   console.log("Initializing Letta client...");
   const client = createLettaClient();
 
-  console.log("Calling checkCompliance agent...");
+  console.log("Calling checkDuplicates agent...");
   try {
-    const markdown = await checkCompliance(client, xmlContent);
+    const markdown = await checkDuplicates(client, xmlContent);
 
     // Write output to file
     const outputDir = path.resolve(__dirname, "../output");
@@ -26,12 +26,12 @@ async function main() {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    const outputPath = path.join(outputDir, "rco-compliance.md");
+    const outputPath = path.join(outputDir, "rco-duplicates.md");
     fs.writeFileSync(outputPath, markdown, "utf-8");
     console.log("Output written to:", outputPath);
   } catch (error) {
     console.error(
-      "Error calling checkCompliance:",
+      "Error calling checkDuplicates:",
       error instanceof Error ? error.message : String(error),
     );
   }

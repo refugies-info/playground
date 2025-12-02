@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { generateMockDocuments } from "@/lib/mock/documents";
 import type { MockDocument } from "@shared/types";
+import { type NextRequest, NextResponse } from "next/server";
+import { generateMockDocuments } from "@/lib/mock/documents";
 
 interface PaginatedResponse {
   data: MockDocument[];
@@ -11,7 +11,7 @@ interface PaginatedResponse {
 }
 
 export async function GET(
-  request: NextRequest
+  request: NextRequest,
 ): Promise<NextResponse<PaginatedResponse>> {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 500));
@@ -56,12 +56,16 @@ export async function GET(
 
   // Apply sorting
   documents.sort((a, b) => {
-    let aValue: any = a[sortBy as keyof MockDocument];
-    let bValue: any = b[sortBy as keyof MockDocument];
+    let aValue: string | number = a[sortBy as keyof MockDocument] as
+      | string
+      | number;
+    let bValue: string | number = b[sortBy as keyof MockDocument] as
+      | string
+      | number;
 
-    if (typeof aValue === "string") {
+    if (typeof aValue === "string" && typeof bValue === "string") {
       aValue = aValue.toLowerCase();
-      bValue = (bValue as string).toLowerCase();
+      bValue = bValue.toLowerCase();
     }
 
     if (aValue < bValue) {

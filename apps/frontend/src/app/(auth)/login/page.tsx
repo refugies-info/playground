@@ -16,6 +16,7 @@ export default function LoginPage() {
     }
     if (session) {
       // Set auth cookie for middleware
+      // biome-ignore lint/suspicious/noDocumentCookie: For setting auth cookie
       document.cookie = `sb-auth-token=${
         session.token
       }; path=/; max-age=${3600}; SameSite=Lax`;

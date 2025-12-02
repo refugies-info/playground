@@ -1,5 +1,5 @@
-import { generateMockDocuments } from "@/lib/mock/documents";
 import type { MockDocument } from "@shared/types";
+import { generateMockDocuments } from "@/lib/mock/documents";
 
 export interface GetDocumentsParams {
   page?: number;
@@ -51,12 +51,16 @@ export async function getDocuments(params: GetDocumentsParams) {
 
   // Apply sorting
   documents.sort((a, b) => {
-    let aValue: any = a[sortBy as keyof MockDocument];
-    let bValue: any = b[sortBy as keyof MockDocument];
+    let aValue: string | number = a[sortBy as keyof MockDocument] as
+      | string
+      | number;
+    let bValue: string | number = b[sortBy as keyof MockDocument] as
+      | string
+      | number;
 
-    if (typeof aValue === "string") {
+    if (typeof aValue === "string" && typeof bValue === "string") {
       aValue = aValue.toLowerCase();
-      bValue = (bValue as string).toLowerCase();
+      bValue = bValue.toLowerCase();
     }
 
     if (aValue < bValue) {

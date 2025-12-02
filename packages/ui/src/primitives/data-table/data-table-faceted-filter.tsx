@@ -1,10 +1,7 @@
 "use client";
 
+import type { Column } from "@tanstack/react-table";
 import * as React from "react";
-import { Column } from "@tanstack/react-table";
-
-import { Button } from "../button/Button";
-import { cn } from "../../utils/cn";
 
 interface DataTableFacetedFilterProps<TData, TValue> {
   column?: Column<TData, TValue>;
@@ -27,7 +24,7 @@ export function DataTableFacetedFilter<TData, TValue>({
   }, [column]);
 
   const selectedValues = new Set(
-    column?.getFilterValue() as string[] | undefined
+    column?.getFilterValue() as string[] | undefined,
   );
 
   return (
@@ -50,7 +47,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                 }
                 const filterValues = Array.from(selectedValues);
                 column?.setFilterValue(
-                  filterValues.length ? filterValues : undefined
+                  filterValues.length ? filterValues : undefined,
                 );
               }}
               className="h-4 w-4 rounded border-gray-300"

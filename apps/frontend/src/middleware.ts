@@ -20,10 +20,10 @@ export function middleware(request: NextRequest) {
 
   // Check if route is protected
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
-    pathname.startsWith(route)
+    pathname.startsWith(route),
   );
   const isPublicRoute = PUBLIC_ROUTES.some((route) =>
-    pathname.startsWith(route)
+    pathname.startsWith(route),
   );
 
   // Get session token from cookies

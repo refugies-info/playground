@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
 import { DataTable } from "@refugies/ui/primitives";
-import { columns } from "./columns";
 import type { MockDocument } from "@shared/types";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { columns } from "./columns";
 
 interface DocumentsListProps {
   initialDocuments: MockDocument[];
@@ -88,8 +88,11 @@ export function DocumentsList({
                 </select>
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">De</label>
+                <label htmlFor="dateFrom" className="text-sm font-medium">
+                  De
+                </label>
                 <input
+                  id="dateFrom"
                   type="date"
                   value={filters.dateFrom}
                   onChange={(e) =>
@@ -99,8 +102,11 @@ export function DocumentsList({
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">à</label>
+                <label htmlFor="dateTo" className="text-sm font-medium">
+                  à
+                </label>
                 <input
+                  id="dateTo"
                   type="date"
                   value={filters.dateTo}
                   onChange={(e) =>
@@ -115,6 +121,7 @@ export function DocumentsList({
               filters.dateFrom ||
               filters.dateTo) && (
               <button
+                type="button"
                 onClick={clearFilters}
                 className="text-sm text-blue-600 hover:text-blue-800 font-medium"
               >

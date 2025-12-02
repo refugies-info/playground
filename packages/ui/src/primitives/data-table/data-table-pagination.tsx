@@ -1,7 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { Table } from "@tanstack/react-table";
+import type { Table } from "@tanstack/react-table";
 
 import { Button } from "../button/Button";
 
@@ -72,12 +71,9 @@ export function DataTablePagination<TData>({
         </Button>
 
         <div className="flex items-center space-x-1">
-          {getPageNumbers().map((page, index) =>
+          {getPageNumbers().map((page) =>
             page < 0 ? (
-              <span
-                key={`ellipsis-${index}`}
-                className="px-2 text-muted-foreground"
-              >
+              <span key={page} className="px-2 text-muted-foreground">
                 ...
               </span>
             ) : (
@@ -90,7 +86,7 @@ export function DataTablePagination<TData>({
               >
                 {page + 1}
               </Button>
-            )
+            ),
           )}
         </div>
 

@@ -63,7 +63,7 @@ export const getSupabaseServer = () => {
 
   if (!serviceRoleKey) {
     throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY is required for server-side operations"
+      "SUPABASE_SERVICE_ROLE_KEY is required for server-side operations",
     );
   }
 

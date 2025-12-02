@@ -11,7 +11,7 @@ export default function SignupPage() {
   const handleSignUp = async (email: string, password: string) => {
     if (!SIGNUP_ENABLED) {
       throw new Error(
-        "Les créations de compte sont temporairement désactivées."
+        "Les créations de compte sont temporairement désactivées.",
       );
     }
 

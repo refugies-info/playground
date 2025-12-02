@@ -4,21 +4,19 @@
  */
 
 export type {
-  User,
-  AuthSession,
-  OAuthProvider,
   AuthError,
-  SignUpRequest,
+  AuthSession,
+  CurrentUserResponse,
+  LinkOAuthRequest,
+  OAuthProvider,
+  OAuthSignInResponse,
+  PasswordResetConfirmRequest,
+  PasswordResetRequest,
   SignInRequest,
   SignInResponse,
-  PasswordResetRequest,
-  PasswordResetConfirmRequest,
-  OAuthSignInResponse,
-  LinkOAuthRequest,
+  SignUpRequest,
   UnlinkOAuthRequest,
-  CurrentUserResponse,
+  User,
 } from "./auth";
-
+export type { DocumentState, DocumentStatus, MockDocument } from "./document";
 export type { User as UserType } from "./user";
-
-export type { DocumentStatus, DocumentState, MockDocument } from "./document";
