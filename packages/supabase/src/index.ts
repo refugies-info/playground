@@ -74,4 +74,35 @@ export const getSupabaseServer = () => {
   });
 };
 
+
+/**
+ * Create a Supabase client for use in scripts (Node.js environment)
+ * Allows passing credentials explicitly or falling back to environment variables.
+ *
+ * @param url - Supabase URL (optional, defaults to SUPABASE_URL env var)
+ * @param key - Supabase Service Role Key (optional, defaults to SUPABASE_SERVICE_ROLE_KEY or SUPABASE_KEY env var)
+ */
+export const createScriptClient = (url?: string, key?: string) => {
+  const supabaseUrl = url || process.env.SUPABASE_URL;
+  const supabaseKey =
+    key ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_SECRET ||
+    process.env.SUPABASE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error(
+      "Supabase URL and Key are required. Pass them as arguments or set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.",
+    );
+  }
+
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+};
+
 export type { SupabaseEnv };
