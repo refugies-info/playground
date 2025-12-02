@@ -82,3 +82,18 @@ export async function getDocuments(params: GetDocumentsParams) {
     totalPages,
   };
 }
+
+export async function getDocumentById(
+  id: string
+): Promise<MockDocument | null> {
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
+  // Generate the same mock data
+  const documents = generateMockDocuments(100);
+
+  // Find document by ID
+  const document = documents.find((doc) => doc.id === id);
+
+  return document || null;
+}

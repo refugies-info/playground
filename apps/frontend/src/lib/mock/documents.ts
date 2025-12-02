@@ -1,4 +1,5 @@
 import { MockDocument, DocumentStatus, DocumentState } from "@shared/types";
+import { SeededRandom } from "./seededRandom";
 
 const SOURCES = ["RCO", "Manual", "API"];
 const STATUSES: DocumentStatus[] = ["accepted", "rejected"];
@@ -9,7 +10,15 @@ const STATES: DocumentState[] = [
   "published",
 ];
 
+// Cache to store generated documents
+let cachedDocuments: MockDocument[] | null = null;
+
 export function generateMockDocuments(count: number = 50): MockDocument[] {
+  // Return cached documents if already generated
+  if (cachedDocuments && cachedDocuments.length === count) {
+    return cachedDocuments;
+  }
+
   const titles = [
     "Cours de français langue d'intégration",
     "Formation en informatique de base",
@@ -40,29 +49,42 @@ export function generateMockDocuments(count: number = 50): MockDocument[] {
     "Lille (59)",
   ];
 
-  return Array.from({ length: count }).map((_, i) => {
-    const id = crypto.randomUUID();
-    const date = new Date(Date.now() - Math.floor(Math.random() * 10000000000));
+  const documents = Array.from({ length: count }).map((_, i) => {
+    // Use index as seed for consistent generation
+    const rng = new SeededRandom(i + 1000);
+
+    const id = rng.uuid();
+    // Generate a consistent date based on index (newer documents have higher index)
+    const daysAgo = count - i;
+    const date = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+
     const title = titles[i % titles.length];
     const objective = objectives[i % objectives.length];
     const location = locations[i % locations.length];
 
+    const sourceIdx = rng.randomInt(0, SOURCES.length);
+    const levelIdx = rng.randomInt(0, 4);
+    const rhythmIdx = rng.randomInt(0, 3);
+    const duration = rng.randomInt(10, 110);
+    const phone = rng.randomInt(100000000, 999999999);
+    const hasCertification = rng.random() > 0.5;
+
     // Generate markdown content with YAML frontmatter (inspired by RCO format)
     const yamlFrontmatter = `---
 title: "${title}"
-source: "${SOURCES[Math.floor(Math.random() * SOURCES.length)]}"
+source: "${SOURCES[sourceIdx]}"
 date_created: "${date.toISOString().split("T")[0]}"
 location: "${location}"
 contact:
   email: "contact${i}@example.fr"
-  phone: "+33 ${Math.floor(Math.random() * 900000000) + 100000000}"
-duration: "${Math.floor(Math.random() * 100) + 10} heures"
-level: "${["A1", "A2", "B1", "B2"][Math.floor(Math.random() * 4)]}"
+  phone: "+33 ${phone}"
+duration: "${duration} heures"
+level: "${["A1", "A2", "B1", "B2"][levelIdx]}"
 target_audience:
   - "Migrants"
   - "Demandeurs d'emploi"
   - "Adultes en formation"
-certification: ${Math.random() > 0.5 ? "true" : "false"}
+certification: ${hasCertification ? "true" : "false"}
 ---`;
 
     const markdownBody = `
@@ -79,13 +101,9 @@ Le programme couvre les aspects essentiels de la formation avec une approche pra
 ## Modalités
 
 - **Lieu**: ${location}
-- **Durée**: ${Math.floor(Math.random() * 100) + 10} heures
-- **Rythme**: ${
-      ["Hebdomadaire", "Bi-hebdomadaire", "Intensif"][
-        Math.floor(Math.random() * 3)
-      ]
-    }
-- **Certification**: ${Math.random() > 0.5 ? "Oui" : "Non"}
+- **Durée**: ${duration} heures
+- **Rythme**: ${["Hebdomadaire", "Bi-hebdomadaire", "Intensif"][rhythmIdx]}
+- **Certification**: ${hasCertification ? "Oui" : "Non"}
 
 ## Conditions d'accès
 
@@ -102,22 +120,24 @@ Contactez-nous pour plus d'informations et pour vous inscrire.
       id,
       title,
       date_added: date.toISOString(),
-      status: STATUSES[Math.floor(Math.random() * STATUSES.length)],
-      state: STATES[Math.floor(Math.random() * STATES.length)],
-      source: SOURCES[Math.floor(Math.random() * SOURCES.length)],
+      status: STATUSES[rng.randomInt(0, STATUSES.length)],
+      state: STATES[rng.randomInt(0, STATES.length)],
+      source: SOURCES[sourceIdx],
       content,
       metadata: {
         location,
-        duration: `${Math.floor(Math.random() * 100) + 10} heures`,
-        level: ["A1", "A2", "B1", "B2"][Math.floor(Math.random() * 4)],
-        certification: Math.random() > 0.5,
+        duration: `${duration} heures`,
+        level: ["A1", "A2", "B1", "B2"][levelIdx],
+        certification: hasCertification,
         contact_email: `contact${i}@example.fr`,
-        contact_phone: `+33 ${
-          Math.floor(Math.random() * 900000000) + 100000000
-        }`,
+        contact_phone: `+33 ${phone}`,
         tags: ["formation", "intégration", "français"],
         target_audience: ["Migrants", "Demandeurs d'emploi"],
       },
     };
   });
+
+  // Cache the generated documents
+  cachedDocuments = documents;
+  return documents;
 }
