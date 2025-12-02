@@ -1,7 +1,7 @@
 "use client";
 
-import { DataTable } from "@playground/ui/primitives";
 import type { MockDocument } from "@playground/shared-types";
+import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { columns } from "./columns";
