@@ -1,4 +1,4 @@
-import { Button } from "@refugies/ui/primitives";
+import { Button } from "@playground/ui/primitives";
 import Link from "next/link";
 
 interface DocumentPageProps {

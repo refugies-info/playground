@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
   Input,
-} from "@refugies/ui";
+} from "@playground/ui";
 
 import Link from "next/link";
 import { useState } from "react";

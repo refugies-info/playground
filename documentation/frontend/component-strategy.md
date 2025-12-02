@@ -75,7 +75,7 @@ packages/ui/src/
 │   ├── light.ts
 │   ├── dark.ts
 │   └── index.ts
-└── index.ts                 # Main barrel export for @refugies/ui
+└── index.ts                 # Main barrel export for @playground/ui
 ```
 
 ### Frontend Features (`/apps/frontend/src/components`)
@@ -134,7 +134,7 @@ Is this component reusable across multiple pages/features?
 ```typescript
 // /packages/ui/src/primitives/button/Button.tsx
 import * as React from "react";
-import { cn } from "@refugies/ui/utils";
+import { cn } from "@playground/ui/utils";
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -184,7 +184,7 @@ export { Button };
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button, Input, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@refugies/ui";
+import { Button, Input, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@playground/ui";
 
 interface LoginFormProps {
   onSubmit?: (email: string, password: string) => Promise<void>;
@@ -287,11 +287,11 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
 ### From Design System
 
 ```typescript
-// ✅ Correct: Import from @refugies/ui
-import { Button, Input, Card } from "@refugies/ui";
+// ✅ Correct: Import from @playground/ui
+import { Button, Input, Card } from "@playground/ui";
 
 // ❌ Avoid: Direct path imports
-import { Button } from "@refugies/ui/src/primitives/button";
+import { Button } from "@playground/ui/src/primitives/button";
 ```
 
 ### From Feature Components

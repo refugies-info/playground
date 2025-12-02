@@ -456,7 +456,7 @@ export async function POST(request: Request) {
 3. **Import shared types**:
 
    ```typescript
-   import { User, ContentItem, ContentFlag } from '@shared/types';
+   import { User, ContentItem, ContentFlag } from '@playground/shared-types';
    ```
 
 4. **Call Letta classifier** (Sprint 2+):

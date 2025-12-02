@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/suspicious/noConsole: Fine for api routes */
-import type { ContentItem } from "@shared/types";
+import type { ContentItem } from "@playground/shared-types";
 import { type NextRequest, NextResponse } from "next/server";
 
 /**
