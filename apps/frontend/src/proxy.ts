@@ -8,7 +8,7 @@ import { type NextRequest, NextResponse } from "next/server";
 /**
  * Protected routes that require authentication
  */
-const PROTECTED_ROUTES = ["/dashboard", "/profile", "/account-linking"];
+const PROTECTED_ROUTES = ["/dashboard", "/documents", "/profile", "/account-linking"];
 
 /**
  * Public routes that don't require authentication
