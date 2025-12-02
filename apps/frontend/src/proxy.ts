@@ -15,7 +15,7 @@ const PROTECTED_ROUTES = ["/dashboard", "/profile", "/account-linking"];
  */
 const PUBLIC_ROUTES = ["/login", "/signup", "/password-reset", "/callback"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Check if route is protected
