@@ -1,4 +1,4 @@
-import type { SupabaseEnv } from "@shared/types";
+import type { SupabaseEnv } from "@playground/shared-types";
 import { createClient } from "@supabase/supabase-js";
 
 /**

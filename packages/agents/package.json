@@ -1,5 +1,5 @@
 {
-  "name": "@refugies-info/agents",
+  "name": "@playground/agents",
   "version": "0.0.0",
   "private": true,
   "main": "./src/index.ts",
@@ -12,7 +12,7 @@
     "@letta-ai/letta-client": "1.1.0",
     "dotenv": "^17.2.3",
     "gray-matter": "^4.0.3",
-    "rco": "workspace:^"
+    "@playground/rco": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

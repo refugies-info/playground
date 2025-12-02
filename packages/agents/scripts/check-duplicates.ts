@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/suspicious/noConsole: It's fine for a script */
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { parseLheoXml } from "rco";
+import { parseLheoXml } from "@playground/rco";
 import { checkDuplicates, createLettaClient } from "../src/index";
 
 async function main() {

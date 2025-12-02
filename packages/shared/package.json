@@ -1,5 +1,5 @@
 {
-  "name": "@shared/types",
+  "name": "@playground/shared-types",
   "version": "0.1.0",
   "description": "Shared TypeScript types for Content Playground",
   "main": "index.ts",

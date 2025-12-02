@@ -31,7 +31,7 @@ content-playground/
 ├── apps/
 │   └── frontend/          # Next.js application (UI + Utility API routes)
 ├── packages/
-│   └── shared/            # Shared TypeScript types (@shared/types)
+│   └── shared/            # Shared TypeScript types (@playground/shared-types)
 ├── migrations/            # Supabase SQL schema & migrations
 ├── documentation/         # Project documentation & specs
 ├── .specify/              # Spec templates
@@ -68,7 +68,7 @@ content-playground/
 
 ### 3. Coding Conventions
 
-- **Types**: Define shared entities in `packages/shared`. Import them as `@shared/types`.
+- **Types**: Define shared entities in `packages/shared`. Import them as `@playground/shared-types`.
 - **Database Access**:
   - **Reads**: Direct Supabase Client (frontend, protected by RLS).
   - **Writes**: API Routes (`apps/frontend/app/api/...`) using the Service Role Key.

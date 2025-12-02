@@ -1,4 +1,4 @@
-# @packages/mongo
+# @playground/mongo
 
 This package contains MongoDB related utilities and aggregation pipelines.
 
@@ -11,7 +11,7 @@ The `dispositifs` module exports an aggregation pipeline `getDispositifsPipeline
 ## Usage
 
 ```typescript
-import { getDispositifs } from '@packages/mongo';
+import { getDispositifs } from '@playground/mongo';
 
 // Ensure MONGODB_URI is set in your .env file
 

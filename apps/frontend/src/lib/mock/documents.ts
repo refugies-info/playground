@@ -2,7 +2,7 @@ import type {
   DocumentState,
   DocumentStatus,
   MockDocument,
-} from "@shared/types";
+} from "@playground/shared-types";
 import { SeededRandom } from "./seededRandom";
 
 const SOURCES = ["RCO", "Manual", "API"];

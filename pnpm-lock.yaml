@@ -40,12 +40,12 @@ importers:
       '@blocknote/react':
         specifier: ^0.42.3
         version: 0.42.3(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.11.0(@tiptap/core@3.11.0(@tiptap/pm@3.11.0))(@tiptap/pm@3.11.0))(@types/hast@3.0.4)(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@refugies/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      '@shared/types':
+      '@playground/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@playground/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@supabase/supabase-js':
         specifier: 2.84.0
         version: 2.84.0
@@ -86,15 +86,15 @@ importers:
       '@letta-ai/letta-client':
         specifier: 1.1.0
         version: 1.1.0
+      '@playground/rco':
+        specifier: workspace:^
+        version: link:../rco
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
-      rco:
-        specifier: workspace:^
-        version: link:../rco
     devDependencies:
       '@types/node':
         specifier: ^24.10.1

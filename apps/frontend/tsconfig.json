@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -19,11 +23,18 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@shared": ["../../packages/shared/src"],
-      "@refugies/ui": ["../../packages/ui/src"],
-      "@refugies/ui/*": ["../../packages/ui/src/*"],
-      "@shared/*": ["../../packages/shared/src/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@playground/shared-types": [
+        "../../packages/shared/src"
+      ],
+      "@playground/ui": [
+        "../../packages/ui/src"
+      ],
+      "@playground/ui/*": [
+        "../../packages/ui/src/*"
+      ],
     }
   },
   "include": [
@@ -34,5 +45,7 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

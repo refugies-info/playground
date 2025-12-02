@@ -1,4 +1,4 @@
-import type { MockDocument } from "@shared/types";
+import type { MockDocument } from "@playground/shared-types";
 import { type NextRequest, NextResponse } from "next/server";
 import { generateMockDocuments } from "@/lib/mock/documents";
 
