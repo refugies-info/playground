@@ -153,6 +153,22 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/supabase:
+    dependencies:
+      '@playground/shared-types':
+        specifier: workspace:*
+        version: link:../shared
+      '@supabase/supabase-js':
+        specifier: 2.84.0
+        version: 2.84.0
+    devDependencies:
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.10.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   packages/ui:
     dependencies:
       '@radix-ui/react-label':
