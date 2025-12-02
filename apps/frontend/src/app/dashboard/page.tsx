@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@refugies/ui";
+import { Button } from "@playground/ui";
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";

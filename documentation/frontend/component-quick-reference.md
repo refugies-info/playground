@@ -46,7 +46,7 @@ layout/              ← Header, Sidebar, Navigation, etc.
 
 ```typescript
 // Design system
-import { Button, Input, Card } from "@refugies/ui";
+import { Button, Input, Card } from "@playground/ui";
 
 // Feature components
 import { LoginForm } from "@/components/auth";
@@ -56,7 +56,7 @@ import { LoginForm } from "@/components/auth";
 
 ```typescript
 // Deep paths
-import { Button } from "@refugies/ui/src/primitives/button";
+import { Button } from "@playground/ui/src/primitives/button";
 
 // Cross-feature imports
 import { SomeComponent } from "../dashboard";
@@ -166,7 +166,7 @@ export interface ButtonProps {
 # Location: /apps/frontend/src/components/auth/LoginForm.tsx
 # Already exists! Imports design system components:
 
-import { Button, Input, Card } from "@refugies/ui";
+import { Button, Input, Card } from "@playground/ui";
 
 export function LoginForm() {
   // Use design system components
@@ -187,7 +187,7 @@ export function LoginForm() {
 ```bash
 # Location: /apps/frontend/src/components/dashboard/ContentList.tsx
 
-import { Card, Button } from "@refugies/ui";
+import { Card, Button } from "@playground/ui";
 
 export function ContentList() {
   return (

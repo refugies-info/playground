@@ -2,7 +2,7 @@ import type {
   DocumentState,
   DocumentStatus,
   MockDocument,
-} from "@shared/types";
+} from "@playground/shared-types";
 
 const SOURCES = ["RCO", "Manual", "API"];
 const STATUSES: DocumentStatus[] = ["accepted", "rejected"];

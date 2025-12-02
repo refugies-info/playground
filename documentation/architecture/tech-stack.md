@@ -117,7 +117,7 @@ Overview of the technologies used in Content Playground and the rationale behind
 ├── public/                # Static assets
 └── next.config.ts         # Next.js config
 
-/packages/ui               # Design system (@refugies/ui)
+/packages/ui               # Design system (@playground/ui)
 ├── src/
 │   ├── primitives/        # Button, Input, Card, etc.
 │   ├── forms/             # Form components

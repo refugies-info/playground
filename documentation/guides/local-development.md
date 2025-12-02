@@ -108,7 +108,7 @@ The project uses **Turborepo** for monorepo management:
 
 ```
 /apps/frontend        # Next.js frontend application
-/packages/ui          # Design system components (@refugies/ui)
+/packages/ui          # Design system components (@playground/ui)
 /packages/shared      # Shared types and utilities
 ```
 
