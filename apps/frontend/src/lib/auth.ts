@@ -9,9 +9,9 @@ import type {
   SignInRequest,
   SignUpRequest,
   User,
-} from "@shared";
+} from "@playground/shared-types";
 
-import { supabaseClient } from "./supabase";
+import { supabaseClient } from "@playground/supabase";
 
 /**
  * Sign up with email and password

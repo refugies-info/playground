@@ -8,14 +8,14 @@ import { type NextRequest, NextResponse } from "next/server";
 /**
  * Protected routes that require authentication
  */
-const PROTECTED_ROUTES = ["/dashboard", "/profile", "/account-linking"];
+const PROTECTED_ROUTES = ["/dashboard", "/documents", "/profile", "/account-linking"];
 
 /**
  * Public routes that don't require authentication
  */
 const PUBLIC_ROUTES = ["/login", "/signup", "/password-reset", "/callback"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Check if route is protected

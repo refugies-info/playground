@@ -3,17 +3,7 @@
  * Shared types for Supabase Auth integration
  */
 
-/**
- * User entity representing an authenticated user in the system
- */
-export interface User {
-  id: string; // UUID from Supabase Auth
-  email: string;
-  role: "editor" | "admin";
-  created_at: string; // ISO 8601 timestamp
-  updated_at: string; // ISO 8601 timestamp
-  is_active: boolean;
-}
+import type { User } from "./user";
 
 /**
  * Authentication session tracking JWT tokens and expiration

@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, DataTableColumnHeader } from "@playground/ui/primitives";
 import type { MockDocument } from "@playground/shared-types";
+import { Button, DataTableColumnHeader } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
 
 export const columns: ColumnDef<MockDocument>[] = [
