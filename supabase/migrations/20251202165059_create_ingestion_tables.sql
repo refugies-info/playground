@@ -173,7 +173,3 @@ grant trigger on table "public"."ingestion_reports" to "service_role";
 grant truncate on table "public"."ingestion_reports" to "service_role";
 
 grant update on table "public"."ingestion_reports" to "service_role";
-
-alter publication "supabase_realtime" add table "public"."ingestion_records";
-
-alter publication "supabase_realtime" add table "public"."ingestion_reports";
