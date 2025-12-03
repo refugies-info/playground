@@ -15,8 +15,14 @@ export type {
   SignInRequest,
   SignInResponse,
   SignUpRequest,
+  SupabaseEnv,
   UnlinkOAuthRequest,
   User,
 } from "./auth";
-export type { DocumentState, DocumentStatus, MockDocument } from "./document";
+export type {
+  ContentItem,
+  DocumentState,
+  DocumentStatus,
+  MockDocument,
+} from "./document";
 export type { User as UserType } from "./user";

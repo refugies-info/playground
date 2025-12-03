@@ -1,5 +1,5 @@
-import type { MockDocument } from "@playground/shared-types";
 import { generateMockDocuments } from "@/lib/mock/documents";
+import type { MockDocument } from "@playground/shared-types";
 
 export interface GetDocumentsParams {
   page?: number;

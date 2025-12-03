@@ -118,3 +118,16 @@ export interface CurrentUserResponse {
   session: AuthSession | null;
   isAuthenticated: boolean;
 }
+
+/**
+ * Supabase environment variables interface
+ */
+export interface SupabaseEnv {
+  url: string;
+  anonKey: string;
+  serviceRoleKey: string;
+  NEXT_PUBLIC_SUPABASE_URL: string;
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: string;
+  SUPABASE_SERVICE_ROLE_KEY: string;
+}

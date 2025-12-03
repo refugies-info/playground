@@ -9,7 +9,7 @@ import type {
   SignInRequest,
   SignUpRequest,
   User,
-} from "@shared";
+} from "@playground/shared-types";
 
 import { supabaseClient } from "./supabase";
 

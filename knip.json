@@ -28,7 +28,8 @@
     "coverage",
     ".turbo",
     "packages/rco/.velite",
-    "packages/rco/src/lheo-types.ts"
+    "packages/rco/src/lheo-types.ts",
+    "packages/mongo/scripts/test-connection.ts"
   ],
   "ignoreDependencies": ["husky", "tsx", "zod", "velite"]
 }

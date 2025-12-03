@@ -6,7 +6,7 @@
  * Requires valid authentication (Bearer token in Authorization header).
  */
 
-import type { CurrentUserResponse } from "@shared";
+import type { CurrentUserResponse } from "@playground/shared-types";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { getSupabaseServer } from "@/lib/supabase";
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
         { error: "Missing or invalid authorization header" },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     if (sessionError) {
       return NextResponse.json(
         { error: "Failed to retrieve session" },
-        { status: 500 },
+        { status: 500 }
       );
     }
 
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     console.error("Get user error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

@@ -23,6 +23,11 @@ function getSupabaseEnv(): SupabaseEnv {
     url: url || "https://placeholder.supabase.co",
     anonKey: anonKey || "placeholder-publishable-key",
     serviceRoleKey: serviceRoleKey || "",
+    NEXT_PUBLIC_SUPABASE_URL: url || "https://placeholder.supabase.co",
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: anonKey || "placeholder-publishable-key",
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+      anonKey || "placeholder-publishable-key",
+    SUPABASE_SERVICE_ROLE_KEY: serviceRoleKey || "",
   };
 }
 
@@ -63,7 +68,7 @@ export const getSupabaseServer = () => {
 
   if (!serviceRoleKey) {
     throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY is required for server-side operations",
+      "SUPABASE_SERVICE_ROLE_KEY is required for server-side operations"
     );
   }
 
