@@ -2,7 +2,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@playground/ui"],
+  transpilePackages: ["@playground/ui", "@playground/rco", "@playground/agents"],
+  serverExternalPackages: ["libxml2-wasm"],
 };
 
 // Validate required environment variables at build time

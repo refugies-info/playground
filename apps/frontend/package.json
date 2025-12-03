@@ -11,6 +11,8 @@
   "dependencies": {
     "@playground/ui": "workspace:*",
     "@playground/shared-types": "workspace:*",
+    "@playground/rco": "workspace:*",
+    "@playground/agents": "workspace:*",
     "@supabase/supabase-js": "2.84.0",
     "@tanstack/react-table": "^8.21.3",
     "next": "16.0.3",

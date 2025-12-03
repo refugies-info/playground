@@ -31,6 +31,12 @@ importers:
 
   apps/frontend:
     dependencies:
+      '@playground/agents':
+        specifier: workspace:*
+        version: link:../../packages/agents
+      '@playground/rco':
+        specifier: workspace:*
+        version: link:../../packages/rco
       '@playground/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared

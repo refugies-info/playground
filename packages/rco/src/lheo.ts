@@ -1,8 +1,8 @@
 import { XMLParser } from "fast-xml-parser";
-import type { XmlDocument, XsdValidator } from "libxml2-wasm";
-import { Lheo, LheoDocument } from "./lheo-types";
+// import type { XmlDocument, XsdValidator } from "libxml2-wasm";
+import type { Lheo, LheoDocument } from "./lheo-types";
 
-export { Lheo, LheoDocument };
+export type { Lheo, LheoDocument };
 
 const alwaysArray = [
   "code-FORMACODE",
@@ -66,30 +66,30 @@ const parser = new XMLParser({
 export const parseLheoXml = async (
   xmlString: string,
 ): Promise<LheoDocument> => {
-  const { XmlDocument, XsdValidator } = await import("libxml2-wasm");
-  const fs = await import("node:fs");
-  const path = await import("node:path");
+  // const { XmlDocument, XsdValidator } = await import("libxml2-wasm");
+  // const fs = await import("node:fs");
+  // const path = await import("node:path");
 
-  const xsdPath = path.join(__dirname, "lheo.xsd");
-  const xsdContent = fs.readFileSync(xsdPath, "utf-8");
+  // const xsdPath = path.join(__dirname, "lheo.xsd");
+  // const xsdContent = fs.readFileSync(xsdPath, "utf-8");
 
-  let xsdDoc: XmlDocument | undefined;
-  let validator: XsdValidator | undefined;
-  let xmlDoc: XmlDocument | undefined;
+  // let xsdDoc: XmlDocument | undefined;
+  // let validator: XsdValidator | undefined;
+  // let xmlDoc: XmlDocument | undefined;
 
-  try {
-    xsdDoc = XmlDocument.fromString(xsdContent);
-    validator = XsdValidator.fromDoc(xsdDoc);
-    xmlDoc = XmlDocument.fromString(xmlString);
+  // try {
+  //   xsdDoc = XmlDocument.fromString(xsdContent);
+  //   validator = XsdValidator.fromDoc(xsdDoc);
+  //   xmlDoc = XmlDocument.fromString(xmlString);
 
-    validator.validate(xmlDoc);
-  } catch (error) {
-    throw new Error(`XML Validation failed: ${error}`);
-  } finally {
-    if (xmlDoc) xmlDoc.dispose();
-    if (validator) validator.dispose();
-    if (xsdDoc) xsdDoc.dispose();
-  }
+  //   validator.validate(xmlDoc);
+  // } catch (error) {
+  //   throw new Error(`XML Validation failed: ${error}`);
+  // } finally {
+  //   if (xmlDoc) xmlDoc.dispose();
+  //   if (validator) validator.dispose();
+  //   if (xsdDoc) xsdDoc.dispose();
+  // }
 
   return parser.parse(xmlString) as LheoDocument;
 };

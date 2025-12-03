@@ -35,6 +35,12 @@
       "@playground/ui/*": [
         "../../packages/ui/src/*"
       ],
+      "@playground/rco": [
+        "../../packages/rco/src"
+      ],
+      "@playground/agents": [
+        "../../packages/agents/src"
+      ]
     }
   },
   "include": [
