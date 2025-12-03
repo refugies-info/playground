@@ -29,7 +29,8 @@
     ".turbo",
     "packages/rco/.velite",
     "packages/rco/src/lheo-types.ts",
-    "packages/mongo/scripts/test-connection.ts"
+    "packages/mongo/scripts/test-connection.ts",
+    "packages/agents/scripts/convert-dispositifs.ts"
   ],
   "ignoreDependencies": ["husky", "tsx", "zod", "velite"]
 }
