@@ -29,4 +29,6 @@ if (typeof window === "undefined") {
   }
 }
 
-export default nextConfig;
+import { withWorkflow } from "workflow/next";
+
+export default withWorkflow(nextConfig);

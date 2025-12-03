@@ -9,15 +9,16 @@
     "check:types": "tsc --noEmit"
   },
   "dependencies": {
-    "@playground/ui": "workspace:*",
-    "@playground/shared-types": "workspace:*",
-    "@playground/rco": "workspace:*",
     "@playground/agents": "workspace:*",
+    "@playground/rco": "workspace:*",
+    "@playground/shared-types": "workspace:*",
+    "@playground/ui": "workspace:*",
     "@supabase/supabase-js": "2.84.0",
     "@tanstack/react-table": "^8.21.3",
     "next": "16.0.3",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "workflow": "4.0.1-beta.21"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",
