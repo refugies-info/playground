@@ -7,8 +7,8 @@
     "source_created_at" timestamp with time zone not null,
     "source_updated_at" timestamp with time zone not null,
     "source_raw" text not null,
-    "markdown_content" text not null,
-    "markdown_frontmatter" jsonb not null,
+    "markdown" text not null,
+    "metadata" jsonb not null,
     "is_current_version" boolean not null default true
       );
 
@@ -22,8 +22,8 @@ alter table "public"."ingestion_records" enable row level security;
     "updated_at" timestamp with time zone not null default now(),
     "raw_record_id" uuid not null,
     "report_type" text not null,
-    "markdown_content" text not null,
-    "markdown_frontmatter" jsonb not null
+    "markdown" text not null,
+    "metadata" jsonb not null
       );
 
 
@@ -43,9 +43,14 @@ CREATE INDEX ingestion_reports_raw_record_id_idx ON public.ingestion_reports USI
 
 CREATE INDEX ingestion_reports_report_type_idx ON public.ingestion_reports USING btree (report_type);
 
-CREATE INDEX ingestion_raw_records_markdown_frontmatter_idx ON public.ingestion_records USING gin (markdown_frontmatter);
+CREATE INDEX ingestion_raw_records_metadata_idx ON public.ingestion_records USING gin (metadata);
 
-CREATE INDEX ingestion_reports_markdown_frontmatter_idx ON public.ingestion_reports USING gin (markdown_frontmatter);
+CREATE INDEX ingestion_reports_metadata_idx ON public.ingestion_reports USING gin (metadata);
+
+comment on column public.ingestion_records.markdown is 'Contains the complete markdown file including frontmatter.';
+comment on column public.ingestion_records.metadata is 'Contains the JSONB representation of the frontmatter for indexing.';
+comment on column public.ingestion_reports.markdown is 'Contains the complete markdown file including frontmatter.';
+comment on column public.ingestion_reports.metadata is 'Contains the JSONB representation of the frontmatter for indexing.';
 
 alter table "public"."ingestion_records" add constraint "ingestion_raw_records_pkey" PRIMARY KEY using index "ingestion_raw_records_pkey";
 
