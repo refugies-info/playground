@@ -78,3 +78,4 @@ export const getSupabaseAdmin = (url?: string, serviceRoleKey?: string) => {
     },
   });
 };
+export * from "./proxy";

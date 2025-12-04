@@ -1,62 +1,19 @@
-import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { updateSession } from "@playground/supabase";
 
-/**
- * Protected routes that require authentication
- */
-const PROTECTED_ROUTES = [
-  "/dashboard",
-  "/documents",
-  "/profile",
-  "/account-linking",
-];
+export async function proxy(request: NextRequest) {
+  const { supabaseResponse, user } = await updateSession(request);
 
-/**
- * Public routes that don't require authentication
- */
-const PUBLIC_ROUTES = ["/login", "/signup", "/password-reset", "/callback"];
+  // Protected routes that require authentication
+  const PROTECTED_ROUTES = [
+    "/dashboard",
+    "/documents",
+    "/profile",
+    "/account-linking",
+  ];
 
-export default async function proxy(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
-
-  const supabase = createServerClient(
-    // biome-ignore lint/style/noNonNullAssertion: Supabase URL is required
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    // biome-ignore lint/style/noNonNullAssertion: Supabase Key is required
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value);
-            response = NextResponse.next({
-              request: {
-                headers: request.headers,
-              },
-            });
-            response.cookies.set({
-              name,
-              value,
-              ...options,
-            });
-          });
-        },
-      },
-    },
-  );
-
-  // Refresh session if expired - required for Server Components
-  // https://supabase.com/docs/guides/auth/server-side/nextjs
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Public routes that don't require authentication
+  const PUBLIC_ROUTES = ["/login", "/signup", "/password-reset", "/callback"];
 
   const pathname = request.nextUrl.pathname;
 
@@ -90,5 +47,18 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  return response;
+  return supabaseResponse;
 }
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};
