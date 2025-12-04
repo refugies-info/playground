@@ -19,17 +19,19 @@ if (!supabaseUrl || !serviceRoleKey) {
 
 const supabase = getSupabaseAdmin(supabaseUrl, serviceRoleKey);
 
+const defaultPassword = process.env.SEED_USER_PASSWORD || "password123";
+
 const users = [
   // Admins
-  { email: "luis@refugies.info", password: "admin", role: "admin" },
-  { email: "jeremie@refugies.info", password: "admin", role: "admin" },
-  { email: "margot@refugies.info", password: "admin", role: "admin" },
-  { email: "nour@refugies.info", password: "admin", role: "admin" },
-  { email: "julie@refugies.info", password: "admin", role: "admin" },
+  { email: "luis@refugies.info", password: defaultPassword, role: "admin" },
+  { email: "jeremie@refugies.info", password: defaultPassword, role: "admin" },
+  { email: "margot@refugies.info", password: defaultPassword, role: "admin" },
+  { email: "nour@refugies.info", password: defaultPassword, role: "admin" },
+  { email: "julie@refugies.info", password: defaultPassword, role: "admin" },
   // Editors
-  { email: "alice@refugies.info", password: "editor", role: "editor" },
-  { email: "claudia@refugies.info", password: "editor", role: "editor" },
-  { email: "xavier@refugies.info", password: "editor", role: "editor" },
+  { email: "alice@refugies.info", password: defaultPassword, role: "editor" },
+  { email: "claudia@refugies.info", password: defaultPassword, role: "editor" },
+  { email: "xavier@refugies.info", password: defaultPassword, role: "editor" },
 ];
 
 async function seedUsers() {
