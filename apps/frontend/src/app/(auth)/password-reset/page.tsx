@@ -3,13 +3,13 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
 import { PasswordConfirmForm, PasswordResetForm } from "@/components/auth";
-import { resetPassword, updatePassword } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/client";
 
 export default function PasswordResetPage() {
   const router = useRouter();
   const [isConfirming, setIsConfirming] = useState(false);
+  const supabase = createClient();
 
   useEffect(() => {
     // Check if we have a recovery token in the hash
@@ -20,14 +20,20 @@ export default function PasswordResetPage() {
   }, []);
 
   const handleResetPassword = async (email: string) => {
-    const { error } = await resetPassword(email);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/password-reset`,
+    });
+
     if (error) {
       throw error;
     }
   };
 
   const handleConfirmPassword = async (password: string) => {
-    const { error } = await updatePassword(password);
+    const { error } = await supabase.auth.updateUser({
+      password,
+    });
+
     if (error) {
       throw error;
     }

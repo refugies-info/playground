@@ -11,6 +11,7 @@
       "caniuse-lite": "1.0.30001756"
     },
     "onlyBuiltDependencies": [
+      "@swc/core",
       "esbuild"
     ]
   },
@@ -24,13 +25,19 @@
     "knip": "knip",
     "lint": "biome check --write .",
     "validate:docs": "node scripts/validate-docs.js",
-    "validate": "pnpm validate:docs && pnpm knip"
+    "validate": "pnpm validate:docs && pnpm knip",
+    "seed:users": "tsx scripts/seed-users.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.6",
+    "dotenv": "^17.2.3",
     "husky": "^9.1.7",
     "knip": "5.70.1",
     "postcss": "^8.5.6",
+    "tsx": "^4.20.6",
     "turbo": "^2.6.1"
+  },
+  "dependencies": {
+    "baseline-browser-mapping": "^2.8.31"
   }
 }

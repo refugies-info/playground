@@ -1,7 +1,7 @@
 {
-  "name": "@playground/shared-types",
+  "name": "@playground/supabase",
   "version": "0.1.0",
-  "description": "Shared TypeScript types for Content Playground",
+  "description": "Shared Supabase client and utilities",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -11,7 +11,13 @@
     "build": "tsc --noEmit",
     "check:types": "tsc --noEmit"
   },
+  "dependencies": {
+    "@playground/shared-types": "workspace:*",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "2.84.0"
+  },
   "devDependencies": {
+    "@types/node": "^24.10.1",
     "typescript": "^5.9.3"
   }
 }
