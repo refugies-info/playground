@@ -11,8 +11,8 @@ export async function POST(request: Request) {
 
   // Start the workflow
   const result = await start(processXmlWorkflow, [xmlContent]);
-  // @ts-ignore: workflowId might not be in the type definition yet but is returned at runtime
-  const workflowId = result.workflowId;
+
+  const workflowId = result.runId;
 
   return NextResponse.json({
     message: "Workflow started",

@@ -10,7 +10,6 @@ export interface LettaConfig {
 
 export const createLettaClient = (config: LettaConfig = {}): Letta => {
   return new Letta({
-    baseURL: config.baseUrl,
     apiKey: config.token || process.env.LETTA_API_KEY,
   });
 };
