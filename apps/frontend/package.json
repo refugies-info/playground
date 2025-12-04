@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently -n \"NEXT,WORKFLOW\" -c \"blue,magenta\" \"pnpm dev:next\" \"pnpm dev:workflow\"",
+    "dev:next": "next dev",
+    "dev:workflow": "PORT=3456 workflow inspect runs --web",
     "build": "next build",
     "start": "next start",
     "check:types": "tsc --noEmit"
@@ -27,6 +29,7 @@
     "@types/react": "19.1.9",
     "@types/react-dom": "^19.2.3",
     "baseline-browser-mapping": "^2.8.31",
+    "concurrently": "^9.2.1",
     "typescript": "^5.9.3"
   }
 }
