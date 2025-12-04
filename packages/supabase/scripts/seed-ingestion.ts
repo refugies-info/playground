@@ -11,6 +11,13 @@ console.log("Loading .env from:", envPath);
 console.log("File exists:", fs.existsSync(envPath));
 dotenv.config({ path: envPath });
 
+function parseYYYYMMMDD(dateStr: string): Date {
+  const year = dateStr.slice(0, 4);
+  const month = dateStr.slice(4, 6);
+  const day = dateStr.slice(6, 8);
+  return new Date(`${year}-${month}-${day}`);
+}
+
 async function main() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
@@ -46,10 +53,17 @@ async function main() {
   const rcoMdContent = fs.readFileSync(rcoMdPath, "utf-8");
   const { data: rcoMetadata } = matter(rcoMdContent);
 
-  // Extract source_id from metadata or generate one
-  // We use a fallback if not present, but typically RCO data should have an ID.
-  const sourceId =
-    rcoMetadata.id || rcoMetadata["numero-session"] || "rco-sample-1";
+  const formation = rcoMetadata.lheo.offres.formation[0];
+  const action = formation.action[0];
+
+  console.log("RCO Metadata action:", action);
+
+  // Extract source_id from metadata
+  const sourceId = `${formation.attributes.numero}/${action.attributes.numero}`;
+  // Extract source_created_at from metadata (parse YYYYMMMDD format into Postgres timestampz)
+  const sourceCreatedAt = parseYYYYMMMDD(action.attributes.datecrea);
+  // Extract source_updated_at from metadata (parse YYYYMMMDD format into Postgres timestampz)
+  const sourceUpdatedAt = parseYYYYMMMDD(action.attributes.datemaj);
 
   console.log(`Inserting ingestion record for source_id: ${sourceId}`);
 
@@ -58,8 +72,8 @@ async function main() {
     .upsert(
       {
         source_id: sourceId,
-        source_created_at: new Date().toISOString(),
-        source_updated_at: new Date().toISOString(),
+        source_created_at: sourceCreatedAt,
+        source_updated_at: sourceUpdatedAt,
         source_raw: rcoXml,
         markdown: rcoMdContent,
         metadata: rcoMetadata,
@@ -96,7 +110,7 @@ async function main() {
       const { error: reportError } = await supabase
         .from("ingestion_reports")
         .insert({
-          raw_record_id: record.id,
+          record_id: record.id,
           report_type: report.type,
           markdown: markdown,
           metadata: metadata,
