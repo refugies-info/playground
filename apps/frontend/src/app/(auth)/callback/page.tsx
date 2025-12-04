@@ -2,13 +2,14 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { supabaseClient } from "@playground/supabase";
+import { createClient } from "@/lib/supabase/client";
 
 function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const supabase = createClient();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -22,18 +23,10 @@ function CallbackContent() {
         }
 
         if (code) {
-          const { data, error: exchangeError } = await supabaseClient.auth.exchangeCodeForSession(code);
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
           if (exchangeError) {
             throw exchangeError;
-          }
-
-          if (data.session) {
-            // Set auth cookie for middleware
-            // biome-ignore lint/suspicious/noDocumentCookie: For setting auth cookie
-            document.cookie = `sb-auth-token=${
-              data.session.access_token
-            }; path=/; max-age=${3600}; SameSite=Lax`;
           }
         }
 

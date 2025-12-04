@@ -1,8 +1,4 @@
-/**
- * Next.js Middleware for Route Protection
- * Protects authenticated routes and redirects unauthenticated users to login
- */
-
+import { createSupabaseServerClient } from "@playground/supabase";
 import { type NextRequest, NextResponse } from "next/server";
 
 /**
@@ -15,7 +11,44 @@ const PROTECTED_ROUTES = ["/dashboard", "/documents", "/profile", "/account-link
  */
 const PUBLIC_ROUTES = ["/login", "/signup", "/password-reset", "/callback"];
 
-export function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
+
+  const supabase = createSupabaseServerClient({
+    getAll() {
+      return request.cookies.getAll();
+    },
+    setAll(cookiesToSet: any[]) {
+      cookiesToSet.forEach(({ name, value, options }) => {
+        request.cookies.set({
+          name,
+          value,
+          ...options,
+        });
+        response = NextResponse.next({
+          request: {
+            headers: request.headers,
+          },
+        });
+        response.cookies.set({
+          name,
+          value,
+          ...options,
+        });
+      });
+    },
+  });
+
+  // Refresh session if expired - required for Server Components
+  // https://supabase.com/docs/guides/auth/server-side/nextjs
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const pathname = request.nextUrl.pathname;
 
   // Check if route is protected
@@ -26,12 +59,9 @@ export function proxy(request: NextRequest) {
     pathname.startsWith(route),
   );
 
-  // Get session token from cookies
-  const sessionToken = request.cookies.get("sb-auth-token")?.value;
-
   // Handle root path "/"
   if (pathname === "/") {
-    if (sessionToken) {
+    if (user) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     } else {
       return NextResponse.redirect(new URL("/login", request.url));
@@ -39,7 +69,7 @@ export function proxy(request: NextRequest) {
   }
 
   // If accessing protected route without session, redirect to login
-  if (isProtectedRoute && !sessionToken) {
+  if (isProtectedRoute && !user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
@@ -49,13 +79,13 @@ export function proxy(request: NextRequest) {
   // EXCEPT for password-reset (allow password reset even when authenticated)
   if (
     isPublicRoute &&
-    sessionToken &&
+    user &&
     !pathname.startsWith("/password-reset")
   ) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

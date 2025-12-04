@@ -1,3 +1,4 @@
+import { createBrowserClient, createServerClient, type CookieOptions } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl =
@@ -8,33 +9,37 @@ const supabaseAnonKey =
   "placeholder-publishable-key";
 
 /**
- * Client-side Supabase client (anon key)
- * Use for read operations in components and client-side code.
- * Row-level security (RLS) enforces access control.
+ * Create a Supabase client for use in the browser (Client Components)
  */
-export const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    flowType: "pkce",
-    storage: typeof window !== "undefined" ? window.localStorage : undefined,
-  },
-  global: {
-    headers: {
-      "X-Client-Info": "supabase-js/web",
-    },
-  },
-});
+export const createSupabaseBrowserClient = () => {
+  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+};
 
 /**
- * Server-side Supabase client (service role key)
- * Use ONLY in Next.js API routes for write operations.
- * NEVER expose this key to the client.
- *
- * This is only exported for use in API routes (server-side only).
- * Do NOT import this in client components.
+ * Create a Supabase client for use in the server (Server Components, Actions, API Routes)
+ * @param cookieStore - The Next.js cookie store (from `cookies()`)
  */
+export const createSupabaseServerClient = (cookieStore: any) => {
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {
+          // The `setAll` method was called from a Server Component.
+          // This can be ignored if you have middleware refreshing
+          // user sessions.
+        }
+      },
+    },
+  });
+};
+
 /**
  * Server-side Supabase client (service role key)
  * Use for scripts and API routes that need admin privileges.

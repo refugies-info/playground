@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { supabaseClient } from "@playground/supabase";
+import { createClient } from "@/lib/supabase/client";
 
 import { SignupForm } from "@/components/auth";
 import { SIGNUP_ENABLED } from "@/config/features";
 
 export default function SignupPage() {
+  const supabase = createClient();
+
   const handleSignUp = async (email: string, password: string) => {
     if (!SIGNUP_ENABLED) {
       throw new Error(
@@ -15,7 +17,7 @@ export default function SignupPage() {
       );
     }
 
-    const { data, error } = await supabaseClient.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
