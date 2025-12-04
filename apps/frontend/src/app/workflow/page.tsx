@@ -171,7 +171,7 @@ export default function WorkflowPage() {
             </button>
           </div>
           <p className="mt-2 text-sm">
-            Check the <a href="http://localhost:3000/workflow-dashboard" target="_blank" rel="noopener noreferrer" className="underline font-semibold">Workflow Dashboard</a> (if enabled) or server logs for progress.
+            Check the <a href="http://localhost:3456" target="_blank" rel="noopener noreferrer" className="underline font-semibold">Workflow Dashboard</a> (if enabled) or server logs for progress.
           </p>
         </div>
       )}
