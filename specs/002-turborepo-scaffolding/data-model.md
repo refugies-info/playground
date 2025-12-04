@@ -47,17 +47,11 @@
   - `validatedAt: string`
 - **Status**: Not implemented in Sprint 0 but types exist so frontend can shape future forms.
 
-## 5. SupabaseEnv
 
-- **Fields**:
-  - `url: string`
-  - `anonKey: string`
-  - `serviceRoleKey: string`
-- **Purpose**: Ensures quickstart + Next.js runtime share a typed contract for env parsing.
 
 ## Shared Type Export Map
 
 ```typescript
 export type { User, ContentItem, ContentFlag, MetadataMapping } from './types';
-export interface SupabaseEnv { url: string; anonKey: string; serviceRoleKey: string; }
+
 ```
