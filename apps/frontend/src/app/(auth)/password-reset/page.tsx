@@ -3,9 +3,8 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-
 import { PasswordConfirmForm, PasswordResetForm } from "@/components/auth";
+import { createClient } from "@/lib/supabase/client";
 
 export default function PasswordResetPage() {
   const router = useRouter();

@@ -4,7 +4,12 @@ import { type NextRequest, NextResponse } from "next/server";
 /**
  * Protected routes that require authentication
  */
-const PROTECTED_ROUTES = ["/dashboard", "/documents", "/profile", "/account-linking"];
+const PROTECTED_ROUTES = [
+  "/dashboard",
+  "/documents",
+  "/profile",
+  "/account-linking",
+];
 
 /**
  * Public routes that don't require authentication
@@ -22,6 +27,7 @@ export async function middleware(request: NextRequest) {
     getAll() {
       return request.cookies.getAll();
     },
+    // biome-ignore lint/suspicious/noExplicitAny: complex cookie type
     setAll(cookiesToSet: any[]) {
       cookiesToSet.forEach(({ name, value, options }) => {
         request.cookies.set({
@@ -77,11 +83,7 @@ export async function middleware(request: NextRequest) {
 
   // If accessing public auth route with session, redirect to dashboard
   // EXCEPT for password-reset (allow password reset even when authenticated)
-  if (
-    isPublicRoute &&
-    user &&
-    !pathname.startsWith("/password-reset")
-  ) {
+  if (isPublicRoute && user && !pathname.startsWith("/password-reset")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

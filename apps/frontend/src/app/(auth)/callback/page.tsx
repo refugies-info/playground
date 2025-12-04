@@ -23,7 +23,8 @@ function CallbackContent() {
         }
 
         if (code) {
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          const { error: exchangeError } =
+            await supabase.auth.exchangeCodeForSession(code);
 
           if (exchangeError) {
             throw exchangeError;
@@ -40,7 +41,7 @@ function CallbackContent() {
     };
 
     handleCallback();
-  }, [searchParams, router]);
+  }, [searchParams, router, supabase.auth]);
 
   if (isLoading) {
     return (

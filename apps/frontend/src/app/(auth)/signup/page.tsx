@@ -2,10 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-
 import { SignupForm } from "@/components/auth";
 import { SIGNUP_ENABLED } from "@/config/features";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
   const supabase = createClient();
