@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { supabaseClient } from "@playground/supabase";
 
 function CallbackContent() {
   const router = useRouter();
@@ -20,13 +21,23 @@ function CallbackContent() {
           return;
         }
 
-        if (!code) {
-          setError("No authorization code received");
-          return;
+        if (code) {
+          const { data, error: exchangeError } = await supabaseClient.auth.exchangeCodeForSession(code);
+
+          if (exchangeError) {
+            throw exchangeError;
+          }
+
+          if (data.session) {
+            // Set auth cookie for middleware
+            // biome-ignore lint/suspicious/noDocumentCookie: For setting auth cookie
+            document.cookie = `sb-auth-token=${
+              data.session.access_token
+            }; path=/; max-age=${3600}; SameSite=Lax`;
+          }
         }
 
-        // TODO: Exchange code for token with Supabase
-        // For now, just redirect to dashboard
+        // Redirect to dashboard
         router.push("/dashboard");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Authentication failed");

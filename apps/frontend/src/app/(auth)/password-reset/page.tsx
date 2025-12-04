@@ -3,9 +3,9 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { supabaseClient } from "@playground/supabase";
 
 import { PasswordConfirmForm, PasswordResetForm } from "@/components/auth";
-import { resetPassword, updatePassword } from "@/lib/auth";
 
 export default function PasswordResetPage() {
   const router = useRouter();
@@ -20,14 +20,20 @@ export default function PasswordResetPage() {
   }, []);
 
   const handleResetPassword = async (email: string) => {
-    const { error } = await resetPassword(email);
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/password-reset`,
+    });
+
     if (error) {
       throw error;
     }
   };
 
   const handleConfirmPassword = async (password: string) => {
-    const { error } = await updatePassword(password);
+    const { error } = await supabaseClient.auth.updateUser({
+      password,
+    });
+
     if (error) {
       throw error;
     }

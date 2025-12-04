@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { signOut } from "@/lib/auth";
+import { supabaseClient } from "@playground/supabase";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -15,7 +15,7 @@ export default function DashboardPage() {
   const handleLogout = async () => {
     setIsLoading(true);
     try {
-      const { error } = await signOut();
+      const { error } = await supabaseClient.auth.signOut();
       if (error) {
         throw error;
       }

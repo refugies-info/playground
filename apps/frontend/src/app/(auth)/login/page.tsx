@@ -2,24 +2,30 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { supabaseClient } from "@playground/supabase";
 
 import { LoginForm } from "@/components/auth";
-import { signIn } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
 
   const handleSignIn = async (email: string, password: string) => {
-    const { session, error } = await signIn({ email, password });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password,
+    });
+
     if (error) {
       throw error;
     }
-    if (session) {
+
+    if (data.session) {
       // Set auth cookie for middleware
       // biome-ignore lint/suspicious/noDocumentCookie: For setting auth cookie
       document.cookie = `sb-auth-token=${
-        session.token
+        data.session.access_token
       }; path=/; max-age=${3600}; SameSite=Lax`;
+
       // Wait a moment for cookie to be set, then redirect
       await new Promise((resolve) => setTimeout(resolve, 100));
       router.push("/dashboard");
