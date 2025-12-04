@@ -13,10 +13,11 @@
   },
   "dependencies": {
     "@playground/shared-types": "workspace:*",
+    "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "2.84.0"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "@types/node": "^24.10.1"
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
   }
 }

@@ -2,12 +2,14 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const supabase = createClient();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -20,13 +22,16 @@ function CallbackContent() {
           return;
         }
 
-        if (!code) {
-          setError("No authorization code received");
-          return;
+        if (code) {
+          const { error: exchangeError } =
+            await supabase.auth.exchangeCodeForSession(code);
+
+          if (exchangeError) {
+            throw exchangeError;
+          }
         }
 
-        // TODO: Exchange code for token with Supabase
-        // For now, just redirect to dashboard
+        // Redirect to dashboard
         router.push("/dashboard");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Authentication failed");
@@ -36,7 +41,7 @@ function CallbackContent() {
     };
 
     handleCallback();
-  }, [searchParams, router]);
+  }, [searchParams, router, supabase.auth]);
 
   if (isLoading) {
     return (
