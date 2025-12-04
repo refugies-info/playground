@@ -12,6 +12,7 @@
     "@playground/shared-types": "workspace:*",
     "@playground/supabase": "workspace:*",
     "@playground/ui": "workspace:*",
+    "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "2.84.0",
     "@tanstack/react-table": "^8.21.3",
     "next": "16.0.3",

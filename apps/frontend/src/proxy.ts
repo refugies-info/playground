@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@playground/supabase";
+import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 /**
@@ -16,38 +16,41 @@ const PROTECTED_ROUTES = [
  */
 const PUBLIC_ROUTES = ["/login", "/signup", "/password-reset", "/callback"];
 
-export async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   });
 
-  const supabase = createSupabaseServerClient({
-    getAll() {
-      return request.cookies.getAll();
+  const supabase = createServerClient(
+    // biome-ignore lint/style/noNonNullAssertion: Supabase URL is required
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    // biome-ignore lint/style/noNonNullAssertion: Supabase Key is required
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            });
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+          });
+        },
+      },
     },
-    // biome-ignore lint/suspicious/noExplicitAny: complex cookie type
-    setAll(cookiesToSet: any[]) {
-      cookiesToSet.forEach(({ name, value, options }) => {
-        request.cookies.set({
-          name,
-          value,
-          ...options,
-        });
-        response = NextResponse.next({
-          request: {
-            headers: request.headers,
-          },
-        });
-        response.cookies.set({
-          name,
-          value,
-          ...options,
-        });
-      });
-    },
-  });
+  );
 
   // Refresh session if expired - required for Server Components
   // https://supabase.com/docs/guides/auth/server-side/nextjs
@@ -89,17 +92,3 @@ export async function middleware(request: NextRequest) {
 
   return response;
 }
-
-export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public (public files)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico|public).*)",
-  ],
-};
