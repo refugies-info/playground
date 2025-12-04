@@ -33,7 +33,7 @@ export const checkCompliance = async (
 
   // Clear previous messages before each call
   await client.agents.messages.reset(agentId, {
-    add_default_initial_messages: true,
+    add_default_initial_messages: false,
   });
 
   const response = await client.agents.messages.create(agentId, {
@@ -98,7 +98,7 @@ export const checkDuplicates = async (
 
   // Clear previous messages before each call
   await client.agents.messages.reset(agentId, {
-    add_default_initial_messages: true,
+    add_default_initial_messages: false,
   });
 
   const response = await client.agents.messages.create(agentId, {
