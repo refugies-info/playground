@@ -7,10 +7,10 @@ export interface User {
   id: string;
   /** User email address */
   email: string;
-  /** Display name for UI */
-  displayName: string;
   /** Role in the editorial workflow (POC uses 'editor' only) */
   role: "editor" | "reviewer" | "admin";
   /** ISO timestamp of account creation */
-  createdAt: string;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
 }

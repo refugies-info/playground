@@ -1,14 +1,16 @@
 {
   "workspaces": {
+    ".": {
+      "entry": ["scripts/*.ts"],
+      "project": ["scripts/*.ts"]
+    },
     "packages/shared": {
-      "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/ui": {
       "project": ["src/**/*.ts", "src/**/*.tsx"]
     },
     "apps/frontend": {
-      "entry": ["src/lib/supabase.ts", "src/lib/auth.ts"],
       "project": ["src/**/*.ts", "src/**/*.tsx"]
     },
     "packages/agents": {

@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
+import { useCreateBlockNote } from "@blocknote/react";
+import { useEffect } from "react";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import { useDocument } from "./DocumentContext";
 import { Button } from "@refugies/ui/primitives";
 import { Undo2 } from "lucide-react";
+import { useDocument } from "./DocumentContext";
 
 /**
  * Strip YAML frontmatter from markdown content
@@ -32,16 +32,14 @@ export function OriginalContentView() {
     async function loadContent() {
       try {
         const contentWithoutFrontmatter = stripYamlFrontmatter(
-          document!.originalContent!
+          document?.originalContent!,
         );
 
         const blocks = await editor.tryParseMarkdownToBlocks(
-          contentWithoutFrontmatter
+          contentWithoutFrontmatter,
         );
         editor.replaceBlocks(editor.document, blocks);
-      } catch (error) {
-        console.error("Error parsing original markdown:", error);
-      }
+      } catch (_error) {}
     }
 
     loadContent();

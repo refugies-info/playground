@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-
 import { SignupForm } from "@/components/auth";
 import { SIGNUP_ENABLED } from "@/config/features";
-import { signUp } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
+  const supabase = createClient();
+
   const handleSignUp = async (email: string, password: string) => {
     if (!SIGNUP_ENABLED) {
       throw new Error(
@@ -15,11 +16,16 @@ export default function SignupPage() {
       );
     }
 
-    const { user, error } = await signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
     if (error) {
       throw error;
     }
-    if (user) {
+
+    if (data.user) {
       // Verification email will be sent by Supabase
       // User will see success message in the form
     }

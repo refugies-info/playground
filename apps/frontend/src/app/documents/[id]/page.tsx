@@ -1,6 +1,6 @@
+import { notFound } from "next/navigation";
 import { DocumentEditorLayout } from "@/components/document-editor/DocumentEditorLayout";
 import { getDocumentById } from "@/services/documents";
-import { notFound } from "next/navigation";
 
 interface DocumentPageProps {
   params: Promise<{

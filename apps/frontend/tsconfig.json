@@ -20,7 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@playground/shared-types": ["../../packages/shared"],
+      "@playground/shared-types": ["../../packages/shared/src"],
       "@playground/ui": ["../../packages/ui/src"],
       "@playground/ui/*": ["../../packages/ui/src/*"]
     }

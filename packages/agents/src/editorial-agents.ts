@@ -1,4 +1,4 @@
-import { Letta } from "@letta-ai/letta-client";
+import type { Letta } from "@letta-ai/letta-client";
 import type { AssistantMessage } from "@letta-ai/letta-client/resources/agents.js";
 
 export interface ReasoningStep {
@@ -15,7 +15,7 @@ export interface EditorialAgentResult {
 export const editorialAgent = async (
   client: Letta,
   content: string,
-  instructions?: string
+  instructions?: string,
 ): Promise<EditorialAgentResult> => {
   const agentId = process.env.EDITORIAL_AGENT_ID;
   if (!agentId) {
@@ -43,17 +43,12 @@ export const editorialAgent = async (
   const messages = response.messages;
   const reasoning: ReasoningStep[] = [];
 
-  console.log(`[Editorial Agent] Received ${messages.length} messages`);
-
   // Extract reasoning from all messages
   for (const msg of messages as any[]) {
     const timestamp = new Date().toISOString();
 
-    console.log(`[Editorial Agent] Message type: ${msg.message_type}`);
-
     if (msg.message_type === "reasoning_message") {
       const reasoningText = msg.reasoning || msg.content;
-      console.log(`[Editorial Agent] Found reasoning_message:`, reasoningText);
       reasoning.push({
         timestamp,
         message:
@@ -63,9 +58,6 @@ export const editorialAgent = async (
         type: "thinking",
       });
     } else if (msg.message_type === "hidden_reasoning_message") {
-      console.log(
-        `[Editorial Agent] Found hidden_reasoning_message (state: ${msg.state})`
-      );
       if (msg.hidden_reasoning) {
         reasoning.push({
           timestamp,
@@ -75,27 +67,19 @@ export const editorialAgent = async (
       }
     } else if (msg.message_type === "tool_call_message") {
       const functionName = msg.tool_call?.name || "unknown";
-      console.log(`[Editorial Agent] Found tool_call_message: ${functionName}`);
       reasoning.push({
         timestamp,
         message: `Calling function: ${functionName}`,
         type: "function_call",
       });
     } else if (msg.message_type === "tool_return_message") {
-      console.log(
-        `[Editorial Agent] Found tool_return_message (status: ${msg.status})`
-      );
     }
   }
-
-  console.log(
-    `[Editorial Agent] Extracted ${reasoning.length} reasoning steps`
-  );
 
   const lastMessage = [...messages]
     .reverse()
     .find(
-      ({ message_type }) => message_type === "assistant_message"
+      ({ message_type }) => message_type === "assistant_message",
     ) as AssistantMessage;
 
   if (!lastMessage) {

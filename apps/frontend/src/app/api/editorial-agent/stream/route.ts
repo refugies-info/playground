@@ -1,5 +1,5 @@
 import { createLettaClient, editorialAgentStream } from "@playground/agents";
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         for await (const chunk of editorialAgentStream(
           client,
           content,
-          instructions
+          instructions,
         )) {
           const data = `data: ${JSON.stringify(chunk)}\n\n`;
           controller.enqueue(encoder.encode(data));
@@ -30,7 +30,6 @@ export async function POST(request: NextRequest) {
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
       } catch (error) {
-        console.error("Streaming error:", error);
         const errorData = `data: ${JSON.stringify({
           type: "error",
           message: error instanceof Error ? error.message : "Unknown error",

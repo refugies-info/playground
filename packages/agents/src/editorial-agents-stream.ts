@@ -1,4 +1,4 @@
-import { Letta } from "@letta-ai/letta-client";
+import type { Letta } from "@letta-ai/letta-client";
 
 export interface ReasoningStep {
   timestamp: string;
@@ -9,7 +9,7 @@ export interface ReasoningStep {
 export const editorialAgentStream = async function* (
   client: Letta,
   content: string,
-  instructions?: string
+  instructions?: string,
 ): AsyncGenerator<ReasoningStep | { type: "content"; content: string }> {
   const agentId = process.env.EDITORIAL_AGENT_ID;
   if (!agentId) {
@@ -34,17 +34,12 @@ export const editorialAgentStream = async function* (
     ],
   });
 
-  console.log(`[Editorial Agent Stream] Starting stream...`);
-
   for await (const chunk of stream as AsyncIterable<any>) {
     const msg = chunk as any;
     const timestamp = new Date().toISOString();
 
-    console.log(`[Editorial Agent Stream] Chunk type: ${msg.message_type}`);
-
     if (msg.message_type === "reasoning_message") {
       const reasoningText = msg.reasoning;
-      console.log(`[Editorial Agent Stream] Reasoning:`, reasoningText);
       yield {
         timestamp,
         message:
@@ -54,9 +49,6 @@ export const editorialAgentStream = async function* (
         type: "thinking",
       };
     } else if (msg.message_type === "hidden_reasoning_message") {
-      console.log(
-        `[Editorial Agent Stream] Hidden reasoning (state: ${msg.state})`
-      );
       if (msg.hidden_reasoning) {
         yield {
           timestamp,
@@ -66,7 +58,6 @@ export const editorialAgentStream = async function* (
       }
     } else if (msg.message_type === "tool_call_message") {
       const functionName = msg.tool_call?.name || "unknown";
-      console.log(`[Editorial Agent Stream] Tool call: ${functionName}`);
       yield {
         timestamp,
         message: `Calling function: ${functionName}`,
@@ -78,13 +69,10 @@ export const editorialAgentStream = async function* (
         typeof responseContent === "string"
           ? responseContent
           : JSON.stringify(responseContent);
-      console.log(`[Editorial Agent Stream] Final content received`);
       yield {
         type: "content",
         content: finalContent,
       };
     }
   }
-
-  console.log(`[Editorial Agent Stream] Stream complete`);
 };

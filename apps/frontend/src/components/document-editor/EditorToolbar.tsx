@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
 import { Button } from "@refugies/ui/primitives";
-import { Save, ArrowLeft, GitCompare } from "lucide-react";
+import { ArrowLeft, GitCompare, Save } from "lucide-react";
 import Link from "next/link";
 import { useDocument } from "./DocumentContext";
 

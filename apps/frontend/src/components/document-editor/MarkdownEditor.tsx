@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { BlockNoteEditor } from "@blocknote/core";
-import { useCreateBlockNote } from "@blocknote/react";
+import type { BlockNoteEditor } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
+import { useEffect, useState } from "react";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import { Eye, FileText, Loader2 } from "lucide-react";
 import { useDocument } from "./DocumentContext";
 import { OriginalContentView } from "./OriginalContentView";
 import { RawMarkdownView } from "./RawMarkdownView";
-import { Loader2, Eye, FileText } from "lucide-react";
 
 /**
  * Strip YAML frontmatter from markdown content
@@ -52,21 +51,19 @@ export function MarkdownEditor() {
       try {
         // Strip YAML frontmatter before parsing
         const contentWithoutFrontmatter = stripYamlFrontmatter(
-          document!.content
+          document?.content,
         );
 
         // Parse markdown to BlockNote blocks
         const blocks = await editor.tryParseMarkdownToBlocks(
-          contentWithoutFrontmatter
+          contentWithoutFrontmatter,
         );
         editor.replaceBlocks(editor.document, blocks);
 
         // Also update raw markdown state
         const markdown = await editor.blocksToMarkdownLossy(editor.document);
         setRawMarkdown(markdown);
-      } catch (error) {
-        console.error("Error parsing markdown:", error);
-      }
+      } catch (_error) {}
     }
 
     loadContent();
@@ -80,9 +77,7 @@ export function MarkdownEditor() {
       try {
         const markdown = await editor.blocksToMarkdownLossy(editor.document);
         setRawMarkdown(markdown);
-      } catch (error) {
-        console.error("Error converting to markdown:", error);
-      }
+      } catch (_error) {}
     }
 
     updateRawMarkdown();
@@ -97,9 +92,7 @@ export function MarkdownEditor() {
       try {
         const blocks = await editor.tryParseMarkdownToBlocks(newMarkdown);
         editor.replaceBlocks(editor.document, blocks);
-      } catch (error) {
-        console.error("Error parsing markdown:", error);
-      }
+      } catch (_error) {}
     }
   };
 

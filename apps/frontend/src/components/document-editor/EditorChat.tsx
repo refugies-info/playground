@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { useDocument } from "./DocumentContext";
+import { cn } from "@refugies/ui";
+import { Button } from "@refugies/ui/primitives";
 import {
+  Brain,
+  ChevronLeft,
+  ChevronRight,
   Hourglass,
   WandSparkles,
   X,
-  Brain,
   Zap,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
-import { cn } from "@refugies/ui";
-import { Button } from "@refugies/ui/primitives";
+import { useEffect, useRef, useState } from "react";
+import { useDocument } from "./DocumentContext";
 
 interface ReasoningStep {
   timestamp: string;
@@ -106,9 +106,7 @@ export function EditorChat() {
                 // It's a reasoning step
                 setReasoning((prev) => [...prev, parsed]);
               }
-            } catch (e) {
-              console.error("Failed to parse SSE data:", e);
-            }
+            } catch (_e) {}
           }
         }
       }
@@ -149,7 +147,7 @@ export function EditorChat() {
     <div
       className={cn(
         "flex flex-col h-full border-l bg-white transition-all duration-300 ease-in-out relative",
-        isCollapsed ? "w-12" : "w-80"
+        isCollapsed ? "w-12" : "w-80",
       )}
     >
       <div className="flex items-center p-3 border-b">

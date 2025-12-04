@@ -6,26 +6,23 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { signOut } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/client";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const supabase = createClient();
 
   const handleLogout = async () => {
     setIsLoading(true);
     try {
-      const { error } = await signOut();
+      const { error } = await supabase.auth.signOut();
       if (error) {
         throw error;
       }
 
-      // Clear middleware cookie so protected routes lock again
-      // biome-ignore lint/suspicious/noDocumentCookie: For clearing auth cookie
-      document.cookie = "sb-auth-token=; path=/; max-age=0; SameSite=Lax";
-
-      // Give the browser a moment to persist the cookie change
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Refresh router to update server components and middleware
+      router.refresh();
       router.push("/login");
     } catch (err) {
       // biome-ignore lint/suspicious/noConsole: For debugging

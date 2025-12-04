@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, type ReactNode, useContext, useState } from "react";
 
 interface DocumentData {
   id: string;
@@ -25,7 +25,7 @@ interface DocumentContextType {
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export function DocumentProvider({
@@ -36,7 +36,7 @@ export function DocumentProvider({
   initialData?: DocumentData;
 }) {
   const [document, setDocument] = useState<DocumentData | null>(
-    initialData || null
+    initialData || null,
   );
   const [isLoading] = useState(false);
   const [isComparisonMode, setIsComparisonMode] = useState(false);

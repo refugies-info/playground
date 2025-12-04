@@ -1,10 +1,9 @@
 "use client";
 
-import React from "react";
 import { DocumentProvider } from "./DocumentContext";
-import { EditorToolbar } from "./EditorToolbar";
-import { EditorSidebar } from "./EditorSidebar";
 import { EditorChat } from "./EditorChat";
+import { EditorSidebar } from "./EditorSidebar";
+import { EditorToolbar } from "./EditorToolbar";
 import { MarkdownEditor } from "./MarkdownEditor";
 
 interface DocumentEditorLayoutProps {

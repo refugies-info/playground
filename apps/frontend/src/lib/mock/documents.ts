@@ -1,9 +1,9 @@
-import { SeededRandom } from "./seededRandom";
 import type {
   DocumentState,
   DocumentStatus,
   MockDocument,
 } from "@playground/shared-types";
+import { SeededRandom } from "./seededRandom";
 
 const SOURCES = ["RCO", "Manual", "API"];
 const STATUSES: DocumentStatus[] = ["accepted", "rejected"];

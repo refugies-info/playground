@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Button } from "@refugies/ui/primitives";
-import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
 import { cn } from "@refugies/ui";
+import { Button } from "@refugies/ui/primitives";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useDocument } from "./DocumentContext";
 
 export function EditorSidebar() {
@@ -21,7 +21,7 @@ export function EditorSidebar() {
     <div
       className={cn(
         "flex flex-col border-r bg-gray-50 transition-all duration-300 ease-in-out h-full",
-        isCollapsed ? "w-12" : "w-64"
+        isCollapsed ? "w-12" : "w-64",
       )}
     >
       <div className="flex items-center p-2">

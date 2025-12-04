@@ -1,5 +1,5 @@
-import { generateMockDocuments } from "@/lib/mock/documents";
 import type { MockDocument } from "@playground/shared-types";
+import { generateMockDocuments } from "@/lib/mock/documents";
 
 export interface GetDocumentsParams {
   page?: number;
@@ -88,7 +88,7 @@ export async function getDocuments(params: GetDocumentsParams) {
 }
 
 export async function getDocumentById(
-  id: string
+  id: string,
 ): Promise<MockDocument | null> {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 300));
