@@ -20,10 +20,11 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- Create identities for these users (required for Supabase Auth to work properly with email provider)
-INSERT INTO auth.identities (id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+INSERT INTO auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
 SELECT
+  gen_random_uuid(),
   id,
-  id,
+  id::text,
   format('{"sub":"%s","email":"%s"}', id, email)::jsonb,
   'email',
   NOW(),
@@ -40,4 +41,4 @@ WHERE id IN (
   '20000000-0000-0000-0000-000000000002',
   '20000000-0000-0000-0000-000000000003'
 )
-ON CONFLICT (provider, id) DO NOTHING;
+ON CONFLICT (provider_id, provider) DO NOTHING;
