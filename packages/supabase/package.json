@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc --noEmit",
     "check:types": "tsc --noEmit",
-    "seed:ingestion": "tsx scripts/seed-ingestion.ts"
+    "seed:ingestion": "tsx scripts/seed-ingestion.ts",
+    "gen:types": "supabase gen types typescript --local --schema public,storage,graphql_public > src/types.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
