@@ -9,7 +9,17 @@ const sampleXml = fs.readFileSync(sampleXmlPath, "utf-8");
 describe("JSON Module", () => {
   it("should convert XML to JSON", async () => {
     const json = await lheoXmlToJson(sampleXml);
-    expect(json.lheo).toBeDefined();
-    expect(json.lheo.offres.formation).toBeDefined();
+    expect(json.tag).toBe("#document");
+    expect(json.children.length).toBeGreaterThan(0);
+    const lheo = json.children.find((child) => child.tag === "lheo");
+    expect(lheo).toBeDefined();
+    if (!lheo) return;
+    const offres = lheo.children.find((child) => child.tag === "offres");
+    expect(offres).toBeDefined();
+    if (!offres) return;
+    const formations = offres.children.filter(
+      (child) => child.tag === "formation"
+    );
+    expect(formations.length).toBeGreaterThan(0);
   });
 });
