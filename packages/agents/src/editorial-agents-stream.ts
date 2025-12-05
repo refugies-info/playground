@@ -1,10 +1,5 @@
 import type { Letta } from "@letta-ai/letta-client";
-
-export interface ReasoningStep {
-  timestamp: string;
-  message: string;
-  type: "thinking" | "function_call" | "response";
-}
+import { type ReasoningStep } from "./editorial-agents";
 
 export const editorialAgentStream = async function* (
   client: Letta,

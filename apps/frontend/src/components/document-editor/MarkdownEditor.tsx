@@ -48,10 +48,11 @@ export function MarkdownEditor() {
     if (!editor || !document?.content) return;
 
     async function loadContent() {
+      if (!editor) return;
       try {
         // Strip YAML frontmatter before parsing
         const contentWithoutFrontmatter = stripYamlFrontmatter(
-          document?.content,
+          document?.content ?? "",
         );
 
         // Parse markdown to BlockNote blocks
@@ -74,6 +75,7 @@ export function MarkdownEditor() {
     if (!editor || !isRawMarkdownMode) return;
 
     async function updateRawMarkdown() {
+      if (!editor) return;
       try {
         const markdown = await editor.blocksToMarkdownLossy(editor.document);
         setRawMarkdown(markdown);

@@ -1,4 +1,4 @@
-export interface ContentItem {
+export interface RawContentItem {
   id: string;
   originalText: string;
   languageCode: string;
