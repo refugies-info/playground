@@ -56,29 +56,34 @@ async function main() {
   const formation = rcoMetadata.lheo.offres.formation[0];
   const action = formation.action[0];
 
-  // Extract source_id from metadata
-  const sourceId = `${formation.attributes.numero}/${action.attributes.numero}`;
+  // Extract composite identifiers from metadata
+  const trainingOfferId = formation.attributes.numero;
+  const trainingActionId = action.attributes.numero;
   // Extract source_created_at from metadata (parse YYYYMMMDD format into Postgres timestampz)
-  const sourceCreatedAt = parseYYYYMMMDD(action.attributes.datecrea);
+  const sourceCreatedAt = parseYYYYMMMDD(
+    action.attributes.datecrea
+  ).toISOString();
   // Extract source_updated_at from metadata (parse YYYYMMMDD format into Postgres timestampz)
-  const sourceUpdatedAt = parseYYYYMMMDD(action.attributes.datemaj);
+  const sourceUpdatedAt = parseYYYYMMMDD(
+    action.attributes.datemaj
+  ).toISOString();
 
-  console.log(`Inserting ingestion record for source_id: ${sourceId}`);
+  console.log(
+    `Inserting ingestion record for training_offer_id: ${trainingOfferId}, training_id: ${trainingActionId}`
+  );
 
   const { data: record, error: recordError } = await supabase
-    .from("ingestion_records")
-    .upsert(
-      {
-        source_id: sourceId,
-        source_created_at: sourceCreatedAt,
-        source_updated_at: sourceUpdatedAt,
-        source_raw: rcoXml,
-        markdown: rcoMdContent,
-        metadata: rcoMetadata,
-        is_current_version: true,
-      },
-      { onConflict: "source_id" }
-    )
+    .from("rco_ingestion_records")
+    .insert({
+      training_offer_id: trainingOfferId,
+      training_action_id: trainingActionId,
+      source_created_at: sourceCreatedAt,
+      source_updated_at: sourceUpdatedAt,
+      source_raw: rcoXml,
+      markdown: rcoMdContent,
+      metadata: rcoMetadata,
+      is_current_version: true,
+    })
     .select()
     .single();
 
@@ -106,7 +111,7 @@ async function main() {
       console.log(`Inserting ${report.type} report...`);
 
       const { error: reportError } = await supabase
-        .from("ingestion_reports")
+        .from("rco_ingestion_reports")
         .insert({
           record_id: record.id,
           report_type: report.type,
