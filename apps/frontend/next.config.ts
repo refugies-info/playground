@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 import { withWorkflow } from "workflow/next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@playground/ui", "@playground/rco", "@playground/agents"],
+  transpilePackages: ["@playground/ui", "@playground/rco", "@playground/agents", "@playground/workflows"],
   serverExternalPackages: ["libxml2-wasm"],
 };
 

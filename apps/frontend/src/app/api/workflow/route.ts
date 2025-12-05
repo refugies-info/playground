@@ -1,5 +1,5 @@
 import { start } from "workflow/api";
-import { processXmlWorkflow } from "@/workflows/process-xml";
+import { processXmlWorkflow } from "@playground/workflows";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
