@@ -14,7 +14,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "check:types": "tsc --noEmit"
+    "check:types": "tsc --noEmit",
+    "dev:workflow": "workflow inspect runs --web"
   },
   "dependencies": {
     "@playground/agents": "workspace:*",
