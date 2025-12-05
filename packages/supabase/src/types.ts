@@ -34,7 +34,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      ingestion_records: {
+      rco_ingestion_records: {
         Row: {
           created_at: string
           id: string
@@ -42,9 +42,10 @@ export type Database = {
           markdown: string
           metadata: Json
           source_created_at: string
-          source_id: string
           source_raw: string
           source_updated_at: string
+          training_action_id: string
+          training_offer_id: string
           updated_at: string | null
         }
         Insert: {
@@ -54,9 +55,10 @@ export type Database = {
           markdown: string
           metadata: Json
           source_created_at: string
-          source_id: string
           source_raw: string
           source_updated_at: string
+          training_action_id: string
+          training_offer_id: string
           updated_at?: string | null
         }
         Update: {
@@ -66,14 +68,15 @@ export type Database = {
           markdown?: string
           metadata?: Json
           source_created_at?: string
-          source_id?: string
           source_raw?: string
           source_updated_at?: string
+          training_action_id?: string
+          training_offer_id?: string
           updated_at?: string | null
         }
         Relationships: []
       }
-      ingestion_reports: {
+      rco_ingestion_reports: {
         Row: {
           created_at: string
           id: number
@@ -103,10 +106,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ingestion_reports_record_id_fkey"
+            foreignKeyName: "rco_ingestion_reports_record_id_fkey"
             columns: ["record_id"]
             isOneToOne: false
-            referencedRelation: "ingestion_records"
+            referencedRelation: "rco_ingestion_records"
             referencedColumns: ["id"]
           },
         ]

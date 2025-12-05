@@ -30,11 +30,11 @@ async function main() {
   const rcoMdPath = path.resolve(__dirname, "../../rco/output/rco.md");
   const complianceMdPath = path.resolve(
     __dirname,
-    "../../agents/output/rco-compliance.md",
+    "../../agents/output/rco-compliance.md"
   );
   const duplicatesMdPath = path.resolve(
     __dirname,
-    "../../agents/output/rco-duplicates.md",
+    "../../agents/output/rco-duplicates.md"
   );
 
   // 1. Insert Ingestion Record
@@ -44,7 +44,7 @@ async function main() {
   }
   if (!fs.existsSync(rcoMdPath)) {
     console.error(
-      `RCO Markdown not found at ${rcoMdPath}. Please run 'pnpm generate:md' in packages/rco.`,
+      `RCO Markdown not found at ${rcoMdPath}. Please run 'pnpm generate:md' in packages/rco.`
     );
     return;
   }
@@ -56,38 +56,41 @@ async function main() {
   const formation = rcoMetadata.lheo.offres.formation[0];
   const action = formation.action[0];
 
-  console.log("RCO Metadata action:", action);
-
-  // Extract source_id from metadata
-  const sourceId = `${formation.attributes.numero}/${action.attributes.numero}`;
+  // Extract composite identifiers from metadata
+  const trainingOfferId = formation.attributes.numero;
+  const trainingActionId = action.attributes.numero;
   // Extract source_created_at from metadata (parse YYYYMMMDD format into Postgres timestampz)
-  const sourceCreatedAt = parseYYYYMMMDD(action.attributes.datecrea);
+  const sourceCreatedAt = parseYYYYMMMDD(
+    action.attributes.datecrea
+  ).toISOString();
   // Extract source_updated_at from metadata (parse YYYYMMMDD format into Postgres timestampz)
-  const sourceUpdatedAt = parseYYYYMMMDD(action.attributes.datemaj);
+  const sourceUpdatedAt = parseYYYYMMMDD(
+    action.attributes.datemaj
+  ).toISOString();
 
-  console.log(`Inserting ingestion record for source_id: ${sourceId}`);
+  console.log(
+    `Inserting ingestion record for training_offer_id: ${trainingOfferId}, training_id: ${trainingActionId}`
+  );
 
   const { data: record, error: recordError } = await supabase
-    .from("ingestion_records")
-    .upsert(
-      {
-        source_id: sourceId,
-        source_created_at: sourceCreatedAt,
-        source_updated_at: sourceUpdatedAt,
-        source_raw: rcoXml,
-        markdown: rcoMdContent,
-        metadata: rcoMetadata,
-        is_current_version: true,
-      },
-      { onConflict: "source_id" },
-    )
+    .from("rco_ingestion_records")
+    .insert({
+      training_offer_id: trainingOfferId,
+      training_action_id: trainingActionId,
+      source_created_at: sourceCreatedAt,
+      source_updated_at: sourceUpdatedAt,
+      source_raw: rcoXml,
+      markdown: rcoMdContent,
+      metadata: rcoMetadata,
+      is_current_version: true,
+    })
     .select()
     .single();
 
   if (recordError) {
     console.error(
       "Error inserting ingestion record:",
-      JSON.stringify(recordError, null, 2),
+      JSON.stringify(recordError, null, 2)
     );
     return;
   }
@@ -108,7 +111,7 @@ async function main() {
       console.log(`Inserting ${report.type} report...`);
 
       const { error: reportError } = await supabase
-        .from("ingestion_reports")
+        .from("rco_ingestion_reports")
         .insert({
           record_id: record.id,
           report_type: report.type,
@@ -123,7 +126,7 @@ async function main() {
       }
     } else {
       console.warn(
-        `Report file not found: ${report.path}. Run agents scripts to generate it.`,
+        `Report file not found: ${report.path}. Run agents scripts to generate it.`
       );
     }
   }
