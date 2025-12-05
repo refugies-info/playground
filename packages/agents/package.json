@@ -9,10 +9,10 @@
     "check:types": "tsc --noEmit"
   },
   "dependencies": {
-    "@letta-ai/letta-client": "1.1.0",
+    "@letta-ai/letta-client": "1.3.1",
+    "@playground/rco": "workspace:^",
     "dotenv": "^17.2.3",
-    "gray-matter": "^4.0.3",
-    "@playground/rco": "workspace:^"
+    "gray-matter": "^4.0.3"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

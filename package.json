@@ -21,7 +21,7 @@
     "check:outdated": "pnpx taze -r --maturity-period",
     "check:types": "turbo check:types",
     "clean:branches": "pnpx git-removed-branches --prune --force",
-    "dev": "turbo dev",
+    "dev": "turbo dev dev:workflow",
     "format": "biome format --write .",
     "knip": "knip",
     "lint": "biome check --write .",

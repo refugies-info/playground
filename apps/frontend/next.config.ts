@@ -1,8 +1,10 @@
 /** biome-ignore-all lint/suspicious/noConsole: Fine for early warnings */
 import type { NextConfig } from "next";
+import { withWorkflow } from "workflow/next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@playground/ui"],
+  transpilePackages: ["@playground/ui", "@playground/rco", "@playground/agents"],
+  serverExternalPackages: ["libxml2-wasm"],
 };
 
 // Validate required environment variables at build time
@@ -28,4 +30,4 @@ if (typeof window === "undefined") {
   }
 }
 
-export default nextConfig;
+export default withWorkflow(nextConfig);

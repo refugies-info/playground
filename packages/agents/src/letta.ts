@@ -10,7 +10,6 @@ export interface LettaConfig {
 
 export const createLettaClient = (config: LettaConfig = {}): Letta => {
   return new Letta({
-    baseURL: config.baseUrl,
     apiKey: config.token || process.env.LETTA_API_KEY,
   });
 };
@@ -34,7 +33,7 @@ export const checkCompliance = async (
 
   // Clear previous messages before each call
   await client.agents.messages.reset(agentId, {
-    add_default_initial_messages: true,
+    add_default_initial_messages: false,
   });
 
   const response = await client.agents.messages.create(agentId, {
@@ -99,7 +98,7 @@ export const checkDuplicates = async (
 
   // Clear previous messages before each call
   await client.agents.messages.reset(agentId, {
-    add_default_initial_messages: true,
+    add_default_initial_messages: false,
   });
 
   const response = await client.agents.messages.create(agentId, {

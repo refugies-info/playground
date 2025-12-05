@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -19,11 +23,28 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@playground/shared-types": ["../../packages/shared/src"],
-      "@playground/ui": ["../../packages/ui/src"],
-      "@playground/ui/*": ["../../packages/ui/src/*"]
-    }
+      "@/*": [
+        "./src/*"
+      ],
+      "@playground/shared-types": [
+        "../../packages/shared/src"
+      ],
+      "@playground/ui": [
+        "../../packages/ui/src"
+      ],
+      "@playground/ui/*": [
+        "../../packages/ui/src/*"
+      ],
+      "@playground/rco": [
+        "../../packages/rco/src"
+      ],
+      "@playground/agents": [
+        "../../packages/agents/src"
+      ]
+    },
+    "types": [
+      "workflow"
+    ]
   },
   "include": [
     "next-env.d.ts",
@@ -33,5 +54,7 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
