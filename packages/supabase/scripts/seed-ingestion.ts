@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import dotenv from "dotenv";
 import matter from "gray-matter";
-import { getSupabaseAdmin } from "../src/index";
+
 
 // Load env vars from root
 const envPath = path.resolve(__dirname, "../../../.env");
@@ -11,16 +11,16 @@ console.log("Loading .env from:", envPath);
 console.log("File exists:", fs.existsSync(envPath));
 dotenv.config({ path: envPath });
 
-function parseYYYYMMMDD(dateStr: string): Date {
-  const year = dateStr.slice(0, 4);
-  const month = dateStr.slice(4, 6);
-  const day = dateStr.slice(6, 8);
-  return new Date(`${year}-${month}-${day}`);
-}
+
 
 async function main() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
+
+  // Note: We need to import ingestRcoData. Since we are in scripts/, we recall that this package's src exports it.
+  // However, running ts-node on scripts might not resolve ".." correctly if not compiled.
+  // But previously it imported `getSupabaseAdmin` from "../src/index". So we can do the same.
+  const { getSupabaseAdmin, ingestRcoData } = require("../src/index");
 
   const supabase = getSupabaseAdmin(url, key);
   console.log("Seeding ingestion tables...");
@@ -37,7 +37,7 @@ async function main() {
     "../../agents/output/rco-duplicates.md"
   );
 
-  // 1. Insert Ingestion Record
+  // 1. Load Data
   if (!fs.existsSync(rcoXmlPath)) {
     console.error(`RCO XML not found at ${rcoXmlPath}`);
     return;
@@ -53,82 +53,40 @@ async function main() {
   const rcoMdContent = fs.readFileSync(rcoMdPath, "utf-8");
   const { data: rcoMetadata } = matter(rcoMdContent);
 
-  const formation = rcoMetadata.lheo.offres.formation[0];
-  const action = formation.action[0];
-
-  // Extract composite identifiers from metadata
-  const trainingOfferId = formation.attributes.numero;
-  const trainingActionId = action.attributes.numero;
-  // Extract source_created_at from metadata (parse YYYYMMMDD format into Postgres timestampz)
-  const sourceCreatedAt = parseYYYYMMMDD(
-    action.attributes.datecrea
-  ).toISOString();
-  // Extract source_updated_at from metadata (parse YYYYMMMDD format into Postgres timestampz)
-  const sourceUpdatedAt = parseYYYYMMMDD(
-    action.attributes.datemaj
-  ).toISOString();
-
-  console.log(
-    `Inserting ingestion record for training_offer_id: ${trainingOfferId}, training_id: ${trainingActionId}`
-  );
-
-  const { data: record, error: recordError } = await supabase
-    .from("rco_ingestion_records")
-    .insert({
-      training_offer_id: trainingOfferId,
-      training_action_id: trainingActionId,
-      source_created_at: sourceCreatedAt,
-      source_updated_at: sourceUpdatedAt,
-      source_raw: rcoXml,
-      markdown: rcoMdContent,
-      metadata: rcoMetadata,
-      is_current_version: true,
-    })
-    .select()
-    .single();
-
-  if (recordError) {
-    console.error(
-      "Error inserting ingestion record:",
-      JSON.stringify(recordError, null, 2)
-    );
-    return;
+  // 2. Load Reports (Optional)
+  let complianceReport;
+  if (fs.existsSync(complianceMdPath)) {
+      const content = fs.readFileSync(complianceMdPath, "utf-8");
+      const { data: metadata, content: markdown } = matter(content);
+      complianceReport = { markdown, metadata };
   }
 
-  console.log(`Inserted/Updated record ID: ${record.id}`);
-
-  // 2. Insert Ingestion Reports
-  const reports = [
-    { path: complianceMdPath, type: "compliance" },
-    { path: duplicatesMdPath, type: "duplicates" },
-  ];
-
-  for (const report of reports) {
-    if (fs.existsSync(report.path)) {
-      const content = fs.readFileSync(report.path, "utf-8");
+  let duplicatesReport;
+  if (fs.existsSync(duplicatesMdPath)) {
+      const content = fs.readFileSync(duplicatesMdPath, "utf-8");
       const { data: metadata, content: markdown } = matter(content);
+      duplicatesReport = { markdown, metadata };
+  }
 
-      console.log(`Inserting ${report.type} report...`);
+  // 3. Call Ingestion Function
+  console.log("Calling ingestRcoData...");
+  const result = await ingestRcoData(supabase, {
+      xmlContent: rcoXml,
+      markdownContent: rcoMdContent,
+      metadata: rcoMetadata,
+      complianceReport,
+      duplicatesReport
+  });
 
-      const { error: reportError } = await supabase
-        .from("rco_ingestion_reports")
-        .insert({
-          record_id: record.id,
-          report_type: report.type,
-          markdown: markdown,
-          metadata: metadata,
-        });
-
-      if (reportError) {
-        console.error(`Error inserting ${report.type} report:`, reportError);
-      } else {
-        console.log(`Inserted ${report.type} report.`);
+  if (result.status === "success") {
+      console.log(`Ingestion successful! Record ID: ${result.recordId}`);
+      if (result.reportResults) {
+          result.reportResults.forEach((r: any) => {
+              console.log(`Report (${r.type}): ${r.status}`);
+          });
       }
-    } else {
-      console.warn(
-        `Report file not found: ${report.path}. Run agents scripts to generate it.`
-      );
-    }
+  } else {
+      console.error("Ingestion failed:", result.error);
   }
 
   console.log("Done.");

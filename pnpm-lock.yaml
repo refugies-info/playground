@@ -271,6 +271,9 @@ importers:
       '@playground/rco':
         specifier: workspace:*
         version: link:../rco
+      '@playground/supabase':
+        specifier: workspace:*
+        version: link:../supabase
       workflow:
         specifier: 4.0.1-beta.21
         version: 4.0.1-beta.21(@aws-sdk/client-sts@3.940.0)(next@16.0.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
