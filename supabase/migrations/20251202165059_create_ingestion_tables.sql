@@ -2,7 +2,7 @@
   create table "public"."rco_ingestion_records" (
     "id" uuid not null default gen_random_uuid(),
     "created_at" timestamp with time zone not null default now(),
-    "updated_at" timestamp with time zone,
+    "updated_at" timestamp with time zone not null default now(),
     "training_offer_id" text not null,
     "training_action_id" text not null,
     "source_created_at" timestamp with time zone not null,

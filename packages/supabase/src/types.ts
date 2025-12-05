@@ -34,6 +34,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      editorial_records: {
+        Row: {
+          created_at: string
+          id: string
+          markdown: string | null
+          metadata: Json | null
+          rco_ingestion_record_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          markdown?: string | null
+          metadata?: Json | null
+          rco_ingestion_record_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          markdown?: string | null
+          metadata?: Json | null
+          rco_ingestion_record_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "editorial_records_rco_ingestion_record_id_fkey"
+            columns: ["rco_ingestion_record_id"]
+            isOneToOne: false
+            referencedRelation: "rco_ingestion_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      editorial_reports: {
+        Row: {
+          created_at: string
+          id: string
+          markdown: string
+          metadata: Json
+          record_id: string
+          report_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          markdown: string
+          metadata: Json
+          record_id: string
+          report_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          markdown?: string
+          metadata?: Json
+          record_id?: string
+          report_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rco_ingestion_records: {
         Row: {
           created_at: string
@@ -46,7 +111,7 @@ export type Database = {
           source_updated_at: string
           training_action_id: string
           training_offer_id: string
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
           created_at?: string
@@ -59,7 +124,7 @@ export type Database = {
           source_updated_at: string
           training_action_id: string
           training_offer_id: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
           created_at?: string
@@ -72,7 +137,7 @@ export type Database = {
           source_updated_at?: string
           training_action_id?: string
           training_offer_id?: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
