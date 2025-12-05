@@ -45,3 +45,4 @@ Thumbs.db
 .supabase/
 .supabase.local/
 supabase/functions/node_modules/
+.workflow-data/

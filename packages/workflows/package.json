@@ -20,6 +20,7 @@
   "dependencies": {
     "@playground/agents": "workspace:*",
     "@playground/rco": "workspace:*",
+    "@playground/supabase": "workspace:*",
     "workflow": "4.0.1-beta.21"
   },
   "devDependencies": {

@@ -84,14 +84,38 @@ export default function WorkflowPage() {
         // where returnObject values are indices pointing to the values in the array
         const [resultMap, ...values] = data.output;
 
+        // Check if we have ingestion result
+        // The new return structure is { files: {...}, ingestion: {...} }
+        // We need to access it via the resultMap
+
         if (resultMap && typeof resultMap === 'object') {
-           const parsedResults: Record<string, string> = {};
-           Object.entries(resultMap).forEach(([key, index]) => {
-             if (typeof index === 'number' && values[index - 1]) {
-               parsedResults[key] = values[index - 1] as string;
-             }
-           });
-           setResults(parsedResults);
+           // We'll reconstruct the object for easier handling
+           const reconstruct = (val: any): any => {
+               if (typeof val === 'number') return values[val - 1];
+               if (Array.isArray(val)) return val.map(reconstruct);
+               if (val && typeof val === 'object') {
+                   const res: any = {};
+                   for (const k in val) {
+                       res[k] = reconstruct(val[k]);
+                   }
+                   return res;
+               }
+               return val;
+           };
+
+           const fullResult = reconstruct(resultMap);
+
+           if (fullResult.ingestion) {
+               // Use ingestion result
+               setResults({
+                   ...fullResult.files,
+                   "Ingestion Status": fullResult.ingestion.status,
+                   "Ingestion Record ID": fullResult.ingestion.recordId || "N/A"
+               });
+           } else {
+               // Fallback to old format (flat) if no ingestion key
+               setResults(fullResult);
+           }
         }
       }
     } catch (err) {
@@ -180,17 +204,19 @@ export default function WorkflowPage() {
         <div className="mt-8">
           <h2 className="text-2xl font-bold mb-4">Results</h2>
           <div className="grid gap-4">
-            {Object.entries(results).map(([filename, path]) => (
-              <div key={filename} className="p-4 border rounded-lg bg-white dark:bg-gray-800 shadow-sm">
-                <h3 className="font-semibold text-lg mb-2">{filename}</h3>
+            {Object.entries(results).map(([key, value]) => (
+              <div key={key} className="p-4 border rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+                <h3 className="font-semibold text-lg mb-2">{key}</h3>
                 <div className="flex items-center justify-between">
-                  <code className="text-sm bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded">
-                    {path}
+                  <code className="text-sm bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded break-all">
+                    {value as string}
                   </code>
-                  {path.startsWith("Error") ? (
-                    <span className="text-red-500 text-sm">Failed</span>
+                  {(typeof value === 'string' && value.startsWith("Error")) || (value === "error" || value === "failed") ? (
+                    <span className="text-red-500 text-sm font-medium">Failed</span>
+                  ) : (typeof value === 'string' && value.startsWith("success")) || (key.includes("Status") && value === "success") ? (
+                    <span className="text-green-500 text-sm font-medium">Success</span>
                   ) : (
-                    <span className="text-green-500 text-sm">Generated</span>
+                    <span className="text-gray-500 text-sm">Info</span>
                   )}
                 </div>
               </div>

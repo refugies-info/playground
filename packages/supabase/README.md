@@ -36,6 +36,6 @@ This package relies on the following environment variables:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`)
-- `SUPABASE_SERVICE_ROLE_KEY` (or `SUPABASE_SERVICE_ROLE_SECRET`) - Server-side only
+- `SUPABASE_SERVICE_ROLE_KEY` - Server-side only
 - `SUPABASE_URL` - Script usage (optional fallback)
 - `SUPABASE_KEY` - Script usage (optional fallback)
