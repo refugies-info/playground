@@ -31,7 +31,7 @@ The startup output will show your local credentials. Create `.env.local` in `/ap
 # Supabase Local Development Configuration
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<your_publishable_key>
-SUPABASE_SERVICE_ROLE_SECRET=<your_service_role_secret>
+SUPABASE_SERVICE_ROLE_KEY=<your_service_role_secret>
 ```
 
 Replace the keys with values from `supabase start` output.
@@ -159,12 +159,12 @@ Use `--no-backup` to avoid creating backup files.
 ```
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable_key>
-SUPABASE_SERVICE_ROLE_SECRET=<service_role_secret>
+SUPABASE_SERVICE_ROLE_KEY=<service_role_secret>
 ```
 
 ### Backend (API Routes)
 
-Use `SUPABASE_SERVICE_ROLE_SECRET` for server-side operations in Next.js API routes.
+Use `SUPABASE_SERVICE_ROLE_KEY` for server-side operations in Next.js API routes.
 
 ## Resources
 
