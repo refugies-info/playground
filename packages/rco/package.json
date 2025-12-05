@@ -8,9 +8,11 @@
     "test": "vitest run",
     "check:types": "tsc --noEmit",
     "generate-json": "tsx scripts/generate-json.ts",
-    "generate-md": "tsx scripts/generate-md.ts"
+    "generate-md": "tsx scripts/generate-md.ts",
+    "copy:schema": "tsx scripts/copy-schema.ts"
   },
   "dependencies": {
+    "ajv": "^8.17.1",
     "fast-xml-parser": "^4.5.3",
     "libxml2-wasm": "^0.6.0",
     "yaml": "^2.8.1",

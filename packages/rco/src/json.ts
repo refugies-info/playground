@@ -7,6 +7,26 @@ export interface JsonNode {
   children: JsonNode[];
 }
 
+export const findChildrenByTag = (node: JsonNode, tag: string): JsonNode[] =>
+  node.children.filter((child) => child.tag === tag);
+
+export const findFirstChildByTag = (
+  node: JsonNode,
+  tag: string
+): JsonNode | undefined => node.children.find((child) => child.tag === tag);
+
+export const findDescendantsByTag = (
+  node: JsonNode,
+  tag: string
+): JsonNode[] => {
+  const results: JsonNode[] = [];
+  for (const child of node.children) {
+    if (child.tag === tag) results.push(child);
+    results.push(...findDescendantsByTag(child, tag));
+  }
+  return results;
+};
+
 const toStringValue = (value: unknown): string => {
   if (value === null || value === undefined) return "";
   return String(value);

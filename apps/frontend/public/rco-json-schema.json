@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://refugies.info/rco-json-schema.json",
+  "title": "LHEO JSON Node",
+  "description": "Lossless, query-friendly LHEO XML representation. Every element is a node with tag/attrs/text/children.",
+  "type": "object",
+  "required": ["tag", "attrs", "children"],
+  "properties": {
+    "tag": {
+      "type": "string",
+      "description": "Element name. Root is '#document'."
+    },
+    "attrs": {
+      "type": "object",
+      "description": "XML attributes keyed by name (values as strings).",
+      "additionalProperties": { "type": "string" }
+    },
+    "text": {
+      "type": ["string", "null"],
+      "description": "Text content for the node, if any. Null represents explicit empty text."
+    },
+    "children": {
+      "type": "array",
+      "description": "Ordered child nodes. Repeated siblings appear as multiple entries.",
+      "items": { "$ref": "#/$defs/node" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["tag", "attrs", "children"],
+      "properties": {
+        "tag": { "type": "string" },
+        "attrs": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "text": { "type": ["string", "null"] },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/node" }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
