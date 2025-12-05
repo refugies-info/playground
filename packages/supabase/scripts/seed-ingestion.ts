@@ -30,11 +30,11 @@ async function main() {
   const rcoMdPath = path.resolve(__dirname, "../../rco/output/rco.md");
   const complianceMdPath = path.resolve(
     __dirname,
-    "../../agents/output/rco-compliance.md",
+    "../../agents/output/rco-compliance.md"
   );
   const duplicatesMdPath = path.resolve(
     __dirname,
-    "../../agents/output/rco-duplicates.md",
+    "../../agents/output/rco-duplicates.md"
   );
 
   // 1. Insert Ingestion Record
@@ -44,7 +44,7 @@ async function main() {
   }
   if (!fs.existsSync(rcoMdPath)) {
     console.error(
-      `RCO Markdown not found at ${rcoMdPath}. Please run 'pnpm generate:md' in packages/rco.`,
+      `RCO Markdown not found at ${rcoMdPath}. Please run 'pnpm generate:md' in packages/rco.`
     );
     return;
   }
@@ -55,8 +55,6 @@ async function main() {
 
   const formation = rcoMetadata.lheo.offres.formation[0];
   const action = formation.action[0];
-
-  console.log("RCO Metadata action:", action);
 
   // Extract source_id from metadata
   const sourceId = `${formation.attributes.numero}/${action.attributes.numero}`;
@@ -79,7 +77,7 @@ async function main() {
         metadata: rcoMetadata,
         is_current_version: true,
       },
-      { onConflict: "source_id" },
+      { onConflict: "source_id" }
     )
     .select()
     .single();
@@ -87,7 +85,7 @@ async function main() {
   if (recordError) {
     console.error(
       "Error inserting ingestion record:",
-      JSON.stringify(recordError, null, 2),
+      JSON.stringify(recordError, null, 2)
     );
     return;
   }
@@ -123,7 +121,7 @@ async function main() {
       }
     } else {
       console.warn(
-        `Report file not found: ${report.path}. Run agents scripts to generate it.`,
+        `Report file not found: ${report.path}. Run agents scripts to generate it.`
       );
     }
   }
