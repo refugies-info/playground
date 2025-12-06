@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import matter from "gray-matter";
 
 // Load env vars from root
-const envPath = path.resolve(__dirname, "../../../.env");
+const envPath = path.resolve(__dirname, "../.env");
 console.log("Loading .env from:", envPath);
 console.log("File exists:", fs.existsSync(envPath));
 dotenv.config({ path: envPath });
@@ -17,21 +17,21 @@ async function main() {
   // Note: We need to import ingestRcoData. Since we are in scripts/, we recall that this package's src exports it.
   // However, running ts-node on scripts might not resolve ".." correctly if not compiled.
   // But previously it imported `getSupabaseAdmin` from "../src/index". So we can do the same.
-  const { getSupabaseAdmin, ingestRcoData } = require("../src/index");
+  const { getSupabaseAdmin, ingestRcoData } = require("../packages/supabase/src/index");
 
   const supabase = getSupabaseAdmin(url, key);
   console.log("Seeding ingestion tables...");
 
   // Paths
-  const rcoXmlPath = path.resolve(__dirname, "../../rco/samples/rco.xml");
-  const rcoMdPath = path.resolve(__dirname, "../../rco/output/rco.md");
+  const rcoXmlPath = path.resolve(__dirname, "../packages/rco/samples/rco.xml");
+  const rcoMdPath = path.resolve(__dirname, "../packages/rco/output/rco.md");
   const complianceMdPath = path.resolve(
     __dirname,
-    "../../agents/output/rco-compliance.md",
+    "../packages/agents/output/rco-compliance.md",
   );
   const duplicatesMdPath = path.resolve(
     __dirname,
-    "../../agents/output/rco-duplicates.md",
+    "../packages/agents/output/rco-duplicates.md",
   );
 
   // 1. Load Data
