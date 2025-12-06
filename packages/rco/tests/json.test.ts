@@ -18,7 +18,7 @@ describe("JSON Module", () => {
     expect(offres).toBeDefined();
     if (!offres) return;
     const formations = offres.children.filter(
-      (child) => child.tag === "formation"
+      (child) => child.tag === "formation",
     );
     expect(formations.length).toBeGreaterThan(0);
   });

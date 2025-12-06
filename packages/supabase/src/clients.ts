@@ -3,8 +3,8 @@ import {
   createBrowserClient,
   createServerClient,
 } from "@supabase/ssr";
-import { type SupabaseClient, createClient } from "@supabase/supabase-js";
-import { type Database } from "./types";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "./types";
 
 const supabaseUrl =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
@@ -24,9 +24,9 @@ export const createSupabaseBrowserClient = (): SupabaseClient<Database> => {
  * Create a Supabase client for use in the server (Server Components, Actions, API Routes)
  * @param cookieStore - The Next.js cookie store (from `cookies()`)
  */
-// biome-ignore lint/suspicious/noExplicitAny: cookieStore comes from next/headers which is not available here
 export const createSupabaseServerClient = (
-  cookieStore: any
+  // biome-ignore lint/suspicious/noExplicitAny: cookieStore comes from next/headers which is not available here
+  cookieStore: any,
 ): SupabaseClient<Database> => {
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -34,7 +34,7 @@ export const createSupabaseServerClient = (
         return cookieStore.getAll();
       },
       setAll(
-        cookiesToSet: { name: string; value: string; options: CookieOptions }[]
+        cookiesToSet: { name: string; value: string; options: CookieOptions }[],
       ) {
         try {
           cookiesToSet.forEach(({ name, value, options }) => {
@@ -60,7 +60,7 @@ export const createSupabaseServerClient = (
  */
 export const getSupabaseAdmin = (
   url?: string,
-  serviceRoleKey?: string
+  serviceRoleKey?: string,
 ): SupabaseClient<Database> => {
   const supabaseUrl =
     url || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -71,7 +71,7 @@ export const getSupabaseAdmin = (
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error(
-      "Supabase URL and Service Role Key are required. Pass them as arguments or set SUPABASE_SERVICE_ROLE_KEY environment variable."
+      "Supabase URL and Service Role Key are required. Pass them as arguments or set SUPABASE_SERVICE_ROLE_KEY environment variable.",
     );
   }
 

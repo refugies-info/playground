@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDocument } from "./DocumentContext";
 
 interface ReasoningStep {
+  id?: string;
   timestamp: string;
   message: string;
   type: "thinking" | "function_call" | "response";
@@ -104,7 +105,10 @@ export function EditorChat() {
                 finalContent = parsed.content;
               } else {
                 // It's a reasoning step
-                setReasoning((prev) => [...prev, parsed]);
+                setReasoning((prev) => [
+                  ...prev,
+                  { ...parsed, id: Math.random().toString(36).substring(7) },
+                ]);
               }
             } catch (_e) {}
           }
@@ -185,7 +189,7 @@ export function EditorChat() {
               </h3>
               {reasoning.map((step, index) => (
                 <div
-                  key={index}
+                  key={step.id || index}
                   className="p-3 rounded-lg bg-gray-50 border border-gray-200 animate-in fade-in slide-in-from-bottom-2 duration-300"
                 >
                   <div className="flex items-center gap-2 mb-1">
@@ -218,6 +222,7 @@ export function EditorChat() {
       {!isCollapsed && (
         <div className="p-4 border-t space-y-2">
           <button
+            type="button"
             onClick={handleImproveContent}
             disabled={isProcessing || !document?.content}
             className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
@@ -236,6 +241,7 @@ export function EditorChat() {
 
           {isProcessing && (
             <button
+              type="button"
               onClick={handleCancel}
               className="w-full px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 transition-colors flex items-center justify-center gap-2 text-sm"
             >

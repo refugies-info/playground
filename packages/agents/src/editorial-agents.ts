@@ -44,6 +44,7 @@ export const editorialAgent = async (
   const reasoning: ReasoningStep[] = [];
 
   // Extract reasoning from all messages
+  // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
   for (const msg of messages as any[]) {
     const timestamp = new Date().toISOString();
 

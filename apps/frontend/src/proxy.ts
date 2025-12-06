@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@playground/supabase";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function proxy(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request);

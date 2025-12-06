@@ -1,8 +1,16 @@
-import { lheoXmlToMarkdownWithFrontmatter, lheoXmlToJson } from "@playground/rco";
-import { createLettaClient, checkCompliance, checkDuplicates } from "@playground/agents";
-import { ingestRcoData, getSupabaseAdmin, type IngestionResult } from "@playground/supabase";
 import fs from "node:fs/promises";
 import path from "node:path";
+import {
+  checkCompliance,
+  checkDuplicates,
+  createLettaClient,
+} from "@playground/agents";
+import {
+  lheoXmlToJson,
+  lheoXmlToMarkdownWithFrontmatter,
+} from "@playground/rco";
+import { getSupabaseAdmin, ingestRcoData } from "@playground/supabase";
+import matter from "gray-matter";
 
 // Define steps
 export async function parseXmlStep(xmlContent: string) {
@@ -79,116 +87,87 @@ export async function checkDuplicatesStep(xmlContent: string) {
   }
 }
 
-export async function ingestStep(
+export async function ingestDataStep(
   xmlContent: string,
-  markdownResult: { path: string, content: string },
-  complianceResult: any,
-  duplicatesResult: any
+  markdownResult: { path: string; content: string },
+  // jsonResult: any, // We can use the json output for metadata if structurally compatible,
+  // but `seed-ingestion` used `matter(markdown)`.
+  // `matter` is robust.
+  complianceResult: { error?: unknown; content?: string },
+  duplicatesResult: { error?: unknown; content?: string },
 ) {
   "use step";
 
-  // We need metadata from markdown.
-  // Since we don't have gray-matter here, we will hack it or add the dependency.
-  // Actually, `lheoXmlToMarkdownWithFrontmatter` returns the string with frontmatter.
-  // `ingestRcoData` takes `metadata` object.
-  // I should probably move the metadata parsing into `ingestRcoData` or export a helper.
-  // BUT `ingestRcoData` expects `metadata` as an object.
-  // I will add `gray-matter` to this package or just import `matter` from it if I add it.
-  // For now, I will optimistically assuming I can add `gray-matter` to this package too,
-  // OR I can use `lheoXmlToJson` result which HAS the data structure!
-  // `ingestion.ts` uses `metadata` to extract `formation` and `action`.
-  // `lheoXmlToJson` returns exactly that structure (I assume).
-  // Let's use the JSON result for metadata!
+  // Initialize Supabase
+  // We assume env vars are present (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  // We need to pass the JSON result to this step too.
+  if (!key) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not defined");
+  }
 
-  return { status: "skipped_needs_json_and_client" };
+  const supabase = getSupabaseAdmin(url, key);
+
+  // Parse Metadata from markdown content
+  const { data: metadata } = matter(markdownResult.content);
+
+  // Prepare Reports
+  let complianceReport:
+    | { markdown: string; metadata: Record<string, unknown> }
+    | undefined;
+  if (complianceResult && !complianceResult.error && complianceResult.content) {
+    const { data: cMeta, content: cMd } = matter(complianceResult.content);
+    complianceReport = { markdown: cMd, metadata: cMeta };
+  }
+
+  let duplicatesReport:
+    | { markdown: string; metadata: Record<string, unknown> }
+    | undefined;
+  if (duplicatesResult && !duplicatesResult.error && duplicatesResult.content) {
+    const { data: dMeta, content: dMd } = matter(duplicatesResult.content);
+    duplicatesReport = { markdown: dMd, metadata: dMeta };
+  }
+
+  const result = await ingestRcoData(supabase, {
+    xmlContent,
+    markdownContent: markdownResult.content,
+    metadata, // This metadata comes from the markdown frontmatter
+    complianceReport,
+    duplicatesReport,
+  });
+
+  return result;
 }
-
-
-// RE-WRITING THE FILE completely to include ingestion properly.
-
-import matter from "gray-matter";
-
-// ... (imports)
-
-export async function ingestDataStep(
-    xmlContent: string,
-    markdownResult: { path: string; content: string },
-    // jsonResult: any, // We can use the json output for metadata if structurally compatible,
-    // but `seed-ingestion` used `matter(markdown)`.
-    // `matter` is robust.
-    complianceResult: any,
-    duplicatesResult: any
-) {
-    "use step";
-
-    // Initialize Supabase
-    // We assume env vars are present (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!key) {
-        throw new Error("SUPABASE_SERVICE_ROLE_KEY is not defined");
-    }
-
-    const supabase = getSupabaseAdmin(url, key);
-
-    // Parse Metadata from markdown content
-    const { data: metadata } = matter(markdownResult.content);
-
-    // Prepare Reports
-    let complianceReport;
-    if (complianceResult && !complianceResult.error && complianceResult.content) {
-        const { data: cMeta, content: cMd } = matter(complianceResult.content);
-        complianceReport = { markdown: cMd, metadata: cMeta };
-    }
-
-    let duplicatesReport;
-    if (duplicatesResult && !duplicatesResult.error && duplicatesResult.content) {
-         const { data: dMeta, content: dMd } = matter(duplicatesResult.content);
-         duplicatesReport = { markdown: dMd, metadata: dMeta };
-    }
-
-    const result = await ingestRcoData(supabase, {
-        xmlContent,
-        markdownContent: markdownResult.content,
-        metadata, // This metadata comes from the markdown frontmatter
-        complianceReport,
-        duplicatesReport
-    });
-
-    return result;
-}
-
 
 // Define workflow
 export async function processXmlWorkflow(xmlContent: string) {
   "use workflow";
 
   // Parallel execution for files generation
-  const [mdResult, jsonPath, complianceResult, duplicatesResult] = await Promise.all([
-    generateMarkdownStep(xmlContent),
-    generateJsonStep(xmlContent),
-    checkComplianceStep(xmlContent),
-    checkDuplicatesStep(xmlContent),
-  ]);
+  const [mdResult, jsonPath, complianceResult, duplicatesResult] =
+    await Promise.all([
+      generateMarkdownStep(xmlContent),
+      generateJsonStep(xmlContent),
+      checkComplianceStep(xmlContent),
+      checkDuplicatesStep(xmlContent),
+    ]);
 
   // Ingest Step (run after generation)
   const ingestionResult = await ingestDataStep(
-      xmlContent,
-      mdResult,
-      complianceResult,
-      duplicatesResult
+    xmlContent,
+    mdResult,
+    complianceResult,
+    duplicatesResult,
   );
 
   return {
     files: {
-        "rco.md": mdResult.path,
-        "rco.json": jsonPath,
-        "rco_compliance.md": complianceResult.path || complianceResult.error,
-        "rco_duplicates.md": duplicatesResult.path || duplicatesResult.error,
+      "rco.md": mdResult.path,
+      "rco.json": jsonPath,
+      "rco_compliance.md": complianceResult.path || complianceResult.error,
+      "rco_duplicates.md": duplicatesResult.path || duplicatesResult.error,
     },
-    ingestion: ingestionResult
+    ingestion: ingestionResult,
   };
 }
