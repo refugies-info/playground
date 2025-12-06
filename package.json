@@ -36,9 +36,15 @@
     "dotenv": "^17.2.3",
     "husky": "^9.1.7",
     "knip": "^5.70.0",
+    "lint-staged": "^16.2.7",
     "postcss": "^8.5.6",
     "tsx": "^4.20.6",
     "turbo": "^2.6.1",
     "workflow": "4.0.1-beta.21"
+  },
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+      "biome check --write"
+    ]
   }
 }

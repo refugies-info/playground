@@ -1,4 +1,5 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-pnpm validate
+pnpm dlx lint-staged
+pnpm check:types

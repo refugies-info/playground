@@ -1,5 +1,5 @@
 import type { Letta } from "@letta-ai/letta-client";
-import { type ReasoningStep } from "./editorial-agents";
+import type { ReasoningStep } from "./editorial-agents";
 
 export const editorialAgentStream = async function* (
   client: Letta,
@@ -29,7 +29,9 @@ export const editorialAgentStream = async function* (
     ],
   });
 
+  // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
   for await (const chunk of stream as AsyncIterable<any>) {
+    // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
     const msg = chunk as any;
     const timestamp = new Date().toISOString();
 

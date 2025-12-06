@@ -12,12 +12,12 @@ export const findChildrenByTag = (node: JsonNode, tag: string): JsonNode[] =>
 
 export const findFirstChildByTag = (
   node: JsonNode,
-  tag: string
+  tag: string,
 ): JsonNode | undefined => node.children.find((child) => child.tag === tag);
 
 export const findDescendantsByTag = (
   node: JsonNode,
-  tag: string
+  tag: string,
 ): JsonNode[] => {
   const results: JsonNode[] = [];
   for (const child of node.children) {
@@ -101,7 +101,7 @@ export const lheoXmlToJson = async (xmlString: string): Promise<JsonNode> => {
   const parsed = await parseLheoXml(xmlString);
 
   const children = Object.entries(parsed).map(([key, value]) =>
-    normalizeToNode(key, value)
+    normalizeToNode(key, value),
   );
 
   return {

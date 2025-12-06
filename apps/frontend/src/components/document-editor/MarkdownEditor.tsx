@@ -166,6 +166,7 @@ export function MarkdownEditor() {
       <div className="border-b bg-gray-50">
         <div className="flex gap-1">
           <button
+            type="button"
             onClick={() => setIsRawMarkdownMode(false)}
             disabled={isProcessing}
             className={`
@@ -186,6 +187,7 @@ export function MarkdownEditor() {
             Visual Editor
           </button>
           <button
+            type="button"
             onClick={() => setIsRawMarkdownMode(true)}
             disabled={isProcessing}
             className={`

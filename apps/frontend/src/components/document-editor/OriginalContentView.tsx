@@ -32,7 +32,7 @@ export function OriginalContentView() {
     async function loadContent() {
       try {
         const contentWithoutFrontmatter = stripYamlFrontmatter(
-          document?.originalContent!,
+          document?.originalContent ?? "",
         );
 
         const blocks = await editor.tryParseMarkdownToBlocks(

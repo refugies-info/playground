@@ -1,9 +1,16 @@
 "use server";
 
-import { lheoXmlToMarkdownWithFrontmatter, lheoXmlToJson } from "@playground/rco";
-import { createLettaClient, checkCompliance, checkDuplicates } from "@playground/agents";
 import fs from "node:fs/promises";
 import path from "node:path";
+import {
+  checkCompliance,
+  checkDuplicates,
+  createLettaClient,
+} from "@playground/agents";
+import {
+  lheoXmlToJson,
+  lheoXmlToMarkdownWithFrontmatter,
+} from "@playground/rco";
 
 export async function runWorkflow(xmlContent: string) {
   const outputDir = path.join(process.cwd(), "output");
@@ -11,6 +18,7 @@ export async function runWorkflow(xmlContent: string) {
   try {
     await fs.mkdir(outputDir, { recursive: true });
   } catch (error) {
+    // biome-ignore lint/suspicious/noConsole: Log error
     console.error("Error creating output directory:", error);
     return { success: false, error: "Failed to create output directory" };
   }
@@ -40,8 +48,10 @@ export async function runWorkflow(xmlContent: string) {
       await fs.writeFile(compliancePath, complianceReport);
       results["rco_compliance.md"] = compliancePath;
     } catch (error) {
+      // biome-ignore lint/suspicious/noConsole: Log error
       console.error("Error generating compliance report:", error);
-      results["rco_compliance.md"] = `Error: ${error instanceof Error ? error.message : String(error)}`;
+      results["rco_compliance.md"] =
+        `Error: ${error instanceof Error ? error.message : String(error)}`;
     }
 
     // 4. Duplicates Report
@@ -51,14 +61,19 @@ export async function runWorkflow(xmlContent: string) {
       await fs.writeFile(duplicatesPath, duplicatesReport);
       results["rco_duplicates.md"] = duplicatesPath;
     } catch (error) {
+      // biome-ignore lint/suspicious/noConsole: Log error
       console.error("Error generating duplicates report:", error);
-      results["rco_duplicates.md"] = `Error: ${error instanceof Error ? error.message : String(error)}`;
+      results["rco_duplicates.md"] =
+        `Error: ${error instanceof Error ? error.message : String(error)}`;
     }
 
     return { success: true, results };
-
   } catch (error) {
+    // biome-ignore lint/suspicious/noConsole: Log error
     console.error("Workflow failed:", error);
-    return { success: false, error: error instanceof Error ? error.message : String(error) };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }

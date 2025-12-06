@@ -8,11 +8,12 @@ import { MarkdownEditor } from "./MarkdownEditor";
 
 interface DocumentEditorLayoutProps {
   documentId: string;
+  // biome-ignore lint/suspicious/noExplicitAny: Generic initial data
   initialData?: any; // Replace with proper type
 }
 
 export function DocumentEditorLayout({
-  documentId,
+  documentId: _documentId,
   initialData,
 }: DocumentEditorLayoutProps) {
   return (

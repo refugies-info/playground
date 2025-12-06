@@ -47,6 +47,7 @@ export function RawMarkdownView({
               </p>
             </div>
             <button
+              type="button"
               onClick={() => setShowWarning(false)}
               className="text-amber-600 hover:text-amber-800 text-xs font-medium"
             >

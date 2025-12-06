@@ -25,8 +25,8 @@ const schemaPath = path.join(__dirname, "../json-schema.json");
       `Generated JSON failed schema validation: ${JSON.stringify(
         validate.errors,
         null,
-        2
-      )}`
+        2,
+      )}`,
     );
   }
 

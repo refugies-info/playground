@@ -4,14 +4,11 @@ import path from "node:path";
 import dotenv from "dotenv";
 import matter from "gray-matter";
 
-
 // Load env vars from root
 const envPath = path.resolve(__dirname, "../../../.env");
 console.log("Loading .env from:", envPath);
 console.log("File exists:", fs.existsSync(envPath));
 dotenv.config({ path: envPath });
-
-
 
 async function main() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -30,11 +27,11 @@ async function main() {
   const rcoMdPath = path.resolve(__dirname, "../../rco/output/rco.md");
   const complianceMdPath = path.resolve(
     __dirname,
-    "../../agents/output/rco-compliance.md"
+    "../../agents/output/rco-compliance.md",
   );
   const duplicatesMdPath = path.resolve(
     __dirname,
-    "../../agents/output/rco-duplicates.md"
+    "../../agents/output/rco-duplicates.md",
   );
 
   // 1. Load Data
@@ -44,7 +41,7 @@ async function main() {
   }
   if (!fs.existsSync(rcoMdPath)) {
     console.error(
-      `RCO Markdown not found at ${rcoMdPath}. Please run 'pnpm generate:md' in packages/rco.`
+      `RCO Markdown not found at ${rcoMdPath}. Please run 'pnpm generate:md' in packages/rco.`,
     );
     return;
   }
@@ -54,39 +51,44 @@ async function main() {
   const { data: rcoMetadata } = matter(rcoMdContent);
 
   // 2. Load Reports (Optional)
-  let complianceReport;
+  // biome-ignore lint/suspicious/noExplicitAny: Script convenience
+  let complianceReport: { markdown: string; metadata: any } | undefined;
   if (fs.existsSync(complianceMdPath)) {
-      const content = fs.readFileSync(complianceMdPath, "utf-8");
-      const { data: metadata, content: markdown } = matter(content);
-      complianceReport = { markdown, metadata };
+    const content = fs.readFileSync(complianceMdPath, "utf-8");
+    const { data: metadata, content: markdown } = matter(content);
+    complianceReport = { markdown, metadata };
   }
 
-  let duplicatesReport;
+  // biome-ignore lint/suspicious/noExplicitAny: Script convenience
+  let duplicatesReport: { markdown: string; metadata: any } | undefined;
   if (fs.existsSync(duplicatesMdPath)) {
-      const content = fs.readFileSync(duplicatesMdPath, "utf-8");
-      const { data: metadata, content: markdown } = matter(content);
-      duplicatesReport = { markdown, metadata };
+    const content = fs.readFileSync(duplicatesMdPath, "utf-8");
+    const { data: metadata, content: markdown } = matter(content);
+    duplicatesReport = { markdown, metadata };
   }
 
   // 3. Call Ingestion Function
   console.log("Calling ingestRcoData...");
   const result = await ingestRcoData(supabase, {
-      xmlContent: rcoXml,
-      markdownContent: rcoMdContent,
-      metadata: rcoMetadata,
-      complianceReport,
-      duplicatesReport
+    xmlContent: rcoXml,
+    markdownContent: rcoMdContent,
+    metadata: rcoMetadata,
+    complianceReport,
+    duplicatesReport,
   });
 
   if (result.status === "success") {
-      console.log(`Ingestion successful! RCO Record ID: ${result.rcoRecordId}, Ingestion Record ID: ${result.ingestionRecordId}`);
-      if (result.reportResults) {
-          result.reportResults.forEach((r: any) => {
-              console.log(`Report (${r.type}): ${r.status}`);
-          });
-      }
+    console.log(
+      `Ingestion successful! RCO Record ID: ${result.rcoRecordId}, Ingestion Record ID: ${result.ingestionRecordId}`,
+    );
+    if (result.reportResults) {
+      // biome-ignore lint/suspicious/noExplicitAny: Script convenience
+      result.reportResults.forEach((r: any) => {
+        console.log(`Report (${r.type}): ${r.status}`);
+      });
+    }
   } else {
-      console.error("Ingestion failed:", result.error);
+    console.error("Ingestion failed:", result.error);
   }
 
   console.log("Done.");
