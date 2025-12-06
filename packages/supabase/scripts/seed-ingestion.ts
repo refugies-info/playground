@@ -79,7 +79,7 @@ async function main() {
   });
 
   if (result.status === "success") {
-      console.log(`Ingestion successful! Record ID: ${result.recordId}`);
+      console.log(`Ingestion successful! RCO Record ID: ${result.rcoRecordId}, Ingestion Record ID: ${result.ingestionRecordId}`);
       if (result.reportResults) {
           result.reportResults.forEach((r: any) => {
               console.log(`Report (${r.type}): ${r.status}`);
