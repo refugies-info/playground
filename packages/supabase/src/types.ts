@@ -36,75 +36,125 @@ export type Database = {
     Tables: {
       editorial_records: {
         Row: {
+          content_report_id: string | null
           created_at: string
           id: string
+          ingestion_record_id: string
           markdown: string | null
           metadata: Json | null
-          rco_ingestion_record_id: string
+          metadata_report_id: string | null
           updated_at: string
         }
         Insert: {
+          content_report_id?: string | null
           created_at?: string
           id?: string
+          ingestion_record_id: string
           markdown?: string | null
           metadata?: Json | null
-          rco_ingestion_record_id: string
+          metadata_report_id?: string | null
           updated_at?: string
         }
         Update: {
+          content_report_id?: string | null
           created_at?: string
           id?: string
+          ingestion_record_id?: string
           markdown?: string | null
           metadata?: Json | null
-          rco_ingestion_record_id?: string
+          metadata_report_id?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "editorial_records_rco_ingestion_record_id_fkey"
-            columns: ["rco_ingestion_record_id"]
+            foreignKeyName: "editorial_records_content_report_id_fkey"
+            columns: ["content_report_id"]
             isOneToOne: false
-            referencedRelation: "rco_ingestion_records"
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "editorial_records_ingestion_record_id_fkey"
+            columns: ["ingestion_record_id"]
+            isOneToOne: false
+            referencedRelation: "ingestion_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "editorial_records_metadata_report_id_fkey"
+            columns: ["metadata_report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "editorial_records_rco_ingestion_record_id_fkey"
+            columns: ["ingestion_record_id"]
+            isOneToOne: false
+            referencedRelation: "ingestion_records"
             referencedColumns: ["id"]
           },
         ]
       }
-      editorial_reports: {
+      ingestion_records: {
         Row: {
+          compliance_report_id: string | null
           created_at: string
+          duplicates_report_id: string | null
           id: string
           markdown: string
           metadata: Json
-          record_id: string
-          report_type: string
+          rco_record_id: string | null
           updated_at: string
         }
         Insert: {
+          compliance_report_id?: string | null
           created_at?: string
+          duplicates_report_id?: string | null
           id?: string
           markdown: string
           metadata: Json
-          record_id: string
-          report_type: string
+          rco_record_id?: string | null
           updated_at?: string
         }
         Update: {
+          compliance_report_id?: string | null
           created_at?: string
+          duplicates_report_id?: string | null
           id?: string
           markdown?: string
           metadata?: Json
-          record_id?: string
-          report_type?: string
+          rco_record_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ingestion_records_compliance_report_id_fkey"
+            columns: ["compliance_report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ingestion_records_duplicates_report_id_fkey"
+            columns: ["duplicates_report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ingestion_records_rco_record_id_fkey"
+            columns: ["rco_record_id"]
+            isOneToOne: false
+            referencedRelation: "rco_records"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      rco_ingestion_records: {
+      rco_records: {
         Row: {
           created_at: string
           id: string
-          is_current_version: boolean
-          markdown: string
           metadata: Json
           source_created_at: string
           source_raw: string
@@ -116,8 +166,6 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          is_current_version?: boolean
-          markdown: string
           metadata: Json
           source_created_at: string
           source_raw: string
@@ -129,8 +177,6 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          is_current_version?: boolean
-          markdown?: string
           metadata?: Json
           source_created_at?: string
           source_raw?: string
@@ -141,43 +187,32 @@ export type Database = {
         }
         Relationships: []
       }
-      rco_ingestion_reports: {
+      reports: {
         Row: {
           created_at: string
-          id: number
+          id: string
           markdown: string
           metadata: Json
-          record_id: string
           report_type: string
           updated_at: string
         }
         Insert: {
           created_at?: string
-          id?: number
+          id?: string
           markdown: string
           metadata: Json
-          record_id: string
           report_type: string
           updated_at?: string
         }
         Update: {
           created_at?: string
-          id?: number
+          id?: string
           markdown?: string
           metadata?: Json
-          record_id?: string
           report_type?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "rco_ingestion_reports_record_id_fkey"
-            columns: ["record_id"]
-            isOneToOne: false
-            referencedRelation: "rco_ingestion_records"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {

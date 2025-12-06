@@ -1,11 +1,9 @@
 import { type SupabaseClient } from "@supabase/supabase-js";
-
-// Wait, I saw `packages/supabase/scripts/seed-ingestion.ts` had `parseYYYYMMMDD`.
-// I should probably make it a utility if I want to reuse it, or just keep it local if it's specific.
-// I'll keep it local to this file for now as it's specific to this data format.
+import { type Database } from "./types";
 
 export interface IngestionResult {
-  recordId: string;
+  rcoRecordId: string;
+  ingestionRecordId: string;
   status: "success" | "error";
   error?: any;
   reportResults?: { type: string; status: "success" | "error"; error?: any }[];
@@ -28,7 +26,7 @@ function parseYYYYMMMDD_Local(dateStr: string): Date {
 }
 
 export async function ingestRcoData(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   data: IngestionData
 ): Promise<IngestionResult> {
   const { xmlContent, markdownContent, metadata, complianceReport, duplicatesReport } = data;
@@ -39,7 +37,7 @@ export async function ingestRcoData(
   const action = formation?.action?.[0];
 
   if (!formation || !action) {
-      return { recordId: "", status: "error", error: "Invalid metadata structure" };
+      return { rcoRecordId: "", ingestionRecordId: "", status: "error", error: "Invalid metadata structure" };
   }
 
   const trainingOfferId = formation.attributes?.numero;
@@ -49,58 +47,94 @@ export async function ingestRcoData(
   const sourceUpdatedAt = parseYYYYMMMDD_Local(action.attributes?.datemaj).toISOString();
 
   console.log(
-    `Inserting ingestion record for training_offer_id: ${trainingOfferId}, training_id: ${trainingActionId}`
+    `Inserting rco_record for training_offer_id: ${trainingOfferId}, training_id: ${trainingActionId}`
   );
 
-  const { data: record, error: recordError } = await supabase
-    .from("rco_ingestion_records")
+  // 1. Insert Raw RCO Record
+  const { data: rcoRecord, error: rcoError } = await supabase
+    .from("rco_records")
     .insert({
       training_offer_id: trainingOfferId,
       training_action_id: trainingActionId,
       source_created_at: sourceCreatedAt,
       source_updated_at: sourceUpdatedAt,
       source_raw: xmlContent,
-      markdown: markdownContent,
       metadata: metadata,
-      is_current_version: true,
     })
     .select()
     .single();
 
-  if (recordError) {
-    console.error("Error inserting ingestion record:", recordError);
-    return { recordId: "", status: "error", error: recordError };
+  if (rcoError) {
+    console.error("Error inserting rco_record:", rcoError);
+    return { rcoRecordId: "", ingestionRecordId: "", status: "error", error: rcoError };
   }
 
-  const recordId = record.id;
-  const reportResults = [];
+  const rcoRecordId = rcoRecord.id;
+  const reportResults: { type: string; status: "success" | "error"; error?: any }[] = [];
 
-  // Insert Reports if they exist
-  const reportsToInsert = [];
-  if (complianceReport) reportsToInsert.push({ ...complianceReport, type: "compliance" });
-  if (duplicatesReport) reportsToInsert.push({ ...duplicatesReport, type: "duplicates" });
+  // 2. Insert Reports
+  let complianceReportId = null;
+  let duplicatesReportId = null;
 
-  for (const report of reportsToInsert) {
-      console.log(`Inserting ${report.type} report...`);
-      const { error: reportError } = await supabase
-        .from("rco_ingestion_reports")
-        .insert({
-          record_id: recordId,
-          report_type: report.type,
-          markdown: report.markdown,
-          metadata: report.metadata,
-        });
+  // Helper to insert report
+  const insertReport = async (type: string, reportData: { markdown: string; metadata: any }) => {
+      console.log(`Inserting ${type} report...`);
+      const { data: report, error: reportError } = await supabase
+          .from("reports")
+          .insert({
+              report_type: type,
+              markdown: reportData.markdown,
+              metadata: reportData.metadata,
+          })
+          .select("id")
+          .single();
 
       if (reportError) {
-          console.error(`Error inserting ${report.type} report:`, reportError);
-          reportResults.push({ type: report.type, status: "error" as const, error: reportError });
-      } else {
-          reportResults.push({ type: report.type, status: "success" as const });
+          console.error(`Error inserting ${type} report:`, reportError);
+          reportResults.push({ type, status: "error", error: reportError });
+          return null;
       }
+      reportResults.push({ type, status: "success" });
+      return report.id;
+  };
+
+  if (complianceReport) {
+      complianceReportId = await insertReport("compliance", complianceReport);
+  }
+
+  if (duplicatesReport) {
+      duplicatesReportId = await insertReport("duplicates", duplicatesReport);
+  }
+
+  // 3. Insert Ingestion Record
+  console.log("Inserting ingestion_record...");
+  const { data: ingestionRecord, error: ingestionError } = await supabase
+      .from("ingestion_records")
+      .insert({
+          markdown: markdownContent,
+          metadata: metadata,
+          rco_record_id: rcoRecordId,
+          compliance_report_id: complianceReportId,
+          duplicates_report_id: duplicatesReportId,
+      })
+      .select()
+      .single();
+
+  if (ingestionError) {
+      console.error("Error inserting ingestion_record:", ingestionError);
+      // We might want to rollback or something, but for now just report error
+      return {
+          rcoRecordId,
+          ingestionRecordId: "", // Failed
+          status: "error",
+          error: ingestionError,
+          reportResults
+      };
   }
 
   return {
-      recordId,
+      rcoRecordId,
+      ingestionRecordId: ingestionRecord.id,
       status: "success",
       reportResults
   };
