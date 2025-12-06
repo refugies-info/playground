@@ -110,7 +110,8 @@ export default function WorkflowPage() {
                setResults({
                    ...fullResult.files,
                    "Ingestion Status": fullResult.ingestion.status,
-                   "Ingestion Record ID": fullResult.ingestion.recordId || "N/A"
+                   "RCO Record ID": fullResult.ingestion.rcoRecordId || "N/A",
+                   "Ingestion Record ID": fullResult.ingestion.ingestionRecordId || "N/A"
                });
            } else {
                // Fallback to old format (flat) if no ingestion key
