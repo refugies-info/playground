@@ -7,8 +7,8 @@ import { dump } from "js-yaml";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const inputPath = path.join(__dirname, "../samples/dispositifs.json");
-const outputPath = path.join(__dirname, "../samples/dispositifs.yaml");
+const inputPath = path.join(__dirname, "../packages/agents/samples/dispositifs.json");
+const outputPath = path.join(__dirname, "../packages/agents/samples/dispositifs.yaml");
 
 try {
   console.log(`Reading from ${inputPath}...`);

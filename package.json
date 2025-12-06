@@ -28,11 +28,20 @@
     "lint": "biome check --write .",
     "validate:docs": "node scripts/validate-docs.js",
     "validate": "pnpm validate:docs && pnpm knip",
-    "seed:users": "tsx scripts/seed-users.ts"
+    "seed:users": "tsx scripts/seed-users.ts",
+    "check:compliance": "tsx scripts/check-compliance.ts",
+    "check:duplicates": "tsx scripts/check-duplicates.ts",
+    "convert:dispositifs": "tsx scripts/convert-dispositifs.ts",
+    "list:agents": "tsx scripts/list-agents.ts",
+    "generate:json": "tsx scripts/generate-json.ts",
+    "generate:md": "tsx scripts/generate-md.ts",
+    "copy:schema": "tsx scripts/copy-schema.ts",
+    "seed:ingestion": "tsx scripts/seed-ingestion.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.6",
     "@playground/supabase": "workspace:*",
+    "@types/js-yaml": "^4.0.9",
     "dotenv": "^17.2.3",
     "husky": "^9.1.7",
     "knip": "^5.70.0",

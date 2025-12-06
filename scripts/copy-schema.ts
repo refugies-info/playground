@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const schemaSource = path.join(__dirname, "../json-schema.json");
+const schemaSource = path.join(__dirname, "../packages/rco/json-schema.json");
 const frontendSchemaTarget = path.join(
   __dirname,
-  "../../../apps/frontend/public/rco-json-schema.json",
+  "../apps/frontend/public/rco-json-schema.json",
 );
 
 const ensureDir = (targetPath: string) => {

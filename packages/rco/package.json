@@ -6,10 +6,7 @@
   "types": "./src/index.ts",
   "scripts": {
     "test": "vitest run",
-    "check:types": "tsc --noEmit",
-    "generate-json": "tsx scripts/generate-json.ts",
-    "generate-md": "tsx scripts/generate-md.ts",
-    "copy:schema": "tsx scripts/copy-schema.ts"
+    "check:types": "tsc --noEmit"
   },
   "dependencies": {
     "ajv": "^8.17.1",

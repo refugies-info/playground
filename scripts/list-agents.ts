@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/suspicious/noConsole: It's fine for a script */
-import { createLettaClient, listAgents } from "../src/index";
+import { createLettaClient, listAgents } from "../packages/agents/src/index";
 
 async function main() {
   console.log("Initializing Letta client...");

@@ -1,12 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import Ajv from "ajv";
-import { lheoXmlToJson } from "../src/index";
+import { lheoXmlToJson } from "../packages/rco/src/index";
 
-const sampleXmlPath = path.join(__dirname, "../samples/rco.xml");
-const outputDir = path.join(__dirname, "../output");
+const sampleXmlPath = path.join(__dirname, "../packages/rco/samples/rco.xml");
+const outputDir = path.join(__dirname, "../packages/rco/output");
 const outputPath = path.join(outputDir, "rco.json");
-const schemaPath = path.join(__dirname, "../json-schema.json");
+const schemaPath = path.join(__dirname, "../packages/rco/json-schema.json");
 
 (async () => {
   if (!fs.existsSync(outputDir)) {

@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import { lheoXmlToMarkdownWithFrontmatter } from "../src/index";
+import { lheoXmlToMarkdownWithFrontmatter } from "../packages/rco/src/index";
 
-const sampleXmlPath = path.join(__dirname, "../samples/rco.xml");
-const outputDir = path.join(__dirname, "../output");
+const sampleXmlPath = path.join(__dirname, "../packages/rco/samples/rco.xml");
+const outputDir = path.join(__dirname, "../packages/rco/output");
 const outputPath = path.join(outputDir, "rco.md");
 
 (async () => {
