@@ -35,7 +35,7 @@ alter table "public"."editorial_records" enable row level security;
     "updated_at" timestamp with time zone not null default now(),
     "markdown" text not null,
     "metadata" jsonb not null,
-    "rco_record_id" uuid,
+    "rco_record_id" uuid not null,
     "compliance_report_id" uuid,
     "duplicates_report_id" uuid
       );
