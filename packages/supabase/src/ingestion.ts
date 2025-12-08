@@ -235,6 +235,31 @@ export async function ingestProcessedData(
     };
   }
 
+  // 4. Update Content Flow Status based on Compliance
+  let status = "unknown";
+  const complianceVal = complianceReport?.metadata?.compliant;
+
+  // biome-ignore lint/suspicious/noConsole: Log metadata for debugging
+  console.log("Compliance Metadata Value:", complianceVal, "Type:", typeof complianceVal);
+
+  if (complianceVal === true || complianceVal === "true") {
+    status = "compliant";
+  } else if (complianceVal === false || complianceVal === "false") {
+    status = "non_compliant";
+  }
+
+  // biome-ignore lint/suspicious/noConsole: Log progress
+  console.log(`Updating content_flow status to: ${status}`);
+  const { error: statusError } = await supabase
+    .from("content_flows")
+    .update({ status })
+    .eq("rco_record_id", rcoRecordId);
+
+  if (statusError) {
+     // biome-ignore lint/suspicious/noConsole: Log error
+    console.error("Error updating content_flow status:", statusError);
+  }
+
   return {
     rcoRecordId,
     ingestionRecordId: ingestionRecord.id,

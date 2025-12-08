@@ -21,6 +21,7 @@
     "@playground/agents": "workspace:*",
     "@playground/rco": "workspace:*",
     "@playground/supabase": "workspace:*",
+    "gray-matter": "^4.0.3",
     "workflow": "4.0.1-beta.21"
   },
   "devDependencies": {

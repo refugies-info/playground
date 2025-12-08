@@ -140,16 +140,21 @@ export async function ingestDataStep(
     | { markdown: string; metadata: Record<string, unknown> }
     | undefined;
   if (complianceResult && !complianceResult.error && complianceResult.content) {
-    const { data: cMeta, content: cMd } = matter(complianceResult.content);
-    complianceReport = { markdown: cMd, metadata: cMeta };
+    console.log("DEBUG: compliance content len:", complianceResult.content.length);
+    console.log("DEBUG: compliance content start:", complianceResult.content.substring(0, 100));
+
+    const { data: cMeta } = matter(complianceResult.content);
+    console.log("DEBUG: parsed metadata:", JSON.stringify(cMeta));
+
+    complianceReport = { markdown: complianceResult.content, metadata: cMeta };
   }
 
   let duplicatesReport:
     | { markdown: string; metadata: Record<string, unknown> }
     | undefined;
   if (duplicatesResult && !duplicatesResult.error && duplicatesResult.content) {
-    const { data: dMeta, content: dMd } = matter(duplicatesResult.content);
-    duplicatesReport = { markdown: dMd, metadata: dMeta };
+    const { data: dMeta } = matter(duplicatesResult.content);
+    duplicatesReport = { markdown: duplicatesResult.content, metadata: dMeta };
   }
 
   const result = await ingestProcessedData(supabase, {
