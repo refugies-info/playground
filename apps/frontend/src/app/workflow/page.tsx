@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { runWorkflow } from "../actions/workflow";
+
 
 export default function WorkflowPage() {
   const [xmlInput, setXmlInput] = useState("");
@@ -12,29 +12,7 @@ export default function WorkflowPage() {
 
   const [status, setStatus] = useState<string | null>(null);
 
-  const handleRun = async () => {
-    setIsLoading(true);
-    setError(null);
-    setResults(null);
-    setWorkflowId(null);
-    setStatus(null);
 
-    try {
-      const response = await runWorkflow(xmlInput);
-      if (response.success && response.results) {
-        setResults(response.results);
-        setStatus("completed");
-      } else {
-        setError(response.error || "Unknown error occurred");
-        setStatus("failed");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setStatus("failed");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleRunVercel = async () => {
     setIsLoading(true);
@@ -147,14 +125,7 @@ export default function WorkflowPage() {
       </div>
 
       <div className="flex gap-4">
-        <button
-          type="button"
-          onClick={handleRun}
-          disabled={isLoading || !xmlInput.trim()}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {isLoading ? "Running..." : "Run Locally"}
-        </button>
+
 
         <button
           type="button"
