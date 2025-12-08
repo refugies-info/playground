@@ -26,15 +26,20 @@ export const checkCompliance = async (
   client: Letta,
   xmlContent: string,
 ): Promise<string> => {
-  const agentId = process.env.COMPLIANCE_AGENT_ID;
-  if (!agentId) {
-    throw new Error("COMPLIANCE_AGENT_ID is not defined");
+  const templateId = process.env.COMPLIANCE_AGENT_TEMPLATE;
+  if (!templateId) {
+    throw new Error("COMPLIANCE_AGENT_TEMPLATE is not defined");
   }
 
-  // Clear previous messages before each call
-  await client.agents.messages.reset(agentId, {
-    add_default_initial_messages: false,
+  // Create a new agent from the template
+  const agentResponse = await client.templates.agents.create(templateId, {
+    agent_name: `compliance-check-${Date.now()}`,
   });
+  const agentId = agentResponse.agent_ids[0];
+
+  if (!agentId) {
+    throw new Error("Failed to create agent from template");
+  }
 
   const response = await client.agents.messages.create(agentId, {
     messages: [
@@ -74,6 +79,8 @@ export const checkCompliance = async (
     if (usage.total_tokens) lettaMetadata.total_tokens = usage.total_tokens;
   }
 
+  // Add agent ID to metadata
+  lettaMetadata.agent_id = agentId;
   // Add timestamp
   lettaMetadata.processed_at = new Date().toISOString();
 
@@ -91,15 +98,20 @@ export const checkDuplicates = async (
   client: Letta,
   xmlContent: string,
 ): Promise<string> => {
-  const agentId = process.env.DUPLICATES_AGENT_ID;
-  if (!agentId) {
-    throw new Error("DUPLICATES_AGENT_ID is not defined");
+  const templateId = process.env.DUPLICATES_AGENT_TEMPLATE;
+  if (!templateId) {
+    throw new Error("DUPLICATES_AGENT_TEMPLATE is not defined");
   }
 
-  // Clear previous messages before each call
-  await client.agents.messages.reset(agentId, {
-    add_default_initial_messages: false,
+  // Create a new agent from the template
+  const agentResponse = await client.templates.agents.create(templateId, {
+    agent_name: `duplicates-check-${Date.now()}`,
   });
+  const agentId = agentResponse.agent_ids[0];
+
+  if (!agentId) {
+    throw new Error("Failed to create agent from template");
+  }
 
   const response = await client.agents.messages.create(agentId, {
     messages: [
@@ -139,6 +151,8 @@ export const checkDuplicates = async (
     if (usage.total_tokens) lettaMetadata.total_tokens = usage.total_tokens;
   }
 
+  // Add agent ID to metadata
+  lettaMetadata.agent_id = agentId;
   // Add timestamp
   lettaMetadata.processed_at = new Date().toISOString();
 
