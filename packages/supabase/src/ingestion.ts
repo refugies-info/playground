@@ -38,9 +38,9 @@ export async function insertRcoRecord(
   // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
   metadata: any,
 ): Promise<{
-    rcoRecordId: string;
-    contentFlowId: string;
-    error?: unknown;
+  rcoRecordId: string;
+  contentFlowId: string;
+  error?: unknown;
 }> {
   // Extract info from metadata
   const formation = metadata?.lheo?.offres?.formation?.[0];
@@ -102,12 +102,12 @@ export async function insertRcoRecord(
     .single();
 
   if (flowError || !contentFlow) {
-      console.error("Error fetching content flow after retries:", flowError);
-      return {
-          rcoRecordId: rcoRecord.id,
-          contentFlowId: "",
-          error: flowError || new Error("Content flow not found after retries")
-      };
+    console.error("Error fetching content flow after retries:", flowError);
+    return {
+      rcoRecordId: rcoRecord.id,
+      contentFlowId: "",
+      error: flowError || new Error("Content flow not found after retries"),
+    };
   }
 
   return {
@@ -119,23 +119,23 @@ export async function insertRcoRecord(
 export async function ingestProcessedData(
   supabase: SupabaseClient<Database>,
   data: {
-      rcoRecordId: string;
-      markdownContent: string;
-      // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
-      metadata: any;
-      // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
-      complianceReport?: { markdown: string; metadata: any };
-      // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
-      duplicatesReport?: { markdown: string; metadata: any };
-  }
+    rcoRecordId: string;
+    markdownContent: string;
+    // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
+    metadata: any;
+    // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
+    complianceReport?: { markdown: string; metadata: any };
+    // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
+    duplicatesReport?: { markdown: string; metadata: any };
+  },
 ): Promise<IngestionResult> {
-    const {
-        rcoRecordId,
-        markdownContent,
-        metadata,
-        complianceReport,
-        duplicatesReport,
-    } = data;
+  const {
+    rcoRecordId,
+    markdownContent,
+    metadata,
+    complianceReport,
+    duplicatesReport,
+  } = data;
 
   const reportResults: {
     type: string;
@@ -216,7 +216,12 @@ export async function ingestProcessedData(
   const complianceVal = complianceReport?.metadata?.compliant;
 
   // biome-ignore lint/suspicious/noConsole: Log metadata for debugging
-  console.log("Compliance Metadata Value:", complianceVal, "Type:", typeof complianceVal);
+  console.log(
+    "Compliance Metadata Value:",
+    complianceVal,
+    "Type:",
+    typeof complianceVal,
+  );
 
   if (complianceVal === true || complianceVal === "true") {
     status = "compliant";
@@ -232,7 +237,7 @@ export async function ingestProcessedData(
     .eq("rco_record_id", rcoRecordId);
 
   if (statusError) {
-     // biome-ignore lint/suspicious/noConsole: Log error
+    // biome-ignore lint/suspicious/noConsole: Log error
     console.error("Error updating content_flow status:", statusError);
   }
 
@@ -248,22 +253,26 @@ export async function ingestRcoData(
   supabase: SupabaseClient<Database>,
   data: IngestionData,
 ): Promise<IngestionResult> {
-    // wrapper for backward compatibility
-    const rcoResult = await insertRcoRecord(supabase, data.xmlContent, data.metadata);
-    if (rcoResult.error || !rcoResult.rcoRecordId) {
-        return {
-            rcoRecordId: "",
-            ingestionRecordId: "",
-            status: "error",
-            error: rcoResult.error
-        }
-    }
+  // wrapper for backward compatibility
+  const rcoResult = await insertRcoRecord(
+    supabase,
+    data.xmlContent,
+    data.metadata,
+  );
+  if (rcoResult.error || !rcoResult.rcoRecordId) {
+    return {
+      rcoRecordId: "",
+      ingestionRecordId: "",
+      status: "error",
+      error: rcoResult.error,
+    };
+  }
 
-    return ingestProcessedData(supabase, {
-        rcoRecordId: rcoResult.rcoRecordId,
-        markdownContent: data.markdownContent,
-        metadata: data.metadata,
-        complianceReport: data.complianceReport,
-        duplicatesReport: data.duplicatesReport
-    });
+  return ingestProcessedData(supabase, {
+    rcoRecordId: rcoResult.rcoRecordId,
+    markdownContent: data.markdownContent,
+    metadata: data.metadata,
+    complianceReport: data.complianceReport,
+    duplicatesReport: data.duplicatesReport,
+  });
 }

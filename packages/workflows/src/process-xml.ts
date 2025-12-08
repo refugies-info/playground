@@ -64,11 +64,18 @@ export async function generateJsonStep(xmlContent: string) {
   return jsonPath;
 }
 
-export async function checkComplianceStep(xmlContent: string) {
+export async function checkComplianceStep(
+  contentFlowId: string,
+  xmlContent: string,
+) {
   "use step";
   const lettaClient = createLettaClient();
   try {
-    const complianceReport = await checkCompliance(lettaClient, xmlContent);
+    const complianceReport = await checkCompliance(
+      lettaClient,
+      xmlContent,
+      contentFlowId,
+    );
     const outputDir = path.join(process.cwd(), "output");
     await fs.mkdir(outputDir, { recursive: true });
     const compliancePath = path.join(outputDir, "rco_compliance.md");
@@ -93,11 +100,18 @@ export async function checkComplianceStep(xmlContent: string) {
   }
 }
 
-export async function checkDuplicatesStep(xmlContent: string) {
+export async function checkDuplicatesStep(
+  contentFlowId: string,
+  xmlContent: string,
+) {
   "use step";
   const lettaClient = createLettaClient();
   try {
-    const duplicatesReport = await checkDuplicates(lettaClient, xmlContent);
+    const duplicatesReport = await checkDuplicates(
+      lettaClient,
+      xmlContent,
+      contentFlowId,
+    );
     const outputDir = path.join(process.cwd(), "output");
     await fs.mkdir(outputDir, { recursive: true });
     const duplicatesPath = path.join(outputDir, "rco_duplicates.md");
@@ -177,8 +191,8 @@ export async function processXmlWorkflow(
     await Promise.all([
       generateMarkdownStep(xmlContent),
       generateJsonStep(xmlContent),
-      checkComplianceStep(xmlContent),
-      checkDuplicatesStep(xmlContent),
+      checkComplianceStep(contentFlowId, xmlContent),
+      checkDuplicatesStep(contentFlowId, xmlContent),
     ]);
 
   // Ingest Step (run after generation)

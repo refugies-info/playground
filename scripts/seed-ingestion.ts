@@ -17,7 +17,10 @@ async function main() {
   // Note: We need to import ingestRcoData. Since we are in scripts/, we recall that this package's src exports it.
   // However, running ts-node on scripts might not resolve ".." correctly if not compiled.
   // But previously it imported `getSupabaseAdmin` from "../src/index". So we can do the same.
-  const { getSupabaseAdmin, ingestRcoData } = require("../packages/supabase/src/index");
+  const {
+    getSupabaseAdmin,
+    ingestRcoData,
+  } = require("../packages/supabase/src/index");
 
   const supabase = getSupabaseAdmin(url, key);
   console.log("Seeding ingestion tables...");

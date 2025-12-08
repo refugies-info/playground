@@ -2,7 +2,10 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseLheoXml } from "@playground/rco";
-import { checkDuplicates, createLettaClient } from "../packages/agents/src/index";
+import {
+  checkDuplicates,
+  createLettaClient,
+} from "../packages/agents/src/index";
 
 async function main() {
   const xmlPath = path.resolve(__dirname, "../packages/rco/samples/rco.xml");
