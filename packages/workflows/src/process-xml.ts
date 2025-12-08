@@ -9,10 +9,33 @@ import {
   lheoXmlToJson,
   lheoXmlToMarkdownWithFrontmatter,
 } from "@playground/rco";
-import { getSupabaseAdmin, ingestRcoData } from "@playground/supabase";
+import { getSupabaseAdmin, ingestProcessedData } from "@playground/supabase";
 import matter from "gray-matter";
 
 // Define steps
+export async function fetchRcoXmlStep(rcoRecordId: string) {
+  "use step";
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!key) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not defined");
+  }
+
+  const supabase = getSupabaseAdmin(url, key);
+  const { data, error } = await supabase
+    .from("rco_records")
+    .select("source_raw")
+    .eq("id", rcoRecordId)
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Failed to fetch RCO record: ${error?.message}`);
+  }
+
+  return data.source_raw;
+}
+
 export async function parseXmlStep(xmlContent: string) {
   "use step";
   // For this POC, we'll just return the content as is, but in a real scenario
@@ -88,7 +111,7 @@ export async function checkDuplicatesStep(xmlContent: string) {
 }
 
 export async function ingestDataStep(
-  xmlContent: string,
+  rcoRecordId: string,
   markdownResult: { path: string; content: string },
   // jsonResult: any, // We can use the json output for metadata if structurally compatible,
   // but `seed-ingestion` used `matter(markdown)`.
@@ -129,8 +152,8 @@ export async function ingestDataStep(
     duplicatesReport = { markdown: dMd, metadata: dMeta };
   }
 
-  const result = await ingestRcoData(supabase, {
-    xmlContent,
+  const result = await ingestProcessedData(supabase, {
+    rcoRecordId,
     markdownContent: markdownResult.content,
     metadata, // This metadata comes from the markdown frontmatter
     complianceReport,
@@ -141,8 +164,13 @@ export async function ingestDataStep(
 }
 
 // Define workflow
-export async function processXmlWorkflow(xmlContent: string) {
+export async function processXmlWorkflow(
+  contentFlowId: string,
+  rcoRecordId: string,
+) {
   "use workflow";
+
+  const xmlContent = await fetchRcoXmlStep(rcoRecordId);
 
   // Parallel execution for files generation
   const [mdResult, jsonPath, complianceResult, duplicatesResult] =
@@ -155,7 +183,7 @@ export async function processXmlWorkflow(xmlContent: string) {
 
   // Ingest Step (run after generation)
   const ingestionResult = await ingestDataStep(
-    xmlContent,
+    rcoRecordId,
     mdResult,
     complianceResult,
     duplicatesResult,

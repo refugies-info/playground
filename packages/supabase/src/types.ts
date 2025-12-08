@@ -159,7 +159,7 @@ export type Database = {
           id: string
           markdown: string
           metadata: Json
-          rco_record_id: string | null
+          rco_record_id: string
           updated_at: string
         }
         Insert: {
@@ -169,7 +169,7 @@ export type Database = {
           id?: string
           markdown: string
           metadata: Json
-          rco_record_id?: string | null
+          rco_record_id: string
           updated_at?: string
         }
         Update: {
@@ -179,7 +179,7 @@ export type Database = {
           id?: string
           markdown?: string
           metadata?: Json
-          rco_record_id?: string | null
+          rco_record_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -277,30 +277,30 @@ export type Database = {
       }
       vercel_workflows: {
         Row: {
+          content_flow_id: string
           created_at: string
           id: string
-          pipeline_id: string
           updated_at: string
-          workflow_id: string | null
+          vercel_workflow_id: string | null
         }
         Insert: {
+          content_flow_id: string
           created_at?: string
           id?: string
-          pipeline_id: string
           updated_at?: string
-          workflow_id?: string | null
+          vercel_workflow_id?: string | null
         }
         Update: {
+          content_flow_id?: string
           created_at?: string
           id?: string
-          pipeline_id?: string
           updated_at?: string
-          workflow_id?: string | null
+          vercel_workflow_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "workflows_pipeline_id_fkey"
-            columns: ["pipeline_id"]
+            columns: ["content_flow_id"]
             isOneToOne: false
             referencedRelation: "content_flows"
             referencedColumns: ["id"]

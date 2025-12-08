@@ -32,28 +32,24 @@ function parseYYYYMMMDD_Local(dateStr: string): Date {
   return new Date(`${year}-${month}-${day}`);
 }
 
-export async function ingestRcoData(
+export async function insertRcoRecord(
   supabase: SupabaseClient<Database>,
-  data: IngestionData,
-): Promise<IngestionResult> {
-  const {
-    xmlContent,
-    markdownContent,
-    metadata,
-    complianceReport,
-    duplicatesReport,
-  } = data;
-
+  xmlContent: string,
+  // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
+  metadata: any,
+): Promise<{
+    rcoRecordId: string;
+    contentFlowId: string;
+    error?: unknown;
+}> {
   // Extract info from metadata
-  // Assuming metadata structure based on seed-ingestion.ts
   const formation = metadata?.lheo?.offres?.formation?.[0];
   const action = formation?.action?.[0];
 
   if (!formation || !action) {
     return {
       rcoRecordId: "",
-      ingestionRecordId: "",
-      status: "error",
+      contentFlowId: "",
       error: "Invalid metadata structure",
     };
   }
@@ -92,13 +88,61 @@ export async function ingestRcoData(
     console.error("Error inserting rco_record:", rcoError);
     return {
       rcoRecordId: "",
-      ingestionRecordId: "",
-      status: "error",
+      contentFlowId: "",
       error: rcoError,
     };
   }
 
-  const rcoRecordId = rcoRecord.id;
+  // 2. Fetch Content Flow ID (created by trigger)
+  // We might need to wait a small bit or just query? Triggers are usually immediate in same transaction context but here we are using client.
+  // Actually, Supabase Triggers run synchronously ON AFTER INSERT?
+  // User migration says: `create trigger` ... usually it's AFTER INSERT.
+  // If we can't get it immediately, we might need a small retry or just assume it's there.
+  // Let's try to fetch it.
+  const { data: contentFlow, error: flowError } = await supabase
+    .from("content_flows")
+    .select("id")
+    .eq("rco_record_id", rcoRecord.id)
+    .single();
+
+  if (flowError) {
+      console.error("Error fetching content flow:", flowError);
+      // Return success for RCO but failure for flow retrieval?
+      // The plan requires content_flow_id.
+      return {
+          rcoRecordId: rcoRecord.id,
+          contentFlowId: "",
+          error: flowError
+      };
+  }
+
+  return {
+    rcoRecordId: rcoRecord.id,
+    contentFlowId: contentFlow.id,
+  };
+}
+
+export async function ingestProcessedData(
+  supabase: SupabaseClient<Database>,
+  data: {
+      rcoRecordId: string;
+      markdownContent: string;
+      // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
+      metadata: any;
+      // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
+      complianceReport?: { markdown: string; metadata: any };
+      // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
+      duplicatesReport?: { markdown: string; metadata: any };
+  }
+): Promise<IngestionResult> {
+    const {
+        rcoRecordId,
+        markdownContent,
+        metadata,
+        complianceReport,
+        duplicatesReport,
+    } = data;
+
   const reportResults: {
     type: string;
     status: "success" | "error";
@@ -164,7 +208,6 @@ export async function ingestRcoData(
   if (ingestionError) {
     // biome-ignore lint/suspicious/noConsole: Log error
     console.error("Error inserting ingestion_record:", ingestionError);
-    // We might want to rollback or something, but for now just report error
     return {
       rcoRecordId,
       ingestionRecordId: "", // Failed
@@ -180,4 +223,28 @@ export async function ingestRcoData(
     status: "success",
     reportResults,
   };
+}
+
+export async function ingestRcoData(
+  supabase: SupabaseClient<Database>,
+  data: IngestionData,
+): Promise<IngestionResult> {
+    // wrapper for backward compatibility
+    const rcoResult = await insertRcoRecord(supabase, data.xmlContent, data.metadata);
+    if (rcoResult.error || !rcoResult.rcoRecordId) {
+        return {
+            rcoRecordId: "",
+            ingestionRecordId: "",
+            status: "error",
+            error: rcoResult.error
+        }
+    }
+
+    return ingestProcessedData(supabase, {
+        rcoRecordId: rcoResult.rcoRecordId,
+        markdownContent: data.markdownContent,
+        metadata: data.metadata,
+        complianceReport: data.complianceReport,
+        duplicatesReport: data.duplicatesReport
+    });
 }
