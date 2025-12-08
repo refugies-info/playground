@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { logger } from "@playground/shared-types";
 import { lheoXmlToMarkdownWithFrontmatter } from "../packages/rco/src/index";
 
 const sampleXmlPath = path.join(__dirname, "../packages/rco/samples/rco.xml");
@@ -15,6 +16,6 @@ const outputPath = path.join(outputDir, "rco.md");
   const markdown = await lheoXmlToMarkdownWithFrontmatter(xml);
 
   fs.writeFileSync(outputPath, markdown);
-  // biome-ignore lint/suspicious/noConsole: It's fine for a script
-  console.log(`Generated ${outputPath}`);
+
+  logger.info(`Generated ${outputPath}`);
 })();

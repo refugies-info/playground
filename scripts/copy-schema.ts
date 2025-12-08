@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { logger } from "@playground/shared-types";
 
 const schemaSource = path.join(__dirname, "../packages/rco/json-schema.json");
 const frontendSchemaTarget = path.join(
@@ -21,6 +22,6 @@ const ensureDir = (targetPath: string) => {
 
   ensureDir(frontendSchemaTarget);
   fs.copyFileSync(schemaSource, frontendSchemaTarget);
-  // biome-ignore lint/suspicious/noConsole: script output
-  console.log(`Copied schema to ${frontendSchemaTarget}`);
+
+  logger.info(`Copied schema to ${frontendSchemaTarget}`);
 })();

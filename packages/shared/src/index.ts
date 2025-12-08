@@ -3,4 +3,5 @@
  * Exported from @content-playground/shared package
  */
 
+export * from "./logger";
 export * from "./types/index";

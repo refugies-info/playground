@@ -1,3 +1,4 @@
-const workflowApi = require("workflow/api");
-// biome-ignore lint/suspicious/noConsole: Script output
-console.log("workflow/api exports:", Object.keys(workflowApi));
+import { logger } from "@playground/shared-types";
+import * as workflowApi from "workflow/api";
+
+logger.info({ exports: Object.keys(workflowApi) }, "workflow/api exports");

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { logger } from "@playground/shared-types";
 import Ajv from "ajv";
 import { lheoXmlToJson } from "../packages/rco/src/index";
 
@@ -31,6 +32,6 @@ const schemaPath = path.join(__dirname, "../packages/rco/json-schema.json");
   }
 
   fs.writeFileSync(outputPath, JSON.stringify(json, null, 2));
-  // biome-ignore lint/suspicious/noConsole: It's fine for a script
-  console.log(`Generated ${outputPath}`);
+
+  logger.info(`Generated ${outputPath}`);
 })();

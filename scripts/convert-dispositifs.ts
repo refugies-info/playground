@@ -1,7 +1,7 @@
-/** biome-ignore-all lint/suspicious/noConsole: Fine for a script */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { logger } from "@playground/shared-types";
 import { dump } from "js-yaml";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -17,11 +17,11 @@ const outputPath = path.join(
 );
 
 try {
-  console.log(`Reading from ${inputPath}...`);
+  logger.info(`Reading from ${inputPath}...`);
   const jsonContent = fs.readFileSync(inputPath, "utf8");
   const data = JSON.parse(jsonContent);
 
-  console.log("Converting to YAML...");
+  logger.info("Converting to YAML...");
   const yamlContent = dump(data, {
     indent: 2,
     lineWidth: -1, // Don't wrap long lines
@@ -29,8 +29,8 @@ try {
   });
 
   fs.writeFileSync(outputPath, yamlContent, "utf8");
-  console.log(`Successfully converted to ${outputPath}`);
+  logger.info(`Successfully converted to ${outputPath}`);
 } catch (error) {
-  console.error("Error converting file:", error);
+  logger.error(error, "Error converting file");
   process.exit(1);
 }
