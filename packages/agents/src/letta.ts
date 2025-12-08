@@ -3,14 +3,10 @@ import { Letta } from "@letta-ai/letta-client";
 import type { AssistantMessage } from "@letta-ai/letta-client/resources/agents.js";
 import matter from "gray-matter";
 
-export interface LettaConfig {
-  baseUrl?: string;
-  token?: string;
-}
-
-export const createLettaClient = (config: LettaConfig = {}): Letta => {
+export const createLettaClient = (): Letta => {
   return new Letta({
-    apiKey: config.token || process.env.LETTA_API_KEY,
+    apiKey: process.env.LETTA_API_KEY,
+    projectID: process.env.LETTA_PROJECT_ID,
   });
 };
 
