@@ -79,8 +79,8 @@ alter table "public"."rco_records" enable row level security;
     "id" uuid not null default gen_random_uuid(),
     "created_at" timestamp with time zone not null default now(),
     "updated_at" timestamp with time zone not null default now(),
-    "pipeline_id" uuid not null,
-    "workflow_id" text
+    "content_flow_id" uuid not null,
+    "vercel_workflow_id" text
       );
 
 
@@ -94,6 +94,10 @@ CREATE INDEX ingestion_records_metadata_path_ops_idx ON public.ingestion_records
 
 CREATE INDEX letta_reports_metadata_path_ops_idx ON public.letta_reports USING gin (metadata jsonb_path_ops);
 
+CREATE UNIQUE INDEX rco_ingestion_records_pkey ON public.ingestion_records USING btree (id);
+
+CREATE INDEX rco_ingestion_records_updated_at_idx ON public.ingestion_records USING btree (updated_at);
+
 CREATE INDEX rco_records_metadata_idx ON public.rco_records USING gin (metadata);
 
 CREATE UNIQUE INDEX rco_records_pkey ON public.rco_records USING btree (id);
@@ -106,15 +110,11 @@ CREATE INDEX rco_records_training_offer_id_idx ON public.rco_records USING btree
 
 CREATE INDEX rco_records_updated_at_idx ON public.rco_records USING btree (updated_at);
 
-CREATE UNIQUE INDEX rco_ingestion_records_pkey ON public.ingestion_records USING btree (id);
-
-CREATE INDEX rco_ingestion_records_updated_at_idx ON public.ingestion_records USING btree (updated_at);
-
 CREATE UNIQUE INDEX reports_pkey ON public.letta_reports USING btree (id);
 
 CREATE UNIQUE INDEX status_pkey ON public.content_flows USING btree (id);
 
-CREATE UNIQUE INDEX workflows_workflow_id_key ON public.vercel_workflows USING btree (workflow_id);
+CREATE UNIQUE INDEX workflows_workflow_id_key ON public.vercel_workflows USING btree (vercel_workflow_id);
 
 alter table "public"."content_flows" add constraint "status_pkey" PRIMARY KEY using index "status_pkey";
 
@@ -166,7 +166,7 @@ alter table "public"."ingestion_records" add constraint "ingestion_records_rco_r
 
 alter table "public"."ingestion_records" validate constraint "ingestion_records_rco_record_id_fkey";
 
-alter table "public"."vercel_workflows" add constraint "workflows_pipeline_id_fkey" FOREIGN KEY (pipeline_id) REFERENCES public.content_flows(id) ON UPDATE CASCADE not valid;
+alter table "public"."vercel_workflows" add constraint "workflows_pipeline_id_fkey" FOREIGN KEY (content_flow_id) REFERENCES public.content_flows(id) ON UPDATE CASCADE not valid;
 
 alter table "public"."vercel_workflows" validate constraint "workflows_pipeline_id_fkey";
 
@@ -423,3 +423,5 @@ grant trigger on table "public"."vercel_workflows" to "service_role";
 grant truncate on table "public"."vercel_workflows" to "service_role";
 
 grant update on table "public"."vercel_workflows" to "service_role";
+
+
