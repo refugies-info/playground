@@ -1,8 +1,8 @@
+import { parseLheoXml } from "@playground/rco";
+import { getSupabaseAdmin, insertRcoRecord } from "@playground/supabase";
 import { processXmlWorkflow } from "@playground/workflows";
 import { NextResponse } from "next/server";
 import { start } from "workflow/api";
-import { parseLheoXml } from "@playground/rco";
-import { getSupabaseAdmin, insertRcoRecord } from "@playground/supabase";
 
 export async function POST(request: Request) {
   const { xmlContent } = await request.json();
@@ -32,11 +32,11 @@ export async function POST(request: Request) {
     const supabase = getSupabaseAdmin(url, key);
 
     // 3. Insert RCO Record (triggers content_flow creation)
-    const { rcoRecordId, contentFlowId, error: dbError } = await insertRcoRecord(
-      supabase,
-      xmlContent,
-      metadata,
-    );
+    const {
+      rcoRecordId,
+      contentFlowId,
+      error: dbError,
+    } = await insertRcoRecord(supabase, xmlContent, metadata);
 
     if (dbError || !rcoRecordId || !contentFlowId) {
       return NextResponse.json(
@@ -46,7 +46,10 @@ export async function POST(request: Request) {
     }
 
     // 4. Start the workflow
-    const result = await start(processXmlWorkflow, [contentFlowId, rcoRecordId]);
+    const result = await start(processXmlWorkflow, [
+      contentFlowId,
+      rcoRecordId,
+    ]);
     const workflowId = result.runId;
 
     // 5. Link Workflow to Content Flow
@@ -59,7 +62,7 @@ export async function POST(request: Request) {
 
     if (linkError) {
       // Non-blocking error, but should be logged.
-       // biome-ignore lint/suspicious/noConsole: Log error
+      // biome-ignore lint/suspicious/noConsole: Log error
       console.error("Failed to link workflow:", linkError);
     }
 
@@ -69,9 +72,8 @@ export async function POST(request: Request) {
       contentFlowId,
       rcoRecordId,
     });
-
   } catch (error) {
-     // biome-ignore lint/suspicious/noConsole: Log error
+    // biome-ignore lint/suspicious/noConsole: Log error
     console.error("Workflow start error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
