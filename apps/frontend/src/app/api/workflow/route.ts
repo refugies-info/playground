@@ -1,7 +1,7 @@
 import { processXmlWorkflow } from "@playground/workflows";
 import { NextResponse } from "next/server";
 import { start } from "workflow/api";
-import { lheoXmlToJson } from "@playground/rco";
+import { parseLheoXml } from "@playground/rco";
 import { getSupabaseAdmin, insertRcoRecord } from "@playground/supabase";
 
 export async function POST(request: Request) {
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
   try {
     // 1. Parse Metadata for RCO insertion
-    const metadata = await lheoXmlToJson(xmlContent);
+    const metadata = await parseLheoXml(xmlContent);
 
     // 2. Initialize Supabase Admin
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

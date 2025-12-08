@@ -99,20 +99,38 @@ export async function insertRcoRecord(
   // User migration says: `create trigger` ... usually it's AFTER INSERT.
   // If we can't get it immediately, we might need a small retry or just assume it's there.
   // Let's try to fetch it.
-  const { data: contentFlow, error: flowError } = await supabase
-    .from("content_flows")
-    .select("id")
-    .eq("rco_record_id", rcoRecord.id)
-    .single();
+  // 2. Fetch Content Flow ID (created by trigger)
+  // Retry 3 times with 500ms delay to allow trigger to complete
+  let contentFlow = null;
+  let flowError = null;
 
-  if (flowError) {
-      console.error("Error fetching content flow:", flowError);
-      // Return success for RCO but failure for flow retrieval?
-      // The plan requires content_flow_id.
+  for (let i = 0; i < 3; i++) {
+    const response = await supabase
+      .from("content_flows")
+      .select("id")
+      .eq("rco_record_id", rcoRecord.id)
+      .single();
+
+    if (response.data) {
+      contentFlow = response.data;
+      flowError = null;
+      break;
+    }
+
+    if (response.error) {
+       flowError = response.error;
+    }
+
+    // Wait 500ms before retrying
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  if (flowError || !contentFlow) {
+      console.error("Error fetching content flow after retries:", flowError);
       return {
           rcoRecordId: rcoRecord.id,
           contentFlowId: "",
-          error: flowError
+          error: flowError || new Error("Content flow not found after retries")
       };
   }
 
