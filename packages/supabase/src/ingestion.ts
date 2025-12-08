@@ -224,7 +224,6 @@ export async function ingestProcessedData(
     status = "non_compliant";
   }
 
-
   logger.info(`Updating content_flow status to: ${status}`);
   const { error: statusError } = await supabase
     .from("content_flows")

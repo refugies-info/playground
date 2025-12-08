@@ -9,6 +9,7 @@ import {
   lheoXmlToJson,
   lheoXmlToMarkdownWithFrontmatter,
 } from "@playground/rco";
+import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin, ingestProcessedData } from "@playground/supabase";
 import matter from "gray-matter";
 
@@ -94,8 +95,7 @@ export async function checkComplianceStep(
     // I'll just return the string.
     return { path: compliancePath, content: complianceReport };
   } catch (error) {
-    // biome-ignore lint/suspicious/noConsole: Log error for debugging
-    console.error("Error generating compliance report:", error);
+    logger.error(error, "Error generating compliance report");
     return { error: error instanceof Error ? error.message : String(error) };
   }
 }
@@ -118,8 +118,7 @@ export async function checkDuplicatesStep(
     await fs.writeFile(duplicatesPath, duplicatesReport);
     return { path: duplicatesPath, content: duplicatesReport };
   } catch (error) {
-    // biome-ignore lint/suspicious/noConsole: Log error for debugging
-    console.error("Error generating duplicates report:", error);
+    logger.error(error, "Error generating duplicates report");
     return { error: error instanceof Error ? error.message : String(error) };
   }
 }

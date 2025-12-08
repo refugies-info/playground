@@ -296,6 +296,9 @@ importers:
       '@playground/rco':
         specifier: workspace:*
         version: link:../rco
+      '@playground/shared-types':
+        specifier: workspace:*
+        version: link:../shared
       '@playground/supabase':
         specifier: workspace:*
         version: link:../supabase

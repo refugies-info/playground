@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     "@playground/agents",
     "@playground/workflows",
   ],
-  serverExternalPackages: ["libxml2-wasm"],
+  serverExternalPackages: ["libxml2-wasm", "pino", "pino-pretty"],
 };
 
 // Validate required environment variables at build time
