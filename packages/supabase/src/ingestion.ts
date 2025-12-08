@@ -94,36 +94,12 @@ export async function insertRcoRecord(
   }
 
   // 2. Fetch Content Flow ID (created by trigger)
-  // We might need to wait a small bit or just query? Triggers are usually immediate in same transaction context but here we are using client.
-  // Actually, Supabase Triggers run synchronously ON AFTER INSERT?
-  // User migration says: `create trigger` ... usually it's AFTER INSERT.
-  // If we can't get it immediately, we might need a small retry or just assume it's there.
-  // Let's try to fetch it.
-  // 2. Fetch Content Flow ID (created by trigger)
-  // Retry 3 times with 500ms delay to allow trigger to complete
-  let contentFlow = null;
-  let flowError = null;
-
-  for (let i = 0; i < 3; i++) {
-    const response = await supabase
-      .from("content_flows")
-      .select("id")
-      .eq("rco_record_id", rcoRecord.id)
-      .single();
-
-    if (response.data) {
-      contentFlow = response.data;
-      flowError = null;
-      break;
-    }
-
-    if (response.error) {
-       flowError = response.error;
-    }
-
-    // Wait 500ms before retrying
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
+  // The trigger `on_new_rco_record` is synchronous, so the content_flow should exist immediately.
+  const { data: contentFlow, error: flowError } = await supabase
+    .from("content_flows")
+    .select("id")
+    .eq("rco_record_id", rcoRecord.id)
+    .single();
 
   if (flowError || !contentFlow) {
       console.error("Error fetching content flow after retries:", flowError);
