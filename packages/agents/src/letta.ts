@@ -63,7 +63,7 @@ export const checkCompliance = async (
   // Parse existing frontmatter and enhance with Letta metadata
   const parsed = matter(messageContent);
 
-  const lettaMetadata: Record<string, unknown> = {};
+  const lettaMetadata: Record<string, unknown> = { agentId };
 
   // Extract usage stats from response if available
   if (response.usage) {
@@ -128,7 +128,7 @@ export const checkDuplicates = async (
   // Parse existing frontmatter and enhance with Letta metadata
   const parsed = matter(messageContent);
 
-  const lettaMetadata: Record<string, unknown> = {};
+  const lettaMetadata: Record<string, unknown> = { agentId };
 
   // Extract usage stats from response if available
   if (response.usage) {

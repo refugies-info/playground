@@ -1,6 +1,8 @@
 import { processXmlWorkflow } from "@playground/workflows";
 import { NextResponse } from "next/server";
 import { start } from "workflow/api";
+import { parseLheoXml } from "@playground/rco";
+import { getSupabaseAdmin, insertRcoRecord } from "@playground/supabase";
 
 export async function POST(request: Request) {
   const { xmlContent } = await request.json();
@@ -12,13 +14,68 @@ export async function POST(request: Request) {
     );
   }
 
-  // Start the workflow
-  const result = await start(processXmlWorkflow, [xmlContent]);
+  try {
+    // 1. Parse Metadata for RCO insertion
+    const metadata = await parseLheoXml(xmlContent);
 
-  const workflowId = result.runId;
+    // 2. Initialize Supabase Admin
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  return NextResponse.json({
-    message: "Workflow started",
-    workflowId,
-  });
+    if (!url || !key) {
+      return NextResponse.json(
+        { error: "Server configuration error: Missing Supabase credentials" },
+        { status: 500 },
+      );
+    }
+
+    const supabase = getSupabaseAdmin(url, key);
+
+    // 3. Insert RCO Record (triggers content_flow creation)
+    const { rcoRecordId, contentFlowId, error: dbError } = await insertRcoRecord(
+      supabase,
+      xmlContent,
+      metadata,
+    );
+
+    if (dbError || !rcoRecordId || !contentFlowId) {
+      return NextResponse.json(
+        { error: "Failed to create RCO record", details: dbError },
+        { status: 500 },
+      );
+    }
+
+    // 4. Start the workflow
+    const result = await start(processXmlWorkflow, [contentFlowId, rcoRecordId]);
+    const workflowId = result.runId;
+
+    // 5. Link Workflow to Content Flow
+    const { error: linkError } = await supabase
+      .from("vercel_workflows")
+      .insert({
+        content_flow_id: contentFlowId,
+        vercel_workflow_id: workflowId,
+      });
+
+    if (linkError) {
+      // Non-blocking error, but should be logged.
+       // biome-ignore lint/suspicious/noConsole: Log error
+      console.error("Failed to link workflow:", linkError);
+    }
+
+    return NextResponse.json({
+      message: "Workflow started",
+      workflowId,
+      contentFlowId,
+      rcoRecordId,
+    });
+
+  } catch (error) {
+     // biome-ignore lint/suspicious/noConsole: Log error
+    console.error("Workflow start error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
 }
