@@ -140,12 +140,7 @@ export async function ingestDataStep(
     | { markdown: string; metadata: Record<string, unknown> }
     | undefined;
   if (complianceResult && !complianceResult.error && complianceResult.content) {
-    console.log("DEBUG: compliance content len:", complianceResult.content.length);
-    console.log("DEBUG: compliance content start:", complianceResult.content.substring(0, 100));
-
     const { data: cMeta } = matter(complianceResult.content);
-    console.log("DEBUG: parsed metadata:", JSON.stringify(cMeta));
-
     complianceReport = { markdown: complianceResult.content, metadata: cMeta };
   }
 
