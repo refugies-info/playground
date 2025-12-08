@@ -118,8 +118,9 @@ export async function ingestRcoData(
     // biome-ignore lint/suspicious/noConsole: Log progress
     console.log(`Inserting ${type} report...`);
     const { data: report, error: reportError } = await supabase
-      .from("reports")
+      .from("letta_reports")
       .insert({
+        agent_id: reportData.metadata?.letta?.agentId,
         report_type: type,
         markdown: reportData.markdown,
         metadata: reportData.metadata,
