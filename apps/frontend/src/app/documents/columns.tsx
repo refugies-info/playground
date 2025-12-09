@@ -1,10 +1,10 @@
 "use client";
 
-import type { MockDocument } from "@playground/shared-types";
+import type { Document } from "@playground/shared-types";
 import { Button, DataTableColumnHeader } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
 
-export const columns: ColumnDef<MockDocument>[] = [
+export const columns: ColumnDef<Document>[] = [
   {
     accessorKey: "title",
     header: ({ column }) => (
@@ -84,13 +84,7 @@ export const columns: ColumnDef<MockDocument>[] = [
       );
     },
   },
-  {
-    accessorKey: "source",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Source" />
-    ),
-    cell: ({ row }) => <div>{row.getValue("source")}</div>,
-  },
+
   {
     id: "actions",
     header: "Actions",

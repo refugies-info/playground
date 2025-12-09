@@ -12,7 +12,7 @@ export default async function DocumentPage(props: DocumentPageProps) {
   const params = await props.params;
   const { id } = params;
 
-  // Fetch the document from mock data
+  // Fetch the document
   const document = await getDocumentById(id);
 
   // If document not found, show 404
@@ -24,7 +24,7 @@ export default async function DocumentPage(props: DocumentPageProps) {
   const initialData = {
     id: document.id,
     title: document.title,
-    content: document.content, // This is the markdown content from mock data
+    content: document.content,
   };
 
   return <DocumentEditorLayout documentId={id} initialData={initialData} />;

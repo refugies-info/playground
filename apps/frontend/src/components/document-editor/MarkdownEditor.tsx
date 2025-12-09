@@ -5,18 +5,89 @@ import { BlockNoteView } from "@blocknote/mantine";
 import { useEffect, useState } from "react";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import matter from "gray-matter";
 import { Eye, FileText, Loader2 } from "lucide-react";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
+import rehypeStringify from "rehype-stringify";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
+import { unified } from "unified";
 import { useDocument } from "./DocumentContext";
 import { OriginalContentView } from "./OriginalContentView";
 import { RawMarkdownView } from "./RawMarkdownView";
 
 /**
- * Strip YAML frontmatter from markdown content
+ * Custom sanitization schema that allows common HTML tags
+ * while still blocking dangerous elements like <script> and event handlers
  */
-function stripYamlFrontmatter(content: string): string {
-  // Match YAML frontmatter pattern: --- at start, content, --- at end
-  const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
-  return content.replace(frontmatterRegex, "").trim();
+const sanitizeSchema = {
+  ...defaultSchema,
+  tagNames: [
+    ...(defaultSchema.tagNames || []),
+    // Allow common HTML tags that might be in your content
+    "p",
+    "br",
+    "div",
+    "span",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "strong",
+    "em",
+    "b",
+    "i",
+    "u",
+    "ul",
+    "ol",
+    "li",
+    "a",
+    "blockquote",
+    "pre",
+    "code",
+    "hr",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td",
+  ],
+};
+
+/**
+ * Convert mixed content (Markdown + HTML) to pure HTML.
+ *
+ * This uses the remark ecosystem to properly parse Markdown and convert it to HTML,
+ * which BlockNote can then parse via tryParseHTMLToBlocks.
+ *
+ * Pipeline:
+ * 1. Strip YAML frontmatter with gray-matter
+ * 2. Parse Markdown with remark-parse
+ * 3. Convert to HTML AST with remark-rehype (allowing dangerous HTML to pass through)
+ * 4. Parse raw HTML nodes with rehype-raw (critical for embedded HTML in markdown)
+ * 5. Sanitize HTML to remove dangerous tags/attributes with rehype-sanitize
+ * 6. Serialize to HTML string with rehype-stringify
+ */
+async function convertMixedContentToHtml(content: string): Promise<string> {
+  if (!content) return "";
+
+  // Strip YAML frontmatter
+  const { content: contentWithoutFrontmatter } = matter(content);
+
+  // Convert Markdown to HTML using unified pipeline
+  const result = await unified()
+    .use(remarkParse)
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeRaw) // 👈 Parse raw HTML nodes into proper HTML AST
+    .use(rehypeSanitize, sanitizeSchema)
+    .use(rehypeStringify)
+    .process(contentWithoutFrontmatter);
+
+  return String(result);
 }
 
 export function MarkdownEditor() {
@@ -50,15 +121,13 @@ export function MarkdownEditor() {
     async function loadContent() {
       if (!editor) return;
       try {
-        // Strip YAML frontmatter before parsing
-        const contentWithoutFrontmatter = stripYamlFrontmatter(
+        // Convert mixed Markdown/HTML to pure HTML
+        const htmlContent = await convertMixedContentToHtml(
           document?.content ?? "",
         );
 
-        // Parse markdown to BlockNote blocks
-        const blocks = await editor.tryParseMarkdownToBlocks(
-          contentWithoutFrontmatter,
-        );
+        // Parse HTML to BlockNote blocks
+        const blocks = await editor.tryParseHTMLToBlocks(htmlContent);
         editor.replaceBlocks(editor.document, blocks);
 
         // Also update raw markdown state

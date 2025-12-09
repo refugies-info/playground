@@ -1,7 +1,7 @@
 import type {
+  Document,
   DocumentState,
   DocumentStatus,
-  MockDocument,
 } from "@playground/shared-types";
 import { SeededRandom } from "./seededRandom";
 
@@ -15,9 +15,9 @@ const STATES: DocumentState[] = [
 ];
 
 // Cache to store generated documents
-let cachedDocuments: MockDocument[] | null = null;
+let cachedDocuments: Document[] | null = null;
 
-export function generateMockDocuments(count: number = 50): MockDocument[] {
+export function generateMockDocuments(count: number = 50): Document[] {
   // Return cached documents if already generated
   if (cachedDocuments && cachedDocuments.length === count) {
     return cachedDocuments;
@@ -54,14 +54,13 @@ export function generateMockDocuments(count: number = 50): MockDocument[] {
   ];
 
   // First document: Actions socio-linguistiques complémentaires du CIR (ASL)
-  const aslDocument: MockDocument = {
+  const aslDocument: Document = {
     id: "asl-languaction-2025",
     title:
       "Actions socio-linguistiques complémentaires du CIR (ASL) - Langu'Action - métiers en tension",
     date_added: new Date("2025-11-25").toISOString(),
     status: "accepted",
     state: "published",
-    source: "RCO",
     content: `# Actions socio-linguistiques complémentaires du CIR (ASL) - Langu'Action - métiers en tension
 
 Date de mise à jour : 25/11/2025 | Identifiant OffreInfo : 14_AF_0000214846
@@ -270,7 +269,6 @@ Contactez-nous pour plus d'informations et pour vous inscrire.
       date_added: date.toISOString(),
       status: STATUSES[rng.randomInt(0, STATUSES.length)],
       state: STATES[rng.randomInt(0, STATES.length)],
-      source: SOURCES[sourceIdx],
       content,
       metadata: {
         location,
