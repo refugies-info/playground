@@ -1,20 +1,31 @@
 import type { Letta } from "@letta-ai/letta-client";
-import type { ReasoningStep } from "./editorial-agents";
+
+export interface ReasoningStep {
+  timestamp: string;
+  message: string;
+  type: "thinking" | "function_call" | "response";
+}
 
 export const editorialAgentStream = async function* (
   client: Letta,
   content: string,
   instructions?: string,
+  flowId?: string,
 ): AsyncGenerator<ReasoningStep | { type: "content"; content: string }> {
-  const agentId = process.env.EDITORIAL_AGENT_ID;
-  if (!agentId) {
-    throw new Error("EDITORIAL_AGENT_ID is not defined");
+  const templateId = process.env.EDITORIAL_AGENT_TEMPLATE;
+  if (!templateId) {
+    throw new Error("EDITORIAL_AGENT_TEMPLATE is not defined");
   }
 
-  // Clear previous messages before each call
-  await client.agents.messages.reset(agentId, {
-    add_default_initial_messages: true,
+  // Create a new agent from the template
+  const agentResponse = await client.templates.agents.create(templateId, {
+    agent_name: `${templateId}-${flowId}`,
   });
+  const agentId = agentResponse.agent_ids[0];
+
+  if (!agentId) {
+    throw new Error("Failed to create agent from template");
+  }
 
   const messageContent = instructions
     ? `Content:\n${content}\n\nInstructions:\n${instructions}`

@@ -40,7 +40,7 @@ export async function insertRcoRecord(
   metadata: any,
 ): Promise<{
   rcoRecordId: string;
-  contentFlowId: string;
+  flowId: string;
   error?: unknown;
 }> {
   // Extract info from metadata
@@ -50,7 +50,7 @@ export async function insertRcoRecord(
   if (!formation || !action) {
     return {
       rcoRecordId: "",
-      contentFlowId: "",
+      flowId: "",
       error: "Invalid metadata structure",
     };
   }
@@ -87,31 +87,31 @@ export async function insertRcoRecord(
     logger.error(rcoError, "Error inserting rco_record");
     return {
       rcoRecordId: "",
-      contentFlowId: "",
+      flowId: "",
       error: rcoError,
     };
   }
 
   // 2. Fetch Content Flow ID (created by trigger)
   // The trigger `on_new_rco_record` is synchronous, so the content_flow should exist immediately.
-  const { data: contentFlow, error: flowError } = await supabase
+  const { data: flow, error: flowError } = await supabase
     .from("workflows")
     .select("id")
     .eq("rco_record_id", rcoRecord.id)
     .single();
 
-  if (flowError || !contentFlow) {
+  if (flowError || !flow) {
     logger.error(flowError, "Error fetching content flow after retries");
     return {
       rcoRecordId: rcoRecord.id,
-      contentFlowId: "",
+      flowId: "",
       error: flowError || new Error("Content flow not found after retries"),
     };
   }
 
   return {
     rcoRecordId: rcoRecord.id,
-    contentFlowId: contentFlow.id,
+    flowId: flow.id,
   };
 }
 

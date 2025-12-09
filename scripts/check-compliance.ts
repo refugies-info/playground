@@ -21,8 +21,8 @@ async function main() {
 
   logger.info("Calling checkCompliance agent...");
   try {
-    const contentFlowId = "test-flow-id";
-    const markdown = await checkCompliance(client, xmlContent, contentFlowId);
+    const flowId = "test-flow-id";
+    const markdown = await checkCompliance(client, xmlContent, flowId);
 
     // Write output to file
     const outputDir = path.resolve(__dirname, "../packages/agents/output");

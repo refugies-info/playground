@@ -35,11 +35,11 @@ export async function POST(request: Request) {
     // 3. Insert RCO Record (triggers content_flow creation)
     const {
       rcoRecordId,
-      contentFlowId,
+      flowId,
       error: dbError,
     } = await insertRcoRecord(supabase, xmlContent, metadata);
 
-    if (dbError || !rcoRecordId || !contentFlowId) {
+    if (dbError || !rcoRecordId || !flowId) {
       return NextResponse.json(
         { error: "Failed to create RCO record", details: dbError },
         { status: 500 },
@@ -47,10 +47,7 @@ export async function POST(request: Request) {
     }
 
     // 4. Start the workflow
-    const result = await start(processXmlWorkflow, [
-      contentFlowId,
-      rcoRecordId,
-    ]);
+    const result = await start(processXmlWorkflow, [flowId, rcoRecordId]);
     const workflowId = result.runId;
 
     // 5. Link Workflow to Content Flow
@@ -59,7 +56,7 @@ export async function POST(request: Request) {
       .update({
         vercel_workflow_id: workflowId,
       })
-      .eq("id", contentFlowId);
+      .eq("id", flowId);
 
     if (linkError) {
       // Non-blocking error, but should be logged.
@@ -70,7 +67,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       message: "Workflow started",
       workflowId,
-      contentFlowId,
+      flowId,
       rcoRecordId,
     });
   } catch (error) {

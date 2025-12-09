@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  const { content, instructions } = await request.json();
+  const { content, instructions, flowId } = await request.json();
 
   if (!content) {
     return new Response("Content is required", { status: 400 });
@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
           client,
           content,
           instructions,
+          flowId,
         )) {
           const data = `data: ${JSON.stringify(chunk)}\n\n`;
           controller.enqueue(encoder.encode(data));
