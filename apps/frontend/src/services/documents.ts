@@ -1,5 +1,6 @@
 import type { Lheo } from "@playground/rco";
 import type { Document, DocumentSortField } from "@playground/shared-types";
+import { logger } from "@playground/shared-types";
 import type { Database } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
 import matter from "gray-matter";
@@ -69,7 +70,7 @@ async function extractTitleFromMarkdown(markdown: string): Promise<string> {
     }
   } catch (error) {
     // If parsing fails, continue to fallback
-    console.error("Failed to parse markdown for title extraction:", error);
+    logger.error(error, "Failed to parse markdown for title extraction");
   }
 
   return "Untitled";
@@ -318,7 +319,15 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     .eq("id", id)
     .single();
 
-  if (error || !data) {
+  if (error) {
+    // Log the error unless it's a "not found" error, which is an expected case for .single().
+    if (error.code !== "PGRST116") {
+      logger.error(error, "Error fetching document by ID");
+    }
+    return null;
+  }
+
+  if (!data) {
     return null;
   }
 
