@@ -5,18 +5,42 @@ import { BlockNoteView } from "@blocknote/mantine";
 import { useEffect, useState } from "react";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import matter from "gray-matter";
 import { Eye, FileText, Loader2 } from "lucide-react";
+import rehypeStringify from "rehype-stringify";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
+import { unified } from "unified";
 import { useDocument } from "./DocumentContext";
 import { OriginalContentView } from "./OriginalContentView";
 import { RawMarkdownView } from "./RawMarkdownView";
 
 /**
- * Strip YAML frontmatter from markdown content
+ * Convert mixed content (Markdown + HTML) to pure HTML.
+ *
+ * This uses the remark ecosystem to properly parse Markdown and convert it to HTML,
+ * which BlockNote can then parse via tryParseHTMLToBlocks.
+ *
+ * Pipeline:
+ * 1. Strip YAML frontmatter with gray-matter
+ * 2. Parse Markdown with remark-parse
+ * 3. Convert to HTML AST with remark-rehype
+ * 4. Serialize to HTML string with rehype-stringify
  */
-function stripYamlFrontmatter(content: string): string {
-  // Match YAML frontmatter pattern: --- at start, content, --- at end
-  const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
-  return content.replace(frontmatterRegex, "").trim();
+async function convertMixedContentToHtml(content: string): Promise<string> {
+  if (!content) return "";
+
+  // Strip YAML frontmatter
+  const { content: contentWithoutFrontmatter } = matter(content);
+
+  // Convert Markdown to HTML using unified pipeline
+  const result = await unified()
+    .use(remarkParse) // Parse Markdown to mdast
+    .use(remarkRehype, { allowDangerousHtml: false })
+    .use(rehypeStringify, { allowDangerousHtml: false })
+    .process(contentWithoutFrontmatter);
+
+  return String(result);
 }
 
 export function MarkdownEditor() {
@@ -50,15 +74,13 @@ export function MarkdownEditor() {
     async function loadContent() {
       if (!editor) return;
       try {
-        // Strip YAML frontmatter before parsing
-        const contentWithoutFrontmatter = stripYamlFrontmatter(
+        // Convert mixed Markdown/HTML to pure HTML
+        const htmlContent = await convertMixedContentToHtml(
           document?.content ?? "",
         );
 
-        // Parse markdown to BlockNote blocks
-        const blocks = await editor.tryParseMarkdownToBlocks(
-          contentWithoutFrontmatter,
-        );
+        // Parse HTML to BlockNote blocks
+        const blocks = await editor.tryParseHTMLToBlocks(htmlContent);
         editor.replaceBlocks(editor.document, blocks);
 
         // Also update raw markdown state
