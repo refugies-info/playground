@@ -3,11 +3,35 @@
 import { Button } from "@playground/ui/primitives";
 import { ArrowLeft, GitCompare, Save } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { useDocument } from "./DocumentContext";
 
 export function EditorToolbar() {
-  const { document, isComparisonMode, setIsComparisonMode } = useDocument();
+  const {
+    document,
+    isComparisonMode,
+    setIsComparisonMode,
+    saveDocument,
+    isSaving,
+  } = useDocument();
   const hasRewrittenContent = !!document?.rewrittenContent;
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const handleSave = async () => {
+    setSaveError(null);
+    setSaveSuccess(false);
+
+    const result = await saveDocument();
+
+    if (result.success) {
+      setSaveSuccess(true);
+      // Clear success message after 3 seconds
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } else {
+      setSaveError(result.error || "Failed to save");
+    }
+  };
 
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b bg-white">
@@ -22,6 +46,12 @@ export function EditorToolbar() {
       </Link>
 
       <div className="flex items-center gap-2">
+        {/* Save status messages */}
+        {saveSuccess && (
+          <span className="text-sm text-green-600">Enregistré avec succès</span>
+        )}
+        {saveError && <span className="text-sm text-red-600">{saveError}</span>}
+
         {/* Comparison Toggle */}
         {hasRewrittenContent && (
           <Button
@@ -36,9 +66,15 @@ export function EditorToolbar() {
         )}
 
         {/* Save Button */}
-        <Button variant="primary" size="sm" className="gap-2">
+        <Button
+          variant="primary"
+          size="sm"
+          className="gap-2"
+          onClick={handleSave}
+          disabled={isSaving}
+        >
           <Save className="w-4 h-4" />
-          Enregistrer
+          {isSaving ? "Enregistrement..." : "Enregistrer"}
         </Button>
       </div>
     </div>

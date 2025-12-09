@@ -1,5 +1,6 @@
 "use client";
 
+import { logger } from "@playground/shared-types";
 import { createContext, type ReactNode, useContext, useState } from "react";
 
 interface DocumentData {
@@ -22,6 +23,8 @@ interface DocumentContextType {
   isLoading: boolean;
   isRawMarkdownMode: boolean;
   setIsRawMarkdownMode: (mode: boolean) => void;
+  saveDocument: () => Promise<{ success: boolean; error?: string }>;
+  isSaving: boolean;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
@@ -42,6 +45,7 @@ export function DocumentProvider({
   const [isComparisonMode, setIsComparisonMode] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRawMarkdownMode, setIsRawMarkdownMode] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const setRewrittenContent = (rewrittenContent: string) => {
     if (!document) return;
@@ -68,6 +72,30 @@ export function DocumentProvider({
     setIsComparisonMode(false);
   };
 
+  const saveDocument = async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
+    if (!document) {
+      return { success: false, error: "No document to save" };
+    }
+
+    setIsSaving(true);
+    try {
+      // Import the server action from the dedicated actions file
+      const { saveDocument: saveDocumentAction } = await import(
+        "@/services/document-actions"
+      );
+      const result = await saveDocumentAction(document.id, document.content);
+      return result;
+    } catch (error) {
+      logger.error(error, "Error saving document");
+      return { success: false, error: "Network error" };
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <DocumentContext.Provider
       value={{
@@ -82,6 +110,8 @@ export function DocumentProvider({
         isLoading,
         isRawMarkdownMode,
         setIsRawMarkdownMode,
+        saveDocument,
+        isSaving,
       }}
     >
       {children}
