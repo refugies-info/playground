@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lheo xmlns="http://lheo.gouv.fr/2.3">
+	<offres>
+		<formation numero="01_GE335067" ref="755" datecrea="20240312" datemaj="20241213" href="https://formation.grandest.fr/accueil/formations/113663">
+			<domaine-formation>
+				<code-FORMACODE ref="V14" tag="principal">15235</code-FORMACODE>
+			</domaine-formation>
+			<intitule-formation>Actions socio-linguistiques complémentaires du CIR - ASL Français langue étrangère à visée professionnelle (FLE) - Objectif A2</intitule-formation>
+			<objectif-formation>Apprentissage de la langue française à l'oral et à l'écrit, développement de son autonomie dans les démarches quotidiennes, travail sur le positionnement professionnel + découvrir un métier, se représenter le fonctionnement d'une entreprise en France et développer ses compétences linguistiques en situation professionnelle. Permettre de lever des freins à l'adaptation à l'emploi et offrir la possibilité aux personnes de s'engager pleinement dans un projet.</objectif-formation>
+			<resultats-attendus>Atteindre le niveau supérieur en maîtrise de la langue française - A2</resultats-attendus>
+			<contenu-formation>Durée : 180 h + 1 semaine d'immersion en entreprise - 17h hebbo.</contenu-formation>
+			<certifiante>0</certifiante>
+			<contact-formation tag="principal">
+				<type-contact>4</type-contact>
+				<coordonnees>
+					<nom>Accueil</nom>
+					<prenom>Service</prenom>
+					<telfixe>
+						<numtel>0300000000</numtel>
+					</telfixe>
+					<courriel>accueil@xxx.fr</courriel>
+				</coordonnees>
+			</contact-formation>
+			<parcours-de-formation>1</parcours-de-formation>
+			<code-niveau-entree>1</code-niveau-entree>
+			<objectif-general-formation>5</objectif-general-formation>
+			<certification/>
+			<code-niveau-sortie>1</code-niveau-sortie>
+			<url-formation>
+				<urlweb>https://www.cfp-presquile.fr/</urlweb>
+			</url-formation>
+			<action numero="01_GE1716206" datemaj="20241213" datecrea="20240312">
+				<rythme-formation>Nombre d'heures variant par semaine selon le groupe de niveau.</rythme-formation>
+				<code-public-vise ref="V14">81022</code-public-vise>
+				<code-public-vise ref="V14">81023</code-public-vise>
+				<code-public-vise ref="V14">81042</code-public-vise>
+				<niveau-entree-obligatoire>1</niveau-entree-obligatoire>
+				<modalites-alternance>180h en centre</modalites-alternance>
+				<modalites-enseignement>0</modalites-enseignement>
+				<duree-indicative>180 heures en centre</duree-indicative> 
+				<conditions-specifiques>Motivation / Personnes de nationalité étrangère (plus de 16 ans) en situation administrative régulière, rencontrant des difficultés linguistiques et inscrites dans un parcours socio-professionnel.</conditions-specifiques>
+				<prise-en-charge-frais-possible>0</prise-en-charge-frais-possible>
+				<lieu-de-formation tag="principal">
+					<coordonnees>
+						<adresse>
+							<denomination>Bâtiment AGORA</denomination>
+							<ligne>1 rue Victor Hugo</ligne>
+							<codepostal>44400</codepostal>
+							<ville>Rezé</ville>
+							<departement>44</departement>
+							<code-INSEE-commune>44143</code-INSEE-commune>
+							<region>52</region>
+							<pays>FR</pays>
+							<geolocalisation>
+								<latitude>47.1888545</latitude>
+								<longitude>-1.5516644</longitude>
+							</geolocalisation>
+						</adresse>
+					</coordonnees>
+				</lieu-de-formation>
+				<modalites-entrees-sorties>0</modalites-entrees-sorties>
+				<session numero="GE1716206" ref="1922">
+					<periode>
+						<debut>20251113</debut>
+						<fin>202560212</fin>
+					</periode>
+					<adresse-inscription>
+						<adresse>
+							<denomination>La maison de l'inscription</denomination>
+							<ligne>95 Rue de Mulhouse</ligne>
+							<codepostal>68300</codepostal>
+							<ville>Saint-Louis</ville>
+							<code-INSEE-commune>68297</code-INSEE-commune>
+						</adresse>
+					</adresse-inscription>
+					<modalites-inscription>Information collective</modalites-inscription>
+					<periode-inscription>
+						<periode>
+							<debut>20240101</debut>
+							<fin>20261218</fin>
+						</periode>
+					</periode-inscription>
+					<etat-recrutement>1</etat-recrutement>
+					<contact-session tag="principal">
+						<type-contact>3</type-contact>
+						<coordonnees>
+							<nom>Robert-Tissot</nom>
+							<prenom>Frederique</prenom>
+							<telfixe>
+								<numtel>02-40-88-19-40</numtel>
+							</telfixe>
+							<courriel>cfp.presquile@cfp-presquile.com</courriel>
+						</coordonnees>
+					</contact-session>
+					<reference-certification/>
+				</session>
+				<acces-handicapes>Oui</acces-handicapes>
+				<conventionnement>1</conventionnement>
+				<organisme-formateur numero="01_GE305705" tag="principal">
+					<SIRET-formateur>
+						<SIRET>77897285100068</SIRET>
+					</SIRET-formateur>
+					<raison-sociale-formateur>Centre socio-culturel de Saint-Louis</raison-sociale-formateur>
+					<contact-formateur tag="principal">
+						<type-contact>4</type-contact>
+						<coordonnees>
+							<nom>Accueil</nom>
+							<prenom>Service</prenom>
+							<ligne>Accueil</ligne>
+							<telfixe>
+								<numtel>0300000000</numtel>
+							</telfixe>
+							<courriel>accueil@zzz.fr</courriel>
+						</coordonnees>
+					</contact-formateur>
+					<reference-certification/>
+				</organisme-formateur>
+				<organisme-financeur>
+					<code-financeur>19</code-financeur>
+					<nb-places-financees>10</nb-places-financees>
+					<extras info="specificites">
+						<extra info="code-public-vise" ref="V14">81022</extra>
+						<extra info="code-public-vise" ref="V14">81023</extra>
+						<extra info="code-public-vise" ref="V14">81042</extra>
+						<extra info="programme-financeur">ASL</extra>
+						<extra info="ref-action-marche-financeur">BOP 104</extra>
+					</extras>
+				</organisme-financeur>
+				<extras info="dispositif">
+					<extra info="contrat-apprentissage">0</extra>
+					<extra info="contrat-professionnalisation">0</extra>
+				</extras>
+			</action>
+			<organisme-formation-responsable numero="01_GE305705" ref="755" href="https://formation.grandest.fr/organisme/fiche/4298">
+				<numero-activite>00000000000</numero-activite>
+				<SIRET-organisme-formation>
+					<SIRET>77897285100068</SIRET>
+				</SIRET-organisme-formation>
+				<nom-organisme>CFP Presqu'île</nom-organisme>
+				<raison-sociale>Centre socio-culturel de Saint-Louis</raison-sociale>
+				<coordonnees-organisme>
+					<coordonnees>
+						<adresse>
+							<denomination>La maison de julie</denomination>
+							<ligne>63 rue marcelin berthelot</ligne>
+							<codepostal>94140</codepostal>
+							<ville>Alfortville</ville>
+							<departement>94</departement>
+							<code-INSEE-commune>68297</code-INSEE-commune>
+							<region>44</region>
+							<pays>FR</pays>
+							<geolocalisation>
+								<latitude>21.57773</latitude>
+								<longitude>1.959829</longitude>
+							</geolocalisation>
+						</adresse>
+						<telfixe>
+							<numtel>0300000000</numtel>
+						</telfixe>
+						<courriel>julie@refugies.info</courriel>
+					</coordonnees>
+				</coordonnees-organisme>
+				<contact-organisme tag="principal">
+					<type-contact>4</type-contact>
+					<coordonnees>
+						<nom>Accueil</nom>
+						<prenom>Service</prenom>
+						<ligne>Accueil</ligne>
+						<telfixe>
+							<numtel>0300000000</numtel>
+						</telfixe>
+						<courriel>accueil@bbb.fr</courriel>
+					</coordonnees>
+				</contact-organisme>
+				<extras info="categorie-organisme">
+					<extra info="code-categorie-organisme">13</extra>
+				</extras>
+			</organisme-formation-responsable>
+		</formation>
+		<extras info="flux-intercarif">
+			<extra info="date-export">20251101</extra>
+			<extra info="heure-export">062847</extra>
+		</extras>
+	</offres>
+</lheo>

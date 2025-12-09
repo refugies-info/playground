@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lheo xmlns="http://lheo.gouv.fr/2.3">
+	<offres>
+		<formation numero="01_GE335067" ref="755" datecrea="20240312" datemaj="20241213" href="https://formation.grandest.fr/accueil/formations/113663">
+			<domaine-formation>
+				<code-FORMACODE ref="V14" tag="principal">15235</code-FORMACODE>
+			</domaine-formation>
+			<intitule-formation>Certificat de capacité à l'enseignement du français langue étrangère - FLE</intitule-formation>
+			<objectif-formation>Acquérir et développer les compétences et savoir-faire pédagogiques nécessaires à l'enseignement du français langue étrangère.</objectif-formation>
+			<resultats-attendus>Attestation de formation</resultats-attendus>
+			<contenu-formation>Gérer la classe et maîtriser les outils de la classe : 
+- Maîtriser les techniques d'animation et de gestion de classe - Favoriser les interactions authentiques en langue cible - Savoir utiliser des outils numériques simples pour la classe - Utiliser des supports et documents complémentaires (documents télévisuels, presse écrite, radio) - Connaître les ressources pédagogiques disponibles pour l'enseignant et l'apprenant. 
+Construire un cours : 
+- Planifier un cours et une progression - Cibler les activités sur des compétences visées - Enrichir le manuel avec des documents authentiques. Évaluer les apprenants par compétences : - Connaître les différentes formes d'évaluation - Utiliser l'évaluation comme outil de motivation - Identifier les erreurs et proposer des pistes de correction - Évaluer les apprenants sur la base du Cadre européen commun de référence (CECR).</contenu-formation>
+			<certifiante>0</certifiante>
+			<contact-formation tag="principal">
+				<type-contact>4</type-contact>
+				<coordonnees>
+					<nom>Accueil</nom>
+					<prenom>Service</prenom>
+					<telfixe>
+						<numtel>0300000000</numtel>
+					</telfixe>
+					<courriel>accueil@xxx.fr</courriel>
+				</coordonnees>
+			</contact-formation>
+			<parcours-de-formation>1</parcours-de-formation>
+			<code-niveau-entree>1</code-niveau-entree>
+			<objectif-general-formation>5</objectif-general-formation>
+			<certification/>
+			<code-niveau-sortie>1</code-niveau-sortie>
+			<url-formation>
+				<urlweb>https://www.coteformations.fr/je-recherche/une-formation/certificat-de-capacite-a-l-enseignement-du-francais-langue-etrangere/51268</urlweb>
+			</url-formation>
+			<action numero="01_GE1716206" datemaj="20241213" datecrea="20240312">
+				<rythme-formation>Nombre d'heures variant par semaine selon le groupe de niveau.</rythme-formation>
+				<code-public-vise ref="V14">81022</code-public-vise>
+				<code-public-vise ref="V14">81023</code-public-vise>
+				<code-public-vise ref="V14">81042</code-public-vise>
+				<info-public-vise>Baccalauréat français ou équivalent + niveau B2 attesté</info-public-vise>
+				<niveau-entree-obligatoire>1</niveau-entree-obligatoire>
+				<modalites-alternance>Aucun rythme d alternance declare.</modalites-alternance>
+				<modalites-enseignement>0</modalites-enseignement>
+				<conditions-specifiques>Baccalauréat français ou équivalent + niveau B2 attesté Sour réserve de l'acceptation du dossier de candidature : CV et lettre de motivation.</conditions-specifiques>
+				<prise-en-charge-frais-possible>0</prise-en-charge-frais-possible>
+				<lieu-de-formation tag="principal">
+					<coordonnees>
+						<adresse>
+							<denomination>Cavilam - Alliance Française</denomination>
+							<ligne>1 Avenue des Célestins</ligne>
+							<codepostal>94140</codepostal>
+							<ville>Vichy</ville>
+							<departement>03</departement>
+							<code-INSEE-commune>03310</code-INSEE-commune>
+							<region>84</region>
+							<pays>FR</pays>
+							<geolocalisation>
+								<latitude>48.862725</latitude>
+								<longitude>2.287592</longitude>
+							</geolocalisation>
+						</adresse>
+					</coordonnees>
+				</lieu-de-formation>
+				<modalites-entrees-sorties>1</modalites-entrees-sorties>
+				<session numero="GE1716206" ref="1922">
+					<periode>
+						<debut>20260803</debut>
+						<fin>20260821</fin>
+					</periode>
+					<adresse-inscription>
+						<adresse>
+							<denomination>denomination à ne pas prendre</denomination>
+							<ligne>adresse à ne pas prendre</ligne>
+							<codepostal>11111</codepostal>
+							<ville>Ville à ne pas prendre</ville>
+							<code-INSEE-commune>11111</code-INSEE-commune>
+						</adresse>
+					</adresse-inscription>
+					<modalites-inscription>FLI niveau A1.1</modalites-inscription>
+					<periode-inscription>
+						<periode>
+							<debut>20240101</debut>
+							<fin>20261218</fin>
+						</periode>
+					</periode-inscription>
+					<etat-recrutement>1</etat-recrutement>
+					<contact-session tag="principal">
+						<type-contact>3</type-contact>
+						<coordonnees>
+							<nom>Magali</nom>
+							<prenom>Lepron</prenom>
+							<telfixe>
+								<numtel>0470308383</numtel>
+							</telfixe>
+							<courriel>info@cavilam.com</courriel>
+						</coordonnees>
+					</contact-session>
+					<reference-certification/>
+				</session>
+				<acces-handicapes>Oui</acces-handicapes>
+				<conventionnement>0</conventionnement>
+				<organisme-formateur numero="01_GE305705" tag="principal">
+					<SIRET-formateur>
+						<SIRET>77897285100068</SIRET>
+					</SIRET-formateur>
+					<raison-sociale-formateur>Centre socio-culturel de Saint-Louis</raison-sociale-formateur>
+					<contact-formateur tag="principal">
+						<type-contact>4</type-contact>
+						<coordonnees>
+							<nom>Accueil</nom>
+							<prenom>Service</prenom>
+							<ligne>Accueil</ligne>
+							<telfixe>
+								<numtel>0300000000</numtel>
+							</telfixe>
+							<courriel>accueil@zzz.fr</courriel>
+						</coordonnees>
+					</contact-formateur>
+					<reference-certification/>
+				</organisme-formateur>
+				<organisme-financeur>
+					<code-financeur>11</code-financeur>
+					<nb-places-financees>10</nb-places-financees>
+					<extras info="specificites">
+						<extra info="code-public-vise" ref="V14">81022</extra>
+						<extra info="code-public-vise" ref="V14">81023</extra>
+						<extra info="code-public-vise" ref="V14">81042</extra>
+						<extra info="programme-financeur">ASL</extra>
+						<extra info="ref-action-marche-financeur">BOP 104</extra>
+					</extras>
+				</organisme-financeur>
+				<extras info="dispositif">
+					<extra info="contrat-apprentissage">0</extra>
+					<extra info="contrat-professionnalisation">0</extra>
+				</extras>
+			</action>
+			<organisme-formation-responsable numero="01_GE305705" ref="755" href="https://formation.grandest.fr/organisme/fiche/4298">
+				<numero-activite>00000000000</numero-activite>
+				<SIRET-organisme-formation>
+					<SIRET>77897285100068</SIRET>
+				</SIRET-organisme-formation>
+				<nom-organisme>Cavilam - Alliance Française</nom-organisme>
+				<raison-sociale>Centre socio-culturel de Saint-Louis</raison-sociale>
+				<coordonnees-organisme>
+					<coordonnees>
+						<adresse>
+							<denomination>La maison de julie</denomination>
+							<ligne>63 rue marcelin berthelot</ligne>
+							<codepostal>94140</codepostal>
+							<ville>Alfortville</ville>
+							<departement>94</departement>
+							<code-INSEE-commune>68297</code-INSEE-commune>
+							<region>44</region>
+							<pays>FR</pays>
+							<geolocalisation>
+								<latitude>21.57773</latitude>
+								<longitude>1.959829</longitude>
+							</geolocalisation>
+						</adresse>
+						<telfixe>
+							<numtel>0300000000</numtel>
+						</telfixe>
+						<courriel>julie@refugies.info</courriel>
+					</coordonnees>
+				</coordonnees-organisme>
+				<contact-organisme tag="principal">
+					<type-contact>4</type-contact>
+					<coordonnees>
+						<nom>Accueil</nom>
+						<prenom>Service</prenom>
+						<ligne>Accueil</ligne>
+						<telfixe>
+							<numtel>0300000000</numtel>
+						</telfixe>
+						<courriel>accueil@bbb.fr</courriel>
+					</coordonnees>
+				</contact-organisme>
+				<extras info="categorie-organisme">
+					<extra info="code-categorie-organisme">13</extra>
+				</extras>
+			</organisme-formation-responsable>
+		</formation>
+		<extras info="flux-intercarif">
+			<extra info="date-export">20251101</extra>
+			<extra info="heure-export">062847</extra>
+		</extras>
+	</offres>
+</lheo>
