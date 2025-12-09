@@ -12,6 +12,7 @@ import {
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin, ingestProcessedData } from "@playground/supabase";
 import matter from "gray-matter";
+import { createHook } from "workflow";
 
 // Define steps
 export async function fetchRcoXmlStep(rcoRecordId: string) {
@@ -176,6 +177,30 @@ export async function ingestDataStep(
   return result;
 }
 
+// Save workflow hook token
+export async function saveWorkflowHookTokenStep(
+  contentFlowId: string,
+  hookToken: string,
+) {
+  "use step";
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!key) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not defined");
+  }
+
+  const supabase = getSupabaseAdmin(url, key);
+  const { error } = await supabase
+    .from("workflows")
+    .update({ vercel_hook_token: hookToken })
+    .eq("id", contentFlowId);
+
+  if (error) {
+    throw new Error(`Failed to save workflow hook token: ${error.message}`);
+  }
+}
+
 // Define workflow
 export async function processXmlWorkflow(
   contentFlowId: string,
@@ -201,6 +226,10 @@ export async function processXmlWorkflow(
     complianceResult,
     duplicatesResult,
   );
+
+  const hook = createHook();
+  await saveWorkflowHookTokenStep(contentFlowId, hook.token);
+  await hook;
 
   return {
     files: {

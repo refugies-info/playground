@@ -70,7 +70,7 @@ alter table "public"."rco_records" enable row level security;
     "progress" text not null,
     "status" text not null,
     "vercel_workflow_id" text,
-    "vercel_hook_url" text
+    "vercel_hook_token" text
       );
 
 
