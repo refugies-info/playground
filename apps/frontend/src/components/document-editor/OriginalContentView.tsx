@@ -5,7 +5,7 @@ import { useCreateBlockNote } from "@blocknote/react";
 import { useEffect } from "react";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import { Button } from "@refugies/ui/primitives";
+import { Button } from "@playground/ui/primitives";
 import { Undo2 } from "lucide-react";
 import { useDocument } from "./DocumentContext";
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@refugies/ui";
-import { Button } from "@refugies/ui/primitives";
+import { cn } from "@playground/ui";
+import { Button } from "@playground/ui/primitives";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDocument } from "./DocumentContext";
