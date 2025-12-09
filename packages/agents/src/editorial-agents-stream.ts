@@ -1,5 +1,10 @@
 import type { Letta } from "@letta-ai/letta-client";
-import type { ReasoningStep } from "./editorial-agents";
+
+export interface ReasoningStep {
+  timestamp: string;
+  message: string;
+  type: "thinking" | "function_call" | "response";
+}
 
 export const editorialAgentStream = async function* (
   client: Letta,
@@ -14,7 +19,7 @@ export const editorialAgentStream = async function* (
 
   // Create a new agent from the template
   const agentResponse = await client.templates.agents.create(templateId, {
-    agent_name: `${templateId}-${flowId ?? Date.now()}`,
+    agent_name: `${templateId}-${flowId}`,
   });
   const agentId = agentResponse.agent_ids[0];
 
