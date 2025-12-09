@@ -1,13 +1,13 @@
 "use client";
 
-import type { MockDocument } from "@playground/shared-types";
+import type { Document } from "@playground/shared-types";
 import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { columns } from "./columns";
 
 interface DocumentsListProps {
-  initialDocuments: MockDocument[];
+  initialDocuments: Document[];
   initialFilters: {
     status: string;
     state: string;

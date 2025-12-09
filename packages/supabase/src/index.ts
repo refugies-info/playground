@@ -4,6 +4,7 @@ export * from "./proxy";
 export type {
   Database,
   Enums,
+  Json,
   Tables,
   TablesInsert,
   TablesUpdate,

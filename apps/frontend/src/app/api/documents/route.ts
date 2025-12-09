@@ -1,9 +1,9 @@
-import type { MockDocument } from "@playground/shared-types";
+import type { Document } from "@playground/shared-types";
 import { type NextRequest, NextResponse } from "next/server";
 import { generateMockDocuments } from "@/lib/mock/documents";
 
 interface PaginatedResponse {
-  data: MockDocument[];
+  data: Document[];
   total: number;
   page: number;
   pageSize: number;
@@ -56,10 +56,10 @@ export async function GET(
 
   // Apply sorting
   documents.sort((a, b) => {
-    let aValue: string | number = a[sortBy as keyof MockDocument] as
+    let aValue: string | number = a[sortBy as keyof Document] as
       | string
       | number;
-    let bValue: string | number = b[sortBy as keyof MockDocument] as
+    let bValue: string | number = b[sortBy as keyof Document] as
       | string
       | number;
 

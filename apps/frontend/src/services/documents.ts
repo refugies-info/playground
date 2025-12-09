@@ -1,5 +1,7 @@
-import type { MockDocument } from "@playground/shared-types";
-import { generateMockDocuments } from "@/lib/mock/documents";
+import type { Document } from "@playground/shared-types";
+import type { Database, Json } from "@playground/supabase";
+import { createSupabaseServerClient } from "@playground/supabase";
+import { cookies } from "next/headers";
 
 export interface GetDocumentsParams {
   page?: number;
@@ -12,92 +14,237 @@ export interface GetDocumentsParams {
   dateTo?: string;
 }
 
-export async function getDocuments(params: GetDocumentsParams) {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
+// Helper type for the joined query result
+type WorkflowWithRelations =
+  Database["public"]["Tables"]["workflows"]["Row"] & {
+    rco_records: Pick<
+      Database["public"]["Tables"]["rco_records"]["Row"],
+      "source_raw" | "metadata"
+    >;
+    editorial_records:
+      | Pick<
+          Database["public"]["Tables"]["editorial_records"]["Row"],
+          "markdown" | "metadata"
+        >[]
+      | null;
+  };
 
+// Helper to safely extract title from metadata Json
+function getTitleFromMetadata(metadata: Json | null): string | null {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return null;
+  }
+  const metaObj = metadata as Record<string, unknown>;
+  if (typeof metaObj.title === "string") {
+    return metaObj.title;
+  }
+  return null;
+}
+
+// Helper to safely extract RCO title
+function getRcoTitle(metadata: Json | null): string | null {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return null;
+  }
+  // We need to traverse: lheo.offres.formation[0]["intitule-formation"]
+  // biome-ignore lint/suspicious/noExplicitAny: Deep nested access on untyped JSON
+  const metaObj = metadata as any; // Using any for deep nested access on untyped JSON structure is pragmatic here
+  return metaObj?.lheo?.offres?.formation?.[0]?.["intitule-formation"] || null;
+}
+
+export async function getDocuments(params: GetDocumentsParams) {
   const {
     page = 1,
     pageSize = 10,
-    sortBy = "date_added",
+    sortBy = "updated_at",
     sortOrder = "desc",
     status,
     state,
-    dateFrom: dateFromFilter,
-    dateTo: dateToFilter,
+    dateFrom,
+    dateTo,
   } = params;
 
-  // Generate mock data
-  let documents = generateMockDocuments(100);
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
+  // Base query on workflows table
+  let query = supabase.from("workflows").select(
+    `
+      id,
+      status,
+      progress,
+      updated_at,
+      rco_records!inner (
+        source_raw,
+        metadata
+      ),
+      editorial_records (
+        markdown,
+        metadata
+      )
+    `,
+    { count: "exact" },
+  );
 
   // Apply filters
   if (status) {
-    documents = documents.filter((doc) => doc.status === status);
+    query = query.eq("status", status);
   }
 
   if (state) {
-    documents = documents.filter((doc) => doc.state === state);
+    query = query.eq("progress", state);
   }
 
-  if (dateFromFilter) {
-    const dateFrom = new Date(dateFromFilter);
-    documents = documents.filter((doc) => new Date(doc.date_added) >= dateFrom);
+  if (dateFrom) {
+    query = query.gte("updated_at", dateFrom);
   }
 
-  if (dateToFilter) {
-    const dateTo = new Date(dateToFilter);
-    documents = documents.filter((doc) => new Date(doc.date_added) <= dateTo);
+  if (dateTo) {
+    query = query.lte("updated_at", dateTo);
   }
 
   // Apply sorting
-  documents.sort((a, b) => {
-    let aValue: string | number = a[sortBy as keyof MockDocument] as
-      | string
-      | number;
-    let bValue: string | number = b[sortBy as keyof MockDocument] as
-      | string
-      | number;
-
-    if (typeof aValue === "string" && typeof bValue === "string") {
-      aValue = aValue.toLowerCase();
-      bValue = bValue.toLowerCase();
-    }
-
-    if (aValue < bValue) {
-      return sortOrder === "asc" ? -1 : 1;
-    }
-    if (aValue > bValue) {
-      return sortOrder === "asc" ? 1 : -1;
-    }
-    return 0;
-  });
+  // Note: sorting by fields in joined tables is complex in Supabase JS client.
+  // We'll stick to sorting by workflow fields for now.
+  if (sortBy === "date_added" || sortBy === "updated_at") {
+    query = query.order("updated_at", { ascending: sortOrder === "asc" });
+  } else if (sortBy === "status") {
+    query = query.order("status", { ascending: sortOrder === "asc" });
+  } else if (sortBy === "state") {
+    query = query.order("progress", { ascending: sortOrder === "asc" });
+  } else {
+    // Default sort
+    query = query.order("updated_at", { ascending: false });
+  }
 
   // Apply pagination
-  const total = documents.length;
-  const totalPages = Math.ceil(total / pageSize);
   const startIndex = (page - 1) * pageSize;
-  const paginatedDocuments = documents.slice(startIndex, startIndex + pageSize);
+  const endIndex = startIndex + pageSize - 1;
+  query = query.range(startIndex, endIndex);
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    // logger.error(error, "Error fetching documents"); // Logger not available here yet, using simple throw
+    throw new Error("Failed to fetch documents");
+  }
+
+  // Cast the data to our helper type since Supabase query builder types are complex with select strings
+  const rows = data as unknown as WorkflowWithRelations[];
+
+  // Map to Document type
+  const documents: Document[] = rows.map((item) => {
+    const rcoRecord = item.rco_records;
+    const editorialRecord =
+      item.editorial_records && item.editorial_records.length > 0
+        ? item.editorial_records[0]
+        : null;
+
+    const metadata = (editorialRecord?.metadata ||
+      rcoRecord?.metadata ||
+      {}) as Record<string, unknown>;
+
+    let title = "Untitled";
+    const editorialTitle = getTitleFromMetadata(
+      editorialRecord?.metadata || null,
+    );
+
+    if (editorialTitle) {
+      title = editorialTitle;
+    } else {
+      const rcoTitle = getRcoTitle(rcoRecord?.metadata || null);
+      if (rcoTitle) {
+        title = rcoTitle;
+      }
+    }
+
+    const content = editorialRecord?.markdown || rcoRecord?.source_raw || "";
+
+    return {
+      id: item.id,
+      title,
+      date_added: item.updated_at,
+      status: item.status,
+      state: item.progress,
+      content,
+      metadata,
+    };
+  });
 
   return {
-    data: paginatedDocuments,
-    total,
+    data: documents,
+    total: count || 0,
     page,
     pageSize,
-    totalPages,
+    totalPages: Math.ceil((count || 0) / pageSize),
   };
 }
 
-export async function getDocumentById(
-  id: string,
-): Promise<MockDocument | null> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
+export async function getDocumentById(id: string): Promise<Document | null> {
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
 
-  // Generate the same mock data
-  const documents = generateMockDocuments(100);
+  const { data, error } = await supabase
+    .from("workflows")
+    .select(
+      `
+      id,
+      status,
+      progress,
+      updated_at,
+      rco_records!inner (
+        source_raw,
+        metadata
+      ),
+      editorial_records (
+        markdown,
+        metadata
+      )
+    `,
+    )
+    .eq("id", id)
+    .single();
 
-  // Find document by ID
-  const document = documents.find((doc) => doc.id === id);
+  if (error || !data) {
+    return null;
+  }
 
-  return document || null;
+  // Cast the data to our helper type
+  const row = data as unknown as WorkflowWithRelations;
+
+  const rcoRecord = row.rco_records;
+  const editorialRecord =
+    row.editorial_records && row.editorial_records.length > 0
+      ? row.editorial_records[0]
+      : null;
+
+  const metadata = (editorialRecord?.metadata ||
+    rcoRecord?.metadata ||
+    {}) as Record<string, unknown>;
+
+  let title = "Untitled";
+  const editorialTitle = getTitleFromMetadata(
+    editorialRecord?.metadata || null,
+  );
+
+  if (editorialTitle) {
+    title = editorialTitle;
+  } else {
+    const rcoTitle = getRcoTitle(rcoRecord?.metadata || null);
+    if (rcoTitle) {
+      title = rcoTitle;
+    }
+  }
+
+  const content = editorialRecord?.markdown || rcoRecord?.source_raw || "";
+
+  return {
+    id: row.id,
+    title,
+    date_added: row.updated_at,
+    status: row.status,
+    state: row.progress,
+    content,
+    metadata,
+  };
 }
