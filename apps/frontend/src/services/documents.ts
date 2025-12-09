@@ -1,7 +1,11 @@
 import type { Document, DocumentSortField } from "@playground/shared-types";
 import type { Database } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
+import matter from "gray-matter";
+import type { Heading, Root } from "mdast";
 import { cookies } from "next/headers";
+import remarkParse from "remark-parse";
+import { unified } from "unified";
 
 export interface GetDocumentsParams {
   page?: number;
@@ -12,6 +16,51 @@ export interface GetDocumentsParams {
   state?: string;
   dateFrom?: string;
   dateTo?: string;
+}
+
+/**
+ * Extract title from markdown content.
+ * Priority:
+ * 1. Title from YAML frontmatter
+ * 2. First H1 heading in markdown (parsed with remark)
+ * 3. "Untitled" as fallback
+ */
+async function extractTitleFromMarkdown(markdown: string): Promise<string> {
+  if (!markdown) return "Untitled";
+
+  try {
+    // Parse YAML frontmatter
+    const { data, content } = matter(markdown);
+
+    // Check for title in frontmatter
+    if (data.title && typeof data.title === "string") {
+      return data.title.trim();
+    }
+
+    // Use remark to parse markdown and find first H1 heading
+    const tree = unified().use(remarkParse).parse(content) as Root;
+
+    // Find the first heading with depth 1 (H1)
+    for (const node of tree.children) {
+      if (node.type === "heading" && (node as Heading).depth === 1) {
+        const heading = node as Heading;
+        // Extract text from heading children
+        const text = heading.children
+          .filter((child) => child.type === "text")
+          .map((child) => ("value" in child ? child.value : ""))
+          .join("")
+          .trim();
+
+        if (text) {
+          return text;
+        }
+      }
+    }
+  } catch (_error) {
+    // If parsing fails, continue to fallback
+  }
+
+  return "Untitled";
 }
 
 // Helper type for the joined query result
@@ -123,43 +172,48 @@ export async function getDocuments(params: GetDocumentsParams) {
   // Cast the data to our helper type since Supabase query builder types are complex with select strings
   const rows = data as unknown as WorkflowWithRelations[];
 
-  // Map to Document type
-  const documents: Document[] = rows.map((item) => {
-    const rcoRecord = item.rco_records;
-    const ingestionRecord = item.ingestion_records;
-    const editorialRecord =
-      item.editorial_records && item.editorial_records.length > 0
-        ? item.editorial_records[0]
-        : null;
+  // Map to Document type with async title extraction
+  const documents: Document[] = await Promise.all(
+    rows.map(async (item) => {
+      const rcoRecord = item.rco_records;
+      const ingestionRecord = item.ingestion_records;
+      const editorialRecord =
+        item.editorial_records && item.editorial_records.length > 0
+          ? item.editorial_records[0]
+          : null;
 
-    // Priority: editorial > ingestion > rco
-    const metadata = (editorialRecord?.metadata ||
-      ingestionRecord?.metadata ||
-      rcoRecord?.metadata ||
-      {}) as Record<string, unknown>;
+      // Priority: editorial > ingestion > rco
+      const metadata = (editorialRecord?.metadata ||
+        ingestionRecord?.metadata ||
+        rcoRecord?.metadata ||
+        {}) as Record<string, unknown>;
 
-    // Priority: editorial > ingestion > empty
-    // We do not use rcoRecord.source_raw as per requirements
-    const content =
-      editorialRecord?.markdown || ingestionRecord?.markdown || "";
+      // Priority: editorial > ingestion > empty
+      // We do not use rcoRecord.source_raw as per requirements
+      const content =
+        editorialRecord?.markdown || ingestionRecord?.markdown || "";
 
-    // Simple title extraction if available in metadata, otherwise "Untitled"
-    // The title logic uses the markdown content mainly now.
-    const title =
-      (metadata?.title as string) ||
-      (metadata?.["intitule-formation"] as string) ||
-      "Untitled";
+      // Title extraction priority:
+      // 1. metadata.title
+      // 2. metadata["intitule-formation"]
+      // 3. Extract from markdown content (YAML frontmatter or first H1)
+      // 4. "Untitled" as final fallback
+      const title =
+        (metadata?.title as string) ||
+        (metadata?.["intitule-formation"] as string) ||
+        (await extractTitleFromMarkdown(content));
 
-    return {
-      id: item.id,
-      title,
-      date_added: item.updated_at,
-      status: item.status,
-      state: item.progress,
-      content,
-      metadata,
-    };
-  });
+      return {
+        id: item.id,
+        title,
+        date_added: item.updated_at,
+        status: item.status,
+        state: item.progress,
+        content,
+        metadata,
+      };
+    }),
+  );
 
   return {
     data: documents,
@@ -223,11 +277,15 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   // We do not use rcoRecord.source_raw as per requirements
   const content = editorialRecord?.markdown || ingestionRecord?.markdown || "";
 
-  // Simple title extraction if available in metadata, otherwise "Untitled"
+  // Title extraction priority:
+  // 1. metadata.title
+  // 2. metadata["intitule-formation"]
+  // 3. Extract from markdown content (YAML frontmatter or first H1)
+  // 4. "Untitled" as final fallback
   const title =
     (metadata?.title as string) ||
     (metadata?.["intitule-formation"] as string) ||
-    "Untitled";
+    (await extractTitleFromMarkdown(content));
 
   return {
     id: row.id,
