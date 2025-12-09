@@ -1,4 +1,4 @@
-import type { Document } from "@playground/shared-types";
+import type { Document, DocumentSortField } from "@playground/shared-types";
 import { type NextRequest, NextResponse } from "next/server";
 import { generateMockDocuments } from "@/lib/mock/documents";
 
@@ -10,9 +10,13 @@ interface PaginatedResponse {
   totalPages: number;
 }
 
+interface ErrorResponse {
+  error: string;
+}
+
 export async function GET(
   request: NextRequest,
-): Promise<NextResponse<PaginatedResponse>> {
+): Promise<NextResponse<PaginatedResponse | ErrorResponse>> {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -23,8 +27,28 @@ export async function GET(
   const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
 
   // Sorting parameters
-  const sortBy = searchParams.get("sortBy") || "date_added";
+  const sortByParam = searchParams.get("sortBy") || "date_added";
   const sortOrder = (searchParams.get("sortOrder") || "desc") as "asc" | "desc";
+
+  // Validate sortBy parameter
+  const validSortFields: DocumentSortField[] = [
+    "title",
+    "date_added",
+    "updated_at",
+    "status",
+    "state",
+  ];
+  if (!validSortFields.includes(sortByParam as DocumentSortField)) {
+    return NextResponse.json(
+      {
+        error: `Invalid sortBy parameter. Must be one of: ${validSortFields.join(
+          ", ",
+        )}`,
+      },
+      { status: 400 },
+    );
+  }
+  const sortBy = sortByParam as DocumentSortField;
 
   // Filter parameters
   const statusFilter = searchParams.get("status");

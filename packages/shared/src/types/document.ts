@@ -1,5 +1,11 @@
 export type DocumentStatus = "accepted" | "rejected";
 export type DocumentState = "draft" | "to_process" | "archived" | "published";
+export type DocumentSortField =
+  | "title"
+  | "date_added"
+  | "updated_at"
+  | "status"
+  | "state";
 
 export interface Document {
   id: string;

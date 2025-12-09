@@ -1,4 +1,4 @@
-import type { Document } from "@playground/shared-types";
+import type { Document, DocumentSortField } from "@playground/shared-types";
 import type { Database } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 export interface GetDocumentsParams {
   page?: number;
   pageSize?: number;
-  sortBy?: string;
+  sortBy?: DocumentSortField;
   sortOrder?: "asc" | "desc";
   status?: string;
   state?: string;
@@ -37,7 +37,7 @@ export async function getDocuments(params: GetDocumentsParams) {
   const {
     page = 1,
     pageSize = 10,
-    sortBy = "updated_at",
+    sortBy = "date_added",
     sortOrder = "desc",
     status,
     state,
@@ -89,18 +89,24 @@ export async function getDocuments(params: GetDocumentsParams) {
   }
 
   // Apply sorting
+  // Map Document fields to their corresponding database columns
   // Note: sorting by fields in joined tables is complex in Supabase JS client.
   // We'll stick to sorting by workflow fields for now.
-  if (sortBy === "date_added" || sortBy === "updated_at") {
-    query = query.order("updated_at", { ascending: sortOrder === "asc" });
-  } else if (sortBy === "status") {
-    query = query.order("status", { ascending: sortOrder === "asc" });
-  } else if (sortBy === "state") {
-    query = query.order("progress", { ascending: sortOrder === "asc" });
-  } else {
-    // Default sort
-    query = query.order("updated_at", { ascending: false });
+  const sortFieldMap: Record<DocumentSortField, string> = {
+    date_added: "updated_at", // date_added is computed from updated_at
+    updated_at: "updated_at",
+    status: "status",
+    state: "progress", // state maps to progress column
+    title: "updated_at", // title is computed, fall back to updated_at
+  };
+
+  const dbColumn = sortFieldMap[sortBy];
+  if (!dbColumn) {
+    // This should never happen due to TypeScript, but add runtime safety
+    throw new Error(`Unsupported sort field: ${sortBy}`);
   }
+
+  query = query.order(dbColumn, { ascending: sortOrder === "asc" });
 
   // Apply pagination
   const startIndex = (page - 1) * pageSize;
