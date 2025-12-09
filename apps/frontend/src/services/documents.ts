@@ -1,3 +1,4 @@
+import type { Lheo } from "@playground/rco";
 import type { Document, DocumentSortField } from "@playground/shared-types";
 import type { Database } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
@@ -6,6 +7,16 @@ import type { Heading, Root } from "mdast";
 import { cookies } from "next/headers";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
+
+/**
+ * Metadata can be a partial LHEO structure or have direct title fields.
+ * Uses the canonical Lheo type from @playground/rco package.
+ */
+type Metadata = Partial<Lheo> & {
+  title?: string;
+  "intitule-formation"?: string;
+  [key: string]: unknown;
+};
 
 export interface GetDocumentsParams {
   page?: number;
@@ -61,6 +72,61 @@ async function extractTitleFromMarkdown(markdown: string): Promise<string> {
   }
 
   return "Untitled";
+}
+
+/**
+ * Safely extracts the title from LHEO metadata.
+ * Handles the nested structure: lheo.offres.formation[0]["intitule-formation"]
+ * Also checks for direct title or intitule-formation fields.
+ */
+function extractTitleFromMetadata(metadata: Metadata): string | null {
+  // Check for direct title field
+  if (metadata.title && typeof metadata.title === "string") {
+    return metadata.title;
+  }
+
+  // Check for direct intitule-formation field
+  if (
+    metadata["intitule-formation"] &&
+    typeof metadata["intitule-formation"] === "string"
+  ) {
+    return metadata["intitule-formation"];
+  }
+
+  // Navigate through LHEO structure: metadata.offres.formation[0]["intitule-formation"]
+  // metadata is already Partial<Lheo>, so we access offres directly
+  if (!metadata.offres) {
+    return null;
+  }
+
+  const formations = metadata.offres.formation;
+  if (!formations || formations.length === 0) {
+    return null;
+  }
+
+  // Get the first formation
+  const firstFormation = formations[0];
+  if (!firstFormation) {
+    return null;
+  }
+
+  const intitule = firstFormation["intitule-formation"];
+  if (!intitule) {
+    return null;
+  }
+
+  // IntituleFormation type from LHEO has a _text property
+  if (typeof intitule === "object" && "_text" in intitule) {
+    const text = intitule._text;
+    return typeof text === "string" ? text : null;
+  }
+
+  // Fallback for direct string (shouldn't happen with canonical types, but be safe)
+  if (typeof intitule === "string") {
+    return intitule;
+  }
+
+  return null;
 }
 
 // Helper type for the joined query result
@@ -186,7 +252,7 @@ export async function getDocuments(params: GetDocumentsParams) {
       const metadata = (editorialRecord?.metadata ||
         ingestionRecord?.metadata ||
         rcoRecord?.metadata ||
-        {}) as Record<string, unknown>;
+        {}) as Metadata;
 
       // Priority: editorial > ingestion > empty
       // We do not use rcoRecord.source_raw as per requirements
@@ -194,13 +260,11 @@ export async function getDocuments(params: GetDocumentsParams) {
         editorialRecord?.markdown || ingestionRecord?.markdown || "";
 
       // Title extraction priority:
-      // 1. metadata.title
-      // 2. metadata["intitule-formation"]
-      // 3. Extract from markdown content (YAML frontmatter or first H1)
-      // 4. "Untitled" as final fallback
+      // 1. Extract from metadata (handles LHEO structure, title, intitule-formation)
+      // 2. Extract from markdown content (YAML frontmatter or first H1)
+      // 3. "Untitled" as final fallback
       const title =
-        (metadata?.title as string) ||
-        (metadata?.["intitule-formation"] as string) ||
+        extractTitleFromMetadata(metadata) ||
         (await extractTitleFromMarkdown(content));
 
       return {
@@ -271,20 +335,18 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const metadata = (editorialRecord?.metadata ||
     ingestionRecord?.metadata ||
     rcoRecord?.metadata ||
-    {}) as Record<string, unknown>;
+    {}) as Metadata;
 
   // Priority: editorial > ingestion > empty
   // We do not use rcoRecord.source_raw as per requirements
   const content = editorialRecord?.markdown || ingestionRecord?.markdown || "";
 
   // Title extraction priority:
-  // 1. metadata.title
-  // 2. metadata["intitule-formation"]
-  // 3. Extract from markdown content (YAML frontmatter or first H1)
-  // 4. "Untitled" as final fallback
+  // 1. Extract from metadata (handles LHEO structure, title, intitule-formation)
+  // 2. Extract from markdown content (YAML frontmatter or first H1)
+  // 3. "Untitled" as final fallback
   const title =
-    (metadata?.title as string) ||
-    (metadata?.["intitule-formation"] as string) ||
+    extractTitleFromMetadata(metadata) ||
     (await extractTitleFromMarkdown(content));
 
   return {
