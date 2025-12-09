@@ -1,13 +1,12 @@
-/** biome-ignore-all lint/suspicious/noConsole: It's fine for a script */
 import fs from "node:fs";
 import path from "node:path";
+import { logger } from "@playground/shared-types";
 import dotenv from "dotenv";
 import matter from "gray-matter";
 
 // Load env vars from root
 const envPath = path.resolve(__dirname, "../.env");
-console.log("Loading .env from:", envPath);
-console.log("File exists:", fs.existsSync(envPath));
+logger.info({ envPath, exists: fs.existsSync(envPath) }, "Loading .env");
 dotenv.config({ path: envPath });
 
 async function main() {
@@ -23,7 +22,7 @@ async function main() {
   } = require("../packages/supabase/src/index");
 
   const supabase = getSupabaseAdmin(url, key);
-  console.log("Seeding ingestion tables...");
+  logger.info("Seeding ingestion tables...");
 
   // Paths
   const rcoXmlPath = path.resolve(__dirname, "../packages/rco/samples/rco.xml");
@@ -39,11 +38,11 @@ async function main() {
 
   // 1. Load Data
   if (!fs.existsSync(rcoXmlPath)) {
-    console.error(`RCO XML not found at ${rcoXmlPath}`);
+    logger.error(`RCO XML not found at ${rcoXmlPath}`);
     return;
   }
   if (!fs.existsSync(rcoMdPath)) {
-    console.error(
+    logger.error(
       `RCO Markdown not found at ${rcoMdPath}. Please run 'pnpm generate:md' in packages/rco.`,
     );
     return;
@@ -71,7 +70,7 @@ async function main() {
   }
 
   // 3. Call Ingestion Function
-  console.log("Calling ingestRcoData...");
+  logger.info("Calling ingestRcoData...");
   const result = await ingestRcoData(supabase, {
     xmlContent: rcoXml,
     markdownContent: rcoMdContent,
@@ -81,20 +80,24 @@ async function main() {
   });
 
   if (result.status === "success") {
-    console.log(
-      `Ingestion successful! RCO Record ID: ${result.rcoRecordId}, Ingestion Record ID: ${result.ingestionRecordId}`,
+    logger.info(
+      {
+        rcoRecordId: result.rcoRecordId,
+        ingestionRecordId: result.ingestionRecordId,
+      },
+      "Ingestion successful",
     );
     if (result.reportResults) {
       // biome-ignore lint/suspicious/noExplicitAny: Script convenience
       result.reportResults.forEach((r: any) => {
-        console.log(`Report (${r.type}): ${r.status}`);
+        logger.info({ type: r.type, status: r.status }, "Report Status");
       });
     }
   } else {
-    console.error("Ingestion failed:", result.error);
+    logger.error(result.error, "Ingestion failed");
   }
 
-  console.log("Done.");
+  logger.info("Done.");
 }
 
-main().catch(console.error);
+main().catch((err) => logger.error(err, "Unhandled error"));

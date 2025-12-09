@@ -1,5 +1,6 @@
-#!/usr/bin/env node
-/** biome-ignore-all lint/suspicious/noConsole: Fine for test scripts */
+import fs from "node:fs";
+import path from "node:path";
+import { logger } from "@playground/shared-types";
 
 /**
  * Validate Documentation Structure
@@ -15,8 +16,7 @@
  * - .specify/** (all subdirectories)
  */
 
-const fs = require("node:fs");
-const path = require("node:path");
+// Locations are defined below
 
 const ALLOWED_PATTERNS = [
   "AGENTS.md",
@@ -41,7 +41,7 @@ const IGNORED_DIRS = [
   ".git",
 ];
 
-function isAllowed(filePath) {
+function isAllowed(filePath: string) {
   const relativePath = path.relative(process.cwd(), filePath);
 
   // Check exact matches
@@ -62,7 +62,7 @@ function isAllowed(filePath) {
   return false;
 }
 
-function findMdFiles(dir, files = []) {
+function findMdFiles(dir: string, files: string[] = []) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
 
   for (const entry of entries) {
@@ -89,26 +89,23 @@ function main() {
   const rogueFiles = mdFiles.filter((file) => !isAllowed(file));
 
   if (rogueFiles.length === 0) {
-    console.log("✅ No rogue .md files found!");
+    logger.info("✅ No rogue .md files found!");
     process.exit(0);
   }
 
-  console.error("❌ Rogue .md files detected (not in allowed locations):");
-  console.error("");
+  logger.error("❌ Rogue .md files detected (not in allowed locations):");
 
   rogueFiles.forEach((file) => {
     const relativePath = path.relative(process.cwd(), file);
-    console.error(`  ❌ ${relativePath}`);
+    logger.error(`  ❌ ${relativePath}`);
   });
 
-  console.error("");
-  console.error("Allowed locations:");
+  logger.error("Allowed locations:");
   ALLOWED_PATTERNS.forEach((pattern) => {
-    console.error(`  ✅ ${pattern}`);
+    logger.error(`  ✅ ${pattern}`);
   });
 
-  console.error("");
-  console.error("See DOCUMENTATION_GUIDELINES.md for more information.");
+  logger.error("See DOCUMENTATION_GUIDELINES.md for more information.");
 
   process.exit(1);
 }

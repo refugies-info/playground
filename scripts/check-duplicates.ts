@@ -1,7 +1,7 @@
-/** biome-ignore-all lint/suspicious/noConsole: It's fine for a script */
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseLheoXml } from "@playground/rco";
+import { logger } from "@playground/shared-types";
 import {
   checkDuplicates,
   createLettaClient,
@@ -10,18 +10,19 @@ import {
 async function main() {
   const xmlPath = path.resolve(__dirname, "../packages/rco/samples/rco.xml");
 
-  console.log("Reading XML file:", xmlPath);
+  logger.info({ xmlPath }, "Reading XML file");
   const xmlContent = fs.readFileSync(xmlPath, "utf-8");
 
-  console.log("Validating LHEO XML...");
+  logger.info("Validating LHEO XML...");
   await parseLheoXml(xmlContent); // Validate XML structure
 
-  console.log("Initializing Letta client...");
+  logger.info("Initializing Letta client...");
   const client = createLettaClient();
 
-  console.log("Calling checkDuplicates agent...");
+  logger.info("Calling checkDuplicates agent...");
   try {
-    const markdown = await checkDuplicates(client, xmlContent);
+    const contentFlowId = "test-flow-id";
+    const markdown = await checkDuplicates(client, xmlContent, contentFlowId);
 
     // Write output to file
     const outputDir = path.resolve(__dirname, "../packages/agents/output");
@@ -31,12 +32,9 @@ async function main() {
 
     const outputPath = path.join(outputDir, "rco-duplicates.md");
     fs.writeFileSync(outputPath, markdown, "utf-8");
-    console.log("Output written to:", outputPath);
+    logger.info({ outputPath }, "Output written to file");
   } catch (error) {
-    console.error(
-      "Error calling checkDuplicates:",
-      error instanceof Error ? error.message : String(error),
-    );
+    logger.error(error, "Error calling checkDuplicates");
   }
 }
 

@@ -13,6 +13,7 @@
     "gen:types": "supabase gen types typescript --local --schema public,storage,graphql_public > src/types.ts"
   },
   "dependencies": {
+    "@playground/shared-types": "workspace:*",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "2.84.0"
   },

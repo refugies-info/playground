@@ -1,4 +1,5 @@
 import { parseLheoXml } from "@playground/rco";
+import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin, insertRcoRecord } from "@playground/supabase";
 import { processXmlWorkflow } from "@playground/workflows";
 import { NextResponse } from "next/server";
@@ -62,8 +63,8 @@ export async function POST(request: Request) {
 
     if (linkError) {
       // Non-blocking error, but should be logged.
-      // biome-ignore lint/suspicious/noConsole: Log error
-      console.error("Failed to link workflow:", linkError);
+
+      logger.error(linkError, "Failed to link workflow");
     }
 
     return NextResponse.json({
@@ -73,8 +74,7 @@ export async function POST(request: Request) {
       rcoRecordId,
     });
   } catch (error) {
-    // biome-ignore lint/suspicious/noConsole: Log error
-    console.error("Workflow start error:", error);
+    logger.error(error, "Workflow start error");
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

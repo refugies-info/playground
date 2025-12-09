@@ -1,3 +1,4 @@
+import { logger } from "@playground/shared-types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
@@ -64,8 +65,7 @@ export async function insertRcoRecord(
     action.attributes?.datemaj,
   ).toISOString();
 
-  // biome-ignore lint/suspicious/noConsole: Log ingestion progress
-  console.log(
+  logger.info(
     `Inserting rco_record for training_offer_id: ${trainingOfferId}, training_id: ${trainingActionId}`,
   );
 
@@ -84,8 +84,7 @@ export async function insertRcoRecord(
     .single();
 
   if (rcoError) {
-    // biome-ignore lint/suspicious/noConsole: Log error
-    console.error("Error inserting rco_record:", rcoError);
+    logger.error(rcoError, "Error inserting rco_record");
     return {
       rcoRecordId: "",
       contentFlowId: "",
@@ -102,7 +101,7 @@ export async function insertRcoRecord(
     .single();
 
   if (flowError || !contentFlow) {
-    console.error("Error fetching content flow after retries:", flowError);
+    logger.error(flowError, "Error fetching content flow after retries");
     return {
       rcoRecordId: rcoRecord.id,
       contentFlowId: "",
@@ -153,8 +152,7 @@ export async function ingestProcessedData(
     // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
     reportData: { markdown: string; metadata: any },
   ) => {
-    // biome-ignore lint/suspicious/noConsole: Log progress
-    console.log(`Inserting ${type} report...`);
+    logger.info(`Inserting ${type} report...`);
     const { data: report, error: reportError } = await supabase
       .from("letta_reports")
       .insert({
@@ -167,8 +165,7 @@ export async function ingestProcessedData(
       .single();
 
     if (reportError) {
-      // biome-ignore lint/suspicious/noConsole: Log error
-      console.error(`Error inserting ${type} report:`, reportError);
+      logger.error(reportError, `Error inserting ${type} report`);
       reportResults.push({ type, status: "error", error: reportError });
       return null;
     }
@@ -185,8 +182,8 @@ export async function ingestProcessedData(
   }
 
   // 3. Insert Ingestion Record
-  // biome-ignore lint/suspicious/noConsole: Log progress
-  console.log("Inserting ingestion_record...");
+
+  logger.info("Inserting ingestion_record...");
   const { data: ingestionRecord, error: ingestionError } = await supabase
     .from("ingestion_records")
     .insert({
@@ -200,8 +197,7 @@ export async function ingestProcessedData(
     .single();
 
   if (ingestionError) {
-    // biome-ignore lint/suspicious/noConsole: Log error
-    console.error("Error inserting ingestion_record:", ingestionError);
+    logger.error(ingestionError, "Error inserting ingestion_record");
     return {
       rcoRecordId,
       ingestionRecordId: "", // Failed
@@ -215,8 +211,7 @@ export async function ingestProcessedData(
   let status = "unknown";
   const complianceVal = complianceReport?.metadata?.compliant;
 
-  // biome-ignore lint/suspicious/noConsole: Log metadata for debugging
-  console.log(
+  logger.info(
     "Compliance Metadata Value:",
     complianceVal,
     "Type:",
@@ -229,16 +224,14 @@ export async function ingestProcessedData(
     status = "non_compliant";
   }
 
-  // biome-ignore lint/suspicious/noConsole: Log progress
-  console.log(`Updating content_flow status to: ${status}`);
+  logger.info(`Updating content_flow status to: ${status}`);
   const { error: statusError } = await supabase
     .from("content_flows")
     .update({ status })
     .eq("rco_record_id", rcoRecordId);
 
   if (statusError) {
-    // biome-ignore lint/suspicious/noConsole: Log error
-    console.error("Error updating content_flow status:", statusError);
+    logger.error(statusError, "Error updating content_flow status");
   }
 
   return {

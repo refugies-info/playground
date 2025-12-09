@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { logger } from "@playground/shared-types";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -31,8 +32,7 @@ export async function GET(
       throw err;
     }
   } catch (error) {
-    // biome-ignore lint/suspicious/noConsole: Log error
-    console.error("Error fetching workflow run:", error);
+    logger.error(error, "Error fetching workflow run");
     return NextResponse.json(
       { error: "Failed to fetch workflow run" },
       { status: 500 },

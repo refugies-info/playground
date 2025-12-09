@@ -1,5 +1,7 @@
 "use client";
 
+import { logger } from "@playground/shared-types";
+
 import { useState } from "react";
 
 export default function WorkflowPage() {
@@ -98,8 +100,7 @@ export default function WorkflowPage() {
         }
       }
     } catch (err) {
-      // biome-ignore lint/suspicious/noConsole: Log error
-      console.error("Error refreshing status:", err);
+      logger.error(err, "Error refreshing status");
       // Don't set error state here to avoid clearing the workflow ID view
     }
   };

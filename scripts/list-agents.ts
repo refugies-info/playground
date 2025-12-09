@@ -1,18 +1,18 @@
-/** biome-ignore-all lint/suspicious/noConsole: It's fine for a script */
+import { logger } from "@playground/shared-types";
 import { createLettaClient, listAgents } from "../packages/agents/src/index";
 
 async function main() {
-  console.log("Initializing Letta client...");
+  logger.info("Initializing Letta client...");
   const client = createLettaClient();
 
   try {
-    console.log("Listing agents...");
+    logger.info("Listing agents...");
     const agents = await listAgents(client);
-    console.log("Agents:", agents);
+    logger.info({ agents }, "Agents list");
   } catch (error) {
-    console.error(
-      "Error listing agents (expected if server is not running):",
-      error instanceof Error ? error.message : String(error),
+    logger.error(
+      error,
+      "Error listing agents (expected if server is not running)",
     );
   }
 }
