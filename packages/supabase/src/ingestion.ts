@@ -95,7 +95,7 @@ export async function insertRcoRecord(
   // 2. Fetch Content Flow ID (created by trigger)
   // The trigger `on_new_rco_record` is synchronous, so the content_flow should exist immediately.
   const { data: contentFlow, error: flowError } = await supabase
-    .from("content_flows")
+    .from("workflows")
     .select("id")
     .eq("rco_record_id", rcoRecord.id)
     .single();
@@ -226,7 +226,7 @@ export async function ingestProcessedData(
 
   logger.info(`Updating content_flow status to: ${status}`);
   const { error: statusError } = await supabase
-    .from("content_flows")
+    .from("workflows")
     .update({ status })
     .eq("rco_record_id", rcoRecordId);
 

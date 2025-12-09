@@ -1,19 +1,4 @@
 
-  create table "public"."content_flows" (
-    "id" uuid not null default gen_random_uuid(),
-    "created_at" timestamp with time zone not null default now(),
-    "updated_at" timestamp with time zone not null default now(),
-    "rco_record_id" uuid not null,
-    "ingestion_record_id" uuid,
-    "editorial_record_id" uuid,
-    "progress" text not null,
-    "status" text not null
-      );
-
-
-alter table "public"."content_flows" enable row level security;
-
-
   create table "public"."editorial_records" (
     "id" uuid not null default gen_random_uuid(),
     "created_at" timestamp with time zone not null default now(),
@@ -75,16 +60,21 @@ alter table "public"."letta_reports" enable row level security;
 alter table "public"."rco_records" enable row level security;
 
 
-  create table "public"."vercel_workflows" (
+  create table "public"."workflows" (
     "id" uuid not null default gen_random_uuid(),
     "created_at" timestamp with time zone not null default now(),
     "updated_at" timestamp with time zone not null default now(),
-    "content_flow_id" uuid not null,
-    "vercel_workflow_id" text
+    "rco_record_id" uuid not null,
+    "ingestion_record_id" uuid,
+    "editorial_record_id" uuid,
+    "progress" text not null,
+    "status" text not null,
+    "vercel_workflow_id" text,
+    "vercel_hook_url" text
       );
 
 
-alter table "public"."vercel_workflows" enable row level security;
+alter table "public"."workflows" enable row level security;
 
 CREATE INDEX editorial_records_metadata_path_ops_idx ON public.editorial_records USING gin (metadata jsonb_path_ops);
 
@@ -112,11 +102,7 @@ CREATE INDEX rco_records_updated_at_idx ON public.rco_records USING btree (updat
 
 CREATE UNIQUE INDEX reports_pkey ON public.letta_reports USING btree (id);
 
-CREATE UNIQUE INDEX status_pkey ON public.content_flows USING btree (id);
-
-CREATE UNIQUE INDEX workflows_workflow_id_key ON public.vercel_workflows USING btree (vercel_workflow_id);
-
-alter table "public"."content_flows" add constraint "status_pkey" PRIMARY KEY using index "status_pkey";
+CREATE UNIQUE INDEX status_pkey ON public.workflows USING btree (id);
 
 alter table "public"."editorial_records" add constraint "editorial_records_pkey" PRIMARY KEY using index "editorial_records_pkey";
 
@@ -126,17 +112,7 @@ alter table "public"."letta_reports" add constraint "reports_pkey" PRIMARY KEY u
 
 alter table "public"."rco_records" add constraint "rco_records_pkey" PRIMARY KEY using index "rco_records_pkey";
 
-alter table "public"."content_flows" add constraint "status_editorial_record_id_fkey" FOREIGN KEY (editorial_record_id) REFERENCES public.editorial_records(id) ON UPDATE CASCADE not valid;
-
-alter table "public"."content_flows" validate constraint "status_editorial_record_id_fkey";
-
-alter table "public"."content_flows" add constraint "status_ingestion_record_id_fkey" FOREIGN KEY (ingestion_record_id) REFERENCES public.ingestion_records(id) ON UPDATE CASCADE not valid;
-
-alter table "public"."content_flows" validate constraint "status_ingestion_record_id_fkey";
-
-alter table "public"."content_flows" add constraint "status_rco_record_id_fkey" FOREIGN KEY (rco_record_id) REFERENCES public.rco_records(id) ON UPDATE CASCADE not valid;
-
-alter table "public"."content_flows" validate constraint "status_rco_record_id_fkey";
+alter table "public"."workflows" add constraint "status_pkey" PRIMARY KEY using index "status_pkey";
 
 alter table "public"."editorial_records" add constraint "editorial_records_content_report_id_fkey" FOREIGN KEY (content_report_id) REFERENCES public.letta_reports(id) ON UPDATE CASCADE ON DELETE RESTRICT not valid;
 
@@ -166,53 +142,66 @@ alter table "public"."ingestion_records" add constraint "ingestion_records_rco_r
 
 alter table "public"."ingestion_records" validate constraint "ingestion_records_rco_record_id_fkey";
 
-alter table "public"."vercel_workflows" add constraint "workflows_pipeline_id_fkey" FOREIGN KEY (content_flow_id) REFERENCES public.content_flows(id) ON UPDATE CASCADE not valid;
+alter table "public"."workflows" add constraint "status_editorial_record_id_fkey" FOREIGN KEY (editorial_record_id) REFERENCES public.editorial_records(id) ON UPDATE CASCADE not valid;
 
-alter table "public"."vercel_workflows" validate constraint "workflows_pipeline_id_fkey";
+alter table "public"."workflows" validate constraint "status_editorial_record_id_fkey";
 
-alter table "public"."vercel_workflows" add constraint "workflows_workflow_id_key" UNIQUE using index "workflows_workflow_id_key";
+alter table "public"."workflows" add constraint "status_ingestion_record_id_fkey" FOREIGN KEY (ingestion_record_id) REFERENCES public.ingestion_records(id) ON UPDATE CASCADE not valid;
 
-grant delete on table "public"."content_flows" to "anon";
+alter table "public"."workflows" validate constraint "status_ingestion_record_id_fkey";
 
-grant insert on table "public"."content_flows" to "anon";
+alter table "public"."workflows" add constraint "status_rco_record_id_fkey" FOREIGN KEY (rco_record_id) REFERENCES public.rco_records(id) ON UPDATE CASCADE not valid;
 
-grant references on table "public"."content_flows" to "anon";
+alter table "public"."workflows" validate constraint "status_rco_record_id_fkey";
 
-grant select on table "public"."content_flows" to "anon";
+set check_function_bodies = off;
 
-grant trigger on table "public"."content_flows" to "anon";
+CREATE OR REPLACE FUNCTION public.handle_new_editorial_record()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  -- Update the content_flow linked to the Ingestion record
+  UPDATE public.workflows
+  SET
+    editorial_record_id = NEW.id,
+    progress = 'editorial'
+  WHERE ingestion_record_id = NEW.ingestion_record_id;
+  RETURN NEW;
+END;
+$function$
+;
 
-grant truncate on table "public"."content_flows" to "anon";
+CREATE OR REPLACE FUNCTION public.handle_new_ingestion_record()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  -- Update the content_flow linked to the RCO record
+  UPDATE public.workflows
+  SET
+    ingestion_record_id = NEW.id,
+    progress = 'ingestion'
+  WHERE rco_record_id = NEW.rco_record_id;
+  RETURN NEW;
+END;
+$function$
+;
 
-grant update on table "public"."content_flows" to "anon";
-
-grant delete on table "public"."content_flows" to "authenticated";
-
-grant insert on table "public"."content_flows" to "authenticated";
-
-grant references on table "public"."content_flows" to "authenticated";
-
-grant select on table "public"."content_flows" to "authenticated";
-
-grant trigger on table "public"."content_flows" to "authenticated";
-
-grant truncate on table "public"."content_flows" to "authenticated";
-
-grant update on table "public"."content_flows" to "authenticated";
-
-grant delete on table "public"."content_flows" to "service_role";
-
-grant insert on table "public"."content_flows" to "service_role";
-
-grant references on table "public"."content_flows" to "service_role";
-
-grant select on table "public"."content_flows" to "service_role";
-
-grant trigger on table "public"."content_flows" to "service_role";
-
-grant truncate on table "public"."content_flows" to "service_role";
-
-grant update on table "public"."content_flows" to "service_role";
+CREATE OR REPLACE FUNCTION public.handle_new_rco_record()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+  INSERT INTO public.workflows (rco_record_id, progress, status)
+  VALUES (NEW.id, 'rco', 'unknown');
+  RETURN NEW;
+END;
+$function$
+;
 
 grant delete on table "public"."editorial_records" to "anon";
 
@@ -382,46 +371,50 @@ grant truncate on table "public"."rco_records" to "service_role";
 
 grant update on table "public"."rco_records" to "service_role";
 
-grant delete on table "public"."vercel_workflows" to "anon";
+grant delete on table "public"."workflows" to "anon";
 
-grant insert on table "public"."vercel_workflows" to "anon";
+grant insert on table "public"."workflows" to "anon";
 
-grant references on table "public"."vercel_workflows" to "anon";
+grant references on table "public"."workflows" to "anon";
 
-grant select on table "public"."vercel_workflows" to "anon";
+grant select on table "public"."workflows" to "anon";
 
-grant trigger on table "public"."vercel_workflows" to "anon";
+grant trigger on table "public"."workflows" to "anon";
 
-grant truncate on table "public"."vercel_workflows" to "anon";
+grant truncate on table "public"."workflows" to "anon";
 
-grant update on table "public"."vercel_workflows" to "anon";
+grant update on table "public"."workflows" to "anon";
 
-grant delete on table "public"."vercel_workflows" to "authenticated";
+grant delete on table "public"."workflows" to "authenticated";
 
-grant insert on table "public"."vercel_workflows" to "authenticated";
+grant insert on table "public"."workflows" to "authenticated";
 
-grant references on table "public"."vercel_workflows" to "authenticated";
+grant references on table "public"."workflows" to "authenticated";
 
-grant select on table "public"."vercel_workflows" to "authenticated";
+grant select on table "public"."workflows" to "authenticated";
 
-grant trigger on table "public"."vercel_workflows" to "authenticated";
+grant trigger on table "public"."workflows" to "authenticated";
 
-grant truncate on table "public"."vercel_workflows" to "authenticated";
+grant truncate on table "public"."workflows" to "authenticated";
 
-grant update on table "public"."vercel_workflows" to "authenticated";
+grant update on table "public"."workflows" to "authenticated";
 
-grant delete on table "public"."vercel_workflows" to "service_role";
+grant delete on table "public"."workflows" to "service_role";
 
-grant insert on table "public"."vercel_workflows" to "service_role";
+grant insert on table "public"."workflows" to "service_role";
 
-grant references on table "public"."vercel_workflows" to "service_role";
+grant references on table "public"."workflows" to "service_role";
 
-grant select on table "public"."vercel_workflows" to "service_role";
+grant select on table "public"."workflows" to "service_role";
 
-grant trigger on table "public"."vercel_workflows" to "service_role";
+grant trigger on table "public"."workflows" to "service_role";
 
-grant truncate on table "public"."vercel_workflows" to "service_role";
+grant truncate on table "public"."workflows" to "service_role";
 
-grant update on table "public"."vercel_workflows" to "service_role";
+grant update on table "public"."workflows" to "service_role";
 
+CREATE TRIGGER on_new_editorial_record AFTER INSERT ON public.editorial_records FOR EACH ROW EXECUTE FUNCTION public.handle_new_editorial_record();
 
+CREATE TRIGGER on_new_ingestion_record AFTER INSERT ON public.ingestion_records FOR EACH ROW EXECUTE FUNCTION public.handle_new_ingestion_record();
+
+CREATE TRIGGER on_new_rco_record AFTER INSERT ON public.rco_records FOR EACH ROW EXECUTE FUNCTION public.handle_new_rco_record();

@@ -34,61 +34,6 @@ export type Database = {
   };
   public: {
     Tables: {
-      content_flows: {
-        Row: {
-          created_at: string;
-          editorial_record_id: string | null;
-          id: string;
-          ingestion_record_id: string | null;
-          progress: string;
-          rco_record_id: string;
-          status: string;
-          updated_at: string;
-        };
-        Insert: {
-          created_at?: string;
-          editorial_record_id?: string | null;
-          id?: string;
-          ingestion_record_id?: string | null;
-          progress: string;
-          rco_record_id: string;
-          status: string;
-          updated_at?: string;
-        };
-        Update: {
-          created_at?: string;
-          editorial_record_id?: string | null;
-          id?: string;
-          ingestion_record_id?: string | null;
-          progress?: string;
-          rco_record_id?: string;
-          status?: string;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "status_editorial_record_id_fkey";
-            columns: ["editorial_record_id"];
-            isOneToOne: false;
-            referencedRelation: "editorial_records";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "status_ingestion_record_id_fkey";
-            columns: ["ingestion_record_id"];
-            isOneToOne: false;
-            referencedRelation: "ingestion_records";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "status_rco_record_id_fkey";
-            columns: ["rco_record_id"];
-            isOneToOne: false;
-            referencedRelation: "rco_records";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       editorial_records: {
         Row: {
           content_report_id: string | null;
@@ -275,34 +220,63 @@ export type Database = {
         };
         Relationships: [];
       };
-      vercel_workflows: {
+      workflows: {
         Row: {
-          content_flow_id: string;
           created_at: string;
+          editorial_record_id: string | null;
           id: string;
+          ingestion_record_id: string | null;
+          progress: string;
+          rco_record_id: string;
+          status: string;
           updated_at: string;
+          vercel_hook_url: string | null;
           vercel_workflow_id: string | null;
         };
         Insert: {
-          content_flow_id: string;
           created_at?: string;
+          editorial_record_id?: string | null;
           id?: string;
+          ingestion_record_id?: string | null;
+          progress: string;
+          rco_record_id: string;
+          status: string;
           updated_at?: string;
+          vercel_hook_url?: string | null;
           vercel_workflow_id?: string | null;
         };
         Update: {
-          content_flow_id?: string;
           created_at?: string;
+          editorial_record_id?: string | null;
           id?: string;
+          ingestion_record_id?: string | null;
+          progress?: string;
+          rco_record_id?: string;
+          status?: string;
           updated_at?: string;
+          vercel_hook_url?: string | null;
           vercel_workflow_id?: string | null;
         };
         Relationships: [
           {
-            foreignKeyName: "workflows_pipeline_id_fkey";
-            columns: ["content_flow_id"];
+            foreignKeyName: "status_editorial_record_id_fkey";
+            columns: ["editorial_record_id"];
             isOneToOne: false;
-            referencedRelation: "content_flows";
+            referencedRelation: "editorial_records";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "status_ingestion_record_id_fkey";
+            columns: ["ingestion_record_id"];
+            isOneToOne: false;
+            referencedRelation: "ingestion_records";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "status_rco_record_id_fkey";
+            columns: ["rco_record_id"];
+            isOneToOne: false;
+            referencedRelation: "rco_records";
             referencedColumns: ["id"];
           },
         ];

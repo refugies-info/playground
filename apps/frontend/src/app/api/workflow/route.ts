@@ -55,11 +55,11 @@ export async function POST(request: Request) {
 
     // 5. Link Workflow to Content Flow
     const { error: linkError } = await supabase
-      .from("vercel_workflows")
-      .insert({
-        content_flow_id: contentFlowId,
+      .from("workflows")
+      .update({
         vercel_workflow_id: workflowId,
-      });
+      })
+      .eq("id", contentFlowId);
 
     if (linkError) {
       // Non-blocking error, but should be logged.
