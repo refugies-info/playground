@@ -1,5 +1,5 @@
 import type { Document } from "@playground/shared-types";
-import type { Database, Json } from "@playground/supabase";
+import type { Database } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 
@@ -21,6 +21,10 @@ type WorkflowWithRelations =
       Database["public"]["Tables"]["rco_records"]["Row"],
       "source_raw" | "metadata"
     >;
+    ingestion_records: Pick<
+      Database["public"]["Tables"]["ingestion_records"]["Row"],
+      "markdown" | "metadata"
+    > | null;
     editorial_records:
       | Pick<
           Database["public"]["Tables"]["editorial_records"]["Row"],
@@ -28,29 +32,6 @@ type WorkflowWithRelations =
         >[]
       | null;
   };
-
-// Helper to safely extract title from metadata Json
-function getTitleFromMetadata(metadata: Json | null): string | null {
-  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
-    return null;
-  }
-  const metaObj = metadata as Record<string, unknown>;
-  if (typeof metaObj.title === "string") {
-    return metaObj.title;
-  }
-  return null;
-}
-
-// Helper to safely extract RCO title
-function getRcoTitle(metadata: Json | null): string | null {
-  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
-    return null;
-  }
-  // We need to traverse: lheo.offres.formation[0]["intitule-formation"]
-  // biome-ignore lint/suspicious/noExplicitAny: Deep nested access on untyped JSON
-  const metaObj = metadata as any; // Using any for deep nested access on untyped JSON structure is pragmatic here
-  return metaObj?.lheo?.offres?.formation?.[0]?.["intitule-formation"] || null;
-}
 
 export async function getDocuments(params: GetDocumentsParams) {
   const {
@@ -76,6 +57,10 @@ export async function getDocuments(params: GetDocumentsParams) {
       updated_at,
       rco_records!inner (
         source_raw,
+        metadata
+      ),
+      ingestion_records (
+        markdown,
         metadata
       ),
       editorial_records (
@@ -135,30 +120,29 @@ export async function getDocuments(params: GetDocumentsParams) {
   // Map to Document type
   const documents: Document[] = rows.map((item) => {
     const rcoRecord = item.rco_records;
+    const ingestionRecord = item.ingestion_records;
     const editorialRecord =
       item.editorial_records && item.editorial_records.length > 0
         ? item.editorial_records[0]
         : null;
 
+    // Priority: editorial > ingestion > rco
     const metadata = (editorialRecord?.metadata ||
+      ingestionRecord?.metadata ||
       rcoRecord?.metadata ||
       {}) as Record<string, unknown>;
 
-    let title = "Untitled";
-    const editorialTitle = getTitleFromMetadata(
-      editorialRecord?.metadata || null,
-    );
+    // Priority: editorial > ingestion > empty
+    // We do not use rcoRecord.source_raw as per requirements
+    const content =
+      editorialRecord?.markdown || ingestionRecord?.markdown || "";
 
-    if (editorialTitle) {
-      title = editorialTitle;
-    } else {
-      const rcoTitle = getRcoTitle(rcoRecord?.metadata || null);
-      if (rcoTitle) {
-        title = rcoTitle;
-      }
-    }
-
-    const content = editorialRecord?.markdown || rcoRecord?.source_raw || "";
+    // Simple title extraction if available in metadata, otherwise "Untitled"
+    // The title logic uses the markdown content mainly now.
+    const title =
+      (metadata?.title as string) ||
+      (metadata?.["intitule-formation"] as string) ||
+      "Untitled";
 
     return {
       id: item.id,
@@ -196,6 +180,10 @@ export async function getDocumentById(id: string): Promise<Document | null> {
         source_raw,
         metadata
       ),
+      ingestion_records (
+        markdown,
+        metadata
+      ),
       editorial_records (
         markdown,
         metadata
@@ -213,30 +201,27 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const row = data as unknown as WorkflowWithRelations;
 
   const rcoRecord = row.rco_records;
+  const ingestionRecord = row.ingestion_records;
   const editorialRecord =
     row.editorial_records && row.editorial_records.length > 0
       ? row.editorial_records[0]
       : null;
 
+  // Priority: editorial > ingestion > rco
   const metadata = (editorialRecord?.metadata ||
+    ingestionRecord?.metadata ||
     rcoRecord?.metadata ||
     {}) as Record<string, unknown>;
 
-  let title = "Untitled";
-  const editorialTitle = getTitleFromMetadata(
-    editorialRecord?.metadata || null,
-  );
+  // Priority: editorial > ingestion > empty
+  // We do not use rcoRecord.source_raw as per requirements
+  const content = editorialRecord?.markdown || ingestionRecord?.markdown || "";
 
-  if (editorialTitle) {
-    title = editorialTitle;
-  } else {
-    const rcoTitle = getRcoTitle(rcoRecord?.metadata || null);
-    if (rcoTitle) {
-      title = rcoTitle;
-    }
-  }
-
-  const content = editorialRecord?.markdown || rcoRecord?.source_raw || "";
+  // Simple title extraction if available in metadata, otherwise "Untitled"
+  const title =
+    (metadata?.title as string) ||
+    (metadata?.["intitule-formation"] as string) ||
+    "Untitled";
 
   return {
     id: row.id,
