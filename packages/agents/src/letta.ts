@@ -21,7 +21,7 @@ export const getAgent = async (client: Letta, agentId: string) => {
 export const checkCompliance = async (
   client: Letta,
   xmlContent: string,
-  contentFlowId: string,
+  flowId: string,
 ): Promise<string> => {
   const templateId = process.env.COMPLIANCE_AGENT_TEMPLATE;
   if (!templateId) {
@@ -30,7 +30,7 @@ export const checkCompliance = async (
 
   // Create a new agent from the template
   const agentResponse = await client.templates.agents.create(templateId, {
-    agent_name: `compliance-check-${contentFlowId}`,
+    agent_name: `${templateId}-${flowId}`,
   });
   const agentId = agentResponse.agent_ids[0];
 
@@ -94,7 +94,7 @@ export const checkCompliance = async (
 export const checkDuplicates = async (
   client: Letta,
   xmlContent: string,
-  contentFlowId: string,
+  flowId: string,
 ): Promise<string> => {
   const templateId = process.env.DUPLICATES_AGENT_TEMPLATE;
   if (!templateId) {
@@ -103,7 +103,7 @@ export const checkDuplicates = async (
 
   // Create a new agent from the template
   const agentResponse = await client.templates.agents.create(templateId, {
-    agent_name: `duplicates-check-${contentFlowId}`,
+    agent_name: `${templateId}-${flowId}`,
   });
   const agentId = agentResponse.agent_ids[0];
 

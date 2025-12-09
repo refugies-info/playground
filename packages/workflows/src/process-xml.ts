@@ -71,17 +71,14 @@ export async function generateJsonStep(xmlContent: string) {
   return jsonPath;
 }
 
-export async function checkComplianceStep(
-  contentFlowId: string,
-  xmlContent: string,
-) {
+export async function checkComplianceStep(flowId: string, xmlContent: string) {
   "use step";
   const lettaClient = createLettaClient();
   try {
     const complianceReport = await checkCompliance(
       lettaClient,
       xmlContent,
-      contentFlowId,
+      flowId,
     );
     const outputDir = path.join(process.cwd(), "output");
     await fs.mkdir(outputDir, { recursive: true });
@@ -106,17 +103,14 @@ export async function checkComplianceStep(
   }
 }
 
-export async function checkDuplicatesStep(
-  contentFlowId: string,
-  xmlContent: string,
-) {
+export async function checkDuplicatesStep(flowId: string, xmlContent: string) {
   "use step";
   const lettaClient = createLettaClient();
   try {
     const duplicatesReport = await checkDuplicates(
       lettaClient,
       xmlContent,
-      contentFlowId,
+      flowId,
     );
     const outputDir = path.join(process.cwd(), "output");
     await fs.mkdir(outputDir, { recursive: true });
@@ -176,7 +170,7 @@ export async function ingestDataStep(
 
 // Save workflow hook token
 export async function saveWorkflowHookTokenStep(
-  contentFlowId: string,
+  flowId: string,
   hookToken: string,
 ) {
   "use step";
@@ -184,7 +178,7 @@ export async function saveWorkflowHookTokenStep(
   const { error } = await supabase
     .from("workflows")
     .update({ vercel_hook_token: hookToken })
-    .eq("id", contentFlowId);
+    .eq("id", flowId);
 
   if (error) {
     throw new Error(`Failed to save workflow hook token: ${error.message}`);
@@ -192,10 +186,7 @@ export async function saveWorkflowHookTokenStep(
 }
 
 // Define workflow
-export async function processXmlWorkflow(
-  contentFlowId: string,
-  rcoRecordId: string,
-) {
+export async function processXmlWorkflow(flowId: string, rcoRecordId: string) {
   "use workflow";
 
   const xmlContent = await fetchRcoXmlStep(rcoRecordId);
@@ -205,8 +196,8 @@ export async function processXmlWorkflow(
     await Promise.all([
       generateMarkdownStep(xmlContent),
       generateJsonStep(xmlContent),
-      checkComplianceStep(contentFlowId, xmlContent),
-      checkDuplicatesStep(contentFlowId, xmlContent),
+      checkComplianceStep(flowId, xmlContent),
+      checkDuplicatesStep(flowId, xmlContent),
     ]);
 
   // Ingest Step (run after generation)
@@ -218,7 +209,7 @@ export async function processXmlWorkflow(
   );
 
   const hook = createHook();
-  await saveWorkflowHookTokenStep(contentFlowId, hook.token);
+  await saveWorkflowHookTokenStep(flowId, hook.token);
   await hook;
 
   return {

@@ -60,7 +60,10 @@ export function EditorChat() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ content: document.content }),
+        body: JSON.stringify({
+          content: document.content,
+          flowId: document.id,
+        }),
         signal: abortControllerRef.current.signal,
       });
 

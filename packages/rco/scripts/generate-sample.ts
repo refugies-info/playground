@@ -1,5 +1,5 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: <explanation> */
-/** biome-ignore-all lint/suspicious/noConsole: <explanation> */
+/** biome-ignore-all lint/suspicious/noExplicitAny: XML parsing result is untyped by design */
+/** biome-ignore-all lint/suspicious/noConsole: CLI script needs console output */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

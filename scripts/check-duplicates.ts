@@ -21,8 +21,8 @@ async function main() {
 
   logger.info("Calling checkDuplicates agent...");
   try {
-    const contentFlowId = "test-flow-id";
-    const markdown = await checkDuplicates(client, xmlContent, contentFlowId);
+    const flowId = "test-flow-id";
+    const markdown = await checkDuplicates(client, xmlContent, flowId);
 
     // Write output to file
     const outputDir = path.resolve(__dirname, "../packages/agents/output");

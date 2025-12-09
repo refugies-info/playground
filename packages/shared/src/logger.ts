@@ -1,5 +1,6 @@
 import pino from "pino";
 
+// biome-ignore lint/suspicious/noExplicitAny: Check for window presence safely
 const isBrowser = typeof (globalThis as any).window !== "undefined";
 const isDev = process.env.NODE_ENV !== "production";
 
