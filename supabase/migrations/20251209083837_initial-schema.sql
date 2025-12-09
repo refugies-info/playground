@@ -163,7 +163,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_editorial_record()
 AS $function$
 BEGIN
   -- Update the content_flow linked to the Ingestion record
-  UPDATE public.content_flows
+  UPDATE public.workflows
   SET
     editorial_record_id = NEW.id,
     progress = 'editorial'
@@ -180,7 +180,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_ingestion_record()
 AS $function$
 BEGIN
   -- Update the content_flow linked to the RCO record
-  UPDATE public.content_flows
+  UPDATE public.workflows
   SET
     ingestion_record_id = NEW.id,
     progress = 'ingestion'
@@ -196,7 +196,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_rco_record()
  SECURITY DEFINER
 AS $function$
 BEGIN
-  INSERT INTO public.content_flows (rco_record_id, progress, status)
+  INSERT INTO public.workflows (rco_record_id, progress, status)
   VALUES (NEW.id, 'rco', 'unknown');
   RETURN NEW;
 END;
@@ -418,5 +418,3 @@ CREATE TRIGGER on_new_editorial_record AFTER INSERT ON public.editorial_records 
 CREATE TRIGGER on_new_ingestion_record AFTER INSERT ON public.ingestion_records FOR EACH ROW EXECUTE FUNCTION public.handle_new_ingestion_record();
 
 CREATE TRIGGER on_new_rco_record AFTER INSERT ON public.rco_records FOR EACH ROW EXECUTE FUNCTION public.handle_new_rco_record();
-
-
