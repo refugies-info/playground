@@ -239,8 +239,8 @@ export async function getDocuments(params: GetDocumentsParams) {
   const { data, error, count } = await query;
 
   if (error) {
-    // logger.error(error, "Error fetching documents"); // Logger not available here yet, using simple throw
-    throw new Error("Failed to fetch documents", { cause: error });
+    console.error("Error fetching documents from Supabase:", error); // Or use a proper logger
+    throw new Error(`Failed to fetch documents: ${error.message}`);
   }
 
   // Cast the data to our helper type since Supabase query builder types are complex with select strings
