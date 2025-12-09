@@ -67,8 +67,9 @@ async function extractTitleFromMarkdown(markdown: string): Promise<string> {
         }
       }
     }
-  } catch (_error) {
+  } catch (error) {
     // If parsing fails, continue to fallback
+    console.error("Failed to parse markdown for title extraction:", error);
   }
 
   return "Untitled";
