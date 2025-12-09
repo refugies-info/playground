@@ -166,8 +166,10 @@ export async function getDocuments(params: GetDocumentsParams) {
   const supabase = createSupabaseServerClient(cookieStore);
 
   // Base query on workflows table
-  let query = supabase.from("workflows").select(
-    `
+  let query = supabase
+    .from("workflows")
+    .select(
+      `
       id,
       status,
       progress,
@@ -185,8 +187,12 @@ export async function getDocuments(params: GetDocumentsParams) {
         metadata
       )
     `,
-    { count: "exact" },
-  );
+      { count: "exact" },
+    )
+    .order("created_at", {
+      ascending: false,
+      referencedTable: "editorial_records",
+    });
 
   // Apply filters
   if (status) {
@@ -317,6 +323,10 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     `,
     )
     .eq("id", id)
+    .order("created_at", {
+      ascending: false,
+      referencedTable: "editorial_records",
+    })
     .single();
 
   if (error) {
