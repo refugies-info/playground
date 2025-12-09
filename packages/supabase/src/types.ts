@@ -230,7 +230,7 @@ export type Database = {
           rco_record_id: string;
           status: string;
           updated_at: string;
-          vercel_hook_url: string | null;
+          vercel_hook_token: string | null;
           vercel_workflow_id: string | null;
         };
         Insert: {
@@ -242,7 +242,7 @@ export type Database = {
           rco_record_id: string;
           status: string;
           updated_at?: string;
-          vercel_hook_url?: string | null;
+          vercel_hook_token?: string | null;
           vercel_workflow_id?: string | null;
         };
         Update: {
@@ -254,7 +254,7 @@ export type Database = {
           rco_record_id?: string;
           status?: string;
           updated_at?: string;
-          vercel_hook_url?: string | null;
+          vercel_hook_token?: string | null;
           vercel_workflow_id?: string | null;
         };
         Relationships: [
