@@ -15,8 +15,8 @@ import matter from "gray-matter";
 import { createHook } from "workflow";
 
 // Define steps
-export async function fetchRcoXmlStep(rcoRecordId: string) {
-  "use step";
+
+function getSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -24,7 +24,12 @@ export async function fetchRcoXmlStep(rcoRecordId: string) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY is not defined");
   }
 
-  const supabase = getSupabaseAdmin(url, key);
+  return getSupabaseAdmin(url, key);
+}
+
+export async function fetchRcoXmlStep(rcoRecordId: string) {
+  "use step";
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("rco_records")
     .select("source_raw")
@@ -136,15 +141,7 @@ export async function ingestDataStep(
   "use step";
 
   // Initialize Supabase
-  // We assume env vars are present (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!key) {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not defined");
-  }
-
-  const supabase = getSupabaseAdmin(url, key);
+  const supabase = getSupabaseClient();
 
   // Parse Metadata from markdown content
   const { data: metadata } = matter(markdownResult.content);
@@ -183,14 +180,7 @@ export async function saveWorkflowHookTokenStep(
   hookToken: string,
 ) {
   "use step";
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!key) {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not defined");
-  }
-
-  const supabase = getSupabaseAdmin(url, key);
+  const supabase = getSupabaseClient();
   const { error } = await supabase
     .from("workflows")
     .update({ vercel_hook_token: hookToken })
