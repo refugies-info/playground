@@ -31,16 +31,7 @@ export async function saveDocument(
     }
 
     // Check if we need an ingestion_record_id (required for creating new editorial_records)
-    if (!workflow.ingestion_record_id && !workflow.editorial_record_id) {
-      return {
-        success: false,
-        error: "No ingestion record found for this workflow",
-      };
-    }
-
-    const editorialRecordId = workflow.editorial_record_id;
-
-    if (editorialRecordId) {
+    if (workflow.editorial_record_id) {
       // Update existing editorial_record
       const { error: updateError } = await supabase
         .from("editorial_records")
@@ -48,7 +39,7 @@ export async function saveDocument(
           markdown,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", editorialRecordId);
+        .eq("id", workflow.editorial_record_id);
 
       if (updateError) {
         logger.error(updateError, "Error updating editorial_record");
