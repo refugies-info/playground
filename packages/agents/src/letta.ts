@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { Letta } from "@letta-ai/letta-client";
 import type { AssistantMessage } from "@letta-ai/letta-client/resources/agents.js";
 import matter from "gray-matter";
