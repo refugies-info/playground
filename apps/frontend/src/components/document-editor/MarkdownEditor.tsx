@@ -133,8 +133,12 @@ export function MarkdownEditor() {
           ...document,
           content: markdown,
         });
-      } catch {
-        // Silently fail - don't disrupt editing experience
+      } catch (error) {
+        // Silently fail - don't disrupt editing experience, but log for debugging
+        console.error(
+          "Error syncing editor changes to document context:",
+          error,
+        );
       }
     };
 
@@ -168,13 +172,12 @@ export function MarkdownEditor() {
         // Also update raw markdown state
         const markdown = await editor.blocksToMarkdownLossy(editor.document);
         setRawMarkdown(markdown);
-      } catch {
-        // Silently fail
+      } catch (error) {
+        // Silently fail - don't disrupt editing experience, but log for debugging
+        console.error("Error loading content into editor:", error);
       } finally {
-        // Re-enable onChange after a short delay to ensure load is complete
-        setTimeout(() => {
-          isLoadingContent.current = false;
-        }, 100);
+        // Re-enable onChange immediately after load is complete
+        isLoadingContent.current = false;
       }
     }
 
@@ -214,12 +217,11 @@ export function MarkdownEditor() {
       try {
         const blocks = await editor.tryParseMarkdownToBlocks(newMarkdown);
         editor.replaceBlocks(editor.document, blocks);
-      } catch {
-        // Silently fail
+      } catch (error) {
+        // Silently fail - don't disrupt editing experience, but log for debugging
+        console.error("Error updating editor blocks from markdown:", error);
       } finally {
-        setTimeout(() => {
-          isLoadingContent.current = false;
-        }, 100);
+        isLoadingContent.current = false;
       }
     }
   };
