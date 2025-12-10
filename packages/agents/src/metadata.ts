@@ -6,9 +6,10 @@ export const convertMetadata = async (
   frontmatter: string,
   flowId: string,
 ): Promise<string> => {
-  const templateId =
-    process.env.CONVERT_METADATA_AGENT_TEMPLATE ||
-    "playground/convert-metadata:latest";
+  const templateId = process.env.CONVERT_METADATA_AGENT_TEMPLATE;
+  if (!templateId) {
+    throw new Error("CONVERT_METADATA_AGENT_TEMPLATE is not defined");
+  }
 
   const { content } = await runAgentOneShot(
     client,
