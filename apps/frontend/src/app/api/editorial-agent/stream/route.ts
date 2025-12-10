@@ -1,4 +1,4 @@
-import { createLettaClient, editorialAgentStream } from "@playground/agents";
+import { createLettaClient, simplifyContent } from "@playground/agents";
 import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       try {
         const client = createLettaClient();
 
-        for await (const chunk of editorialAgentStream(
+        for await (const chunk of simplifyContent(
           client,
           content,
           instructions,

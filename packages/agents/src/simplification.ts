@@ -1,7 +1,7 @@
 import type { Letta } from "@letta-ai/letta-client";
 import type { ReasoningStep } from "./types";
 
-export const editorialAgentStream = async function* (
+export const simplifyContent = async function* (
   client: Letta,
   content: string,
   instructions?: string,
