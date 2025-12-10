@@ -38,7 +38,7 @@ export async function saveDocument(
       };
     }
 
-    let editorialRecordId = workflow.editorial_record_id;
+    const editorialRecordId = workflow.editorial_record_id;
 
     if (editorialRecordId) {
       // Update existing editorial_record
@@ -63,40 +63,16 @@ export async function saveDocument(
         };
       }
 
-      const { data: newRecord, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from("editorial_records")
         .insert({
           ingestion_record_id: workflow.ingestion_record_id,
           markdown,
-        })
-        .select("id")
-        .single();
+        });
 
-      if (insertError || !newRecord) {
+      if (insertError) {
         logger.error(insertError, "Error creating editorial_record");
         return { success: false, error: "Failed to create editorial record" };
-      }
-
-      editorialRecordId = newRecord.id;
-
-      // Update workflow to link the new editorial_record
-      const { error: workflowUpdateError } = await supabase
-        .from("workflows")
-        .update({
-          editorial_record_id: editorialRecordId,
-        })
-        .eq("id", workflowId);
-
-      if (workflowUpdateError) {
-        logger.error(
-          workflowUpdateError,
-          "Error linking editorial_record to workflow",
-        );
-        // Note: editorial_record was created but not linked - this is a partial failure
-        return {
-          success: false,
-          error: "Failed to link editorial record to workflow",
-        };
       }
     }
 
