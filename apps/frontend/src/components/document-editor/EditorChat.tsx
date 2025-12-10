@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReasoningStep } from "@playground/agents";
 import { cn } from "@playground/ui";
 import { Button } from "@playground/ui/primitives";
 import {
@@ -13,13 +14,6 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDocument } from "./DocumentContext";
-
-interface ReasoningStep {
-  id?: string;
-  timestamp: string;
-  message: string;
-  type: "thinking" | "function_call" | "response";
-}
 
 export function EditorChat() {
   const {
