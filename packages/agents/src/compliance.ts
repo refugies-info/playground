@@ -22,7 +22,10 @@ export const checkCompliance = async (
   // Parse existing frontmatter and enhance with Letta metadata
   const parsed = matter(content);
 
-  const lettaMetadata: Record<string, unknown> = { agentId };
+  const lettaMetadata: Record<string, unknown> = {
+    agent_id: agentId,
+    processed_at: new Date().toISOString(),
+  };
 
   // Extract usage stats from response if available
   if (usage) {
@@ -31,11 +34,6 @@ export const checkCompliance = async (
       lettaMetadata.completion_tokens = usage.completion_tokens;
     if (usage.total_tokens) lettaMetadata.total_tokens = usage.total_tokens;
   }
-
-  // Add agent ID to metadata
-  lettaMetadata.agent_id = agentId;
-  // Add timestamp
-  lettaMetadata.processed_at = new Date().toISOString();
 
   // Merge Letta metadata into frontmatter
   const enhancedData = {
