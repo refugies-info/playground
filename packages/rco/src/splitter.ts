@@ -66,8 +66,11 @@ export const splitLheoXmlIntoActions = async (
       newDoc.lheo.offres.formation = [];
 
       // 3. Clone formation but set action to just this one
-      const singleActionFormation = { ...formation };
-      singleActionFormation.action = [action];
+      // We use JSON parse/stringify to ensure a deep copy, preventing shared references
+      // for nested objects like domaine-formation
+      const singleActionFormation = JSON.parse(
+        JSON.stringify({ ...formation, action: [action] }),
+      );
 
       // 4. Add to newDoc
       newDoc.lheo.offres.formation.push(singleActionFormation);

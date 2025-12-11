@@ -1,5 +1,5 @@
-import fs from "node:fs/promises";
-import path from "node:path";
+// import fs from "node:fs/promises";
+// import path from "node:path";
 import {
   checkCompliance,
   checkDuplicates,
@@ -52,35 +52,22 @@ export async function parseXmlStep(xmlContent: string) {
   return xmlContent;
 }
 
-export async function generateMarkdownStep(doc: LheoDocument, index: number) {
+export async function generateMarkdownStep(doc: LheoDocument) {
   "use step";
   // Convert JSON to YAML for frontmatter
   const yaml = await import("@playground/rco").then((m) => m.jsonToYaml(doc));
   const markdown = lheoJsonToMarkdownWithFrontmatter(doc, yaml);
 
-  const outputDir = path.join(process.cwd(), "output");
-  await fs.mkdir(outputDir, { recursive: true });
-  // Use index to distinguish files if needed, but for ingestion we mostly care about the content return.
-  // We can save debugging files with index.
-  const mdPath = path.join(outputDir, `rco_${index}.md`);
-  await fs.writeFile(mdPath, markdown);
-  return { path: mdPath, content: markdown };
+  // Return content directly for memory-based processing
+  return { content: markdown };
 }
 
-export async function generateJsonStep(doc: LheoDocument, index: number) {
+export async function generateJsonStep(doc: LheoDocument) {
   "use step";
-  const outputDir = path.join(process.cwd(), "output");
-  await fs.mkdir(outputDir, { recursive: true });
-  const jsonPath = path.join(outputDir, `rco_${index}.json`);
-  await fs.writeFile(jsonPath, JSON.stringify(doc, null, 2));
-  return jsonPath;
+  return { content: doc };
 }
 
-export async function checkComplianceStep(
-  flowId: string,
-  content: string,
-  index: number,
-) {
+export async function checkComplianceStep(flowId: string, content: string) {
   "use step";
   const lettaClient = createLettaClient();
   try {
@@ -89,22 +76,14 @@ export async function checkComplianceStep(
       content,
       flowId,
     );
-    const outputDir = path.join(process.cwd(), "output");
-    await fs.mkdir(outputDir, { recursive: true });
-    const compliancePath = path.join(outputDir, `rco_compliance_${index}.md`);
-    await fs.writeFile(compliancePath, complianceReport);
-    return { path: compliancePath, content: complianceReport };
+    return { content: complianceReport };
   } catch (error) {
     logger.error(error, "Error generating compliance report");
     return { error: error instanceof Error ? error.message : String(error) };
   }
 }
 
-export async function checkDuplicatesStep(
-  flowId: string,
-  content: string,
-  index: number,
-) {
+export async function checkDuplicatesStep(flowId: string, content: string) {
   "use step";
   const lettaClient = createLettaClient();
   try {
@@ -113,11 +92,7 @@ export async function checkDuplicatesStep(
       content,
       flowId,
     );
-    const outputDir = path.join(process.cwd(), "output");
-    await fs.mkdir(outputDir, { recursive: true });
-    const duplicatesPath = path.join(outputDir, `rco_duplicates_${index}.md`);
-    await fs.writeFile(duplicatesPath, duplicatesReport);
-    return { path: duplicatesPath, content: duplicatesReport };
+    return { content: duplicatesReport };
   } catch (error) {
     logger.error(error, "Error generating duplicates report");
     return { error: error instanceof Error ? error.message : String(error) };
@@ -126,7 +101,7 @@ export async function checkDuplicatesStep(
 
 export async function ingestDataStep(
   rcoRecordId: string,
-  markdownResult: { path: string; content: string },
+  markdownResult: { content: string },
   // jsonResult: any, // We can use the json output for metadata if structurally compatible,
   // but `seed-ingestion` used `matter(markdown)`.
   // `matter` is robust.
@@ -206,13 +181,13 @@ export async function processXmlWorkflow(flowId: string, rcoRecordId: string) {
     // We can generate MD first, then check compliance on MD.
 
     // Step 1: Generate Content
-    const mdResult = await generateMarkdownStep(actionDoc, i);
-    const jsonPath = await generateJsonStep(actionDoc, i);
+    const mdResult = await generateMarkdownStep(actionDoc);
+    const jsonResult = await generateJsonStep(actionDoc);
 
     // Step 2: Checks (dependent on MD content)
     const [complianceResult, duplicatesResult] = await Promise.all([
-      checkComplianceStep(flowId, mdResult.content, i),
-      checkDuplicatesStep(flowId, mdResult.content, i),
+      checkComplianceStep(flowId, mdResult.content),
+      checkDuplicatesStep(flowId, mdResult.content),
     ]);
 
     // Step 3: Ingest
@@ -226,10 +201,13 @@ export async function processXmlWorkflow(flowId: string, rcoRecordId: string) {
     results.push({
       index: i,
       files: {
-        "rco.md": mdResult.path,
-        "rco.json": jsonPath,
-        "compliance.md": complianceResult.path,
-        "duplicates.md": duplicatesResult.path,
+        // Files are no longer generated on disk
+      },
+      content: {
+        "rco.md": mdResult.content,
+        "rco.json": jsonResult,
+        "compliance.md": complianceResult.content,
+        "duplicates.md": duplicatesResult.content,
       },
       ingestion: ingestionResult,
     });
