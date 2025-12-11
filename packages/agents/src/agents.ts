@@ -39,9 +39,12 @@ export const runAgentOneShot = async (
   });
 
   const messages = response.messages;
-  const lastMessage = messages.findLast(
-    ({ message_type }) => message_type === "assistant_message",
-  ) as AssistantMessage;
+  const lastMessage = [...messages]
+    .reverse()
+    .find(
+      (msg) =>
+        (msg as { message_type?: string }).message_type === "assistant_message",
+    ) as AssistantMessage;
 
   if (!lastMessage) {
     throw new Error("No message with content found in response");

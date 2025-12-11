@@ -4,7 +4,7 @@ import { runAgentOneShot } from "./agents";
 
 export const checkDuplicates = async (
   client: Letta,
-  xmlContent: string,
+  content: string,
   flowId: string,
 ): Promise<string> => {
   const templateId = process.env.DUPLICATES_AGENT_TEMPLATE;
@@ -12,15 +12,14 @@ export const checkDuplicates = async (
     throw new Error("DUPLICATES_AGENT_TEMPLATE is not defined");
   }
 
-  const { content, agentId, usage } = await runAgentOneShot(
-    client,
-    templateId,
-    flowId,
-    xmlContent,
-  );
+  const {
+    content: agentResponse,
+    agentId,
+    usage,
+  } = await runAgentOneShot(client, templateId, flowId, content);
 
   // Parse existing frontmatter and enhance with Letta metadata
-  const parsed = matter(content);
+  const parsed = matter(agentResponse);
 
   const lettaMetadata: Record<string, unknown> = {
     agent_id: agentId,
