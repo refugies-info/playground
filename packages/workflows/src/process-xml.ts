@@ -13,8 +13,6 @@ import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin, ingestProcessedData } from "@playground/supabase";
 import matter from "gray-matter";
 
-// import { createHook } from "workflow";
-
 // Define steps
 
 function getSupabaseClient() {
@@ -208,10 +206,6 @@ export async function processXmlWorkflow(flowId: string, rcoRecordId: string) {
     complianceResult,
     duplicatesResult,
   );
-
-  // const hook = createHook();
-  // await saveWorkflowHookTokenStep(flowId, hook.token);
-  // await hook;
 
   return {
     files: {
