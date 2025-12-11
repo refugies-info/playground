@@ -40,7 +40,7 @@ export const runAgentOneShot = async (
 
   const messages = response.messages;
   const lastMessage = messages.findLast(
-    (msg: any) => msg.message_type === "assistant_message",
+    (msg) => msg.message_type === "assistant_message",
   ) as AssistantMessage;
 
   if (!lastMessage) {
