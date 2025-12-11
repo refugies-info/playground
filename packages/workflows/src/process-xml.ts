@@ -168,50 +168,38 @@ export async function processXmlWorkflow(flowId: string, rcoRecordId: string) {
   const xmlContent = await fetchRcoXmlStep(rcoRecordId);
   const actionDocs = await splitLheoXmlIntoActions(xmlContent);
 
-  const results = [];
+  const results = await Promise.all(
+    actionDocs.map(async (actionDoc, i) => {
+      // Step 1: Generate Content
+      const mdResult = await generateMarkdownStep(actionDoc);
+      const jsonResult = await generateJsonStep(actionDoc);
 
-  for (let i = 0; i < actionDocs.length; i++) {
-    const actionDoc = actionDocs[i];
+      // Step 2: Checks (dependent on MD content)
+      const [complianceResult, duplicatesResult] = await Promise.all([
+        checkComplianceStep(flowId, mdResult.content),
+        checkDuplicatesStep(flowId, mdResult.content),
+      ]);
 
-    // Parallel execution for files generation AND compliance/duplicates for this specific action
-    // We need to generate markdown first to pass to checking steps?
-    // Actually, `generateMarkdownStep` returns the content.
-    // But we need `content` for `checkComplianceStep`.
-    // In the previous flow, valid XML was passed. Now we have a JSON object `actionDoc`.
-    // We can generate MD first, then check compliance on MD.
+      // Step 3: Ingest
+      const ingestionResult = await ingestDataStep(
+        rcoRecordId,
+        mdResult,
+        complianceResult,
+        duplicatesResult,
+      );
 
-    // Step 1: Generate Content
-    const mdResult = await generateMarkdownStep(actionDoc);
-    const jsonResult = await generateJsonStep(actionDoc);
-
-    // Step 2: Checks (dependent on MD content)
-    const [complianceResult, duplicatesResult] = await Promise.all([
-      checkComplianceStep(flowId, mdResult.content),
-      checkDuplicatesStep(flowId, mdResult.content),
-    ]);
-
-    // Step 3: Ingest
-    const ingestionResult = await ingestDataStep(
-      rcoRecordId,
-      mdResult,
-      complianceResult,
-      duplicatesResult,
-    );
-
-    results.push({
-      index: i,
-      files: {
-        // Files are no longer generated on disk
-      },
-      content: {
-        "rco.md": mdResult.content,
-        "rco.json": jsonResult,
-        "compliance.md": complianceResult.content,
-        "duplicates.md": duplicatesResult.content,
-      },
-      ingestion: ingestionResult,
-    });
-  }
+      return {
+        index: i,
+        content: {
+          "rco.md": mdResult.content,
+          "rco.json": jsonResult.content,
+          "compliance.md": complianceResult.content ?? complianceResult.error,
+          "duplicates.md": duplicatesResult.content ?? duplicatesResult.error,
+        },
+        ingestion: ingestionResult,
+      };
+    }),
+  );
 
   const hook = createHook();
   await saveWorkflowHookTokenStep(flowId, hook.token);

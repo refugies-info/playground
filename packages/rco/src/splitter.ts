@@ -43,7 +43,7 @@ export const splitLheoXmlIntoActions = async (
       // If there are no actions, we might still want to keep the formation record?
       // For now let's assume we keep it as is.
       const newDoc = JSON.parse(JSON.stringify(doc)); // Deep copy
-      newDoc.lheo.offres.formation = [formation];
+      newDoc.lheo.offres.formation = [JSON.parse(JSON.stringify(formation))];
       results.push(newDoc);
       continue;
     }
