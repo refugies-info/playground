@@ -239,7 +239,7 @@ export async function getDocuments(params: GetDocumentsParams) {
   const { data, error, count } = await query;
 
   if (error) {
-    console.error("Error fetching documents from Supabase:", error); // Or use a proper logger
+    logger.error(error, "Error fetching documents from Supabase");
     throw new Error(`Failed to fetch documents: ${error.message}`);
   }
 
@@ -300,56 +300,57 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
-  const { data, error } = await supabase
+  // First, get the workflow with its linked record IDs
+  const { data: workflow, error: workflowError } = await supabase
     .from("workflows")
     .select(
-      `
-      id,
-      status,
-      progress,
-      updated_at,
-      rco_records!inner (
-        source_raw,
-        metadata
-      ),
-      ingestion_records (
-        markdown,
-        metadata
-      ),
-      editorial_records (
-        markdown,
-        metadata
-      )
-    `,
+      "id, status, progress, updated_at, editorial_record_id, ingestion_record_id, rco_record_id",
     )
     .eq("id", id)
-    .order("created_at", {
-      ascending: false,
-      referencedTable: "editorial_records",
-    })
     .single();
 
-  if (error) {
-    // Log the error unless it's a "not found" error, which is an expected case for .single().
-    if (error.code !== "PGRST116") {
-      logger.error(error, "Error fetching document by ID");
+  if (workflowError) {
+    if (workflowError.code !== "PGRST116") {
+      logger.error(workflowError, "Error fetching workflow by ID");
     }
     return null;
   }
 
-  if (!data) {
+  if (!workflow) {
     return null;
   }
 
-  // Cast the data to our helper type
-  const row = data as unknown as WorkflowWithRelations;
+  // Fetch the related records individually
+  const [rcoResult, ingestionResult, editorialResult] = await Promise.all([
+    supabase
+      .from("rco_records")
+      .select("source_raw, metadata")
+      .eq("id", workflow.rco_record_id)
+      .single(),
+    workflow.ingestion_record_id
+      ? supabase
+          .from("ingestion_records")
+          .select("markdown, metadata")
+          .eq("id", workflow.ingestion_record_id)
+          .single()
+      : Promise.resolve({ data: null, error: null }),
+    workflow.editorial_record_id
+      ? supabase
+          .from("editorial_records")
+          .select("markdown, metadata")
+          .eq("id", workflow.editorial_record_id)
+          .single()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
 
-  const rcoRecord = row.rco_records;
-  const ingestionRecord = row.ingestion_records;
-  const editorialRecord =
-    row.editorial_records && row.editorial_records.length > 0
-      ? row.editorial_records[0]
-      : null;
+  const rcoRecord = rcoResult.data;
+  const ingestionRecord = ingestionResult.data;
+  const editorialRecord = editorialResult.data;
+
+  if (!rcoRecord) {
+    logger.error(rcoResult.error, "Error fetching rco_record");
+    return null;
+  }
 
   // Priority: editorial > ingestion > rco
   const metadata = (editorialRecord?.metadata ||
@@ -370,11 +371,11 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     (await extractTitleFromMarkdown(content));
 
   return {
-    id: row.id,
+    id: workflow.id,
     title,
-    date_added: row.updated_at,
-    status: row.status,
-    state: row.progress,
+    date_added: workflow.updated_at,
+    status: workflow.status,
+    state: workflow.progress,
     content,
     metadata,
   };

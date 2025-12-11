@@ -13,8 +13,9 @@ export const simplifyContent = async function* (
   }
 
   // Create a new agent from the template
+  const sanitizedTemplateId = templateId.replace(/[^a-zA-Z0-9\s\-_]/g, "-");
   const agentResponse = await client.templates.agents.create(templateId, {
-    agent_name: `${templateId}-${flowId}`,
+    agent_name: `${sanitizedTemplateId}-${flowId}`,
   });
   const agentId = agentResponse.agent_ids[0];
 
