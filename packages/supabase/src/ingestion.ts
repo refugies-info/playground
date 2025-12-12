@@ -20,9 +20,7 @@ export interface IngestionData {
   // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
   metadata: any;
   // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
-  complianceReport?: { markdown: string; metadata: any };
-  // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
-  duplicatesReport?: { markdown: string; metadata: any };
+  ingestionReport?: { markdown: string; metadata: any };
 }
 
 function parseYYYYMMMDD_Local(dateStr: string): Date {
@@ -123,18 +121,10 @@ export async function ingestProcessedData(
     // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
     metadata: any;
     // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
-    complianceReport?: { markdown: string; metadata: any };
-    // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
-    duplicatesReport?: { markdown: string; metadata: any };
+    ingestionReport?: { markdown: string; metadata: any };
   },
 ): Promise<IngestionResult> {
-  const {
-    rcoRecordId,
-    markdownContent,
-    metadata,
-    complianceReport,
-    duplicatesReport,
-  } = data;
+  const { rcoRecordId, markdownContent, metadata, ingestionReport } = data;
 
   const reportResults: {
     type: string;
@@ -143,8 +133,7 @@ export async function ingestProcessedData(
   }[] = [];
 
   // 2. Insert Reports
-  let complianceReportId = null;
-  let duplicatesReportId = null;
+  let ingestionReportId = null;
 
   // Helper to insert report
   const insertReport = async (
@@ -173,12 +162,8 @@ export async function ingestProcessedData(
     return report.id;
   };
 
-  if (complianceReport) {
-    complianceReportId = await insertReport("compliance", complianceReport);
-  }
-
-  if (duplicatesReport) {
-    duplicatesReportId = await insertReport("duplicates", duplicatesReport);
+  if (ingestionReport) {
+    ingestionReportId = await insertReport("ingestion", ingestionReport);
   }
 
   // 3. Insert Ingestion Record
@@ -190,8 +175,7 @@ export async function ingestProcessedData(
       markdown: markdownContent,
       metadata: metadata,
       rco_record_id: rcoRecordId,
-      compliance_report_id: complianceReportId,
-      duplicates_report_id: duplicatesReportId,
+      ingestion_report_id: ingestionReportId,
     })
     .select()
     .single();
@@ -209,7 +193,7 @@ export async function ingestProcessedData(
 
   // 4. Update Content Flow Status based on Compliance
   let status = "unknown";
-  const complianceVal = complianceReport?.metadata?.compliant;
+  const complianceVal = ingestionReport?.metadata?.compliant;
 
   logger.info(
     "Compliance Metadata Value:",
@@ -265,7 +249,6 @@ export async function ingestRcoData(
     rcoRecordId: rcoResult.rcoRecordId,
     markdownContent: data.markdownContent,
     metadata: data.metadata,
-    complianceReport: data.complianceReport,
-    duplicatesReport: data.duplicatesReport,
+    ingestionReport: data.ingestionReport,
   });
 }

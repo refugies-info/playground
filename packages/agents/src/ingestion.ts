@@ -1,23 +1,17 @@
 import type { Letta } from "@letta-ai/letta-client";
 import matter from "gray-matter";
-import { runAgentOneShot } from "./agents";
+import { sendMessage } from "./agents";
 
-export const checkCompliance = async (
+export const generateIngestionReport = async (
   client: Letta,
   xmlContent: string,
-  flowId: string,
 ): Promise<string> => {
-  const templateId = process.env.COMPLIANCE_AGENT_TEMPLATE;
-  if (!templateId) {
-    throw new Error("COMPLIANCE_AGENT_TEMPLATE is not defined");
+  const agentId = process.env.PLAYGROUND_AGENT_ID;
+  if (!agentId) {
+    throw new Error("PLAYGROUND_AGENT_ID is not defined");
   }
 
-  const { content, agentId, usage } = await runAgentOneShot(
-    client,
-    templateId,
-    flowId,
-    xmlContent,
-  );
+  const { content, usage } = await sendMessage(client, agentId, xmlContent);
 
   // Parse existing frontmatter and enhance with Letta metadata
   const parsed = matter(content);
