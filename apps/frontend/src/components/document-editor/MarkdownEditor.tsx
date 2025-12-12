@@ -2,7 +2,7 @@
 
 import type { BlockNoteEditor } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import matter from "gray-matter";
@@ -93,6 +93,7 @@ async function convertMixedContentToHtml(content: string): Promise<string> {
 export function MarkdownEditor() {
   const {
     document,
+    setDocument,
     isComparisonMode,
     isProcessing,
     isRawMarkdownMode,
@@ -100,6 +101,7 @@ export function MarkdownEditor() {
   } = useDocument();
   const [rawMarkdown, setRawMarkdown] = useState("");
   const [editor, setEditor] = useState<BlockNoteEditor | null>(null);
+  const isLoadingContent = useRef(false);
 
   // Initialize editor only on client side
   useEffect(() => {
@@ -114,12 +116,49 @@ export function MarkdownEditor() {
     initEditor();
   }, []);
 
+  // Sync editor changes back to document context
+  useEffect(() => {
+    if (!editor || !document) return;
+
+    const handleEditorChange = async () => {
+      // Don't sync changes while we're loading content from props
+      if (isLoadingContent.current) return;
+
+      try {
+        // Convert editor content to markdown
+        const markdown = await editor.blocksToMarkdownLossy(editor.document);
+
+        // Update the document content in context
+        setDocument({
+          ...document,
+          content: markdown,
+        });
+      } catch (error) {
+        // Silently fail - don't disrupt editing experience, but log for debugging
+        console.error(
+          "Error syncing editor changes to document context:",
+          error,
+        );
+      }
+    };
+
+    // Subscribe to editor changes
+    const unsubscribe = editor.onChange(handleEditorChange);
+
+    // Cleanup subscription on unmount
+    return unsubscribe;
+  }, [editor, document, setDocument]);
+
   // Load markdown content when document changes
   useEffect(() => {
     if (!editor || !document?.content) return;
 
     async function loadContent() {
       if (!editor) return;
+
+      // Set flag to prevent onChange from firing during load
+      isLoadingContent.current = true;
+
       try {
         // Convert mixed Markdown/HTML to pure HTML
         const htmlContent = await convertMixedContentToHtml(
@@ -133,7 +172,13 @@ export function MarkdownEditor() {
         // Also update raw markdown state
         const markdown = await editor.blocksToMarkdownLossy(editor.document);
         setRawMarkdown(markdown);
-      } catch (_error) {}
+      } catch (error) {
+        // Silently fail - don't disrupt editing experience, but log for debugging
+        console.error("Error loading content into editor:", error);
+      } finally {
+        // Re-enable onChange immediately after load is complete
+        isLoadingContent.current = false;
+      }
     }
 
     loadContent();
@@ -158,12 +203,26 @@ export function MarkdownEditor() {
   const handleRawMarkdownChange = async (newMarkdown: string) => {
     setRawMarkdown(newMarkdown);
 
+    // Update the document context with the new markdown
+    if (document) {
+      setDocument({
+        ...document,
+        content: newMarkdown,
+      });
+    }
+
     // Update the editor blocks when content changes
     if (editor) {
+      isLoadingContent.current = true;
       try {
         const blocks = await editor.tryParseMarkdownToBlocks(newMarkdown);
         editor.replaceBlocks(editor.document, blocks);
-      } catch (_error) {}
+      } catch (error) {
+        // Silently fail - don't disrupt editing experience, but log for debugging
+        console.error("Error updating editor blocks from markdown:", error);
+      } finally {
+        isLoadingContent.current = false;
+      }
     }
   };
 

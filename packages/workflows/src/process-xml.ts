@@ -1,10 +1,4 @@
-// import fs from "node:fs/promises";
-// import path from "node:path";
-import {
-  checkCompliance,
-  checkDuplicates,
-  createLettaClient,
-} from "@playground/agents";
+import { createLettaClient, generateIngestionReport } from "@playground/agents";
 import {
   type LheoDocument,
   lheoJsonToMarkdownWithFrontmatter,
@@ -67,34 +61,15 @@ export async function generateJsonStep(doc: LheoDocument) {
   return { content: doc };
 }
 
-export async function checkComplianceStep(flowId: string, content: string) {
+export async function generateIngestionReportStep(xmlContent: string) {
   "use step";
   const lettaClient = createLettaClient();
   try {
-    const complianceReport = await checkCompliance(
-      lettaClient,
-      content,
-      flowId,
-    );
-    return { content: complianceReport };
+    const report = await generateIngestionReport(lettaClient, xmlContent);
+    // Return content directly
+    return { content: report };
   } catch (error) {
-    logger.error(error, "Error generating compliance report");
-    return { error: error instanceof Error ? error.message : String(error) };
-  }
-}
-
-export async function checkDuplicatesStep(flowId: string, content: string) {
-  "use step";
-  const lettaClient = createLettaClient();
-  try {
-    const duplicatesReport = await checkDuplicates(
-      lettaClient,
-      content,
-      flowId,
-    );
-    return { content: duplicatesReport };
-  } catch (error) {
-    logger.error(error, "Error generating duplicates report");
+    logger.error(error, "Error generating ingestion report");
     return { error: error instanceof Error ? error.message : String(error) };
   }
 }
@@ -105,8 +80,7 @@ export async function ingestDataStep(
   // jsonResult: any, // We can use the json output for metadata if structurally compatible,
   // but `seed-ingestion` used `matter(markdown)`.
   // `matter` is robust.
-  complianceResult: { error?: unknown; content?: string },
-  duplicatesResult: { error?: unknown; content?: string },
+  ingestionResult: { error?: unknown; content?: string },
 ) {
   "use step";
 
@@ -116,29 +90,21 @@ export async function ingestDataStep(
   // Parse Metadata from markdown content
   const { data: metadata } = matter(markdownResult.content);
 
-  // Prepare Reports
-  let complianceReport:
+  // Prepare Report
+  let ingestionReport:
     | { markdown: string; metadata: Record<string, unknown> }
     | undefined;
-  if (complianceResult && !complianceResult.error && complianceResult.content) {
-    const { data: cMeta } = matter(complianceResult.content);
-    complianceReport = { markdown: complianceResult.content, metadata: cMeta };
-  }
 
-  let duplicatesReport:
-    | { markdown: string; metadata: Record<string, unknown> }
-    | undefined;
-  if (duplicatesResult && !duplicatesResult.error && duplicatesResult.content) {
-    const { data: dMeta } = matter(duplicatesResult.content);
-    duplicatesReport = { markdown: duplicatesResult.content, metadata: dMeta };
+  if (ingestionResult && !ingestionResult.error && ingestionResult.content) {
+    const { data: iMeta } = matter(ingestionResult.content);
+    ingestionReport = { markdown: ingestionResult.content, metadata: iMeta };
   }
 
   const result = await ingestProcessedData(supabase, {
     rcoRecordId,
     markdownContent: markdownResult.content,
     metadata, // This metadata comes from the markdown frontmatter
-    complianceReport,
-    duplicatesReport,
+    ingestionReport,
   });
 
   return result;
@@ -174,18 +140,17 @@ export async function processXmlWorkflow(flowId: string, rcoRecordId: string) {
       const mdResult = await generateMarkdownStep(actionDoc);
       const jsonResult = await generateJsonStep(actionDoc);
 
-      // Step 2: Checks (dependent on MD content)
-      const [complianceResult, duplicatesResult] = await Promise.all([
-        checkComplianceStep(flowId, mdResult.content),
-        checkDuplicatesStep(flowId, mdResult.content),
-      ]);
+      // Step 2: Checks (Ingestion Report)
+      // Pass the markdown content to the agent
+      const ingestionReportResult = await generateIngestionReportStep(
+        mdResult.content,
+      );
 
       // Step 3: Ingest
       const ingestionResult = await ingestDataStep(
         rcoRecordId,
         mdResult,
-        complianceResult,
-        duplicatesResult,
+        ingestionReportResult,
       );
 
       return {
@@ -193,8 +158,8 @@ export async function processXmlWorkflow(flowId: string, rcoRecordId: string) {
         content: {
           "rco.md": mdResult.content,
           "rco.json": jsonResult.content,
-          "compliance.md": complianceResult.content ?? complianceResult.error,
-          "duplicates.md": duplicatesResult.content ?? duplicatesResult.error,
+          "report.md":
+            ingestionReportResult.content ?? ingestionReportResult.error,
         },
         ingestion: ingestionResult,
       };

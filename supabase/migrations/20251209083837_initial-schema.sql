@@ -21,8 +21,7 @@ alter table "public"."editorial_records" enable row level security;
     "markdown" text not null,
     "metadata" jsonb not null,
     "rco_record_id" uuid not null,
-    "compliance_report_id" uuid,
-    "duplicates_report_id" uuid
+    "ingestion_report_id" uuid
       );
 
 
@@ -130,13 +129,9 @@ alter table "public"."editorial_records" add constraint "editorial_records_rco_i
 
 alter table "public"."editorial_records" validate constraint "editorial_records_rco_ingestion_record_id_fkey";
 
-alter table "public"."ingestion_records" add constraint "ingestion_records_compliance_report_id_fkey" FOREIGN KEY (compliance_report_id) REFERENCES public.letta_reports(id) not valid;
+alter table "public"."ingestion_records" add constraint "ingestion_records_ingestion_report_id_fkey" FOREIGN KEY (ingestion_report_id) REFERENCES public.letta_reports(id) not valid;
 
-alter table "public"."ingestion_records" validate constraint "ingestion_records_compliance_report_id_fkey";
-
-alter table "public"."ingestion_records" add constraint "ingestion_records_duplicates_report_id_fkey" FOREIGN KEY (duplicates_report_id) REFERENCES public.letta_reports(id) not valid;
-
-alter table "public"."ingestion_records" validate constraint "ingestion_records_duplicates_report_id_fkey";
+alter table "public"."ingestion_records" validate constraint "ingestion_records_ingestion_report_id_fkey";
 
 alter table "public"."ingestion_records" add constraint "ingestion_records_rco_record_id_fkey" FOREIGN KEY (rco_record_id) REFERENCES public.rco_records(id) not valid;
 

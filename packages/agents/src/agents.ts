@@ -9,26 +9,14 @@ export const getAgent = async (client: Letta, agentId: string) => {
   return client.agents.retrieve(agentId);
 };
 
-export const runAgentOneShot = async (
+export const sendMessage = async (
   client: Letta,
-  templateId: string,
-  flowId: string,
+  agentId: string,
   content: string,
 ): Promise<{
   content: string;
-  agentId: string;
   usage?: Record<string, unknown>;
 }> => {
-  // Create a new agent from the template
-  const agentResponse = await client.templates.agents.create(templateId, {
-    agent_name: `${templateId}-${flowId}`.replace(/[:/]/g, "-"),
-  });
-  const agentId = agentResponse.agent_ids[0];
-
-  if (!agentId) {
-    throw new Error("Failed to create agent from template");
-  }
-
   const response = await client.agents.messages.create(agentId, {
     messages: [
       {
@@ -55,7 +43,39 @@ export const runAgentOneShot = async (
 
   return {
     content: resultString,
-    agentId,
     usage: response.usage as Record<string, unknown> | undefined,
+  };
+};
+
+export const runAgentOneShot = async (
+  client: Letta,
+  templateId: string,
+  flowId: string,
+  content: string,
+): Promise<{
+  content: string;
+  agentId: string;
+  usage?: Record<string, unknown>;
+}> => {
+  // Create a new agent from the template
+  const agentResponse = await client.templates.agents.create(templateId, {
+    agent_name: `${templateId}-${flowId}`.replace(/[:/]/g, "-"),
+  });
+  const agentId = agentResponse.agent_ids[0];
+
+  if (!agentId) {
+    throw new Error("Failed to create agent from template");
+  }
+
+  const { content: resultString, usage } = await sendMessage(
+    client,
+    agentId,
+    content,
+  );
+
+  return {
+    content: resultString,
+    agentId,
+    usage,
   };
 };

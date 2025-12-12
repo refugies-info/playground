@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     }
 
     // 4. Start the workflow
-    const result = await start(processXmlWorkflow, [flowId, rcoRecordId]);
+    const result = await start(processXmlWorkflow, [rcoRecordId]);
     const workflowId = result.runId;
 
     // 5. Link Workflow to Content Flow
