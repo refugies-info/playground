@@ -34,12 +34,12 @@ export const generateIngestionReport = async (
 
   // Extract usage stats from response if available
   if (usage) {
-    if (usage.prompt_tokens)
-      lettaMetadata.prompt_tokens = usage.prompt_tokens as number;
-    if (usage.completion_tokens)
-      lettaMetadata.completion_tokens = usage.completion_tokens as number;
-    if (usage.total_tokens)
-      lettaMetadata.total_tokens = usage.total_tokens as number;
+    if (typeof usage.prompt_tokens === "number")
+      lettaMetadata.prompt_tokens = usage.prompt_tokens;
+    if (typeof usage.completion_tokens === "number")
+      lettaMetadata.completion_tokens = usage.completion_tokens;
+    if (typeof usage.total_tokens === "number")
+      lettaMetadata.total_tokens = usage.total_tokens;
   }
 
   // Merge Letta metadata into frontmatter
