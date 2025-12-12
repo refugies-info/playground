@@ -28,7 +28,7 @@ export const sendMessage = async (
 
   const messages = response.messages;
   const lastMessage = messages.findLast(
-    ({ message_type }) => message_type === "assistant_message",
+    (msg) => msg.message_type === "assistant_message",
   ) as AssistantMessage;
 
   if (!lastMessage) {

@@ -1,9 +1,8 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { createLettaClient, generateIngestionReport } from "@playground/agents";
 import {
-  lheoXmlToJson,
-  lheoXmlToMarkdownWithFrontmatter,
+  type LheoDocument,
+  lheoJsonToMarkdownWithFrontmatter,
+  splitLheoXmlIntoActions,
 } from "@playground/rco";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin, ingestProcessedData } from "@playground/supabase";
@@ -46,24 +45,19 @@ export async function parseXmlStep(xmlContent: string) {
   return xmlContent;
 }
 
-export async function generateMarkdownStep(xmlContent: string) {
+export async function generateMarkdownStep(doc: LheoDocument) {
   "use step";
-  const markdown = await lheoXmlToMarkdownWithFrontmatter(xmlContent);
-  const outputDir = path.join(process.cwd(), "output");
-  await fs.mkdir(outputDir, { recursive: true });
-  const mdPath = path.join(outputDir, "rco.md");
-  await fs.writeFile(mdPath, markdown);
-  return { path: mdPath, content: markdown }; // Return content for ingestion
+  // Convert JSON to YAML for frontmatter
+  const yaml = await import("@playground/rco").then((m) => m.jsonToYaml(doc));
+  const markdown = lheoJsonToMarkdownWithFrontmatter(doc, yaml);
+
+  // Return content directly for memory-based processing
+  return { content: markdown };
 }
 
-export async function generateJsonStep(xmlContent: string) {
+export async function generateJsonStep(doc: LheoDocument) {
   "use step";
-  const json = await lheoXmlToJson(xmlContent);
-  const outputDir = path.join(process.cwd(), "output");
-  await fs.mkdir(outputDir, { recursive: true });
-  const jsonPath = path.join(outputDir, "rco.json");
-  await fs.writeFile(jsonPath, JSON.stringify(json, null, 2));
-  return jsonPath;
+  return { content: doc };
 }
 
 export async function generateIngestionReportStep(xmlContent: string) {
@@ -71,11 +65,8 @@ export async function generateIngestionReportStep(xmlContent: string) {
   const lettaClient = createLettaClient();
   try {
     const report = await generateIngestionReport(lettaClient, xmlContent);
-    const outputDir = path.join(process.cwd(), "output");
-    await fs.mkdir(outputDir, { recursive: true });
-    const reportPath = path.join(outputDir, "rco_report.md");
-    await fs.writeFile(reportPath, report);
-    return { path: reportPath, content: report };
+    // Return content directly
+    return { content: report };
   } catch (error) {
     logger.error(error, "Error generating ingestion report");
     return { error: error instanceof Error ? error.message : String(error) };
@@ -84,7 +75,7 @@ export async function generateIngestionReportStep(xmlContent: string) {
 
 export async function ingestDataStep(
   rcoRecordId: string,
-  markdownResult: { path: string; content: string },
+  markdownResult: { content: string },
   // jsonResult: any, // We can use the json output for metadata if structurally compatible,
   // but `seed-ingestion` used `matter(markdown)`.
   // `matter` is robust.
@@ -118,50 +109,47 @@ export async function ingestDataStep(
   return result;
 }
 
-// Save workflow hook token
-export async function saveWorkflowHookTokenStep(
-  flowId: string,
-  hookToken: string,
-) {
-  "use step";
-  const supabase = getSupabaseClient();
-  const { error } = await supabase
-    .from("workflows")
-    .update({ vercel_hook_token: hookToken })
-    .eq("id", flowId);
-
-  if (error) {
-    throw new Error(`Failed to save workflow hook token: ${error.message}`);
-  }
-}
-
 // Define workflow
-export async function processXmlWorkflow(rcoRecordId: string) {
+export async function processXmlWorkflow(_flowId: string, rcoRecordId: string) {
   "use workflow";
 
   const xmlContent = await fetchRcoXmlStep(rcoRecordId);
+  const actionDocs = await splitLheoXmlIntoActions(xmlContent);
 
-  // Parallel execution for files generation
-  const [mdResult, jsonPath, ingestionReportResult] = await Promise.all([
-    generateMarkdownStep(xmlContent),
-    generateJsonStep(xmlContent),
-    generateIngestionReportStep(xmlContent),
-  ]);
+  const results = await Promise.all(
+    actionDocs.map(async (actionDoc, i) => {
+      // Step 1: Generate Content
+      const mdResult = await generateMarkdownStep(actionDoc);
+      const jsonResult = await generateJsonStep(actionDoc);
 
-  // Ingest Step (run after generation)
-  const ingestionResult = await ingestDataStep(
-    rcoRecordId,
-    mdResult,
-    ingestionReportResult,
+      // Step 2: Checks (Ingestion Report)
+      // Pass the markdown content to the agent
+      const ingestionReportResult = await generateIngestionReportStep(
+        mdResult.content,
+      );
+
+      // Step 3: Ingest
+      const ingestionResult = await ingestDataStep(
+        rcoRecordId,
+        mdResult,
+        ingestionReportResult,
+      );
+
+      return {
+        index: i,
+        content: {
+          "rco.md": mdResult.content,
+          "rco.json": jsonResult.content,
+          "report.md":
+            ingestionReportResult.content ?? ingestionReportResult.error,
+        },
+        ingestion: ingestionResult,
+      };
+    }),
   );
 
   return {
-    files: {
-      "rco.md": mdResult.path,
-      "rco.json": jsonPath,
-      "rco_report.md":
-        ingestionReportResult.path || ingestionReportResult.error,
-    },
-    ingestion: ingestionResult,
+    processedActions: results.length,
+    details: results,
   };
 }

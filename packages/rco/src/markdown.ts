@@ -6,11 +6,7 @@ import type {
 } from "./lheo-types";
 import { lheoXmlToYaml } from "./yaml";
 
-export const extractMarkdownContent = async (
-  xmlString: string,
-): Promise<string> => {
-  const json = await parseLheoXml(xmlString);
-
+export const jsonToMarkdown = (json: unknown): string => {
   // Helper to find nodes recursively
   const findNodes = <T>(obj: unknown, key: string): T[] => {
     let results: T[] = [];
@@ -70,10 +66,25 @@ export const extractMarkdownContent = async (
   return markdown;
 };
 
+export const extractMarkdownContent = async (
+  xmlString: string,
+): Promise<string> => {
+  const json = await parseLheoXml(xmlString);
+  return jsonToMarkdown(json);
+};
+
 export const lheoXmlToMarkdownWithFrontmatter = async (
   xmlString: string,
 ): Promise<string> => {
   const yaml = await lheoXmlToYaml(xmlString);
   const markdownBody = await extractMarkdownContent(xmlString);
+  return `---\n${yaml}---\n\n${markdownBody}`;
+};
+
+export const lheoJsonToMarkdownWithFrontmatter = (
+  json: unknown,
+  yaml: string,
+): string => {
+  const markdownBody = jsonToMarkdown(json);
   return `---\n${yaml}---\n\n${markdownBody}`;
 };
