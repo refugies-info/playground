@@ -11,7 +11,13 @@ export const generateIngestionReport = async (
     throw new Error("PLAYGROUND_AGENT_ID is not defined");
   }
 
-  const { content, usage } = await sendMessage(client, agentId, xmlContent);
+  const heading = "Analyse conformité + doublons (parallèle):";
+
+  const { content, usage } = await sendMessage(
+    client,
+    agentId,
+    `${heading}\n\n${xmlContent}`,
+  );
 
   // Parse existing frontmatter and enhance with Letta metadata
   const parsed = matter(content);
