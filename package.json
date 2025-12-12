@@ -30,8 +30,6 @@
     "validate:docs": "tsx scripts/validate-docs.ts",
     "validate": "pnpm validate:docs && pnpm knip",
     "seed:users": "tsx scripts/seed-users.ts",
-    "check:compliance": "tsx scripts/check-compliance.ts",
-    "check:duplicates": "tsx scripts/check-duplicates.ts",
     "convert:dispositifs": "tsx scripts/convert-dispositifs.ts",
     "list:agents": "tsx scripts/list-agents.ts",
     "generate:json": "tsx scripts/generate-json.ts",

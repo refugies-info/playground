@@ -1,10 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import {
-  checkCompliance,
-  checkDuplicates,
-  createLettaClient,
-} from "@playground/agents";
+import { createLettaClient, generateIngestionReport } from "@playground/agents";
 import {
   lheoXmlToJson,
   lheoXmlToMarkdownWithFrontmatter,
@@ -70,54 +66,18 @@ export async function generateJsonStep(xmlContent: string) {
   return jsonPath;
 }
 
-export async function checkComplianceStep(flowId: string, xmlContent: string) {
+export async function generateIngestionReportStep(xmlContent: string) {
   "use step";
   const lettaClient = createLettaClient();
   try {
-    const complianceReport = await checkCompliance(
-      lettaClient,
-      xmlContent,
-      flowId,
-    );
+    const report = await generateIngestionReport(lettaClient, xmlContent);
     const outputDir = path.join(process.cwd(), "output");
     await fs.mkdir(outputDir, { recursive: true });
-    const compliancePath = path.join(outputDir, "rco_compliance.md");
-    await fs.writeFile(compliancePath, complianceReport);
-
-    // We need to parse metadata from the report for ingestion
-    // Simple extraction since we don't have matter here?
-    // Actually we can use the same matter library or just pass the full string and let ingest parse it?
-    // ingestRcoData expects { markdown, metadata }.
-    // BUT we don't want to import matter here if we can avoid it (or we can adding gray-matter dep).
-    // Better: let's just return the raw string and let the step handle parsing?
-    // Or just pass the raw content and let ingestion handle it?
-    // `ingestRcoData` takes { complianceReport: { markdown, metadata } }.
-    // I'll parse it here if I can, or I'll just skip metadata parsing for now if it's too complex without deps.
-    // Wait, the agent returns a string that has frontmatter.
-    // I'll just return the string.
-    return { path: compliancePath, content: complianceReport };
+    const reportPath = path.join(outputDir, "rco_report.md");
+    await fs.writeFile(reportPath, report);
+    return { path: reportPath, content: report };
   } catch (error) {
-    logger.error(error, "Error generating compliance report");
-    return { error: error instanceof Error ? error.message : String(error) };
-  }
-}
-
-export async function checkDuplicatesStep(flowId: string, xmlContent: string) {
-  "use step";
-  const lettaClient = createLettaClient();
-  try {
-    const duplicatesReport = await checkDuplicates(
-      lettaClient,
-      xmlContent,
-      flowId,
-    );
-    const outputDir = path.join(process.cwd(), "output");
-    await fs.mkdir(outputDir, { recursive: true });
-    const duplicatesPath = path.join(outputDir, "rco_duplicates.md");
-    await fs.writeFile(duplicatesPath, duplicatesReport);
-    return { path: duplicatesPath, content: duplicatesReport };
-  } catch (error) {
-    logger.error(error, "Error generating duplicates report");
+    logger.error(error, "Error generating ingestion report");
     return { error: error instanceof Error ? error.message : String(error) };
   }
 }
@@ -128,8 +88,7 @@ export async function ingestDataStep(
   // jsonResult: any, // We can use the json output for metadata if structurally compatible,
   // but `seed-ingestion` used `matter(markdown)`.
   // `matter` is robust.
-  complianceResult: { error?: unknown; content?: string },
-  duplicatesResult: { error?: unknown; content?: string },
+  ingestionResult: { error?: unknown; content?: string },
 ) {
   "use step";
 
@@ -139,29 +98,21 @@ export async function ingestDataStep(
   // Parse Metadata from markdown content
   const { data: metadata } = matter(markdownResult.content);
 
-  // Prepare Reports
-  let complianceReport:
+  // Prepare Report
+  let ingestionReport:
     | { markdown: string; metadata: Record<string, unknown> }
     | undefined;
-  if (complianceResult && !complianceResult.error && complianceResult.content) {
-    const { data: cMeta } = matter(complianceResult.content);
-    complianceReport = { markdown: complianceResult.content, metadata: cMeta };
-  }
 
-  let duplicatesReport:
-    | { markdown: string; metadata: Record<string, unknown> }
-    | undefined;
-  if (duplicatesResult && !duplicatesResult.error && duplicatesResult.content) {
-    const { data: dMeta } = matter(duplicatesResult.content);
-    duplicatesReport = { markdown: duplicatesResult.content, metadata: dMeta };
+  if (ingestionResult && !ingestionResult.error && ingestionResult.content) {
+    const { data: iMeta } = matter(ingestionResult.content);
+    ingestionReport = { markdown: ingestionResult.content, metadata: iMeta };
   }
 
   const result = await ingestProcessedData(supabase, {
     rcoRecordId,
     markdownContent: markdownResult.content,
     metadata, // This metadata comes from the markdown frontmatter
-    complianceReport,
-    duplicatesReport,
+    ingestionReport,
   });
 
   return result;
@@ -185,34 +136,31 @@ export async function saveWorkflowHookTokenStep(
 }
 
 // Define workflow
-export async function processXmlWorkflow(flowId: string, rcoRecordId: string) {
+export async function processXmlWorkflow(rcoRecordId: string) {
   "use workflow";
 
   const xmlContent = await fetchRcoXmlStep(rcoRecordId);
 
   // Parallel execution for files generation
-  const [mdResult, jsonPath, complianceResult, duplicatesResult] =
-    await Promise.all([
-      generateMarkdownStep(xmlContent),
-      generateJsonStep(xmlContent),
-      checkComplianceStep(flowId, xmlContent),
-      checkDuplicatesStep(flowId, xmlContent),
-    ]);
+  const [mdResult, jsonPath, ingestionReportResult] = await Promise.all([
+    generateMarkdownStep(xmlContent),
+    generateJsonStep(xmlContent),
+    generateIngestionReportStep(xmlContent),
+  ]);
 
   // Ingest Step (run after generation)
   const ingestionResult = await ingestDataStep(
     rcoRecordId,
     mdResult,
-    complianceResult,
-    duplicatesResult,
+    ingestionReportResult,
   );
 
   return {
     files: {
       "rco.md": mdResult.path,
       "rco.json": jsonPath,
-      "rco_compliance.md": complianceResult.path || complianceResult.error,
-      "rco_duplicates.md": duplicatesResult.path || duplicatesResult.error,
+      "rco_report.md":
+        ingestionReportResult.path || ingestionReportResult.error,
     },
     ingestion: ingestionResult,
   };
