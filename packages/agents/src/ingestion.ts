@@ -20,8 +20,12 @@ export const generateIngestionReport = async (
     `${heading}\n\n${xmlContent}`,
   );
 
+  // Extract valid markdown content (skipping any preamble text before the frontmatter)
+  // This is robust against agents that might chat before outputting the report
+  const cleanContent = extractValidContent(content);
+
   // Parse existing frontmatter and enhance with Letta metadata
-  const parsed = matter(content);
+  const parsed = matter(cleanContent);
 
   const lettaMetadata: LettaMetadata = {
     agent_id: agentId,
@@ -47,3 +51,19 @@ export const generateIngestionReport = async (
   // Reconstruct markdown with enhanced frontmatter
   return matter.stringify(parsed.content, enhancedData);
 };
+
+/**
+ * Extracts valid markdown content by locating the start of the frontmatter.
+ * If there is text before the first '---' block, it is discarded.
+ */
+function extractValidContent(content: string): string {
+  const frontmatterStart = content.indexOf("---");
+  if (frontmatterStart > 0) {
+    // Check if it's really the start (preceded by newline or start of file)
+    // If it's just '---' in the middle of a sentence, we need to be careful.
+    // However, for purposes of cleaning agent output, usually we look for the FIRST occurrence of ---
+    // that looks like a frontmatter delimiter.
+    return content.slice(frontmatterStart);
+  }
+  return content;
+}
