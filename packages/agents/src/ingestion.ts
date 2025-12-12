@@ -54,16 +54,18 @@ export const generateIngestionReport = async (
 
 /**
  * Extracts valid markdown content by locating the start of the frontmatter.
- * If there is text before the first '---' block, it is discarded.
+ * If there is text before the first '---' block (that appears at the start of a line), it is discarded.
  */
 function extractValidContent(content: string): string {
-  const frontmatterStart = content.indexOf("---");
-  if (frontmatterStart > 0) {
-    // Check if it's really the start (preceded by newline or start of file)
-    // If it's just '---' in the middle of a sentence, we need to be careful.
-    // However, for purposes of cleaning agent output, usually we look for the FIRST occurrence of ---
-    // that looks like a frontmatter delimiter.
-    return content.slice(frontmatterStart);
+  // Look for '---' at the start of the string or immediately following a newline
+  const match = content.match(/(?:^|\n)---/);
+
+  if (match && match.index !== undefined) {
+    // If the match starts with a newline, we want to slice starting after that newline
+    const startIndex = match[0].startsWith("\n")
+      ? match.index + 1
+      : match.index;
+    return content.slice(startIndex);
   }
   return content;
 }
