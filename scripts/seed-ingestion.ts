@@ -27,14 +27,7 @@ async function main() {
   // Paths
   const rcoXmlPath = path.resolve(__dirname, "../packages/rco/samples/rco.xml");
   const rcoMdPath = path.resolve(__dirname, "../packages/rco/output/rco.md");
-  const complianceMdPath = path.resolve(
-    __dirname,
-    "../packages/agents/output/rco-compliance.md",
-  );
-  const duplicatesMdPath = path.resolve(
-    __dirname,
-    "../packages/agents/output/rco-duplicates.md",
-  );
+  const ingestionMdPath = path.resolve(__dirname, "../output/rco_report.md");
 
   // 1. Load Data
   if (!fs.existsSync(rcoXmlPath)) {
@@ -54,19 +47,11 @@ async function main() {
 
   // 2. Load Reports (Optional)
   // biome-ignore lint/suspicious/noExplicitAny: Script convenience
-  let complianceReport: { markdown: string; metadata: any } | undefined;
-  if (fs.existsSync(complianceMdPath)) {
-    const content = fs.readFileSync(complianceMdPath, "utf-8");
+  let ingestionReport: { markdown: string; metadata: any } | undefined;
+  if (fs.existsSync(ingestionMdPath)) {
+    const content = fs.readFileSync(ingestionMdPath, "utf-8");
     const { data: metadata, content: markdown } = matter(content);
-    complianceReport = { markdown, metadata };
-  }
-
-  // biome-ignore lint/suspicious/noExplicitAny: Script convenience
-  let duplicatesReport: { markdown: string; metadata: any } | undefined;
-  if (fs.existsSync(duplicatesMdPath)) {
-    const content = fs.readFileSync(duplicatesMdPath, "utf-8");
-    const { data: metadata, content: markdown } = matter(content);
-    duplicatesReport = { markdown, metadata };
+    ingestionReport = { markdown, metadata };
   }
 
   // 3. Call Ingestion Function
@@ -75,8 +60,7 @@ async function main() {
     xmlContent: rcoXml,
     markdownContent: rcoMdContent,
     metadata: rcoMetadata,
-    complianceReport,
-    duplicatesReport,
+    ingestionReport,
   });
 
   if (result.status === "success") {
