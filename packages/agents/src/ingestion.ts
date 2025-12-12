@@ -1,6 +1,7 @@
 import type { Letta } from "@letta-ai/letta-client";
 import matter from "gray-matter";
 import { sendMessage } from "./agents";
+import { INGESTION_AGENT_HEADING } from "./prompts";
 import type { LettaMetadata } from "./types";
 
 export const generateIngestionReport = async (
@@ -12,12 +13,10 @@ export const generateIngestionReport = async (
     throw new Error("PLAYGROUND_AGENT_ID is not defined");
   }
 
-  const heading = "Analyse conformité + doublons (parallèle):";
-
   const { content, usage } = await sendMessage(
     client,
     agentId,
-    `${heading}\n\n${xmlContent}`,
+    `${INGESTION_AGENT_HEADING}\n\n${xmlContent}`,
   );
 
   // Extract valid markdown content (skipping any preamble text before the frontmatter)
