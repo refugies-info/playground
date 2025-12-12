@@ -7,7 +7,6 @@ import {
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin, ingestProcessedData } from "@playground/supabase";
 import matter from "gray-matter";
-import { createHook } from "workflow";
 
 // Define steps
 
@@ -110,25 +109,8 @@ export async function ingestDataStep(
   return result;
 }
 
-// Save workflow hook token
-export async function saveWorkflowHookTokenStep(
-  flowId: string,
-  hookToken: string,
-) {
-  "use step";
-  const supabase = getSupabaseClient();
-  const { error } = await supabase
-    .from("workflows")
-    .update({ vercel_hook_token: hookToken })
-    .eq("id", flowId);
-
-  if (error) {
-    throw new Error(`Failed to save workflow hook token: ${error.message}`);
-  }
-}
-
 // Define workflow
-export async function processXmlWorkflow(flowId: string, rcoRecordId: string) {
+export async function processXmlWorkflow(_flowId: string, rcoRecordId: string) {
   "use workflow";
 
   const xmlContent = await fetchRcoXmlStep(rcoRecordId);
@@ -165,10 +147,6 @@ export async function processXmlWorkflow(flowId: string, rcoRecordId: string) {
       };
     }),
   );
-
-  const hook = createHook();
-  await saveWorkflowHookTokenStep(flowId, hook.token);
-  await hook;
 
   return {
     processedActions: results.length,
