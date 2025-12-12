@@ -1,6 +1,7 @@
 import type { Letta } from "@letta-ai/letta-client";
 import matter from "gray-matter";
 import { sendMessage } from "./agents";
+import type { LettaMetadata } from "./types";
 
 export const generateIngestionReport = async (
   client: Letta,
@@ -22,17 +23,19 @@ export const generateIngestionReport = async (
   // Parse existing frontmatter and enhance with Letta metadata
   const parsed = matter(content);
 
-  const lettaMetadata: Record<string, unknown> = {
+  const lettaMetadata: LettaMetadata = {
     agent_id: agentId,
     processed_at: new Date().toISOString(),
   };
 
   // Extract usage stats from response if available
   if (usage) {
-    if (usage.prompt_tokens) lettaMetadata.prompt_tokens = usage.prompt_tokens;
+    if (usage.prompt_tokens)
+      lettaMetadata.prompt_tokens = usage.prompt_tokens as number;
     if (usage.completion_tokens)
-      lettaMetadata.completion_tokens = usage.completion_tokens;
-    if (usage.total_tokens) lettaMetadata.total_tokens = usage.total_tokens;
+      lettaMetadata.completion_tokens = usage.completion_tokens as number;
+    if (usage.total_tokens)
+      lettaMetadata.total_tokens = usage.total_tokens as number;
   }
 
   // Merge Letta metadata into frontmatter

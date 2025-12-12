@@ -145,7 +145,7 @@ export async function ingestProcessedData(
     const { data: report, error: reportError } = await supabase
       .from("letta_reports")
       .insert({
-        agent_id: reportData.metadata?.letta?.agentId,
+        agent_id: reportData.metadata?.letta?.agent_id,
         report_type: type,
         markdown: reportData.markdown,
         metadata: reportData.metadata,
