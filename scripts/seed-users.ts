@@ -57,7 +57,7 @@ async function seedUsers() {
         logger.info(`Updating user ${user.email}...`);
         const { error: updateError } = await supabase.auth.admin.updateUserById(
           existingUser.id,
-          { password: user.password, user_metadata: { role: user.role } },
+          { user_metadata: { role: user.role } },
         );
 
         if (updateError) throw updateError;
