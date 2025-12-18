@@ -223,11 +223,14 @@ We use **GitHub Actions** to automatically apply migrations to the production da
 - `SUPABASE_ACCESS_TOKEN`: Personal Access Token
 - `SUPABASE_DB_PASSWORD`: Production database password
 - `SUPABASE_PROJECT_ID`: Production project ID
+- `SUPABASE_SERVICE_ROLE_KEY`: Service Role Key (for seeding users)
 
 The workflow will:
 1. Install Supabase CLI
 2. Link to the production project
 3. Run `supabase db push` to apply pending migrations
+4. Install Node.js dependencies
+5. Run `pnpm seed:users` to ensure admin users exist
 
 ---
 
