@@ -211,6 +211,24 @@ To apply migrations without restarting Supabase:
 supabase db push
 ```
 
+### Automated Deployment (CI/CD)
+
+We use **GitHub Actions** to automatically apply migrations to the production database.
+
+**Workflow**: `.github/workflows/production-release.yml`
+
+**Trigger**: Push to `main` branch.
+
+**Required Secrets**:
+- `SUPABASE_ACCESS_TOKEN`: Personal Access Token
+- `SUPABASE_DB_PASSWORD`: Production database password
+- `SUPABASE_PROJECT_ID`: Production project ID
+
+The workflow will:
+1. Install Supabase CLI
+2. Link to the production project
+3. Run `supabase db push` to apply pending migrations
+
 ---
 
 ## Resetting Migrations
