@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     "@playground/rco",
     "@playground/agents",
     "@playground/workflows",
+    "@playground/supabase",
   ],
   serverExternalPackages: ["libxml2-wasm", "pino", "pino-pretty"],
 };
