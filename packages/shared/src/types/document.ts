@@ -14,6 +14,7 @@ export interface Document {
   status: string;
   state: string;
   content: string;
+  ingestionContent?: string; // Immutable original content from ingestion_records
   metadata: Record<string, unknown>;
 }
 

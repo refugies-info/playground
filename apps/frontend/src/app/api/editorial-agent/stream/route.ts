@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  const { content, instructions, flowId } = await request.json();
+  const { content, instructions, metadata } = await request.json();
 
   if (!content) {
     return new Response("Content is required", { status: 400 });
@@ -21,7 +21,8 @@ export async function POST(request: NextRequest) {
           client,
           content,
           instructions,
-          flowId,
+          process.env.PLAYGROUND_AGENT_ID,
+          metadata, // Pass metadata to the AI agent
         )) {
           const data = `data: ${JSON.stringify(chunk)}\n\n`;
           controller.enqueue(encoder.encode(data));
