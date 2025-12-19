@@ -98,6 +98,12 @@ export function EditorChat() {
             try {
               const parsed = JSON.parse(data);
 
+              // Handle error messages from the backend
+              if (parsed.type === "error") {
+                setError(parsed.message);
+                continue;
+              }
+
               if (parsed.message_type === "assistant_message") {
                 const content =
                   typeof parsed.content === "string"
@@ -142,7 +148,10 @@ export function EditorChat() {
                   },
                 ]);
               }
-            } catch (_e) {}
+            } catch (error) {
+              // biome-ignore lint/suspicious/noConsole: Necessary for debugging stream parsing errors
+              console.error("Error parsing stream data:", { error, data });
+            }
           }
         }
       }
@@ -186,7 +195,7 @@ export function EditorChat() {
         isCollapsed ? "w-12" : "w-80",
       )}
     >
-      <div className="flex items-center p-3 border-b">
+      <div className="flex items-center p-2 border-b">
         <Button
           variant="ghost"
           size="sm"

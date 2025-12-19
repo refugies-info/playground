@@ -259,8 +259,13 @@ export function MarkdownEditor() {
 
   if (!editor) {
     return (
-      <div className="flex items-center justify-center h-full">
-        Loading editor...
+      <div className="flex flex-1 w-full items-center justify-center h-full bg-white">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <p className="text-sm font-medium text-gray-700">
+            Chargement de l'éditeur...
+          </p>
+        </div>
       </div>
     );
   }
