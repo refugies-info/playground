@@ -146,6 +146,7 @@ export function MarkdownEditor() {
         });
       } catch (error) {
         // Silently fail - don't disrupt editing experience, but log for debugging
+        // biome-ignore lint/suspicious/noConsole: debugging
         console.error(
           "Error syncing editor changes to document context:",
           error,
@@ -205,6 +206,7 @@ export function MarkdownEditor() {
         setRawMarkdown(futureMarkdown);
       } catch (error) {
         // Silently fail - don't disrupt editing experience, but log for debugging
+        // biome-ignore lint/suspicious/noConsole: debugging
         console.error("Error loading content into editor:", error);
       } finally {
         // Wait for browser to process the update before releasing lock
@@ -251,6 +253,7 @@ export function MarkdownEditor() {
         editor.replaceBlocks(editor.document, blocks);
       } catch (error) {
         // Silently fail - don't disrupt editing experience, but log for debugging
+        // biome-ignore lint/suspicious/noConsole: debugging
         console.error("Error updating editor blocks from markdown:", error);
       } finally {
       }
