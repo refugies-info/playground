@@ -1,4 +1,5 @@
 import { createLettaClient, simplifyContent } from "@playground/agents";
+import { logger } from "@playground/shared-types";
 import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
@@ -6,6 +7,15 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   const { content, instructions, metadata } = await request.json();
+  const agentId = process.env.PLAYGROUND_AGENT_ID;
+
+  if (!agentId) {
+    logger.error(
+      { error: "Missing PLAYGROUND_AGENT_ID" },
+      "Editorial Agent Stream configuration error",
+    );
+    return new Response("Server configuration error", { status: 500 });
+  }
 
   if (!content) {
     return new Response("Content is required", { status: 400 });
@@ -21,7 +31,7 @@ export async function POST(request: NextRequest) {
           client,
           content,
           instructions,
-          process.env.PLAYGROUND_AGENT_ID,
+          agentId,
           metadata, // Pass metadata to the AI agent
         )) {
           const data = `data: ${JSON.stringify(chunk)}\n\n`;
