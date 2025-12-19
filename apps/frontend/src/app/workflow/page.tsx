@@ -107,11 +107,11 @@ export default function WorkflowPage() {
 
   return (
     <div className="container mx-auto p-8 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">Vercel Workflow POC</h1>
+      <h1 className="text-3xl font-bold mb-6">Importer du contenu</h1>
 
       <div className="mb-6">
         <label htmlFor="xmlInput" className="block text-sm font-medium mb-2">
-          Paste Lhéo XML Content
+          Coller le contenu XML de Lhéo
         </label>
         <textarea
           id="xmlInput"
@@ -138,7 +138,7 @@ export default function WorkflowPage() {
             <title>Vercel Logo</title>
             <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" />
           </svg>
-          {isLoading ? "Starting..." : "Run with Vercel Workflow"}
+          {isLoading ? "En cours..." : "Lancer l'importation"}
         </button>
       </div>
 
@@ -164,7 +164,13 @@ export default function WorkflowPage() {
                 <p className="mt-2">
                   Status:{" "}
                   <span
-                    className={`font-semibold ${status === "completed" ? "text-green-600" : status === "failed" ? "text-red-600" : "text-blue-600"}`}
+                    className={`font-semibold ${
+                      status === "completed"
+                        ? "text-green-600"
+                        : status === "failed"
+                          ? "text-red-600"
+                          : "text-blue-600"
+                    }`}
                   >
                     {status}
                   </span>
