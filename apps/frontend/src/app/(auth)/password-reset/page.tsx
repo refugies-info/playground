@@ -37,8 +37,8 @@ export default function PasswordResetPage() {
     if (error) {
       throw error;
     }
-    // Redirect to dashboard on success
-    router.push("/dashboard");
+    // Redirect to documents on success
+    router.push("/documents");
   };
 
   return (

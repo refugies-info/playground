@@ -18,7 +18,7 @@ import { useDocument } from "./DocumentContext";
 export function EditorChat() {
   const {
     document,
-    setRewrittenContent,
+    setAiSuggestion,
     isProcessing,
     setIsProcessing,
     isComparisonMode,
@@ -36,7 +36,7 @@ export function EditorChat() {
   }, [isComparisonMode]);
 
   const handleImproveContent = async () => {
-    if (!document?.content) {
+    if (!document?.editorialContent) {
       setError("No document content to improve");
       return;
     }
@@ -55,8 +55,11 @@ export function EditorChat() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          content: document.content,
+          instructions:
+            "Transforme ce contenu en langage clair. Utilise le bloc compétence_transformation_langage_clair et format_sortie_transformation.",
+          content: document.editorialContent,
           flowId: document.id,
+          metadata: document.metadata, // Include ingestion_records metadata
         }),
         signal: abortControllerRef.current.signal,
       });
@@ -73,14 +76,16 @@ export function EditorChat() {
       }
 
       let finalContent = "";
+      let buffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
 
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split("\n");
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || ""; // Keep the last incomplete line in buffer
 
         for (const line of lines) {
           if (line.startsWith("data: ")) {
@@ -93,28 +98,67 @@ export function EditorChat() {
             try {
               const parsed = JSON.parse(data);
 
+              // Handle error messages from the backend
               if (parsed.type === "error") {
                 setError(parsed.message);
                 continue;
               }
 
-              if (parsed.type === "content") {
-                finalContent = parsed.content;
-              } else {
-                // It's a reasoning step
+              if (parsed.message_type === "assistant_message") {
+                const content =
+                  typeof parsed.content === "string"
+                    ? parsed.content
+                    : JSON.stringify(parsed.content);
+
+                finalContent = content;
                 setReasoning((prev) => [
                   ...prev,
-                  { ...parsed, id: Math.random().toString(36).substring(7) },
+                  {
+                    id: Math.random().toString(36).substring(7),
+                    timestamp: parsed.timestamp || new Date().toISOString(),
+                    message: content,
+                    type: "response",
+                  },
+                ]);
+              } else if (parsed.message_type === "reasoning_message") {
+                const content =
+                  typeof parsed.reasoning === "string"
+                    ? parsed.reasoning
+                    : JSON.stringify(parsed.reasoning);
+
+                setReasoning((prev) => [
+                  ...prev,
+                  {
+                    id: Math.random().toString(36).substring(7),
+                    timestamp: parsed.timestamp || new Date().toISOString(),
+                    message: content,
+                    type: "thinking",
+                  },
+                ]);
+              } else if (parsed.message_type === "tool_call_message") {
+                setReasoning((prev) => [
+                  ...prev,
+                  {
+                    id: Math.random().toString(36).substring(7),
+                    timestamp: parsed.timestamp || new Date().toISOString(),
+                    message: `Calling function: ${
+                      parsed.tool_call?.name || "unknown"
+                    }`,
+                    type: "function_call",
+                  },
                 ]);
               }
-            } catch (_e) {}
+            } catch (error) {
+              // biome-ignore lint/suspicious/noConsole: Necessary for debugging stream parsing errors
+              console.error("Error parsing stream data:", { error, data });
+            }
           }
         }
       }
 
       // Update document with final content
       if (finalContent) {
-        setRewrittenContent(finalContent);
+        setAiSuggestion(finalContent);
       }
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
@@ -151,7 +195,7 @@ export function EditorChat() {
         isCollapsed ? "w-12" : "w-80",
       )}
     >
-      <div className="flex items-center p-3 border-b">
+      <div className="flex items-center p-2 border-b">
         <Button
           variant="ghost"
           size="sm"
@@ -221,7 +265,7 @@ export function EditorChat() {
           <button
             type="button"
             onClick={handleImproveContent}
-            disabled={isProcessing || !document?.content}
+            disabled={isProcessing || !document?.editorialContent}
             className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             {isProcessing ? (

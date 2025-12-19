@@ -6,15 +6,18 @@ import { createContext, type ReactNode, useContext, useState } from "react";
 interface DocumentData {
   id: string;
   title: string;
-  content: string; // Current content (can be original or rewritten)
-  originalContent?: string; // Original content before any AI modifications
-  rewrittenContent?: string; // AI-rewritten content
+  editorialContent: string; // Current working content from editorial_records (edited by humans or accepted AI suggestions)
+  ingestionContent?: string; // Immutable original content from ingestion_records (for comparison/rollback)
+  aiSuggestion?: string; // Pending AI suggestion awaiting user review
+  metadata?: Record<string, unknown>; // Metadata from ingestion_records
 }
 
 interface DocumentContextType {
   document: DocumentData | null;
-  setDocument: (doc: DocumentData) => void;
-  setRewrittenContent: (rewrittenContent: string) => void;
+  setDocument: React.Dispatch<React.SetStateAction<DocumentData | null>>;
+  setAiSuggestion: (suggestion: string) => void;
+  acceptAiSuggestion: () => void;
+  rejectAiSuggestion: () => void;
   rollbackToOriginal: () => void;
   isComparisonMode: boolean;
   setIsComparisonMode: (mode: boolean) => void;
@@ -47,29 +50,45 @@ export function DocumentProvider({
   const [isRawMarkdownMode, setIsRawMarkdownMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const setRewrittenContent = (rewrittenContent: string) => {
+  const setAiSuggestion = (suggestion: string) => {
     if (!document) return;
 
     setDocument({
       ...document,
-      // Store original content if not already stored
-      originalContent: document.originalContent || document.content,
-      rewrittenContent,
-      // Update current content to the rewritten version
-      content: rewrittenContent,
+      // Preserve immutable ingestionContent
+      ingestionContent: document.ingestionContent,
+      aiSuggestion: suggestion,
+    });
+  };
+
+  const acceptAiSuggestion = () => {
+    if (!document?.aiSuggestion) return;
+
+    setDocument({
+      ...document,
+      editorialContent: document.aiSuggestion,
+      aiSuggestion: undefined,
+    });
+  };
+
+  const rejectAiSuggestion = () => {
+    if (!document) return;
+
+    setDocument({
+      ...document,
+      aiSuggestion: undefined,
     });
   };
 
   const rollbackToOriginal = () => {
-    if (!document || !document.originalContent) return;
+    if (!document || !document.ingestionContent) return;
 
     setDocument({
       ...document,
-      content: document.originalContent,
-      rewrittenContent: undefined,
-      originalContent: undefined,
+      editorialContent: document.ingestionContent,
+      aiSuggestion: undefined,
+      // Keep ingestionContent - it's immutable and always available for comparison
     });
-    setIsComparisonMode(false);
   };
 
   const saveDocument = async (): Promise<{
@@ -86,7 +105,10 @@ export function DocumentProvider({
       const { saveDocument: saveDocumentAction } = await import(
         "@/services/document-actions"
       );
-      const result = await saveDocumentAction(document.id, document.content);
+      const result = await saveDocumentAction(
+        document.id,
+        document.editorialContent,
+      );
       return result;
     } catch (error) {
       logger.error(error, "Error saving document");
@@ -101,7 +123,9 @@ export function DocumentProvider({
       value={{
         document,
         setDocument,
-        setRewrittenContent,
+        setAiSuggestion,
+        acceptAiSuggestion,
+        rejectAiSuggestion,
         rollbackToOriginal,
         isComparisonMode,
         setIsComparisonMode,

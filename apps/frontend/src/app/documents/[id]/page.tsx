@@ -24,7 +24,9 @@ export default async function DocumentPage(props: DocumentPageProps) {
   const initialData = {
     id: document.id,
     title: document.title,
-    content: document.content,
+    editorialContent: document.content, // Current working version (editorial or ingestion)
+    ingestionContent: document.ingestionContent, // Immutable original from ingestion_records
+    metadata: document.metadata, // Include metadata from ingestion_records
   };
 
   return <DocumentEditorLayout documentId={id} initialData={initialData} />;

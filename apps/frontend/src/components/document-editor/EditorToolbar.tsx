@@ -14,7 +14,7 @@ export function EditorToolbar() {
     saveDocument,
     isSaving,
   } = useDocument();
-  const hasRewrittenContent = !!document?.rewrittenContent;
+  const hasRewrittenContent = !!document?.ingestionContent;
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -61,7 +61,9 @@ export function EditorToolbar() {
             onClick={() => setIsComparisonMode(!isComparisonMode)}
           >
             <GitCompare className="w-4 h-4" />
-            {isComparisonMode ? "Hide Comparison" : "Compare Versions"}
+            {isComparisonMode
+              ? "Masquer la comparaison"
+              : "Comparer avec la version initiale"}
           </Button>
         )}
 

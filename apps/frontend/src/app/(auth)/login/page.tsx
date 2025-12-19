@@ -21,7 +21,7 @@ export default function LoginPage() {
 
     // Refresh router to update server components and middleware
     router.refresh();
-    router.push("/dashboard");
+    router.push("/documents");
   };
 
   return (

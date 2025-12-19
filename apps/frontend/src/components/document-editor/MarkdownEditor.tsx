@@ -10,9 +10,11 @@ import { Eye, FileText, Loader2 } from "lucide-react";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import rehypeStringify from "rehype-stringify";
+import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
+import { AiSuggestionBanner } from "./AiSuggestionBanner";
 import { useDocument } from "./DocumentContext";
 import { OriginalContentView } from "./OriginalContentView";
 import { RawMarkdownView } from "./RawMarkdownView";
@@ -81,6 +83,7 @@ async function convertMixedContentToHtml(content: string): Promise<string> {
   // Convert Markdown to HTML using unified pipeline
   const result = await unified()
     .use(remarkParse)
+    .use(remarkGfm) // 👈 Add support for GitHub Flavored Markdown (tables, strikethrough, etc.)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw) // 👈 Parse raw HTML nodes into proper HTML AST
     .use(rehypeSanitize, sanitizeSchema)
@@ -101,7 +104,9 @@ export function MarkdownEditor() {
   } = useDocument();
   const [rawMarkdown, setRawMarkdown] = useState("");
   const [editor, setEditor] = useState<BlockNoteEditor | null>(null);
-  const isLoadingContent = useRef(false);
+  // We use this to track updates that came from the editor itself,
+  // so we don't reload them and cause an infinite loop due to serialization differences.
+  const lastSyncedContent = useRef<string | null>(null);
 
   // Initialize editor only on client side
   useEffect(() => {
@@ -116,25 +121,32 @@ export function MarkdownEditor() {
     initEditor();
   }, []);
 
-  // Sync editor changes back to document context
+  // Sync editor changes back to document context (only when not showing AI suggestion)
   useEffect(() => {
-    if (!editor || !document) return;
+    if (!editor || document?.aiSuggestion) return; // Don't sync when showing AI suggestion
 
     const handleEditorChange = async () => {
-      // Don't sync changes while we're loading content from props
-      if (isLoadingContent.current) return;
-
       try {
         // Convert editor content to markdown
         const markdown = await editor.blocksToMarkdownLossy(editor.document);
 
+        // Update our ref so we know this content came from the editor
+        lastSyncedContent.current = markdown;
+
         // Update the document content in context
-        setDocument({
-          ...document,
-          content: markdown,
+        setDocument((prev) => {
+          if (!prev) return null;
+          // Prevent loop if content is identical
+          if (prev.editorialContent === markdown) return prev;
+
+          return {
+            ...prev,
+            editorialContent: markdown,
+          };
         });
       } catch (error) {
         // Silently fail - don't disrupt editing experience, but log for debugging
+        // biome-ignore lint/suspicious/noConsole: debugging
         console.error(
           "Error syncing editor changes to document context:",
           error,
@@ -147,42 +159,65 @@ export function MarkdownEditor() {
 
     // Cleanup subscription on unmount
     return unsubscribe;
-  }, [editor, document, setDocument]);
+  }, [editor, setDocument, document?.aiSuggestion]);
 
-  // Load markdown content when document changes
+  // Load markdown content when document changes or AI suggestion arrives
   useEffect(() => {
-    if (!editor || !document?.content) return;
+    if (!editor) return;
+
+    // Show AI suggestion if it exists, otherwise show current content
+    const contentToShow = document?.aiSuggestion || document?.editorialContent;
+    if (!contentToShow) return;
 
     async function loadContent() {
       if (!editor) return;
 
-      // Set flag to prevent onChange from firing during load
-      isLoadingContent.current = true;
+      // Set flag FIRST to prevent onChange from firing during load
+
+      // If the content is exactly what we just synced from the editor, don't re-load it.
+      // This breaks the loop where (Markdown -> Blocks -> Markdown) conversion causes differences.
+      if (
+        lastSyncedContent.current &&
+        contentToShow === lastSyncedContent.current
+      ) {
+        return;
+      }
 
       try {
         // Convert mixed Markdown/HTML to pure HTML
         const htmlContent = await convertMixedContentToHtml(
-          document?.content ?? "",
+          contentToShow ?? "",
         );
 
         // Parse HTML to BlockNote blocks
         const blocks = await editor.tryParseHTMLToBlocks(htmlContent);
+
+        // Get the markdown representation BEFORE we update the editor
+        // This way we can set lastSyncedContent to prevent the onChange loop
+        const futureMarkdown = await editor.blocksToMarkdownLossy(blocks);
+
+        // Update lastSyncedContent BEFORE replaceBlocks to prevent onChange from triggering
+        lastSyncedContent.current = futureMarkdown;
+
+        // Now replace the blocks - onChange will fire but will see content matches lastSyncedContent
         editor.replaceBlocks(editor.document, blocks);
 
         // Also update raw markdown state
-        const markdown = await editor.blocksToMarkdownLossy(editor.document);
-        setRawMarkdown(markdown);
+        setRawMarkdown(futureMarkdown);
       } catch (error) {
         // Silently fail - don't disrupt editing experience, but log for debugging
+        // biome-ignore lint/suspicious/noConsole: debugging
         console.error("Error loading content into editor:", error);
       } finally {
-        // Re-enable onChange immediately after load is complete
-        isLoadingContent.current = false;
+        // Wait for browser to process the update before releasing lock
+        await new Promise((resolve) =>
+          requestAnimationFrame(() => resolve(undefined)),
+        );
       }
     }
 
     loadContent();
-  }, [editor, document?.content]);
+  }, [editor, document?.editorialContent, document?.aiSuggestion]);
 
   // Update raw markdown when switching to raw mode
   useEffect(() => {
@@ -207,35 +242,39 @@ export function MarkdownEditor() {
     if (document) {
       setDocument({
         ...document,
-        content: newMarkdown,
+        editorialContent: newMarkdown,
       });
     }
 
     // Update the editor blocks when content changes
     if (editor) {
-      isLoadingContent.current = true;
       try {
         const blocks = await editor.tryParseMarkdownToBlocks(newMarkdown);
         editor.replaceBlocks(editor.document, blocks);
       } catch (error) {
         // Silently fail - don't disrupt editing experience, but log for debugging
+        // biome-ignore lint/suspicious/noConsole: debugging
         console.error("Error updating editor blocks from markdown:", error);
       } finally {
-        isLoadingContent.current = false;
       }
     }
   };
 
   if (!editor) {
     return (
-      <div className="flex items-center justify-center h-full">
-        Loading editor...
+      <div className="flex flex-1 w-full items-center justify-center h-full bg-white">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <p className="text-sm font-medium text-gray-700">
+            Chargement de l'éditeur...
+          </p>
+        </div>
       </div>
     );
   }
 
   // Render side-by-side view in comparison mode
-  if (isComparisonMode && document?.originalContent) {
+  if (isComparisonMode && document?.ingestionContent) {
     return (
       <div className="flex flex-1 overflow-hidden relative">
         {/* Processing overlay */}
@@ -257,7 +296,7 @@ export function MarkdownEditor() {
         <div className="flex-1 overflow-y-auto bg-white">
           <div className="sticky top-0 z-10 bg-white border-b px-8 py-4">
             <h3 className="font-semibold text-sm text-gray-700">
-              AI-Rewritten Content
+              Contenu modifié
             </h3>
             <p className="text-xs text-gray-500">Editable</p>
           </div>
@@ -266,7 +305,7 @@ export function MarkdownEditor() {
               <BlockNoteView
                 editor={editor}
                 theme="light"
-                editable={!isProcessing}
+                editable={!isProcessing && !document?.aiSuggestion}
               />
             </div>
           </div>
@@ -289,6 +328,9 @@ export function MarkdownEditor() {
           </div>
         </div>
       )}
+
+      {/* AI Suggestion Banner */}
+      <AiSuggestionBanner />
 
       {/* Tab Bar */}
       <div className="border-b bg-gray-50">
@@ -351,7 +393,7 @@ export function MarkdownEditor() {
               <BlockNoteView
                 editor={editor}
                 theme="light"
-                editable={!isProcessing}
+                editable={!isProcessing && !document?.aiSuggestion}
               />
             </div>
           </div>

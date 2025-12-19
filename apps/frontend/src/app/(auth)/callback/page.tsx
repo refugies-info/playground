@@ -31,8 +31,8 @@ function CallbackContent() {
           }
         }
 
-        // Redirect to dashboard
-        router.push("/dashboard");
+        // Redirect to documents
+        router.push("/documents");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Authentication failed");
       } finally {

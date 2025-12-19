@@ -5,12 +5,7 @@ export async function proxy(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request);
 
   // Protected routes that require authentication
-  const PROTECTED_ROUTES = [
-    "/dashboard",
-    "/documents",
-    "/profile",
-    "/account-linking",
-  ];
+  const PROTECTED_ROUTES = ["/documents", "/profile", "/account-linking"];
 
   // Public routes that don't require authentication
   const PUBLIC_ROUTES = ["/login", "/signup", "/password-reset", "/callback"];
@@ -28,7 +23,7 @@ export async function proxy(request: NextRequest) {
   // Handle root path "/"
   if (pathname === "/") {
     if (user) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL("/documents", request.url));
     } else {
       return NextResponse.redirect(new URL("/login", request.url));
     }
@@ -41,10 +36,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // If accessing public auth route with session, redirect to dashboard
+  // If accessing public auth route with session, redirect to documents
   // EXCEPT for password-reset (allow password reset even when authenticated)
   if (isPublicRoute && user && !pathname.startsWith("/password-reset")) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/documents", request.url));
   }
 
   return supabaseResponse;

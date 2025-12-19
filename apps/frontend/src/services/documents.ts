@@ -358,9 +358,11 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     rcoRecord?.metadata ||
     {}) as Metadata;
 
-  // Priority: editorial > ingestion > empty
-  // We do not use rcoRecord.source_raw as per requirements
+  // Current working content: editorial > ingestion > empty
   const content = editorialRecord?.markdown || ingestionRecord?.markdown || "";
+
+  // Immutable ingestion content (always from ingestion_records)
+  const ingestionContent = ingestionRecord?.markdown || "";
 
   // Title extraction priority:
   // 1. Extract from metadata (handles LHEO structure, title, intitule-formation)
@@ -377,6 +379,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     status: workflow.status,
     state: workflow.progress,
     content,
+    ingestionContent,
     metadata,
   };
 }
