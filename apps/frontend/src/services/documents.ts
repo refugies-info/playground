@@ -330,7 +330,16 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     workflow.ingestion_record_id
       ? supabase
           .from("ingestion_records")
-          .select("markdown, metadata")
+          .select(
+            `
+            markdown,
+            metadata,
+            ingestion_report_id,
+            letta_reports (
+              markdown
+            )
+          `,
+          )
           .eq("id", workflow.ingestion_record_id)
           .single()
       : Promise.resolve({ data: null, error: null }),
@@ -344,8 +353,26 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   ]);
 
   const rcoRecord = rcoResult.data;
-  const ingestionRecord = ingestionResult.data;
+  // biome-ignore lint/suspicious/noExplicitAny: Supabase types outdated
+  const ingestionRecord = ingestionResult.data as any;
   const editorialRecord = editorialResult.data;
+
+  // Fetch compliance report from the joined data
+  let complianceReport = "";
+  // biome-ignore lint/suspicious/noExplicitAny: Supabase types outdated
+  const typedIngestionRecord = ingestionRecord as any;
+
+  if (typedIngestionRecord?.letta_reports) {
+    // If it's a single relation (one-to-one or one-to-many treated as single), it might be an object or array.
+    // Based on typical Supabase/PostgREST join:
+    const reportData = Array.isArray(typedIngestionRecord.letta_reports)
+      ? typedIngestionRecord.letta_reports[0]
+      : typedIngestionRecord.letta_reports;
+
+    if (reportData?.markdown) {
+      complianceReport = reportData.markdown;
+    }
+  }
 
   if (!rcoRecord) {
     logger.error(rcoResult.error, "Error fetching rco_record");
@@ -380,6 +407,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     state: workflow.progress,
     content,
     ingestionContent,
+    complianceReport,
     metadata,
   };
 }

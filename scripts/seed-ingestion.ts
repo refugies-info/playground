@@ -45,13 +45,40 @@ async function main() {
   const rcoMdContent = fs.readFileSync(rcoMdPath, "utf-8");
   const { data: rcoMetadata } = matter(rcoMdContent);
 
-  // 2. Load Reports (Optional)
+  // 2. Load Reports (Optional or Generate)
   // biome-ignore lint/suspicious/noExplicitAny: Script convenience
   let ingestionReport: { markdown: string; metadata: any } | undefined;
+
   if (fs.existsSync(ingestionMdPath)) {
     const content = fs.readFileSync(ingestionMdPath, "utf-8");
     const { data: metadata, content: markdown } = matter(content);
     ingestionReport = { markdown, metadata };
+  } else {
+    logger.info(
+      "Report file not found. Generating ingestion report with Letta...",
+    );
+    try {
+      // Dynamic require/import to access agents package
+      const {
+        createLettaClient,
+        generateIngestionReport,
+      } = require("../packages/agents/src/index");
+
+      const lettaClient = createLettaClient();
+      const reportMarkdown = await generateIngestionReport(lettaClient, rcoXml);
+
+      // Save it for future use
+      fs.mkdirSync(path.dirname(ingestionMdPath), { recursive: true });
+      fs.writeFileSync(ingestionMdPath, reportMarkdown);
+      logger.info(`Generated report saved to ${ingestionMdPath}`);
+
+      const { data: metadata, content: markdown } = matter(reportMarkdown);
+      ingestionReport = { markdown, metadata };
+    } catch (error) {
+      logger.error(error, "Failed to generate ingestion report");
+      // Continue without report? Or fail?
+      // For seeding, maybe acceptable to continue, but improved logic.
+    }
   }
 
   // 3. Call Ingestion Function

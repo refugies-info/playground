@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import matter from "gray-matter";
-import { Eye, FileText, Loader2 } from "lucide-react";
+import { Eye, FileText, GitCompare, Loader2 } from "lucide-react";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import rehypeStringify from "rehype-stringify";
@@ -93,11 +93,12 @@ async function convertMixedContentToHtml(content: string): Promise<string> {
   return String(result);
 }
 
-export function MarkdownEditor() {
+export function EditionView() {
   const {
     document,
     setDocument,
     isComparisonMode,
+    setIsComparisonMode,
     isProcessing,
     isRawMarkdownMode,
     setIsRawMarkdownMode,
@@ -276,7 +277,7 @@ export function MarkdownEditor() {
   // Render side-by-side view in comparison mode
   if (isComparisonMode && document?.ingestionContent) {
     return (
-      <div className="flex flex-1 overflow-hidden relative">
+      <div className="flex-1 overflow-hidden bg-white relative flex flex-col">
         {/* Processing overlay */}
         {isProcessing && (
           <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -289,24 +290,107 @@ export function MarkdownEditor() {
           </div>
         )}
 
-        {/* Original content on the left */}
-        <OriginalContentView />
+        {/* AI Suggestion Banner */}
+        <AiSuggestionBanner />
 
-        {/* Rewritten content on the right */}
-        <div className="flex-1 overflow-y-auto bg-white">
-          <div className="sticky top-0 z-10 bg-white border-b px-8 py-4">
-            <h3 className="font-semibold text-sm text-gray-700">
-              Contenu modifié
-            </h3>
-            <p className="text-xs text-gray-500">Editable</p>
+        {/* Tab Bar - same as normal mode */}
+        <div className="border-b bg-gray-50">
+          <div className="flex justify-between items-center">
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => setIsRawMarkdownMode(false)}
+                disabled={isProcessing}
+                className={`
+                  flex items-center gap-2 px-3 py-2 text-xs font-medium border-b-2 transition-colors
+                  ${
+                    !isRawMarkdownMode
+                      ? "border-blue-600 text-blue-600 bg-white"
+                      : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  }
+                  ${
+                    isProcessing
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer"
+                  }
+                `}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                Visual Editor
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsRawMarkdownMode(true)}
+                disabled={isProcessing}
+                className={`
+                  flex items-center gap-2 px-3 py-2 text-xs font-medium border-b-2 transition-colors
+                  ${
+                    isRawMarkdownMode
+                      ? "border-blue-600 text-blue-600 bg-white"
+                      : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  }
+                  ${
+                    isProcessing
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer"
+                  }
+                `}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Raw Markdown
+              </button>
+            </div>
+
+            {/* Comparison button on the right */}
+            {document?.ingestionContent && (
+              <button
+                type="button"
+                onClick={() => setIsComparisonMode(!isComparisonMode)}
+                disabled={isProcessing}
+                className={`
+                  flex items-center gap-2 px-3 py-2 mr-2 text-xs font-medium rounded-t transition-colors
+                  ${
+                    isComparisonMode
+                      ? "bg-blue-600 text-white"
+                      : "bg-white text-gray-700 hover:bg-gray-100 border border-b-0"
+                  }
+                  ${
+                    isProcessing
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer"
+                  }
+                `}
+              >
+                <GitCompare className="w-3.5 h-3.5" />
+                {isComparisonMode
+                  ? "Masquer la comparaison"
+                  : "Comparer avec la version initiale"}
+              </button>
+            )}
           </div>
-          <div className="p-8">
-            <div className="max-w-3xl mx-auto">
-              <BlockNoteView
-                editor={editor}
-                theme="light"
-                editable={!isProcessing && !document?.aiSuggestion}
-              />
+        </div>
+
+        {/* Comparison content */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Original content on the left */}
+          <OriginalContentView />
+
+          {/* Rewritten content on the right */}
+          <div className="flex-1 overflow-y-auto bg-white">
+            <div className="sticky top-0 z-10 bg-white border-b px-8 py-4">
+              <h3 className="font-semibold text-sm text-gray-700">
+                Contenu modifié
+              </h3>
+              <p className="text-xs text-gray-500">Editable</p>
+            </div>
+            <div className="p-8">
+              <div className="max-w-3xl mx-auto">
+                <BlockNoteView
+                  editor={editor}
+                  theme="light"
+                  editable={!isProcessing && !document?.aiSuggestion}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -334,12 +418,13 @@ export function MarkdownEditor() {
 
       {/* Tab Bar */}
       <div className="border-b bg-gray-50">
-        <div className="flex gap-1">
-          <button
-            type="button"
-            onClick={() => setIsRawMarkdownMode(false)}
-            disabled={isProcessing}
-            className={`
+        <div className="flex justify-between items-center">
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => setIsRawMarkdownMode(false)}
+              disabled={isProcessing}
+              className={`
               flex items-center gap-2 px-3 py-2 text-xs font-medium border-b-2 transition-colors
               ${
                 !isRawMarkdownMode
@@ -352,15 +437,15 @@ export function MarkdownEditor() {
                   : "cursor-pointer"
               }
             `}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            Visual Editor
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsRawMarkdownMode(true)}
-            disabled={isProcessing}
-            className={`
+            >
+              <Eye className="w-3.5 h-3.5" />
+              Visual Editor
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsRawMarkdownMode(true)}
+              disabled={isProcessing}
+              className={`
               flex items-center gap-2 px-3 py-2 text-xs font-medium border-b-2 transition-colors
               ${
                 isRawMarkdownMode
@@ -373,10 +458,38 @@ export function MarkdownEditor() {
                   : "cursor-pointer"
               }
             `}
-          >
-            <FileText className="w-3.5 h-3.5" />
-            Raw Markdown
-          </button>
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Raw Markdown
+            </button>
+          </div>
+
+          {/* Comparison button on the right */}
+          {document?.ingestionContent && (
+            <button
+              type="button"
+              onClick={() => setIsComparisonMode(!isComparisonMode)}
+              disabled={isProcessing}
+              className={`
+                flex items-center gap-2 px-3 py-2 mr-2 text-xs font-medium rounded-t transition-colors
+                ${
+                  isComparisonMode
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-gray-700 hover:bg-gray-100 border border-b-0"
+                }
+                ${
+                  isProcessing
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer"
+                }
+              `}
+            >
+              <GitCompare className="w-3.5 h-3.5" />
+              {isComparisonMode
+                ? "Masquer la comparaison"
+                : "Comparer avec la version initiale"}
+            </button>
+          )}
         </div>
       </div>
 

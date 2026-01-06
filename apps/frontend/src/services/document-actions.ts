@@ -73,3 +73,31 @@ export async function saveDocument(
     return { success: false, error: "Unexpected error occurred" };
   }
 }
+
+export async function toggleWorkflowStatus(
+  workflowId: string,
+  currentStatus: string,
+): Promise<{ success: boolean; newStatus?: string; error?: string }> {
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
+  try {
+    const newStatus =
+      currentStatus === "compliant" ? "non_compliant" : "compliant";
+
+    const { error: updateError } = await supabase
+      .from("workflows")
+      .update({ status: newStatus })
+      .eq("id", workflowId);
+
+    if (updateError) {
+      logger.error(updateError, "Error updating workflow status");
+      return { success: false, error: "Failed to update workflow status" };
+    }
+
+    return { success: true, newStatus };
+  } catch (error) {
+    logger.error(error, "Unexpected error removing workflow status");
+    return { success: false, error: "Unexpected error occurred" };
+  }
+}

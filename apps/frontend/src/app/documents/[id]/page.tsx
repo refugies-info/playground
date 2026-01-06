@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { DocumentEditorLayout } from "@/components/document-editor/DocumentEditorLayout";
+import { DocumentLayout } from "@/components/document-editor/DocumentLayout";
 import { getDocumentById } from "@/services/documents";
 
 interface DocumentPageProps {
@@ -24,10 +24,13 @@ export default async function DocumentPage(props: DocumentPageProps) {
   const initialData = {
     id: document.id,
     title: document.title,
+    status: document.status,
+    state: document.state,
     editorialContent: document.content, // Current working version (editorial or ingestion)
     ingestionContent: document.ingestionContent, // Immutable original from ingestion_records
+    complianceReport: document.complianceReport,
     metadata: document.metadata, // Include metadata from ingestion_records
   };
 
-  return <DocumentEditorLayout documentId={id} initialData={initialData} />;
+  return <DocumentLayout documentId={params.id} initialData={initialData} />;
 }

@@ -104,6 +104,9 @@ importers:
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      gray-matter:
+        specifier: ^4.0.3
+        version: 4.0.3
       lucide-react:
         specifier: ^0.554.0
         version: 0.554.0(react@19.2.0)

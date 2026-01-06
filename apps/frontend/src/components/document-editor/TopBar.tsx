@@ -1,20 +1,13 @@
 "use client";
 
 import { Button } from "@playground/ui/primitives";
-import { ArrowLeft, GitCompare, Save } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useDocument } from "./DocumentContext";
 
-export function EditorToolbar() {
-  const {
-    document,
-    isComparisonMode,
-    setIsComparisonMode,
-    saveDocument,
-    isSaving,
-  } = useDocument();
-  const hasRewrittenContent = !!document?.ingestionContent;
+export function TopBar() {
+  const { saveDocument, isSaving } = useDocument();
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -51,21 +44,6 @@ export function EditorToolbar() {
           <span className="text-sm text-green-600">Enregistré avec succès</span>
         )}
         {saveError && <span className="text-sm text-red-600">{saveError}</span>}
-
-        {/* Comparison Toggle */}
-        {hasRewrittenContent && (
-          <Button
-            variant={isComparisonMode ? "primary" : "outline"}
-            size="sm"
-            className="gap-2"
-            onClick={() => setIsComparisonMode(!isComparisonMode)}
-          >
-            <GitCompare className="w-4 h-4" />
-            {isComparisonMode
-              ? "Masquer la comparaison"
-              : "Comparer avec la version initiale"}
-          </Button>
-        )}
 
         {/* Save Button */}
         <Button

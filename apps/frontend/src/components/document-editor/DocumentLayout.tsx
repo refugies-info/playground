@@ -1,0 +1,50 @@
+"use client";
+
+import { ArbitrationView } from "./ArbitrationView";
+import { AssistantPanel } from "./AssistantPanel";
+import { DocumentProvider, useDocument } from "./DocumentContext";
+import { EditionView } from "./EditionView";
+import { EditorNavigation } from "./EditorNavigation";
+import { TopBar } from "./TopBar";
+
+interface DocumentLayoutProps {
+  documentId: string;
+  // biome-ignore lint/suspicious/noExplicitAny: Generic initial data
+  initialData?: any; // Replace with proper type
+}
+
+function EditorContent() {
+  const { activeView } = useDocument();
+
+  if (activeView === "compliance") {
+    return <ArbitrationView />;
+  }
+
+  return <EditionView />;
+}
+
+export function DocumentLayout({
+  documentId: _documentId,
+  initialData,
+}: DocumentLayoutProps) {
+  return (
+    <DocumentProvider initialData={initialData}>
+      <div className="flex flex-col h-screen w-full overflow-hidden bg-gray-100">
+        {/* Top Toolbar */}
+        <TopBar />
+
+        {/* Main Content Area */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left Sidebar */}
+          <EditorNavigation />
+
+          {/* Center Editor */}
+          <EditorContent />
+
+          {/* Right Chat */}
+          <AssistantPanel />
+        </div>
+      </div>
+    </DocumentProvider>
+  );
+}

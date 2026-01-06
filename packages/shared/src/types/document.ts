@@ -15,6 +15,7 @@ export interface Document {
   state: string;
   content: string;
   ingestionContent?: string; // Immutable original content from ingestion_records
+  complianceReport?: string; // Markdown content of the compliance report
   metadata: Record<string, unknown>;
 }
 
