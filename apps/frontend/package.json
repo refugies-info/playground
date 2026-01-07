@@ -22,6 +22,7 @@
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "2.84.0",
     "@tanstack/react-table": "^8.21.3",
+    "gray-matter": "^4.0.3",
     "lucide-react": "^0.554.0",
     "next": "16.0.10",
     "react": "19.2.0",

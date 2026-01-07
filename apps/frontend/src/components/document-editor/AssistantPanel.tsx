@@ -15,7 +15,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useDocument } from "./DocumentContext";
 
-export function EditorChat() {
+export function AssistantPanel() {
   const {
     document,
     setAiSuggestion,

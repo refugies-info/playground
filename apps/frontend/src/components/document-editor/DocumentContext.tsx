@@ -6,8 +6,11 @@ import { createContext, type ReactNode, useContext, useState } from "react";
 interface DocumentData {
   id: string;
   title: string;
+  status: string; // Workflow status
+  state: string; // Workflow progress state
   editorialContent: string; // Current working content from editorial_records (edited by humans or accepted AI suggestions)
   ingestionContent?: string; // Immutable original content from ingestion_records (for comparison/rollback)
+  complianceReport?: string; // Markdown content of the compliance report
   aiSuggestion?: string; // Pending AI suggestion awaiting user review
   metadata?: Record<string, unknown>; // Metadata from ingestion_records
 }
@@ -28,6 +31,8 @@ interface DocumentContextType {
   setIsRawMarkdownMode: (mode: boolean) => void;
   saveDocument: () => Promise<{ success: boolean; error?: string }>;
   isSaving: boolean;
+  activeView: "edit" | "compliance";
+  setActiveView: (view: "edit" | "compliance") => void;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
@@ -44,6 +49,7 @@ export function DocumentProvider({
   const [document, setDocument] = useState<DocumentData | null>(
     initialData || null,
   );
+  const [activeView, setActiveView] = useState<"edit" | "compliance">("edit");
   const [isLoading] = useState(false);
   const [isComparisonMode, setIsComparisonMode] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -136,6 +142,8 @@ export function DocumentProvider({
         setIsRawMarkdownMode,
         saveDocument,
         isSaving,
+        activeView,
+        setActiveView,
       }}
     >
       {children}

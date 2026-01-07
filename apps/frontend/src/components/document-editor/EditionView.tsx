@@ -5,99 +5,20 @@ import { BlockNoteView } from "@blocknote/mantine";
 import { useEffect, useRef, useState } from "react";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import matter from "gray-matter";
-import { Eye, FileText, Loader2 } from "lucide-react";
-import rehypeRaw from "rehype-raw";
-import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
-import rehypeStringify from "rehype-stringify";
-import remarkGfm from "remark-gfm";
-import remarkParse from "remark-parse";
-import remarkRehype from "remark-rehype";
-import { unified } from "unified";
+import { Loader2 } from "lucide-react";
+import { convertMixedContentToHtml } from "@/lib/markdownUtils";
 import { AiSuggestionBanner } from "./AiSuggestionBanner";
 import { useDocument } from "./DocumentContext";
+import { EditorTabs } from "./EditorTabs";
 import { OriginalContentView } from "./OriginalContentView";
 import { RawMarkdownView } from "./RawMarkdownView";
 
-/**
- * Custom sanitization schema that allows common HTML tags
- * while still blocking dangerous elements like <script> and event handlers
- */
-const sanitizeSchema = {
-  ...defaultSchema,
-  tagNames: [
-    ...(defaultSchema.tagNames || []),
-    // Allow common HTML tags that might be in your content
-    "p",
-    "br",
-    "div",
-    "span",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "strong",
-    "em",
-    "b",
-    "i",
-    "u",
-    "ul",
-    "ol",
-    "li",
-    "a",
-    "blockquote",
-    "pre",
-    "code",
-    "hr",
-    "table",
-    "thead",
-    "tbody",
-    "tr",
-    "th",
-    "td",
-  ],
-};
-
-/**
- * Convert mixed content (Markdown + HTML) to pure HTML.
- *
- * This uses the remark ecosystem to properly parse Markdown and convert it to HTML,
- * which BlockNote can then parse via tryParseHTMLToBlocks.
- *
- * Pipeline:
- * 1. Strip YAML frontmatter with gray-matter
- * 2. Parse Markdown with remark-parse
- * 3. Convert to HTML AST with remark-rehype (allowing dangerous HTML to pass through)
- * 4. Parse raw HTML nodes with rehype-raw (critical for embedded HTML in markdown)
- * 5. Sanitize HTML to remove dangerous tags/attributes with rehype-sanitize
- * 6. Serialize to HTML string with rehype-stringify
- */
-async function convertMixedContentToHtml(content: string): Promise<string> {
-  if (!content) return "";
-
-  // Strip YAML frontmatter
-  const { content: contentWithoutFrontmatter } = matter(content);
-
-  // Convert Markdown to HTML using unified pipeline
-  const result = await unified()
-    .use(remarkParse)
-    .use(remarkGfm) // 👈 Add support for GitHub Flavored Markdown (tables, strikethrough, etc.)
-    .use(remarkRehype, { allowDangerousHtml: true })
-    .use(rehypeRaw) // 👈 Parse raw HTML nodes into proper HTML AST
-    .use(rehypeSanitize, sanitizeSchema)
-    .use(rehypeStringify)
-    .process(contentWithoutFrontmatter);
-
-  return String(result);
-}
-
-export function MarkdownEditor() {
+export function EditionView() {
   const {
     document,
     setDocument,
     isComparisonMode,
+    setIsComparisonMode,
     isProcessing,
     isRawMarkdownMode,
     setIsRawMarkdownMode,
@@ -107,6 +28,9 @@ export function MarkdownEditor() {
   // We use this to track updates that came from the editor itself,
   // so we don't reload them and cause an infinite loop due to serialization differences.
   const lastSyncedContent = useRef<string | null>(null);
+
+  // Check if document is compliant (editable)
+  const isCompliant = document?.status === "compliant";
 
   // Initialize editor only on client side
   useEffect(() => {
@@ -276,7 +200,7 @@ export function MarkdownEditor() {
   // Render side-by-side view in comparison mode
   if (isComparisonMode && document?.ingestionContent) {
     return (
-      <div className="flex flex-1 overflow-hidden relative">
+      <div className="flex-1 overflow-hidden bg-white relative flex flex-col">
         {/* Processing overlay */}
         {isProcessing && (
           <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -289,24 +213,35 @@ export function MarkdownEditor() {
           </div>
         )}
 
-        {/* Original content on the left */}
-        <OriginalContentView />
+        {/* AI Suggestion Banner */}
+        <AiSuggestionBanner />
 
-        {/* Rewritten content on the right */}
-        <div className="flex-1 overflow-y-auto bg-white">
-          <div className="sticky top-0 z-10 bg-white border-b px-8 py-4">
-            <h3 className="font-semibold text-sm text-gray-700">
-              Contenu modifié
-            </h3>
-            <p className="text-xs text-gray-500">Editable</p>
-          </div>
-          <div className="p-8">
-            <div className="max-w-3xl mx-auto">
-              <BlockNoteView
-                editor={editor}
-                theme="light"
-                editable={!isProcessing && !document?.aiSuggestion}
-              />
+        {/* Tab Bar - same as normal mode */}
+        <EditorTabs />
+
+        {/* Comparison content */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Original content on the left */}
+          <OriginalContentView />
+
+          {/* Rewritten content on the right */}
+          <div className="flex-1 overflow-y-auto bg-white">
+            <div className="sticky top-0 z-10 bg-white border-b px-8 py-4">
+              <h3 className="font-semibold text-sm text-gray-700">
+                Contenu modifié
+              </h3>
+              <p className="text-xs text-gray-500">Editable</p>
+            </div>
+            <div className="p-8">
+              <div className="max-w-3xl mx-auto">
+                <BlockNoteView
+                  editor={editor}
+                  theme="light"
+                  editable={
+                    isCompliant && !isProcessing && !document?.aiSuggestion
+                  }
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -333,52 +268,7 @@ export function MarkdownEditor() {
       <AiSuggestionBanner />
 
       {/* Tab Bar */}
-      <div className="border-b bg-gray-50">
-        <div className="flex gap-1">
-          <button
-            type="button"
-            onClick={() => setIsRawMarkdownMode(false)}
-            disabled={isProcessing}
-            className={`
-              flex items-center gap-2 px-3 py-2 text-xs font-medium border-b-2 transition-colors
-              ${
-                !isRawMarkdownMode
-                  ? "border-blue-600 text-blue-600 bg-white"
-                  : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              }
-              ${
-                isProcessing
-                  ? "opacity-50 cursor-not-allowed"
-                  : "cursor-pointer"
-              }
-            `}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            Visual Editor
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsRawMarkdownMode(true)}
-            disabled={isProcessing}
-            className={`
-              flex items-center gap-2 px-3 py-2 text-xs font-medium border-b-2 transition-colors
-              ${
-                isRawMarkdownMode
-                  ? "border-blue-600 text-blue-600 bg-white"
-                  : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              }
-              ${
-                isProcessing
-                  ? "opacity-50 cursor-not-allowed"
-                  : "cursor-pointer"
-              }
-            `}
-          >
-            <FileText className="w-3.5 h-3.5" />
-            Raw Markdown
-          </button>
-        </div>
-      </div>
+      <EditorTabs />
 
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto">
@@ -393,7 +283,9 @@ export function MarkdownEditor() {
               <BlockNoteView
                 editor={editor}
                 theme="light"
-                editable={!isProcessing && !document?.aiSuggestion}
+                editable={
+                  isCompliant && !isProcessing && !document?.aiSuggestion
+                }
               />
             </div>
           </div>
