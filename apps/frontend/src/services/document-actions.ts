@@ -77,7 +77,12 @@ export async function saveDocument(
 export async function toggleWorkflowStatus(
   workflowId: string,
   currentStatus: string,
-): Promise<{ success: boolean; newStatus?: string; error?: string }> {
+): Promise<{
+  success: boolean;
+  newStatus?: string;
+  newProgress?: string;
+  error?: string;
+}> {
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
@@ -85,9 +90,22 @@ export async function toggleWorkflowStatus(
     const newStatus =
       currentStatus === "compliant" ? "non_compliant" : "compliant";
 
+    // Determine the new progress based on status transition
+    let newProgress: string;
+    if (currentStatus === "non_compliant" && newStatus === "compliant") {
+      // Non-conforme → Conforme: document needs to be processed before publication
+      newProgress = "to_process";
+    } else if (currentStatus === "compliant" && newStatus === "non_compliant") {
+      // Conforme → Non-conforme: document is archived
+      newProgress = "archived";
+    } else {
+      // Fallback: keep existing progress (shouldn't happen in normal flow)
+      newProgress = currentStatus === "compliant" ? "to_process" : "archived";
+    }
+
     const { error: updateError } = await supabase
       .from("workflows")
-      .update({ status: newStatus })
+      .update({ status: newStatus, progress: newProgress })
       .eq("id", workflowId);
 
     if (updateError) {
@@ -95,7 +113,7 @@ export async function toggleWorkflowStatus(
       return { success: false, error: "Failed to update workflow status" };
     }
 
-    return { success: true, newStatus };
+    return { success: true, newStatus, newProgress };
   } catch (error) {
     logger.error(error, "Unexpected error removing workflow status");
     return { success: false, error: "Unexpected error occurred" };

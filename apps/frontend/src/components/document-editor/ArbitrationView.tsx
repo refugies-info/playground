@@ -25,7 +25,11 @@ export function ArbitrationView() {
       const result = await toggleWorkflowStatus(document.id, document.status);
 
       if (result.success && result.newStatus) {
-        setDocument({ ...document, status: result.newStatus });
+        setDocument({
+          ...document,
+          status: result.newStatus,
+          state: result.newProgress || document.state,
+        });
       }
     } catch (error) {
       console.error("Failed to toggle status", error);
