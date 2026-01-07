@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useDocument } from "./DocumentContext";
 
 export function TopBar() {
-  const { saveDocument, isSaving } = useDocument();
+  const { document, saveDocument, isSaving } = useDocument();
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -45,13 +45,13 @@ export function TopBar() {
         )}
         {saveError && <span className="text-sm text-red-600">{saveError}</span>}
 
-        {/* Save Button */}
+        {/* Save Button - only show for compliant documents */}
         <Button
           variant="primary"
           size="sm"
           className="gap-2"
           onClick={handleSave}
-          disabled={isSaving}
+          disabled={isSaving || document?.status !== "compliant"}
         >
           <Save className="w-4 h-4" />
           {isSaving ? "Enregistrement..." : "Enregistrer"}

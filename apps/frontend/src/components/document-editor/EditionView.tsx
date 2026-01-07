@@ -29,6 +29,9 @@ export function EditionView() {
   // so we don't reload them and cause an infinite loop due to serialization differences.
   const lastSyncedContent = useRef<string | null>(null);
 
+  // Check if document is compliant (editable)
+  const isCompliant = document?.status === "compliant";
+
   // Initialize editor only on client side
   useEffect(() => {
     const initEditor = async () => {
@@ -234,7 +237,9 @@ export function EditionView() {
                 <BlockNoteView
                   editor={editor}
                   theme="light"
-                  editable={!isProcessing && !document?.aiSuggestion}
+                  editable={
+                    isCompliant && !isProcessing && !document?.aiSuggestion
+                  }
                 />
               </div>
             </div>
@@ -278,7 +283,9 @@ export function EditionView() {
               <BlockNoteView
                 editor={editor}
                 theme="light"
-                editable={!isProcessing && !document?.aiSuggestion}
+                editable={
+                  isCompliant && !isProcessing && !document?.aiSuggestion
+                }
               />
             </div>
           </div>
