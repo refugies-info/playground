@@ -6,9 +6,12 @@ import type {
 import { SeededRandom } from "./seededRandom";
 
 const SOURCES = ["RCO", "Manual", "API"];
-const STATUSES: DocumentStatus[] = ["accepted", "rejected"];
+const STATUSES: DocumentStatus[] = ["compliant", "non_compliant"];
 const STATES: DocumentState[] = [
+  "rco",
+  "ingestion",
   "draft",
+  "editorial",
   "to_process",
   "archived",
   "published",
@@ -59,7 +62,7 @@ export function generateMockDocuments(count: number = 50): Document[] {
     title:
       "Actions socio-linguistiques complémentaires du CIR (ASL) - Langu'Action - métiers en tension",
     date_added: new Date("2025-11-25").toISOString(),
-    status: "accepted",
+    status: "compliant",
     state: "published",
     content: `# Actions socio-linguistiques complémentaires du CIR (ASL) - Langu'Action - métiers en tension
 

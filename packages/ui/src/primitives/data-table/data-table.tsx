@@ -104,10 +104,10 @@ export function DataTable<TData, TValue>({
               <TableCell colSpan={columns.length} className="h-24 text-center">
                 <div className="flex flex-col items-center justify-center py-8">
                   <p className="text-gray-500 text-lg font-medium">
-                    No documents found
+                    Aucun document trouvé
                   </p>
                   <p className="text-gray-400 text-sm mt-1">
-                    Try adjusting your filters or search criteria
+                    Essayez d'ajuster vos filtres ou critères de recherche
                   </p>
                 </div>
               </TableCell>

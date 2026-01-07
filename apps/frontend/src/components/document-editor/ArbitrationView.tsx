@@ -2,6 +2,7 @@
 
 import { Badge, Button } from "@playground/ui/primitives";
 import { useMemo, useState } from "react";
+import { getStatusLabel, getStatusVariant } from "@/lib/document-labels";
 import { toggleWorkflowStatus } from "@/services/document-actions";
 import { useDocument } from "./DocumentContext";
 import { MarkdownViewer } from "./MarkdownViewer";
@@ -47,8 +48,8 @@ export function ArbitrationView() {
             <div className="p-4 border-b grid grid-cols-2 items-center  shadow">
               <p className="flex items-center gap-2">
                 Etat de la fiche :{" "}
-                <Badge variant={isCompliant ? "success" : "danger"}>
-                  {isCompliant ? "Conforme" : "Non conforme"}
+                <Badge variant={getStatusVariant(document?.status || "")}>
+                  {getStatusLabel(document?.status || "")}
                 </Badge>
               </p>
 

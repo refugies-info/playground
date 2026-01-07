@@ -5,6 +5,7 @@ import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { STATE_CONFIG } from "@/lib/document-labels";
 import { columns } from "./columns";
 
 interface DocumentsListProps {
@@ -70,9 +71,9 @@ export function DocumentsList({
                     }
                     className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
                   >
-                    <option value="">Status</option>
-                    <option value="accepted">Accepté</option>
-                    <option value="rejected">Rejeté</option>
+                    <option value="">Statut</option>
+                    <option value="compliant">Conforme</option>
+                    <option value="non_compliant">Non conforme</option>
                   </select>
                 </div>
                 <div>
@@ -84,10 +85,19 @@ export function DocumentsList({
                     className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
                   >
                     <option value="">État</option>
-                    <option value="draft">Brouillon</option>
-                    <option value="to_process">En attente</option>
-                    <option value="archived">Archivé</option>
-                    <option value="published">Publié</option>
+                    {Object.entries(STATE_CONFIG)
+                      .filter(
+                        ([key, config], index, array) =>
+                          // Garder seulement la première occurrence de chaque label
+                          array.findIndex(
+                            ([, c]) => c.label === config.label,
+                          ) === index,
+                      )
+                      .map(([key, config]) => (
+                        <option key={key} value={key}>
+                          {config.label}
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <div className="flex items-center gap-2">
