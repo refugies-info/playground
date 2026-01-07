@@ -2,6 +2,7 @@
 
 import { Badge, Button } from "@playground/ui/primitives";
 import { useMemo, useState } from "react";
+import { toggleWorkflowStatus } from "@/services/document-actions";
 import { useDocument } from "./DocumentContext";
 import { MarkdownViewer } from "./MarkdownViewer";
 
@@ -21,9 +22,6 @@ export function ArbitrationView() {
     if (!document) return;
     setIsUpdating(true);
     try {
-      const { toggleWorkflowStatus } = await import(
-        "@/services/document-actions"
-      );
       const result = await toggleWorkflowStatus(document.id, document.status);
 
       if (result.success && result.newStatus) {
