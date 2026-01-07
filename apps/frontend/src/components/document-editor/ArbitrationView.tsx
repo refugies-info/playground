@@ -14,6 +14,9 @@ export function ArbitrationView() {
     return document?.complianceReport ?? "";
   }, [document?.complianceReport]);
 
+  // Simplified status logic
+  const isCompliant = document?.status === "compliant";
+
   const handleToggleStatus = async () => {
     if (!document) return;
     setIsUpdating(true);
@@ -42,30 +45,22 @@ export function ArbitrationView() {
             <div className="p-4 border-b grid grid-cols-2 items-center  shadow">
               <p className="flex items-center gap-2">
                 Etat de la fiche :{" "}
-                <Badge
-                  variant={
-                    document?.status === "compliant" ? "danger" : "success"
-                  }
-                >
-                  {document?.status === "compliant"
-                    ? "Non conforme"
-                    : "Conforme"}
+                <Badge variant={isCompliant ? "success" : "danger"}>
+                  {isCompliant ? "Conforme" : "Non conforme"}
                 </Badge>
               </p>
 
               <Button
-                variant={
-                  document?.status === "compliant" ? "primary" : "danger"
-                }
+                variant={isCompliant ? "danger" : "primary"}
                 className="w-fit flex gap-2 items-center justify-center cursor-pointer ml-auto"
                 onClick={handleToggleStatus}
                 disabled={isUpdating}
               >
                 <b className="uppercase">Je ne suis pas d'accord</b>{" "}
                 <span>
-                  {document?.status === "compliant"
-                    ? "(passer en conforme)"
-                    : "(passer en non conforme)"}
+                  {isCompliant
+                    ? "(passer en non conforme)"
+                    : "(passer en conforme)"}
                 </span>
               </Button>
             </div>

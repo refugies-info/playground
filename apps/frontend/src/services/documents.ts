@@ -1,8 +1,9 @@
 import type { Lheo } from "@playground/rco";
 import type { Document, DocumentSortField } from "@playground/shared-types";
 import { logger } from "@playground/shared-types";
-import type { Database } from "@playground/supabase";
+import type { Database, Json } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
+
 import matter from "gray-matter";
 import type { Heading, Root } from "mdast";
 import { cookies } from "next/headers";
@@ -18,6 +19,17 @@ type Metadata = Partial<Lheo> & {
   "intitule-formation"?: string;
   [key: string]: unknown;
 };
+
+/**
+ * Type for ingestion record with joined letta_reports.
+ * The letta_reports field can be a single object or an array depending on the join.
+ */
+interface IngestionRecordWithReport {
+  markdown: string;
+  metadata: Json;
+  ingestion_report_id: string | null;
+  letta_reports: { markdown: string } | { markdown: string }[] | null;
+}
 
 export interface GetDocumentsParams {
   page?: number;
@@ -353,21 +365,19 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   ]);
 
   const rcoRecord = rcoResult.data;
-  // biome-ignore lint/suspicious/noExplicitAny: Supabase types outdated
-  const ingestionRecord = ingestionResult.data as any;
+  const ingestionRecord =
+    ingestionResult.data as IngestionRecordWithReport | null;
   const editorialRecord = editorialResult.data;
 
   // Fetch compliance report from the joined data
   let complianceReport = "";
-  // biome-ignore lint/suspicious/noExplicitAny: Supabase types outdated
-  const typedIngestionRecord = ingestionRecord as any;
 
-  if (typedIngestionRecord?.letta_reports) {
+  if (ingestionRecord?.letta_reports) {
     // If it's a single relation (one-to-one or one-to-many treated as single), it might be an object or array.
     // Based on typical Supabase/PostgREST join:
-    const reportData = Array.isArray(typedIngestionRecord.letta_reports)
-      ? typedIngestionRecord.letta_reports[0]
-      : typedIngestionRecord.letta_reports;
+    const reportData = Array.isArray(ingestionRecord.letta_reports)
+      ? ingestionRecord.letta_reports[0]
+      : ingestionRecord.letta_reports;
 
     if (reportData?.markdown) {
       complianceReport = reportData.markdown;

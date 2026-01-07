@@ -5,93 +5,13 @@ import { BlockNoteView } from "@blocknote/mantine";
 import { useEffect, useRef, useState } from "react";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import matter from "gray-matter";
-import { Eye, FileText, GitCompare, Loader2 } from "lucide-react";
-import rehypeRaw from "rehype-raw";
-import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
-import rehypeStringify from "rehype-stringify";
-import remarkGfm from "remark-gfm";
-import remarkParse from "remark-parse";
-import remarkRehype from "remark-rehype";
-import { unified } from "unified";
+import { Loader2 } from "lucide-react";
+import { convertMixedContentToHtml } from "@/lib/markdownUtils";
 import { AiSuggestionBanner } from "./AiSuggestionBanner";
 import { useDocument } from "./DocumentContext";
+import { EditorTabs } from "./EditorTabs";
 import { OriginalContentView } from "./OriginalContentView";
 import { RawMarkdownView } from "./RawMarkdownView";
-
-/**
- * Custom sanitization schema that allows common HTML tags
- * while still blocking dangerous elements like <script> and event handlers
- */
-const sanitizeSchema = {
-  ...defaultSchema,
-  tagNames: [
-    ...(defaultSchema.tagNames || []),
-    // Allow common HTML tags that might be in your content
-    "p",
-    "br",
-    "div",
-    "span",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "strong",
-    "em",
-    "b",
-    "i",
-    "u",
-    "ul",
-    "ol",
-    "li",
-    "a",
-    "blockquote",
-    "pre",
-    "code",
-    "hr",
-    "table",
-    "thead",
-    "tbody",
-    "tr",
-    "th",
-    "td",
-  ],
-};
-
-/**
- * Convert mixed content (Markdown + HTML) to pure HTML.
- *
- * This uses the remark ecosystem to properly parse Markdown and convert it to HTML,
- * which BlockNote can then parse via tryParseHTMLToBlocks.
- *
- * Pipeline:
- * 1. Strip YAML frontmatter with gray-matter
- * 2. Parse Markdown with remark-parse
- * 3. Convert to HTML AST with remark-rehype (allowing dangerous HTML to pass through)
- * 4. Parse raw HTML nodes with rehype-raw (critical for embedded HTML in markdown)
- * 5. Sanitize HTML to remove dangerous tags/attributes with rehype-sanitize
- * 6. Serialize to HTML string with rehype-stringify
- */
-async function convertMixedContentToHtml(content: string): Promise<string> {
-  if (!content) return "";
-
-  // Strip YAML frontmatter
-  const { content: contentWithoutFrontmatter } = matter(content);
-
-  // Convert Markdown to HTML using unified pipeline
-  const result = await unified()
-    .use(remarkParse)
-    .use(remarkGfm) // 👈 Add support for GitHub Flavored Markdown (tables, strikethrough, etc.)
-    .use(remarkRehype, { allowDangerousHtml: true })
-    .use(rehypeRaw) // 👈 Parse raw HTML nodes into proper HTML AST
-    .use(rehypeSanitize, sanitizeSchema)
-    .use(rehypeStringify)
-    .process(contentWithoutFrontmatter);
-
-  return String(result);
-}
 
 export function EditionView() {
   const {
@@ -294,81 +214,7 @@ export function EditionView() {
         <AiSuggestionBanner />
 
         {/* Tab Bar - same as normal mode */}
-        <div className="border-b bg-gray-50">
-          <div className="flex justify-between items-center">
-            <div className="flex gap-1">
-              <button
-                type="button"
-                onClick={() => setIsRawMarkdownMode(false)}
-                disabled={isProcessing}
-                className={`
-                  flex items-center gap-2 px-3 py-2 text-xs font-medium border-b-2 transition-colors
-                  ${
-                    !isRawMarkdownMode
-                      ? "border-blue-600 text-blue-600 bg-white"
-                      : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                  }
-                  ${
-                    isProcessing
-                      ? "opacity-50 cursor-not-allowed"
-                      : "cursor-pointer"
-                  }
-                `}
-              >
-                <Eye className="w-3.5 h-3.5" />
-                Visual Editor
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsRawMarkdownMode(true)}
-                disabled={isProcessing}
-                className={`
-                  flex items-center gap-2 px-3 py-2 text-xs font-medium border-b-2 transition-colors
-                  ${
-                    isRawMarkdownMode
-                      ? "border-blue-600 text-blue-600 bg-white"
-                      : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                  }
-                  ${
-                    isProcessing
-                      ? "opacity-50 cursor-not-allowed"
-                      : "cursor-pointer"
-                  }
-                `}
-              >
-                <FileText className="w-3.5 h-3.5" />
-                Raw Markdown
-              </button>
-            </div>
-
-            {/* Comparison button on the right */}
-            {document?.ingestionContent && (
-              <button
-                type="button"
-                onClick={() => setIsComparisonMode(!isComparisonMode)}
-                disabled={isProcessing}
-                className={`
-                  flex items-center gap-2 px-3 py-2 mr-2 text-xs font-medium rounded-t transition-colors
-                  ${
-                    isComparisonMode
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-gray-700 hover:bg-gray-100 border border-b-0"
-                  }
-                  ${
-                    isProcessing
-                      ? "opacity-50 cursor-not-allowed"
-                      : "cursor-pointer"
-                  }
-                `}
-              >
-                <GitCompare className="w-3.5 h-3.5" />
-                {isComparisonMode
-                  ? "Masquer la comparaison"
-                  : "Comparer avec la version initiale"}
-              </button>
-            )}
-          </div>
-        </div>
+        <EditorTabs />
 
         {/* Comparison content */}
         <div className="flex flex-1 overflow-hidden">
@@ -417,81 +263,7 @@ export function EditionView() {
       <AiSuggestionBanner />
 
       {/* Tab Bar */}
-      <div className="border-b bg-gray-50">
-        <div className="flex justify-between items-center">
-          <div className="flex gap-1">
-            <button
-              type="button"
-              onClick={() => setIsRawMarkdownMode(false)}
-              disabled={isProcessing}
-              className={`
-              flex items-center gap-2 px-3 py-2 text-xs font-medium border-b-2 transition-colors
-              ${
-                !isRawMarkdownMode
-                  ? "border-blue-600 text-blue-600 bg-white"
-                  : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              }
-              ${
-                isProcessing
-                  ? "opacity-50 cursor-not-allowed"
-                  : "cursor-pointer"
-              }
-            `}
-            >
-              <Eye className="w-3.5 h-3.5" />
-              Visual Editor
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsRawMarkdownMode(true)}
-              disabled={isProcessing}
-              className={`
-              flex items-center gap-2 px-3 py-2 text-xs font-medium border-b-2 transition-colors
-              ${
-                isRawMarkdownMode
-                  ? "border-blue-600 text-blue-600 bg-white"
-                  : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              }
-              ${
-                isProcessing
-                  ? "opacity-50 cursor-not-allowed"
-                  : "cursor-pointer"
-              }
-            `}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              Raw Markdown
-            </button>
-          </div>
-
-          {/* Comparison button on the right */}
-          {document?.ingestionContent && (
-            <button
-              type="button"
-              onClick={() => setIsComparisonMode(!isComparisonMode)}
-              disabled={isProcessing}
-              className={`
-                flex items-center gap-2 px-3 py-2 mr-2 text-xs font-medium rounded-t transition-colors
-                ${
-                  isComparisonMode
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-100 border border-b-0"
-                }
-                ${
-                  isProcessing
-                    ? "opacity-50 cursor-not-allowed"
-                    : "cursor-pointer"
-                }
-              `}
-            >
-              <GitCompare className="w-3.5 h-3.5" />
-              {isComparisonMode
-                ? "Masquer la comparaison"
-                : "Comparer avec la version initiale"}
-            </button>
-          )}
-        </div>
-      </div>
+      <EditorTabs />
 
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto">
