@@ -1,8 +1,18 @@
 "use client";
 
 import type { Document } from "@playground/shared-types";
-import { Button, DataTableColumnHeader } from "@playground/ui/primitives";
+import {
+  Badge,
+  Button,
+  DataTableColumnHeader,
+} from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
+import {
+  getStateLabel,
+  getStateVariant,
+  getStatusLabel,
+  getStatusVariant,
+} from "@/lib/document-labels";
 
 export const columns: ColumnDef<Document>[] = [
   {
@@ -31,24 +41,10 @@ export const columns: ColumnDef<Document>[] = [
     ),
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
-      const statusColors: Record<string, string> = {
-        accepted: "bg-green-100 text-green-800",
-        rejected: "bg-red-100 text-red-800",
-      };
-
-      const translatedStatus: Record<string, string> = {
-        accepted: "Accepté",
-        rejected: "Rejeté",
-      };
-
       return (
-        <span
-          className={`inline-block px-2 py-1 rounded text-sm ${
-            statusColors[status] || "bg-gray-100"
-          }`}
-        >
-          {translatedStatus[status] || status}
-        </span>
+        <Badge variant={getStatusVariant(status)}>
+          {getStatusLabel(status)}
+        </Badge>
       );
     },
   },
@@ -59,28 +55,8 @@ export const columns: ColumnDef<Document>[] = [
     ),
     cell: ({ row }) => {
       const state = row.getValue("state") as string;
-      const stateColors: Record<string, string> = {
-        draft: "bg-blue-100 text-blue-800",
-        to_process: "bg-yellow-100 text-yellow-800",
-        archived: "bg-gray-100 text-gray-800",
-        published: "bg-purple-100 text-purple-800",
-      };
-
-      const translatedState: Record<string, string> = {
-        draft: "Brouillon",
-        to_process: "En attente",
-        archived: "Archivé",
-        published: "Publié",
-      };
-
       return (
-        <span
-          className={`inline-block px-2 py-1 rounded text-sm ${
-            stateColors[state] || "bg-gray-100"
-          }`}
-        >
-          {translatedState[state] || state.replace("_", " ")}
-        </span>
+        <Badge variant={getStateVariant(state)}>{getStateLabel(state)}</Badge>
       );
     },
   },

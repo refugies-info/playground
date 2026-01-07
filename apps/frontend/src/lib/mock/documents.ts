@@ -6,7 +6,7 @@ import type {
 import { SeededRandom } from "./seededRandom";
 
 const SOURCES = ["RCO", "Manual", "API"];
-const STATUSES: DocumentStatus[] = ["accepted", "rejected"];
+const STATUSES: DocumentStatus[] = ["compliant", "non_compliant"];
 const STATES: DocumentState[] = [
   "draft",
   "to_process",

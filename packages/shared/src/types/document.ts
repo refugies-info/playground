@@ -1,5 +1,12 @@
-export type DocumentStatus = "accepted" | "rejected";
-export type DocumentState = "draft" | "to_process" | "archived" | "published";
+export type DocumentStatus = "compliant" | "non_compliant";
+export type DocumentState =
+  | "rco"
+  | "ingestion"
+  | "draft"
+  | "editorial"
+  | "to_process"
+  | "archived"
+  | "published";
 export type DocumentSortField =
   | "title"
   | "date_added"
