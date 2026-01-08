@@ -4,7 +4,7 @@ import { useDocument } from "./DocumentContext";
 import { MarkdownViewer } from "./MarkdownViewer";
 
 export function OriginalContentView() {
-  const { document, rollbackToOriginal } = useDocument();
+  const { document, rollbackToOriginal, isRawMarkdownMode } = useDocument();
 
   return (
     <div className="flex-1 overflow-y-auto bg-gray-50 border-r relative">
@@ -27,14 +27,23 @@ export function OriginalContentView() {
         </Button>
       </div>
 
-      {/* Read-only markdown viewer */}
-      <div className="p-8">
-        <div className="max-w-3xl mx-auto">
-          <MarkdownViewer
-            content={document?.ingestionContent ?? ""}
-            loadingMessage="Chargement du contenu original..."
-            emptyMessage="Aucun contenu original disponible"
-          />
+      {/* Read-only content */}
+      <div className="p-8 h-full flex flex-col">
+        <div className="max-w-3xl mx-auto flex-1 flex flex-col w-full">
+          {isRawMarkdownMode ? (
+            <textarea
+              value={document?.ingestionContent ?? ""}
+              readOnly
+              className="flex-1 w-full p-4 border border-gray-300 font-mono text-sm leading-relaxed resize-none focus:outline-none bg-gray-50 text-gray-600"
+              spellCheck={false}
+            />
+          ) : (
+            <MarkdownViewer
+              content={document?.ingestionContent ?? ""}
+              loadingMessage="Chargement du contenu original..."
+              emptyMessage="Aucun contenu original disponible"
+            />
+          )}
         </div>
       </div>
     </div>
