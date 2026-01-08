@@ -85,7 +85,9 @@ export function EditionView() {
 
   // Load markdown content when document changes or AI suggestion arrives
   useEffect(() => {
-    if (!editor) return;
+    // Skip loading if editor is not ready OR if we are in raw markdown mode
+    // (the raw mode sync is handled manually or when switching back)
+    if (!editor || isRawMarkdownMode) return;
 
     // Show AI suggestion if it exists, otherwise show current content
     const contentToShow = document?.aiSuggestion || document?.editorialContent;
@@ -93,8 +95,6 @@ export function EditionView() {
 
     async function loadContent() {
       if (!editor) return;
-
-      // Set flag FIRST to prevent onChange from firing during load
 
       // If the content is exactly what we just synced from the editor, don't re-load it.
       // This breaks the loop where (Markdown -> Blocks -> Markdown) conversion causes differences.
@@ -139,7 +139,12 @@ export function EditionView() {
     }
 
     loadContent();
-  }, [editor, document?.editorialContent, document?.aiSuggestion]);
+  }, [
+    editor,
+    document?.editorialContent,
+    document?.aiSuggestion,
+    isRawMarkdownMode,
+  ]);
 
   // Update raw markdown when switching to raw mode
   useEffect(() => {
@@ -150,6 +155,8 @@ export function EditionView() {
       try {
         const markdown = await editor.blocksToMarkdownLossy(editor.document);
         setRawMarkdown(markdown);
+        // Also update lastSyncedContent to avoid loop when switching back
+        lastSyncedContent.current = markdown;
       } catch (_error) {}
     }
 
@@ -168,18 +175,9 @@ export function EditionView() {
       });
     }
 
-    // Update the editor blocks when content changes
-    if (editor) {
-      try {
-        const blocks = await editor.tryParseMarkdownToBlocks(newMarkdown);
-        editor.replaceBlocks(editor.document, blocks);
-      } catch (error) {
-        // Silently fail - don't disrupt editing experience, but log for debugging
-        // biome-ignore lint/suspicious/noConsole: debugging
-        console.error("Error updating editor blocks from markdown:", error);
-      } finally {
-      }
-    }
+    // IMPORTANT: We do NOT update the editor blocks here while the user is typing
+    // in raw mode. This prevents the "one-line formatting" issue and sync loops.
+    // The editor will be updated when we switch back to Visual mode via the useEffect above.
   };
 
   if (!editor) {
@@ -230,17 +228,25 @@ export function EditionView() {
               </h3>
               <p className="text-xs text-gray-500">Editable</p>
             </div>
-            <div className="p-8">
-              <div className="max-w-3xl mx-auto">
-                <BlockNoteView
-                  editor={editor}
-                  theme="light"
-                  editable={
-                    isCompliant && !isProcessing && !document?.aiSuggestion
-                  }
-                />
+            {isRawMarkdownMode ? (
+              <RawMarkdownView
+                markdownContent={rawMarkdown}
+                onContentChange={handleRawMarkdownChange}
+                readOnly={!isCompliant}
+              />
+            ) : (
+              <div className="p-8">
+                <div className="max-w-3xl mx-auto">
+                  <BlockNoteView
+                    editor={editor}
+                    theme="light"
+                    editable={
+                      isCompliant && !isProcessing && !document?.aiSuggestion
+                    }
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

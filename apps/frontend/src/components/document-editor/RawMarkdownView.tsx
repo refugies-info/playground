@@ -1,6 +1,6 @@
 import { AlertCircle } from "lucide-react";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDocument } from "./DocumentContext";
 
 interface RawMarkdownViewProps {
@@ -16,12 +16,15 @@ export function RawMarkdownView({
 }: RawMarkdownViewProps) {
   const { isProcessing } = useDocument();
   const [localContent, setLocalContent] = useState(markdownContent);
+  const [prevMarkdownContent, setPrevMarkdownContent] =
+    useState(markdownContent);
   const [showWarning, setShowWarning] = useState(true);
 
-  // Update local content when prop changes
-  useEffect(() => {
+  // If props change from outside (e.g. AI suggestion or rollback), update local state
+  if (markdownContent !== prevMarkdownContent) {
     setLocalContent(markdownContent);
-  }, [markdownContent]);
+    setPrevMarkdownContent(markdownContent);
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
