@@ -46,4 +46,5 @@ Thumbs.db
 .supabase.local/
 supabase/functions/node_modules/
 .workflow-data/
-.letta/
+.letta/*
+!.letta/settings.json
