@@ -174,10 +174,6 @@ export function EditionView() {
         editorialContent: newMarkdown,
       });
     }
-
-    // IMPORTANT: We do NOT update the editor blocks here while the user is typing
-    // in raw mode. This prevents the "one-line formatting" issue and sync loops.
-    // The editor will be updated when we switch back to Visual mode via the useEffect above.
   };
 
   if (!editor) {
