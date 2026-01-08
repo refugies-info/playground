@@ -6,6 +6,7 @@ export const simplifyContent = async function* (
   instructions?: string,
   agentId?: string,
   metadata?: Record<string, unknown>,
+  // biome-ignore lint/suspicious/noExplicitAny: Letta SDK stream yields various message types
 ): AsyncGenerator<any> {
   if (!agentId) {
     throw new Error("Agent ID is required");
