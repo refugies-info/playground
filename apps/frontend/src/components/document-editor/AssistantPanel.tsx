@@ -265,7 +265,11 @@ export function AssistantPanel() {
           <button
             type="button"
             onClick={handleImproveContent}
-            disabled={isProcessing || !document?.editorialContent}
+            disabled={
+              isProcessing ||
+              !document?.editorialContent ||
+              document?.status !== "compliant"
+            }
             className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             {isProcessing ? (

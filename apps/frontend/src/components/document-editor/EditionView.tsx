@@ -18,10 +18,8 @@ export function EditionView() {
     document,
     setDocument,
     isComparisonMode,
-    setIsComparisonMode,
     isProcessing,
     isRawMarkdownMode,
-    setIsRawMarkdownMode,
   } = useDocument();
   const [rawMarkdown, setRawMarkdown] = useState("");
   const [editor, setEditor] = useState<BlockNoteEditor | null>(null);
@@ -276,6 +274,7 @@ export function EditionView() {
           <RawMarkdownView
             markdownContent={rawMarkdown}
             onContentChange={handleRawMarkdownChange}
+            readOnly={!isCompliant}
           />
         ) : (
           <div className="p-8">

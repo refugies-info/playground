@@ -1,5 +1,3 @@
-"use client";
-
 import { AlertCircle } from "lucide-react";
 import type React from "react";
 import { useEffect, useState } from "react";
@@ -8,11 +6,13 @@ import { useDocument } from "./DocumentContext";
 interface RawMarkdownViewProps {
   markdownContent: string;
   onContentChange: (content: string) => void;
+  readOnly?: boolean;
 }
 
 export function RawMarkdownView({
   markdownContent,
   onContentChange,
+  readOnly = false,
 }: RawMarkdownViewProps) {
   const { isProcessing } = useDocument();
   const [localContent, setLocalContent] = useState(markdownContent);
@@ -60,7 +60,7 @@ export function RawMarkdownView({
         <textarea
           value={localContent}
           onChange={handleChange}
-          disabled={isProcessing}
+          disabled={isProcessing || readOnly}
           className="flex-1 w-full p-4 border border-gray-300 font-mono text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
           placeholder="Entrez votre contenu markdown ici..."
           spellCheck={false}
