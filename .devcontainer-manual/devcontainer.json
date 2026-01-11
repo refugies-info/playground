@@ -4,10 +4,12 @@
   "postCreateCommand": "npm i -g pnpm @letta-ai/letta-code && pnpm install",
   "mounts": [
     "source=${localEnv:HOME}/.gemini,target=/home/node/.gemini,type=bind",
-    "source=${localEnv:HOME}/.letta,target=/home/node/.letta,type=bind"
+    "source=${localEnv:HOME}/.letta,target=/home/node/.letta,type=bind",
+    "source=${localEnv:HOME}/.ssh,target=/home/node/.ssh,type=bind,readonly"
   ],
   "features": {
-    "ghcr.io/devcontainers/features/git:1": {}
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "customizations": {
     "vscode": {
