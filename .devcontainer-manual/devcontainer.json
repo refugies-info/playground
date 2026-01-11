@@ -1,5 +1,5 @@
 {
-  "name": "Refugiés Info Playground",
+  "name": "Réfugiés Info Playground",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bullseye",
   "postCreateCommand": "npm i -g pnpm turbo @letta-ai/letta-code && pnpm install",
   "mounts": [

@@ -68,8 +68,14 @@ async function main() {
 }
 
 function mapLheoToRi(doc: LheoDocument) {
-  const formation = doc.lheo.offres.formation[0];
-  const action = formation.action[0];
+  const formation = doc.lheo.offres.formation?.[0];
+  if (!formation) {
+    throw new Error("No formation found in LHEO document.");
+  }
+  const action = formation.action?.[0];
+  if (!action) {
+    throw new Error("No action found for the formation.");
+  }
   const organisme = formation["organisme-formation-responsable"];
   const session = action.session?.[0];
 
@@ -124,10 +130,10 @@ function mapLheoToRi(doc: LheoDocument) {
 
   // 8. Map (Lieu de formation)
   const lieu = action["lieu-de-formation"]?.[0];
-  const map = lieu
+  const map = lieu?.coordonnees?.adresse
     ? {
         title: getText(lieu.coordonnees.adresse.denomination) || "",
-        address: `${getText(lieu.coordonnees.adresse.ligne[0])}, ${getText(lieu.coordonnees.adresse.codepostal)} ${getText(lieu.coordonnees.adresse.ville)}`,
+        address: `${getText(lieu.coordonnees.adresse.ligne?.[0])}, ${getText(lieu.coordonnees.adresse.codepostal)} ${getText(lieu.coordonnees.adresse.ville)}`,
         city: getText(lieu.coordonnees.adresse.ville) || "",
         lat: parseFloat(
           getText(lieu.coordonnees.adresse.geolocalisation?.latitude) || "0",
