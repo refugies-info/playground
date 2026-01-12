@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lheo xmlns="http://lheo.gouv.fr/2.3">
+	<offres>
+		<formation numero="01_GE335067" ref="755" datecrea="20240312" datemaj="20241213" href="https://formation.grandest.fr/accueil/formations/113663">
+			<domaine-formation>
+				<code-FORMACODE ref="V14" tag="principal">15235</code-FORMACODE>
+			</domaine-formation>
+			<intitule-formation>Cours de FLE - Accompagnement sociolinguistique des primo-arrivants allophones</intitule-formation>
+			<objectif-formation>Finalité : favoriser l'intégration des personnes primo-arrivantes sur le territoire (Frouard - QPV de La Penotte et CCBP)
+
+Objectifs généraux :
+- Accueillir les primo-arrivants allophones et recueillir leurs besoins en matière d'accompagnement sociolinguistique ;
+- Contribuer à tisser du lien social entre les habitants, notamment entre les allophones et les francophones natifs ;
+- Faciliter la bonne compréhension de ce qu'est la citoyenneté française, incluant l'acquisition des références culturelles et des codes sociaux.
+
+Objectifs opérationnels :
+- Proposer des ateliers sociolinguistiques adaptés aux besoins et au niveau de chacun, en tenant compte des contraintes ;
+- Suivre la progression des apprenants dans leur acquisition de la langue française et des codes socioculturels ;
+- Accompagner les primo-arrivants en les conseillant au quotidien dans leur apprentissage et dans leur parcours d'intégration, en les orientant vers les structures et dispositifs adéquats ;
+- Encourager les apprenants à participer à l'ensemble des actions de l'EVS afin de leur fournir autant d'occasions que possible de tisser des liens avec les autres habitants du territoire et de pratiquer la langue française.</objectif-formation>
+			<resultats-attendus>attestation de suivi ou de présence</resultats-attendus>
+			<contenu-formation>3 groupes d'une capacité totale d'une douzaine d'apprenants chacun  :
+- un groupe de débutants de niveau 0 vers A1,
+- un groupe de niveau intermédiaire, de niveau A1 vers A2,
+- un groupe de niveau plus avancé, de niveau A2 vers B1.
+
+Ces cours de groupes ont lieu deux fois par semaine en période scolaire, les mardis et les jeudis à raison de 2h par séance, soit 4h hebdomadaires.
+S'ajoutent des cours au format individuel proposé aux personnes de profils différents de ceux des 3 groupes : alphabétisation (pour ceux qui ne maîtrisent pas l'alphabet latin et les relations grapho-phonologiques de base du français) ou de niveau supérieur à B1, ainsi que pour les personnes potentiellement indisponibles aux heures des cours de groupe. (Capacité d'accueil : de 2 à 5 apprenants en individuel max.)
+Par ailleurs, les apprenants du groupe le plus avancé peuvent accéder à une séance supplémentaire de 2h axée sur le travail du français par les textes et supports écrits authentiques (articles, romans, etc.)</contenu-formation>
+			<certifiante>0</certifiante>
+			<contact-formation tag="principal">
+				<type-contact>4</type-contact>
+				<coordonnees>
+					<nom>Accueil</nom>
+					<prenom>Service</prenom>
+					<telfixe>
+						<numtel>0300000000</numtel>
+					</telfixe>
+					<courriel>accueil@xxx.fr</courriel>
+				</coordonnees>
+			</contact-formation>
+			<parcours-de-formation>1</parcours-de-formation>
+			<code-niveau-entree>1</code-niveau-entree>
+			<objectif-general-formation>5</objectif-general-formation>
+			<certification/>
+			<code-niveau-sortie>1</code-niveau-sortie>
+			<url-formation>
+				<urlweb>http://www.francaslca.net</urlweb>
+			</url-formation>
+			<action numero="01_GE1716206" datemaj="20241213" datecrea="20240312">
+				<rythme-formation></rythme-formation>
+				<code-public-vise ref="V14">81022</code-public-vise>
+				<info-public-vise></info-public-vise>
+				<niveau-entree-obligatoire>1</niveau-entree-obligatoire>
+				<modalites-alternance>3 groupes d'une capacité totale d'une douzaine d'apprenants :
+- un groupe de débutants de niveau 0 vers A1,
+- un groupe de niveau intermédiaire, de niveau A1 vers A2,
+- un groupe de niveau plus avancé, de niveau A2 vers B1.
+Ces cours de groupes ont lieu deux fois par semaine en période scolaire, les mardis et les jeudis, à raison de 2h00 par séance, soit 4h00 hebdomadaires.
+
+S'ajoutent des cours au format individuel proposé aux personnes de profils différents de ceux des 3 groupes : alphabétisation (pour ceux qui ne maîtrisent pas l'alphabet latin et les relations grapho-phonologiques de base du français) ou de niveau supérieur à B1, ainsi que pour les personnes potentiellement indisponibles aux heures des cours de groupe. (capacité d'accueil : 2 à 5 apprenants max.)
+
+Par ailleurs, les apprenants du groupe le plus avancé peuvent accéder à une séance supplémentaire de 2h00 axée sur le travail du français par les textes et supports écrits authentiques (articles, romans, etc.)</modalites-alternance>
+				<modalites-enseignement>0</modalites-enseignement>
+				<duree-indicative>100 heures en centre, 0 heures en entreprise</duree-indicative> 
+				<conditions-specifiques>Connaissance préalable de l'alphabet latin, pour les apprenants des 3 groupes de FLE.</conditions-specifiques>
+				<prise-en-charge-frais-possible>0</prise-en-charge-frais-possible>
+				<lieu-de-formation tag="principal">
+					<coordonnees>
+						<adresse>
+							<denomination></denomination>
+							<ligne>8, impasse Prévert</ligne>
+							<codepostal>54390</codepostal>
+							<ville>Frouard</ville>
+							<departement>54</departement>
+							<code-INSEE-commune>54215</code-INSEE-commune>
+							<region>44</region>
+							<pays>FR</pays>
+							<geolocalisation>
+								<latitude>48.752479553222656</latitude>
+								<longitude>6.138979911804199</longitude>
+							</geolocalisation>
+						</adresse>
+					</coordonnees>
+				</lieu-de-formation>
+				<modalites-entrees-sorties>1</modalites-entrees-sorties>
+				<session numero="GE1716206" ref="1922">
+					<periode>
+						<debut>20260803</debut>
+						<fin>20260821</fin>
+					</periode>
+					<adresse-inscription>
+						<adresse>
+							<denomination>denomination à ne pas prendre</denomination>
+							<ligne>adresse à ne pas prendre</ligne>
+							<codepostal>11111</codepostal>
+							<ville>Ville à ne pas prendre</ville>
+							<code-INSEE-commune>11111</code-INSEE-commune>
+						</adresse>
+					</adresse-inscription>
+					<modalites-inscription>Rendez-vous d'inscription et de test de positionnement - Adhésion à l'association (5€ à l'année).</modalites-inscription>
+					<periode-inscription>
+						<periode>
+							<debut>20250902</debut>
+							<fin>20260703</fin>
+						</periode>
+					</periode-inscription>
+					<etat-recrutement>1</etat-recrutement>
+					<contact-session tag="principal">
+						<type-contact>3</type-contact>
+						<coordonnees>
+							<nom>Aloys</nom>
+							<prenom>SIMON</prenom>
+							<telfixe>
+								<numtel>0383293723</numtel>
+							</telfixe>
+							<courriel>a.simon@francas-vosges.org</courriel>
+						</coordonnees>
+					</contact-session>
+					<reference-certification/>
+				</session>
+				<acces-handicapes>Oui</acces-handicapes>
+				<conventionnement>0</conventionnement>
+				<organisme-formateur numero="01_GE305705" tag="principal">
+					<SIRET-formateur>
+						<SIRET>77897285100068</SIRET>
+					</SIRET-formateur>
+					<raison-sociale-formateur>Centre socio-culturel de Saint-Louis</raison-sociale-formateur>
+					<contact-formateur tag="principal">
+						<type-contact>4</type-contact>
+						<coordonnees>
+							<nom>Accueil</nom>
+							<prenom>Service</prenom>
+							<ligne>Accueil</ligne>
+							<telfixe>
+								<numtel>0300000000</numtel>
+							</telfixe>
+							<courriel>accueil@zzz.fr</courriel>
+						</coordonnees>
+					</contact-formateur>
+					<reference-certification/>
+				</organisme-formateur>
+				<organisme-financeur>
+					<code-financeur>13</code-financeur>
+					<nb-places-financees>10</nb-places-financees>
+					<extras info="specificites">
+						<extra info="code-public-vise" ref="V14">81022</extra>
+						<extra info="programme-financeur">ASL</extra>
+						<extra info="ref-action-marche-financeur">BOP 104</extra>
+					</extras>
+				</organisme-financeur>
+				<extras info="dispositif">
+					<extra info="contrat-apprentissage">0</extra>
+					<extra info="contrat-professionnalisation">0</extra>
+				</extras>
+			</action>
+			<organisme-formation-responsable numero="01_GE305705" ref="755" href="https://formation.grandest.fr/organisme/fiche/4298">
+				<numero-activite>00000000000</numero-activite>
+				<SIRET-organisme-formation>
+					<SIRET>77897285100068</SIRET>
+				</SIRET-organisme-formation>
+				<nom-organisme>Francas du Grand Est</nom-organisme>
+				<raison-sociale>Centre socio-culturel de Saint-Louis</raison-sociale>
+				<coordonnees-organisme>
+					<coordonnees>
+						<adresse>
+							<denomination>La maison de julie</denomination>
+							<ligne>63 rue marcelin berthelot</ligne>
+							<codepostal>94140</codepostal>
+							<ville>Alfortville</ville>
+							<departement>94</departement>
+							<code-INSEE-commune>68297</code-INSEE-commune>
+							<region>44</region>
+							<pays>FR</pays>
+							<geolocalisation>
+								<latitude>21.57773</latitude>
+								<longitude>1.959829</longitude>
+							</geolocalisation>
+						</adresse>
+						<telfixe>
+							<numtel>0300000000</numtel>
+						</telfixe>
+						<courriel>julie@refugies.info</courriel>
+					</coordonnees>
+				</coordonnees-organisme>
+				<contact-organisme tag="principal">
+					<type-contact>4</type-contact>
+					<coordonnees>
+						<nom>Accueil</nom>
+						<prenom>Service</prenom>
+						<ligne>Accueil</ligne>
+						<telfixe>
+							<numtel>0300000000</numtel>
+						</telfixe>
+						<courriel>accueil@bbb.fr</courriel>
+					</coordonnees>
+				</contact-organisme>
+				<extras info="categorie-organisme">
+					<extra info="code-categorie-organisme">13</extra>
+				</extras>
+			</organisme-formation-responsable>
+		</formation>
+		<extras info="flux-intercarif">
+			<extra info="date-export">20251101</extra>
+			<extra info="heure-export">062847</extra>
+		</extras>
+	</offres>
+</lheo>
