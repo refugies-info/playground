@@ -33,6 +33,7 @@ interface DocumentContextType {
   isSaving: boolean;
   activeView: "edit" | "compliance";
   setActiveView: (view: "edit" | "compliance") => void;
+  previewDocument: () => void;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
@@ -124,6 +125,36 @@ export function DocumentProvider({
     }
   };
 
+  const previewDocument = () => {
+    if (!document) return;
+
+    const previewUrl = process.env.NEXT_PUBLIC_PREVIEW_URL;
+    if (!previewUrl) {
+      logger.error("NEXT_PUBLIC_PREVIEW_URL is not configured");
+      return;
+    }
+
+    // Create a form to submit to the new tab
+    const form = window.document.createElement("form");
+    form.target = "_blank";
+    form.method = "POST";
+    form.action = previewUrl;
+
+    // Add markdown content as input
+    const input = window.document.createElement("input");
+    input.type = "hidden";
+    input.name = "markdown";
+    // TODO: Currently we only send the raw markdown.
+    // In the future, we should send the full document structure including metadata
+    // to match the expected format of Réfugiés.info (title, themes, etc.)
+    input.value = document.editorialContent;
+    form.appendChild(input);
+
+    window.document.body.appendChild(form);
+    form.submit();
+    window.document.body.removeChild(form);
+  };
+
   return (
     <DocumentContext.Provider
       value={{
@@ -144,6 +175,7 @@ export function DocumentProvider({
         isSaving,
         activeView,
         setActiveView,
+        previewDocument,
       }}
     >
       {children}
