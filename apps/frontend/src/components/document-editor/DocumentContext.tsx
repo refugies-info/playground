@@ -125,34 +125,23 @@ export function DocumentProvider({
     }
   };
 
-  const previewDocument = () => {
+  const previewDocument = async () => {
     if (!document) return;
 
-    const previewUrl = process.env.NEXT_PUBLIC_PREVIEW_URL;
-    if (!previewUrl) {
-      logger.error("NEXT_PUBLIC_PREVIEW_URL is not configured");
-      return;
+    try {
+      // Use the utility function to handle the secure form submission
+      // Note: We use dynamic import here to keep the context size small
+      // but static usage in preview-utils.ts is fine
+      const { submitPreview } = await import("@/lib/preview-utils");
+      await submitPreview(document);
+    } catch (e) {
+      logger.error(e, "Error previewing document");
+      alert(
+        `Erreur lors de la prévisualisation: ${
+          e instanceof Error ? e.message : e
+        }`,
+      );
     }
-
-    // Create a form to submit to the new tab
-    const form = window.document.createElement("form");
-    form.target = "_blank";
-    form.method = "POST";
-    form.action = previewUrl;
-
-    // Add markdown content as input
-    const input = window.document.createElement("input");
-    input.type = "hidden";
-    input.name = "markdown";
-    // TODO: Currently we only send the raw markdown.
-    // In the future, we should send the full document structure including metadata
-    // to match the expected format of Réfugiés.info (title, themes, etc.)
-    input.value = document.editorialContent;
-    form.appendChild(input);
-
-    window.document.body.appendChild(form);
-    form.submit();
-    window.document.body.removeChild(form);
   };
 
   return (

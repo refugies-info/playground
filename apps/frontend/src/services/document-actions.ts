@@ -119,3 +119,104 @@ export async function toggleWorkflowStatus(
     return { success: false, error: "Unexpected error occurred" };
   }
 }
+
+export async function previewDocumentAction(
+  payload: Record<string, unknown>,
+): Promise<{ success: boolean; html?: string; error?: string }> {
+  const previewUrl = process.env.NEXT_PUBLIC_PREVIEW_URL;
+  const webhookSecret = process.env.RI_WEBHOOK_SECRET;
+
+  if (!previewUrl || !webhookSecret) {
+    logger.error("Missing preview configuration (URL or Secret)");
+    return { success: false, error: "Configuration serveur manquante" };
+  }
+
+  // Replace localhost with 127.0.0.1 and parse URL
+  const targetUrl = new URL(previewUrl.replace("localhost", "127.0.0.1"));
+
+  logger.info(
+    { url: targetUrl.toString() },
+    "Fetching preview via http module",
+  );
+
+  // Dynamically import http to ensure node environment usage
+  const http = await import("http");
+
+  return new Promise((resolve) => {
+    const options = {
+      hostname: targetUrl.hostname,
+      port: targetUrl.port || 80,
+      path: targetUrl.pathname + targetUrl.search,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "webhook-secret": webhookSecret,
+      },
+    };
+
+    const req = http.request(options, (res) => {
+      let data = "";
+
+      res.on("data", (chunk) => {
+        data += chunk;
+      });
+
+      res.on("end", () => {
+        if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+          resolve({ success: true, html: data });
+        } else {
+          logger.error(
+            { statusCode: res.statusCode, data },
+            "Preview request failed",
+          );
+          resolve({
+            success: false,
+            error: `Erreur serveur: ${res.statusCode}`,
+          });
+        }
+      });
+    });
+
+    req.on("error", (error) => {
+      logger.error(error, "Error sending preview request");
+      resolve({
+        success: false,
+        error: "Impossible de contacter le serveur de prévisualisation",
+      });
+    });
+
+    // Write data to request body
+    req.write(JSON.stringify(payload));
+    req.end();
+  });
+}
+
+/**
+ * Server action to get the webhook secret for preview authentication
+ * This allows secure transmission of the webhook secret without exposing it client-side
+ * The Main App expects the raw secret, not an HMAC signature
+ */
+export async function getPreviewSecret(): Promise<{
+  success: boolean;
+  secret?: string;
+  error?: string;
+}> {
+  const webhookSecret = process.env.RI_WEBHOOK_SECRET;
+
+  if (!webhookSecret) {
+    logger.error("Missing RI_WEBHOOK_SECRET for preview");
+    return { success: false, error: "Configuration serveur manquante" };
+  }
+
+  return { success: true, secret: webhookSecret };
+}
+
+/**
+ * Returns the preview URL from environment (server-side access)
+ */
+export async function getPreviewUrl(): Promise<string> {
+  return (
+    process.env.NEXT_PUBLIC_PREVIEW_URL ||
+    "http://localhost:3000/dispositif/preview"
+  );
+}
