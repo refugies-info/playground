@@ -1,4 +1,4 @@
-import { getPreviewSecret, getPreviewUrl } from "@/services/document-actions";
+import { getPreviewSecret } from "@/services/document-actions";
 
 interface PreviewDocument {
   id?: string;
@@ -31,11 +31,13 @@ export const submitPreview = async (document: PreviewDocument) => {
     },
   };
 
-  // Fetch secret and URL in parallel
-  const [secretResult, previewUrl] = await Promise.all([
-    getPreviewSecret(),
-    getPreviewUrl(),
-  ]);
+  // Get preview URL from client-side env vars
+  const previewUrl =
+    process.env.NEXT_PUBLIC_PREVIEW_URL ||
+    "http://localhost:3000/dispositif/preview";
+
+  // Fetch secret via Server Action
+  const secretResult = await getPreviewSecret();
 
   if (!secretResult.success || !secretResult.secret) {
     throw new Error(
