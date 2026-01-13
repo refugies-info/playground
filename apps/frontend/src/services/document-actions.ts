@@ -120,9 +120,6 @@ export async function toggleWorkflowStatus(
   }
 }
 
-// previewDocumentAction removed as it's no longer used.
-// Preview is now handled by direct form submission in preview-utils.ts
-
 /**
  * Server action to get the webhook secret for preview authentication
  * This allows secure transmission of the webhook secret without exposing it client-side
