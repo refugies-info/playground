@@ -2,7 +2,7 @@
 
 import { cn } from "@playground/ui";
 import { Button } from "@playground/ui/primitives";
-import { Eye, Save, Send } from "lucide-react";
+import { Archive, Eye, Save, Send } from "lucide-react";
 import { useState } from "react";
 import { useDocument } from "./DocumentContext";
 
@@ -20,12 +20,16 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
     previewDocument,
     publishDocument,
     isPublishing,
+    archiveDocument,
+    isArchiving,
   } = useDocument();
 
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [publishSuccess, setPublishSuccess] = useState(false);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
+  const [archiveSuccess, setArchiveSuccess] = useState(false);
 
   const handleSave = async () => {
     setSaveError(null);
@@ -59,13 +63,36 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
     }
   };
 
+  const handleArchive = async () => {
+    setArchiveError(null);
+    setArchiveSuccess(false);
+
+    if (
+      !confirm(
+        "Êtes-vous sûr de vouloir archiver ce document ? Il ne sera plus visible publiquement.",
+      )
+    ) {
+      return;
+    }
+
+    const result = await archiveDocument();
+
+    if (result.success) {
+      setArchiveSuccess(true);
+      setTimeout(() => setArchiveSuccess(false), 3000);
+    } else {
+      setArchiveError(result.error || "Échec de l'archivage");
+    }
+  };
+
   const isCompliant = document?.status === "compliant";
 
   // Workflow:
   // - Save: enabled when document is modified (isDirty) AND compliant
-  // - Publish: enabled when document has been saved (canPublish) AND compliant
+  // - Publish: enabled when document is NOT modified (saved) AND compliant AND NOT already published/synced
   const canSave = isDirty && isCompliant;
-  const canPublishNow = canPublish && isCompliant;
+  const canPublishNow =
+    !isDirty && isCompliant && document?.state !== "published";
 
   return (
     <div className="flex flex-col gap-2 p-4 border-t bg-white">
@@ -76,6 +103,8 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
           {saveError && <span className="text-red-600">{saveError}</span>}
           {publishSuccess && <span className="text-green-600">Publié ✓</span>}
           {publishError && <span className="text-red-600">{publishError}</span>}
+          {archiveSuccess && <span className="text-red-600">Archivé ✓</span>}
+          {archiveError && <span className="text-red-600">{archiveError}</span>}
         </div>
       )}
 
@@ -113,6 +142,23 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
         <Send className="w-4 h-4" />
         {!isCollapsed && (isPublishing ? "Publication..." : "Publier")}
       </Button>
+
+      {/* Archive Button - visible only for published/modified docs */}
+      {(document?.state === "published" || document?.state === "modified") && (
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700",
+            isCollapsed && "justify-center px-0",
+          )}
+          onClick={handleArchive}
+          disabled={isArchiving}
+        >
+          <Archive className="w-4 h-4" />
+          {!isCollapsed && (isArchiving ? "Archivage..." : "Archiver")}
+        </Button>
+      )}
     </div>
   );
 }

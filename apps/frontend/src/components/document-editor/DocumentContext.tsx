@@ -4,6 +4,7 @@ import { logger } from "@playground/shared-types";
 import { createContext, type ReactNode, useContext, useState } from "react";
 import { submitPreview } from "@/lib/preview-utils";
 import {
+  archiveDocument,
   publishDocument,
   saveDocument as saveDocumentAction,
 } from "@/services/document-actions";
@@ -48,6 +49,8 @@ interface DocumentContextType {
     error?: string;
   }>;
   isPublishing: boolean;
+  archiveDocument: () => Promise<{ success: boolean; error?: string }>;
+  isArchiving: boolean;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
@@ -71,6 +74,7 @@ export function DocumentProvider({
   const [isRawMarkdownMode, setIsRawMarkdownMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   // If document is already in 'modified' state, it's ready to publish
   const [canPublish, setCanPublish] = useState(
@@ -223,6 +227,41 @@ export function DocumentProvider({
     }
   };
 
+  const archiveDocumentWrapper = async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
+    if (!document) {
+      return { success: false, error: "No document to archive" };
+    }
+
+    setIsArchiving(true);
+    try {
+      const result = await archiveDocument(
+        document.id,
+        document.title,
+        document.editorialContent,
+        document.metadata,
+      );
+
+      if (result.success) {
+        // Update local state to reflect archived status
+        setDocument({
+          ...document,
+          state: "archived",
+        });
+        setCanPublish(false);
+      }
+
+      return result;
+    } catch (error) {
+      logger.error(error, "Error archiving document");
+      return { success: false, error: "Erreur réseau" };
+    } finally {
+      setIsArchiving(false);
+    }
+  };
+
   return (
     <DocumentContext.Provider
       value={{
@@ -249,6 +288,8 @@ export function DocumentProvider({
         previewDocument,
         publishDocument: publishDocumentAction,
         isPublishing,
+        archiveDocument: archiveDocumentWrapper,
+        isArchiving,
       }}
     >
       {children}

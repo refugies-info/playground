@@ -43,6 +43,7 @@ export interface PublishPayload extends DispositifPayload {
  */
 export function buildDispositifPayload(
   doc: DocumentPayloadInput,
+  status = "Actif",
 ): DispositifPayload {
   const themeId = (doc.metadata?.theme as string) || "63286a015d31b2c0cad99615";
 
@@ -50,7 +51,7 @@ export function buildDispositifPayload(
     dispositif: {
       typeContenu: "dispositif",
       theme: themeId,
-      status: "Actif",
+      status: status,
       // titreInformatif at root is kept for legacy/compatibility if needed,
       // but important part is in translations based on user example
       titreInformatif: doc.title,
@@ -78,8 +79,9 @@ export function buildDispositifPayload(
 export function buildPublishPayload(
   doc: DocumentPayloadInput,
   email: string,
+  status = "Actif",
 ): PublishPayload {
-  const basePayload = buildDispositifPayload(doc);
+  const basePayload = buildDispositifPayload(doc, status);
   return {
     ...basePayload,
     email,

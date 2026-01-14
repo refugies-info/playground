@@ -3,12 +3,13 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useDocument } from "./DocumentContext";
+import { DocumentStatus } from "./DocumentStatus";
 
 export function TopBar() {
   const { document } = useDocument();
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 border-b bg-white">
+    <div className="relative flex items-center justify-between px-4 py-2 border-b bg-white">
       <Link
         href="/documents"
         className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
@@ -21,10 +22,12 @@ export function TopBar() {
 
       {/* Document title */}
       {document && (
-        <span className="text-sm font-medium text-gray-700 truncate max-w-md">
+        <span className="absolute left-1/2 transform -translate-x-1/2 text-sm font-medium text-gray-700 truncate max-w-md">
           {document.title}
         </span>
       )}
+
+      <DocumentStatus />
     </div>
   );
 }

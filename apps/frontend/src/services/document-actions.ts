@@ -332,7 +332,7 @@ export async function publishDocument(
 
     return {
       success: true,
-      publicationId: existingPublication?.id,
+      publicationId: isUpdate ? existingPublication.id : (result as any).id, // Using result ID if available, otherwise just success
       remoteId,
       isUpdate,
     };
@@ -342,5 +342,128 @@ export async function publishDocument(
       success: false,
       error: "Erreur inattendue lors de la publication",
     };
+  }
+}
+
+/**
+ * Server action to archive a document
+ * 1. Checks if document was previously published
+ * 2. Calls webhook with status 'Archivé'
+ * 3. Updates record and workflow status
+ */
+export async function archiveDocument(
+  workflowId: string,
+  title: string,
+  markdown: string,
+  metadata?: Record<string, unknown>,
+): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
+  try {
+    // 1. Get authenticated user
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user?.email) {
+      return { success: false, error: "Utilisateur non authentifié" };
+    }
+
+    // 2. Get webhook config
+    const baseUrl = process.env.RI_BASE_URL;
+    const webhookSecret = process.env.RI_WEBHOOK_SECRET;
+
+    if (!baseUrl || !webhookSecret) {
+      return { success: false, error: "Configuration serveur manquante" };
+    }
+
+    const cleanBaseUrl = baseUrl.replace(/\/$/, "");
+    const webhookUrl = `${cleanBaseUrl}/api/webhook/dispositif`;
+
+    // 3. Find existing publication (MUST exist to archive)
+    const { data: existingPublication } = await supabase
+      .from("publication_records")
+      .select("id, remote_id")
+      .eq("workflow_id", workflowId)
+      .eq("target", cleanBaseUrl)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!existingPublication?.remote_id) {
+      return { success: false, error: "Document jamais publié" };
+    }
+
+    const remoteId = existingPublication.remote_id;
+
+    // 4. Build payload with status 'Archivé'
+    const payload = buildPublishPayload(
+      {
+        title,
+        editorialContent: markdown,
+        metadata,
+      },
+      user.email,
+      "Archivé", // Override status
+    );
+
+    // Include _id for update
+    const updatePayload = {
+      ...payload,
+      dispositif: {
+        ...payload.dispositif,
+        _id: remoteId,
+      },
+    };
+
+    // 5. Call webhook
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "webhook-secret": webhookSecret,
+      },
+      body: JSON.stringify(updatePayload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      logger.error(
+        { status: response.status, error: errorData },
+        "Archive webhook failed",
+      );
+      return {
+        success: false,
+        error: errorData.message || `Erreur ${response.status}`,
+      };
+    }
+
+    // 6. Update existing publication record to archived status
+    await supabase
+      .from("publication_records")
+      .update({
+        status: "archived",
+        // biome-ignore lint/suspicious/noExplicitAny: Payload structure is complex but valid JSON
+        payload: updatePayload as any,
+        published_by: user.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingPublication.id);
+
+    // 7. Update workflow status to 'archived'
+    await supabase
+      .from("workflows")
+      .update({ progress: "archived" })
+      .eq("id", workflowId);
+
+    return { success: true };
+  } catch (error) {
+    logger.error(error, "Error archiving document");
+    return { success: false, error: "Erreur interne" };
   }
 }
