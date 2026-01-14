@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
       } catch (error) {
+        logger.error({ error }, "Error in editorial agent stream");
         const errorData = `data: ${JSON.stringify({
           type: "error",
           message: error instanceof Error ? error.message : "Unknown error",
