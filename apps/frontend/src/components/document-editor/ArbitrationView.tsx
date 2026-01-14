@@ -76,18 +76,20 @@ export function ArbitrationView() {
 
           {/* Error alert when agent failed to produce valid output */}
           {isError && (
-            <div className="mx-6 p-4 bg-amber-50 border border-amber-300 rounded-md flex items-start gap-3">
-              <svg
-                className="w-6 h-6 text-amber-500 shrink-0 mt-0.5"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
-              </svg>
-              <div>
-                <p className="font-bold text-amber-800">Erreur</p>
-                <p className="text-amber-700">
+            <div className="mx-6 border border-amber-300 rounded-md flex bg-white overflow-hidden">
+              <div className="w-16 bg-amber-400 shrink-0 flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                </svg>
+              </div>
+              <div className="p-4">
+                <p className="font-bold text-gray-900">Erreur</p>
+                <p className="text-gray-600">
                   L'arbitrage de cette fiche n'a pas pu être réalisé.
                 </p>
               </div>
