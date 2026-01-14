@@ -49,7 +49,7 @@ export function AssistantPanel() {
     setReasoning([]); // Clear previous reasoning
 
     try {
-      const response = await fetch("/api/editorial-agent/stream", {
+      const response = await fetch("/api/agents/editorial/stream", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

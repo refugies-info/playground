@@ -11,6 +11,7 @@ interface DocumentData {
   editorialContent: string; // Current working content from editorial_records (edited by humans or accepted AI suggestions)
   ingestionContent?: string; // Immutable original content from ingestion_records (for comparison/rollback)
   complianceReport?: string; // Markdown content of the compliance report
+  metadataReport?: string; // Markdown content of the metadata report from Agathe
   aiSuggestion?: string; // Pending AI suggestion awaiting user review
   metadata?: Record<string, unknown>; // Metadata from ingestion_records
 }
@@ -34,6 +35,9 @@ interface DocumentContextType {
   activeView: "edit" | "compliance";
   setActiveView: (view: "edit" | "compliance") => void;
   previewDocument: () => void;
+  isGeneratingMetadataReport: boolean;
+  setIsGeneratingMetadataReport: (generating: boolean) => void;
+  setMetadataReport: (report: string) => void;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
@@ -56,6 +60,16 @@ export function DocumentProvider({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRawMarkdownMode, setIsRawMarkdownMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingMetadataReport, setIsGeneratingMetadataReport] =
+    useState(false);
+
+  const setMetadataReport = (report: string) => {
+    if (!document) return;
+    setDocument({
+      ...document,
+      metadataReport: report,
+    });
+  };
 
   const setAiSuggestion = (suggestion: string) => {
     if (!document) return;
@@ -165,6 +179,9 @@ export function DocumentProvider({
         activeView,
         setActiveView,
         previewDocument,
+        isGeneratingMetadataReport,
+        setIsGeneratingMetadataReport,
+        setMetadataReport,
       }}
     >
       {children}
