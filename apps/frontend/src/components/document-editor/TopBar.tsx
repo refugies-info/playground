@@ -1,13 +1,13 @@
 "use client";
 
 import { Button } from "@playground/ui/primitives";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Eye, Save } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useDocument } from "./DocumentContext";
 
 export function TopBar() {
-  const { document, saveDocument, isSaving } = useDocument();
+  const { document, saveDocument, isSaving, previewDocument } = useDocument();
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -24,6 +24,10 @@ export function TopBar() {
     } else {
       setSaveError(result.error || "Failed to save");
     }
+  };
+
+  const handlePreview = () => {
+    previewDocument();
   };
 
   return (
@@ -44,6 +48,16 @@ export function TopBar() {
           <span className="text-sm text-green-600">Enregistré avec succès</span>
         )}
         {saveError && <span className="text-sm text-red-600">{saveError}</span>}
+        {/* Preview Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={handlePreview}
+        >
+          <Eye className="w-4 h-4" />
+          Prévisualiser
+        </Button>
 
         {/* Save Button - only show for compliant documents */}
         <Button

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "PORT=3001 next dev -p 3001",
     "dev:workflow": "PORT=3456 workflow inspect runs --web",
     "build": "next build",
     "start": "next start",

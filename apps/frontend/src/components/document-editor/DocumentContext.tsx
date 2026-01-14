@@ -33,6 +33,7 @@ interface DocumentContextType {
   isSaving: boolean;
   activeView: "edit" | "compliance";
   setActiveView: (view: "edit" | "compliance") => void;
+  previewDocument: () => void;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
@@ -124,6 +125,25 @@ export function DocumentProvider({
     }
   };
 
+  const previewDocument = async () => {
+    if (!document) return;
+
+    try {
+      // Use the utility function to handle the secure form submission
+      // Note: We use dynamic import here to keep the context size small
+      // but static usage in preview-utils.ts is fine
+      const { submitPreview } = await import("@/lib/preview-utils");
+      await submitPreview(document);
+    } catch (e) {
+      logger.error(e, "Error previewing document");
+      alert(
+        `Erreur lors de la prévisualisation: ${
+          e instanceof Error ? e.message : e
+        }`,
+      );
+    }
+  };
+
   return (
     <DocumentContext.Provider
       value={{
@@ -144,6 +164,7 @@ export function DocumentProvider({
         isSaving,
         activeView,
         setActiveView,
+        previewDocument,
       }}
     >
       {children}

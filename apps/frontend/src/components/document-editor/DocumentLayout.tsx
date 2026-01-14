@@ -23,10 +23,8 @@ function EditorContent() {
   return <EditionView />;
 }
 
-export function DocumentLayout({
-  documentId: _documentId,
-  initialData,
-}: DocumentLayoutProps) {
+export function DocumentLayout(props: DocumentLayoutProps) {
+  const { initialData } = props;
   return (
     <DocumentProvider initialData={initialData}>
       <div className="flex flex-col h-screen w-full overflow-hidden bg-gray-100">

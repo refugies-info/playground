@@ -119,3 +119,23 @@ export async function toggleWorkflowStatus(
     return { success: false, error: "Unexpected error occurred" };
   }
 }
+
+/**
+ * Server action to get the webhook secret for preview authentication
+ * This allows secure transmission of the webhook secret without exposing it client-side
+ * The Main App expects the raw secret, not an HMAC signature
+ */
+export async function getPreviewSecret(): Promise<{
+  success: boolean;
+  secret?: string;
+  error?: string;
+}> {
+  const webhookSecret = process.env.RI_WEBHOOK_SECRET;
+
+  if (!webhookSecret) {
+    logger.error("Missing RI_WEBHOOK_SECRET for preview");
+    return { success: false, error: "Configuration serveur manquante" };
+  }
+
+  return { success: true, secret: webhookSecret };
+}
