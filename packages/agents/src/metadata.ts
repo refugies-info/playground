@@ -37,8 +37,6 @@ export const generateMetadataReport = async function* (
     const msg = chunk as any;
 
     // Add timestamp to every message
-    msg.timestamp = new Date().toISOString();
-
-    yield msg;
+    yield { ...msg, timestamp: new Date().toISOString() };
   }
 };
