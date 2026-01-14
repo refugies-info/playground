@@ -76,8 +76,8 @@ export function ArbitrationView() {
 
           {/* Error alert when agent failed to produce valid output */}
           {isError && (
-            <div className="mx-6 border border-amber-300 rounded-md flex bg-white overflow-hidden">
-              <div className="w-12 bg-amber-400 shrink-0 flex items-start justify-center pt-4">
+            <div className="mx-6 border border-[#FCC639] flex bg-white">
+              <div className="w-12 bg-[#FCC639] shrink-0 flex items-start justify-center pt-4">
                 <svg
                   className="w-6 h-6 text-white"
                   fill="currentColor"
