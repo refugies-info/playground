@@ -211,7 +211,7 @@ export async function ingestProcessedData(
   }
 
   // 4. Update Content Flow Status based on Compliance and Report Status
-  let status = "unknown";
+  let status: "compliant" | "non_compliant" | "error";
 
   // Check if report is incomplete (agent failed to produce valid output)
   if (ingestionReport?.status === "incomplete") {
@@ -231,7 +231,7 @@ export async function ingestProcessedData(
 
     if (complianceVal === true || complianceVal === "true") {
       status = "compliant";
-    } else if (complianceVal === false || complianceVal === "false") {
+    } else {
       status = "non_compliant";
     }
   }
