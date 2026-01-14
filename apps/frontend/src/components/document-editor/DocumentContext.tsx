@@ -2,6 +2,11 @@
 
 import { logger } from "@playground/shared-types";
 import { createContext, type ReactNode, useContext, useState } from "react";
+import { submitPreview } from "@/lib/preview-utils";
+import {
+  publishDocument,
+  saveDocument as saveDocumentAction,
+} from "@/services/document-actions";
 
 interface DocumentData {
   id: string;
@@ -34,6 +39,12 @@ interface DocumentContextType {
   activeView: "edit" | "compliance";
   setActiveView: (view: "edit" | "compliance") => void;
   previewDocument: () => void;
+  publishDocument: () => Promise<{
+    success: boolean;
+    remoteId?: string;
+    error?: string;
+  }>;
+  isPublishing: boolean;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
@@ -56,6 +67,7 @@ export function DocumentProvider({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRawMarkdownMode, setIsRawMarkdownMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const setAiSuggestion = (suggestion: string) => {
     if (!document) return;
@@ -108,10 +120,6 @@ export function DocumentProvider({
 
     setIsSaving(true);
     try {
-      // Import the server action from the dedicated actions file
-      const { saveDocument: saveDocumentAction } = await import(
-        "@/services/document-actions"
-      );
       const result = await saveDocumentAction(
         document.id,
         document.editorialContent,
@@ -130,9 +138,6 @@ export function DocumentProvider({
 
     try {
       // Use the utility function to handle the secure form submission
-      // Note: We use dynamic import here to keep the context size small
-      // but static usage in preview-utils.ts is fine
-      const { submitPreview } = await import("@/lib/preview-utils");
       await submitPreview(document);
     } catch (e) {
       logger.error(e, "Error previewing document");
@@ -141,6 +146,41 @@ export function DocumentProvider({
           e instanceof Error ? e.message : e
         }`,
       );
+    }
+  };
+
+  const publishDocumentAction = async (): Promise<{
+    success: boolean;
+    remoteId?: string;
+    error?: string;
+  }> => {
+    if (!document) {
+      return { success: false, error: "No document to publish" };
+    }
+
+    setIsPublishing(true);
+    try {
+      const result = await publishDocument(
+        document.id,
+        document.title,
+        document.editorialContent,
+        document.metadata,
+      );
+
+      if (result.success) {
+        // Update local state to reflect published status
+        setDocument({
+          ...document,
+          state: "published",
+        });
+      }
+
+      return result;
+    } catch (error) {
+      logger.error(error, "Error publishing document");
+      return { success: false, error: "Erreur réseau" };
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -165,6 +205,8 @@ export function DocumentProvider({
         activeView,
         setActiveView,
         previewDocument,
+        publishDocument: publishDocumentAction,
+        isPublishing,
       }}
     >
       {children}

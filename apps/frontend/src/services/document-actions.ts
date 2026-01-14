@@ -3,11 +3,14 @@
 import { logger } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
+import { buildPublishPayload } from "../lib/payload-builder";
 
 export async function saveDocument(
   workflowId: string,
   markdown: string,
 ): Promise<{ success: boolean; error?: string }> {
+  // Cookies are required here to forward the user's session to Supabase
+  // This ensures the action is performed by the authenticated user
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
@@ -138,4 +141,188 @@ export async function getPreviewSecret(): Promise<{
   }
 
   return { success: true, secret: webhookSecret };
+}
+
+/**
+ * Server action to publish a document to refugies.info via webhook
+ * 1. Gets authenticated user email
+ * 2. Calls the publication webhook
+ * 3. Stores the publication record
+ * 4. Updates workflow progress to 'published'
+ */
+/**
+ * Server action to publish a document to refugies.info via webhook
+ * 1. Gets authenticated user email
+ * 2. Calls the publication webhook
+ * 3. Stores the publication record
+ * 4. Updates workflow progress to 'published'
+ */
+export async function publishDocument(
+  workflowId: string,
+  title: string,
+  markdown: string,
+  metadata?: Record<string, unknown>,
+): Promise<{
+  success: boolean;
+  publicationId?: string;
+  remoteId?: string;
+  isUpdate?: boolean;
+  error?: string;
+}> {
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
+  try {
+    // 1. Get authenticated user
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user?.email) {
+      logger.error(userError, "Error getting user for publication");
+      return { success: false, error: "Utilisateur non authentifié" };
+    }
+
+    // 2. Get webhook configuration (Simplified)
+    const baseUrl = process.env.RI_BASE_URL;
+    const webhookSecret = process.env.RI_WEBHOOK_SECRET;
+
+    if (!baseUrl || !webhookSecret) {
+      logger.error(
+        "Missing publication configuration (RI_BASE_URL or RI_WEBHOOK_SECRET)",
+      );
+      return {
+        success: false,
+        error: "Configuration de publication manquante",
+      };
+    }
+
+    // Construct the full webhook URL
+    // Remove trailing slash if present to avoid double slashes
+    const cleanBaseUrl = baseUrl.replace(/\/$/, "");
+    const webhookUrl = `${cleanBaseUrl}/api/webhook/dispositif`;
+
+    // 3. Check for existing publication (to determine CREATE vs UPDATE)
+    const { data: existingPublication } = await supabase
+      .from("publication_records")
+      .select("id, remote_id")
+      .eq("workflow_id", workflowId)
+      .eq("target", cleanBaseUrl)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    const existingRemoteId = existingPublication?.remote_id;
+    const isUpdate = !!existingRemoteId;
+
+    // 4. Build the payload using shared builder
+    const basePayload = buildPublishPayload(
+      {
+        title,
+        editorialContent: markdown,
+        metadata,
+      },
+      user.email,
+    );
+
+    // If updating, include the remote_id as _id so the webhook updates instead of creates
+    const payload = isUpdate
+      ? {
+          ...basePayload,
+          dispositif: {
+            ...basePayload.dispositif,
+            _id: existingRemoteId,
+          },
+        }
+      : basePayload;
+
+    // 5. Call the webhook
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "webhook-secret": webhookSecret,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      logger.error(
+        { status: response.status, error: errorData },
+        "Publication webhook failed",
+      );
+      return {
+        success: false,
+        error: errorData.message || `Erreur ${response.status}`,
+      };
+    }
+
+    const result = await response.json();
+    const remoteId = result.id;
+
+    if (!remoteId) {
+      logger.error(result, "Publication webhook did not return an ID");
+      return { success: false, error: "ID de publication non reçu" };
+    }
+
+    // 6. Store or update publication record
+    if (isUpdate && existingPublication) {
+      // Update the existing record's updated_at and payload
+      const { error: updateRecordError } = await supabase
+        .from("publication_records")
+        .update({
+          updated_at: new Date().toISOString(),
+          // biome-ignore lint/suspicious/noExplicitAny: Payload structure is complex but valid JSON
+          payload: payload as any,
+          published_by: user.id,
+        })
+        .eq("id", existingPublication.id);
+
+      if (updateRecordError) {
+        logger.error(updateRecordError, "Error updating publication record");
+      }
+    } else {
+      // Create new publication record
+      const { error: insertError } = await supabase
+        .from("publication_records")
+        .insert({
+          workflow_id: workflowId,
+          target: cleanBaseUrl,
+          remote_id: remoteId,
+          status: "published",
+          // biome-ignore lint/suspicious/noExplicitAny: Payload structure is complex but valid JSON
+          payload: payload as any,
+          published_by: user.id,
+        });
+
+      if (insertError) {
+        logger.error(insertError, "Error storing publication record");
+      }
+    }
+
+    // 7. Update workflow progress
+    const { error: updateError } = await supabase
+      .from("workflows")
+      .update({ progress: "published" })
+      .eq("id", workflowId);
+
+    if (updateError) {
+      logger.error(updateError, "Error updating workflow progress");
+    }
+
+    return {
+      success: true,
+      publicationId: existingPublication?.id,
+      remoteId,
+      isUpdate,
+    };
+  } catch (error) {
+    logger.error(error, "Unexpected error publishing document");
+    return {
+      success: false,
+      error: "Erreur inattendue lors de la publication",
+    };
+  }
 }
