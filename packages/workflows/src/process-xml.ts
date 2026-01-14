@@ -1,4 +1,8 @@
-import { createLettaClient, generateIngestionReport } from "@playground/agents";
+import {
+  createLettaClient,
+  generateIngestionReport,
+  type IngestionReportResult,
+} from "@playground/agents";
 import {
   type LheoDocument,
   lheoJsonToMarkdownWithFrontmatter,
@@ -65,8 +69,8 @@ export async function generateIngestionReportStep(xmlContent: string) {
   const lettaClient = createLettaClient();
   try {
     const report = await generateIngestionReport(lettaClient, xmlContent);
-    // Return content directly
-    return { content: report };
+    // Return the full result object with status information
+    return { result: report };
   } catch (error) {
     logger.error(error, "Error generating ingestion report");
     return { error: error instanceof Error ? error.message : String(error) };
@@ -79,7 +83,7 @@ export async function ingestDataStep(
   // jsonResult: any, // We can use the json output for metadata if structurally compatible,
   // but `seed-ingestion` used `matter(markdown)`.
   // `matter` is robust.
-  ingestionResult: { error?: unknown; content?: string },
+  ingestionResult: { error?: unknown; result?: IngestionReportResult },
 ) {
   "use step";
 
@@ -89,14 +93,24 @@ export async function ingestDataStep(
   // Parse Metadata from markdown content
   const { data: metadata } = matter(markdownResult.content);
 
-  // Prepare Report
+  // Prepare Report with status information
   let ingestionReport:
-    | { markdown: string; metadata: Record<string, unknown> }
+    | {
+        markdown: string;
+        metadata: Record<string, unknown>;
+        status?: "complete" | "incomplete";
+        rawResponse?: string;
+      }
     | undefined;
 
-  if (ingestionResult && !ingestionResult.error && ingestionResult.content) {
-    const { data: iMeta } = matter(ingestionResult.content);
-    ingestionReport = { markdown: ingestionResult.content, metadata: iMeta };
+  if (ingestionResult?.result) {
+    const report = ingestionResult.result;
+    ingestionReport = {
+      markdown: report.content,
+      metadata: report.metadata,
+      status: report.status,
+      rawResponse: report.rawResponse,
+    };
   }
 
   const result = await ingestProcessedData(supabase, {
@@ -141,7 +155,8 @@ export async function processXmlWorkflow(_flowId: string, rcoRecordId: string) {
           "rco.md": mdResult.content,
           "rco.json": jsonResult.content,
           "report.md":
-            ingestionReportResult.content ?? ingestionReportResult.error,
+            ingestionReportResult.result?.content ??
+            ingestionReportResult.error,
         },
         ingestion: ingestionResult,
       };

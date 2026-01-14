@@ -28,7 +28,10 @@ interface IngestionRecordWithReport {
   markdown: string;
   metadata: Json;
   ingestion_report_id: string | null;
-  letta_reports: { markdown: string } | { markdown: string }[] | null;
+  letta_reports:
+    | { markdown: string; status?: string }
+    | { markdown: string; status?: string }[]
+    | null;
 }
 
 export interface GetDocumentsParams {
@@ -348,7 +351,8 @@ export async function getDocumentById(id: string): Promise<Document | null> {
             metadata,
             ingestion_report_id,
             letta_reports (
-              markdown
+              markdown,
+              status
             )
           `,
           )

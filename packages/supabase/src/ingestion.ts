@@ -19,8 +19,13 @@ export interface IngestionData {
   markdownContent: string;
   // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
   metadata: any;
-  // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
-  ingestionReport?: { markdown: string; metadata: any };
+  ingestionReport?: {
+    markdown: string;
+    // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
+    metadata: any;
+    status?: "complete" | "incomplete";
+    rawResponse?: string;
+  };
 }
 
 function parseYYYYMMMDD_Local(dateStr: string): Date {
@@ -120,8 +125,13 @@ export async function ingestProcessedData(
     markdownContent: string;
     // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
     metadata: any;
-    // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
-    ingestionReport?: { markdown: string; metadata: any };
+    ingestionReport?: {
+      markdown: string;
+      // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
+      metadata: any;
+      status?: "complete" | "incomplete";
+      rawResponse?: string;
+    };
   },
 ): Promise<IngestionResult> {
   const { rcoRecordId, markdownContent, metadata, ingestionReport } = data;
@@ -138,10 +148,17 @@ export async function ingestProcessedData(
   // Helper to insert report
   const insertReport = async (
     type: string,
-    // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
-    reportData: { markdown: string; metadata: any },
+    reportData: {
+      markdown: string;
+      // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
+      metadata: any;
+      status?: "complete" | "incomplete";
+      rawResponse?: string;
+    },
   ) => {
-    logger.info(`Inserting ${type} report...`);
+    logger.info(
+      `Inserting ${type} report with status: ${reportData.status ?? "complete"}...`,
+    );
     const { data: report, error: reportError } = await supabase
       .from("letta_reports")
       .insert({
@@ -149,6 +166,8 @@ export async function ingestProcessedData(
         report_type: type,
         markdown: reportData.markdown,
         metadata: reportData.metadata,
+        status: reportData.status ?? "complete",
+        raw_response: reportData.rawResponse ?? null,
       })
       .select("id")
       .single();
@@ -191,21 +210,30 @@ export async function ingestProcessedData(
     };
   }
 
-  // 4. Update Content Flow Status based on Compliance
+  // 4. Update Content Flow Status based on Compliance and Report Status
   let status = "unknown";
-  const complianceVal = ingestionReport?.metadata?.compliant;
 
-  logger.info(
-    "Compliance Metadata Value:",
-    complianceVal,
-    "Type:",
-    typeof complianceVal,
-  );
+  // Check if report is incomplete (agent failed to produce valid output)
+  if (ingestionReport?.status === "incomplete") {
+    status = "error";
+    logger.info(
+      "Report marked as incomplete - setting workflow status to error",
+    );
+  } else {
+    const complianceVal = ingestionReport?.metadata?.compliant;
 
-  if (complianceVal === true || complianceVal === "true") {
-    status = "compliant";
-  } else if (complianceVal === false || complianceVal === "false") {
-    status = "non_compliant";
+    logger.info(
+      "Compliance Metadata Value:",
+      complianceVal,
+      "Type:",
+      typeof complianceVal,
+    );
+
+    if (complianceVal === true || complianceVal === "true") {
+      status = "compliant";
+    } else if (complianceVal === false || complianceVal === "false") {
+      status = "non_compliant";
+    }
   }
 
   logger.info(`Updating content_flow status to: ${status}`);

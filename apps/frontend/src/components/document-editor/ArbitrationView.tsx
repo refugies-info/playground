@@ -16,6 +16,9 @@ export function ArbitrationView() {
     return document?.complianceReport ?? "";
   }, [document?.complianceReport]);
 
+  // Check for error state (agent failed to produce valid output)
+  const isError = document?.status === "error";
+
   // Simplified status logic
   const isCompliant = document?.status === "compliant";
 
@@ -53,28 +56,44 @@ export function ArbitrationView() {
                 </Badge>
               </p>
 
-              <Button
-                variant={isCompliant ? "danger" : "primary"}
-                className="w-fit flex gap-2 items-center justify-center cursor-pointer ml-auto"
-                onClick={handleToggleStatus}
-                disabled={isUpdating}
-              >
-                <b className="uppercase">Je ne suis pas d'accord</b>{" "}
-                <span>
-                  {isCompliant
-                    ? "(passer en non conforme)"
-                    : "(passer en conforme)"}
-                </span>
-              </Button>
+              {!isError && (
+                <Button
+                  variant={isCompliant ? "danger" : "primary"}
+                  className="w-fit flex gap-2 items-center justify-center cursor-pointer ml-auto"
+                  onClick={handleToggleStatus}
+                  disabled={isUpdating}
+                >
+                  <b className="uppercase">Je ne suis pas d'accord</b>{" "}
+                  <span>
+                    {isCompliant
+                      ? "(passer en non conforme)"
+                      : "(passer en conforme)"}
+                  </span>
+                </Button>
+              )}
             </div>
           </div>
-          <div className="  p-6">
-            <MarkdownViewer
-              content={reportContent}
-              loadingMessage="Chargement du rapport..."
-              emptyMessage="Aucun rapport disponible"
-            />
-          </div>
+
+          {/* Error alert when agent failed to produce valid output */}
+          {isError && (
+            <div className="mx-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="font-bold text-red-600">Erreur</p>
+              <p className="text-red-600">
+                L'arbitrage de cette fiche n'a pas pu être réalisé.
+              </p>
+            </div>
+          )}
+
+          {/* Report content (only shown when not in error state) */}
+          {!isError && (
+            <div className="  p-6">
+              <MarkdownViewer
+                content={reportContent}
+                loadingMessage="Chargement du rapport..."
+                emptyMessage="Aucun rapport disponible"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
