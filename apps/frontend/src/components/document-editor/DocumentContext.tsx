@@ -23,6 +23,7 @@ interface DocumentData {
 interface DocumentContextType {
   document: DocumentData | null;
   setDocument: React.Dispatch<React.SetStateAction<DocumentData | null>>;
+  updateContent: (content: string) => void;
   setAiSuggestion: (suggestion: string) => void;
   acceptAiSuggestion: () => void;
   rejectAiSuggestion: () => void;
@@ -36,6 +37,8 @@ interface DocumentContextType {
   setIsRawMarkdownMode: (mode: boolean) => void;
   saveDocument: () => Promise<{ success: boolean; error?: string }>;
   isSaving: boolean;
+  isDirty: boolean;
+  canPublish: boolean;
   activeView: "edit" | "compliance";
   setActiveView: (view: "edit" | "compliance") => void;
   previewDocument: () => void;
@@ -68,6 +71,25 @@ export function DocumentProvider({
   const [isRawMarkdownMode, setIsRawMarkdownMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  // If document is already in 'modified' state, it's ready to publish
+  const [canPublish, setCanPublish] = useState(
+    initialData?.state === "modified",
+  );
+
+  // Update content and mark as dirty (only if content actually changed)
+  const updateContent = (content: string) => {
+    if (!document) return;
+    // Don't mark dirty if content hasn't actually changed
+    if (document.editorialContent === content) return;
+
+    setDocument({
+      ...document,
+      editorialContent: content,
+    });
+    setIsDirty(true);
+    setCanPublish(false); // Can't publish until saved
+  };
 
   const setAiSuggestion = (suggestion: string) => {
     if (!document) return;
@@ -88,6 +110,8 @@ export function DocumentProvider({
       editorialContent: document.aiSuggestion,
       aiSuggestion: undefined,
     });
+    setIsDirty(true);
+    setCanPublish(false);
   };
 
   const rejectAiSuggestion = () => {
@@ -108,6 +132,8 @@ export function DocumentProvider({
       aiSuggestion: undefined,
       // Keep ingestionContent - it's immutable and always available for comparison
     });
+    setIsDirty(true);
+    setCanPublish(false);
   };
 
   const saveDocument = async (): Promise<{
@@ -124,6 +150,17 @@ export function DocumentProvider({
         document.id,
         document.editorialContent,
       );
+      if (result.success) {
+        setIsDirty(false);
+        setCanPublish(true); // Now can publish
+        // If document was published, update local state to 'modified'
+        if (document.state === "published") {
+          setDocument({
+            ...document,
+            state: "modified",
+          });
+        }
+      }
       return result;
     } catch (error) {
       logger.error(error, "Error saving document");
@@ -173,6 +210,8 @@ export function DocumentProvider({
           ...document,
           state: "published",
         });
+        // Disable publish button until next modification + save
+        setCanPublish(false);
       }
 
       return result;
@@ -189,6 +228,7 @@ export function DocumentProvider({
       value={{
         document,
         setDocument,
+        updateContent,
         setAiSuggestion,
         acceptAiSuggestion,
         rejectAiSuggestion,
@@ -202,6 +242,8 @@ export function DocumentProvider({
         setIsRawMarkdownMode,
         saveDocument,
         isSaving,
+        isDirty,
+        canPublish,
         activeView,
         setActiveView,
         previewDocument,

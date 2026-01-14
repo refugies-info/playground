@@ -4,11 +4,11 @@ import { cn } from "@playground/ui";
 import { Button } from "@playground/ui/primitives";
 import { ChevronLeft, ChevronRight, File, Gavel } from "lucide-react";
 import { useEffect, useState } from "react";
+import { DocumentActions } from "./DocumentActions";
 import { useDocument } from "./DocumentContext";
 
 export function EditorNavigation() {
-  const { isComparisonMode, document, activeView, setActiveView } =
-    useDocument();
+  const { isComparisonMode, activeView, setActiveView } = useDocument();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Auto-collapse when comparison mode is active
@@ -44,8 +44,8 @@ export function EditorNavigation() {
         </Button>
       </div>
 
+      {/* Navigation Buttons */}
       <div className="flex-1 flex flex-col p-4 gap-4">
-        {/* Navigation Buttons */}
         <div className="flex flex-col gap-2">
           <Button
             variant={activeView === "edit" ? "secondary" : "ghost"}
@@ -71,6 +71,11 @@ export function EditorNavigation() {
             {!isCollapsed && "Arbitrage"}
           </Button>
         </div>
+      </div>
+
+      {/* Action Buttons - Sticky Bottom */}
+      <div className="sticky bottom-0 mt-auto">
+        <DocumentActions isCollapsed={isCollapsed} />
       </div>
     </div>
   );

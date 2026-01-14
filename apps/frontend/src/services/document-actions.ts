@@ -15,14 +15,15 @@ export async function saveDocument(
   const supabase = createSupabaseServerClient(cookieStore);
 
   try {
-    // First, get the workflow to check for existing editorial_record and get ingestion_record_id
+    // First, get the workflow to check for existing editorial_record and get progress
     const { data: workflow, error: workflowError } = await supabase
       .from("workflows")
       .select(
         `
         id,
         editorial_record_id,
-        ingestion_record_id
+        ingestion_record_id,
+        progress
       `,
       )
       .eq("id", workflowId)
@@ -67,6 +68,23 @@ export async function saveDocument(
       if (insertError) {
         logger.error(insertError, "Error creating editorial_record");
         return { success: false, error: "Failed to create editorial record" };
+      }
+    }
+
+    // If the document was published, set progress to 'modified'
+    // This indicates the document has local changes not yet republished
+    if (workflow.progress === "published") {
+      const { error: progressError } = await supabase
+        .from("workflows")
+        .update({ progress: "modified" })
+        .eq("id", workflowId);
+
+      if (progressError) {
+        logger.error(
+          progressError,
+          "Error updating workflow progress to modified",
+        );
+        // Don't fail the save operation for this
       }
     }
 

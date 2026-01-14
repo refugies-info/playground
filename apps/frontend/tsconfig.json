@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@playground/ui/*": ["../../packages/ui/src/*"],
+      "@playground/ui": ["../../packages/ui/src/index.ts"]
     },
     "types": ["workflow"]
   },
