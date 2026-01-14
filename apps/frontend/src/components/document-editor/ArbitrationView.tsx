@@ -43,7 +43,7 @@ export function ArbitrationView() {
     <div className="flex-1 flex flex-col h-full bg-white overflow-hidden">
       <div className="flex-1 overflow-auto ">
         <div className="mx-auto space-y-6">
-          {/* Header with status and toggle */}
+          {/* Markdown viewer for compliance report */}
           <div className="sticky top-0 z-10 bg-white">
             <div className="p-4 border-b grid grid-cols-2 items-center  shadow">
               <p className="flex items-center gap-2">
@@ -68,12 +68,7 @@ export function ArbitrationView() {
               </Button>
             </div>
           </div>
-
-          {/* Compliance Report Section */}
-          <div className="p-6">
-            <h2 className="text-lg font-semibold mb-4">
-              Rapport de conformité
-            </h2>
+          <div className="  p-6">
             <MarkdownViewer
               content={reportContent}
               loadingMessage="Chargement du rapport..."
