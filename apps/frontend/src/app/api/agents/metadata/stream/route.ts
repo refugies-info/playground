@@ -6,7 +6,16 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  const { content } = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch (_) {
+    return new Response("Invalid JSON", { status: 400 });
+  }
+
+  const { content } = body as {
+    content: string;
+  };
   const agentId = process.env.PLAYGROUND_AGENT_ID;
 
   if (!agentId) {
