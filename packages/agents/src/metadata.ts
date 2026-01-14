@@ -12,39 +12,15 @@ export const METADATA_SLASH_COMMAND = "/metadata";
  * @param client - The Letta client instance
  * @param content - The document content (markdown with frontmatter)
  * @param agentId - The agent ID to use (PLAYGROUND_AGENT_ID)
- * @param flowId - The workflow/document ID for context
- * @param metadata - Optional additional metadata to include
  */
 export const generateMetadataReport = async function* (
   client: Letta,
   content: string,
   agentId: string,
-  flowId?: string,
-  metadata?: Record<string, unknown>,
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK stream yields various message types
 ): AsyncGenerator<any> {
-  // Build the message content with the slash command
-  const messageParts: string[] = [];
-
-  // Start with the slash command
-  messageParts.push(METADATA_SLASH_COMMAND);
-
-  // Add the content for analysis
-  messageParts.push(`<content>\n${content}\n</content>`);
-
-  // Add flowId if provided for tracking
-  if (flowId) {
-    messageParts.push(`<flow_id>${flowId}</flow_id>`);
-  }
-
-  // Add metadata if provided
-  if (metadata) {
-    messageParts.push(
-      `<metadata>\n${JSON.stringify(metadata, null, 2)}\n</metadata>`,
-    );
-  }
-
-  const messageContent = messageParts.join("\n\n");
+  // Build the message with the slash command followed by the content
+  const messageContent = `${METADATA_SLASH_COMMAND} ${content}`;
 
   const stream = await client.agents.messages.stream(agentId, {
     messages: [

@@ -69,8 +69,6 @@ export function ArbitrationView() {
         },
         body: JSON.stringify({
           content: document.editorialContent,
-          flowId: document.id,
-          metadata: document.metadata,
         }),
       });
 

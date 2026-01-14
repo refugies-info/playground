@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  const { content, flowId, metadata } = await request.json();
+  const { content } = await request.json();
   const agentId = process.env.PLAYGROUND_AGENT_ID;
 
   if (!agentId) {
@@ -31,8 +31,6 @@ export async function POST(request: NextRequest) {
           client,
           content,
           agentId,
-          flowId,
-          metadata,
         )) {
           const data = `data: ${JSON.stringify(chunk)}\n\n`;
           controller.enqueue(encoder.encode(data));
