@@ -30,6 +30,7 @@ export default async function DocumentPage(props: DocumentPageProps) {
     ingestionContent: document.ingestionContent, // Immutable original from ingestion_records
     complianceReport: document.complianceReport,
     metadata: document.metadata, // Include metadata from ingestion_records
+    publishedUrl: document.publishedUrl,
   };
 
   return <DocumentLayout documentId={params.id} initialData={initialData} />;

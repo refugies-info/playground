@@ -160,6 +160,12 @@ type WorkflowWithRelations =
           "markdown" | "metadata"
         >[]
       | null;
+    publication_records:
+      | Pick<
+          Database["public"]["Tables"]["publication_records"]["Row"],
+          "remote_id"
+        >[]
+      | null;
   };
 
 export async function getDocuments(params: GetDocumentsParams) {
@@ -197,6 +203,9 @@ export async function getDocuments(params: GetDocumentsParams) {
       editorial_records (
         markdown,
         metadata
+      ),
+      publication_records (
+        remote_id
       )
     `,
       { count: "exact" },
@@ -287,6 +296,17 @@ export async function getDocuments(params: GetDocumentsParams) {
         extractTitleFromMetadata(metadata) ||
         (await extractTitleFromMarkdown(content));
 
+      const cleanBaseUrl = (process.env.RI_BASE_URL || "").replace(/\/$/, "");
+      const remoteId =
+        item.publication_records && item.publication_records.length > 0
+          ? item.publication_records[0].remote_id
+          : undefined;
+
+      const publishedUrl =
+        item.progress === "published" && remoteId && cleanBaseUrl
+          ? `${cleanBaseUrl}/dispositif/${remoteId}`
+          : undefined;
+
       return {
         id: item.id,
         title,
@@ -295,6 +315,7 @@ export async function getDocuments(params: GetDocumentsParams) {
         state: item.progress,
         content,
         metadata,
+        publishedUrl,
       };
     }),
   );
@@ -333,17 +354,18 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   }
 
   // Fetch the related records individually
-  const [rcoResult, ingestionResult, editorialResult] = await Promise.all([
-    supabase
-      .from("rco_records")
-      .select("source_raw, metadata")
-      .eq("id", workflow.rco_record_id)
-      .single(),
-    workflow.ingestion_record_id
-      ? supabase
-          .from("ingestion_records")
-          .select(
-            `
+  const [rcoResult, ingestionResult, editorialResult, publicationResult] =
+    await Promise.all([
+      supabase
+        .from("rco_records")
+        .select("source_raw, metadata")
+        .eq("id", workflow.rco_record_id)
+        .single(),
+      workflow.ingestion_record_id
+        ? supabase
+            .from("ingestion_records")
+            .select(
+              `
             markdown,
             metadata,
             ingestion_report_id,
@@ -351,23 +373,31 @@ export async function getDocumentById(id: string): Promise<Document | null> {
               markdown
             )
           `,
-          )
-          .eq("id", workflow.ingestion_record_id)
-          .single()
-      : Promise.resolve({ data: null, error: null }),
-    workflow.editorial_record_id
-      ? supabase
-          .from("editorial_records")
-          .select("markdown, metadata")
-          .eq("id", workflow.editorial_record_id)
-          .single()
-      : Promise.resolve({ data: null, error: null }),
-  ]);
+            )
+            .eq("id", workflow.ingestion_record_id)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
+      workflow.editorial_record_id
+        ? supabase
+            .from("editorial_records")
+            .select("markdown, metadata")
+            .eq("id", workflow.editorial_record_id)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
+      supabase
+        .from("publication_records")
+        .select("remote_id")
+        .eq("workflow_id", workflow.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single(),
+    ]);
 
   const rcoRecord = rcoResult.data;
   const ingestionRecord =
     ingestionResult.data as IngestionRecordWithReport | null;
   const editorialRecord = editorialResult.data;
+  const publicationRecord = publicationResult.data;
 
   // Fetch compliance report from the joined data
   let complianceReport = "";
@@ -409,6 +439,13 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     extractTitleFromMetadata(metadata) ||
     (await extractTitleFromMarkdown(content));
 
+  const cleanBaseUrl = (process.env.RI_BASE_URL || "").replace(/\/$/, "");
+  const remoteId = publicationRecord?.remote_id;
+  const publishedUrl =
+    workflow.progress === "published" && remoteId && cleanBaseUrl
+      ? `${cleanBaseUrl}/dispositif/${remoteId}`
+      : undefined;
+
   return {
     id: workflow.id,
     title,
@@ -419,5 +456,6 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     ingestionContent,
     complianceReport,
     metadata,
+    publishedUrl,
   };
 }

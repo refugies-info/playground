@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@playground/ui/primitives";
+import { ExternalLink } from "lucide-react";
 import {
   getStateLabel,
   getStateVariant,
@@ -22,6 +23,17 @@ export function DocumentStatus() {
       <Badge variant={getStateVariant(document.state)}>
         {getStateLabel(document.state)}
       </Badge>
+      {document.publishedUrl && (
+        <a
+          href={document.publishedUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-gray-400 hover:text-blue-600 transition-colors"
+          title="Voir la fiche publiée"
+        >
+          <ExternalLink className="w-4 h-4" />
+        </a>
+      )}
     </div>
   );
 }

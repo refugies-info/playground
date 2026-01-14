@@ -19,6 +19,7 @@ interface DocumentData {
   complianceReport?: string; // Markdown content of the compliance report
   aiSuggestion?: string; // Pending AI suggestion awaiting user review
   metadata?: Record<string, unknown>; // Metadata from ingestion_records
+  publishedUrl?: string; // Link to the published document on RI
 }
 
 interface DocumentContextType {
@@ -46,6 +47,7 @@ interface DocumentContextType {
   publishDocument: () => Promise<{
     success: boolean;
     remoteId?: string;
+    publishedUrl?: string;
     error?: string;
   }>;
   isPublishing: boolean;
@@ -193,6 +195,7 @@ export function DocumentProvider({
   const publishDocumentAction = async (): Promise<{
     success: boolean;
     remoteId?: string;
+    publishedUrl?: string;
     error?: string;
   }> => {
     if (!document) {

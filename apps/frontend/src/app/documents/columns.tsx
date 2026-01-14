@@ -7,6 +7,7 @@ import {
   DataTableColumnHeader,
 } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
+import { ExternalLink } from "lucide-react";
 import {
   getStateLabel,
   getStateVariant,
@@ -55,8 +56,23 @@ export const columns: ColumnDef<Document>[] = [
     ),
     cell: ({ row }) => {
       const state = row.getValue("state") as string;
+      const document = row.original;
       return (
-        <Badge variant={getStateVariant(state)}>{getStateLabel(state)}</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={getStateVariant(state)}>{getStateLabel(state)}</Badge>
+          {document.publishedUrl && (
+            <a
+              href={document.publishedUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-blue-600 transition-colors"
+              title="Voir la fiche publiée"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          )}
+        </div>
       );
     },
   },

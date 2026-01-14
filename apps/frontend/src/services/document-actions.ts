@@ -185,6 +185,7 @@ export async function publishDocument(
   publicationId?: string;
   remoteId?: string;
   isUpdate?: boolean;
+  publishedUrl?: string;
   error?: string;
 }> {
   const cookieStore = await cookies();
@@ -335,6 +336,7 @@ export async function publishDocument(
       publicationId: isUpdate ? existingPublication.id : (result as any).id, // Using result ID if available, otherwise just success
       remoteId,
       isUpdate,
+      publishedUrl: `${cleanBaseUrl}/dispositif/${remoteId}`,
     };
   } catch (error) {
     logger.error(error, "Unexpected error publishing document");
