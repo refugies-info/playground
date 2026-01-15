@@ -6,7 +6,18 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  const { content, instructions, metadata } = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch (_) {
+    return new Response("Invalid JSON", { status: 400 });
+  }
+
+  const { content, instructions, metadata } = body as {
+    content: string;
+    instructions: string;
+    metadata?: Record<string, unknown>;
+  };
   const agentId = process.env.PLAYGROUND_AGENT_ID;
 
   if (!agentId) {
@@ -42,6 +53,7 @@ export async function POST(request: NextRequest) {
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
       } catch (error) {
+        logger.error({ error }, "Error in editorial agent stream");
         const errorData = `data: ${JSON.stringify({
           type: "error",
           message: error instanceof Error ? error.message : "Unknown error",
