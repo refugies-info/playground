@@ -62,18 +62,51 @@ async function main() {
       const {
         createLettaClient,
         generateIngestionReport,
+        parseIngestionResponse,
       } = require("../packages/agents/src/index");
 
       const lettaClient = createLettaClient();
-      const reportMarkdown = await generateIngestionReport(lettaClient, rcoXml);
+      const agentId = process.env.PLAYGROUND_AGENT_ID;
 
-      // Save it for future use
-      fs.mkdirSync(path.dirname(ingestionMdPath), { recursive: true });
-      fs.writeFileSync(ingestionMdPath, reportMarkdown);
-      logger.info(`Generated report saved to ${ingestionMdPath}`);
+      if (!agentId) {
+        throw new Error("PLAYGROUND_AGENT_ID is not defined");
+      }
 
-      const { data: metadata, content: markdown } = matter(reportMarkdown);
-      ingestionReport = { markdown, metadata };
+      // Collect streaming response
+      let finalContent = "";
+      for await (const chunk of generateIngestionReport(
+        lettaClient,
+        rcoMdContent, // Pass markdown content instead of XML
+        agentId,
+      )) {
+        if (chunk.message_type === "assistant_message") {
+          const content =
+            typeof chunk.content === "string"
+              ? chunk.content
+              : JSON.stringify(chunk.content);
+          finalContent = content;
+        }
+      }
+
+      // Parse the response
+      const reportResult = parseIngestionResponse(finalContent, agentId);
+
+      if (reportResult.status === "complete") {
+        // Save it for future use
+        fs.mkdirSync(path.dirname(ingestionMdPath), { recursive: true });
+        fs.writeFileSync(ingestionMdPath, reportResult.content);
+        logger.info(`Generated report saved to ${ingestionMdPath}`);
+
+        ingestionReport = {
+          markdown: reportResult.content,
+          metadata: reportResult.metadata,
+        };
+      } else {
+        logger.warn(
+          { rawResponse: reportResult.rawResponse },
+          "Ingestion report incomplete (no frontmatter found)",
+        );
+      }
     } catch (error) {
       logger.error(error, "Failed to generate ingestion report");
       // Continue without report? Or fail?
