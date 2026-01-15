@@ -35,7 +35,8 @@
     "remark-parse": "^11.0.0",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0",
-    "workflow": "4.0.1-beta.21"
+    "workflow": "4.0.1-beta.21",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",

@@ -1,9 +1,18 @@
 import { createLettaClient, generateMetadataReport } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/**
+ * Request body schema for the metadata stream endpoint.
+ * Expects markdown with frontmatter containing metadata from previous phases.
+ */
+const requestBodySchema = z.object({
+  markdownContent: z.string().min(1, "Markdown content cannot be empty"),
+});
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -13,9 +22,20 @@ export async function POST(request: NextRequest) {
     return new Response("Invalid JSON", { status: 400 });
   }
 
-  const { markdownContent } = body as {
-    markdownContent: string;
-  };
+  // Validate request body with zod
+  const parseResult = requestBodySchema.safeParse(body);
+  if (!parseResult.success) {
+    return new Response(
+      JSON.stringify({
+        error: "Validation error",
+        details: parseResult.error.flatten(),
+      }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  const { markdownContent } = parseResult.data;
+
   const agentId = process.env.PLAYGROUND_AGENT_ID;
 
   if (!agentId) {
@@ -24,10 +44,6 @@ export async function POST(request: NextRequest) {
       "Metadata Agent Stream configuration error",
     );
     return new Response("Server configuration error", { status: 500 });
-  }
-
-  if (!markdownContent) {
-    return new Response("Markdown content is required", { status: 400 });
   }
 
   const encoder = new TextEncoder();

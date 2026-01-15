@@ -143,6 +143,9 @@ importers:
       workflow:
         specifier: 4.0.1-beta.21
         version: 4.0.1-beta.21(@aws-sdk/client-sts@3.940.0)(next@16.0.10(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.1.17
