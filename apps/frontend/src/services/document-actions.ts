@@ -217,14 +217,28 @@ export async function publishDocument(
     const webhookUrl = `${cleanBaseUrl}/api/webhook/dispositif`;
 
     // 3. Check for existing publication (to determine CREATE vs UPDATE)
-    const { data: existingPublication } = await supabase
-      .from("publication_records")
-      .select("id, remote_id")
-      .eq("workflow_id", workflowId)
-      .eq("target", cleanBaseUrl)
-      .order("created_at", { ascending: false })
-      .limit(1)
+    // Fetch workflow to get the current publication_record_id
+    const { data: workflow } = await supabase
+      .from("workflows")
+      .select("publication_record_id")
+      .eq("id", workflowId)
       .single();
+
+    let existingPublication = null;
+    const publicationRecordId = workflow?.publication_record_id;
+
+    if (publicationRecordId) {
+      const { data: pubRecord } = await supabase
+        .from("publication_records")
+        .select("id, remote_id, target")
+        .eq("id", publicationRecordId)
+        .single();
+
+      // Only consider it an update if the target matches
+      if (pubRecord && pubRecord.target === cleanBaseUrl) {
+        existingPublication = pubRecord;
+      }
+    }
 
     const existingRemoteId = existingPublication?.remote_id;
     const isUpdate = !!existingRemoteId;
@@ -298,20 +312,37 @@ export async function publishDocument(
       }
     } else {
       // Create new publication record
-      const { error: insertError } = await supabase
+      // Note: we don't store workflow_id in publication_records anymore
+      const { data: newRecord, error: insertError } = await supabase
         .from("publication_records")
         .insert({
-          workflow_id: workflowId,
           target: cleanBaseUrl,
           remote_id: remoteId,
           status: "published",
           // biome-ignore lint/suspicious/noExplicitAny: Payload structure is complex but valid JSON
           payload: payload as any,
           published_by: user.id,
-        });
+        })
+        .select("id")
+        .single();
 
       if (insertError) {
         logger.error(insertError, "Error storing publication record");
+      } else if (newRecord) {
+        // Link the new publication record to the workflow
+        const { error: linkError } = await supabase
+          .from("workflows")
+          .update({
+            publication_record_id: newRecord.id,
+          })
+          .eq("id", workflowId);
+
+        if (linkError) {
+          logger.error(
+            linkError,
+            "Error linking publication record to workflow",
+          );
+        }
       }
     }
 
@@ -327,7 +358,10 @@ export async function publishDocument(
 
     return {
       success: true,
-      publicationId: isUpdate ? existingPublication.id : (result as any).id, // Using result ID if available, otherwise just success
+      publicationId:
+        isUpdate && existingPublication
+          ? existingPublication.id
+          : (result as any).id, // Using result ID if available, otherwise just success
       remoteId,
       isUpdate,
       publishedUrl: `${cleanBaseUrl}/dispositif/${remoteId}`,
@@ -382,17 +416,32 @@ export async function archiveDocument(
     const webhookUrl = `${cleanBaseUrl}/api/webhook/dispositif`;
 
     // 3. Find existing publication (MUST exist to archive)
-    const { data: existingPublication } = await supabase
-      .from("publication_records")
-      .select("id, remote_id")
-      .eq("workflow_id", workflowId)
-      .eq("target", cleanBaseUrl)
-      .order("created_at", { ascending: false })
-      .limit(1)
+    const { data: workflow } = await supabase
+      .from("workflows")
+      .select("publication_record_id")
+      .eq("id", workflowId)
       .single();
 
-    if (!existingPublication?.remote_id) {
-      return { success: false, error: "Document jamais publié" };
+    const publicationRecordId = workflow?.publication_record_id;
+
+    if (!publicationRecordId) {
+      return {
+        success: false,
+        error: "Document jamais publié (pas d'enregistrement)",
+      };
+    }
+
+    const { data: existingPublication } = await supabase
+      .from("publication_records")
+      .select("id, remote_id, target")
+      .eq("id", publicationRecordId)
+      .single();
+
+    if (!existingPublication || existingPublication.target !== cleanBaseUrl) {
+      return {
+        success: false,
+        error: "Document jamais publié (cible incorrecte)",
+      };
     }
 
     const remoteId = existingPublication.remote_id;

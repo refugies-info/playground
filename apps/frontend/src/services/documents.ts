@@ -163,12 +163,10 @@ type WorkflowWithRelations =
           "markdown" | "metadata"
         >[]
       | null;
-    publication_records:
-      | Pick<
-          Database["public"]["Tables"]["publication_records"]["Row"],
-          "remote_id"
-        >[]
-      | null;
+    publication_records: Pick<
+      Database["public"]["Tables"]["publication_records"]["Row"],
+      "remote_id"
+    > | null;
   };
 
 export async function getDocuments(params: GetDocumentsParams) {
@@ -300,10 +298,7 @@ export async function getDocuments(params: GetDocumentsParams) {
         (await extractTitleFromMarkdown(content));
 
       const cleanBaseUrl = (process.env.RI_BASE_URL || "").replace(/\/$/, "");
-      const remoteId =
-        item.publication_records && item.publication_records.length > 0
-          ? item.publication_records[0].remote_id
-          : undefined;
+      const remoteId = item.publication_records?.remote_id;
 
       const publishedUrl =
         item.progress === "published" && remoteId && cleanBaseUrl
@@ -337,13 +332,15 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const supabase = createSupabaseServerClient(cookieStore);
 
   // First, get the workflow with its linked record IDs
-  const { data: workflow, error: workflowError } = await supabase
+  const { data: workflowData, error: workflowError } = await supabase
     .from("workflows")
     .select(
-      "id, status, progress, updated_at, editorial_record_id, ingestion_record_id, rco_record_id",
+      "id, status, progress, updated_at, editorial_record_id, ingestion_record_id, rco_record_id, publication_record_id",
     )
     .eq("id", id)
     .single();
+
+  const workflow = workflowData;
 
   if (workflowError) {
     if (workflowError.code !== "PGRST116") {
@@ -388,13 +385,13 @@ export async function getDocumentById(id: string): Promise<Document | null> {
             .eq("id", workflow.editorial_record_id)
             .single()
         : Promise.resolve({ data: null, error: null }),
-      supabase
-        .from("publication_records")
-        .select("remote_id")
-        .eq("workflow_id", workflow.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single(),
+      workflow.publication_record_id
+        ? supabase
+            .from("publication_records")
+            .select("remote_id")
+            .eq("id", workflow.publication_record_id)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
     ]);
 
   const rcoRecord = rcoResult.data;
