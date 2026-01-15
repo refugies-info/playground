@@ -213,9 +213,11 @@ export function DocumentProvider({
 
       if (result.success) {
         // Update local state to reflect published status
+        // Update local state to reflect published status
         setDocument({
           ...document,
           state: "published",
+          publishedUrl: result.publishedUrl,
         });
         // Disable publish button until next modification + save
         setCanPublish(false);

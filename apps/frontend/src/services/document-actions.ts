@@ -168,13 +168,7 @@ export async function getPreviewSecret(): Promise<{
  * 3. Stores the publication record
  * 4. Updates workflow progress to 'published'
  */
-/**
- * Server action to publish a document to refugies.info via webhook
- * 1. Gets authenticated user email
- * 2. Calls the publication webhook
- * 3. Stores the publication record
- * 4. Updates workflow progress to 'published'
- */
+
 export async function publishDocument(
   workflowId: string,
   title: string,

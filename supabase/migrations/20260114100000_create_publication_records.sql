@@ -48,4 +48,4 @@ create policy "Authenticated users can view publication_records"
 create policy "Authenticated users can insert publication_records"
   on public.publication_records for insert to authenticated with check (true);
 
--- No UPDATE policy needed for now as publication records are immutable logs
+

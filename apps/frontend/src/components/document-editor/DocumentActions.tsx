@@ -120,13 +120,18 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
   return (
     <div className="flex flex-col gap-2 p-4 border-t bg-white relative">
       {/* Status messages */}
-      {(saveSuccess || saveError || publishSuccess || publishError) && (
+      {(saveSuccess ||
+        saveError ||
+        publishSuccess ||
+        publishError ||
+        archiveSuccess ||
+        archiveError) && (
         <div className="text-xs text-center mb-1">
           {saveSuccess && <span className="text-green-600">Enregistré ✓</span>}
           {saveError && <span className="text-red-600">{saveError}</span>}
           {publishSuccess && <span className="text-green-600">Publié ✓</span>}
           {publishError && <span className="text-red-600">{publishError}</span>}
-          {archiveSuccess && <span className="text-red-600">Archivé ✓</span>}
+          {archiveSuccess && <span className="text-green-600">Archivé ✓</span>}
           {archiveError && <span className="text-red-600">{archiveError}</span>}
         </div>
       )}
