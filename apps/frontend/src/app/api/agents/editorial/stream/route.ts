@@ -5,9 +5,27 @@ import {
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/**
+ * Request body schema for the editorial stream endpoint.
+ * Accepts either:
+ * - markdownContent: Pre-built markdown with frontmatter (preferred)
+ * - content + metadata + instructions: Legacy format, will be combined
+ */
+const requestBodySchema = z
+  .object({
+    markdownContent: z.string().optional(),
+    content: z.string().optional(),
+    instructions: z.string().optional(),
+    metadata: z.record(z.unknown()).optional(),
+  })
+  .refine((data) => data.markdownContent || data.content, {
+    message: "Either markdownContent or content is required",
+  });
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -17,15 +35,19 @@ export async function POST(request: NextRequest) {
     return new Response("Invalid JSON", { status: 400 });
   }
 
-  // Accept either:
-  // 1. markdownContent - pre-built markdown with frontmatter (preferred)
-  // 2. content + metadata + instructions - legacy format, will be combined
-  const { markdownContent, content, instructions, metadata } = body as {
-    markdownContent?: string;
-    content?: string;
-    instructions?: string;
-    metadata?: Record<string, unknown>;
-  };
+  // Validate request body with zod
+  const parseResult = requestBodySchema.safeParse(body);
+  if (!parseResult.success) {
+    return new Response(
+      JSON.stringify({
+        error: "Validation error",
+        details: parseResult.error.flatten(),
+      }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  const { markdownContent, content, instructions, metadata } = parseResult.data;
 
   const agentId = process.env.PLAYGROUND_AGENT_ID;
 
@@ -43,15 +65,14 @@ export async function POST(request: NextRequest) {
   if (markdownContent) {
     // New unified format: markdown with frontmatter already provided
     inputMarkdown = markdownContent;
-  } else if (content) {
+  } else {
     // Legacy format: combine content + metadata + instructions into markdown
+    // content is guaranteed to exist due to the refine above
     inputMarkdown = buildMarkdownWithFrontmatter(
-      content,
+      content as string,
       metadata,
       instructions,
     );
-  } else {
-    return new Response("Content is required", { status: 400 });
   }
 
   const encoder = new TextEncoder();
