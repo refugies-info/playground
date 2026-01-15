@@ -91,11 +91,12 @@ export async function generateIngestionReportStep(markdownContent: string) {
     )) {
       // Extract assistant message content from stream
       if (chunk.message_type === "assistant_message") {
-        const content =
-          typeof chunk.content === "string"
-            ? chunk.content
-            : JSON.stringify(chunk.content);
-        finalContent = content; // Last assistant message is the final response
+        if (typeof chunk.content !== "string") {
+          throw new Error(
+            `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
+          );
+        }
+        finalContent = chunk.content; // Last assistant message is the final response
       }
     }
 

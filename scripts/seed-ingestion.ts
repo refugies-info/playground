@@ -80,11 +80,12 @@ async function main() {
         agentId,
       )) {
         if (chunk.message_type === "assistant_message") {
-          const content =
-            typeof chunk.content === "string"
-              ? chunk.content
-              : JSON.stringify(chunk.content);
-          finalContent = content;
+          if (typeof chunk.content !== "string") {
+            throw new Error(
+              `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
+            );
+          }
+          finalContent = chunk.content;
         }
       }
 
