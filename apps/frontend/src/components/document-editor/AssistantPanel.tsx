@@ -49,7 +49,7 @@ export function AssistantPanel() {
     setReasoning([]); // Clear previous reasoning
 
     try {
-      // Send content, metadata (from ingestion), and instructions
+      // Send flowId, content, metadata (from ingestion), and instructions
       // The API route will combine these into markdown with frontmatter
       // to ensure metadata continuity through the processing pipeline
       const response = await fetch("/api/agents/editorial/stream", {
@@ -58,6 +58,7 @@ export function AssistantPanel() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          flowId: document.id, // Required for persisting letta_report
           content: document.editorialContent,
           metadata: document.metadata, // Preserve ingestion metadata (frontmatter)
           instructions:
