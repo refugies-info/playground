@@ -98,30 +98,27 @@ export type Database = {
       };
       ingestion_records: {
         Row: {
-          compliance_report_id: string | null;
           created_at: string;
-          duplicates_report_id: string | null;
           id: string;
+          ingestion_report_id: string | null;
           markdown: string;
           metadata: Json;
           rco_record_id: string;
           updated_at: string;
         };
         Insert: {
-          compliance_report_id?: string | null;
           created_at?: string;
-          duplicates_report_id?: string | null;
           id?: string;
+          ingestion_report_id?: string | null;
           markdown: string;
           metadata: Json;
           rco_record_id: string;
           updated_at?: string;
         };
         Update: {
-          compliance_report_id?: string | null;
           created_at?: string;
-          duplicates_report_id?: string | null;
           id?: string;
+          ingestion_report_id?: string | null;
           markdown?: string;
           metadata?: Json;
           rco_record_id?: string;
@@ -129,15 +126,8 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "ingestion_records_compliance_report_id_fkey";
-            columns: ["compliance_report_id"];
-            isOneToOne: false;
-            referencedRelation: "letta_reports";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "ingestion_records_duplicates_report_id_fkey";
-            columns: ["duplicates_report_id"];
+            foreignKeyName: "ingestion_records_ingestion_report_id_fkey";
+            columns: ["ingestion_report_id"];
             isOneToOne: false;
             referencedRelation: "letta_reports";
             referencedColumns: ["id"];
@@ -159,7 +149,9 @@ export type Database = {
           markdown: string;
           metadata: Json;
           rationale: string | null;
+          raw_response: string | null;
           report_type: string;
+          status: string;
           updated_at: string;
         };
         Insert: {
@@ -169,7 +161,9 @@ export type Database = {
           markdown: string;
           metadata: Json;
           rationale?: string | null;
+          raw_response?: string | null;
           report_type: string;
+          status?: string;
           updated_at?: string;
         };
         Update: {
@@ -179,7 +173,9 @@ export type Database = {
           markdown?: string;
           metadata?: Json;
           rationale?: string | null;
+          raw_response?: string | null;
           report_type?: string;
+          status?: string;
           updated_at?: string;
         };
         Relationships: [];

@@ -3,7 +3,7 @@ import type { BadgeProps } from "@playground/ui/primitives";
 /**
  * Document Status Types
  */
-export type DocumentStatus = "compliant" | "non_compliant";
+export type DocumentStatus = "compliant" | "non_compliant" | "error";
 export type DocumentState =
   | "rco"
   | "ingestion"
@@ -34,6 +34,10 @@ export const STATUS_CONFIG: Record<
   },
   non_compliant: {
     label: "Non conforme",
+    variant: "danger",
+  },
+  error: {
+    label: "Erreur",
     variant: "danger",
   },
 };

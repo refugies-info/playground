@@ -1,4 +1,4 @@
-export type DocumentStatus = "compliant" | "non_compliant";
+export type DocumentStatus = "compliant" | "non_compliant" | "error";
 export type DocumentState =
   | "rco"
   | "ingestion"
