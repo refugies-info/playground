@@ -4,6 +4,7 @@ import { getSupabaseAdmin, insertRcoRecord } from "@playground/supabase";
 import { processXmlWorkflow } from "@playground/workflows";
 import { NextResponse } from "next/server";
 import { start } from "workflow/api";
+import { buildWorkflowDashboardUrl } from "@/lib/workflow-utils";
 
 export async function POST(request: Request) {
   const { xmlContent } = await request.json();
@@ -64,11 +65,15 @@ export async function POST(request: Request) {
       logger.error(linkError, "Failed to link workflow");
     }
 
+    // 6. Build dashboard URL for observability
+    const dashboardUrl = buildWorkflowDashboardUrl(workflowId);
+
     return NextResponse.json({
       message: "Workflow started",
       workflowId,
       flowId,
       rcoRecordId,
+      dashboardUrl,
     });
   } catch (error) {
     logger.error(error, "Workflow start error");
