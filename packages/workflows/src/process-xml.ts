@@ -2,6 +2,7 @@ import {
   createLettaClient,
   generateIngestionReport,
   type IngestionReportResult,
+  parseIngestionResponse,
 } from "@playground/agents";
 import {
   type LheoDocument,
@@ -64,13 +65,43 @@ export async function generateJsonStep(doc: LheoDocument) {
   return { content: doc };
 }
 
-export async function generateIngestionReportStep(xmlContent: string) {
+/**
+ * Generates an ingestion (audit) report from markdown content.
+ * Uses the /audit slash command via streaming API.
+ *
+ * @param markdownContent - Markdown with frontmatter from RCO
+ */
+export async function generateIngestionReportStep(markdownContent: string) {
   "use step";
   const lettaClient = createLettaClient();
+  const agentId = process.env.PLAYGROUND_AGENT_ID;
+
+  if (!agentId) {
+    throw new Error("PLAYGROUND_AGENT_ID is not defined");
+  }
+
   try {
-    const report = await generateIngestionReport(lettaClient, xmlContent);
-    // Return the full result object with status information
-    return { result: report };
+    // Collect streaming response into final content
+    let finalContent = "";
+
+    for await (const chunk of generateIngestionReport(
+      lettaClient,
+      markdownContent,
+      agentId,
+    )) {
+      // Extract assistant message content from stream
+      if (chunk.message_type === "assistant_message") {
+        const content =
+          typeof chunk.content === "string"
+            ? chunk.content
+            : JSON.stringify(chunk.content);
+        finalContent = content; // Last assistant message is the final response
+      }
+    }
+
+    // Parse the final response into structured result
+    const result = parseIngestionResponse(finalContent, agentId);
+    return { result };
   } catch (error) {
     logger.error(error, "Error generating ingestion report");
     return { error: error instanceof Error ? error.message : String(error) };
@@ -132,17 +163,17 @@ export async function processXmlWorkflow(_flowId: string, rcoRecordId: string) {
 
   const results = await Promise.all(
     actionDocs.map(async (actionDoc, i) => {
-      // Step 1: Generate Content
+      // Step 1: Generate Markdown from RCO XML
       const mdResult = await generateMarkdownStep(actionDoc);
       const jsonResult = await generateJsonStep(actionDoc);
 
-      // Step 2: Checks (Ingestion Report)
-      // Pass the markdown content to the agent
+      // Step 2: Run audit report on the markdown content
+      // Note: mdResult.content is markdown with frontmatter, not XML
       const ingestionReportResult = await generateIngestionReportStep(
         mdResult.content,
       );
 
-      // Step 3: Ingest
+      // Step 3: Ingest into database
       const ingestionResult = await ingestDataStep(
         rcoRecordId,
         mdResult,

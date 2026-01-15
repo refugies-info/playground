@@ -49,17 +49,19 @@ export function AssistantPanel() {
     setReasoning([]); // Clear previous reasoning
 
     try {
+      // Send content, metadata (from ingestion), and instructions
+      // The API route will combine these into markdown with frontmatter
+      // to ensure metadata continuity through the processing pipeline
       const response = await fetch("/api/agents/editorial/stream", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          content: document.editorialContent,
+          metadata: document.metadata, // Preserve ingestion metadata (frontmatter)
           instructions:
             "Transforme ce contenu en langage clair. Utilise le bloc compétence_transformation_langage_clair et format_sortie_transformation.",
-          content: document.editorialContent,
-          flowId: document.id,
-          metadata: document.metadata, // Include ingestion_records metadata
         }),
         signal: abortControllerRef.current.signal,
       });

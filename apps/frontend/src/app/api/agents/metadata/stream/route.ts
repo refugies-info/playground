@@ -13,8 +13,8 @@ export async function POST(request: NextRequest) {
     return new Response("Invalid JSON", { status: 400 });
   }
 
-  const { content } = body as {
-    content: string;
+  const { markdownContent } = body as {
+    markdownContent: string;
   };
   const agentId = process.env.PLAYGROUND_AGENT_ID;
 
@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
     return new Response("Server configuration error", { status: 500 });
   }
 
-  if (!content) {
-    return new Response("Content is required", { status: 400 });
+  if (!markdownContent) {
+    return new Response("Markdown content is required", { status: 400 });
   }
 
   const encoder = new TextEncoder();
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
         for await (const chunk of generateMetadataReport(
           client,
-          content,
+          markdownContent,
           agentId,
         )) {
           const data = `data: ${JSON.stringify(chunk)}\n\n`;

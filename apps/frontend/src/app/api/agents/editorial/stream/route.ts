@@ -1,4 +1,8 @@
-import { createLettaClient, simplifyContent } from "@playground/agents";
+import {
+  buildMarkdownWithFrontmatter,
+  createLettaClient,
+  simplifyContent,
+} from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import type { NextRequest } from "next/server";
 
@@ -13,11 +17,16 @@ export async function POST(request: NextRequest) {
     return new Response("Invalid JSON", { status: 400 });
   }
 
-  const { content, instructions, metadata } = body as {
-    content: string;
-    instructions: string;
+  // Accept either:
+  // 1. markdownContent - pre-built markdown with frontmatter (preferred)
+  // 2. content + metadata + instructions - legacy format, will be combined
+  const { markdownContent, content, instructions, metadata } = body as {
+    markdownContent?: string;
+    content?: string;
+    instructions?: string;
     metadata?: Record<string, unknown>;
   };
+
   const agentId = process.env.PLAYGROUND_AGENT_ID;
 
   if (!agentId) {
@@ -28,7 +37,20 @@ export async function POST(request: NextRequest) {
     return new Response("Server configuration error", { status: 500 });
   }
 
-  if (!content) {
+  // Build markdown with frontmatter if not provided directly
+  let inputMarkdown: string;
+
+  if (markdownContent) {
+    // New unified format: markdown with frontmatter already provided
+    inputMarkdown = markdownContent;
+  } else if (content) {
+    // Legacy format: combine content + metadata + instructions into markdown
+    inputMarkdown = buildMarkdownWithFrontmatter(
+      content,
+      metadata,
+      instructions,
+    );
+  } else {
     return new Response("Content is required", { status: 400 });
   }
 
@@ -40,10 +62,8 @@ export async function POST(request: NextRequest) {
 
         for await (const chunk of simplifyContent(
           client,
-          content,
-          instructions,
+          inputMarkdown,
           agentId,
-          metadata, // Pass metadata to the AI agent
         )) {
           const data = `data: ${JSON.stringify(chunk)}\n\n`;
           controller.enqueue(encoder.encode(data));

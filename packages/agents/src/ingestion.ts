@@ -1,7 +1,6 @@
 import type { Letta } from "@letta-ai/letta-client";
 import matter from "gray-matter";
-import { sendMessage } from "./agents";
-import { INGESTION_AGENT_HEADING } from "./prompts";
+import { AUDIT_SLASH_COMMAND } from "./prompts";
 import type { LettaMetadata } from "./types";
 
 /**
@@ -19,24 +18,62 @@ export interface IngestionReportResult {
   metadata: Record<string, unknown>;
 }
 
-export const generateIngestionReport = async (
+/**
+ * Generates an ingestion (audit) report by streaming responses from the Letta agent.
+ * Uses the /audit slash command to trigger report generation.
+ *
+ * Input: Markdown with frontmatter (containing RCO metadata)
+ * Output: AsyncGenerator yielding stream chunks, final message contains report markdown
+ *
+ * @param client - The Letta client instance
+ * @param markdownContent - The document markdown (frontmatter + content from RCO)
+ * @param agentId - The agent ID to use (PLAYGROUND_AGENT_ID)
+ */
+export const generateIngestionReport = async function* (
   client: Letta,
-  xmlContent: string,
-): Promise<IngestionReportResult> => {
-  const agentId = process.env.PLAYGROUND_AGENT_ID;
-  if (!agentId) {
-    throw new Error("PLAYGROUND_AGENT_ID is not defined");
+  markdownContent: string,
+  agentId: string,
+  // biome-ignore lint/suspicious/noExplicitAny: Letta SDK stream yields various message types
+): AsyncGenerator<any> {
+  // Build the message with the slash command followed by the markdown content
+  const messageContent = `${AUDIT_SLASH_COMMAND} ${markdownContent}`;
+
+  const stream = await client.agents.messages.stream(agentId, {
+    messages: [
+      {
+        role: "user",
+        content: messageContent,
+      },
+    ],
+  });
+
+  // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
+  for await (const chunk of stream as AsyncIterable<any>) {
+    // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
+    const msg = chunk as any;
+
+    // Add timestamp to every message
+    yield { ...msg, timestamp: new Date().toISOString() };
   }
+};
 
-  const { content, usage } = await sendMessage(
-    client,
-    agentId,
-    `${INGESTION_AGENT_HEADING}\n\n${xmlContent}`,
-  );
-
-  // Check if valid frontmatter exists
-  const hasFrontmatter = checkHasFrontmatter(content);
-
+/**
+ * Parses the final agent response into a structured IngestionReportResult.
+ * Extracts frontmatter metadata and enhances with Letta metadata.
+ *
+ * @param agentResponse - The raw markdown response from the agent
+ * @param agentId - The agent ID used for processing
+ * @param usage - Optional usage statistics from the API
+ */
+export function parseIngestionResponse(
+  agentResponse: string,
+  agentId: string,
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  },
+): IngestionReportResult {
   // Build base Letta metadata (always included)
   const lettaMetadata: LettaMetadata = {
     agent_id: agentId,
@@ -53,19 +90,22 @@ export const generateIngestionReport = async (
       lettaMetadata.total_tokens = usage.total_tokens;
   }
 
+  // Check if valid frontmatter exists
+  const hasFrontmatter = checkHasFrontmatter(agentResponse);
+
   // Handle incomplete response (no valid frontmatter)
   if (!hasFrontmatter) {
     return {
       status: "incomplete",
       content: "",
-      rawResponse: content,
+      rawResponse: agentResponse,
       metadata: { letta: lettaMetadata },
     };
   }
 
   // Extract valid markdown content (skipping any preamble text before the frontmatter)
   // This is robust against agents that might chat before outputting the report
-  const cleanContent = extractValidContent(content);
+  const cleanContent = extractValidContent(agentResponse);
 
   // Parse existing frontmatter and enhance with Letta metadata
   const parsed = matter(cleanContent);
@@ -82,7 +122,7 @@ export const generateIngestionReport = async (
     content: matter.stringify(parsed.content, enhancedData),
     metadata: enhancedData,
   };
-};
+}
 
 /**
  * Checks if the content contains valid YAML frontmatter.
