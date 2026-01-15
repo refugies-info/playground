@@ -1,7 +1,9 @@
+import { APIError } from "@letta-ai/letta-client/error";
 import {
   createLettaClient,
   generateIngestionReport,
   type IngestionReportResult,
+  type LettaApiErrorInfo,
   parseIngestionResponse,
 } from "@playground/agents";
 import {
@@ -104,6 +106,21 @@ export async function generateIngestionReportStep(markdownContent: string) {
     const result = parseIngestionResponse(finalContent, agentId);
     return { result };
   } catch (error) {
+    // Handle Letta API errors (e.g., llm_api_error) with structured info
+    if (error instanceof APIError) {
+      const apiErrorInfo: LettaApiErrorInfo = {
+        type: "api_error",
+        status: error.status,
+        message: error.message,
+        details: error.error, // Contains the JSON body with detailed error info
+      };
+      logger.error(
+        { status: error.status, body: error.error },
+        "Letta API error generating ingestion report",
+      );
+      return { error: apiErrorInfo.message, apiError: apiErrorInfo };
+    }
+
     logger.error(error, "Error generating ingestion report");
     return { error: error instanceof Error ? error.message : String(error) };
   }
@@ -115,7 +132,11 @@ export async function ingestDataStep(
   // jsonResult: any, // We can use the json output for metadata if structurally compatible,
   // but `seed-ingestion` used `matter(markdown)`.
   // `matter` is robust.
-  ingestionResult: { error?: unknown; result?: IngestionReportResult },
+  ingestionResult: {
+    error?: unknown;
+    result?: IngestionReportResult;
+    apiError?: LettaApiErrorInfo;
+  },
 ) {
   "use step";
 
