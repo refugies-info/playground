@@ -11,7 +11,8 @@ export type DocumentState =
   | "editorial"
   | "to_process"
   | "archived"
-  | "published";
+  | "published"
+  | "modified";
 
 /**
  * Badge variant type from UI primitives
@@ -79,6 +80,10 @@ export const STATE_CONFIG: Record<
   published: {
     label: "Publié",
     variant: "success",
+  },
+  modified: {
+    label: "Modifié",
+    variant: "info",
   },
 };
 

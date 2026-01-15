@@ -16,7 +16,7 @@ import { RawMarkdownView } from "./RawMarkdownView";
 export function EditionView() {
   const {
     document,
-    setDocument,
+    updateContent,
     isComparisonMode,
     isProcessing,
     isRawMarkdownMode,
@@ -55,17 +55,8 @@ export function EditionView() {
         // Update our ref so we know this content came from the editor
         lastSyncedContent.current = markdown;
 
-        // Update the document content in context
-        setDocument((prev) => {
-          if (!prev) return null;
-          // Prevent loop if content is identical
-          if (prev.editorialContent === markdown) return prev;
-
-          return {
-            ...prev,
-            editorialContent: markdown,
-          };
-        });
+        // Update the document content in context (marks as dirty)
+        updateContent(markdown);
       } catch (error) {
         // Silently fail - don't disrupt editing experience, but log for debugging
         // biome-ignore lint/suspicious/noConsole: debugging
@@ -81,7 +72,7 @@ export function EditionView() {
 
     // Cleanup subscription on unmount
     return unsubscribe;
-  }, [editor, setDocument, document?.aiSuggestion]);
+  }, [editor, updateContent, document?.aiSuggestion]);
 
   // Load markdown content when document changes or AI suggestion arrives
   useEffect(() => {
@@ -167,13 +158,8 @@ export function EditionView() {
   const handleRawMarkdownChange = async (newMarkdown: string) => {
     setRawMarkdown(newMarkdown);
 
-    // Update the document context with the new markdown
-    if (document) {
-      setDocument({
-        ...document,
-        editorialContent: newMarkdown,
-      });
-    }
+    // Update the document context with the new markdown (marks as dirty)
+    updateContent(newMarkdown);
   };
 
   if (!editor) {

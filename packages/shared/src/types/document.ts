@@ -24,6 +24,7 @@ export interface Document {
   ingestionContent?: string; // Immutable original content from ingestion_records
   complianceReport?: string; // Markdown content of the compliance report
   metadata: Record<string, unknown>;
+  publishedUrl?: string;
 }
 
 export interface ContentItem {

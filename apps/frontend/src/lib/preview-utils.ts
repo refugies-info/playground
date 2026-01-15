@@ -1,10 +1,11 @@
 import { getPreviewSecret } from "@/services/document-actions";
+import { buildDispositifPayload } from "./payload-builder";
 
 interface PreviewDocument {
   id?: string;
   title: string;
   editorialContent: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -14,22 +15,12 @@ interface PreviewDocument {
  * 3. Creates and submits a hidden form to the Main App
  */
 export const submitPreview = async (document: PreviewDocument) => {
-  // Build the preview payload
-  const payload = {
-    dispositif: {
-      typeContenu: "dispositif",
-      theme: document.metadata?.theme || "63286a015d31b2c0cad99615",
-      titreInformatif: document.title,
-      origin: "RCO",
-      translations: {
-        fr: {
-          content: {
-            markdown: document.editorialContent,
-          },
-        },
-      },
-    },
-  };
+  // Build the preview payload using shared builder
+  const payload = buildDispositifPayload({
+    title: document.title,
+    editorialContent: document.editorialContent,
+    metadata: document.metadata,
+  });
 
   // Get preview URL from client-side env vars
   const previewUrl =

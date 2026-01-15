@@ -2,6 +2,12 @@
 
 import { logger } from "@playground/shared-types";
 import { createContext, type ReactNode, useContext, useState } from "react";
+import { submitPreview } from "@/lib/preview-utils";
+import {
+  archiveDocument,
+  publishDocument,
+  saveDocument as saveDocumentAction,
+} from "@/services/document-actions";
 
 interface DocumentData {
   id: string;
@@ -13,11 +19,13 @@ interface DocumentData {
   complianceReport?: string; // Markdown content of the compliance report
   aiSuggestion?: string; // Pending AI suggestion awaiting user review
   metadata?: Record<string, unknown>; // Metadata from ingestion_records
+  publishedUrl?: string; // Link to the published document on RI
 }
 
 interface DocumentContextType {
   document: DocumentData | null;
   setDocument: React.Dispatch<React.SetStateAction<DocumentData | null>>;
+  updateContent: (content: string) => void;
   setAiSuggestion: (suggestion: string) => void;
   acceptAiSuggestion: () => void;
   rejectAiSuggestion: () => void;
@@ -31,9 +39,20 @@ interface DocumentContextType {
   setIsRawMarkdownMode: (mode: boolean) => void;
   saveDocument: () => Promise<{ success: boolean; error?: string }>;
   isSaving: boolean;
+  isDirty: boolean;
+  canPublish: boolean;
   activeView: "edit" | "compliance";
   setActiveView: (view: "edit" | "compliance") => void;
   previewDocument: () => void;
+  publishDocument: () => Promise<{
+    success: boolean;
+    remoteId?: string;
+    publishedUrl?: string;
+    error?: string;
+  }>;
+  isPublishing: boolean;
+  archiveDocument: () => Promise<{ success: boolean; error?: string }>;
+  isArchiving: boolean;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(
@@ -56,6 +75,27 @@ export function DocumentProvider({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRawMarkdownMode, setIsRawMarkdownMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  // If document is already in 'modified' state, it's ready to publish
+  const [canPublish, setCanPublish] = useState(
+    initialData?.state === "modified",
+  );
+
+  // Update content and mark as dirty (only if content actually changed)
+  const updateContent = (content: string) => {
+    if (!document) return;
+    // Don't mark dirty if content hasn't actually changed
+    if (document.editorialContent === content) return;
+
+    setDocument({
+      ...document,
+      editorialContent: content,
+    });
+    setIsDirty(true);
+    setCanPublish(false); // Can't publish until saved
+  };
 
   const setAiSuggestion = (suggestion: string) => {
     if (!document) return;
@@ -76,6 +116,8 @@ export function DocumentProvider({
       editorialContent: document.aiSuggestion,
       aiSuggestion: undefined,
     });
+    setIsDirty(true);
+    setCanPublish(false);
   };
 
   const rejectAiSuggestion = () => {
@@ -96,6 +138,8 @@ export function DocumentProvider({
       aiSuggestion: undefined,
       // Keep ingestionContent - it's immutable and always available for comparison
     });
+    setIsDirty(true);
+    setCanPublish(false);
   };
 
   const saveDocument = async (): Promise<{
@@ -108,14 +152,21 @@ export function DocumentProvider({
 
     setIsSaving(true);
     try {
-      // Import the server action from the dedicated actions file
-      const { saveDocument: saveDocumentAction } = await import(
-        "@/services/document-actions"
-      );
       const result = await saveDocumentAction(
         document.id,
         document.editorialContent,
       );
+      if (result.success) {
+        setIsDirty(false);
+        setCanPublish(true); // Now can publish
+        // If document was published, update local state to 'modified'
+        if (document.state === "published") {
+          setDocument({
+            ...document,
+            state: "modified",
+          });
+        }
+      }
       return result;
     } catch (error) {
       logger.error(error, "Error saving document");
@@ -130,9 +181,6 @@ export function DocumentProvider({
 
     try {
       // Use the utility function to handle the secure form submission
-      // Note: We use dynamic import here to keep the context size small
-      // but static usage in preview-utils.ts is fine
-      const { submitPreview } = await import("@/lib/preview-utils");
       await submitPreview(document);
     } catch (e) {
       logger.error(e, "Error previewing document");
@@ -144,11 +192,87 @@ export function DocumentProvider({
     }
   };
 
+  const publishDocumentAction = async (): Promise<{
+    success: boolean;
+    remoteId?: string;
+    publishedUrl?: string;
+    error?: string;
+  }> => {
+    if (!document) {
+      return { success: false, error: "No document to publish" };
+    }
+
+    setIsPublishing(true);
+    try {
+      const result = await publishDocument(
+        document.id,
+        document.title,
+        document.editorialContent,
+        document.metadata,
+      );
+
+      if (result.success) {
+        // Update local state to reflect published status
+        // Update local state to reflect published status
+        setDocument({
+          ...document,
+          state: "published",
+          publishedUrl: result.publishedUrl,
+        });
+        // Disable publish button until next modification + save
+        setCanPublish(false);
+      }
+
+      return result;
+    } catch (error) {
+      logger.error(error, "Error publishing document");
+      return { success: false, error: "Erreur réseau" };
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const archiveDocumentWrapper = async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
+    if (!document) {
+      return { success: false, error: "No document to archive" };
+    }
+
+    setIsArchiving(true);
+    try {
+      const result = await archiveDocument(
+        document.id,
+        document.title,
+        document.editorialContent,
+        document.metadata,
+      );
+
+      if (result.success) {
+        // Update local state to reflect archived status
+        setDocument({
+          ...document,
+          state: "archived",
+        });
+        setCanPublish(false);
+      }
+
+      return result;
+    } catch (error) {
+      logger.error(error, "Error archiving document");
+      return { success: false, error: "Erreur réseau" };
+    } finally {
+      setIsArchiving(false);
+    }
+  };
+
   return (
     <DocumentContext.Provider
       value={{
         document,
         setDocument,
+        updateContent,
         setAiSuggestion,
         acceptAiSuggestion,
         rejectAiSuggestion,
@@ -162,9 +286,15 @@ export function DocumentProvider({
         setIsRawMarkdownMode,
         saveDocument,
         isSaving,
+        isDirty,
+        canPublish,
         activeView,
         setActiveView,
         previewDocument,
+        publishDocument: publishDocumentAction,
+        isPublishing,
+        archiveDocument: archiveDocumentWrapper,
+        isArchiving,
       }}
     >
       {children}
