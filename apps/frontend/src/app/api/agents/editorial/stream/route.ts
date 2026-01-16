@@ -1,6 +1,7 @@
 import {
   buildMarkdownWithFrontmatter,
   createLettaClient,
+  type LettaReportType,
   simplifyContent,
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
@@ -155,6 +156,7 @@ async function persistEditorialReport(
   agentId: string,
   responseContent: string,
 ): Promise<void> {
+  const reportType: LettaReportType = "editorial";
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -184,7 +186,7 @@ async function persistEditorialReport(
     .from("letta_reports")
     .insert({
       agent_id: agentId,
-      report_type: "editorial",
+      report_type: reportType,
       markdown: responseContent,
       metadata: {
         letta: {
@@ -214,7 +216,11 @@ async function persistEditorialReport(
     );
   } else {
     logger.info(
-      { reportId: report.id, editorialRecordId: workflow.editorial_record_id },
+      {
+        reportId: report.id,
+        editorialRecordId: workflow.editorial_record_id,
+        type: reportType,
+      },
       "Editorial report persisted successfully",
     );
   }
