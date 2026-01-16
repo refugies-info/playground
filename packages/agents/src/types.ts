@@ -24,3 +24,8 @@ export interface LettaApiErrorInfo {
   message: string;
   details?: unknown;
 }
+
+/**
+ * Possible types for Letta reports in the database.
+ */
+export type LettaReportType = "ingestion" | "editorial" | "metadata";
