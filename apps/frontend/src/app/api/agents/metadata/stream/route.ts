@@ -121,6 +121,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * Persists the metadata agent response to letta_reports and links it to the editorial_record.
+ * The report is always stored for debugging purposes, even if linking fails.
  */
 async function persistMetadataReport(
   flowId: string,
@@ -137,21 +138,6 @@ async function persistMetadataReport(
 
   const supabase = getSupabaseAdmin(url, key);
 
-  // 1. Get the editorial_record_id from the workflow
-  const { data: workflow, error: workflowError } = await supabase
-    .from("workflows")
-    .select("editorial_record_id")
-    .eq("id", flowId)
-    .single();
-
-  if (workflowError || !workflow?.editorial_record_id) {
-    logger.warn(
-      { flowId, error: workflowError },
-      "Could not find editorial_record for flowId",
-    );
-    return;
-  }
-
   // Parse and validate metadata from responseContent (frontmatter)
   const result = parseAgentResponse(
     responseContent,
@@ -159,7 +145,7 @@ async function persistMetadataReport(
     MetadataMetadataSchema,
   );
 
-  // 2. Insert the letta_report
+  // 1. Insert the letta_report first (always, for debugging)
   const { data: report, error: reportError } = await supabase
     .from("letta_reports")
     .insert({
@@ -177,6 +163,26 @@ async function persistMetadataReport(
     throw new Error(`Failed to insert letta_report: ${reportError.message}`);
   }
 
+  logger.info(
+    { reportId: report.id, flowId, type: reportType },
+    "Metadata report stored successfully",
+  );
+
+  // 2. Try to get the editorial_record_id from the workflow
+  const { data: workflow, error: workflowError } = await supabase
+    .from("workflows")
+    .select("editorial_record_id")
+    .eq("id", flowId)
+    .single();
+
+  if (workflowError || !workflow?.editorial_record_id) {
+    logger.warn(
+      { flowId, reportId: report.id, error: workflowError },
+      "Could not find editorial_record for flowId - report stored but not linked",
+    );
+    return;
+  }
+
   // 3. Link the report to the editorial_record
   const { error: updateError } = await supabase
     .from("editorial_records")
@@ -185,7 +191,7 @@ async function persistMetadataReport(
 
   if (updateError) {
     logger.error(
-      { error: updateError },
+      { error: updateError, reportId: report.id },
       "Failed to link report to editorial_record",
     );
   } else {
@@ -195,7 +201,7 @@ async function persistMetadataReport(
         editorialRecordId: workflow.editorial_record_id,
         type: reportType,
       },
-      "Metadata report persisted successfully",
+      "Metadata report linked to editorial_record",
     );
   }
 }
