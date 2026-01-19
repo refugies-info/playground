@@ -5,6 +5,7 @@ import {
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
+import matter from "gray-matter";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
@@ -150,6 +151,9 @@ async function persistMetadataReport(
     return;
   }
 
+  // Extract metadata from responseContent (frontmatter)
+  const { data: extractedMetadata } = matter(responseContent);
+
   // 2. Insert the letta_report
   const { data: report, error: reportError } = await supabase
     .from("letta_reports")
@@ -158,6 +162,7 @@ async function persistMetadataReport(
       report_type: reportType,
       markdown: responseContent,
       metadata: {
+        ...extractedMetadata,
         letta: {
           agent_id: agentId,
           processed_at: new Date().toISOString(),
