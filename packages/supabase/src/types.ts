@@ -152,6 +152,7 @@ export type Database = {
           report_type: string;
           status: string;
           updated_at: string;
+          workflow_id: string | null;
         };
         Insert: {
           agent_id: string;
@@ -163,6 +164,7 @@ export type Database = {
           report_type: string;
           status?: string;
           updated_at?: string;
+          workflow_id?: string | null;
         };
         Update: {
           agent_id?: string;
@@ -174,8 +176,17 @@ export type Database = {
           report_type?: string;
           status?: string;
           updated_at?: string;
+          workflow_id?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "letta_reports_workflow_id_fkey";
+            columns: ["workflow_id"];
+            isOneToOne: false;
+            referencedRelation: "workflows";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       publication_records: {
         Row: {

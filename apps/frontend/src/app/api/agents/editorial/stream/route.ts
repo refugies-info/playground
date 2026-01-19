@@ -148,6 +148,7 @@ async function persistEditorialReport(
   );
 
   // 1. Insert the letta_report first (always, for debugging)
+  // The workflow_id enables the database trigger to auto-link to editorial_record
   const { data: report, error: reportError } = await supabase
     .from("letta_reports")
     .insert({
@@ -157,6 +158,7 @@ async function persistEditorialReport(
       metadata: result.metadata as any,
       status: result.status,
       raw_response: result.rawResponse,
+      workflow_id: flowId,
     })
     .select("id")
     .single();
