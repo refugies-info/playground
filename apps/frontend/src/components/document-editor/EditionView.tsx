@@ -2,7 +2,9 @@
 
 import type { BlockNoteEditor } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
+import { SuggestionMenuController } from "@blocknote/react";
 import { useEffect, useRef, useState } from "react";
+import { getCustomSlashMenuItems } from "./slash-menu-config";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { Loader2 } from "lucide-react";
@@ -225,7 +227,15 @@ export function EditionView() {
                     editable={
                       isCompliant && !isProcessing && !document?.aiSuggestion
                     }
-                  />
+                    slashMenu={false}
+                  >
+                    <SuggestionMenuController
+                      triggerCharacter={"/"}
+                      getItems={async (query) =>
+                        getCustomSlashMenuItems(editor, query)
+                      }
+                    />
+                  </BlockNoteView>
                 </div>
               </div>
             )}
@@ -273,7 +283,15 @@ export function EditionView() {
                 editable={
                   isCompliant && !isProcessing && !document?.aiSuggestion
                 }
-              />
+                slashMenu={false}
+              >
+                <SuggestionMenuController
+                  triggerCharacter={"/"}
+                  getItems={async (query) =>
+                    getCustomSlashMenuItems(editor, query)
+                  }
+                />
+              </BlockNoteView>
             </div>
           </div>
         )}
