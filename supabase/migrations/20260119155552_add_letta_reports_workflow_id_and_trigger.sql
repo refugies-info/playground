@@ -19,10 +19,12 @@ DECLARE
   v_editorial_report_id uuid;
   v_metadata_report_id uuid;
 BEGIN
-  -- Find the workflow that references this editorial_record
+  -- Find the workflow via ingestion_record_id (editorial_record has this FK)
+  -- We use ingestion_record_id because the workflow's editorial_record_id
+  -- is set by ANOTHER trigger that may run after this one
   SELECT id INTO v_workflow_id
   FROM public.workflows
-  WHERE editorial_record_id = NEW.id
+  WHERE ingestion_record_id = NEW.ingestion_record_id
   LIMIT 1;
 
   IF v_workflow_id IS NULL THEN
@@ -30,7 +32,7 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  -- Find unlinked editorial letta_report for this workflow
+  -- Find the most recent editorial letta_report for this workflow
   SELECT id INTO v_editorial_report_id
   FROM public.letta_reports
   WHERE workflow_id = v_workflow_id
@@ -38,7 +40,7 @@ BEGIN
   ORDER BY created_at DESC
   LIMIT 1;
 
-  -- Find unlinked metadata letta_report for this workflow
+  -- Find the most recent metadata letta_report for this workflow
   SELECT id INTO v_metadata_report_id
   FROM public.letta_reports
   WHERE workflow_id = v_workflow_id
@@ -67,7 +69,7 @@ CREATE TRIGGER on_editorial_record_link_reports
 
 -- Step 5: Add comment for clarity
 COMMENT ON FUNCTION public.link_letta_reports_to_editorial_record()
-IS 'Automatically links letta_reports (editorial and metadata) to editorial_records based on workflow_id';
+IS 'Automatically links letta_reports (editorial and metadata) to editorial_records based on workflow_id. Uses ingestion_record_id to find the workflow.';
 
 COMMENT ON COLUMN "public"."letta_reports"."workflow_id"
 IS 'Reference to the workflow this report belongs to, used for auto-linking to editorial_records';

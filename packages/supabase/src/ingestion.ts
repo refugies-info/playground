@@ -142,6 +142,15 @@ export async function ingestProcessedData(
     error?: unknown;
   }[] = [];
 
+  // 1. Get the workflow_id for letta_reports (created by trigger on rco_record insert)
+  const { data: workflow } = await supabase
+    .from("workflows")
+    .select("id")
+    .eq("rco_record_id", rcoRecordId)
+    .single();
+
+  const workflowId = workflow?.id ?? null;
+
   // 2. Insert Reports
   let ingestionReportId = null;
 
@@ -168,6 +177,7 @@ export async function ingestProcessedData(
         metadata: reportData.metadata,
         status: reportData.status ?? "complete",
         raw_response: reportData.rawResponse ?? null,
+        workflow_id: workflowId,
       })
       .select("id")
       .single();
