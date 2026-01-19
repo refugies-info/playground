@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
  */
 const requestBodySchema = z.object({
   flowId: z.string().min(1, "flowId is required"),
-  markdownContent: z.string().min(1, "Markdown content cannot be empty"),
+  content: z.string().min(1, "Markdown content cannot be empty"),
 });
 
 export async function POST(request: NextRequest) {
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { flowId, markdownContent } = parseResult.data;
+  const { flowId, content } = parseResult.data;
 
   const agentId = process.env.PLAYGROUND_AGENT_ID;
 
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
         for await (const chunk of generateMetadataReport(
           client,
-          markdownContent,
+          content,
           agentId,
         )) {
           // Capture assistant message content for persistence

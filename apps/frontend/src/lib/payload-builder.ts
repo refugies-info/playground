@@ -66,7 +66,7 @@ export function buildDispositifPayload(
           },
         },
       },
-    } as any, // Cast to any to allow flexible structure matching the user example
+    },
   };
 }
 

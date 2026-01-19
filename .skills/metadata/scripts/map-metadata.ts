@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noConsole: Fine for scripts */
 import fs from "node:fs";
 import path from "node:path";
 import { parseLheoXml } from "../../../packages/rco/src/lheo";
@@ -88,7 +89,7 @@ function mapLheoToRi(doc: LheoDocument) {
   const rawAbstract = getText(formation["contenu-formation"]) || "";
   const abstract =
     rawAbstract.length > 50
-      ? rawAbstract.substring(0, 47) + "..."
+      ? `${rawAbstract.substring(0, 47)}...`
       : rawAbstract;
 
   // 3. Location

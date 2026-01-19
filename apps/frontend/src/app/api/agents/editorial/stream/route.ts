@@ -1,5 +1,4 @@
 import {
-  buildMarkdownWithFrontmatter,
   createLettaClient,
   type LettaReportType,
   simplifyContent,
@@ -21,17 +20,10 @@ export const dynamic = "force-dynamic";
  *
  * flowId is required to link the generated report to the editorial record.
  */
-const requestBodySchema = z
-  .object({
-    flowId: z.string().min(1, "flowId is required"),
-    markdownContent: z.string().optional(),
-    content: z.string().optional(),
-    instructions: z.string().optional(),
-    metadata: z.record(z.unknown()).optional(),
-  })
-  .refine((data) => data.markdownContent || data.content, {
-    message: "Either markdownContent or content is required",
-  });
+const requestBodySchema = z.object({
+  flowId: z.string().min(1, "flowId is required"),
+  content: z.string().min(1, "Markdown content cannot be empty"),
+});
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -53,8 +45,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { flowId, markdownContent, content, instructions, metadata } =
-    parseResult.data;
+  const { flowId, content } = parseResult.data;
 
   const agentId = process.env.PLAYGROUND_AGENT_ID;
 
@@ -64,22 +55,6 @@ export async function POST(request: NextRequest) {
       "Editorial Agent Stream configuration error",
     );
     return new Response("Server configuration error", { status: 500 });
-  }
-
-  // Build markdown with frontmatter if not provided directly
-  let inputMarkdown: string;
-
-  if (markdownContent) {
-    // New unified format: markdown with frontmatter already provided
-    inputMarkdown = markdownContent;
-  } else {
-    // Legacy format: combine content + metadata + instructions into markdown
-    // content is guaranteed to exist due to the refine above
-    inputMarkdown = buildMarkdownWithFrontmatter(
-      content as string,
-      metadata,
-      instructions,
-    );
   }
 
   const encoder = new TextEncoder();
@@ -92,11 +67,7 @@ export async function POST(request: NextRequest) {
       try {
         const client = createLettaClient();
 
-        for await (const chunk of simplifyContent(
-          client,
-          inputMarkdown,
-          agentId,
-        )) {
+        for await (const chunk of simplifyContent(client, content, agentId)) {
           // Capture assistant message content for persistence
           if (chunk.message_type === "assistant_message") {
             if (typeof chunk.content === "string") {
