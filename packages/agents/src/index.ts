@@ -2,6 +2,8 @@ export * from "./agents";
 export * from "./clients";
 export * from "./ingestion";
 export * from "./metadata";
+export * from "./parser";
 export * from "./prompts";
+export * from "./schemas";
 export * from "./simplification";
 export * from "./types";
