@@ -13,3 +13,29 @@ export interface LettaMetadata {
   total_tokens?: number;
   model?: string;
 }
+
+/**
+ * Structured error information from Letta API errors.
+ * Captures LLM API errors (e.g., llm_api_error) with details for debugging.
+ */
+export interface LettaApiErrorInfo {
+  type: "api_error";
+  status?: number;
+  message: string;
+  details?: unknown;
+}
+
+/**
+ * Possible types for Letta reports in the database.
+ */
+export type LettaReportType = "ingestion" | "editorial" | "metadata";
+
+/**
+ * Metadata event emitted at the start of a stream to provide the conversation ID.
+ * This allows consumers to track which Letta conversation the stream belongs to.
+ */
+export interface ConversationMetaEvent {
+  message_type: "conversation_meta";
+  conversation_id: string;
+  timestamp: string;
+}

@@ -1,5 +1,23 @@
 import type { Letta } from "@letta-ai/letta-client";
+import type { ConversationMetaEvent } from "./types";
 
+/**
+ * Simplifies content using the Letta agent via the Conversations API.
+ *
+ * Creates a new conversation for each request, which:
+ * - Provides thread-safe concurrent request handling
+ * - Enables message history tracking per request
+ * - Shares memory blocks and tools across all conversations
+ *
+ * The first yielded event is a `conversation_meta` event containing the
+ * conversation ID for persistence.
+ *
+ * @param client - The Letta client instance
+ * @param content - The content to simplify
+ * @param instructions - Optional instructions for the agent
+ * @param agentId - The agent ID (required)
+ * @param metadata - Optional metadata to include
+ */
 export const simplifyContent = async function* (
   client: Letta,
   content: string,
@@ -11,6 +29,17 @@ export const simplifyContent = async function* (
   if (!agentId) {
     throw new Error("Agent ID is required");
   }
+
+  // Create a new conversation for this request
+  const conversation = await client.conversations.create({ agent_id: agentId });
+
+  // Yield conversation metadata first so consumers can track it
+  const metaEvent: ConversationMetaEvent = {
+    message_type: "conversation_meta",
+    conversation_id: conversation.id,
+    timestamp: new Date().toISOString(),
+  };
+  yield metaEvent;
 
   // Build the message content with metadata if provided
   const messageParts: string[] = [];
@@ -29,7 +58,8 @@ export const simplifyContent = async function* (
 
   const messageContent = messageParts.join("\n\n");
 
-  const stream = await client.agents.messages.stream(agentId, {
+  // Use Conversations API for streaming (always streams by default)
+  const stream = await client.conversations.messages.create(conversation.id, {
     messages: [
       {
         role: "user",

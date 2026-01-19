@@ -17,3 +17,19 @@ export const createLettaClient = (): Letta => {
     projectID,
   });
 };
+
+/**
+ * Creates a new conversation for an agent.
+ * Each conversation has its own message history but shares memory blocks.
+ *
+ * @param client - The Letta client instance
+ * @param agentId - The agent ID to create a conversation for
+ * @returns The conversation ID (conv-xxx format)
+ */
+export const createConversation = async (
+  client: Letta,
+  agentId: string,
+): Promise<string> => {
+  const conversation = await client.conversations.create({ agent_id: agentId });
+  return conversation.id;
+};

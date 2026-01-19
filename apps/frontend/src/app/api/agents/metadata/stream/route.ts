@@ -1,5 +1,6 @@
 import { createLettaClient, generateMetadataReport } from "@playground/agents";
 import { logger } from "@playground/shared-types";
+import { getSupabaseAdmin } from "@playground/supabase";
 import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
@@ -31,18 +32,68 @@ export async function POST(request: NextRequest) {
   }
 
   const encoder = new TextEncoder();
+
+  // Track state for persistence
+  let conversationId: string | undefined;
+  let finalAssistantContent = "";
+
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const client = createLettaClient();
+        const client = createLettaClient(); // Initialize client inside the stream start to ensure fresh instance if needed
 
         for await (const chunk of generateMetadataReport(
           client,
           content,
           agentId,
         )) {
+          // Capture conversation ID from meta event
+          if (
+            chunk.message_type === "conversation_meta" &&
+            chunk.conversation_id
+          ) {
+            conversationId = chunk.conversation_id;
+          }
+
+          // Capture assistant content
+          if (
+            chunk.message_type === "assistant_message" &&
+            typeof chunk.content === "string"
+          ) {
+            finalAssistantContent += chunk.content;
+          }
+
           const data = `data: ${JSON.stringify(chunk)}\n\n`;
           controller.enqueue(encoder.encode(data));
+        }
+
+        // Persist report if we have content and conversation ID
+        if (finalAssistantContent && conversationId) {
+          try {
+            const supabase = getSupabaseAdmin();
+            await supabase.from("letta_reports").insert({
+              agent_id: agentId,
+              report_type: "metadata",
+              markdown: finalAssistantContent,
+              metadata: {
+                letta: {
+                  agent_id: agentId,
+                  processed_at: new Date().toISOString(),
+                },
+              },
+              status: "complete",
+              conversation_id: conversationId,
+            });
+            logger.info(
+              { conversationId },
+              "Persisted metadata report successfully",
+            );
+          } catch (persistError) {
+            logger.error(
+              { error: persistError },
+              "Failed to persist metadata report",
+            );
+          }
         }
 
         // Send done signal

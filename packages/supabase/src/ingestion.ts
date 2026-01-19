@@ -25,6 +25,7 @@ export interface IngestionData {
     metadata: any;
     status?: "complete" | "incomplete";
     rawResponse?: string;
+    conversationId?: string;
   };
 }
 
@@ -131,6 +132,7 @@ export async function ingestProcessedData(
       metadata: any;
       status?: "complete" | "incomplete";
       rawResponse?: string;
+      conversationId?: string;
     };
   },
 ): Promise<IngestionResult> {
@@ -154,6 +156,7 @@ export async function ingestProcessedData(
       metadata: any;
       status?: "complete" | "incomplete";
       rawResponse?: string;
+      conversationId?: string;
     },
   ) => {
     logger.info(
@@ -168,6 +171,7 @@ export async function ingestProcessedData(
         metadata: reportData.metadata,
         status: reportData.status ?? "complete",
         raw_response: reportData.rawResponse ?? null,
+        conversation_id: reportData.conversationId ?? null,
       })
       .select("id")
       .single();
