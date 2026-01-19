@@ -10,15 +10,10 @@ export const IngestionMetadataSchema = z.object({
 });
 
 /**
- * Schema for metadata extracted from the editorial (redaction) report.
- * Focuses on potential metadata fields produced during simplification.
+ * Sentinel schema indicating that no frontmatter is expected.
+ * When passed to parseAgentResponse, content without frontmatter is treated as complete.
  */
-export const EditorialMetadataSchema = z
-  .object({
-    // Add specific editorial fields here if needed.
-    // For now, we allow any fields but validate the structure.
-  })
-  .passthrough();
+export const NoFrontmatterSchema = z.void();
 
 /**
  * Schema for metadata extracted from the metadata generation report.
@@ -83,5 +78,4 @@ export const MetadataMetadataSchema = z
   .passthrough();
 
 export type IngestionMetadata = z.infer<typeof IngestionMetadataSchema>;
-export type EditorialMetadata = z.infer<typeof EditorialMetadataSchema>;
 export type MetadataMetadata = z.infer<typeof MetadataMetadataSchema>;

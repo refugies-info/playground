@@ -1,5 +1,5 @@
 import matter from "gray-matter";
-import type { ZodSchema } from "zod";
+import type { ZodSchema, ZodVoid } from "zod";
 import type { LettaMetadata, LettaReportResult } from "./types";
 
 /**
@@ -24,21 +24,23 @@ function extractValidContent(content: string): string {
 }
 
 /**
- * Options for parseAgentResponse.
+ * Checks if the schema is the NoFrontmatterSchema (z.void()).
  */
-export interface ParseAgentResponseOptions {
-  /** If true, responses without frontmatter are marked as incomplete. Default: true */
-  requireFrontmatter?: boolean;
+function isNoFrontmatterSchema(schema?: ZodSchema): schema is ZodVoid {
+  // biome-ignore lint/suspicious/noExplicitAny: Accessing internal Zod type name
+  return (schema as any)?._def?.typeName === "ZodVoid";
 }
 
 /**
  * Generic parser for Letta agent responses with Zod validation for frontmatter metadata.
  *
+ * If the schema is NoFrontmatterSchema (z.void()), frontmatter is not required
+ * and raw content is returned as-is with "complete" status.
+ *
  * @param agentResponse - The raw markdown response from the agent
  * @param agentId - The agent ID used for processing
- * @param schema - Zod schema to validate extracted frontmatter (optional)
+ * @param schema - Zod schema to validate extracted frontmatter, or NoFrontmatterSchema if no frontmatter expected
  * @param usage - Optional usage statistics
- * @param options - Parser options
  */
 export function parseAgentResponse(
   agentResponse: string,
@@ -49,7 +51,6 @@ export function parseAgentResponse(
     completion_tokens?: number;
     total_tokens?: number;
   },
-  options: ParseAgentResponseOptions = {},
 ): LettaReportResult {
   const lettaMetadata: LettaMetadata = {
     agent_id: agentId,
@@ -65,7 +66,8 @@ export function parseAgentResponse(
       lettaMetadata.total_tokens = usage.total_tokens;
   }
 
-  const { requireFrontmatter = true } = options;
+  // Check if frontmatter is required based on schema type
+  const requireFrontmatter = !isNoFrontmatterSchema(schema);
 
   // 1. Basic check for frontmatter
   const hasFrontmatter = checkHasFrontmatter(agentResponse);
@@ -92,8 +94,8 @@ export function parseAgentResponse(
     const cleanContent = extractValidContent(agentResponse);
     const parsed = matter(cleanContent);
 
-    // 3. Optional Zod validation
-    if (schema) {
+    // 3. Optional Zod validation (skip if NoFrontmatterSchema)
+    if (schema && !isNoFrontmatterSchema(schema)) {
       const validation = schema.safeParse(parsed.data);
       if (!validation.success) {
         return {

@@ -1,6 +1,7 @@
 import {
   createLettaClient,
   type LettaReportType,
+  NoFrontmatterSchema,
   parseAgentResponse,
   simplifyContent,
 } from "@playground/agents";
@@ -157,9 +158,7 @@ async function persistEditorialReport(
   const result = parseAgentResponse(
     responseContent,
     agentId,
-    undefined, // No schema validation for editorial
-    undefined, // No usage stats
-    { requireFrontmatter: false },
+    NoFrontmatterSchema,
   );
 
   // 2. Insert the letta_report
