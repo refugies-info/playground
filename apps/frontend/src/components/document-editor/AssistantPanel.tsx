@@ -60,9 +60,6 @@ export function AssistantPanel() {
         body: JSON.stringify({
           flowId: document.id, // Required for persisting letta_report
           content: document.editorialContent,
-          metadata: document.metadata, // Preserve ingestion metadata (frontmatter)
-          instructions:
-            "Transforme ce contenu en langage clair. Utilise le bloc compétence_transformation_langage_clair et format_sortie_transformation.",
         }),
         signal: abortControllerRef.current.signal,
       });

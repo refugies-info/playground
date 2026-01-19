@@ -87,7 +87,7 @@ export function DocumentsList({
                     <option value="">État</option>
                     {Object.entries(STATE_CONFIG)
                       .filter(
-                        ([key, config], index, array) =>
+                        ([_key, config], index, array) =>
                           // Garder seulement la première occurrence de chaque label
                           array.findIndex(
                             ([, c]) => c.label === config.label,

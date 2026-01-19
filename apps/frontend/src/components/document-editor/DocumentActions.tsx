@@ -25,7 +25,6 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
     saveDocument,
     isSaving,
     isDirty,
-    canPublish,
     previewDocument,
     publishDocument,
     isPublishing,
