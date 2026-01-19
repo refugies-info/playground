@@ -1,6 +1,5 @@
 import {
   createLettaClient,
-  EditorialMetadataSchema,
   type LettaReportType,
   parseAgentResponse,
   simplifyContent,
@@ -154,11 +153,13 @@ async function persistEditorialReport(
     return;
   }
 
-  // Parse and validate metadata from responseContent (frontmatter)
+  // Parse editorial response - no frontmatter expected for editorial reports
   const result = parseAgentResponse(
     responseContent,
     agentId,
-    EditorialMetadataSchema,
+    undefined, // No schema validation for editorial
+    undefined, // No usage stats
+    { requireFrontmatter: false },
   );
 
   // 2. Insert the letta_report

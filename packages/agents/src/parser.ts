@@ -24,12 +24,21 @@ function extractValidContent(content: string): string {
 }
 
 /**
+ * Options for parseAgentResponse.
+ */
+export interface ParseAgentResponseOptions {
+  /** If true, responses without frontmatter are marked as incomplete. Default: true */
+  requireFrontmatter?: boolean;
+}
+
+/**
  * Generic parser for Letta agent responses with Zod validation for frontmatter metadata.
  *
  * @param agentResponse - The raw markdown response from the agent
  * @param agentId - The agent ID used for processing
- * @param schema - Zod schema to validate extracted frontmatter
+ * @param schema - Zod schema to validate extracted frontmatter (optional)
  * @param usage - Optional usage statistics
+ * @param options - Parser options
  */
 export function parseAgentResponse(
   agentResponse: string,
@@ -40,6 +49,7 @@ export function parseAgentResponse(
     completion_tokens?: number;
     total_tokens?: number;
   },
+  options: ParseAgentResponseOptions = {},
 ): LettaReportResult {
   const lettaMetadata: LettaMetadata = {
     agent_id: agentId,
@@ -55,12 +65,24 @@ export function parseAgentResponse(
       lettaMetadata.total_tokens = usage.total_tokens;
   }
 
+  const { requireFrontmatter = true } = options;
+
   // 1. Basic check for frontmatter
-  if (!checkHasFrontmatter(agentResponse)) {
+  const hasFrontmatter = checkHasFrontmatter(agentResponse);
+
+  if (!hasFrontmatter) {
+    if (requireFrontmatter) {
+      return {
+        status: "incomplete",
+        content: "",
+        rawResponse: agentResponse,
+        metadata: { letta: lettaMetadata },
+      };
+    }
+    // No frontmatter but not required - return content as-is with complete status
     return {
-      status: "incomplete",
-      content: "",
-      rawResponse: agentResponse,
+      status: "complete",
+      content: agentResponse,
       metadata: { letta: lettaMetadata },
     };
   }
