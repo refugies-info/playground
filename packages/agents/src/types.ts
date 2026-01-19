@@ -26,6 +26,21 @@ export interface LettaApiErrorInfo {
 }
 
 /**
+ * Result of any Letta agent report generation.
+ * - `complete`: Valid frontmatter was parsed and validated successfully
+ * - `incomplete`: Parsing failed or metadata didn't match schema, raw response preserved
+ */
+export interface LettaReportResult {
+  status: "complete" | "incomplete";
+  /** Processed markdown with enhanced frontmatter (if complete), or empty string (if incomplete) */
+  content: string;
+  /** Original agent response (only populated when status is incomplete) */
+  rawResponse?: string;
+  /** Parsed and validated metadata from frontmatter (if complete), or minimal letta metadata (if incomplete) */
+  metadata: Record<string, unknown>;
+}
+
+/**
  * Possible types for Letta reports in the database.
  */
 export type LettaReportType = "ingestion" | "editorial" | "metadata";
