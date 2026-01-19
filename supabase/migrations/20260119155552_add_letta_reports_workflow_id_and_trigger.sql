@@ -9,6 +9,7 @@ ADD COLUMN "workflow_id" uuid REFERENCES public.workflows(id) ON UPDATE CASCADE 
 CREATE INDEX letta_reports_workflow_id_idx ON public.letta_reports USING btree (workflow_id);
 
 -- Step 3: Create function to link unlinked letta_reports to editorial_record
+-- This fires BEFORE INSERT OR UPDATE, allowing us to modify the record being saved
 CREATE OR REPLACE FUNCTION public.link_letta_reports_to_editorial_record()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -20,8 +21,6 @@ DECLARE
   v_metadata_report_id uuid;
 BEGIN
   -- Find the workflow via ingestion_record_id (editorial_record has this FK)
-  -- We use ingestion_record_id because the workflow's editorial_record_id
-  -- is set by ANOTHER trigger that may run after this one
   SELECT id INTO v_workflow_id
   FROM public.workflows
   WHERE ingestion_record_id = NEW.ingestion_record_id
@@ -37,6 +36,7 @@ BEGIN
   FROM public.letta_reports
   WHERE workflow_id = v_workflow_id
     AND report_type = 'editorial'
+    AND status = 'complete'
   ORDER BY created_at DESC
   LIMIT 1;
 
@@ -45,31 +45,32 @@ BEGIN
   FROM public.letta_reports
   WHERE workflow_id = v_workflow_id
     AND report_type = 'metadata'
+    AND status = 'complete'
   ORDER BY created_at DESC
   LIMIT 1;
 
-  -- Update the editorial_record with the report IDs
-  IF v_editorial_report_id IS NOT NULL OR v_metadata_report_id IS NOT NULL THEN
-    UPDATE public.editorial_records
-    SET
-      content_report_id = COALESCE(v_editorial_report_id, content_report_id),
-      metadata_report_id = COALESCE(v_metadata_report_id, metadata_report_id)
-    WHERE id = NEW.id;
+  -- Update the fields on the record being inserted/updated
+  -- Only update if a report was found
+  IF v_editorial_report_id IS NOT NULL THEN
+    NEW.content_report_id := v_editorial_report_id;
+  END IF;
+
+  IF v_metadata_report_id IS NOT NULL THEN
+    NEW.metadata_report_id := v_metadata_report_id;
   END IF;
 
   RETURN NEW;
 END;
 $function$;
 
--- Step 4: Create trigger that fires after editorial_record is inserted
+-- Step 4: Create trigger that fires BEFORE editorial_record is inserted or updated
+-- Using BEFORE allows us to modify NEW fields directly without an extra UPDATE statement
+DROP TRIGGER IF EXISTS on_editorial_record_link_reports ON public.editorial_records;
 CREATE TRIGGER on_editorial_record_link_reports
-  AFTER INSERT ON public.editorial_records
+  BEFORE INSERT OR UPDATE ON public.editorial_records
   FOR EACH ROW
   EXECUTE FUNCTION public.link_letta_reports_to_editorial_record();
 
--- Step 5: Add comment for clarity
+-- Step 5: Add comments
 COMMENT ON FUNCTION public.link_letta_reports_to_editorial_record()
-IS 'Automatically links letta_reports (editorial and metadata) to editorial_records based on workflow_id. Uses ingestion_record_id to find the workflow.';
-
-COMMENT ON COLUMN "public"."letta_reports"."workflow_id"
-IS 'Reference to the workflow this report belongs to, used for auto-linking to editorial_records';
+IS 'Automatically links the most recent complete letta_reports to editorial_records on save/update';
