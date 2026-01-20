@@ -1,33 +1,33 @@
 import type { Letta } from "@letta-ai/letta-client";
+import matter from "gray-matter";
+import { REDACTION_SLASH_COMMAND } from "./prompts";
 
+/**
+ * Simplifies/transforms content using the Letta agent with the /redaction command.
+ *
+ * Input: Markdown with frontmatter (containing metadata from ingestion phase)
+ * Output: AsyncGenerator yielding stream chunks
+ *
+ * The agent output should be markdown with frontmatter, preserving input metadata
+ * and adding any additional fields from the simplification process.
+ *
+ * @param client - The Letta client instance
+ * @param markdownContent - Markdown with frontmatter (from editorial_records)
+ * @param agentId - The agent ID to use (PLAYGROUND_AGENT_ID)
+ */
 export const simplifyContent = async function* (
   client: Letta,
-  content: string,
-  instructions?: string,
-  agentId?: string,
-  metadata?: Record<string, unknown>,
+  markdownContent: string,
+  agentId: string,
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK stream yields various message types
 ): AsyncGenerator<any> {
   if (!agentId) {
     throw new Error("Agent ID is required");
   }
 
-  // Build the message content with metadata if provided
-  const messageParts: string[] = [];
-
-  if (instructions) {
-    messageParts.push(`<instructions>\n${instructions}\n</instructions>`);
-  }
-
-  messageParts.push(`<content>\n${content}\n</content>`);
-
-  if (metadata) {
-    messageParts.push(
-      `<metadata>\n${JSON.stringify(metadata, null, 2)}\n</metadata>`,
-    );
-  }
-
-  const messageContent = messageParts.join("\n\n");
+  // Build the message with the slash command followed by the markdown content
+  // The markdown should already contain frontmatter with metadata from the ingestion phase
+  const messageContent = `${REDACTION_SLASH_COMMAND} ${markdownContent}`;
 
   const stream = await client.agents.messages.stream(agentId, {
     messages: [
@@ -49,3 +49,27 @@ export const simplifyContent = async function* (
     yield msg;
   }
 };
+
+/**
+ * Builds markdown with frontmatter from separate content and metadata.
+ * Use this helper when the UI provides content and metadata separately.
+ *
+ * @param content - The text content (body)
+ * @param metadata - The metadata to include in frontmatter
+ * @param instructions - Optional instructions to include in frontmatter
+ */
+export function buildMarkdownWithFrontmatter(
+  content: string,
+  metadata?: Record<string, unknown>,
+  instructions?: string,
+): string {
+  const frontmatterData: Record<string, unknown> = {
+    ...metadata,
+  };
+
+  if (instructions) {
+    frontmatterData.instructions = instructions;
+  }
+
+  return matter.stringify(content, frontmatterData);
+}
