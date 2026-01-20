@@ -3,7 +3,6 @@ import { useCreateBlockNote } from "@blocknote/react";
 import { useEffect } from "react";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import { convertMixedContentToHtml } from "@/lib/markdownUtils";
 
 interface MarkdownViewerProps {
   /** Markdown content to render (can include YAML frontmatter) */
@@ -34,11 +33,10 @@ export function MarkdownViewer({
 
     async function loadContent() {
       try {
-        // Convert mixed Markdown/HTML to pure HTML
-        const htmlContent = await convertMixedContentToHtml(content);
-
-        // Parse HTML to BlockNote blocks
-        const blocks = await editor.tryParseHTMLToBlocks(htmlContent);
+        // Use the full markdown parser instead of HTML conversion
+        // This ensures all content types (paragraphs, lists, etc.) are properly parsed
+        const { markdownToBlocks } = await import("@/lib/markdown-parser");
+        const blocks = await markdownToBlocks(content);
         editor.replaceBlocks(editor.document, blocks);
       } catch (_error) {
         // Silently fail

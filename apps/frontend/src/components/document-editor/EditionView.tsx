@@ -1,6 +1,6 @@
 "use client";
 
-import type { BlockNoteEditor } from "@blocknote/core";
+import { BlockNoteEditor } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import { SuggestionMenuController } from "@blocknote/react";
 import { useEffect, useRef, useState } from "react";
@@ -8,8 +8,10 @@ import { getCustomSlashMenuItems } from "./slash-menu-config";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { Loader2 } from "lucide-react";
-import { convertMixedContentToHtml } from "@/lib/markdownUtils";
-import { AiSuggestionBanner } from "./AiSuggestionBanner";
+import { blocksToDirectiveMarkdown } from "@/lib/directive-serializer";
+import { markdownToBlocks } from "@/lib/markdown-parser";
+import { AiSuggestionBanner } from "./AiSuggestionBanner"; // Keeping existing import
+import { type CustomEditor, customSchema } from "./blocks/custom-schema";
 import { useDocument } from "./DocumentContext";
 import { EditorTabs } from "./EditorTabs";
 import { OriginalContentView } from "./OriginalContentView";
@@ -24,44 +26,151 @@ export function EditionView() {
     isRawMarkdownMode,
   } = useDocument();
   const [rawMarkdown, setRawMarkdown] = useState("");
-  const [editor, setEditor] = useState<BlockNoteEditor | null>(null);
+  const [editor, setEditor] = useState<CustomEditor | null>(null);
+
   // We use this to track updates that came from the editor itself,
   // so we don't reload them and cause an infinite loop due to serialization differences.
   const lastSyncedContent = useRef<string | null>(null);
 
+  // We use this to prevent sync loops and errors during programmatic updates
+  const isUpdating = useRef(false);
+  const editorJustInitialized = useRef(false);
+
   // Check if document is compliant (editable)
   const isCompliant = document?.status === "compliant";
 
-  // Initialize editor only on client side
+  // Initialize (or re-initialize) editor when needed
+  // We destroy the editor when in Raw Mode to ensure a fresh state when switching back.
+  // Delayed content hydration state
+  const [isEditorReady, setIsEditorReady] = useState(false);
+  const pendingInitialContent = useRef<any[] | null>(null);
+
+  // Initialize (or re-initialize) editor when needed
+  // We destroy the editor when in Raw Mode to ensure a fresh state when switching back.
+  // 1. Lifecycle Effect: Editor Initialization & Destruction
   useEffect(() => {
+    // SWITCHING TO RAW MODE:
+    // We must capture the current state and destroy the visual editor.
+    if (isRawMarkdownMode) {
+      if (editor) {
+        // Snapshot current state to ensure Raw View has the latest data
+        // Now that imports are static, we can do this synchronously and safely.
+        try {
+          const currentBlocks = editor.document;
+          const markdown = blocksToDirectiveMarkdown(currentBlocks as any);
+          setRawMarkdown(markdown);
+          lastSyncedContent.current = markdown;
+        } catch (e) {
+          console.error("Error snapshotting editor state:", e);
+        }
+
+        setEditor(null);
+        setIsEditorReady(false);
+      }
+      return;
+    }
+
+    // NORMAL MODE:
+    // If editor already exists, we don't need to re-init
+    if (editor) {
+      return;
+    }
+
+    let isMounted = true;
+
     const initEditor = async () => {
-      const { BlockNoteEditor } = await import("@blocknote/core");
-      const newEditor = BlockNoteEditor.create({
-        initialContent: undefined,
-      });
-      setEditor(newEditor);
+      try {
+        if (!isMounted) return;
+
+        // 1. Prepare initial content
+        // We use the current editorialContent from context (which might have been updated by Raw Mode)
+        const initialMarkdown = document?.editorialContent || "";
+        const initialBlocks = await markdownToBlocks(initialMarkdown);
+
+        if (!isMounted) return;
+
+        // 2. Store content for later hydration
+        pendingInitialContent.current = initialBlocks;
+
+        // 3. Create Editor with INITIAL EMPTY content
+        // initializing with complex custom NodeViews directly can cause "Cannot find node position" errors.
+        const newEditor = BlockNoteEditor.create({
+          schema: customSchema,
+          initialContent: [{ type: "paragraph", content: [] }],
+        });
+
+        // 4. Prime the sync ref
+        const standardizedMarkdown = blocksToDirectiveMarkdown(
+          initialBlocks as any,
+        );
+        lastSyncedContent.current = standardizedMarkdown;
+        editorJustInitialized.current = true;
+
+        // 5. Set editor (triggers mount)
+        setEditor(newEditor as unknown as CustomEditor);
+        // Do NOT set isEditorReady yet - wait for hydration (Effect 2)
+
+        // Also ensure raw markdown state is sync
+        setRawMarkdown(standardizedMarkdown);
+      } catch (error) {
+        console.error("Error initializing editor:", error);
+      }
     };
 
     initEditor();
-  }, []);
 
-  // Sync editor changes back to document context (only when not showing AI suggestion)
+    return () => {
+      isMounted = false;
+    };
+  }, [isRawMarkdownMode, document?.editorialContent, editor]); // Dependencies allow re-run when leaving raw mode
+
+  // 2. Hydration Effect: Fills editor after mount
   useEffect(() => {
-    if (!editor || document?.aiSuggestion) return; // Don't sync when showing AI suggestion
+    if (!editor || isEditorReady || !pendingInitialContent.current) return;
 
-    const handleEditorChange = async () => {
+    if (editorJustInitialized.current) {
+      isUpdating.current = true;
       try {
-        // Convert editor content to markdown
-        const markdown = await editor.blocksToMarkdownLossy(editor.document);
+        editor.replaceBlocks(editor.document, pendingInitialContent.current);
+        setIsEditorReady(true);
+        pendingInitialContent.current = null;
+      } catch (e) {
+        console.error("Error hydrating content:", e);
+        // Attempt to recover by setting empty content?
+        // editor.replaceBlocks(editor.document, [{ type: "paragraph", content: "Error loading content" }]);
+        // setIsEditorReady(true);
+      } finally {
+        setTimeout(() => {
+          isUpdating.current = false;
+          editorJustInitialized.current = false;
+        }, 0);
+      }
+    }
+  }, [editor, isEditorReady]);
 
-        // Update our ref so we know this content came from the editor
+  // Handle Comparison Mode Switch: Force Re-initialization
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Trigger reset on mode change
+  useEffect(() => {
+    if (editor) {
+      // Force reset to safety pattern (Init Empty -> Hydrate)
+      // This prevents "Cannot find node position" when moving Editor to new part of DOM
+      setEditor(null);
+      setIsEditorReady(false);
+    }
+  }, [isComparisonMode]);
+
+  // 3. Sync Effect: Pushes changes to global context
+  useEffect(() => {
+    if (!editor || document?.aiSuggestion) return;
+
+    const handleEditorChange = () => {
+      if (isUpdating.current) return;
+
+      try {
+        const markdown = blocksToDirectiveMarkdown(editor.document as any);
         lastSyncedContent.current = markdown;
-
-        // Update the document content in context (marks as dirty)
         updateContent(markdown);
       } catch (error) {
-        // Silently fail - don't disrupt editing experience, but log for debugging
-        // biome-ignore lint/suspicious/noConsole: debugging
         console.error(
           "Error syncing editor changes to document context:",
           error,
@@ -69,92 +178,55 @@ export function EditionView() {
       }
     };
 
-    // Subscribe to editor changes
     const unsubscribe = editor.onChange(handleEditorChange);
-
-    // Cleanup subscription on unmount
     return unsubscribe;
   }, [editor, updateContent, document?.aiSuggestion]);
 
-  // Load markdown content when document changes or AI suggestion arrives
+  // 4. External Update Effect: Handles AI suggestions or Raw Mode changes
   useEffect(() => {
-    // Skip loading if editor is not ready OR if we are in raw markdown mode
-    // (the raw mode sync is handled manually or when switching back)
     if (!editor || isRawMarkdownMode) return;
 
-    // Show AI suggestion if it exists, otherwise show current content
+    if (!isEditorReady || editorJustInitialized.current) {
+      return;
+    }
+
     const contentToShow = document?.aiSuggestion || document?.editorialContent;
     if (!contentToShow) return;
 
-    async function loadContent() {
+    if (
+      lastSyncedContent.current &&
+      contentToShow === lastSyncedContent.current
+    ) {
+      return;
+    }
+
+    async function updateEditorContent() {
       if (!editor) return;
 
-      // If the content is exactly what we just synced from the editor, don't re-load it.
-      // This breaks the loop where (Markdown -> Blocks -> Markdown) conversion causes differences.
-      if (
-        lastSyncedContent.current &&
-        contentToShow === lastSyncedContent.current
-      ) {
-        return;
-      }
-
+      isUpdating.current = true;
       try {
-        // Convert mixed Markdown/HTML to pure HTML
-        const htmlContent = await convertMixedContentToHtml(
-          contentToShow ?? "",
-        );
-
-        // Parse HTML to BlockNote blocks
-        const blocks = await editor.tryParseHTMLToBlocks(htmlContent);
-
-        // Get the markdown representation BEFORE we update the editor
-        // This way we can set lastSyncedContent to prevent the onChange loop
-        const futureMarkdown = await editor.blocksToMarkdownLossy(blocks);
-
-        // Update lastSyncedContent BEFORE replaceBlocks to prevent onChange from triggering
+        const blocks = await markdownToBlocks(contentToShow ?? "");
+        const futureMarkdown = blocksToDirectiveMarkdown(blocks as any);
         lastSyncedContent.current = futureMarkdown;
 
-        // Now replace the blocks - onChange will fire but will see content matches lastSyncedContent
         editor.replaceBlocks(editor.document, blocks);
-
-        // Also update raw markdown state
         setRawMarkdown(futureMarkdown);
       } catch (error) {
-        // Silently fail - don't disrupt editing experience, but log for debugging
-        // biome-ignore lint/suspicious/noConsole: debugging
-        console.error("Error loading content into editor:", error);
+        console.error("Error updating editor content:", error);
       } finally {
-        // Wait for browser to process the update before releasing lock
-        await new Promise((resolve) =>
-          requestAnimationFrame(() => resolve(undefined)),
-        );
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        isUpdating.current = false;
       }
     }
 
-    loadContent();
+    updateEditorContent();
   }, [
     editor,
+    isEditorReady,
     document?.editorialContent,
     document?.aiSuggestion,
     isRawMarkdownMode,
   ]);
-
-  // Update raw markdown when switching to raw mode
-  useEffect(() => {
-    if (!editor || !isRawMarkdownMode) return;
-
-    async function updateRawMarkdown() {
-      if (!editor) return;
-      try {
-        const markdown = await editor.blocksToMarkdownLossy(editor.document);
-        setRawMarkdown(markdown);
-        // Also update lastSyncedContent to avoid loop when switching back
-        lastSyncedContent.current = markdown;
-      } catch (_error) {}
-    }
-
-    updateRawMarkdown();
-  }, [editor, isRawMarkdownMode]);
 
   // Handle raw markdown content changes
   const handleRawMarkdownChange = async (newMarkdown: string) => {
@@ -164,7 +236,7 @@ export function EditionView() {
     updateContent(newMarkdown);
   };
 
-  if (!editor) {
+  if ((!editor || !isEditorReady) && !isRawMarkdownMode) {
     return (
       <div className="flex flex-1 w-full items-center justify-center h-full bg-white">
         <div className="flex flex-col items-center gap-3">
@@ -221,21 +293,25 @@ export function EditionView() {
             ) : (
               <div className="p-8">
                 <div className="max-w-3xl mx-auto">
-                  <BlockNoteView
-                    editor={editor}
-                    theme="light"
-                    editable={
-                      isCompliant && !isProcessing && !document?.aiSuggestion
-                    }
-                    slashMenu={false}
-                  >
-                    <SuggestionMenuController
-                      triggerCharacter={"/"}
-                      getItems={async (query) =>
-                        getCustomSlashMenuItems(editor, query)
+                  {editor ? (
+                    <BlockNoteView
+                      editor={editor}
+                      theme="light"
+                      editable={
+                        isCompliant && !isProcessing && !document?.aiSuggestion
                       }
-                    />
-                  </BlockNoteView>
+                      slashMenu={false}
+                    >
+                      <SuggestionMenuController
+                        triggerCharacter={"/"}
+                        getItems={async (query) =>
+                          getCustomSlashMenuItems(editor, query)
+                        }
+                      />
+                    </BlockNoteView>
+                  ) : (
+                    <div />
+                  )}
                 </div>
               </div>
             )}
@@ -270,28 +346,32 @@ export function EditionView() {
       <div className="flex-1 overflow-y-auto">
         {isRawMarkdownMode ? (
           <RawMarkdownView
-            markdownContent={rawMarkdown}
+            markdownContent={rawMarkdown || document?.editorialContent || ""}
             onContentChange={handleRawMarkdownChange}
             readOnly={!isCompliant}
           />
         ) : (
           <div className="p-8">
             <div className="max-w-3xl mx-auto">
-              <BlockNoteView
-                editor={editor}
-                theme="light"
-                editable={
-                  isCompliant && !isProcessing && !document?.aiSuggestion
-                }
-                slashMenu={false}
-              >
-                <SuggestionMenuController
-                  triggerCharacter={"/"}
-                  getItems={async (query) =>
-                    getCustomSlashMenuItems(editor, query)
+              {editor ? (
+                <BlockNoteView
+                  editor={editor}
+                  theme="light"
+                  editable={
+                    isCompliant && !isProcessing && !document?.aiSuggestion
                   }
-                />
-              </BlockNoteView>
+                  slashMenu={false}
+                >
+                  <SuggestionMenuController
+                    triggerCharacter={"/"}
+                    getItems={async (query) =>
+                      getCustomSlashMenuItems(editor, query)
+                    }
+                  />
+                </BlockNoteView>
+              ) : (
+                <div />
+              )}
             </div>
           </div>
         )}
