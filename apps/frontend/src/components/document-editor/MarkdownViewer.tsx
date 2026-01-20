@@ -35,7 +35,7 @@ export function MarkdownViewer({
       try {
         // Use the full markdown parser instead of HTML conversion
         // This ensures all content types (paragraphs, lists, etc.) are properly parsed
-        const { markdownToBlocks } = await import("@/lib/markdown-parser");
+        const { markdownToBlocks } = await import("@/lib/markdown");
         const blocks = await markdownToBlocks(content);
         editor.replaceBlocks(editor.document, blocks);
       } catch (_error) {

@@ -8,8 +8,7 @@ import { getCustomSlashMenuItems } from "./slash-menu-config";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { Loader2 } from "lucide-react";
-import { blocksToDirectiveMarkdown } from "@/lib/directive-serializer";
-import { markdownToBlocks } from "@/lib/markdown-parser";
+import { blocksToDirectiveMarkdown, markdownToBlocks } from "@/lib/markdown";
 import { AiSuggestionBanner } from "./AiSuggestionBanner"; // Keeping existing import
 import { type CustomEditor, customSchema } from "./blocks/custom-schema";
 import { useDocument } from "./DocumentContext";

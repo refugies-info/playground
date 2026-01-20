@@ -7,9 +7,9 @@ import { Important } from "./important-block";
  *
  * This schema defines custom blocks that map to Markdown Directives (:::directive).
  * The pipeline works as follows:
- * 1. Deserialization: markdown-parser.ts transforms `:::important` -> `important` block.
+ * 1. Deserialization: markdown/parser.ts transforms `:::important` -> `important` block.
  * 2. Editing: The block is rendered using the React component defined in the spec.
- * 3. Serialization: directive-serializer.ts transforms `important` block -> `:::important`.
+ * 3. Serialization: markdown/serializer.ts transforms `important` block -> `:::important`.
  *
  * Current Custom Blocks:
  * - Important (:::important)
