@@ -90,79 +90,19 @@ export async function generateIngestionReportStep(
     // Collect streaming response into final content
     let finalContent = "";
 
-    // Accumulate tool arguments if tool call occurs
-    let toolCallArgs = "";
-    let isToolCall = false;
-
     for await (const chunk of generateIngestionReport(
       lettaClient,
       markdownContent,
       conversationId,
     )) {
-      logger.debug({ type: chunk.message_type }, "Received Letta stream chunk");
-
       // Extract assistant message content from stream
       if (chunk.message_type === "assistant_message") {
-        if (typeof chunk.content === "string") {
-          // Stream yields deltas, so we accumulate
-          finalContent += chunk.content;
+        if (typeof chunk.content !== "string") {
+          throw new Error(
+            `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
+          );
         }
-      } else if (chunk.message_type === "tool_call_message") {
-        logger.info(
-          { tool_call: chunk.tool_call },
-          "Received tool call - continuing stream",
-        );
-        isToolCall = true;
-
-        // Note: In Letta (v1.7+), a tool call might come as a single message or chunks?
-        // If it's a message, it has `tool_call` object with `function.arguments`.
-        if (chunk.tool_call?.function?.arguments) {
-          toolCallArgs += chunk.tool_call.function.arguments;
-        }
-      } else if (chunk.message_type === "tool_response_message") {
-        logger.info(
-          {
-            tool_response: chunk.content?.substring?.(0, 100),
-            is_err: chunk.is_err,
-          },
-          "Received tool response - continuing stream",
-        );
-      } else if (chunk.message_type === "reasoning_message") {
-        logger.debug("Received reasoning message - continuing stream");
-      } else if (chunk.message_type === "ping") {
-        // Keepalive ping - connection is still active, continue
-        logger.debug("Received keepalive ping");
-      } else {
-        logger.debug({ chunk }, "Received other chunk type");
-      }
-    }
-
-    // Log final state
-    logger.info(
-      {
-        finalContentLength: finalContent.length,
-        hadToolCall: isToolCall,
-        toolCallArgsLength: toolCallArgs.length,
-      },
-      "Stream completed",
-    );
-
-    // If we had a tool call, we prioritize its output if it contains the report
-    if (isToolCall && toolCallArgs) {
-      try {
-        // Arguments are JSON string
-        const args = JSON.parse(toolCallArgs);
-        // Assuming the tool is `submit_report` and it has a `report` argument
-        if (args.report) {
-          finalContent = args.report;
-        } else if (typeof args === "string") {
-          finalContent = args;
-        }
-      } catch (e) {
-        logger.error(
-          { error: e, toolCallArgs },
-          "Failed to parse tool call arguments in process-xml",
-        );
+        finalContent = chunk.content; // Last assistant message is the final response
       }
     }
 

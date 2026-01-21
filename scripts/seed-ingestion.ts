@@ -9,17 +9,17 @@ const envPath = path.resolve(__dirname, "../.env");
 logger.info({ envPath, exists: fs.existsSync(envPath) }, "Loading .env");
 dotenv.config({ path: envPath });
 
-// Imports from workspace packages
-import {
-  createLettaClient,
-  generateIngestionReport,
-  parseIngestionResponse,
-} from "@playground/agents";
-import { getSupabaseAdmin, ingestRcoData } from "@playground/supabase";
-
 async function main() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
+
+  // Note: We need to import ingestRcoData. Since we are in scripts/, we recall that this package's src exports it.
+  // However, running ts-node on scripts might not resolve ".." correctly if not compiled.
+  // But previously it imported `getSupabaseAdmin` from "../src/index". So we can do the same.
+  const {
+    getSupabaseAdmin,
+    ingestRcoData,
+  } = require("../packages/supabase/src/index");
 
   const supabase = getSupabaseAdmin(url, key);
   logger.info("Seeding ingestion tables...");
@@ -51,6 +51,11 @@ async function main() {
 
   // Initialize client and conversation regardless of report existence
   // because we might need conversationId for ingestion linkage
+  const {
+    createLettaClient,
+    generateIngestionReport,
+    parseIngestionResponse,
+  } = require("../packages/agents/src/index");
   const lettaClient = createLettaClient();
   const agentId = process.env.PLAYGROUND_AGENT_ID;
 
@@ -75,51 +80,18 @@ async function main() {
     try {
       // Collect streaming response
       let finalContent = "";
-
-      // Accumulate tool arguments if tool call occurs
-      let toolCallArgs = "";
-      let isToolCall = false;
-
       for await (const chunk of generateIngestionReport(
         lettaClient,
         rcoMdContent, // Pass markdown content instead of XML
         conversationId,
       )) {
-        logger.debug(
-          { type: chunk.message_type },
-          "Received Letta stream chunk",
-        );
-
         if (chunk.message_type === "assistant_message") {
-          if (typeof chunk.content === "string") {
-            // Stream yields deltas, so we accumulate
-            finalContent += chunk.content;
+          if (typeof chunk.content !== "string") {
+            throw new Error(
+              `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
+            );
           }
-        } else if (chunk.message_type === "tool_call_message") {
-          logger.info({ tool_call: chunk.tool_call }, "Received tool call");
-          isToolCall = true;
-          if (chunk.tool_call?.function?.arguments) {
-            toolCallArgs += chunk.tool_call.function.arguments;
-          }
-        }
-      }
-
-      // If we had a tool call, we prioritize its output if it contains the report
-      if (isToolCall && toolCallArgs) {
-        logger.info({ toolCallArgs }, "Raw tool call arguments");
-        try {
-          const args = JSON.parse(toolCallArgs);
-          if (args.report) {
-            finalContent = args.report;
-            logger.info("Extracted report from tool call arguments");
-          } else if (typeof args === "string") {
-            finalContent = args;
-          }
-        } catch (e) {
-          logger.error(
-            { error: e, toolCallArgs },
-            "Failed to parse tool call arguments",
-          );
+          finalContent = chunk.content;
         }
       }
 
