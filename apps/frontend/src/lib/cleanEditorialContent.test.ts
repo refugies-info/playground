@@ -77,3 +77,22 @@ Cours de français`;
   assert.strictEqual(content, expectedContent);
   assert.strictEqual(title, "Apprendre le français");
 });
+
+test("correctly cleans when warning section is in the middle", () => {
+  const input = `# Real Title
+Intro content
+
+${warningSection}
+
+# Next Section
+Outro content`;
+
+  const expectedContent = `Intro content
+
+# Next Section
+Outro content`;
+
+  const { content, title } = cleanEditorialContent(input);
+  assert.strictEqual(content, expectedContent);
+  assert.strictEqual(title, "Real Title");
+});

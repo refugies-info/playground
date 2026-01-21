@@ -5,45 +5,50 @@ export function cleanEditorialContent(markdown: string): {
   if (!markdown) return { content: "" };
 
   const lines = markdown.split("\n");
-  const cleanedLines: string[] = [];
-  let inWarningSection = false;
-  let titleRemoved = false;
-  let extractedTitle: string | undefined;
+
+  // Pass 1: Identify Warning Section Range
+  let warningStart = -1;
+  let warningEnd = -1; // Exclusive
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-
-    // Detect start of "Journal des Avertissements"
     if (
       line.trim().startsWith("# ") &&
       line.toLowerCase().includes("journal des avertissements")
     ) {
-      inWarningSection = true;
-      continue;
-    }
-
-    // If we are in the warning section, we skip everything until we hit the next H1
-    if (inWarningSection) {
-      if (line.trim().startsWith("# ")) {
-        // We found the next H1, so the warning section is over
-        inWarningSection = false;
-        // Proceed to process this line (it might be the title we need to remove)
-      } else {
-        // Still in warning section, skip
-        continue;
+      warningStart = i;
+      // Find end
+      for (let j = i + 1; j < lines.length; j++) {
+        if (lines[j].trim().startsWith("# ")) {
+          warningEnd = j;
+          break;
+        }
       }
+      if (warningEnd === -1) warningEnd = lines.length;
+      break; // Only remove one warning section (the first one found)
     }
+  }
 
-    // Identify and remove the first H1 if not yet removed
-    // This assumes the main content starts with an H1 which is the title
-    if (!titleRemoved && line.trim().startsWith("# ")) {
-      // Extract title text (remove "# " and clean up)
-      extractedTitle = line.replace(/^#\s+/, "").trim();
-      titleRemoved = true;
+  // Pass 2: Filter and Extract Title
+  const cleanedLines: string[] = [];
+  let extractedTitle: string | undefined;
+  let titleFound = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    // Skip warning section
+    if (warningStart !== -1 && i >= warningStart && i < warningEnd) {
       continue;
     }
 
-    cleanedLines.push(line);
+    // Check for Title (First H1 outside warning)
+    // This assumes the main content starts with an H1 which is the title
+    if (!titleFound && lines[i].trim().startsWith("# ")) {
+      extractedTitle = lines[i].replace(/^#\s+/, "").trim();
+      titleFound = true;
+      continue; // Remove title from content
+    }
+
+    cleanedLines.push(lines[i]);
   }
 
   return {
