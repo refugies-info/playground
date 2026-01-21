@@ -1,7 +1,7 @@
 "use server";
 
 import { logger } from "@playground/shared-types";
-import { createSupabaseServerClient } from "@playground/supabase";
+import { createSupabaseServerClient, type Tables } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { buildPublishPayload } from "../lib/payload-builder";
 
@@ -217,27 +217,28 @@ export async function publishDocument(
     const webhookUrl = `${cleanBaseUrl}/api/webhook/dispositif`;
 
     // 3. Check for existing publication (to determine CREATE vs UPDATE)
-    // Fetch workflow to get the current publication_record_id
+    // Fetch workflow and its related publication_record in one go
     const { data: workflow } = await supabase
       .from("workflows")
-      .select("publication_record_id")
+      .select("publication_records(id, remote_id, target)")
       .eq("id", workflowId)
-      .single();
+      .single()
+      .overrideTypes<
+        {
+          publication_records: Pick<
+            Tables<"publication_records">,
+            "id" | "remote_id" | "target"
+          > | null;
+        },
+        { merge: false }
+      >();
 
     let existingPublication = null;
-    const publicationRecordId = workflow?.publication_record_id;
+    const pubRecord = workflow?.publication_records;
 
-    if (publicationRecordId) {
-      const { data: pubRecord } = await supabase
-        .from("publication_records")
-        .select("id, remote_id, target")
-        .eq("id", publicationRecordId)
-        .single();
-
-      // Only consider it an update if the target matches
-      if (pubRecord && pubRecord.target === cleanBaseUrl) {
-        existingPublication = pubRecord;
-      }
+    // Only consider it an update if the target matches
+    if (pubRecord && pubRecord.target === cleanBaseUrl) {
+      existingPublication = pubRecord;
     }
 
     const existingRemoteId = existingPublication?.remote_id;
@@ -418,24 +419,27 @@ export async function archiveDocument(
     // 3. Find existing publication (MUST exist to archive)
     const { data: workflow } = await supabase
       .from("workflows")
-      .select("publication_record_id")
+      .select("publication_records(id, remote_id, target)")
       .eq("id", workflowId)
-      .single();
+      .single()
+      .overrideTypes<
+        {
+          publication_records: Pick<
+            Tables<"publication_records">,
+            "id" | "remote_id" | "target"
+          > | null;
+        },
+        { merge: false }
+      >();
 
-    const publicationRecordId = workflow?.publication_record_id;
+    const existingPublication = workflow?.publication_records;
 
-    if (!publicationRecordId) {
+    if (!existingPublication) {
       return {
         success: false,
         error: "Document jamais publié (pas d'enregistrement)",
       };
     }
-
-    const { data: existingPublication } = await supabase
-      .from("publication_records")
-      .select("id, remote_id, target")
-      .eq("id", publicationRecordId)
-      .single();
 
     if (!existingPublication || existingPublication.target !== cleanBaseUrl) {
       return {
