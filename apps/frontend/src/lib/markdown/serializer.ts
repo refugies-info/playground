@@ -67,13 +67,13 @@ function blockToMarkdown(block: AnyBlock, depth: number): string {
 
   switch (block.type) {
     case "toggleListItem":
-      return serializeToggle(block, indent);
+      return serializeToggle(block, indent, depth);
 
     case "important":
-      return serializeContainerBlock(block, indent, "important");
+      return serializeContainerBlock(block, indent, depth, "important");
 
     case "goodToKnow":
-      return serializeContainerBlock(block, indent, "good-to-know");
+      return serializeContainerBlock(block, indent, depth, "good-to-know");
 
     case "paragraph":
       return indent + inlineContentToMarkdown(block.content);
@@ -86,13 +86,13 @@ function blockToMarkdown(block: AnyBlock, depth: number): string {
 
     case "bulletListItem": {
       const bulletContent = inlineContentToMarkdown(block.content);
-      const bulletChildren = serializeChildren(block.children, depth + 1);
+      const bulletChildren = serializeChildren(block.children, depth);
       return `${indent}- ${bulletContent}${bulletChildren}`;
     }
 
     case "numberedListItem": {
       const numContent = inlineContentToMarkdown(block.content);
-      const numChildren = serializeChildren(block.children, depth + 1);
+      const numChildren = serializeChildren(block.children, depth);
       return `${indent}1. ${numContent}${numChildren}`;
     }
 
@@ -145,7 +145,11 @@ function blockToMarkdown(block: AnyBlock, depth: number): string {
  * - Children of toggleListItem -> inner content of the directive
  * - Expanded state -> isOpen attribute (defaulting to true)
  */
-function serializeToggle(block: AnyBlock, indent: string): string {
+function serializeToggle(
+  block: AnyBlock,
+  indent: string,
+  depth: number,
+): string {
   // 1. Extract title from the block's inline content
   const title = inlineContentToMarkdown(block.content) || "Toggle";
 
@@ -153,7 +157,7 @@ function serializeToggle(block: AnyBlock, indent: string): string {
   const expanded = true;
 
   // 3. Serialize all nested children blocks
-  const children = serializeChildren(block.children, 0);
+  const children = serializeChildren(block.children, depth);
   const inner = children || "";
 
   // 4. Construct directive attributes
@@ -178,13 +182,14 @@ function serializeToggle(block: AnyBlock, indent: string): string {
 function serializeContainerBlock(
   block: AnyBlock,
   indent: string,
+  depth: number,
   directiveName: string,
 ): string {
   // 1. Serialize the main content of the block
   const content = inlineContentToMarkdown(block.content);
 
   // 2. Serialize any nested children blocks
-  const children = serializeChildren(block.children, 0);
+  const children = serializeChildren(block.children, depth);
 
   // 3. Combine content and children into the inner body
   let inner = "";
@@ -212,7 +217,7 @@ function serializeChildren(
 ): string {
   if (!children || children.length === 0) return "";
   return (
-    "\n" + children.map((child) => blockToMarkdown(child, depth)).join("\n")
+    "\n" + children.map((child) => blockToMarkdown(child, depth + 1)).join("\n")
   );
 }
 

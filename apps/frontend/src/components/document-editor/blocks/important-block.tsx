@@ -15,9 +15,11 @@ export const Important = createReactBlockSpec(
   {
     render: ({ contentRef }) => {
       return (
-        <Callout variant="important">
-          <div ref={contentRef} />
-        </Callout>
+        <div className="important-block-wrapper w-full my-2">
+          <Callout variant="important" className="my-0">
+            <div ref={contentRef} />
+          </Callout>
+        </div>
       );
     },
   },

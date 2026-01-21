@@ -129,21 +129,22 @@ export function EditionView() {
 
     if (editorJustInitialized.current) {
       isUpdating.current = true;
-      try {
-        editor.replaceBlocks(editor.document, pendingInitialContent.current);
-        setIsEditorReady(true);
-        pendingInitialContent.current = null;
-      } catch (e) {
-        console.error("Error hydrating content:", e);
-        // Attempt to recover by setting empty content?
-        // editor.replaceBlocks(editor.document, [{ type: "paragraph", content: "Error loading content" }]);
-        // setIsEditorReady(true);
-      } finally {
-        setTimeout(() => {
-          isUpdating.current = false;
-          editorJustInitialized.current = false;
-        }, 0);
-      }
+      // Delay hydration by one animation frame to ensure React components are stable
+      requestAnimationFrame(() => {
+        try {
+          if (!editor || !pendingInitialContent.current) return;
+          editor.replaceBlocks(editor.document, pendingInitialContent.current);
+          setIsEditorReady(true);
+          pendingInitialContent.current = null;
+        } catch (e) {
+          console.error("Error hydrating content:", e);
+        } finally {
+          setTimeout(() => {
+            isUpdating.current = false;
+            editorJustInitialized.current = false;
+          }, 0);
+        }
+      });
     }
   }, [editor, isEditorReady]);
 
@@ -166,6 +167,11 @@ export function EditionView() {
       if (isUpdating.current) return;
 
       try {
+        // DEBUG: Log blocks before serialization
+        console.log(
+          "[DEBUG SYNC] Editor blocks:",
+          JSON.stringify(editor.document, null, 2),
+        );
         const markdown = blocksToDirectiveMarkdown(editor.document as any);
         lastSyncedContent.current = markdown;
         updateContent(markdown);

@@ -7,12 +7,13 @@
     "dev:workflow": "PORT=3456 workflow inspect runs --web",
     "build": "next build",
     "start": "next start",
-    "check:types": "tsc --noEmit"
+    "check:types": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@blocknote/core": "^0.42.3",
-    "@blocknote/mantine": "^0.42.3",
-    "@blocknote/react": "^0.42.3",
+    "@blocknote/core": "^0.46.1",
+    "@blocknote/mantine": "^0.46.1",
+    "@blocknote/react": "^0.46.1",
     "@playground/agents": "workspace:*",
     "@playground/rco": "workspace:*",
     "@playground/shared-types": "workspace:*",
@@ -41,6 +42,9 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
-    "typescript": "^5.9.3"
+    "jsdom": "^27.4.0",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.19",
+    "vitest": "^2.1.9"
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { filterSuggestionItems } from "@blocknote/core";
+import { filterSuggestionItems } from "@blocknote/core/extensions";
 import {
   type DefaultReactSuggestionItem,
   getDefaultReactSlashMenuItems,

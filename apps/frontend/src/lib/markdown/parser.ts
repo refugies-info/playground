@@ -67,6 +67,8 @@ interface MarkdownNode {
  * Pipeline Step: 1. Raw MD -> [This Function] -> BlockNote Blocks -> Editor
  * Usage: Called by EditionView.tsx when loading content or applying AI updates.
  */
+import { remarkRestoreHierarchy } from "./remark-restore-hierarchy";
+
 export async function markdownToBlocks(
   markdown: string,
 ): Promise<PartialBlock[]> {
@@ -76,10 +78,75 @@ export async function markdownToBlocks(
   const processor = unified()
     .use(remarkParse)
     .use(remarkGfm)
-    .use(remarkDirective);
+    .use(remarkDirective)
+    .use(remarkRestoreHierarchy);
 
   const ast = processor.parse(contentWithoutFrontmatter);
-  return astToBlocks(ast.children as unknown as MarkdownNode[]);
+
+  // Apply hierarchy restoration (Remark plugins usually run in the 'run' phase)
+  const transformedAst = await processor.run(ast);
+  const blocks = astToBlocks(
+    (transformedAst as any).children as unknown as MarkdownNode[],
+  );
+
+  return validateAndFixBlocks(blocks);
+}
+
+/**
+ * Post-processing step to validate and clean block structures.
+ *
+ * @param {PartialBlock[]} blocks - The array of blocks to validate
+ * @returns {PartialBlock[]} Cleaned and validated blocks
+ *
+ * @description
+ * This function performs two key operations:
+ * 1. Filters out stray `:::` paragraphs (leaked from remark-directive nesting)
+ * 2. Removes empty `children` arrays from leaf blocks (prevents BlockNote crashes)
+ */
+function validateAndFixBlocks(blocks: PartialBlock[]): PartialBlock[] {
+  return blocks
+    .filter((block) => {
+      // SAFETY: This filter only removes paragraphs that contain EXACTLY `:::` and nothing else.
+      // Conditions:
+      // - Block must be a "paragraph" type
+      // - Content array must have exactly 1 element
+      // - That element must be type "text"
+      // - The text (trimmed) must equal exactly ":::"
+      // This is VERY specific and won't affect paragraphs containing ":::" mixed with other text.
+      if (block.type === "paragraph") {
+        const content = block.content as any[];
+        if (
+          content &&
+          content.length === 1 &&
+          content[0].type === "text" &&
+          content[0].text.trim() === ":::"
+        ) {
+          return false; // Remove this stray marker
+        }
+      }
+      return true;
+    })
+    .map((block) => {
+      const safeBlock = { ...block };
+
+      // 1. Recursively validate children if they exist
+      if (safeBlock.children && safeBlock.children.length > 0) {
+        safeBlock.children = validateAndFixBlocks(safeBlock.children);
+      }
+
+      // 2. Remove empty children array for specific leaf/inline blocks
+      if (
+        ["paragraph", "heading", "important", "goodToKnow"].includes(
+          safeBlock.type as string,
+        )
+      ) {
+        if (safeBlock.children && safeBlock.children.length === 0) {
+          delete safeBlock.children;
+        }
+      }
+
+      return safeBlock;
+    });
 }
 
 /**

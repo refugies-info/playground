@@ -15,9 +15,11 @@ export const GoodToKnow = createReactBlockSpec(
   {
     render: ({ contentRef }) => {
       return (
-        <Callout variant="goodToKnow">
-          <div ref={contentRef} />
-        </Callout>
+        <div className="good-to-know-block-wrapper w-full my-2">
+          <Callout variant="goodToKnow" className="my-0">
+            <div ref={contentRef} />
+          </Callout>
+        </div>
       );
     },
   },

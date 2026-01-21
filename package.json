@@ -21,6 +21,7 @@
     "build": "turbo build",
     "check:outdated": "pnpx taze -r --maturity-period",
     "check:types": "turbo check:types",
+    "test": "turbo test",
     "clean:branches": "pnpx git-removed-branches --prune --force",
     "dev": "turbo dev dev:workflow",
     "dev:workflow": "workflow inspect runs --web",
