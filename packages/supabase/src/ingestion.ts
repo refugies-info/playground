@@ -1,6 +1,6 @@
 import { logger } from "@playground/shared-types";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "./types";
+import type { Database } from "./database.types";
 
 export interface IngestionResult {
   rcoRecordId: string;

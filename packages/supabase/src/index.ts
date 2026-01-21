@@ -1,6 +1,4 @@
 export * from "./clients";
-export * from "./ingestion";
-export * from "./proxy";
 export type {
   Database,
   Enums,
@@ -8,4 +6,6 @@ export type {
   Tables,
   TablesInsert,
   TablesUpdate,
-} from "./types";
+} from "./database.types";
+export * from "./ingestion";
+export * from "./proxy";
