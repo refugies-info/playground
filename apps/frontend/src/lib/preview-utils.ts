@@ -1,4 +1,5 @@
 import { getPreviewSecret } from "@/services/document-actions";
+import { cleanEditorialContent } from "./cleanEditorialContent";
 import { buildDispositifPayload } from "./payload-builder";
 
 interface PreviewDocument {
@@ -15,10 +16,13 @@ interface PreviewDocument {
  * 3. Creates and submits a hidden form to the Main App
  */
 export const submitPreview = async (document: PreviewDocument) => {
+  // Clean content and extract real title (incase doc.title is the warning header)
+  const { content, title } = cleanEditorialContent(document.editorialContent);
+
   // Build the preview payload using shared builder
   const payload = buildDispositifPayload({
-    title: document.title,
-    editorialContent: document.editorialContent,
+    title: title || document.title,
+    editorialContent: content,
     metadata: document.metadata,
   });
 
