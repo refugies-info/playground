@@ -136,7 +136,7 @@ function validateAndFixBlocks(blocks: PartialBlock[]): PartialBlock[] {
 
       // 2. Remove empty children array for specific leaf/inline blocks
       if (
-        ["paragraph", "heading", "important", "goodToKnow"].includes(
+        ["paragraph", "heading", "important", "goodToKnow", "callout"].includes(
           safeBlock.type as string,
         )
       ) {
@@ -333,22 +333,23 @@ function parseDirective(node: MarkdownNode): PartialBlock {
   const name = node.name || "";
 
   let blockType = name;
-  if (name === "good-to-know") {
-    blockType = "goodToKnow";
+  const props: Record<string, unknown> = { ...attrs };
+
+  if (name === "good-to-know" || name === "important") {
+    blockType = "callout";
+    props.variant = name === "good-to-know" ? "goodToKnow" : "important";
   }
 
   let childrenBlocks = astToBlocks(node.children || []);
   let content: any[] = [];
 
   // Logic to extract the first paragraph as the main inline content for these blocks
-  if (["important", "goodToKnow"].includes(blockType)) {
+  if (blockType === "callout") {
     if (childrenBlocks.length > 0 && childrenBlocks[0].type === "paragraph") {
       content = childrenBlocks[0].content as InlineContent[];
       childrenBlocks = childrenBlocks.slice(1);
     }
   }
-
-  const props: Record<string, unknown> = { ...attrs };
 
   if (name === "toggle") {
     const title = attrs.title || "Toggle";

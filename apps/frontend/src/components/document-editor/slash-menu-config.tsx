@@ -52,8 +52,8 @@ const getCustomBlockItems = (
       const insertedBlocks = editor.insertBlocks(
         [
           {
-            type: "important",
-            props: {},
+            type: "callout",
+            props: { variant: "important" },
             content: [],
           },
         ],
@@ -76,8 +76,8 @@ const getCustomBlockItems = (
       const insertedBlocks = editor.insertBlocks(
         [
           {
-            type: "goodToKnow",
-            props: {},
+            type: "callout",
+            props: { variant: "goodToKnow" },
             content: [],
           },
         ],

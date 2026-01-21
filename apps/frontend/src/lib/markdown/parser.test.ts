@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { BlockNoteEditor } from "@blocknote/core";
 import { describe, expect, it } from "vitest";
+import { customSchema } from "../../components/document-editor/blocks/custom-schema";
 import { markdownToBlocks } from "./parser";
 
 describe("markdownToBlocks", () => {
@@ -31,9 +32,11 @@ Inner nested content
     // Check children
     expect(outer.children).toHaveLength(2);
 
-    // Child 1: Good To Know
+    // Child 1: Callout (Good To Know)
     const gtk = outer.children![0];
-    expect(gtk.type).toBe("goodToKnow");
+    expect(gtk.type).toBe("callout");
+    // @ts-expect-error
+    expect(gtk.props.variant).toBe("goodToKnow");
 
     // Child 2: Inner Toggle
     const inner = outer.children![1];
@@ -81,7 +84,9 @@ Important inside toggle
     expect(toggle.type).toBe("toggleListItem");
     expect(toggle.children).toHaveLength(3); // List, List, Important
     expect(toggle.children![0].type).toBe("bulletListItem");
-    expect(toggle.children![2].type).toBe("important");
+    expect(toggle.children![2].type).toBe("callout");
+    // @ts-expect-error
+    expect(toggle.children![2].props.variant).toBe("important");
   });
 
   it("should be robust against malformed markdown", async () => {
@@ -131,6 +136,7 @@ More content
     // This verifies schema compliance and prevents runtime crashes
     expect(() => {
       BlockNoteEditor.create({
+        schema: customSchema,
         initialContent: blocks,
       });
     }).not.toThrow();

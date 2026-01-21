@@ -69,11 +69,12 @@ function blockToMarkdown(block: AnyBlock, depth: number): string {
     case "toggleListItem":
       return serializeToggle(block, indent, depth);
 
-    case "important":
-      return serializeContainerBlock(block, indent, depth, "important");
-
-    case "goodToKnow":
-      return serializeContainerBlock(block, indent, depth, "good-to-know");
+    case "callout": {
+      const variant = (block.props as { variant?: string }).variant;
+      const directiveName =
+        variant === "important" ? "important" : "good-to-know";
+      return serializeContainerBlock(block, indent, depth, directiveName);
+    }
 
     case "paragraph":
       return indent + inlineContentToMarkdown(block.content);
