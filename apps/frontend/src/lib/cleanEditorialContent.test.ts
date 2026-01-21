@@ -22,6 +22,7 @@ test("removes warning section and main title", () => {
   const expectedContent = `Ce dispositif propose des cours...
 
 ## Nom de l'action
+
 Cours de français`;
 
   const { content, title } = cleanEditorialContent(input);
@@ -34,6 +35,7 @@ test("removes main title when no warning section exists", () => {
   const expectedContent = `Ce dispositif propose des cours...
 
 ## Nom de l'action
+
 Cours de français`;
 
   const { content, title } = cleanEditorialContent(input);
@@ -46,6 +48,7 @@ test("handles case insensitive warning header", () => {
   const expectedContent = `Ce dispositif propose des cours...
 
 ## Nom de l'action
+
 Cours de français`;
 
   const { content, title } = cleanEditorialContent(input);
@@ -61,8 +64,10 @@ test("returns empty string and undefined title for empty input", () => {
 
 test("returns undefined title if no H1 found", () => {
   const input = "Just some text\n\n## Subheader";
+  // Remark normalization expects surrounding newlines for headers
+  const expectedContent = "Just some text\n\n## Subheader";
   const { content, title } = cleanEditorialContent(input);
-  assert.strictEqual(content, input);
+  assert.strictEqual(content, expectedContent);
   assert.strictEqual(title, undefined);
 });
 
@@ -71,6 +76,7 @@ test("correctly cleans when warning section is at the end", () => {
   const expectedContent = `Ce dispositif propose des cours...
 
 ## Nom de l'action
+
 Cours de français`;
 
   const { content, title } = cleanEditorialContent(input);
@@ -90,6 +96,7 @@ Outro content`;
   const expectedContent = `Intro content
 
 # Next Section
+
 Outro content`;
 
   const { content, title } = cleanEditorialContent(input);
