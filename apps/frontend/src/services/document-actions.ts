@@ -3,6 +3,7 @@
 import { logger } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
+import { cleanEditorialContent } from "../lib/cleanEditorialContent";
 import { buildPublishPayload } from "../lib/payload-builder";
 
 export async function saveDocument(
@@ -230,10 +231,14 @@ export async function publishDocument(
     const isUpdate = !!existingRemoteId;
 
     // 4. Build the payload using shared builder
+    // Clean content and extract real title (incase doc.title is the warning header)
+    const { content: cleanedContent, title: extractedTitle } =
+      cleanEditorialContent(markdown);
+
     const basePayload = buildPublishPayload(
       {
-        title,
-        editorialContent: markdown,
+        title: extractedTitle || title,
+        editorialContent: cleanedContent,
         metadata,
       },
       user.email,
@@ -398,10 +403,14 @@ export async function archiveDocument(
     const remoteId = existingPublication.remote_id;
 
     // 4. Build payload with status 'Archivé'
+    // Clean content and extract real title (incase doc.title is the warning header)
+    const { content: cleanedContent, title: extractedTitle } =
+      cleanEditorialContent(markdown);
+
     const payload = buildPublishPayload(
       {
-        title,
-        editorialContent: markdown,
+        title: extractedTitle || title,
+        editorialContent: cleanedContent,
         metadata,
       },
       user.email,
