@@ -1,3 +1,4 @@
+import { createLettaClient } from "@playground/agents";
 import { parseLheoXml } from "@playground/rco";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin, insertRcoRecord } from "@playground/supabase";
@@ -47,8 +48,37 @@ export async function POST(request: Request) {
       );
     }
 
+    // 3.5 Create Letta Conversation
+    const agentId = process.env.PLAYGROUND_AGENT_ID;
+    if (!agentId) {
+      throw new Error("PLAYGROUND_AGENT_ID is not defined");
+    }
+
+    const lettaClient = createLettaClient();
+    const conversation = await lettaClient.conversations.create({
+      agent_id: agentId,
+    });
+    const conversationId = conversation.id;
+
+    // Link conversation to workflow immediately
+    const { error: convLinkError } = await supabase
+      .from("workflows")
+      .update({ conversation_id: conversationId })
+      .eq("id", flowId);
+
+    if (convLinkError) {
+      logger.error(
+        { error: convLinkError, flowId, conversationId },
+        "Failed to link conversation to workflow",
+      );
+    }
+
     // 4. Start the workflow
-    const result = await start(processXmlWorkflow, [flowId, rcoRecordId]);
+    const result = await start(processXmlWorkflow, [
+      flowId,
+      rcoRecordId,
+      conversationId,
+    ]);
     const workflowId = result.runId;
 
     // 5. Link Workflow to Content Flow

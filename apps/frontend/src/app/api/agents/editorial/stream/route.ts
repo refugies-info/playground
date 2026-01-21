@@ -58,6 +58,34 @@ export async function POST(request: NextRequest) {
     return new Response("Server configuration error", { status: 500 });
   }
 
+  // Retrieve conversation_id from workflow
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    logger.error("Missing Supabase credentials");
+    return new Response("Server configuration error", { status: 500 });
+  }
+
+  const supabase = getSupabaseAdmin(url, key);
+  const { data: workflow, error: workflowError } = await supabase
+    .from("workflows")
+    .select("conversation_id")
+    .eq("id", flowId)
+    .single();
+
+  if (workflowError || !workflow?.conversation_id) {
+    logger.error(
+      { error: workflowError, flowId },
+      "Workflow not found or missing conversation_id",
+    );
+    return new Response(
+      JSON.stringify({ error: "Workflow or conversation not found" }),
+      { status: 404, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  const conversationId = workflow.conversation_id;
   const encoder = new TextEncoder();
 
   // Track the final assistant response for persistence
@@ -68,7 +96,11 @@ export async function POST(request: NextRequest) {
       try {
         const client = createLettaClient();
 
-        for await (const chunk of simplifyContent(client, content, agentId)) {
+        for await (const chunk of simplifyContent(
+          client,
+          content,
+          conversationId,
+        )) {
           // Capture assistant message content for persistence
           if (chunk.message_type === "assistant_message") {
             if (typeof chunk.content === "string") {

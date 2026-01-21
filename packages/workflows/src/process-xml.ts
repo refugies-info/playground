@@ -72,8 +72,12 @@ export async function generateJsonStep(doc: LheoDocument) {
  * Uses the /audit slash command via streaming API.
  *
  * @param markdownContent - Markdown with frontmatter from RCO
+ * @param conversationId - The conversation ID to use
  */
-export async function generateIngestionReportStep(markdownContent: string) {
+export async function generateIngestionReportStep(
+  markdownContent: string,
+  conversationId: string,
+) {
   "use step";
   const lettaClient = createLettaClient();
   const agentId = process.env.PLAYGROUND_AGENT_ID;
@@ -89,7 +93,7 @@ export async function generateIngestionReportStep(markdownContent: string) {
     for await (const chunk of generateIngestionReport(
       lettaClient,
       markdownContent,
-      agentId,
+      conversationId,
     )) {
       // Extract assistant message content from stream
       if (chunk.message_type === "assistant_message") {
@@ -129,6 +133,7 @@ export async function generateIngestionReportStep(markdownContent: string) {
 export async function ingestDataStep(
   rcoRecordId: string,
   markdownResult: { content: string },
+  conversationId: string,
   // jsonResult: any, // We can use the json output for metadata if structurally compatible,
   // but `seed-ingestion` used `matter(markdown)`.
   // `matter` is robust.
@@ -170,6 +175,7 @@ export async function ingestDataStep(
     rcoRecordId,
     markdownContent: markdownResult.content,
     metadata, // This metadata comes from the markdown frontmatter
+    conversationId,
     ingestionReport,
   });
 
@@ -177,44 +183,55 @@ export async function ingestDataStep(
 }
 
 // Define workflow
-export async function processXmlWorkflow(_flowId: string, rcoRecordId: string) {
+export async function processXmlWorkflow(
+  _flowId: string,
+  rcoRecordId: string,
+  conversationId: string,
+) {
   "use workflow";
+
+  if (!conversationId) {
+    throw new Error("Conversation ID is required for processXmlWorkflow");
+  }
 
   const xmlContent = await fetchRcoXmlStep(rcoRecordId);
   const actionDocs = await splitLheoXmlIntoActions(xmlContent);
 
-  const results = await Promise.all(
-    actionDocs.map(async (actionDoc, i) => {
-      // Step 1: Generate Markdown from RCO XML
-      const mdResult = await generateMarkdownStep(actionDoc);
-      const jsonResult = await generateJsonStep(actionDoc);
+  // We must run sequentially to avoid race conditions in the conversation state
+  const results = [];
+  for (let i = 0; i < actionDocs.length; i++) {
+    const actionDoc = actionDocs[i];
 
-      // Step 2: Run audit report on the markdown content
-      // Note: mdResult.content is markdown with frontmatter, not XML
-      const ingestionReportResult = await generateIngestionReportStep(
-        mdResult.content,
-      );
+    // Step 1: Generate Markdown from RCO XML
+    const mdResult = await generateMarkdownStep(actionDoc);
+    const jsonResult = await generateJsonStep(actionDoc);
 
-      // Step 3: Ingest into database
-      const ingestionResult = await ingestDataStep(
-        rcoRecordId,
-        mdResult,
-        ingestionReportResult,
-      );
+    // Step 2: Run audit report on the markdown content
+    // Note: mdResult.content is markdown with frontmatter, not XML
+    const ingestionReportResult = await generateIngestionReportStep(
+      mdResult.content,
+      conversationId,
+    );
 
-      return {
-        index: i,
-        content: {
-          "rco.md": mdResult.content,
-          "rco.json": jsonResult.content,
-          "report.md":
-            ingestionReportResult.result?.content ??
-            ingestionReportResult.error,
-        },
-        ingestion: ingestionResult,
-      };
-    }),
-  );
+    // Step 3: Ingest into database
+    const ingestionResult = await ingestDataStep(
+      rcoRecordId,
+      mdResult,
+      conversationId,
+      ingestionReportResult,
+    );
+
+    results.push({
+      index: i,
+      content: {
+        "rco.md": mdResult.content,
+        "rco.json": jsonResult.content,
+        "report.md":
+          ingestionReportResult.result?.content ?? ingestionReportResult.error,
+      },
+      ingestion: ingestionResult,
+    });
+  }
 
   return {
     processedActions: results.length,

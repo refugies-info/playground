@@ -19,6 +19,7 @@ export interface IngestionData {
   markdownContent: string;
   // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
   metadata: any;
+  conversationId: string;
   ingestionReport?: {
     markdown: string;
     // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
@@ -125,6 +126,7 @@ export async function ingestProcessedData(
     markdownContent: string;
     // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
     metadata: any;
+    conversationId: string;
     ingestionReport?: {
       markdown: string;
       // biome-ignore lint/suspicious/noExplicitAny: Supabase Json compatibility
@@ -134,7 +136,13 @@ export async function ingestProcessedData(
     };
   },
 ): Promise<IngestionResult> {
-  const { rcoRecordId, markdownContent, metadata, ingestionReport } = data;
+  const {
+    rcoRecordId,
+    markdownContent,
+    metadata,
+    conversationId,
+    ingestionReport,
+  } = data;
 
   const reportResults: {
     type: string;
@@ -142,7 +150,7 @@ export async function ingestProcessedData(
     error?: unknown;
   }[] = [];
 
-  // 1. Get the workflow_id for letta_reports (created by trigger on rco_record insert)
+  // 1. Get the workflow for letta_reports (created by trigger on rco_record insert)
   const { data: workflow } = await supabase
     .from("workflows")
     .select("id")
@@ -150,6 +158,21 @@ export async function ingestProcessedData(
     .single();
 
   const workflowId = workflow?.id ?? null;
+
+  if (workflowId && conversationId) {
+    // Update workflow with conversation_id
+    const { error: updateError } = await supabase
+      .from("workflows")
+      .update({ conversation_id: conversationId })
+      .eq("id", workflowId);
+
+    if (updateError) {
+      logger.error(
+        { error: updateError, workflowId, conversationId },
+        "Failed to update workflow with conversation_id",
+      );
+    }
+  }
 
   // 2. Insert Reports
   let ingestionReportId = null;
@@ -287,6 +310,7 @@ export async function ingestRcoData(
     rcoRecordId: rcoResult.rcoRecordId,
     markdownContent: data.markdownContent,
     metadata: data.metadata,
+    conversationId: data.conversationId,
     ingestionReport: data.ingestionReport,
   });
 }
