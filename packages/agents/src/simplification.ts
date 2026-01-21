@@ -31,22 +31,14 @@ export const simplifyContent = async function* (
   // The markdown should already contain frontmatter with metadata from the ingestion phase
   const messageContent = `${REDACTION_SLASH_COMMAND} ${markdownContent}`;
 
-  const stream = await client.conversations.messages.create(
-    conversationId,
-    {
-      messages: [
-        {
-          role: "user",
-          content: messageContent,
-        },
-      ],
-      stream_tokens: true,
-      include_pings: true, // Keep connection alive during long tool executions
-    },
-    {
-      timeout: 600_000, // 10 minute timeout
-    },
-  );
+  const stream = await client.conversations.messages.create(conversationId, {
+    messages: [
+      {
+        role: "user",
+        content: messageContent,
+      },
+    ],
+  });
 
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
   for await (const chunk of stream as AsyncIterable<any>) {
