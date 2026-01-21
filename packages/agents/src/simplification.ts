@@ -13,23 +13,25 @@ import { REDACTION_SLASH_COMMAND } from "./prompts";
  *
  * @param client - The Letta client instance
  * @param markdownContent - Markdown with frontmatter (from editorial_records)
- * @param agentId - The agent ID to use (PLAYGROUND_AGENT_ID)
+ * @param client - The Letta client instance
+ * @param markdownContent - Markdown with frontmatter (from editorial_records)
+ * @param conversationId - The conversation ID to use
  */
 export const simplifyContent = async function* (
   client: Letta,
   markdownContent: string,
-  agentId: string,
+  conversationId: string,
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK stream yields various message types
 ): AsyncGenerator<any> {
-  if (!agentId) {
-    throw new Error("Agent ID is required");
+  if (!conversationId) {
+    throw new Error("Conversation ID is required");
   }
 
   // Build the message with the slash command followed by the markdown content
   // The markdown should already contain frontmatter with metadata from the ingestion phase
   const messageContent = `${REDACTION_SLASH_COMMAND} ${markdownContent}`;
 
-  const stream = await client.agents.messages.stream(agentId, {
+  const stream = await client.conversations.messages.create(conversationId, {
     messages: [
       {
         role: "user",

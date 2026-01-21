@@ -20,18 +20,20 @@ export type IngestionReportResult = LettaReportResult;
  *
  * @param client - The Letta client instance
  * @param markdownContent - The document markdown (frontmatter + content from RCO)
- * @param agentId - The agent ID to use (PLAYGROUND_AGENT_ID)
+ * @param client - The Letta client instance
+ * @param markdownContent - The document markdown (frontmatter + content from RCO)
+ * @param conversationId - The conversation ID to use
  */
 export const generateIngestionReport = async function* (
   client: Letta,
   markdownContent: string,
-  agentId: string,
+  conversationId: string,
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK stream yields various message types
 ): AsyncGenerator<any> {
   // Build the message with the slash command followed by the markdown content
   const messageContent = `${AUDIT_SLASH_COMMAND} ${markdownContent}`;
 
-  const stream = await client.agents.messages.stream(agentId, {
+  const stream = await client.conversations.messages.create(conversationId, {
     messages: [
       {
         role: "user",

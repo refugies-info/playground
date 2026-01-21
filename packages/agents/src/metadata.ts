@@ -12,19 +12,21 @@ import { METADATA_SLASH_COMMAND } from "./prompts";
  *
  * @param client - The Letta client instance
  * @param markdownContent - The document content (markdown with frontmatter)
- * @param agentId - The agent ID to use (PLAYGROUND_AGENT_ID)
+ * @param client - The Letta client instance
+ * @param markdownContent - The document content (markdown with frontmatter)
+ * @param conversationId - The conversation ID to use
  */
 export const generateMetadataReport = async function* (
   client: Letta,
   markdownContent: string,
-  agentId: string,
+  conversationId: string,
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK stream yields various message types
 ): AsyncGenerator<any> {
   // Build the message with the slash command followed by the markdown content
   // The markdown should contain frontmatter with metadata from previous phases
   const messageContent = `${METADATA_SLASH_COMMAND} ${markdownContent}`;
 
-  const stream = await client.agents.messages.stream(agentId, {
+  const stream = await client.conversations.messages.create(conversationId, {
     messages: [
       {
         role: "user",
