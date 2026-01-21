@@ -332,15 +332,13 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const supabase = createSupabaseServerClient(cookieStore);
 
   // First, get the workflow with its linked record IDs
-  const { data: workflowData, error: workflowError } = await supabase
+  const { data: workflow, error: workflowError } = await supabase
     .from("workflows")
     .select(
       "id, status, progress, updated_at, editorial_record_id, ingestion_record_id, rco_record_id, publication_record_id",
     )
     .eq("id", id)
     .single();
-
-  const workflow = workflowData;
 
   if (workflowError) {
     if (workflowError.code !== "PGRST116") {
