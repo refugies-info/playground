@@ -7,6 +7,7 @@ import {
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
+import matter from "gray-matter";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
@@ -56,6 +57,86 @@ export async function POST(request: NextRequest) {
     return new Response("Server configuration error", { status: 500 });
   }
 
+  // Retrieve conversation_id from workflow
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    logger.error("Missing Supabase credentials");
+    return new Response("Server configuration error", { status: 500 });
+  }
+
+  const supabase = getSupabaseAdmin(url, key);
+  const { data: workflow, error: workflowError } = await supabase
+    .from("workflows")
+    .select("conversation_id, editorial_record_id, ingestion_record_id")
+    .eq("id", flowId)
+    .single();
+
+  if (workflowError || !workflow?.conversation_id) {
+    logger.error(
+      { error: workflowError, flowId },
+      "Workflow not found or missing conversation_id",
+    );
+    return new Response(
+      JSON.stringify({ error: "Workflow or conversation not found" }),
+      { status: 404, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  // Fetch metadata from editorial_record or ingestion_record and hydrate content
+  // Priority: editorial_record > ingestion_record
+  let fullContent = content;
+  let metadata: Record<string, unknown> | null = null;
+
+  if (workflow.editorial_record_id) {
+    const { data: record, error: recordError } = await supabase
+      .from("editorial_records")
+      .select("metadata")
+      .eq("id", workflow.editorial_record_id)
+      .single();
+
+    if (
+      !recordError &&
+      record?.metadata &&
+      typeof record.metadata === "object"
+    ) {
+      metadata = record.metadata as Record<string, unknown>;
+    } else {
+      logger.warn(
+        { error: recordError, editorialRecordId: workflow.editorial_record_id },
+        "Could not fetch metadata from editorial_record",
+      );
+    }
+  }
+
+  // Fallback to ingestion_record if no metadata found yet
+  if (!metadata && workflow.ingestion_record_id) {
+    const { data: record, error: recordError } = await supabase
+      .from("ingestion_records")
+      .select("metadata")
+      .eq("id", workflow.ingestion_record_id)
+      .single();
+
+    if (
+      !recordError &&
+      record?.metadata &&
+      typeof record.metadata === "object"
+    ) {
+      metadata = record.metadata as Record<string, unknown>;
+    } else {
+      logger.warn(
+        { error: recordError, ingestionRecordId: workflow.ingestion_record_id },
+        "Could not fetch metadata from ingestion_record",
+      );
+    }
+  }
+
+  if (metadata) {
+    fullContent = matter.stringify(content, metadata);
+  }
+
+  const conversationId = workflow.conversation_id;
   const encoder = new TextEncoder();
 
   // Track the final assistant response for persistence
@@ -68,8 +149,8 @@ export async function POST(request: NextRequest) {
 
         for await (const chunk of generateMetadataReport(
           client,
-          content,
-          agentId,
+          fullContent,
+          conversationId,
         )) {
           // Capture assistant message content for persistence
           if (chunk.message_type === "assistant_message") {
