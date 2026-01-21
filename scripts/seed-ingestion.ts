@@ -49,6 +49,26 @@ async function main() {
   // biome-ignore lint/suspicious/noExplicitAny: Script convenience
   let ingestionReport: { markdown: string; metadata: any } | undefined;
 
+  // Initialize client and conversation regardless of report existence
+  // because we might need conversationId for ingestion linkage
+  const {
+    createLettaClient,
+    generateIngestionReport,
+    parseIngestionResponse,
+  } = require("../packages/agents/src/index");
+  const lettaClient = createLettaClient();
+  const agentId = process.env.PLAYGROUND_AGENT_ID;
+
+  if (!agentId) {
+    throw new Error("PLAYGROUND_AGENT_ID is not defined");
+  }
+
+  logger.info("Creating Letta conversation...");
+  const conversation = await lettaClient.conversations.create({
+    agent_id: agentId,
+  });
+  const conversationId = conversation.id;
+
   if (fs.existsSync(ingestionMdPath)) {
     const content = fs.readFileSync(ingestionMdPath, "utf-8");
     const { data: metadata, content: markdown } = matter(content);
@@ -58,26 +78,12 @@ async function main() {
       "Report file not found. Generating ingestion report with Letta...",
     );
     try {
-      // Dynamic require/import to access agents package
-      const {
-        createLettaClient,
-        generateIngestionReport,
-        parseIngestionResponse,
-      } = require("../packages/agents/src/index");
-
-      const lettaClient = createLettaClient();
-      const agentId = process.env.PLAYGROUND_AGENT_ID;
-
-      if (!agentId) {
-        throw new Error("PLAYGROUND_AGENT_ID is not defined");
-      }
-
       // Collect streaming response
       let finalContent = "";
       for await (const chunk of generateIngestionReport(
         lettaClient,
         rcoMdContent, // Pass markdown content instead of XML
-        agentId,
+        conversationId,
       )) {
         if (chunk.message_type === "assistant_message") {
           if (typeof chunk.content !== "string") {
@@ -121,6 +127,7 @@ async function main() {
     xmlContent: rcoXml,
     markdownContent: rcoMdContent,
     metadata: rcoMetadata,
+    conversationId,
     ingestionReport,
   });
 

@@ -270,6 +270,7 @@ export type Database = {
       };
       workflows: {
         Row: {
+          conversation_id: string | null;
           created_at: string;
           editorial_record_id: string | null;
           id: string;
@@ -282,6 +283,7 @@ export type Database = {
           vercel_workflow_id: string | null;
         };
         Insert: {
+          conversation_id?: string | null;
           created_at?: string;
           editorial_record_id?: string | null;
           id?: string;
@@ -294,6 +296,7 @@ export type Database = {
           vercel_workflow_id?: string | null;
         };
         Update: {
+          conversation_id?: string | null;
           created_at?: string;
           editorial_record_id?: string | null;
           id?: string;
