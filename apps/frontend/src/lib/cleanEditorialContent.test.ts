@@ -65,3 +65,15 @@ test("returns undefined title if no H1 found", () => {
   assert.strictEqual(content, input);
   assert.strictEqual(title, undefined);
 });
+
+test("correctly cleans when warning section is at the end", () => {
+  const input = `${mainContent}\n${warningSection}`;
+  const expectedContent = `Ce dispositif propose des cours...
+
+## Nom de l'action
+Cours de français`;
+
+  const { content, title } = cleanEditorialContent(input);
+  assert.strictEqual(content, expectedContent);
+  assert.strictEqual(title, "Apprendre le français");
+});
