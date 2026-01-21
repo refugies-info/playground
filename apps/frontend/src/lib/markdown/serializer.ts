@@ -154,17 +154,11 @@ function serializeToggle(
   // 1. Extract title from the block's inline content
   const title = inlineContentToMarkdown(block.content) || "Toggle";
 
-  // 2. Determine expanded state (default to true for now)
-  const expanded = true;
-
-  // 3. Serialize all nested children blocks
+  // 2. Serialize all nested children blocks
   const children = serializeChildren(block.children, depth);
   const inner = children || "";
 
-  // 4. Construct directive attributes
-  const expandedAttr = expanded ? "" : ' isOpen="false"';
-
-  return `${indent}:::toggle{title="${escapeQuotes(title)}"${expandedAttr}}\n${inner}\n${indent}:::`;
+  return `${indent}:::toggle{title="${escapeQuotes(title)}"}\n${inner}\n${indent}:::`;
 }
 
 /**

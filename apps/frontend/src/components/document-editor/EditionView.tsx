@@ -219,7 +219,12 @@ export function EditionView() {
       } catch (error) {
         console.error("Error updating editor content:", error);
       } finally {
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        // We wait for the next animation frame to ensure BlockNote has finished
+        // internal processing and state updates. This prevents the immediately-following
+        // state change from triggering a sync loop (the lock is released after this wait).
+        await new Promise((resolve) =>
+          requestAnimationFrame(() => resolve(undefined)),
+        );
         isUpdating.current = false;
       }
     }
