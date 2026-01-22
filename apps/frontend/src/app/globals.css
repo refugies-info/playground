@@ -126,4 +126,15 @@
   a {
     @apply underline text-blue-800;
   }
+
+  /* Toggle List Item Styling */
+  [data-node-type="blockContainer"]:has([data-content-type="toggleListItem"]) {
+    @apply relative p-2;
+    &::after {
+      @apply border border-gray-200 rounded-sm content-[''] pointer-events-none absolute inset-0 z-0;
+    }
+    [data-content-type="toggleListItem"] {
+      @apply text-3xl font-bold;
+    }
+  }
 }

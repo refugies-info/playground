@@ -1,12 +1,20 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { ArbitrationView } from "./ArbitrationView";
 import { AssistantPanel } from "./AssistantPanel";
-import { DebugPanel } from "./DebugPanel";
 import { DocumentProvider, useDocument } from "./DocumentContext";
 import { EditionView } from "./EditionView";
 import { EditorNavigation } from "./EditorNavigation";
 import { TopBar } from "./TopBar";
+
+// Disable SSR for DebugPanel to avoid hydration mismatch from Radix UI random IDs
+const DebugPanel = dynamic(
+  () => import("./DebugPanel").then((mod) => mod.DebugPanel),
+  {
+    ssr: false,
+  },
+);
 
 interface DocumentLayoutProps {
   documentId: string;
