@@ -103,3 +103,33 @@ Outro content`;
   assert.strictEqual(content, expectedContent);
   assert.strictEqual(title, "Real Title");
 });
+
+test("handles warning section without emoji", () => {
+  const input = `# Journal des Avertissements
+Running text
+${mainContent}`;
+  const expectedContent = `Ce dispositif propose des cours...
+
+## Nom de l'action
+
+Cours de français`;
+
+  const { content, title } = cleanEditorialContent(input);
+  assert.strictEqual(content, expectedContent);
+  assert.strictEqual(title, "Apprendre le français");
+});
+
+test("handles warning section as H2", () => {
+  const input = `## Journal des Avertissements
+Running text
+${mainContent}`;
+  const expectedContent = `Ce dispositif propose des cours...
+
+## Nom de l'action
+
+Cours de français`;
+
+  const { content, title } = cleanEditorialContent(input);
+  assert.strictEqual(content, expectedContent);
+  assert.strictEqual(title, "Apprendre le français");
+});

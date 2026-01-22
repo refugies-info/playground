@@ -27,7 +27,7 @@ export function cleanEditorialContent(markdown: string): {
   for (let i = 0; i < tree.children.length; i++) {
     const node = tree.children[i];
 
-    if (node.type === "heading" && node.depth === 1) {
+    if (node.type === "heading" && (node.depth === 1 || node.depth === 2)) {
       const textContent = processor
         .stringify({ type: "root", children: [node] })
         .toLowerCase();
