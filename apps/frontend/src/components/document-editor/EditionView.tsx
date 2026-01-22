@@ -23,6 +23,8 @@ export function EditionView() {
     isComparisonMode,
     isProcessing,
     isRawMarkdownMode,
+    setDebugBlocks,
+    showDebug,
   } = useDocument();
   const [rawMarkdown, setRawMarkdown] = useState("");
   const [editor, setEditor] = useState<CustomEditor | null>(null);
@@ -59,9 +61,7 @@ export function EditionView() {
           const markdown = blocksToDirectiveMarkdown(currentBlocks as any);
           setRawMarkdown(markdown);
           lastSyncedContent.current = markdown;
-        } catch (e) {
-          console.error("Error snapshotting editor state:", e);
-        }
+        } catch (_e) {}
 
         setEditor(null);
         setIsEditorReady(false);
@@ -111,9 +111,7 @@ export function EditionView() {
 
         // Also ensure raw markdown state is sync
         setRawMarkdown(standardizedMarkdown);
-      } catch (error) {
-        console.error("Error initializing editor:", error);
-      }
+      } catch (_error) {}
     };
 
     initEditor();
@@ -136,8 +134,7 @@ export function EditionView() {
           editor.replaceBlocks(editor.document, pendingInitialContent.current);
           setIsEditorReady(true);
           pendingInitialContent.current = null;
-        } catch (e) {
-          console.error("Error hydrating content:", e);
+        } catch (_e) {
         } finally {
           setTimeout(() => {
             isUpdating.current = false;
@@ -167,25 +164,33 @@ export function EditionView() {
       if (isUpdating.current) return;
 
       try {
-        // DEBUG: Log blocks before serialization
-        console.log(
-          "[DEBUG SYNC] Editor blocks:",
-          JSON.stringify(editor.document, null, 2),
-        );
         const markdown = blocksToDirectiveMarkdown(editor.document as any);
         lastSyncedContent.current = markdown;
         updateContent(markdown);
-      } catch (error) {
-        console.error(
-          "Error syncing editor changes to document context:",
-          error,
-        );
-      }
+
+        // Push to debug context if panel is open
+        if (showDebug) {
+          setDebugBlocks(editor.document);
+        }
+      } catch (_error) {}
     };
 
     const unsubscribe = editor.onChange(handleEditorChange);
     return unsubscribe;
-  }, [editor, updateContent, document?.aiSuggestion]);
+  }, [
+    editor,
+    updateContent,
+    document?.aiSuggestion,
+    showDebug,
+    setDebugBlocks,
+  ]);
+
+  // 3.5 Sync Debug State Effect: Ensure initial population when panel opens
+  useEffect(() => {
+    if (showDebug && editor) {
+      setDebugBlocks(editor.document);
+    }
+  }, [showDebug, editor, setDebugBlocks]);
 
   // 4. External Update Effect: Handles AI suggestions or Raw Mode changes
   useEffect(() => {
@@ -216,8 +221,7 @@ export function EditionView() {
 
         editor.replaceBlocks(editor.document, blocks);
         setRawMarkdown(futureMarkdown);
-      } catch (error) {
-        console.error("Error updating editor content:", error);
+      } catch (_error) {
       } finally {
         // We wait for the next animation frame to ensure BlockNote has finished
         // internal processing and state updates. This prevents the immediately-following

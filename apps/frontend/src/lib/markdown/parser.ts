@@ -93,6 +93,24 @@ export async function markdownToBlocks(
 }
 
 /**
+ * Checks if a line is a "stray fence" (only colons and whitespace).
+ *
+ * @param {string} line - The line to check
+ * @returns {boolean} True if the line is a stray fence marker
+ *
+ * @example
+ * isStrayFenceLine(":::") // true
+ * isStrayFenceLine("  :::  ") // true
+ * isStrayFenceLine("::::") // true
+ * isStrayFenceLine("Content :::") // false
+ */
+function isStrayFenceLine(line: string): boolean {
+  const trimmed = line.trim();
+  // Check if line contains ONLY colons (3 or more)
+  return trimmed.length >= 3 && /^:+$/.test(trimmed);
+}
+
+/**
  * Post-processing step to validate and clean block structures.
  *
  * @param {PartialBlock[]} blocks - The array of blocks to validate
@@ -115,13 +133,23 @@ function validateAndFixBlocks(blocks: PartialBlock[]): PartialBlock[] {
       // This is VERY specific and won't affect paragraphs containing ":::" mixed with other text.
       if (block.type === "paragraph") {
         const content = block.content as any[];
-        if (
-          content &&
-          content.length === 1 &&
-          content[0].type === "text" &&
-          content[0].text.trim() === ":::"
-        ) {
-          return false; // Remove this stray marker
+        if (content && content.length === 1 && content[0].type === "text") {
+          const text = content[0].text;
+          // Strategy: Split by newline, filter out strict fence lines, join back.
+          if (text.includes(":::")) {
+            const lines = text.split("\n");
+            const cleanLines = lines.filter(
+              (line: string) => !isStrayFenceLine(line),
+            );
+
+            if (cleanLines.length === 0) {
+              return false; // Block was ONLY fences, remove it.
+            }
+
+            if (lines.length !== cleanLines.length) {
+              content[0].text = cleanLines.join("\n");
+            }
+          }
         }
       }
       return true;

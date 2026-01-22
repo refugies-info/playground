@@ -2,6 +2,7 @@
 
 import { ArbitrationView } from "./ArbitrationView";
 import { AssistantPanel } from "./AssistantPanel";
+import { DebugPanel } from "./DebugPanel";
 import { DocumentProvider, useDocument } from "./DocumentContext";
 import { EditionView } from "./EditionView";
 import { EditorNavigation } from "./EditorNavigation";
@@ -27,6 +28,7 @@ export function DocumentLayout(props: DocumentLayoutProps) {
   const { initialData } = props;
   return (
     <DocumentProvider initialData={initialData}>
+      <DebugPanel />
       <div className="flex flex-col h-screen w-full overflow-hidden bg-gray-100">
         {/* Top Toolbar */}
         <TopBar />

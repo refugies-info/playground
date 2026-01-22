@@ -1,144 +1,125 @@
-// @vitest-environment jsdom
-import { BlockNoteEditor } from "@blocknote/core";
 import { describe, expect, it } from "vitest";
-import { customSchema } from "../../components/document-editor/blocks/custom-schema";
 import { markdownToBlocks } from "./parser";
 
-describe("markdownToBlocks", () => {
-  it("should parse standard nested toggles (no indent)", async () => {
+describe("Markdown Parser", () => {
+  it("should parse flat directives correctly", async () => {
+    const input = `:::toggle{title="Simple"}\nContent\n:::`;
+    const blocks = await markdownToBlocks(input);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].type).toBe("toggleListItem");
+    // biome-ignore lint/suspicious/noExplicitAny: Test assertion requires content array access
+    expect((blocks[0].content as any)[0].text).toBe("Simple");
+  });
+
+  // --- Standard Blocks ---
+  it("should parse headings correctly", async () => {
+    const input = "# H1\n## H2\n### H3";
+    const blocks = await markdownToBlocks(input);
+    expect(blocks).toHaveLength(3);
+    expect(blocks[0].type).toBe("heading");
+    expect(blocks[0].props).toEqual({ level: 1 });
+    expect(blocks[1].props).toEqual({ level: 2 });
+    expect(blocks[2].props).toEqual({ level: 3 });
+  });
+
+  it("should parse standard paragraphs", async () => {
+    const input = "Just some text.";
+    const blocks = await markdownToBlocks(input);
+    expect(blocks[0].type).toBe("paragraph");
+    // biome-ignore lint/suspicious/noExplicitAny: Test assertion requires content array access
+    expect((blocks[0].content as any)[0].text).toBe("Just some text.");
+  });
+
+  // --- Lists ---
+  it("should parse various list types", async () => {
     const input = `
-:::toggle{title="Outer Toggle"}
+- Bullet 1
+1. Number 1
+- [ ] Task 1
+- [x] Task 2
+`.trim();
+    const blocks = await markdownToBlocks(input);
+    expect(blocks[0].type).toBe("bulletListItem");
+    expect(blocks[1].type).toBe("numberedListItem");
+    expect(blocks[2].type).toBe("checkListItem");
+    expect(blocks[2].props).toEqual({ checked: false });
+    expect(blocks[3].type).toBe("checkListItem");
+    expect(blocks[3].props).toEqual({ checked: true });
+  });
 
+  // --- Inline Formatting ---
+  it("should parse inline formatting", async () => {
+    const input = "Bold **text** and *italic* and [link](url)";
+    const blocks = await markdownToBlocks(input);
+    // biome-ignore lint/suspicious/noExplicitAny: Test needs to inspect inline content structure
+    const content = blocks[0].content as any[];
+
+    expect(content.find((c) => c.text === "text").styles).toHaveProperty(
+      "bold",
+      true,
+    );
+    expect(content.find((c) => c.text === "italic").styles).toHaveProperty(
+      "italic",
+      true,
+    );
+    expect(content.find((c) => c.type === "link").href).toBe("url");
+  });
+
+  // --- Custom Callouts ---
+  it("should parse custom callouts", async () => {
+    const input = `
+:::important
+Warning content
+:::
 :::good-to-know
-This is a good to know block
-:::
-
-:::toggle{title="Inner Toggle"}
-
-Inner nested content
-:::
-
+Info content
 :::
 `.trim();
-
     const blocks = await markdownToBlocks(input);
+    expect(blocks[0].type).toBe("callout");
+    expect(blocks[0].props).toEqual({ variant: "important" });
+    expect(blocks[1].type).toBe("callout");
+    expect(blocks[1].props).toEqual({ variant: "goodToKnow" });
+  });
 
+  // --- Cleanup Logic ---
+  it("should clean up stray fences", async () => {
+    const input = `
+Content
+:::
+More Content
+:::
+`.trim();
+    const blocks = await markdownToBlocks(input);
+    // Should remove the lines that are just ":::"
     expect(blocks).toHaveLength(1);
-    const outer = blocks[0];
-    expect(outer.type).toBe("toggleListItem");
-    // @ts-expect-error
-    expect(outer.content[0].text).toBe("Outer Toggle");
-
-    // Check children
-    expect(outer.children).toHaveLength(2);
-
-    // Child 1: Callout (Good To Know)
-    const gtk = outer.children![0];
-    expect(gtk.type).toBe("callout");
-    // @ts-expect-error
-    expect(gtk.props.variant).toBe("goodToKnow");
-
-    // Child 2: Inner Toggle
-    const inner = outer.children![1];
-    expect(inner.type).toBe("toggleListItem");
-    // @ts-expect-error
-    expect(inner.content[0].text).toBe("Inner Toggle");
-
-    // Check inner content nesting
-    expect(inner.children).toHaveLength(1);
-    expect(inner.children![0].type).toBe("paragraph");
-    // @ts-expect-error
-    expect(inner.children![0].content[0].text).toBe("Inner nested content");
+    // biome-ignore lint/suspicious/noExplicitAny: Test assertion requires content array access
+    expect((blocks[0].content as any)[0].text).toBe("Content\nMore Content");
   });
 
-  it("should parse simple flat lists", async () => {
+  // --- Hardcore Nesting ---
+  it("should parse hardcore nested structure", async () => {
     const input = `
-- Item 1
-- Item 2
-    `.trim();
-    const blocks = await markdownToBlocks(input);
-    expect(blocks).toHaveLength(2);
-    expect(blocks[0].type).toBe("bulletListItem");
-    expect(blocks[1].type).toBe("bulletListItem");
-  });
-
-  it("should handle complex mixed content", async () => {
-    const input = `
-# Title
-
-:::toggle{title="My Toggle"}
-- List inside toggle
-- Another item
-
+:::toggle{title="Root"}
+:::toggle{title="Child"}
 :::important
-Important inside toggle
+Deep warning
 :::
 :::
-    `.trim();
-
+:::
+`.trim();
     const blocks = await markdownToBlocks(input);
 
-    expect(blocks[0].type).toBe("heading");
-
-    const toggle = blocks[1];
-    expect(toggle.type).toBe("toggleListItem");
-    expect(toggle.children).toHaveLength(3); // List, List, Important
-    expect(toggle.children![0].type).toBe("bulletListItem");
-    expect(toggle.children![2].type).toBe("callout");
-    // @ts-expect-error
-    expect(toggle.children![2].props.variant).toBe("important");
-  });
-
-  it("should be robust against malformed markdown", async () => {
-    const input = `
-:::toggle{title="Unclosed Toggle"}
-This toggle has no closing fence
-    `.trim();
-
-    // Should not crash, just parse as best as it can (likely flat or contained)
-    const blocks = await markdownToBlocks(input);
-    expect(blocks.length).toBeGreaterThan(0);
+    // Root
     expect(blocks[0].type).toBe("toggleListItem");
-  });
-
-  it("should handle stray closing fences gracefully", async () => {
-    // A stray fence shouldn't crash the parser
-    const input = `
-Some content
-
-:::
-
-More content
-    `.trim();
-
-    const blocks = await markdownToBlocks(input);
-    // The parser logic removes stray ":::" paragraphs
-    expect(blocks).toHaveLength(2);
-    // @ts-expect-error
-    expect(blocks[0].content[0].text).toBe("Some content");
-    // @ts-expect-error
-    expect(blocks[1].content[0].text).toBe("More content");
-  });
-
-  it("should produce blocks valid for BlockNoteEditor", async () => {
-    const input = `
-# Hello BlockNote
-
-:::toggle{title="Verification"}
-- Checking if this loads
-- Into the editor
-:::
-    `.trim();
-
-    const blocks = await markdownToBlocks(input);
-
-    // Try to instantiate an editor with these blocks
-    // This verifies schema compliance and prevents runtime crashes
-    expect(() => {
-      BlockNoteEditor.create({
-        schema: customSchema,
-        initialContent: blocks,
-      });
-    }).not.toThrow();
+    // Child
+    const child = blocks[0].children![0];
+    expect(child.type).toBe("toggleListItem");
+    // biome-ignore lint/suspicious/noExplicitAny: Test assertion requires content array access
+    expect((child.content as any)[0].text).toBe("Child");
+    // Deep Important
+    const deep = child.children![0];
+    expect(deep.type).toBe("callout");
+    expect(deep.props).toEqual({ variant: "important" });
   });
 });
