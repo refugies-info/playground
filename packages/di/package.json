@@ -1,0 +1,17 @@
+{
+  "name": "@refugies-info/di",
+  "version": "0.0.1",
+  "description": "Data Inclusion API Client",
+  "main": "src/index.ts",
+  "scripts": {
+    "gen:client": "pnpx @hey-api/openapi-ts -i $DI_BASE_URL/api/openapi.json -o src/hey-api -c @hey-api/client-fetch"
+  },
+  "dependencies": {
+    "@hey-api/client-fetch": "^0.8.1"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.54.1",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
