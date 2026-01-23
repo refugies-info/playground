@@ -287,7 +287,7 @@ export async function publishDocument(
       };
     }
 
-    const result = await response.json();
+    const result = (await response.json()) as { id?: string };
     const remoteId = result.id;
 
     if (!remoteId) {
@@ -360,9 +360,7 @@ export async function publishDocument(
     return {
       success: true,
       publicationId:
-        isUpdate && existingPublication
-          ? existingPublication.id
-          : (result as any).id, // Using result ID if available, otherwise just success
+        isUpdate && existingPublication ? existingPublication.id : result.id,
       remoteId,
       isUpdate,
       publishedUrl: `${cleanBaseUrl}/dispositif/${remoteId}`,

@@ -54,11 +54,15 @@ Le champ `json` contient un objet structuré ainsi :
   "dispositif": {
     "typeContenu": "dispositif",
     "theme": "...",
-    "titreInformatif": "Titres du document",
+    "status": "Actif",
+    "titreInformatif": "Titre du document",
     "origin": "RCO",
     "translations": {
       "fr": {
         "content": {
+          "titreInformatif": "Titre du document",
+          "titreMarque": "Titre du document",
+          "abstract": "",
           "markdown": "Contenu éditorial..."
         }
       }

@@ -83,6 +83,21 @@ pnpm format
 pnpm build
 ```
 
+### Running Tests
+
+We use **Vitest** for unit testing and **Turborepo** to orchestrate them across the monorepo.
+
+```bash
+# Run all tests (all packages)
+pnpm test
+
+# Run tests in watch mode for a specific package
+cd apps/frontend
+pnpm test
+```
+
+For more details, see the [Testing Guide](./testing.md).
+
 ### Working with Supabase
 
 ```bash
@@ -193,6 +208,7 @@ pnpm supabase:logs
 
 - Read [Component Architecture](../../docs/COMPONENT_QUICK_REFERENCE.md) for adding UI components
 - Check [Supabase Setup](./supabase-setup.md) for database configuration
+- Review the [Testing Guide](./testing.md) for running and writing tests
 - See [Common Commands](../reference/commands.md) for more CLI commands
 - Review [Environment Variables](../reference/environment-variables.md) for configuration options
 

@@ -234,6 +234,42 @@ The workflow will:
 
 ---
 
+## Collaboration & Conflicts
+
+When working in a team, two developers might create migrations at the same time, leading to timestamp collisions (same filename) or order confusion.
+
+### Preventing Collisions
+
+1.  **Use `supabase migration new`**: Always generate filenames with the CLI to ensure distinct, up-to-the-second timestamps. Avoid manual naming.
+2.  **Synchronize often**: Pull `main` frequently to ensure your local history is up to date.
+
+### Resolving Conflicts
+
+If a conflict occurs (e.g., CI fails with "Duplicate key" or "file already exists"):
+
+1.  **Do not edit the timestamp manually** unless necessary.
+2.  **Rename the file**:
+    If your migration `20240101120000_foo.sql` conflicts with a teammate's `20240101120000_bar.sql` (same exact second), rename yours to `20240101120001_foo.sql` (add 1 second).
+
+3.  **Local Reset**:
+    After resolving conflicts or merging `main`, always verify the full chain locally:
+    ```bash
+    npx supabase db reset
+    ```
+    This ensures the new order is valid and dependencies (e.g., referencing a table created by a teammate) are respected.
+
+### Handling "Zombie" Migrations
+
+If a migration was partially applied (e.g., column created but `schema_migrations` not updated), fixing the history manually in production is risky but sometimes necessary:
+
+```sql
+-- Mark a specific version as "already applied" without running it
+INSERT INTO supabase_migrations.schema_migrations (version, name, statements)
+VALUES ('20240101120000', 'name_of_migration', null);
+```
+
+---
+
 ## Resetting Migrations
 
 ### Reset to Initial State

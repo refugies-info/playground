@@ -90,3 +90,16 @@ content-playground/
 
 - Refer to `README.md` for high-level objectives.
 - Refer to `documentation/monorepo-structure.md` for detailed architectural decisions and Sprint scopes.
+- **Features**:
+  - [Publication & Archive](documentation/frontend/publication/index.md)
+- **Database**:
+  - [Migrations & Best Practices](documentation/database/migrations.md)
+
+## 🚀 Deployment & Migrations
+
+### Database Migrations
+- **Location**: `supabase/migrations/`
+- **Naming**: Always use `supabase migration new <name>` to generate timestamped files.
+- **Conflicts**: If you encounter a timestamp collision (CI error), **rename your file** by incrementing the timestamp.
+- **Safety**: Always run `npx supabase db reset` locally after resolving conflicts to verify chain integrity.
+

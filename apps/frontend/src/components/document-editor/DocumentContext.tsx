@@ -18,7 +18,6 @@ interface DocumentData {
   ingestionContent?: string; // Immutable original content from ingestion_records (for comparison/rollback)
   complianceReport?: string; // Markdown content of the compliance report
   aiSuggestion?: string; // Pending AI suggestion awaiting user review
-  metadata?: Record<string, unknown>; // Metadata from ingestion_records
   publishedUrl?: string; // Link to the published document on RI
 }
 
@@ -208,7 +207,6 @@ export function DocumentProvider({
         document.id,
         document.title,
         document.editorialContent,
-        document.metadata,
       );
 
       if (result.success) {
@@ -246,7 +244,6 @@ export function DocumentProvider({
         document.id,
         document.title,
         document.editorialContent,
-        document.metadata,
       );
 
       if (result.success) {

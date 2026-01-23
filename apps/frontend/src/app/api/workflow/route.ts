@@ -1,9 +1,11 @@
+import { createLettaClient } from "@playground/agents";
 import { parseLheoXml } from "@playground/rco";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin, insertRcoRecord } from "@playground/supabase";
 import { processXmlWorkflow } from "@playground/workflows";
 import { NextResponse } from "next/server";
 import { start } from "workflow/api";
+import { buildWorkflowDashboardUrl } from "@/lib/workflow-utils";
 
 export async function POST(request: Request) {
   const { xmlContent } = await request.json();
@@ -46,8 +48,37 @@ export async function POST(request: Request) {
       );
     }
 
+    // 3.5 Create Letta Conversation
+    const agentId = process.env.PLAYGROUND_AGENT_ID;
+    if (!agentId) {
+      throw new Error("PLAYGROUND_AGENT_ID is not defined");
+    }
+
+    const lettaClient = createLettaClient();
+    const conversation = await lettaClient.conversations.create({
+      agent_id: agentId,
+    });
+    const conversationId = conversation.id;
+
+    // Link conversation to workflow immediately
+    const { error: convLinkError } = await supabase
+      .from("workflows")
+      .update({ conversation_id: conversationId })
+      .eq("id", flowId);
+
+    if (convLinkError) {
+      logger.error(
+        { error: convLinkError, flowId, conversationId },
+        "Failed to link conversation to workflow",
+      );
+    }
+
     // 4. Start the workflow
-    const result = await start(processXmlWorkflow, [flowId, rcoRecordId]);
+    const result = await start(processXmlWorkflow, [
+      flowId,
+      rcoRecordId,
+      conversationId,
+    ]);
     const workflowId = result.runId;
 
     // 5. Link Workflow to Content Flow
@@ -64,11 +95,15 @@ export async function POST(request: Request) {
       logger.error(linkError, "Failed to link workflow");
     }
 
+    // 6. Build dashboard URL for observability
+    const dashboardUrl = buildWorkflowDashboardUrl(workflowId);
+
     return NextResponse.json({
       message: "Workflow started",
       workflowId,
       flowId,
       rcoRecordId,
+      dashboardUrl,
     });
   } catch (error) {
     logger.error(error, "Workflow start error");
