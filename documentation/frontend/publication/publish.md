@@ -14,6 +14,9 @@ Le processus de publication suit les étapes suivantes :
     - L'ID distant retourné par le webhook est stocké dans la table `publication_records`.
     - Le workflow passe au statut `published`.
 
+6.  **Mise à jour** : Si le document a déjà été publié (présence d'un `remote_id`), le payload inclut cet ID (`_id`) pour mettre à jour le document existant au lieu d'en créer un nouveau.
+
+
 ## Configuration
 
 Deux variables d'environnement sont nécessaires dans `apps/frontend/.env` :

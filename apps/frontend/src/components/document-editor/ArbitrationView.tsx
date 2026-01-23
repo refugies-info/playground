@@ -36,6 +36,7 @@ export function ArbitrationView() {
         });
       }
     } catch (error) {
+      // biome-ignore lint/suspicious/noConsole: For quick debugging
       console.error("Failed to toggle status", error);
     } finally {
       setIsUpdating(false);

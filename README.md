@@ -162,7 +162,8 @@ Complete guides and architecture documentation available in the [documentation/]
 
 - **[Supabase Local Development](./documentation/supabase.md)** — Setup, configuration, migrations, troubleshooting
 - **[Documentation Index](./documentation/README.md)** — All available guides and resources
-- **[Monorepo Structure](./documentation/monorepo-structure.md)** — Project organization and dependencies
+- **[Monorepo Structure](./documentation/guides/monorepo-structure.md)** — Project organization and dependencies
+- **[Testing Guide](./documentation/guides/testing.md)** — How to run and write tests
 
 ---
 

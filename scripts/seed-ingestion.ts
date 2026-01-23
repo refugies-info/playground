@@ -49,6 +49,26 @@ async function main() {
   // biome-ignore lint/suspicious/noExplicitAny: Script convenience
   let ingestionReport: { markdown: string; metadata: any } | undefined;
 
+  // Initialize client and conversation regardless of report existence
+  // because we might need conversationId for ingestion linkage
+  const {
+    createLettaClient,
+    generateIngestionReport,
+    parseIngestionResponse,
+  } = require("../packages/agents/src/index");
+  const lettaClient = createLettaClient();
+  const agentId = process.env.PLAYGROUND_AGENT_ID;
+
+  if (!agentId) {
+    throw new Error("PLAYGROUND_AGENT_ID is not defined");
+  }
+
+  logger.info("Creating Letta conversation...");
+  const conversation = await lettaClient.conversations.create({
+    agent_id: agentId,
+  });
+  const conversationId = conversation.id;
+
   if (fs.existsSync(ingestionMdPath)) {
     const content = fs.readFileSync(ingestionMdPath, "utf-8");
     const { data: metadata, content: markdown } = matter(content);
@@ -58,22 +78,42 @@ async function main() {
       "Report file not found. Generating ingestion report with Letta...",
     );
     try {
-      // Dynamic require/import to access agents package
-      const {
-        createLettaClient,
-        generateIngestionReport,
-      } = require("../packages/agents/src/index");
+      // Collect streaming response
+      let finalContent = "";
+      for await (const chunk of generateIngestionReport(
+        lettaClient,
+        rcoMdContent, // Pass markdown content instead of XML
+        conversationId,
+      )) {
+        if (chunk.message_type === "assistant_message") {
+          if (typeof chunk.content !== "string") {
+            throw new Error(
+              `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
+            );
+          }
+          finalContent = chunk.content;
+        }
+      }
 
-      const lettaClient = createLettaClient();
-      const reportMarkdown = await generateIngestionReport(lettaClient, rcoXml);
+      // Parse the response
+      const reportResult = parseIngestionResponse(finalContent, agentId);
 
-      // Save it for future use
-      fs.mkdirSync(path.dirname(ingestionMdPath), { recursive: true });
-      fs.writeFileSync(ingestionMdPath, reportMarkdown);
-      logger.info(`Generated report saved to ${ingestionMdPath}`);
+      if (reportResult.status === "complete") {
+        // Save it for future use
+        fs.mkdirSync(path.dirname(ingestionMdPath), { recursive: true });
+        fs.writeFileSync(ingestionMdPath, reportResult.content);
+        logger.info(`Generated report saved to ${ingestionMdPath}`);
 
-      const { data: metadata, content: markdown } = matter(reportMarkdown);
-      ingestionReport = { markdown, metadata };
+        ingestionReport = {
+          markdown: reportResult.content,
+          metadata: reportResult.metadata,
+        };
+      } else {
+        logger.warn(
+          { rawResponse: reportResult.rawResponse },
+          "Ingestion report incomplete (no frontmatter found)",
+        );
+      }
     } catch (error) {
       logger.error(error, "Failed to generate ingestion report");
       // Continue without report? Or fail?
@@ -87,6 +127,7 @@ async function main() {
     xmlContent: rcoXml,
     markdownContent: rcoMdContent,
     metadata: rcoMetadata,
+    conversationId,
     ingestionReport,
   });
 
