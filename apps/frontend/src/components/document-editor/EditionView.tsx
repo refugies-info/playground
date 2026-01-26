@@ -23,6 +23,8 @@ export function EditionView() {
     isComparisonMode,
     isProcessing,
     isRawMarkdownMode,
+    setDebugBlocks,
+    showDebug,
   } = useDocument();
   const [rawMarkdown, setRawMarkdown] = useState("");
   const [editor, setEditor] = useState<CustomEditor | null>(null);
@@ -167,14 +169,14 @@ export function EditionView() {
       if (isUpdating.current) return;
 
       try {
-        // DEBUG: Log blocks before serialization
-        console.log(
-          "[DEBUG SYNC] Editor blocks:",
-          JSON.stringify(editor.document, null, 2),
-        );
         const markdown = blocksToDirectiveMarkdown(editor.document as any);
         lastSyncedContent.current = markdown;
         updateContent(markdown);
+
+        // Push to debug context for real-time sync ONLY in development and when panel is open
+        if (process.env.NODE_ENV === "development" && showDebug) {
+          setDebugBlocks([...editor.document]);
+        }
       } catch (error) {
         console.error(
           "Error syncing editor changes to document context:",
@@ -185,7 +187,20 @@ export function EditionView() {
 
     const unsubscribe = editor.onChange(handleEditorChange);
     return unsubscribe;
-  }, [editor, updateContent, document?.aiSuggestion]);
+  }, [
+    editor,
+    updateContent,
+    document?.aiSuggestion,
+    showDebug,
+    setDebugBlocks,
+  ]);
+
+  // 3.5 Initial Debug Sync: Population of debug state when panel opens (DEV ONLY)
+  useEffect(() => {
+    if (editor && showDebug && process.env.NODE_ENV === "development") {
+      setDebugBlocks([...editor.document]);
+    }
+  }, [editor, showDebug, setDebugBlocks]);
 
   // 4. External Update Effect: Handles AI suggestions or Raw Mode changes
   useEffect(() => {
@@ -217,7 +232,10 @@ export function EditionView() {
         editor.replaceBlocks(editor.document, blocks);
         setRawMarkdown(futureMarkdown);
       } catch (error) {
-        console.error("Error updating editor content:", error);
+        console.error(
+          "Error updating editor content from external source:",
+          error,
+        );
       } finally {
         // We wait for the next animation frame to ensure BlockNote has finished
         // internal processing and state updates. This prevents the immediately-following

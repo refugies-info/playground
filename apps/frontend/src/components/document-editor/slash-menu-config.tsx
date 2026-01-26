@@ -58,7 +58,7 @@ const getCustomBlockItems = (
           },
         ],
         currentBlock,
-        "after",
+        "replace",
       );
       if (insertedBlocks && insertedBlocks.length > 0) {
         editor.setTextCursorPosition(insertedBlocks[0], "end");
@@ -82,7 +82,7 @@ const getCustomBlockItems = (
           },
         ],
         currentBlock,
-        "after",
+        "replace",
       );
       if (insertedBlocks && insertedBlocks.length > 0) {
         editor.setTextCursorPosition(insertedBlocks[0], "end");

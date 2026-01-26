@@ -463,3 +463,37 @@ export async function archiveDocument(
     return { success: false, error: "Erreur interne" };
   }
 }
+
+export async function getEditorialContent(
+  workflowId: string,
+): Promise<{ success: boolean; content?: string; error?: string }> {
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
+  try {
+    const { data: workflow, error: workflowError } = await supabase
+      .from("workflows")
+      .select(
+        `
+        id,
+        editorial_record:editorial_record_id (
+          markdown
+        )
+      `,
+      )
+      .eq("id", workflowId)
+      .single();
+
+    if (workflowError || !workflow) {
+      logger.error(workflowError, "Error fetching workflow for debug content");
+      return { success: false, error: "Workflow not found" };
+    }
+
+    const markdown = workflow.editorial_record?.markdown || "";
+
+    return { success: true, content: markdown };
+  } catch (error) {
+    logger.error(error, "Unexpected error getting editorial content");
+    return { success: false, error: "Unexpected error" };
+  }
+}
