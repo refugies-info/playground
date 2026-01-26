@@ -22,6 +22,10 @@
     "./styles": {
       "import": "./dist/styles/index.js",
       "types": "./dist/styles/index.d.ts"
+    },
+    "./overlays": {
+      "import": "./dist/overlays/index.js",
+      "types": "./dist/overlays/index.d.ts"
     }
   },
   "scripts": {
@@ -40,7 +44,7 @@
     "react-day-picker": "^9.11.2",
     "react-dom": "^19.0.0",
     "tailwind-merge": "2.5.5",
-    "vaul": "^1.1.2"
+    "@vladyoslav/drawer": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

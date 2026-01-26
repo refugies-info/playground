@@ -86,7 +86,7 @@ export function DocumentProvider({
   const [canPublish, setCanPublish] = useState(
     initialData?.state === "modified",
   );
-  const [debugBlocks, setDebugBlocks] = useState<any[] | null>(null);
+  const [debugBlocks, setDebugBlocks] = useState<any[] | null>([]);
 
   // Update content and mark as dirty (only if content actually changed)
   const updateContent = (content: string) => {

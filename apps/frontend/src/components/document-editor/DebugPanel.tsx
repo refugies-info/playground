@@ -68,6 +68,7 @@ export function DebugPanel() {
       <DrawerTrigger asChild>
         <button
           type="button"
+          onClick={() => setShowDebug(true)}
           className="fixed bottom-4 right-4 z-50 p-3 bg-black text-white rounded-full shadow-lg hover:bg-gray-800 transition-all hover:scale-105"
           title="Toggle Debug Panel (Option+Shift+D)"
         >

@@ -1,18 +1,12 @@
 "use client";
 
+import { Drawer as DrawerPrimitive } from "@vladyoslav/drawer";
 import * as React from "react";
-import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "../../utils";
 
-const Drawer = ({
-  shouldScaleBackground = true,
-  ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
-  <DrawerPrimitive.Root
-    shouldScaleBackground={shouldScaleBackground}
-    {...props}
-  />
+const Drawer = (props: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
+  <DrawerPrimitive.Root shouldScaleBackground={true} {...props} />
 );
 Drawer.displayName = "Drawer";
 
@@ -21,19 +15,19 @@ const DrawerPortal = DrawerPrimitive.Portal as any;
 const DrawerClose = DrawerPrimitive.Close as any;
 
 const DrawerOverlay = React.forwardRef<
-  React.ElementRef<typeof DrawerPrimitive.Overlay>,
+  React.ComponentRef<typeof DrawerPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Overlay
     ref={ref}
-    className={cn("fixed inset-0 z-[100] bg-black/40", className)}
+    className={cn("fixed inset-0 z-100 bg-black/40", className)}
     {...props}
   />
 )) as any;
 DrawerOverlay.displayName = "DrawerOverlay";
 
 const DrawerContent = React.forwardRef<
-  React.ElementRef<typeof DrawerPrimitive.Content>,
+  React.ComponentRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
   <DrawerPortal>
@@ -41,7 +35,7 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-[101] mt-10 flex h-auto flex-col rounded-t-[10px] border bg-white",
+        "fixed inset-x-0 bottom-0 z-101 mt-10 flex h-auto flex-col rounded-t-[10px] border bg-white",
         className,
       )}
       {...props}

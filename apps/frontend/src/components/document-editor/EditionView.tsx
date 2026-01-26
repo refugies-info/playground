@@ -168,9 +168,9 @@ export function EditionView() {
         lastSyncedContent.current = markdown;
         updateContent(markdown);
 
-        // Push to debug context if panel is open
-        if (showDebug) {
-          setDebugBlocks(editor.document);
+        // Push to debug context for real-time sync ONLY in development and when panel is open
+        if (process.env.NODE_ENV === "development" && showDebug) {
+          setDebugBlocks([...editor.document]);
         }
       } catch (_error) {}
     };
@@ -185,12 +185,12 @@ export function EditionView() {
     setDebugBlocks,
   ]);
 
-  // 3.5 Sync Debug State Effect: Ensure initial population when panel opens
+  // 3.5 Initial Debug Sync: Population of debug state when panel opens (DEV ONLY)
   useEffect(() => {
-    if (showDebug && editor) {
-      setDebugBlocks(editor.document);
+    if (editor && showDebug && process.env.NODE_ENV === "development") {
+      setDebugBlocks([...editor.document]);
     }
-  }, [showDebug, editor, setDebugBlocks]);
+  }, [editor, showDebug, setDebugBlocks]);
 
   // 4. External Update Effect: Handles AI suggestions or Raw Mode changes
   useEffect(() => {
