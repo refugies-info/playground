@@ -1,7 +1,7 @@
 "use server";
 
 import { logger } from "@playground/shared-types";
-import { createSupabaseServerClient, type Tables } from "@playground/supabase";
+import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { buildPublishPayload } from "../lib/payload-builder";
 
@@ -222,16 +222,7 @@ export async function publishDocument(
       .from("workflows")
       .select("publication_records(id, remote_id, target)")
       .eq("id", workflowId)
-      .single()
-      .overrideTypes<
-        {
-          publication_records: Pick<
-            Tables<"publication_records">,
-            "id" | "remote_id" | "target"
-          > | null;
-        },
-        { merge: false }
-      >();
+      .single();
 
     let existingPublication = null;
     const pubRecord = workflow?.publication_records;
@@ -419,16 +410,7 @@ export async function archiveDocument(
       .from("workflows")
       .select("publication_records(id, remote_id, target)")
       .eq("id", workflowId)
-      .single()
-      .overrideTypes<
-        {
-          publication_records: Pick<
-            Tables<"publication_records">,
-            "id" | "remote_id" | "target"
-          > | null;
-        },
-        { merge: false }
-      >();
+      .single();
 
     const existingPublication = workflow?.publication_records;
 
