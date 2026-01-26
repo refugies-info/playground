@@ -147,7 +147,8 @@ erDiagram
 
     publication_records {
         uuid id PK
-        uuid editorial_record_id FK "Lien Version Source"
+        uuid editorial_record_id FK "Lien Version Source (Principal)"
+        uuid translation_record_id FK "Lien Version Trad (Specifique)"
         json composition "Ids des traductions {en: v2, es: v1}"
     }
 ```
