@@ -61,7 +61,9 @@ export function EditionView() {
           const markdown = blocksToDirectiveMarkdown(currentBlocks as any);
           setRawMarkdown(markdown);
           lastSyncedContent.current = markdown;
-        } catch (_e) {}
+        } catch (e) {
+          console.error("Error snapshotting editor state:", e);
+        }
 
         setEditor(null);
         setIsEditorReady(false);
@@ -111,7 +113,9 @@ export function EditionView() {
 
         // Also ensure raw markdown state is sync
         setRawMarkdown(standardizedMarkdown);
-      } catch (_error) {}
+      } catch (error) {
+        console.error("Error initializing editor:", error);
+      }
     };
 
     initEditor();
@@ -134,7 +138,8 @@ export function EditionView() {
           editor.replaceBlocks(editor.document, pendingInitialContent.current);
           setIsEditorReady(true);
           pendingInitialContent.current = null;
-        } catch (_e) {
+        } catch (e) {
+          console.error("Error hydrating content:", e);
         } finally {
           setTimeout(() => {
             isUpdating.current = false;
@@ -172,7 +177,12 @@ export function EditionView() {
         if (process.env.NODE_ENV === "development" && showDebug) {
           setDebugBlocks([...editor.document]);
         }
-      } catch (_error) {}
+      } catch (error) {
+        console.error(
+          "Error syncing editor changes to document context:",
+          error,
+        );
+      }
     };
 
     const unsubscribe = editor.onChange(handleEditorChange);
@@ -221,7 +231,11 @@ export function EditionView() {
 
         editor.replaceBlocks(editor.document, blocks);
         setRawMarkdown(futureMarkdown);
-      } catch (_error) {
+      } catch (error) {
+        console.error(
+          "Error updating editor content from external source:",
+          error,
+        );
       } finally {
         // We wait for the next animation frame to ensure BlockNote has finished
         // internal processing and state updates. This prevents the immediately-following

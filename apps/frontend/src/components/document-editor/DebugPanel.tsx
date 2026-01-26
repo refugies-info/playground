@@ -32,7 +32,8 @@ export function DebugPanel() {
         setServerContent(result.content);
         setLastRefreshed(new Date());
       }
-    } catch (_error) {
+    } catch (error) {
+      console.error("Error fetching server content for debug panel:", error);
     } finally {
       setIsLoading(false);
     }
