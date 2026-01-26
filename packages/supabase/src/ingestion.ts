@@ -253,7 +253,9 @@ export async function ingestProcessedData(
       "Report marked as incomplete - setting workflow status to error",
     );
   } else {
-    const complianceVal = ingestionReport?.metadata?.compliant;
+    const complianceVal =
+      ingestionReport?.metadata?.compliant &&
+      !ingestionReport?.metadata?.duplicate;
 
     logger.info(
       "Compliance Metadata Value:",
