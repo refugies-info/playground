@@ -130,6 +130,7 @@ Le principe du "Livre de Bord". On trace chaque étape. Une traduction est expli
 erDiagram
     editorial_records ||--o{ translation_records : "Source V(n) -> Traduction V(n)"
     editorial_records ||--o{ publication_records : "Pointe vers Version Exacte"
+    translation_records ||--o{ publication_records : "Inclus dans Composition"
     
     editorial_records {
         uuid id PK
