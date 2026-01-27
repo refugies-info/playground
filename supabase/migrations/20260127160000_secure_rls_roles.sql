@@ -75,7 +75,7 @@ begin
 
   if not exists (select 1 from information_schema.columns where table_name='publication_records' and column_name='editorial_record_id') then
     alter table "public"."publication_records" 
-    add column "editorial_record_id" uuid references "public"."editorial_records"("id");
+    add column "editorial_record_id" uuid references "public"."editorial_records"("id") on delete set null;
   end if;
 
   -- Add translation_record_id to workflows (Bi-directional link)
