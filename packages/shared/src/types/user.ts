@@ -9,6 +9,8 @@ export interface User {
   email: string;
   /** Role in the editorial workflow (editor or translator) */
   role: "editor" | "translator" | "admin";
+  /** Assigned language for translators (optional) */
+  language?: string;
   /** ISO timestamp of account creation */
   created_at: string;
   updated_at: string;

@@ -21,8 +21,14 @@ if (!supabaseUrl || !serviceRoleKey) {
 const supabase = getSupabaseAdmin(supabaseUrl, serviceRoleKey);
 
 const defaultPassword = process.env.SEED_USER_PASSWORD;
-
 let finalPassword = defaultPassword;
+
+interface SeedUser {
+  email: string;
+  password?: string;
+  role: "admin" | "editor" | "translator";
+  language?: string;
+}
 
 if (!finalPassword) {
   finalPassword = crypto.randomBytes(16).toString("hex");
@@ -34,7 +40,7 @@ if (!finalPassword) {
   );
 }
 
-const users = [
+const users: SeedUser[] = [
   // Admins / Developers
   { email: "luis@refugies.info", password: finalPassword, role: "admin" },
   { email: "jeremie@refugies.info", password: finalPassword, role: "admin" },
@@ -43,12 +49,14 @@ const users = [
   { email: "editor@refugies.info", password: finalPassword, role: "editor" },
 
   // Translators (Generated from shared constants)
-  ...LANGUAGES.map((lang) => ({
-    email: `translator.${lang.code}@refugies.info`,
-    password: finalPassword,
-    role: "translator",
-    language: lang.code,
-  })),
+  ...LANGUAGES.map(
+    (lang): SeedUser => ({
+      email: `translator.${lang.code}@refugies.info`,
+      password: finalPassword,
+      role: "translator",
+      language: lang.code,
+    }),
+  ),
 ];
 
 async function seedUsers() {
@@ -77,7 +85,7 @@ async function seedUsers() {
           {
             user_metadata: {
               role: user.role,
-              language: (user as any).language,
+              language: user.language,
             },
           },
         );
@@ -88,7 +96,7 @@ async function seedUsers() {
         const { error: createError } = await supabase.auth.admin.createUser({
           email: user.email,
           password: user.password,
-          user_metadata: { role: user.role, language: (user as any).language },
+          user_metadata: { role: user.role, language: user.language },
           email_confirm: true,
         });
 
