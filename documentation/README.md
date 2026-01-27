@@ -93,7 +93,6 @@ Quick lookup materials:
 
 Internal guidelines and implementation notes:
 
-- **[Internal Overview](./internal/README.md)** — Internal documentation index
 - **[Documentation Strategy](./internal/documentation-strategy.md)** — Guidelines for LLMs on creating documentation
 - **[Component Strategy Implementation](./internal/component-strategy-implementation.md)** — Implementation notes
 

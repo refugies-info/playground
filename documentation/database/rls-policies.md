@@ -79,30 +79,81 @@ ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
 **Important**: Once RLS is enabled, ALL queries are blocked unless a policy allows them.
 
-### Step 2: Create Policies
+### Step 2: Create Helper Functions
+For security and performance, we use helper functions to extract metadata from the JWT. These functions use `deterministic` and `search_path = ''` strictly.
 
 ```sql
--- Policy 1: Users can see their own row
-CREATE POLICY "Users can view their own profile"
-  ON public.users
-  FOR SELECT
-  USING (auth.uid() = id);
+-- Returns the role from JWT user_metadata (admin, editor, translator)
+create or replace function public.get_my_role()
+returns text as $$
+  select coalesce(nullif(current_setting('request.jwt.claims', true)::jsonb -> 'user_metadata' ->> 'role', ''), 'none');
+$$ language sql stable set search_path = '';
 
--- Policy 2: Admins can see all rows
-CREATE POLICY "Admins can view all users"
-  ON public.users
+-- Returns the language assigned to the translator
+create or replace function public.get_my_language()
+returns text as $$
+  select coalesce(nullif(current_setting('request.jwt.claims', true)::jsonb -> 'user_metadata' ->> 'language', ''), 'none');
+$$ language sql stable set search_path = '';
+```
+
+### Step 3: Create Policies
+See the [Project Policies](#project-policies) section for detailed implementations.
+
+### Step 4: Test Policies
+See [Testing RLS Policies](#testing-rls-policies) section below.
+
+---
+
+## Project Policies
+
+### Access Matrix
+
+| Table | Admin / Editor | Translator |
+| :--- | :--- | :--- |
+| `editorial_records` | **FULL** | **SELECT ONLY** |
+| `translation_records` | **FULL** | **SELECT/UPDATE** (Filtered by language) |
+| `publication_records` | **FULL** | **SELECT** (Filtered) / **INSERT** (Limited) |
+| `ingestion_records` | **FULL** | **SELECT ONLY** |
+| `letta_reports` | **FULL** | **DENIED** |
+
+### Implementation Examples
+
+#### Filtering by Role
+```sql
+CREATE POLICY "Admins and Editors have full access"
+  ON public.translation_records
+  FOR ALL -- Or split by SELECT, INSERT, etc.
+  TO authenticated
+  USING ((select public.get_my_role()) in ('admin', 'editor'));
+```
+
+#### Filtering by Role AND Language
+```sql
+CREATE POLICY "Translators can view their languages"
+  ON public.translation_records
   FOR SELECT
+  TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM public.users
-      WHERE id = auth.uid() AND role = 'admin'
-    )
+    (select public.get_my_role()) = 'translator'
+    AND language = (select public.get_my_language())
   );
 ```
 
-### Step 3: Test Policies
+#### Performance Optimization (`EXISTS` vs `IN`)
+For tables linked via foreign keys (like `publication_records` to `translation_records`), use `EXISTS` to leverage indexes.
 
-See [Testing RLS Policies](#testing-rls-policies) section below.
+```sql
+CREATE POLICY "Optimized cross-table select"
+  ON public.publication_records
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.translation_records tr 
+      WHERE tr.id = translation_record_id 
+      AND tr.language = (select public.get_my_language())
+    )
+  );
+```
 
 ---
 
