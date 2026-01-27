@@ -53,3 +53,6 @@ supabase/functions/node_modules/
 
 # Letta
 .letta/*.local.json
+
+# Agents
+.agent
