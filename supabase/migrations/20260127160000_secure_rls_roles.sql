@@ -21,7 +21,7 @@ language sql
 stable
 set search_path = ''
 as $$
-  select nullif(current_setting('request.jwt.claims', true)::jsonb -> 'user_metadata' ->> 'role', '');
+  select coalesce(nullif(current_setting('request.jwt.claims', true)::jsonb -> 'user_metadata' ->> 'role', ''), 'none');
 $$;
 
 create or replace function public.get_my_language()
@@ -30,7 +30,7 @@ language sql
 stable
 set search_path = ''
 as $$
-  select nullif(current_setting('request.jwt.claims', true)::jsonb -> 'user_metadata' ->> 'language', '');
+  select coalesce(nullif(current_setting('request.jwt.claims', true)::jsonb -> 'user_metadata' ->> 'language', ''), 'none');
 $$;
 
 -- Generic update_at trigger function
