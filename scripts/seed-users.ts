@@ -83,6 +83,7 @@ async function seedUsers() {
         const { error: updateError } = await supabase.auth.admin.updateUserById(
           existingUser.id,
           {
+            password: user.password,
             user_metadata: {
               role: user.role,
               language: user.language,
