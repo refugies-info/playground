@@ -314,8 +314,10 @@ create policy "publication_records_select_policy"
       (select public.get_my_role()) = 'translator' 
       AND (
         published_by = (select auth.uid())
-        OR translation_record_id IN (
-          select id from public.translation_records where language = (select public.get_my_language())
+        OR EXISTS (
+          select 1 from public.translation_records tr 
+          where tr.id = translation_record_id 
+          and tr.language = (select public.get_my_language())
         )
       )
     )
