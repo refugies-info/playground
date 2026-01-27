@@ -208,7 +208,81 @@ create policy "editorial_records_delete_policy"
   );
 
 
--- 2. Workflow Policies
+-- 2. Ingestion Records Policies
+create policy "ingestion_records_select_policy" 
+  on public.ingestion_records 
+  for select 
+  to authenticated 
+  using (
+    (select public.get_my_role()) in ('admin', 'editor', 'translator')
+  );
+
+create policy "ingestion_records_insert_policy" 
+  on public.ingestion_records 
+  for insert 
+  to authenticated 
+  with check (
+    (select public.get_my_role()) in ('admin', 'editor')
+  );
+
+create policy "ingestion_records_update_policy" 
+  on public.ingestion_records 
+  for update 
+  to authenticated 
+  using (
+    (select public.get_my_role()) in ('admin', 'editor')
+  )
+  with check (
+    (select public.get_my_role()) in ('admin', 'editor')
+  );
+
+create policy "ingestion_records_delete_policy" 
+  on public.ingestion_records 
+  for delete 
+  to authenticated 
+  using (
+    (select public.get_my_role()) in ('admin', 'editor')
+  );
+
+
+-- 3. Letta Reports Policies
+create policy "letta_reports_select_policy" 
+  on public.letta_reports 
+  for select 
+  to authenticated 
+  using (
+    (select public.get_my_role()) in ('admin', 'editor')
+  );
+
+create policy "letta_reports_insert_policy" 
+  on public.letta_reports 
+  for insert 
+  to authenticated 
+  with check (
+    (select public.get_my_role()) in ('admin', 'editor')
+  );
+
+create policy "letta_reports_update_policy" 
+  on public.letta_reports 
+  for update 
+  to authenticated 
+  using (
+    (select public.get_my_role()) in ('admin', 'editor')
+  )
+  with check (
+    (select public.get_my_role()) in ('admin', 'editor')
+  );
+
+create policy "letta_reports_delete_policy" 
+  on public.letta_reports 
+  for delete 
+  to authenticated 
+  using (
+    (select public.get_my_role()) in ('admin', 'editor')
+  );
+
+
+-- 4. Workflow Policies
 create policy "workflows_select_policy" 
   on public.workflows 
   for select 
