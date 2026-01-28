@@ -12,3 +12,4 @@ client.setConfig({
 });
 
 export * from "./hey-api";
+export * from "./ingest";

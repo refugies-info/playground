@@ -208,6 +208,9 @@ importers:
       '@hey-api/client-fetch':
         specifier: ^0.8.1
         version: 0.8.4
+      '@playground/supabase':
+        specifier: workspace:*
+        version: link:../supabase
     devDependencies:
       '@hey-api/openapi-ts':
         specifier: ^0.54.1

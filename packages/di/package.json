@@ -4,10 +4,13 @@
   "description": "Data Inclusion API Client",
   "main": "src/index.ts",
   "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "check:types": "tsc --noEmit",
     "gen:client": "tsx gen-client.ts"
   },
   "dependencies": {
-    "@hey-api/client-fetch": "^0.8.1"
+    "@hey-api/client-fetch": "^0.8.1",
+    "@playground/supabase": "workspace:*"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.54.1",
