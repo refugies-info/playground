@@ -14,6 +14,17 @@ CREATE UNIQUE INDEX di_structures_pkey ON public.di_structures USING btree (id);
 
 alter table "public"."di_structures" add constraint "di_structures_pkey" PRIMARY KEY using index "di_structures_pkey";
 
+-- GIN index for efficient JSONB containment queries (@>, ?, ?&, ?|)
+CREATE INDEX di_structures_data_gin_idx ON public.di_structures USING gin (data jsonb_path_ops);
+
+-- B-tree indexes on commonly queried JSONB fields
+CREATE INDEX di_structures_data_id_idx ON public.di_structures USING btree ((data->>'id'));
+CREATE INDEX di_structures_data_source_idx ON public.di_structures USING btree ((data->>'source'));
+CREATE INDEX di_structures_data_siret_idx ON public.di_structures USING btree ((data->>'siret'));
+CREATE INDEX di_structures_data_commune_idx ON public.di_structures USING btree ((data->>'commune'));
+CREATE INDEX di_structures_data_code_postal_idx ON public.di_structures USING btree ((data->>'code_postal'));
+CREATE INDEX di_structures_data_date_maj_idx ON public.di_structures USING btree ((data->>'date_maj'));
+
 grant delete on table "public"."di_structures" to "anon";
 
 grant insert on table "public"."di_structures" to "anon";
