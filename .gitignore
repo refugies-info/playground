@@ -51,5 +51,5 @@ Thumbs.db
 supabase/functions/node_modules/
 .workflow-data/
 
-# Letta
+# Letta Code (user-specific settings and cache)
 .letta/
