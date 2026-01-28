@@ -34,6 +34,30 @@ export type Database = {
   };
   public: {
     Tables: {
+      di_structures: {
+        Row: {
+          created_at: string;
+          id: number;
+          metadata: Json | null;
+          raw_data: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: number;
+          metadata?: Json | null;
+          raw_data: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: number;
+          metadata?: Json | null;
+          raw_data?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       editorial_records: {
         Row: {
           content_report_id: string | null;
