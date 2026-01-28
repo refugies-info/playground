@@ -2,7 +2,6 @@
 
 import { Button } from "@playground/ui/primitives";
 import { useEffect } from "react";
-import { TopNav } from "@/components/TopNav";
 
 export default function TranslationsError({
   error,
@@ -19,7 +18,6 @@ export default function TranslationsError({
 
   return (
     <>
-      <TopNav />
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
         <h2 className="text-2xl font-bold text-gray-900">
           Une erreur est survenue !

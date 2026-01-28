@@ -1,13 +1,6 @@
-import { TopNav } from "@/components/TopNav";
-
-function Skeleton({ className }: { className?: string }) {
-  return <div className={`animate-pulse bg-gray-200 rounded ${className}`} />;
-}
-
 export default function Loading() {
   return (
     <>
-      <TopNav />
       <div className="w-full h-full p-8 bg-gray-50 min-h-screen">
         <div className="mb-8">
           <Skeleton className="h-10 w-48" /> {/* Title */}
@@ -47,4 +40,8 @@ export default function Loading() {
       </div>
     </>
   );
+}
+
+function Skeleton({ className }: { className?: string }) {
+  return <div className={`animate-pulse bg-gray-200 rounded ${className}`} />;
 }
