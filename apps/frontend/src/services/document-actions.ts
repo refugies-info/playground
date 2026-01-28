@@ -1,6 +1,6 @@
 "use server";
 
-import { logger } from "@playground/shared-types";
+import { LANGUAGES, logger } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { buildPublishPayload } from "../lib/payload-builder";
@@ -141,6 +141,62 @@ export async function toggleWorkflowStatus(
   }
 }
 
+async function createMissingTranslationRecords(
+  editorialRecordId: string,
+  workflowId: string,
+): Promise<void> {
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
+  try {
+    // 1. Get existing translation records for this editorial record
+    const { data: existingTranslations, error: fetchError } = await supabase
+      .from("translation_records")
+      .select("language")
+      .eq("editorial_record_id", editorialRecordId);
+
+    if (fetchError) {
+      logger.error(fetchError, "Error fetching existing translations");
+      return;
+    }
+
+    const existingLanguages = new Set(
+      existingTranslations?.map((t) => t.language) || [],
+    );
+
+    // 2. Identify missing languages (exclude 'fr' as it is the source - implicitly handled as LANGUAGES does not contain 'fr')
+    const targetLanguages = LANGUAGES.filter(
+      (lang) => !existingLanguages.has(lang.code),
+    );
+
+    if (targetLanguages.length === 0) {
+      return;
+    }
+
+    // 3. Create missing translation records
+    const newRecords = targetLanguages.map((lang) => ({
+      editorial_record_id: editorialRecordId,
+      language: lang.code,
+      status: "draft", // Initial status
+      workflow_id: workflowId,
+    }));
+
+    const { error: insertError } = await supabase
+      .from("translation_records")
+      .insert(newRecords);
+
+    if (insertError) {
+      logger.error(insertError, "Error creating translation records");
+    } else {
+      logger.info(
+        `Created ${newRecords.length} translation records for editorial record ${editorialRecordId}`,
+      );
+    }
+  } catch (error) {
+    logger.error(error, "Unexpected error in createMissingTranslationRecords");
+  }
+}
+
 /**
  * Server action to get the webhook secret for preview authentication
  * This allows secure transmission of the webhook secret without exposing it client-side
@@ -174,6 +230,7 @@ export async function publishDocument(
   title: string,
   markdown: string,
   metadata?: Record<string, unknown>,
+  triggerTranslations?: boolean,
 ): Promise<{
   success: boolean;
   publicationId?: string;
@@ -323,6 +380,33 @@ export async function publishDocument(
 
     if (updateError) {
       logger.error(updateError, "Error updating workflow progress");
+    }
+
+    // 8. Trigger translations if requested
+    if (triggerTranslations) {
+      // We need the editorial_record_id.
+      // If we don't have it easily, we might need to fetch the workflow first or get it from parameters if we had it.
+      // But we can fetch it from the workflowId as we did in saveDocument.
+      const { data: workflow } = await supabase
+        .from("workflows")
+        .select("editorial_record_id")
+        .eq("id", workflowId)
+        .single();
+
+      if (workflow?.editorial_record_id) {
+        // Run asynchronously without awaiting to not block the response?
+        // Or await to ensure it's done?
+        // Given that server actions can timeout, better to await fast operations or offload.
+        // Creating records is fast.
+        await createMissingTranslationRecords(
+          workflow.editorial_record_id,
+          workflowId,
+        );
+      } else {
+        logger.warn(
+          `Could not trigger translations: No editorial_record_id found for workflow ${workflowId}`,
+        );
+      }
     }
 
     return {
