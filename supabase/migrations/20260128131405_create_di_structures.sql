@@ -25,33 +25,8 @@ CREATE INDEX di_structures_data_commune_idx ON public.di_structures USING btree 
 CREATE INDEX di_structures_data_code_postal_idx ON public.di_structures USING btree ((data->>'code_postal'));
 CREATE INDEX di_structures_data_date_maj_idx ON public.di_structures USING btree ((data->>'date_maj'));
 
-grant delete on table "public"."di_structures" to "anon";
-
-grant insert on table "public"."di_structures" to "anon";
-
-grant references on table "public"."di_structures" to "anon";
-
-grant select on table "public"."di_structures" to "anon";
-
-grant trigger on table "public"."di_structures" to "anon";
-
-grant truncate on table "public"."di_structures" to "anon";
-
-grant update on table "public"."di_structures" to "anon";
-
-grant delete on table "public"."di_structures" to "authenticated";
-
-grant insert on table "public"."di_structures" to "authenticated";
-
-grant references on table "public"."di_structures" to "authenticated";
-
+-- Grant read-only access to authenticated users (for frontend)
 grant select on table "public"."di_structures" to "authenticated";
-
-grant trigger on table "public"."di_structures" to "authenticated";
-
-grant truncate on table "public"."di_structures" to "authenticated";
-
-grant update on table "public"."di_structures" to "authenticated";
 
 grant delete on table "public"."di_structures" to "postgres";
 

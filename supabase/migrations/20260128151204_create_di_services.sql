@@ -26,33 +26,8 @@ CREATE INDEX di_services_data_commune_idx ON public.di_services USING btree ((da
 CREATE INDEX di_services_data_code_postal_idx ON public.di_services USING btree ((data->>'code_postal'));
 CREATE INDEX di_services_data_date_maj_idx ON public.di_services USING btree ((data->>'date_maj'));
 
-grant delete on table "public"."di_services" to "anon";
-
-grant insert on table "public"."di_services" to "anon";
-
-grant references on table "public"."di_services" to "anon";
-
-grant select on table "public"."di_services" to "anon";
-
-grant trigger on table "public"."di_services" to "anon";
-
-grant truncate on table "public"."di_services" to "anon";
-
-grant update on table "public"."di_services" to "anon";
-
-grant delete on table "public"."di_services" to "authenticated";
-
-grant insert on table "public"."di_services" to "authenticated";
-
-grant references on table "public"."di_services" to "authenticated";
-
+-- Grant read-only access to authenticated users (for frontend)
 grant select on table "public"."di_services" to "authenticated";
-
-grant trigger on table "public"."di_services" to "authenticated";
-
-grant truncate on table "public"."di_services" to "authenticated";
-
-grant update on table "public"."di_services" to "authenticated";
 
 grant delete on table "public"."di_services" to "postgres";
 
