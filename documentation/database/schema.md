@@ -22,6 +22,7 @@ erDiagram
 
     letta_reports ||--o{ ingestion_records : "validates (compliance/duplicates)"
     letta_reports ||--o{ editorial_records : "validates (content/metadata)"
+    letta_reports ||--o{ translation_records : "validates (content/metadata)"
 
     ingestion_records ||--o{ editorial_records : "source for"
     ingestion_records ||--o{ content_flows : "updates"
@@ -82,6 +83,8 @@ erDiagram
         text status "draft | published"
         text markdown "Translated Content"
         jsonb metadata "Translated Metadata"
+        uuid content_report_id FK "Link to Content Quality Report"
+        uuid metadata_report_id FK "Link to Metadata Quality Report"
     }
 
     publication_records {
@@ -161,6 +164,8 @@ Stores the translated version of an `editorial_record`. It follows the same sche
 
 -   **Foreign Keys**:
     -   `editorial_record_id`: References `editorial_records(id)`.
+    -   `content_report_id`: References `letta_reports(id)`.
+    -   `metadata_report_id`: References `letta_reports(id)`.
 
 ### `publication_records`
 Tracks the history of publications to various platforms. It can link either to an original `editorial_record` (French) or a `translation_record`.

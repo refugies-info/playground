@@ -56,6 +56,8 @@ create table if not exists "public"."translation_records" (
   "status" text not null default 'draft', -- draft, published
   "markdown" text, -- Renamed from content for consistency
   "metadata" jsonb, -- Restored for consistency
+  "content_report_id" uuid references "public"."letta_reports"("id"),
+  "metadata_report_id" uuid references "public"."letta_reports"("id"),
   primary key ("id")
 );
 
@@ -102,6 +104,8 @@ alter table "public"."translation_records" enable row level security;
 -- Indexes
 create index if not exists translation_records_editorial_record_id_idx on public.translation_records (editorial_record_id);
 create index if not exists translation_records_language_idx on public.translation_records (language);
+create index if not exists translation_records_content_report_id_idx on public.translation_records (content_report_id);
+create index if not exists translation_records_metadata_report_id_idx on public.translation_records (metadata_report_id);
 
 -- Missing FK Indexes (Performance Fixes)
 create index if not exists editorial_records_content_report_id_idx on public.editorial_records (content_report_id);
@@ -137,6 +141,7 @@ drop policy if exists "editorial_records_select_policy" on public.editorial_reco
 
 -- Ingestion/Letta Drops
 drop policy if exists "Enable read access for authenticated users" on public.ingestion_records;
+drop policy if exists "Authenticated users can read" on public.ingestion_records;
 drop policy if exists "Enable read access for authenticated users" on public.letta_reports;
 
 -- Workflow Drops
