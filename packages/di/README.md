@@ -25,7 +25,14 @@ pnpm run gen:client
 This will:
 1. Load environment variables from `packages/di/.env`
 2. Fetch the OpenAPI spec from `$DI_BASE_URL/api/openapi.json`
-3. Generate TypeScript client files in `src/hey-api/`
+3. Filter out `/api/v0/` endpoints (only v1 endpoints are generated)
+4. Generate TypeScript client files in `src/hey-api/`
+
+### Configuration
+
+The generation is configured in `openapi-ts.config.ts`. Currently it:
+- Excludes all `/api/v0/` endpoints via regex filter
+- Uses `@hey-api/client-fetch` for HTTP requests
 
 ### Generated Files
 

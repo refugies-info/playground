@@ -5,6 +5,218 @@ export type ClientOptions = {
 };
 
 /**
+ * ValidationError
+ */
+export type ValidationError = {
+    /**
+     * Location
+     */
+    loc: Array<string | number>;
+    /**
+     * Message
+     */
+    msg: string;
+    /**
+     * Error Type
+     */
+    type: string;
+};
+
+/**
+ * TypeService
+ *
+ * Types de services
+ */
+export type TypeService = 'accompagnement' | 'aide-financiere' | 'aide-materielle' | 'atelier' | 'formation' | 'information';
+
+/**
+ * Thematique
+ *
+ * Thématiques
+ */
+export type Thematique = 'choisir-un-metier--confirmer-son-choix-de-metier' | 'choisir-un-metier--connaitre-les-opportunites-demploi' | 'choisir-un-metier--decouvrir-un-metier-ou-un-secteur-dactivite' | 'choisir-un-metier--identifier-ses-points-forts-et-ses-competences' | 'creer-une-entreprise--definir-son-projet-de-creation-dentreprise' | 'creer-une-entreprise--developper-son-entreprise' | 'creer-une-entreprise--structurer-son-projet-de-creation-dentreprise' | 'difficultes-administratives-ou-juridiques--accompagnement-aux-demarches-administratives' | 'difficultes-administratives-ou-juridiques--accompagnement-pour-lacces-a-la-citoyennete' | 'difficultes-administratives-ou-juridiques--accompagnement-pour-lacces-aux-droits' | 'difficultes-administratives-ou-juridiques--beneficier-dune-mesure-daccompagnement-adapte' | 'difficultes-administratives-ou-juridiques--connaitre-ses-droits-face-a-une-discrimination' | 'difficultes-administratives-ou-juridiques--prendre-en-compte-une-problematique-judiciaire' | 'difficultes-financieres--acquerir-une-autonomie-budgetaire' | 'difficultes-financieres--ameliorer-sa-gestion-budgetaire' | 'difficultes-financieres--mettre-en-place-une-mesure-de-protection-financiere' | 'difficultes-financieres--prevenir-une-degradation-de-la-situation-financiere' | 'difficultes-financieres--situation-dendettement-surendettement' | 'equipement-et-alimentation--aide-menagere' | 'equipement-et-alimentation--alimentation' | 'equipement-et-alimentation--electromenager' | 'equipement-et-alimentation--habillement' | 'famille--garde-denfants' | 'famille--prise-en-charge-personne-dependante' | 'famille--soutien-a-la-parentalite-et-a-leducation' | 'famille--soutien-aidants' | 'famille--surmonter-conflits-separation-violence' | 'lecture-ecriture-calcul--maitriser-le-calcul' | 'lecture-ecriture-calcul--maitriser-le-francais' | 'logement-hebergement--acheter-un-logement' | 'logement-hebergement--changer-de-logement' | 'logement-hebergement--louer-un-logement' | 'logement-hebergement--rechercher-une-solution-dhebergement-temporaire' | 'logement-hebergement--reduire-les-impayes-de-loyer' | 'logement-hebergement--se-maintenir-dans-le-logement' | 'logement-hebergement--sinformer-sur-les-demarches-liees-a-lacces-au-logement' | 'mobilite--acceder-a-un-vehicule' | 'mobilite--entretenir-reparer-son-vehicule' | 'mobilite--etre-accompagne-dans-son-parcours-mobilite' | 'mobilite--financer-ma-mobilite' | 'mobilite--preparer-un-permis' | 'mobilite--mobilite-douce-partagee-collective' | 'numerique--acceder-a-des-services-en-ligne' | 'numerique--acceder-a-une-connexion-internet' | 'numerique--acquerir-un-equipement' | 'numerique--maitriser-les-fondamentaux-du-numerique' | 'preparer-sa-candidature--developper-son-reseau' | 'preparer-sa-candidature--organiser-ses-demarches-de-recherche-demploi' | 'preparer-sa-candidature--realiser-un-cv-et-ou-une-lettre-de-motivation' | 'preparer-sa-candidature--valoriser-ses-competences' | 'remobilisation--activites-sportives-et-culturelles' | 'remobilisation--benevolat-action-citoyenne' | 'remobilisation--bien-etre-confiance-en-soi' | 'remobilisation--lien-social' | 'sante--acces-aux-soins' | 'sante--addictions' | 'sante--constituer-un-dossier-mdph-invalidite' | 'sante--sante-mentale' | 'sante--sante-sexuelle' | 'se-former--monter-son-dossier-de-formation' | 'se-former--trouver-sa-formation' | 'souvrir-a-linternational--connaitre-les-opportunites-demploi-a-letranger' | 'souvrir-a-linternational--sinformer-sur-les-aides-pour-travailler-a-letranger' | 'souvrir-a-linternational--sorganiser-suite-a-son-retour-en-france' | 'trouver-un-emploi--convaincre-un-recruteur-en-entretien' | 'trouver-un-emploi--faire-des-candidatures-spontanees' | 'trouver-un-emploi--maintien-dans-lemploi' | 'trouver-un-emploi--repondre-a-des-offres-demploi' | 'trouver-un-emploi--suivre-ses-candidatures-et-relancer-les-employeurs';
+
+/**
+ * Structure
+ */
+export type Structure = {
+    /**
+     * Source
+     *
+     * Identifiant du producteur original de la donnée.
+     */
+    source: string;
+    /**
+     * Id
+     *
+     * Identifiant unique de la structure, obtenu par une combinaison de l’identifiant producteur et de l’identifiant de la structure (fourni par le producteur).
+     */
+    id: string;
+    /**
+     * Nom
+     *
+     * Nom de la structure.
+     *
+     * Chaîne de caractères entre 3 et 150 caractères, ne se terminant pas par un point.
+     */
+    nom: string;
+    /**
+     * Date de dernière modification
+     *
+     * Date de dernière modification de la structure chez le producteur de données.
+     */
+    date_maj: string;
+    /**
+     * Description
+     *
+     * Description de la structure.
+     */
+    description?: string | null;
+    /**
+     * Lien Source
+     *
+     * Lien pour accéder à la structure sur le site web du producteur.
+     */
+    lien_source?: string | null;
+    /**
+     * Numéro SIRET
+     *
+     * Un numéro SIRET associé à la structure.
+     *
+     * Lorsque la structure correspond à un établissement dans la base sirene, le numéro SIRET doit être celui de cet établissement.
+     *
+     * Si la structure ne correspond pas strictement à un établissement de la base sirene, le numéro SIRET du siège social peut être utilisé.
+     *
+     * data·inclusion vérifie régulièrement la validité des numéros SIRET fournis. Les SIRETs inconnus sont retirés. Lorsque l’établissement associé à un SIRET a fait l’objet d’une succession (d’après la base sirene), data·inclusion remplace ce SIRET par celui de l’établissement successeur. Lorsque l’établissement associé est déclaré fermé et sans successeur, data·inclusion retire la structure.
+     */
+    siret?: string | null;
+    /**
+     * Commune
+     */
+    commune?: string | null;
+    /**
+     * Code Postal
+     */
+    code_postal?: string | null;
+    /**
+     * Code Insee
+     */
+    code_insee?: string | null;
+    /**
+     * Adresse
+     */
+    adresse?: string | null;
+    /**
+     * Complement Adresse
+     */
+    complement_adresse?: string | null;
+    /**
+     * Longitude
+     */
+    longitude?: number | null;
+    /**
+     * Latitude
+     */
+    latitude?: number | null;
+    /**
+     * Téléphone
+     *
+     * Numéro de téléphone à utiliser pour obtenir des informations complémentaires sur la structure.
+     *
+     * Chaîne de caractères contenant un seul numéro de téléphone, de préfèrence au format E.164.
+     */
+    telephone?: string | null;
+    /**
+     * Courriel
+     *
+     * Courriel à utiliser pour obtenir des informations complémentaires sur la structure.
+     *
+     * Doit suivre le format de la RFC 5322.
+     */
+    courriel?: string | null;
+    /**
+     * Site Web
+     */
+    site_web?: string | null;
+    /**
+     * Horaires d’accueil du public
+     *
+     * Horaires d’accueil du public par la structure.
+     *
+     * Un service peut avoir un horaire d’accueil différent. Se référer aux horaires des services.
+     *
+     * Doit être au format [OpenStreetMap Opening Hours](https://wiki.openstreetmap.org/wiki/FR:Key:opening_hours).
+     *
+     * [Outil d’aide à la saisie](https://projets.pavie.info/yohours/).
+     */
+    horaires_accueil?: string | null;
+    /**
+     * Accessibilité du lieu
+     *
+     * Lien vers la page Accesslibre référençant le niveau d’accessibilité de la structure.
+     *
+     * Le format attendu est donc un lien vers [Accesslibre](https://acceslibre.beta.gouv.fr/).
+     */
+    accessibilite_lieu?: string | null;
+    /**
+     * Réseaux porteurs
+     *
+     * Réseaux, organisations ou administrations portant la structure.
+     */
+    reseaux_porteurs?: Array<ReseauPorteur> | null;
+};
+
+/**
+ * ReseauPorteur
+ *
+ * Réseaux porteurs
+ */
+export type ReseauPorteur = '60000-rebonds' | 'action-logement' | 'adie' | 'afpa' | 'agefiph' | 'ai' | 'aidants-connect' | 'alliance-villes-emploi' | 'anlci' | 'apprentis-dauteuil' | 'ase' | 'banques-alimentaires' | 'caarud' | 'cada' | 'caf' | 'campus-connecte' | 'cap-emploi-reseau-cheops' | 'cava' | 'ccas-cias' | 'chambres-consulaires' | 'chantier-ecole' | 'chrs' | 'chu' | 'cidff' | 'cmp' | 'cms' | 'cnam' | 'collectif-emploi' | 'communes' | 'coorace' | 'conseillers-numeriques' | 'cpam' | 'cph' | 'creches-avip' | 'crepi' | 'cresus' | 'croix-rouge' | 'csapa' | 'delegataire-conseil-departemental' | 'departements' | 'duo-for-a-job' | 'ecoles-de-la-deuxieme-chance' | 'ea' | 'eatt' | 'egee' | 'emmaus' | 'epide' | 'esat' | 'espaces-publics-numeriques' | 'etcld' | 'fabrique-de-territoire' | 'face' | 'fcsf' | 'federation-professionnelle-femmes' | 'federation-des-acteurs-de-la-solidarite' | 'france-active' | 'france-service' | 'france-travail' | 'french-tech' | 'geiq' | 'grandes-ecoles-du-numerique' | 'huda' | 'hup' | 'inae' | 'initiative-france' | 'konexio' | 'la-cravate-solidaire' | 'la-poste' | 'les-premieres' | 'maisons-de-l-emploi' | 'maison-departementale-de-lautonomie' | 'maisons-des-solidarites' | 'mission-locale' | 'mjc' | 'mobin' | 'msap' | 'mutualite-sociale-agricole' | 'nqt' | 'pimms-mediation' | 'pjj' | 'plie' | 'points-conseil-budget' | 'points-justice' | 'positive-planet' | 'regions' | 'reseau-app' | 'reseau-bge' | 'reseau-entreprendre' | 'reseau-information-jeunesse' | 'residences-fjt' | 'ressourceries' | 'restos-du-coeur' | 'secours-populaire' | 'ei' | 'aci' | 'etti' | 'eiti' | 'siao' | 'simplon' | 'singa' | 'snc' | 'spip' | 'tous-tes-possibles' | 'unaf' | 'unea' | 'unis-cite' | 'wimoov';
+
+/**
+ * SourceIdDict
+ */
+export type SourceIdDict = {
+    /**
+     * Source
+     */
+    source: string;
+    /**
+     * Id
+     */
+    id: string;
+};
+
+/**
+ * Source
+ */
+export type Source = {
+    /**
+     * Slug
+     */
+    slug: string;
+    /**
+     * Nom
+     */
+    nom: string;
+    /**
+     * Description
+     */
+    description: string | null;
+};
+
+/**
+ * ServiceSearchResult
+ */
+export type ServiceSearchResult = {
+    service: DetailedService;
+    /**
+     * Distance
+     */
+    distance?: number | null;
+};
+
+/**
  * BaseStructure
  */
 export type BaseStructure = {
@@ -135,21 +347,39 @@ export type BaseStructure = {
 };
 
 /**
- * Categorie
+ * PersonneMobilisatrice
  *
- * Catégories de thématiques
+ * Personnes mobilisatrices
  */
-export type Categorie = 'choisir-un-metier' | 'creer-une-entreprise' | 'difficultes-administratives-ou-juridiques' | 'difficultes-financieres' | 'equipement-et-alimentation' | 'famille' | 'lecture-ecriture-calcul' | 'logement-hebergement' | 'mobilite' | 'numerique' | 'preparer-sa-candidature' | 'remobilisation' | 'sante' | 'se-former' | 'souvrir-a-linternational' | 'trouver-un-emploi';
+export type PersonneMobilisatrice = 'usagers' | 'professionnels';
 
 /**
- * DepartementCodeEnum
+ * ModeMobilisation
+ *
+ * Modes de mobilisation
  */
-export type DepartementCodeEnum = '01' | '02' | '03' | '04' | '06' | '07' | '08' | '09' | '10' | '11' | '12' | '67' | '13' | '14' | '15' | '17' | '16' | '18' | '19' | '2A' | '21' | '22' | '23' | '79' | '24' | '25' | '26' | '91' | '28' | '27' | '29' | '30' | '32' | '33' | '971' | '973' | '68' | '2B' | '31' | '43' | '52' | '70' | '74' | '87' | '05' | '65' | '92' | '34' | '35' | '37' | '36' | '38' | '39' | '974' | '40' | '41' | '44' | '42' | '45' | '47' | '46' | '48' | '49' | '50' | '51' | '972' | '53' | '976' | '54' | '55' | '56' | '57' | '58' | '59' | '60' | '61' | '75' | '62' | '63' | '64' | '66' | '69' | '71' | '72' | '73' | '77' | '76' | '93' | '80' | '82' | '81' | '90' | '95' | '94' | '83' | '84' | '85' | '86' | '88' | '89' | '78';
+export type ModeMobilisation = 'envoyer-un-courriel' | 'se-presenter' | 'telephoner' | 'utiliser-lien-mobilisation';
 
 /**
- * DepartementSlugEnum
+ * ModeAccueil
+ *
+ * Modes d’accueil
  */
-export type DepartementSlugEnum = 'ain' | 'aisne' | 'allier' | 'alpes-de-haute-provence' | 'alpes-maritimes' | 'ardeche' | 'ardennes' | 'ariege' | 'aube' | 'aude' | 'aveyron' | 'bas-rhin' | 'bouches-du-rhone' | 'calvados' | 'cantal' | 'charente-maritime' | 'charente' | 'cher' | 'correze' | 'corse-du-sud' | 'cote-d-or' | 'cotes-d-armor' | 'creuse' | 'deux-sevres' | 'dordogne' | 'doubs' | 'drome' | 'essonne' | 'eure-et-loir' | 'eure' | 'finistere' | 'gard' | 'gers' | 'gironde' | 'guadeloupe' | 'guyane' | 'haut-rhin' | 'haute-corse' | 'haute-garonne' | 'haute-loire' | 'haute-marne' | 'haute-saone' | 'haute-savoie' | 'haute-vienne' | 'hautes-alpes' | 'hautes-pyrenees' | 'hauts-de-seine' | 'herault' | 'ille-et-vilaine' | 'indre-et-loire' | 'indre' | 'isere' | 'jura' | 'la-reunion' | 'landes' | 'loir-et-cher' | 'loire-atlantique' | 'loire' | 'loiret' | 'lot-et-garonne' | 'lot' | 'lozere' | 'maine-et-loire' | 'manche' | 'marne' | 'martinique' | 'mayenne' | 'mayotte' | 'meurthe-et-moselle' | 'meuse' | 'morbihan' | 'moselle' | 'nievre' | 'nord' | 'oise' | 'orne' | 'paris' | 'pas-de-calais' | 'puy-de-dome' | 'pyrenees-atlantiques' | 'pyrenees-orientales' | 'rhone' | 'saone-et-loire' | 'sarthe' | 'savoie' | 'seine-et-marne' | 'seine-maritime' | 'seine-saint-denis' | 'somme' | 'tarn-et-garonne' | 'tarn' | 'territoire-de-belfort' | 'val-d-oise' | 'val-de-marne' | 'var' | 'vaucluse' | 'vendee' | 'vienne' | 'vosges' | 'yonne' | 'yvelines';
+export type ModeAccueil = 'a-distance' | 'en-presentiel';
+
+/**
+ * Public
+ *
+ * Publics
+ */
+export type Public = 'tous-publics' | 'actifs' | 'beneficiaires-des-minimas-sociaux' | 'demandeurs-emploi' | 'etudiants' | 'familles' | 'femmes' | 'jeunes' | 'personnes-en-situation-de-handicap' | 'personnes-en-situation-durgence' | 'personnes-en-situation-juridique-specifique' | 'personnes-exilees' | 'residents-qpv-frr' | 'seniors';
+
+/**
+ * Frais
+ *
+ * Frais
+ */
+export type Frais = 'gratuit' | 'payant';
 
 /**
  * DetailedService
@@ -388,460 +618,6 @@ export type DetailedService = {
 };
 
 /**
- * DetailedStructure
- */
-export type DetailedStructure = {
-    /**
-     * Source
-     *
-     * Identifiant du producteur original de la donnée.
-     */
-    source: string;
-    /**
-     * Id
-     *
-     * Identifiant unique de la structure, obtenu par une combinaison de l’identifiant producteur et de l’identifiant de la structure (fourni par le producteur).
-     */
-    id: string;
-    /**
-     * Nom
-     *
-     * Nom de la structure.
-     *
-     * Chaîne de caractères entre 3 et 150 caractères, ne se terminant pas par un point.
-     */
-    nom: string;
-    /**
-     * Date de dernière modification
-     *
-     * Date de dernière modification de la structure chez le producteur de données.
-     */
-    date_maj: string;
-    /**
-     * Description
-     *
-     * Description de la structure.
-     */
-    description?: string | null;
-    /**
-     * Lien Source
-     *
-     * Lien pour accéder à la structure sur le site web du producteur.
-     */
-    lien_source?: string | null;
-    /**
-     * Numéro SIRET
-     *
-     * Un numéro SIRET associé à la structure.
-     *
-     * Lorsque la structure correspond à un établissement dans la base sirene, le numéro SIRET doit être celui de cet établissement.
-     *
-     * Si la structure ne correspond pas strictement à un établissement de la base sirene, le numéro SIRET du siège social peut être utilisé.
-     *
-     * data·inclusion vérifie régulièrement la validité des numéros SIRET fournis. Les SIRETs inconnus sont retirés. Lorsque l’établissement associé à un SIRET a fait l’objet d’une succession (d’après la base sirene), data·inclusion remplace ce SIRET par celui de l’établissement successeur. Lorsque l’établissement associé est déclaré fermé et sans successeur, data·inclusion retire la structure.
-     */
-    siret?: string | null;
-    /**
-     * Commune
-     */
-    commune?: string | null;
-    /**
-     * Code Postal
-     */
-    code_postal?: string | null;
-    /**
-     * Code Insee
-     */
-    code_insee?: string | null;
-    /**
-     * Adresse
-     */
-    adresse?: string | null;
-    /**
-     * Complement Adresse
-     */
-    complement_adresse?: string | null;
-    /**
-     * Longitude
-     */
-    longitude?: number | null;
-    /**
-     * Latitude
-     */
-    latitude?: number | null;
-    /**
-     * Téléphone
-     *
-     * Numéro de téléphone à utiliser pour obtenir des informations complémentaires sur la structure.
-     *
-     * Chaîne de caractères contenant un seul numéro de téléphone, de préfèrence au format E.164.
-     */
-    telephone?: string | null;
-    /**
-     * Courriel
-     *
-     * Courriel à utiliser pour obtenir des informations complémentaires sur la structure.
-     *
-     * Doit suivre le format de la RFC 5322.
-     */
-    courriel?: string | null;
-    /**
-     * Site Web
-     */
-    site_web?: string | null;
-    /**
-     * Horaires d’accueil du public
-     *
-     * Horaires d’accueil du public par la structure.
-     *
-     * Un service peut avoir un horaire d’accueil différent. Se référer aux horaires des services.
-     *
-     * Doit être au format [OpenStreetMap Opening Hours](https://wiki.openstreetmap.org/wiki/FR:Key:opening_hours).
-     *
-     * [Outil d’aide à la saisie](https://projets.pavie.info/yohours/).
-     */
-    horaires_accueil?: string | null;
-    /**
-     * Accessibilité du lieu
-     *
-     * Lien vers la page Accesslibre référençant le niveau d’accessibilité de la structure.
-     *
-     * Le format attendu est donc un lien vers [Accesslibre](https://acceslibre.beta.gouv.fr/).
-     */
-    accessibilite_lieu?: string | null;
-    /**
-     * Réseaux porteurs
-     *
-     * Réseaux, organisations ou administrations portant la structure.
-     */
-    reseaux_porteurs?: Array<ReseauPorteur> | null;
-    /**
-     * Score Qualite
-     *
-     * [BETA] Score de qualité de la structure. Défini comme la moyenne
-     * des scores de qualité des services associés à la structure, ou 0
-     * si aucun service n'est associé.
-     *
-     */
-    score_qualite: number;
-    /**
-     * Doublons
-     *
-     * Doublons connus de la structure
-     */
-    doublons: Array<Structure>;
-    /**
-     * Services
-     */
-    services: Array<Service>;
-};
-
-/**
- * Frais
- *
- * Frais
- */
-export type Frais = 'gratuit' | 'payant';
-
-/**
- * FrameworkValue
- *
- * Schema for members of a domain taxonomy
- */
-export type FrameworkValue = {
-    /**
-     * Value
-     */
-    value: string;
-    /**
-     * Label
-     */
-    label: string;
-    /**
-     * Description
-     */
-    description?: string | null;
-};
-
-/**
- * HTTPValidationError
- */
-export type HttpValidationError = {
-    /**
-     * Detail
-     */
-    detail?: Array<ValidationError>;
-};
-
-/**
- * ListedStructure
- */
-export type ListedStructure = {
-    /**
-     * Source
-     *
-     * Identifiant du producteur original de la donnée.
-     */
-    source: string;
-    /**
-     * Id
-     *
-     * Identifiant unique de la structure, obtenu par une combinaison de l’identifiant producteur et de l’identifiant de la structure (fourni par le producteur).
-     */
-    id: string;
-    /**
-     * Nom
-     *
-     * Nom de la structure.
-     *
-     * Chaîne de caractères entre 3 et 150 caractères, ne se terminant pas par un point.
-     */
-    nom: string;
-    /**
-     * Date de dernière modification
-     *
-     * Date de dernière modification de la structure chez le producteur de données.
-     */
-    date_maj: string;
-    /**
-     * Description
-     *
-     * Description de la structure.
-     */
-    description?: string | null;
-    /**
-     * Lien Source
-     *
-     * Lien pour accéder à la structure sur le site web du producteur.
-     */
-    lien_source?: string | null;
-    /**
-     * Numéro SIRET
-     *
-     * Un numéro SIRET associé à la structure.
-     *
-     * Lorsque la structure correspond à un établissement dans la base sirene, le numéro SIRET doit être celui de cet établissement.
-     *
-     * Si la structure ne correspond pas strictement à un établissement de la base sirene, le numéro SIRET du siège social peut être utilisé.
-     *
-     * data·inclusion vérifie régulièrement la validité des numéros SIRET fournis. Les SIRETs inconnus sont retirés. Lorsque l’établissement associé à un SIRET a fait l’objet d’une succession (d’après la base sirene), data·inclusion remplace ce SIRET par celui de l’établissement successeur. Lorsque l’établissement associé est déclaré fermé et sans successeur, data·inclusion retire la structure.
-     */
-    siret?: string | null;
-    /**
-     * Commune
-     */
-    commune?: string | null;
-    /**
-     * Code Postal
-     */
-    code_postal?: string | null;
-    /**
-     * Code Insee
-     */
-    code_insee?: string | null;
-    /**
-     * Adresse
-     */
-    adresse?: string | null;
-    /**
-     * Complement Adresse
-     */
-    complement_adresse?: string | null;
-    /**
-     * Longitude
-     */
-    longitude?: number | null;
-    /**
-     * Latitude
-     */
-    latitude?: number | null;
-    /**
-     * Téléphone
-     *
-     * Numéro de téléphone à utiliser pour obtenir des informations complémentaires sur la structure.
-     *
-     * Chaîne de caractères contenant un seul numéro de téléphone, de préfèrence au format E.164.
-     */
-    telephone?: string | null;
-    /**
-     * Courriel
-     *
-     * Courriel à utiliser pour obtenir des informations complémentaires sur la structure.
-     *
-     * Doit suivre le format de la RFC 5322.
-     */
-    courriel?: string | null;
-    /**
-     * Site Web
-     */
-    site_web?: string | null;
-    /**
-     * Horaires d’accueil du public
-     *
-     * Horaires d’accueil du public par la structure.
-     *
-     * Un service peut avoir un horaire d’accueil différent. Se référer aux horaires des services.
-     *
-     * Doit être au format [OpenStreetMap Opening Hours](https://wiki.openstreetmap.org/wiki/FR:Key:opening_hours).
-     *
-     * [Outil d’aide à la saisie](https://projets.pavie.info/yohours/).
-     */
-    horaires_accueil?: string | null;
-    /**
-     * Accessibilité du lieu
-     *
-     * Lien vers la page Accesslibre référençant le niveau d’accessibilité de la structure.
-     *
-     * Le format attendu est donc un lien vers [Accesslibre](https://acceslibre.beta.gouv.fr/).
-     */
-    accessibilite_lieu?: string | null;
-    /**
-     * Réseaux porteurs
-     *
-     * Réseaux, organisations ou administrations portant la structure.
-     */
-    reseaux_porteurs?: Array<ReseauPorteur> | null;
-    /**
-     * Score Qualite
-     *
-     * [BETA] Score de qualité de la structure. Défini comme la moyenne
-     * des scores de qualité des services associés à la structure, ou 0
-     * si aucun service n'est associé.
-     *
-     */
-    score_qualite: number;
-    /**
-     * Doublons
-     *
-     * Identifiants (source, id) des doublons connus de la structure
-     */
-    doublons: Array<SourceIdDict>;
-};
-
-/**
- * ModeAccueil
- *
- * Modes d’accueil
- */
-export type ModeAccueil = 'a-distance' | 'en-presentiel';
-
-/**
- * ModeMobilisation
- *
- * Modes de mobilisation
- */
-export type ModeMobilisation = 'envoyer-un-courriel' | 'se-presenter' | 'telephoner' | 'utiliser-lien-mobilisation';
-
-/**
- * Page[ListedStructure]
- */
-export type PageListedStructure = {
-    /**
-     * Items
-     */
-    items: Array<ListedStructure>;
-    /**
-     * Total
-     */
-    total: number;
-    /**
-     * Page
-     */
-    page: number;
-    /**
-     * Size
-     */
-    size: number;
-    /**
-     * Pages
-     */
-    pages: number;
-};
-
-/**
- * Page[ServiceSearchResult]
- */
-export type PageServiceSearchResult = {
-    /**
-     * Items
-     */
-    items: Array<ServiceSearchResult>;
-    /**
-     * Total
-     */
-    total: number;
-    /**
-     * Page
-     */
-    page: number;
-    /**
-     * Size
-     */
-    size: number;
-    /**
-     * Pages
-     */
-    pages: number;
-};
-
-/**
- * Page[Service]
- */
-export type PageService = {
-    /**
-     * Items
-     */
-    items: Array<Service>;
-    /**
-     * Total
-     */
-    total: number;
-    /**
-     * Page
-     */
-    page: number;
-    /**
-     * Size
-     */
-    size: number;
-    /**
-     * Pages
-     */
-    pages: number;
-};
-
-/**
- * PersonneMobilisatrice
- *
- * Personnes mobilisatrices
- */
-export type PersonneMobilisatrice = 'usagers' | 'professionnels';
-
-/**
- * Public
- *
- * Publics
- */
-export type Public = 'tous-publics' | 'actifs' | 'beneficiaires-des-minimas-sociaux' | 'demandeurs-emploi' | 'etudiants' | 'familles' | 'femmes' | 'jeunes' | 'personnes-en-situation-de-handicap' | 'personnes-en-situation-durgence' | 'personnes-en-situation-juridique-specifique' | 'personnes-exilees' | 'residents-qpv-frr' | 'seniors';
-
-/**
- * RegionCodeEnum
- */
-export type RegionCodeEnum = '84' | '27' | '53' | '24' | '94' | '44' | '01' | '03' | '32' | '11' | '04' | '02' | '06' | '28' | '75' | '76' | '52' | '93';
-
-/**
- * RegionSlugEnum
- */
-export type RegionSlugEnum = 'auvergne-rhone-alpes' | 'bourgogne-franche-comte' | 'bretagne' | 'centre-val-de-loire' | 'corse' | 'grand-est' | 'guadeloupe' | 'guyane' | 'hauts-de-france' | 'ile-de-france' | 'la-reunion' | 'martinique' | 'mayotte' | 'normandie' | 'nouvelle-aquitaine' | 'occitanie' | 'pays-de-la-loire' | 'provence-alpes-cote-d-azur';
-
-/**
- * ReseauPorteur
- *
- * Réseaux porteurs
- */
-export type ReseauPorteur = '60000-rebonds' | 'action-logement' | 'adie' | 'afpa' | 'agefiph' | 'ai' | 'aidants-connect' | 'alliance-villes-emploi' | 'anlci' | 'apprentis-dauteuil' | 'ase' | 'banques-alimentaires' | 'caarud' | 'cada' | 'caf' | 'campus-connecte' | 'cap-emploi-reseau-cheops' | 'cava' | 'ccas-cias' | 'chambres-consulaires' | 'chantier-ecole' | 'chrs' | 'chu' | 'cidff' | 'cmp' | 'cms' | 'cnam' | 'collectif-emploi' | 'communes' | 'coorace' | 'conseillers-numeriques' | 'cpam' | 'cph' | 'creches-avip' | 'crepi' | 'cresus' | 'croix-rouge' | 'csapa' | 'delegataire-conseil-departemental' | 'departements' | 'duo-for-a-job' | 'ecoles-de-la-deuxieme-chance' | 'ea' | 'eatt' | 'egee' | 'emmaus' | 'epide' | 'esat' | 'espaces-publics-numeriques' | 'etcld' | 'fabrique-de-territoire' | 'face' | 'fcsf' | 'federation-professionnelle-femmes' | 'federation-des-acteurs-de-la-solidarite' | 'france-active' | 'france-service' | 'france-travail' | 'french-tech' | 'geiq' | 'grandes-ecoles-du-numerique' | 'huda' | 'hup' | 'inae' | 'initiative-france' | 'konexio' | 'la-cravate-solidaire' | 'la-poste' | 'les-premieres' | 'maisons-de-l-emploi' | 'maison-departementale-de-lautonomie' | 'maisons-des-solidarites' | 'mission-locale' | 'mjc' | 'mobin' | 'msap' | 'mutualite-sociale-agricole' | 'nqt' | 'pimms-mediation' | 'pjj' | 'plie' | 'points-conseil-budget' | 'points-justice' | 'positive-planet' | 'regions' | 'reseau-app' | 'reseau-bge' | 'reseau-entreprendre' | 'reseau-information-jeunesse' | 'residences-fjt' | 'ressourceries' | 'restos-du-coeur' | 'secours-populaire' | 'ei' | 'aci' | 'etti' | 'eiti' | 'siao' | 'simplon' | 'singa' | 'snc' | 'spip' | 'tous-tes-possibles' | 'unaf' | 'unea' | 'unis-cite' | 'wimoov';
-
-/**
  * Service
  */
 export type Service = {
@@ -1077,52 +853,97 @@ export type Service = {
 };
 
 /**
- * ServiceSearchResult
+ * RegionSlugEnum
  */
-export type ServiceSearchResult = {
-    service: DetailedService;
+export type RegionSlugEnum = 'auvergne-rhone-alpes' | 'bourgogne-franche-comte' | 'bretagne' | 'centre-val-de-loire' | 'corse' | 'grand-est' | 'guadeloupe' | 'guyane' | 'hauts-de-france' | 'ile-de-france' | 'la-reunion' | 'martinique' | 'mayotte' | 'normandie' | 'nouvelle-aquitaine' | 'occitanie' | 'pays-de-la-loire' | 'provence-alpes-cote-d-azur';
+
+/**
+ * RegionCodeEnum
+ */
+export type RegionCodeEnum = '84' | '27' | '53' | '24' | '94' | '44' | '01' | '03' | '32' | '11' | '04' | '02' | '06' | '28' | '75' | '76' | '52' | '93';
+
+/**
+ * Page[Service]
+ */
+export type PageService = {
     /**
-     * Distance
+     * Items
      */
-    distance?: number | null;
+    items: Array<Service>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
 };
 
 /**
- * Source
+ * Page[ServiceSearchResult]
  */
-export type Source = {
+export type PageServiceSearchResult = {
     /**
-     * Slug
+     * Items
      */
-    slug: string;
+    items: Array<ServiceSearchResult>;
     /**
-     * Nom
+     * Total
      */
-    nom: string;
+    total: number;
     /**
-     * Description
+     * Page
      */
-    description: string | null;
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
 };
 
 /**
- * SourceIdDict
+ * Page[ListedStructure]
  */
-export type SourceIdDict = {
+export type PageListedStructure = {
     /**
-     * Source
+     * Items
      */
-    source: string;
+    items: Array<ListedStructure>;
     /**
-     * Id
+     * Total
      */
-    id: string;
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Size
+     */
+    size: number;
+    /**
+     * Pages
+     */
+    pages: number;
 };
 
 /**
- * Structure
+ * ListedStructure
  */
-export type Structure = {
+export type ListedStructure = {
     /**
      * Source
      *
@@ -1247,39 +1068,218 @@ export type Structure = {
      * Réseaux, organisations ou administrations portant la structure.
      */
     reseaux_porteurs?: Array<ReseauPorteur> | null;
+    /**
+     * Score Qualite
+     *
+     * [BETA] Score de qualité de la structure. Défini comme la moyenne
+     * des scores de qualité des services associés à la structure, ou 0
+     * si aucun service n'est associé.
+     *
+     */
+    score_qualite: number;
+    /**
+     * Doublons
+     *
+     * Identifiants (source, id) des doublons connus de la structure
+     */
+    doublons: Array<SourceIdDict>;
 };
 
 /**
- * Thematique
- *
- * Thématiques
+ * HTTPValidationError
  */
-export type Thematique = 'choisir-un-metier--confirmer-son-choix-de-metier' | 'choisir-un-metier--connaitre-les-opportunites-demploi' | 'choisir-un-metier--decouvrir-un-metier-ou-un-secteur-dactivite' | 'choisir-un-metier--identifier-ses-points-forts-et-ses-competences' | 'creer-une-entreprise--definir-son-projet-de-creation-dentreprise' | 'creer-une-entreprise--developper-son-entreprise' | 'creer-une-entreprise--structurer-son-projet-de-creation-dentreprise' | 'difficultes-administratives-ou-juridiques--accompagnement-aux-demarches-administratives' | 'difficultes-administratives-ou-juridiques--accompagnement-pour-lacces-a-la-citoyennete' | 'difficultes-administratives-ou-juridiques--accompagnement-pour-lacces-aux-droits' | 'difficultes-administratives-ou-juridiques--beneficier-dune-mesure-daccompagnement-adapte' | 'difficultes-administratives-ou-juridiques--connaitre-ses-droits-face-a-une-discrimination' | 'difficultes-administratives-ou-juridiques--prendre-en-compte-une-problematique-judiciaire' | 'difficultes-financieres--acquerir-une-autonomie-budgetaire' | 'difficultes-financieres--ameliorer-sa-gestion-budgetaire' | 'difficultes-financieres--mettre-en-place-une-mesure-de-protection-financiere' | 'difficultes-financieres--prevenir-une-degradation-de-la-situation-financiere' | 'difficultes-financieres--situation-dendettement-surendettement' | 'equipement-et-alimentation--aide-menagere' | 'equipement-et-alimentation--alimentation' | 'equipement-et-alimentation--electromenager' | 'equipement-et-alimentation--habillement' | 'famille--garde-denfants' | 'famille--prise-en-charge-personne-dependante' | 'famille--soutien-a-la-parentalite-et-a-leducation' | 'famille--soutien-aidants' | 'famille--surmonter-conflits-separation-violence' | 'lecture-ecriture-calcul--maitriser-le-calcul' | 'lecture-ecriture-calcul--maitriser-le-francais' | 'logement-hebergement--acheter-un-logement' | 'logement-hebergement--changer-de-logement' | 'logement-hebergement--louer-un-logement' | 'logement-hebergement--rechercher-une-solution-dhebergement-temporaire' | 'logement-hebergement--reduire-les-impayes-de-loyer' | 'logement-hebergement--se-maintenir-dans-le-logement' | 'logement-hebergement--sinformer-sur-les-demarches-liees-a-lacces-au-logement' | 'mobilite--acceder-a-un-vehicule' | 'mobilite--entretenir-reparer-son-vehicule' | 'mobilite--etre-accompagne-dans-son-parcours-mobilite' | 'mobilite--financer-ma-mobilite' | 'mobilite--preparer-un-permis' | 'mobilite--mobilite-douce-partagee-collective' | 'numerique--acceder-a-des-services-en-ligne' | 'numerique--acceder-a-une-connexion-internet' | 'numerique--acquerir-un-equipement' | 'numerique--maitriser-les-fondamentaux-du-numerique' | 'preparer-sa-candidature--developper-son-reseau' | 'preparer-sa-candidature--organiser-ses-demarches-de-recherche-demploi' | 'preparer-sa-candidature--realiser-un-cv-et-ou-une-lettre-de-motivation' | 'preparer-sa-candidature--valoriser-ses-competences' | 'remobilisation--activites-sportives-et-culturelles' | 'remobilisation--benevolat-action-citoyenne' | 'remobilisation--bien-etre-confiance-en-soi' | 'remobilisation--lien-social' | 'sante--acces-aux-soins' | 'sante--addictions' | 'sante--constituer-un-dossier-mdph-invalidite' | 'sante--sante-mentale' | 'sante--sante-sexuelle' | 'se-former--monter-son-dossier-de-formation' | 'se-former--trouver-sa-formation' | 'souvrir-a-linternational--connaitre-les-opportunites-demploi-a-letranger' | 'souvrir-a-linternational--sinformer-sur-les-aides-pour-travailler-a-letranger' | 'souvrir-a-linternational--sorganiser-suite-a-son-retour-en-france' | 'trouver-un-emploi--convaincre-un-recruteur-en-entretien' | 'trouver-un-emploi--faire-des-candidatures-spontanees' | 'trouver-un-emploi--maintien-dans-lemploi' | 'trouver-un-emploi--repondre-a-des-offres-demploi' | 'trouver-un-emploi--suivre-ses-candidatures-et-relancer-les-employeurs';
-
-/**
- * TypeService
- *
- * Types de services
- */
-export type TypeService = 'accompagnement' | 'aide-financiere' | 'aide-materielle' | 'atelier' | 'formation' | 'information';
-
-/**
- * ValidationError
- */
-export type ValidationError = {
+export type HttpValidationError = {
     /**
-     * Location
+     * Detail
      */
-    loc: Array<string | number>;
-    /**
-     * Message
-     */
-    msg: string;
-    /**
-     * Error Type
-     */
-    type: string;
+    detail?: Array<ValidationError>;
 };
+
+/**
+ * FrameworkValue
+ *
+ * Schema for members of a domain taxonomy
+ */
+export type FrameworkValue = {
+    /**
+     * Value
+     */
+    value: string;
+    /**
+     * Label
+     */
+    label: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+};
+
+/**
+ * DetailedStructure
+ */
+export type DetailedStructure = {
+    /**
+     * Source
+     *
+     * Identifiant du producteur original de la donnée.
+     */
+    source: string;
+    /**
+     * Id
+     *
+     * Identifiant unique de la structure, obtenu par une combinaison de l’identifiant producteur et de l’identifiant de la structure (fourni par le producteur).
+     */
+    id: string;
+    /**
+     * Nom
+     *
+     * Nom de la structure.
+     *
+     * Chaîne de caractères entre 3 et 150 caractères, ne se terminant pas par un point.
+     */
+    nom: string;
+    /**
+     * Date de dernière modification
+     *
+     * Date de dernière modification de la structure chez le producteur de données.
+     */
+    date_maj: string;
+    /**
+     * Description
+     *
+     * Description de la structure.
+     */
+    description?: string | null;
+    /**
+     * Lien Source
+     *
+     * Lien pour accéder à la structure sur le site web du producteur.
+     */
+    lien_source?: string | null;
+    /**
+     * Numéro SIRET
+     *
+     * Un numéro SIRET associé à la structure.
+     *
+     * Lorsque la structure correspond à un établissement dans la base sirene, le numéro SIRET doit être celui de cet établissement.
+     *
+     * Si la structure ne correspond pas strictement à un établissement de la base sirene, le numéro SIRET du siège social peut être utilisé.
+     *
+     * data·inclusion vérifie régulièrement la validité des numéros SIRET fournis. Les SIRETs inconnus sont retirés. Lorsque l’établissement associé à un SIRET a fait l’objet d’une succession (d’après la base sirene), data·inclusion remplace ce SIRET par celui de l’établissement successeur. Lorsque l’établissement associé est déclaré fermé et sans successeur, data·inclusion retire la structure.
+     */
+    siret?: string | null;
+    /**
+     * Commune
+     */
+    commune?: string | null;
+    /**
+     * Code Postal
+     */
+    code_postal?: string | null;
+    /**
+     * Code Insee
+     */
+    code_insee?: string | null;
+    /**
+     * Adresse
+     */
+    adresse?: string | null;
+    /**
+     * Complement Adresse
+     */
+    complement_adresse?: string | null;
+    /**
+     * Longitude
+     */
+    longitude?: number | null;
+    /**
+     * Latitude
+     */
+    latitude?: number | null;
+    /**
+     * Téléphone
+     *
+     * Numéro de téléphone à utiliser pour obtenir des informations complémentaires sur la structure.
+     *
+     * Chaîne de caractères contenant un seul numéro de téléphone, de préfèrence au format E.164.
+     */
+    telephone?: string | null;
+    /**
+     * Courriel
+     *
+     * Courriel à utiliser pour obtenir des informations complémentaires sur la structure.
+     *
+     * Doit suivre le format de la RFC 5322.
+     */
+    courriel?: string | null;
+    /**
+     * Site Web
+     */
+    site_web?: string | null;
+    /**
+     * Horaires d’accueil du public
+     *
+     * Horaires d’accueil du public par la structure.
+     *
+     * Un service peut avoir un horaire d’accueil différent. Se référer aux horaires des services.
+     *
+     * Doit être au format [OpenStreetMap Opening Hours](https://wiki.openstreetmap.org/wiki/FR:Key:opening_hours).
+     *
+     * [Outil d’aide à la saisie](https://projets.pavie.info/yohours/).
+     */
+    horaires_accueil?: string | null;
+    /**
+     * Accessibilité du lieu
+     *
+     * Lien vers la page Accesslibre référençant le niveau d’accessibilité de la structure.
+     *
+     * Le format attendu est donc un lien vers [Accesslibre](https://acceslibre.beta.gouv.fr/).
+     */
+    accessibilite_lieu?: string | null;
+    /**
+     * Réseaux porteurs
+     *
+     * Réseaux, organisations ou administrations portant la structure.
+     */
+    reseaux_porteurs?: Array<ReseauPorteur> | null;
+    /**
+     * Score Qualite
+     *
+     * [BETA] Score de qualité de la structure. Défini comme la moyenne
+     * des scores de qualité des services associés à la structure, ou 0
+     * si aucun service n'est associé.
+     *
+     */
+    score_qualite: number;
+    /**
+     * Doublons
+     *
+     * Doublons connus de la structure
+     */
+    doublons: Array<Structure>;
+    /**
+     * Services
+     */
+    services: Array<Service>;
+};
+
+/**
+ * DepartementSlugEnum
+ */
+export type DepartementSlugEnum = 'ain' | 'aisne' | 'allier' | 'alpes-de-haute-provence' | 'alpes-maritimes' | 'ardeche' | 'ardennes' | 'ariege' | 'aube' | 'aude' | 'aveyron' | 'bas-rhin' | 'bouches-du-rhone' | 'calvados' | 'cantal' | 'charente-maritime' | 'charente' | 'cher' | 'correze' | 'corse-du-sud' | 'cote-d-or' | 'cotes-d-armor' | 'creuse' | 'deux-sevres' | 'dordogne' | 'doubs' | 'drome' | 'essonne' | 'eure-et-loir' | 'eure' | 'finistere' | 'gard' | 'gers' | 'gironde' | 'guadeloupe' | 'guyane' | 'haut-rhin' | 'haute-corse' | 'haute-garonne' | 'haute-loire' | 'haute-marne' | 'haute-saone' | 'haute-savoie' | 'haute-vienne' | 'hautes-alpes' | 'hautes-pyrenees' | 'hauts-de-seine' | 'herault' | 'ille-et-vilaine' | 'indre-et-loire' | 'indre' | 'isere' | 'jura' | 'la-reunion' | 'landes' | 'loir-et-cher' | 'loire-atlantique' | 'loire' | 'loiret' | 'lot-et-garonne' | 'lot' | 'lozere' | 'maine-et-loire' | 'manche' | 'marne' | 'martinique' | 'mayenne' | 'mayotte' | 'meurthe-et-moselle' | 'meuse' | 'morbihan' | 'moselle' | 'nievre' | 'nord' | 'oise' | 'orne' | 'paris' | 'pas-de-calais' | 'puy-de-dome' | 'pyrenees-atlantiques' | 'pyrenees-orientales' | 'rhone' | 'saone-et-loire' | 'sarthe' | 'savoie' | 'seine-et-marne' | 'seine-maritime' | 'seine-saint-denis' | 'somme' | 'tarn-et-garonne' | 'tarn' | 'territoire-de-belfort' | 'val-d-oise' | 'val-de-marne' | 'var' | 'vaucluse' | 'vendee' | 'vienne' | 'vosges' | 'yonne' | 'yvelines';
+
+/**
+ * DepartementCodeEnum
+ */
+export type DepartementCodeEnum = '01' | '02' | '03' | '04' | '06' | '07' | '08' | '09' | '10' | '11' | '12' | '67' | '13' | '14' | '15' | '17' | '16' | '18' | '19' | '2A' | '21' | '22' | '23' | '79' | '24' | '25' | '26' | '91' | '28' | '27' | '29' | '30' | '32' | '33' | '971' | '973' | '68' | '2B' | '31' | '43' | '52' | '70' | '74' | '87' | '05' | '65' | '92' | '34' | '35' | '37' | '36' | '38' | '39' | '974' | '40' | '41' | '44' | '42' | '45' | '47' | '46' | '48' | '49' | '50' | '51' | '972' | '53' | '976' | '54' | '55' | '56' | '57' | '58' | '59' | '60' | '61' | '75' | '62' | '63' | '64' | '66' | '69' | '71' | '72' | '73' | '77' | '76' | '93' | '80' | '82' | '81' | '90' | '95' | '94' | '83' | '84' | '85' | '86' | '88' | '89' | '78';
+
+/**
+ * Categorie
+ *
+ * Catégories de thématiques
+ */
+export type Categorie = 'choisir-un-metier' | 'creer-une-entreprise' | 'difficultes-administratives-ou-juridiques' | 'difficultes-financieres' | 'equipement-et-alimentation' | 'famille' | 'lecture-ecriture-calcul' | 'logement-hebergement' | 'mobilite' | 'numerique' | 'preparer-sa-candidature' | 'remobilisation' | 'sante' | 'se-former' | 'souvrir-a-linternational' | 'trouver-un-emploi';
 
 export type ListStructuresEndpointApiV1StructuresGetData = {
     body?: never;

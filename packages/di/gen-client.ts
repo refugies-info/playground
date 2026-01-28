@@ -16,10 +16,11 @@ if (!diBaseUrl) {
   process.exit(1);
 }
 
-// Run the hey-api command
-const command = `pnpx @hey-api/openapi-ts -i ${diBaseUrl}/api/openapi.json -o src/hey-api -c @hey-api/client-fetch`;
+// Run the hey-api command with config file
+const command = "pnpx @hey-api/openapi-ts";
 
 console.log(`Generating client from: ${diBaseUrl}/api/openapi.json`);
+console.log("Excluding /api/v0/ endpoints...");
 
 try {
   execSync(command, { stdio: "inherit" });
