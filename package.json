@@ -36,12 +36,14 @@
     "generate:json": "tsx scripts/generate-json.ts",
     "generate:md": "tsx scripts/generate-md.ts",
     "copy:schema": "tsx scripts/copy-schema.ts",
-    "seed:ingestion": "tsx scripts/seed-ingestion.ts"
+    "seed:ingestion": "tsx scripts/seed-ingestion.ts",
+    "test:di": "tsx scripts/test-di-ingestion.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.6",
     "@playground/shared-types": "workspace:*",
     "@playground/supabase": "workspace:*",
+    "@refugies-info/di": "workspace:*",
     "@types/js-yaml": "^4.0.9",
     "dotenv": "^17.2.3",
     "husky": "^9.1.7",

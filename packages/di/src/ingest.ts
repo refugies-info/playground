@@ -7,7 +7,7 @@ import {
   type PageListedStructure,
 } from "./hey-api";
 
-const DEFAULT_PAGE_SIZE = 100;
+const DEFAULT_PAGE_SIZE = Number(process.env.DI_PAGE_SIZE) || 100;
 const DEFAULT_BATCH_SIZE = 100;
 const SOURCE_CARIF_OREF = "carif-oref";
 
@@ -19,24 +19,32 @@ export interface DiIngestionResult {
 }
 
 export interface DiIngestionOptions {
+  /** Number of items per API page (default: 100) */
   pageSize?: number;
+  /** Maximum number of structures to fetch (default: unlimited) */
+  limit?: number;
+  /** Progress callback called after each page fetch */
   onProgress?: (current: number, total: number | null) => void;
 }
 
 /**
- * Fetch all structures from Data Inclusion API with pagination
+ * Fetch structures from Data Inclusion API with pagination
  * Filters by source = "carif-oref"
+ * Stops when limit is reached (if specified)
  */
 async function fetchAllCarifOrefStructures(
   options: DiIngestionOptions = {},
 ): Promise<ListedStructure[]> {
-  const { pageSize = DEFAULT_PAGE_SIZE, onProgress } = options;
+  const { pageSize = DEFAULT_PAGE_SIZE, limit, onProgress } = options;
   const allStructures: ListedStructure[] = [];
   let currentPage = 1;
   let totalPages: number | null = null;
   let totalItems: number | null = null;
 
-  logger.info({ source: SOURCE_CARIF_OREF, pageSize }, "Starting DI API fetch");
+  logger.info(
+    { source: SOURCE_CARIF_OREF, pageSize, limit: limit ?? "unlimited" },
+    "Starting DI API fetch",
+  );
 
   while (true) {
     const response = await listStructuresEndpointApiV1StructuresGet({
@@ -64,7 +72,7 @@ async function fetchAllCarifOrefStructures(
       totalPages = data.pages;
       totalItems = data.total;
       logger.info(
-        { totalItems, totalPages, pageSize },
+        { totalItems, totalPages, pageSize, limit: limit ?? "unlimited" },
         "DI API pagination initialized",
       );
     }
@@ -80,7 +88,16 @@ async function fetchAllCarifOrefStructures(
       "Fetched page",
     );
 
-    onProgress?.(allStructures.length, data.total);
+    onProgress?.(allStructures.length, limit ?? data.total);
+
+    // Stop if we've reached the limit
+    if (limit && allStructures.length >= limit) {
+      logger.info(
+        { limit, fetched: allStructures.length },
+        "Limit reached, stopping fetch",
+      );
+      break;
+    }
 
     if (currentPage >= data.pages) {
       break;
@@ -89,12 +106,15 @@ async function fetchAllCarifOrefStructures(
     currentPage++;
   }
 
+  // Trim to exact limit if we fetched more
+  const result = limit ? allStructures.slice(0, limit) : allStructures;
+
   logger.info(
-    { totalFetched: allStructures.length, pagesProcessed: currentPage },
+    { totalFetched: result.length, pagesProcessed: currentPage },
     "Completed DI API fetch",
   );
 
-  return allStructures;
+  return result;
 }
 
 /**
@@ -206,11 +226,18 @@ async function insertStructures(
 }
 
 /**
- * Ingest all carif-oref structures from Data Inclusion API into the di_structures table
+ * Ingest carif-oref structures from Data Inclusion API into the di_structures table
  *
  * @param supabase - Supabase client with admin privileges
- * @param options - Ingestion options (pageSize, onProgress callback)
+ * @param options - Ingestion options (pageSize, limit, onProgress callback)
  * @returns Ingestion results with counts and any errors
+ *
+ * @example
+ * // Ingest all structures
+ * await ingestCarifOrefStructures(supabase);
+ *
+ * // Ingest only 10 structures (for testing)
+ * await ingestCarifOrefStructures(supabase, { limit: 10 });
  */
 export async function ingestCarifOrefStructures(
   supabase: SupabaseClient<Database>,

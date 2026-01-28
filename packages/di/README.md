@@ -4,7 +4,7 @@ TypeScript client for the [Data Inclusion API](https://api.data.inclusion.gouv.f
 
 ## Environment Variables
 
-The client requires the following environment variables in `packages/di/.env`:
+The client requires the following environment variables in the **root `.env`** file:
 
 ```bash
 DI_BASE_URL=https://api-staging.data.inclusion.gouv.fr
@@ -23,7 +23,7 @@ pnpm run gen:client
 ```
 
 This will:
-1. Load environment variables from `packages/di/.env`
+1. Load environment variables from the root `.env`
 2. Fetch the OpenAPI spec from `$DI_BASE_URL/api/openapi.json`
 3. Filter out `/api/v0/` endpoints (only v1 endpoints are generated)
 4. Generate TypeScript client files in `src/hey-api/`

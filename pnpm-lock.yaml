@@ -38,6 +38,9 @@ importers:
       '@playground/supabase':
         specifier: workspace:*
         version: link:packages/supabase
+      '@refugies-info/di':
+        specifier: workspace:*
+        version: link:packages/di
       '@types/js-yaml':
         specifier: ^4.0.9
         version: 4.0.9

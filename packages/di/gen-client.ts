@@ -3,16 +3,16 @@ import { config } from "dotenv";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
-// Load .env file from the same directory as this script
+// Load .env file from project root
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-config({ path: join(__dirname, ".env") });
+config({ path: join(__dirname, "../../.env") });
 
 // Get the DI_BASE_URL from environment
 const diBaseUrl = process.env.DI_BASE_URL;
 
 if (!diBaseUrl) {
-  console.error("Error: DI_BASE_URL is not set in .env file");
+  console.error("Error: DI_BASE_URL is not set in root .env file");
   process.exit(1);
 }
 
