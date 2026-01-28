@@ -10,7 +10,7 @@
   },
   "overrides": [
     {
-      "includes": ["packages/di/src/client/**"],
+      "includes": ["packages/di/src/hey-api/**"],
       "linter": { "enabled": false },
       "formatter": { "enabled": false }
     }

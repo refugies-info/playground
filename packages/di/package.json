@@ -4,14 +4,15 @@
   "description": "Data Inclusion API Client",
   "main": "src/index.ts",
   "scripts": {
-    "gen:client": "pnpx @hey-api/openapi-ts -i $DI_BASE_URL/api/openapi.json -o src/hey-api -c @hey-api/client-fetch"
+    "gen:client": "tsx gen-client.ts"
   },
   "dependencies": {
     "@hey-api/client-fetch": "^0.8.1"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.54.1",
-    "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "dotenv-cli": "^11.0.0",
+    "typescript": "^5.0.0"
   }
 }
