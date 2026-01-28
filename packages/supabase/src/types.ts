@@ -34,6 +34,30 @@ export type Database = {
   };
   public: {
     Tables: {
+      di_services: {
+        Row: {
+          created_at: string;
+          data: Json | null;
+          id: number;
+          raw_data: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          data?: Json | null;
+          id?: number;
+          raw_data: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          data?: Json | null;
+          id?: number;
+          raw_data?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       di_structures: {
         Row: {
           created_at: string;

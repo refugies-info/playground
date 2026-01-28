@@ -2,52 +2,45 @@ import { logger } from "@playground/shared-types";
 import type { Database } from "@playground/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  type ListedStructure,
-  listStructuresEndpointApiV1StructuresGet,
-  type PageListedStructure,
-} from "./hey-api";
+  listServicesEndpointApiV1ServicesGet,
+  type PageService,
+  type Service,
+} from "../hey-api";
+import {
+  DEFAULT_BATCH_SIZE,
+  DEFAULT_PAGE_SIZE,
+  type DiIngestionOptions,
+  SOURCE_CARIF_OREF,
+} from "./shared";
 
-const DEFAULT_PAGE_SIZE = Number(process.env.DI_PAGE_SIZE) || 100;
-const DEFAULT_BATCH_SIZE = 100;
-const SOURCE_CARIF_OREF = "carif-oref";
-
-export interface DiIngestionResult {
+export interface DiServicesIngestionResult {
   totalFetched: number;
   totalInserted: number;
   totalSkipped: number;
-  errors: Array<{ structureId: string; error: unknown }>;
-}
-
-export interface DiIngestionOptions {
-  /** Number of items per API page (default: 100) */
-  pageSize?: number;
-  /** Maximum number of structures to fetch (default: unlimited) */
-  limit?: number;
-  /** Progress callback called after each page fetch */
-  onProgress?: (current: number, total: number | null) => void;
+  errors: Array<{ serviceId: string; error: unknown }>;
 }
 
 /**
- * Fetch structures from Data Inclusion API with pagination
+ * Fetch services from Data Inclusion API with pagination
  * Filters by source = "carif-oref"
  * Stops when limit is reached (if specified)
  */
-async function fetchAllCarifOrefStructures(
+async function fetchAllCarifOrefServices(
   options: DiIngestionOptions = {},
-): Promise<ListedStructure[]> {
+): Promise<Service[]> {
   const { pageSize = DEFAULT_PAGE_SIZE, limit, onProgress } = options;
-  const allStructures: ListedStructure[] = [];
+  const allServices: Service[] = [];
   let currentPage = 1;
   let totalPages: number | null = null;
   let totalItems: number | null = null;
 
   logger.info(
     { source: SOURCE_CARIF_OREF, pageSize, limit: limit ?? "unlimited" },
-    "Starting DI API fetch",
+    "Starting DI API fetch for services",
   );
 
   while (true) {
-    const response = await listStructuresEndpointApiV1StructuresGet({
+    const response = await listServicesEndpointApiV1ServicesGet({
       query: {
         page: currentPage,
         size: pageSize,
@@ -58,22 +51,22 @@ async function fetchAllCarifOrefStructures(
     if (response.error) {
       logger.error(
         { page: currentPage, error: response.error },
-        "Failed to fetch structures page",
+        "Failed to fetch services page",
       );
       throw new Error(
-        `Failed to fetch structures page ${currentPage}: ${JSON.stringify(response.error)}`,
+        `Failed to fetch services page ${currentPage}: ${JSON.stringify(response.error)}`,
       );
     }
 
-    const data = response.data as PageListedStructure;
-    allStructures.push(...data.items);
+    const data = response.data as PageService;
+    allServices.push(...data.items);
 
     if (totalPages === null) {
       totalPages = data.pages;
       totalItems = data.total;
       logger.info(
         { totalItems, totalPages, pageSize, limit: limit ?? "unlimited" },
-        "DI API pagination initialized",
+        "DI API pagination initialized for services",
       );
     }
 
@@ -82,19 +75,19 @@ async function fetchAllCarifOrefStructures(
         page: currentPage,
         totalPages,
         itemsInPage: data.items.length,
-        fetchedSoFar: allStructures.length,
+        fetchedSoFar: allServices.length,
         totalItems,
       },
-      "Fetched page",
+      "Fetched services page",
     );
 
-    onProgress?.(allStructures.length, limit ?? data.total);
+    onProgress?.(allServices.length, limit ?? data.total);
 
     // Stop if we've reached the limit
-    if (limit && allStructures.length >= limit) {
+    if (limit && allServices.length >= limit) {
       logger.info(
-        { limit, fetched: allStructures.length },
-        "Limit reached, stopping fetch",
+        { limit, fetched: allServices.length },
+        "Limit reached, stopping services fetch",
       );
       break;
     }
@@ -107,53 +100,53 @@ async function fetchAllCarifOrefStructures(
   }
 
   // Trim to exact limit if we fetched more
-  const result = limit ? allStructures.slice(0, limit) : allStructures;
+  const result = limit ? allServices.slice(0, limit) : allServices;
 
   logger.info(
     { totalFetched: result.length, pagesProcessed: currentPage },
-    "Completed DI API fetch",
+    "Completed DI API fetch for services",
   );
 
   return result;
 }
 
 /**
- * Insert structures into the di_structures table
- * Stores the full structure as raw_data (JSON string) and the parsed structure in data (jsonb)
+ * Insert services into the di_services table
+ * Stores the full service as raw_data (JSON string) and the parsed service in data (jsonb)
  */
-async function insertStructures(
+async function insertServices(
   supabase: SupabaseClient<Database>,
-  structures: ListedStructure[],
+  services: Service[],
 ): Promise<{
   inserted: number;
   skipped: number;
-  errors: Array<{ structureId: string; error: unknown }>;
+  errors: Array<{ serviceId: string; error: unknown }>;
 }> {
   let inserted = 0;
   const skipped = 0;
-  const errors: Array<{ structureId: string; error: unknown }> = [];
+  const errors: Array<{ serviceId: string; error: unknown }> = [];
 
-  const totalBatches = Math.ceil(structures.length / DEFAULT_BATCH_SIZE);
+  const totalBatches = Math.ceil(services.length / DEFAULT_BATCH_SIZE);
   logger.info(
     {
-      totalStructures: structures.length,
+      totalServices: services.length,
       batchSize: DEFAULT_BATCH_SIZE,
       totalBatches,
     },
-    "Starting database insertion",
+    "Starting database insertion for services",
   );
 
-  for (let i = 0; i < structures.length; i += DEFAULT_BATCH_SIZE) {
+  for (let i = 0; i < services.length; i += DEFAULT_BATCH_SIZE) {
     const batchIndex = Math.floor(i / DEFAULT_BATCH_SIZE) + 1;
-    const batch = structures.slice(i, i + DEFAULT_BATCH_SIZE);
+    const batch = services.slice(i, i + DEFAULT_BATCH_SIZE);
 
-    const records = batch.map((structure) => ({
-      raw_data: JSON.stringify(structure),
-      data: structure,
+    const records = batch.map((service) => ({
+      raw_data: JSON.stringify(service),
+      data: service,
     }));
 
     const { data, error } = await supabase
-      .from("di_structures")
+      .from("di_services")
       .insert(records)
       .select("id");
 
@@ -165,31 +158,31 @@ async function insertStructures(
           batchSize: batch.length,
           error: error.message,
         },
-        "Batch insert failed, falling back to individual inserts",
+        "Batch insert failed for services, falling back to individual inserts",
       );
 
       // If batch fails, try individual inserts to identify problematic records
       let batchInserted = 0;
       let batchErrors = 0;
 
-      for (const structure of batch) {
+      for (const service of batch) {
         const { error: singleError } = await supabase
-          .from("di_structures")
+          .from("di_services")
           .insert({
-            raw_data: JSON.stringify(structure),
-            data: structure,
+            raw_data: JSON.stringify(service),
+            data: service,
           });
 
         if (singleError) {
-          errors.push({ structureId: structure.id, error: singleError });
+          errors.push({ serviceId: service.id, error: singleError });
           batchErrors++;
           logger.error(
             {
-              structureId: structure.id,
-              structureName: structure.nom,
+              serviceId: service.id,
+              serviceName: service.nom,
               error: singleError.message,
             },
-            "Failed to insert structure",
+            "Failed to insert service",
           );
         } else {
           inserted++;
@@ -199,7 +192,7 @@ async function insertStructures(
 
       logger.info(
         { batchIndex, batchInserted, batchErrors },
-        "Completed fallback insertion for batch",
+        "Completed fallback insertion for services batch",
       );
     } else {
       const count = data?.length ?? batch.length;
@@ -212,47 +205,50 @@ async function insertStructures(
           insertedInBatch: count,
           totalInserted: inserted,
         },
-        "Batch inserted successfully",
+        "Services batch inserted successfully",
       );
     }
   }
 
   logger.info(
     { inserted, skipped, errorCount: errors.length },
-    "Completed database insertion",
+    "Completed database insertion for services",
   );
 
   return { inserted, skipped, errors };
 }
 
 /**
- * Ingest carif-oref structures from Data Inclusion API into the di_structures table
+ * Ingest carif-oref services from Data Inclusion API into the di_services table
  *
  * @param supabase - Supabase client with admin privileges
  * @param options - Ingestion options (pageSize, limit, onProgress callback)
  * @returns Ingestion results with counts and any errors
  *
  * @example
- * // Ingest all structures
- * await ingestCarifOrefStructures(supabase);
+ * // Ingest all services
+ * await ingestCarifOrefServices(supabase);
  *
- * // Ingest only 10 structures (for testing)
- * await ingestCarifOrefStructures(supabase, { limit: 10 });
+ * // Ingest only 10 services (for testing)
+ * await ingestCarifOrefServices(supabase, { limit: 10 });
  */
-export async function ingestCarifOrefStructures(
+export async function ingestCarifOrefServices(
   supabase: SupabaseClient<Database>,
   options: DiIngestionOptions = {},
-): Promise<DiIngestionResult> {
+): Promise<DiServicesIngestionResult> {
   const startTime = Date.now();
-  logger.info({ source: SOURCE_CARIF_OREF }, "=== Starting DI ingestion ===");
+  logger.info(
+    { source: SOURCE_CARIF_OREF },
+    "=== Starting DI services ingestion ===",
+  );
 
-  // 1. Fetch all structures from DI API
-  const structures = await fetchAllCarifOrefStructures(options);
+  // 1. Fetch all services from DI API
+  const services = await fetchAllCarifOrefServices(options);
 
   // 2. Insert into Supabase
-  const { inserted, skipped, errors } = await insertStructures(
+  const { inserted, skipped, errors } = await insertServices(
     supabase,
-    structures,
+    services,
   );
 
   const durationMs = Date.now() - startTime;
@@ -260,25 +256,25 @@ export async function ingestCarifOrefStructures(
 
   logger.info(
     {
-      totalFetched: structures.length,
+      totalFetched: services.length,
       totalInserted: inserted,
       totalSkipped: skipped,
       errorCount: errors.length,
       durationMs,
       durationSec: `${durationSec}s`,
     },
-    "=== DI ingestion completed ===",
+    "=== DI services ingestion completed ===",
   );
 
   if (errors.length > 0) {
     logger.warn(
       { errorCount: errors.length, firstErrors: errors.slice(0, 5) },
-      "Some structures failed to insert",
+      "Some services failed to insert",
     );
   }
 
   return {
-    totalFetched: structures.length,
+    totalFetched: services.length,
     totalInserted: inserted,
     totalSkipped: skipped,
     errors,
@@ -286,11 +282,11 @@ export async function ingestCarifOrefStructures(
 }
 
 /**
- * Fetch structures from DI API without storing them (for inspection/testing)
+ * Fetch services from DI API without storing them (for inspection/testing)
  */
-export async function fetchCarifOrefStructures(
+export async function fetchCarifOrefServices(
   options: DiIngestionOptions = {},
-): Promise<ListedStructure[]> {
-  logger.info("Fetching structures (inspect mode, no storage)");
-  return fetchAllCarifOrefStructures(options);
+): Promise<Service[]> {
+  logger.info("Fetching services (inspect mode, no storage)");
+  return fetchAllCarifOrefServices(options);
 }
