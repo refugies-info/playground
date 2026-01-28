@@ -52,4 +52,4 @@ supabase/functions/node_modules/
 .workflow-data/
 
 # Letta
-.letta/*.local.json
+.letta/
