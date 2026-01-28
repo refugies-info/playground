@@ -9,6 +9,7 @@ The client requires the following environment variables in the **root `.env`** f
 ```bash
 DI_BASE_URL=https://api-staging.data.inclusion.gouv.fr
 DI_API_KEY=your_api_key_here
+DI_PAGE_SIZE=100  # Optional, default: 100, max: 10000
 ```
 
 ## Generating the Client
@@ -44,11 +45,58 @@ The generated client is located in `src/hey-api/` and includes:
 
 ## Usage
 
+### Fetching Structures
+
 ```typescript
-import { listStructures } from '@refugies-info/di';
+import { fetchCarifOrefStructures } from '@refugies-info/di';
+
+// Fetch all carif-oref structures
+const structures = await fetchCarifOrefStructures();
+
+// Fetch with options
+const structures = await fetchCarifOrefStructures({
+  pageSize: 100,
+  limit: 10,  // Fetch only 10 structures (for testing)
+  onProgress: (current, total) => console.log(`${current}/${total}`),
+});
+```
+
+### Ingesting to Database
+
+```typescript
+import { ingestCarifOrefStructures } from '@refugies-info/di';
+import { getSupabaseAdmin } from '@playground/supabase';
+
+const supabase = getSupabaseAdmin();
+
+// Ingest all structures
+const result = await ingestCarifOrefStructures(supabase);
+
+console.log(`Fetched: ${result.totalFetched}`);
+console.log(`Inserted: ${result.totalInserted}`);
+console.log(`Errors: ${result.errors.length}`);
+
+// Ingest with limit (for testing)
+const result = await ingestCarifOrefStructures(supabase, {
+  limit: 10,
+});
+```
+
+### Using the Client Directly
+
+```typescript
+import { listStructuresEndpointApiV1StructuresGet } from '@refugies-info/di';
 
 // The client is automatically configured with DI_BASE_URL and DI_API_KEY
-const structures = await listStructures();
+const response = await listStructuresEndpointApiV1StructuresGet({
+  query: {
+    page: 1,
+    size: 100,
+    sources: ['carif-oref'],
+  },
+});
+
+const structures = response.data.items;
 ```
 
 ## Configuration
@@ -73,3 +121,27 @@ await listStructures({
 - Generated files in `src/hey-api/` are excluded from Biome linting/formatting
 - The client uses the `@hey-api/client-fetch` adapter for HTTP requests
 - API endpoints use `/api/v1/` prefix (defined in the OpenAPI spec)
+
+## Smoke Test
+
+A smoke test script is available for testing the DI ingestion module:
+
+```bash
+# Fetch 5 structures (default)
+pnpm test:di
+
+# Fetch specific number
+pnpm test:di --limit 10
+
+# Fetch ALL structures
+pnpm test:di --all
+
+# Fetch and cleanup after
+pnpm test:di --limit 10 --cleanup
+```
+
+The script will:
+1. Fetch structures from DI API
+2. Insert them into local Supabase `di_structures` table
+3. Verify the insertion
+4. Optionally clean up test data
