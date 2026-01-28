@@ -56,3 +56,4 @@ supabase/functions/node_modules/
 
 # Agents
 .agent
+.agents
