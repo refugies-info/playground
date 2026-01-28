@@ -11,7 +11,8 @@
   "dependencies": {
     "@hey-api/client-fetch": "^0.8.1",
     "@playground/shared-types": "workspace:*",
-    "@playground/supabase": "workspace:*"
+    "@playground/supabase": "workspace:*",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.54.1",

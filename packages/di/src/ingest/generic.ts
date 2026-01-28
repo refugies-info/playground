@@ -1,6 +1,7 @@
 import { logger } from "@playground/shared-types";
 import type { Database } from "@playground/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { DiApiResponseSchema } from "./schemas";
 import {
   DEFAULT_BATCH_SIZE,
   DEFAULT_PAGE_SIZE,
@@ -69,23 +70,35 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
       },
     });
 
-    if (response.error) {
+    // Validate API response structure with Zod
+    const parsed = DiApiResponseSchema.safeParse(response);
+    if (!parsed.success) {
       logger.error(
-        { page: currentPage, error: response.error },
-        `Failed to fetch ${itemType} page`,
+        { page: currentPage, error: parsed.error.format() },
+        `Invalid API response structure for ${itemType}`,
       );
       throw new Error(
-        `Failed to fetch ${itemType} page ${currentPage}: ${JSON.stringify(response.error)}`,
+        `Invalid API response for ${itemType} page ${currentPage}: ${parsed.error.message}`,
       );
     }
 
-    const data = response.data;
+    if (parsed.data.error) {
+      logger.error(
+        { page: currentPage, error: parsed.data.error },
+        `Failed to fetch ${itemType} page`,
+      );
+      throw new Error(
+        `Failed to fetch ${itemType} page ${currentPage}: ${JSON.stringify(parsed.data.error)}`,
+      );
+    }
+
+    const data = parsed.data.data;
     if (!data) {
       throw new Error(
         `Failed to fetch ${itemType} page ${currentPage}: no data returned`,
       );
     }
-    allItems.push(...data.items);
+    allItems.push(...(data.items as T[]));
 
     if (totalPages === null) {
       totalPages = data.pages;

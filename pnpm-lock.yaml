@@ -217,6 +217,9 @@ importers:
       '@playground/supabase':
         specifier: workspace:*
         version: link:../supabase
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@hey-api/openapi-ts':
         specifier: ^0.54.1
