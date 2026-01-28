@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @source "../**/*.{ts,tsx,js,jsx,mdx}";
 @source "../../../../packages/ui/src/**/*.{ts,tsx,js,jsx,mdx}";
+@import "flag-icons/css/flag-icons.min.css";
 
 @custom-variant dark (&:is(.dark *));
 

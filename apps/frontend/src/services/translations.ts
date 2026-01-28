@@ -169,3 +169,40 @@ export async function getTranslations(params: GetTranslationsParams) {
     totalPages: Math.ceil((count || 0) / pageSize),
   };
 }
+
+export async function getTranslationById(id: string) {
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
+  const { data, error } = await supabase
+    .from("translation_records")
+    .select(
+      `
+      *,
+      editorial_records (
+        markdown
+      )
+    `,
+    )
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    logger.error(error, "Error fetching translation");
+    return null;
+  }
+
+  // Cast to correct type since we know the relation exists
+  const row =
+    data as unknown as Database["public"]["Tables"]["translation_records"]["Row"] & {
+      editorial_records: { markdown: string };
+    };
+
+  return {
+    id: row.id,
+    language: row.language,
+    status: row.status,
+    translationMarkdown: row.markdown,
+    sourceMarkdown: row.editorial_records?.markdown || "",
+  };
+}

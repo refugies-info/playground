@@ -48,10 +48,15 @@ export default async function TranslationsPage(props: PageProps) {
     status: typeof status === "string" ? status : "",
   };
 
+  const role = user.user_metadata?.role;
+  const title =
+    role === "translator" ? "Traductions" : "Toutes les traductions";
+
   return (
     <TranslationsList
       initialTranslations={translations}
       initialFilters={initialFilters}
+      title={title}
     />
   );
 }

@@ -23,7 +23,9 @@
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "2.84.0",
     "@tanstack/react-table": "^8.21.3",
+    "@vladyoslav/drawer": "^0.1.0",
     "clsx": "^2.1.1",
+    "flag-icons": "^7.5.0",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.554.0",
     "next": "16.0.10",
@@ -38,7 +40,6 @@
     "tailwind-merge": "2.5.5",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0",
-    "@vladyoslav/drawer": "^0.1.0",
     "workflow": "4.0.1-beta.21",
     "zod": "^3.25.76"
   },
