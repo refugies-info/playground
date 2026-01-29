@@ -62,9 +62,6 @@ export async function toggleWorkflowStatus(
   newProgress?: string;
   error?: string;
 }> {
-  const cookieStore = await cookies();
-  const _supabase = createSupabaseServerClient(cookieStore);
-
   try {
     if (!toggleStatusWorkflow) {
       logger.error("toggleStatusWorkflow is undefined");
