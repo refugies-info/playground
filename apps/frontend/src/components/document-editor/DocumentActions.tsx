@@ -41,6 +41,10 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
   const [archiveError, setArchiveError] = useState<string | null>(null);
   const [archiveSuccess, setArchiveSuccess] = useState(false);
 
+  // Publication Overlay State
+  const [showPublishOverlay, setShowPublishOverlay] = useState(false);
+  const [triggerTranslations, setTriggerTranslations] = useState(true);
+
   const handleSave = async () => {
     setSaveError(null);
     setSaveSuccess(false);
@@ -59,12 +63,17 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
     previewDocument();
   };
 
-  const handlePublish = async () => {
+  const handlePublishClick = () => {
+    setShowPublishOverlay(true);
+  };
+
+  const handleConfirmPublish = async () => {
+    setShowPublishOverlay(false);
     setPublishError(null);
     setPublishSuccess(false);
     setPublishedUrl(null);
 
-    const result = await publishDocument();
+    const result = await publishDocument(triggerTranslations);
 
     if (result.success) {
       setPublishSuccess(true);
@@ -163,7 +172,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
         variant="success"
         size="sm"
         className={cn("gap-2", isCollapsed && "justify-center px-0")}
-        onClick={handlePublish}
+        onClick={handlePublishClick}
         disabled={isPublishing || !canPublishNow}
       >
         <Send className="w-4 h-4" />
@@ -225,6 +234,48 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
           >
             <ExternalLink className="w-3.5 h-3.5" />
             Voir la fiche
+          </Button>
+        </div>
+      )}
+
+      {/* Confirmation Overlay */}
+      {showPublishOverlay && (
+        <div className="absolute inset-0 z-20 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-4 p-4 animate-in fade-in duration-200">
+          <button
+            type="button"
+            onClick={() => setShowPublishOverlay(false)}
+            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <div className="text-sm font-medium text-gray-900 text-center">
+            Confirmer la publication
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="triggerTranslations"
+              checked={triggerTranslations}
+              onChange={(e) => setTriggerTranslations(e.target.checked)}
+              className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+            />
+            <label
+              htmlFor="triggerTranslations"
+              className="text-xs text-gray-600 select-none cursor-pointer"
+            >
+              Déclencher les traductions
+            </label>
+          </div>
+
+          <Button
+            onClick={handleConfirmPublish}
+            variant="success"
+            size="sm"
+            className="w-full gap-2 h-8 text-xs"
+          >
+            <Send className="w-3.5 h-3.5" />
+            Publier
           </Button>
         </div>
       )}

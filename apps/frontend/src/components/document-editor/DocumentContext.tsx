@@ -47,7 +47,7 @@ interface DocumentContextType {
   activeView: "edit" | "compliance";
   setActiveView: (view: "edit" | "compliance") => void;
   previewDocument: () => void;
-  publishDocument: () => Promise<{
+  publishDocument: (triggerTranslations?: boolean) => Promise<{
     success: boolean;
     remoteId?: string;
     publishedUrl?: string;
@@ -197,7 +197,9 @@ export function DocumentProvider({
     }
   };
 
-  const publishDocumentAction = async (): Promise<{
+  const publishDocumentAction = async (
+    triggerTranslations = false,
+  ): Promise<{
     success: boolean;
     remoteId?: string;
     publishedUrl?: string;
@@ -213,6 +215,8 @@ export function DocumentProvider({
         document.id,
         document.title,
         document.editorialContent,
+        undefined, // metadata
+        triggerTranslations,
       );
 
       if (result.success) {

@@ -1,3 +1,4 @@
+import { LANGUAGE_NAMES, LANGUAGE_TO_COUNTRY } from "@playground/shared-types";
 import type { BadgeProps } from "@playground/ui/primitives";
 
 /**
@@ -113,4 +114,23 @@ export function getStateLabel(state: string): string {
  */
 export function getStateVariant(state: string): BadgeVariant {
   return STATE_CONFIG[state as DocumentState]?.variant || "neutral";
+}
+
+/**
+ * Get the CSS class for the flag icon
+ * Requires 'flag-icons' to be imported
+ */
+export function getFlagClass(lang: string): string {
+  const countryCode = LANGUAGE_TO_COUNTRY[lang] || "xx"; // xx is placeholder
+  return `fi fi-${countryCode}`;
+}
+
+export function getLanguageFlag(lang: string): string {
+  // Kept for backward compatibility if needed, but we should switch to classes
+  // This will now return the class name, so components need to adapt
+  return getFlagClass(lang);
+}
+
+export function getLanguageName(lang: string): string {
+  return LANGUAGE_NAMES[lang] || lang;
 }

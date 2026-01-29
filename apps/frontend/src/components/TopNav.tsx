@@ -5,7 +5,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export function TopNav() {
+export interface TopNavProps {
+  role?: string | null;
+}
+
+export function TopNav({ role }: TopNavProps) {
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createClient();
@@ -17,6 +21,10 @@ export function TopNav() {
 
   const isWorkflowActive = pathname === "/workflow";
   const isDocumentsActive = pathname === "/documents";
+  const isTranslationsActive = pathname === "/translations";
+
+  // Requirement: "pour les tranducteurs on affiche uniquement le bouton se deconnecter"
+  const isTranslator = role === "translator";
 
   return (
     <nav className="border-b border-gray-200 bg-white">
@@ -35,26 +43,40 @@ export function TopNav() {
             </h1>
           </div>
           <div className="flex items-center gap-8">
-            <Link
-              href="/workflow"
-              className={`border-b-2 pb-1 text-sm font-medium transition-colors ${
-                isWorkflowActive
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900"
-              }`}
-            >
-              Importer du contenu
-            </Link>
-            <Link
-              href="/documents"
-              className={`border-b-2 pb-1 text-sm font-medium transition-colors ${
-                isDocumentsActive
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900"
-              }`}
-            >
-              Voir les documents
-            </Link>
+            {!isTranslator && (
+              <>
+                <Link
+                  href="/workflow"
+                  className={`border-b-2 pb-1 text-sm font-medium transition-colors ${
+                    isWorkflowActive
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900"
+                  }`}
+                >
+                  Importer
+                </Link>
+                <Link
+                  href="/documents"
+                  className={`border-b-2 pb-1 text-sm font-medium transition-colors ${
+                    isDocumentsActive
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900"
+                  }`}
+                >
+                  Documents
+                </Link>
+                <Link
+                  href="/translations"
+                  className={`border-b-2 pb-1 text-sm font-medium transition-colors ${
+                    isTranslationsActive
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900"
+                  }`}
+                >
+                  Traductions
+                </Link>
+              </>
+            )}
             <button
               type="button"
               onClick={handleLogout}
