@@ -82,28 +82,15 @@ export async function archiveDocumentStep(
 
     const remoteId = existingPublication.remote_id;
 
-    // Build the webhook payload with 'Archivé' status
-    const webhookPayload = {
-      email: userEmail,
-      dispositif: {
-        typeContenu: "dispositif",
-        theme: (metadata?.theme as string) || "63286a015d31b2c0cad99615",
-        status: "Archivé",
-        titreInformatif: title,
-        origin: "RCO",
-        _id: remoteId,
-        translations: {
-          fr: {
-            content: {
-              titreInformatif: title,
-              titreMarque: title,
-              abstract: "",
-              markdown: markdown,
-            },
-          },
-        },
-      },
-    };
+    // Use adapter to build payload
+    const webhookPayload = adapter.buildPayload({
+      title,
+      markdown,
+      metadata: metadata || {},
+      userEmail,
+      status: "Archivé",
+      existingRemoteId: remoteId,
+    });
 
     // Call the webhook
     const response = await fetch(webhookUrl, {

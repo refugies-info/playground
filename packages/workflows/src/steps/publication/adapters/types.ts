@@ -3,14 +3,7 @@ import type { PublicationPlatform } from "../../../types";
 /**
  * Payload structure for publication webhooks.
  */
-export interface WebhookPayload {
-  title: string;
-  markdown: string;
-  metadata: Record<string, unknown>;
-  userEmail: string;
-  status?: string;
-  remoteId?: string;
-}
+export type WebhookPayload = Record<string, unknown>;
 
 /**
  * Response from a publication webhook.

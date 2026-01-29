@@ -81,28 +81,15 @@ export async function publishDocumentStep(
     const existingRemoteId = existingPublication?.remote_id;
     const isUpdate = !!existingRemoteId;
 
-    // Build the full webhook payload (dispositif format for refugies.info)
-    const webhookPayload = {
-      email: userEmail,
-      dispositif: {
-        typeContenu: "dispositif",
-        theme: (metadata?.theme as string) || "63286a015d31b2c0cad99615",
-        status: "Actif",
-        titreInformatif: title,
-        origin: "RCO",
-        ...(isUpdate ? { _id: existingRemoteId } : {}),
-        translations: {
-          fr: {
-            content: {
-              titreInformatif: title,
-              titreMarque: title,
-              abstract: "",
-              markdown: markdown,
-            },
-          },
-        },
-      },
-    };
+    // Use adapter to build payload
+    const webhookPayload = adapter.buildPayload({
+      title,
+      markdown,
+      metadata: metadata || {},
+      userEmail,
+      status: "Actif",
+      existingRemoteId: existingRemoteId || undefined,
+    });
 
     // Call the webhook
     const response = await fetch(webhookUrl, {

@@ -21,16 +21,17 @@ export const refugiesInfoAdapter: PublisherAdapter = {
   buildPayload(doc): WebhookPayload {
     const themeId =
       (doc.metadata?.theme as string) || "63286a015d31b2c0cad99615";
+    const status = doc.status || "Actif";
 
     return {
-      title: doc.title,
-      markdown: doc.markdown,
-      metadata: {
+      email: doc.userEmail,
+      dispositif: {
         typeContenu: "dispositif",
         theme: themeId,
-        status: doc.status || "Actif",
+        status: status,
         titreInformatif: doc.title,
         origin: "RCO",
+        ...(doc.existingRemoteId ? { _id: doc.existingRemoteId } : {}),
         translations: {
           fr: {
             content: {
@@ -41,11 +42,7 @@ export const refugiesInfoAdapter: PublisherAdapter = {
             },
           },
         },
-        ...(doc.existingRemoteId ? { _id: doc.existingRemoteId } : {}),
       },
-      userEmail: doc.userEmail,
-      status: doc.status,
-      remoteId: doc.existingRemoteId,
     };
   },
 
