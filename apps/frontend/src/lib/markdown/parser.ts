@@ -86,6 +86,7 @@ export async function markdownToBlocks(
   // Apply hierarchy restoration (Remark plugins usually run in the 'run' phase)
   const transformedAst = await processor.run(ast);
   const blocks = astToBlocks(
+    // biome-ignore lint/suspicious/noExplicitAny: AST transformation type casting
     (transformedAst as any).children as unknown as MarkdownNode[],
   );
 
@@ -132,6 +133,7 @@ function validateAndFixBlocks(blocks: PartialBlock[]): PartialBlock[] {
       // - The text (trimmed) must equal exactly ":::"
       // This is VERY specific and won't affect paragraphs containing ":::" mixed with other text.
       if (block.type === "paragraph") {
+        // biome-ignore lint/suspicious/noExplicitAny: Block content access
         const content = block.content as any[];
         if (content && content.length === 1 && content[0].type === "text") {
           const text = content[0].text;
@@ -228,6 +230,7 @@ function nodeToBlock(node: MarkdownNode): PartialBlock | PartialBlock[] | null {
     case "paragraph":
       return {
         type: "paragraph",
+        // biome-ignore lint/suspicious/noExplicitAny: BlockNote content type
         content: serializeInline(node.children || []) as any,
       };
 
@@ -237,6 +240,7 @@ function nodeToBlock(node: MarkdownNode): PartialBlock | PartialBlock[] | null {
         props: {
           level: Math.min(Math.max(node.depth || 1, 1), 3) as 1 | 2 | 3,
         },
+        // biome-ignore lint/suspicious/noExplicitAny: BlockNote content type
         content: serializeInline(node.children || []) as any,
       };
 
@@ -267,6 +271,7 @@ function nodeToBlock(node: MarkdownNode): PartialBlock | PartialBlock[] | null {
             listItem.checked !== null && listItem.checked !== undefined
               ? { checked: listItem.checked }
               : {},
+          // biome-ignore lint/suspicious/noExplicitAny: BlockNote content type
           content: content as any,
           children: nestedBlocks,
         } as PartialBlock;
@@ -279,6 +284,7 @@ function nodeToBlock(node: MarkdownNode): PartialBlock | PartialBlock[] | null {
     case "blockquote":
       return {
         type: "quote",
+        // biome-ignore lint/suspicious/noExplicitAny: BlockNote content type
         content: serializeInline(node.children || []) as any,
       };
 
@@ -306,6 +312,7 @@ function nodeToBlock(node: MarkdownNode): PartialBlock | PartialBlock[] | null {
         type: "table",
         content: {
           type: "tableContent",
+          // biome-ignore lint/suspicious/noExplicitAny: custom table structure
           rows: rows as any,
         },
       };
@@ -369,6 +376,7 @@ function parseDirective(node: MarkdownNode): PartialBlock {
   }
 
   let childrenBlocks = astToBlocks(node.children || []);
+  // biome-ignore lint/suspicious/noExplicitAny: content array
   let content: any[] = [];
 
   // Logic to extract the first paragraph as the main inline content for these blocks

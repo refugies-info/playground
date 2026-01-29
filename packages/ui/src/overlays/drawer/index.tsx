@@ -10,9 +10,9 @@ const Drawer = (props: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
 );
 Drawer.displayName = "Drawer";
 
-const DrawerTrigger = DrawerPrimitive.Trigger as any;
-const DrawerPortal = DrawerPrimitive.Portal as any;
-const DrawerClose = DrawerPrimitive.Close as any;
+const DrawerTrigger = DrawerPrimitive.Trigger;
+const DrawerPortal = DrawerPrimitive.Portal;
+const DrawerClose = DrawerPrimitive.Close;
 
 const DrawerOverlay = React.forwardRef<
   React.ComponentRef<typeof DrawerPrimitive.Overlay>,
@@ -23,7 +23,7 @@ const DrawerOverlay = React.forwardRef<
     className={cn("fixed inset-0 z-100 bg-black/40", className)}
     {...props}
   />
-)) as any;
+)) as React.ComponentType<React.ComponentProps<typeof DrawerPrimitive.Overlay>>;
 DrawerOverlay.displayName = "DrawerOverlay";
 
 const DrawerContent = React.forwardRef<
@@ -44,7 +44,7 @@ const DrawerContent = React.forwardRef<
       {children}
     </DrawerPrimitive.Content>
   </DrawerPortal>
-)) as any;
+)) as React.ComponentType<React.ComponentProps<typeof DrawerPrimitive.Content>>;
 DrawerContent.displayName = "DrawerContent";
 
 const DrawerHeader = ({
@@ -81,7 +81,7 @@ const DrawerTitle = React.forwardRef<
     )}
     {...props}
   />
-)) as any;
+)) as React.ComponentType<React.ComponentProps<typeof DrawerPrimitive.Title>>;
 DrawerTitle.displayName = "DrawerTitle";
 
 const DrawerDescription = React.forwardRef<
@@ -93,7 +93,9 @@ const DrawerDescription = React.forwardRef<
     className={cn("text-sm text-gray-500", className)}
     {...props}
   />
-)) as any;
+)) as React.ComponentType<
+  React.ComponentProps<typeof DrawerPrimitive.Description>
+>;
 DrawerDescription.displayName = "DrawerDescription";
 
 export {

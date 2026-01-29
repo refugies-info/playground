@@ -51,99 +51,96 @@ export function DocumentsList({
   };
 
   return (
-    <>
-      <div className="w-full h-full p-8 bg-gray-50 min-h-screen">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Documents</h1>
-        </div>
-
-        <div className="">
-          <div className=" border rounded mb-8 bg-white">
-            <div className="px-4 py-3 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <select
-                    value={filters.status}
-                    onChange={(e) =>
-                      updateFilters({ ...filters, status: e.target.value })
-                    }
-                    className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
-                  >
-                    <option value="">Statut</option>
-                    <option value="compliant">Conforme</option>
-                    <option value="non_compliant">Non conforme</option>
-                  </select>
-                </div>
-                <div>
-                  <select
-                    value={filters.state}
-                    onChange={(e) =>
-                      updateFilters({ ...filters, state: e.target.value })
-                    }
-                    className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
-                  >
-                    <option value="">État</option>
-                    {Object.entries(STATE_CONFIG)
-                      .filter(
-                        ([_key, config], index, array) =>
-                          // Garder seulement la première occurrence de chaque label
-                          array.findIndex(
-                            ([, c]) => c.label === config.label,
-                          ) === index,
-                      )
-                      .map(([key, config]) => (
-                        <option key={key} value={key}>
-                          {config.label}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <label htmlFor="dateFrom" className="text-sm font-medium">
-                    De
-                  </label>
-                  <input
-                    id="dateFrom"
-                    type="date"
-                    value={filters.dateFrom}
-                    onChange={(e) =>
-                      updateFilters({ ...filters, dateFrom: e.target.value })
-                    }
-                    className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <label htmlFor="dateTo" className="text-sm font-medium">
-                    à
-                  </label>
-                  <input
-                    id="dateTo"
-                    type="date"
-                    value={filters.dateTo}
-                    onChange={(e) =>
-                      updateFilters({ ...filters, dateTo: e.target.value })
-                    }
-                    className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
-                  />
-                </div>
-              </div>
-              {(filters.status ||
-                filters.state ||
-                filters.dateFrom ||
-                filters.dateTo) && (
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  Re-initialiser les filtres
-                </button>
-              )}
-            </div>
-          </div>
-          <DataTable columns={columns} data={initialDocuments} pageSize={50} />
-        </div>
+    <div className="w-full h-full p-8 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Documents</h1>
       </div>
-    </>
+
+      <div className="">
+        <div className=" border rounded mb-8 bg-white">
+          <div className="px-4 py-3 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <select
+                  value={filters.status}
+                  onChange={(e) =>
+                    updateFilters({ ...filters, status: e.target.value })
+                  }
+                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
+                >
+                  <option value="">Statut</option>
+                  <option value="compliant">Conforme</option>
+                  <option value="non_compliant">Non conforme</option>
+                </select>
+              </div>
+              <div>
+                <select
+                  value={filters.state}
+                  onChange={(e) =>
+                    updateFilters({ ...filters, state: e.target.value })
+                  }
+                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
+                >
+                  <option value="">État</option>
+                  {Object.entries(STATE_CONFIG)
+                    .filter(
+                      ([_key, config], index, array) =>
+                        // Garder seulement la première occurrence de chaque label
+                        array.findIndex(([, c]) => c.label === config.label) ===
+                        index,
+                    )
+                    .map(([key, config]) => (
+                      <option key={key} value={key}>
+                        {config.label}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <label htmlFor="dateFrom" className="text-sm font-medium">
+                  De
+                </label>
+                <input
+                  id="dateFrom"
+                  type="date"
+                  value={filters.dateFrom}
+                  onChange={(e) =>
+                    updateFilters({ ...filters, dateFrom: e.target.value })
+                  }
+                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label htmlFor="dateTo" className="text-sm font-medium">
+                  à
+                </label>
+                <input
+                  id="dateTo"
+                  type="date"
+                  value={filters.dateTo}
+                  onChange={(e) =>
+                    updateFilters({ ...filters, dateTo: e.target.value })
+                  }
+                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
+                />
+              </div>
+            </div>
+            {(filters.status ||
+              filters.state ||
+              filters.dateFrom ||
+              filters.dateTo) && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Re-initialiser les filtres
+              </button>
+            )}
+          </div>
+        </div>
+        <DataTable columns={columns} data={initialDocuments} pageSize={50} />
+      </div>
+    </div>
   );
 }

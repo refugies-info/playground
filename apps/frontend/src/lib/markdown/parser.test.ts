@@ -113,11 +113,13 @@ Deep warning
     // Root
     expect(blocks[0].type).toBe("toggleListItem");
     // Child
+    // biome-ignore lint/style/noNonNullAssertion: Test assertion
     const child = blocks[0].children![0];
     expect(child.type).toBe("toggleListItem");
     // biome-ignore lint/suspicious/noExplicitAny: Test assertion requires content array access
     expect((child.content as any)[0].text).toBe("Child");
     // Deep Important
+    // biome-ignore lint/style/noNonNullAssertion: Test assertion
     const deep = child.children![0];
     expect(deep.type).toBe("callout");
     expect(deep.props).toEqual({ variant: "important" });
