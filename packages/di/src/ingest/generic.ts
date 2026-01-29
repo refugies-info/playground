@@ -45,12 +45,20 @@ export type DiItem = { id: string; nom: string; source: string };
  */
 export async function fetchAllCarifOrefItems<T extends DiItem>(
   endpointFn: (params: {
-    query: { page: number; size: number; sources: string[] };
+    query: { page: number; size: number; sources: string[] } & Record<
+      string,
+      unknown
+    >;
   }) => Promise<{ data?: DiPage<T>; error?: unknown }>,
   itemType: string,
   options: DiIngestionOptions = {},
 ): Promise<T[]> {
-  const { pageSize = DEFAULT_PAGE_SIZE, limit, onProgress } = options;
+  const {
+    pageSize = DEFAULT_PAGE_SIZE,
+    limit,
+    onProgress,
+    extraQueryParams = {},
+  } = options;
   const allItems: T[] = [];
   let currentPage = 1;
   let totalPages: number | null = null;
@@ -67,6 +75,7 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
         page: currentPage,
         size: pageSize,
         sources: [SOURCE_CARIF_OREF],
+        ...extraQueryParams,
       },
     });
 
@@ -277,7 +286,10 @@ export async function insertItems<T extends DiItem>(
 export async function ingestCarifOrefItems<T extends DiItem>(
   supabase: SupabaseClient<Database>,
   endpointFn: (params: {
-    query: { page: number; size: number; sources: string[] };
+    query: { page: number; size: number; sources: string[] } & Record<
+      string,
+      unknown
+    >;
   }) => Promise<{ data?: DiPage<T>; error?: unknown }>,
   tableName: "di_structures" | "di_services",
   itemType: string,

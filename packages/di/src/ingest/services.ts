@@ -30,12 +30,21 @@ export async function ingestCarifOrefServices(
   supabase: SupabaseClient<Database>,
   options: DiIngestionOptions = {},
 ): Promise<DiServicesIngestionResult> {
+  // Merge extra=true into options to populate the extra field on services
+  const optionsWithExtra: DiIngestionOptions = {
+    ...options,
+    extraQueryParams: {
+      ...options.extraQueryParams,
+      extra: true,
+    },
+  };
+
   const result = await ingestCarifOrefItems(
     supabase,
     listServicesEndpointApiV1ServicesGet,
     "di_services",
     "services",
-    options,
+    optionsWithExtra,
   );
 
   // Transform generic result to specific result type
@@ -56,10 +65,19 @@ export async function ingestCarifOrefServices(
 export async function fetchCarifOrefServices(
   options: DiIngestionOptions = {},
 ): Promise<Service[]> {
+  // Merge extra=true into options to populate the extra field on services
+  const optionsWithExtra: DiIngestionOptions = {
+    ...options,
+    extraQueryParams: {
+      ...options.extraQueryParams,
+      extra: true,
+    },
+  };
+
   logger.info("Fetching services (inspect mode, no storage)");
   return fetchAllCarifOrefItems(
     listServicesEndpointApiV1ServicesGet,
     "services",
-    options,
+    optionsWithExtra,
   );
 }

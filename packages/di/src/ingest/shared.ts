@@ -9,6 +9,8 @@ export interface DiIngestionOptions {
   limit?: number;
   /** Progress callback called after each page fetch */
   onProgress?: (current: number, total: number | null) => void;
+  /** Additional query parameters to pass to the API */
+  extraQueryParams?: Record<string, unknown>;
 }
 
 export { DEFAULT_BATCH_SIZE, DEFAULT_PAGE_SIZE, SOURCE_CARIF_OREF };
