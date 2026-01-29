@@ -196,7 +196,7 @@ export async function persistMetadataReportStep(
       data: {
         reportId: report.id,
         linked: true,
-        editorialRecordId: workflow.editorial_record_id,
+        editorialRecordId: editorialRecordId,
       },
     };
   } catch (error) {
