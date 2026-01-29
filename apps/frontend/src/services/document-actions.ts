@@ -165,6 +165,14 @@ export async function publishDocument(
     }
 
     // 2. Start the publication workflow
+    if (!publicationWorkflow) {
+      logger.error("publicationWorkflow is undefined - cannot start workflow");
+      return {
+        success: false,
+        error: "Configuration error: Workflow not loaded",
+      };
+    }
+
     const result = await start(publicationWorkflow, [
       {
         workflowId,
