@@ -30,8 +30,8 @@ interface DocumentContextType {
   setAiSuggestion: (suggestion: string) => void;
   acceptAiSuggestion: () => void;
   rejectAiSuggestion: () => void;
-  debugBlocks: any[] | null;
-  setDebugBlocks: (blocks: any[]) => void;
+  debugBlocks: unknown[] | null;
+  setDebugBlocks: (blocks: unknown[]) => void;
   rollbackToOriginal: () => void;
   isComparisonMode: boolean;
   setIsComparisonMode: (mode: boolean) => void;
@@ -86,7 +86,7 @@ export function DocumentProvider({
   const [canPublish, setCanPublish] = useState(
     initialData?.state === "modified",
   );
-  const [debugBlocks, setDebugBlocks] = useState<any[] | null>([]);
+  const [debugBlocks, setDebugBlocks] = useState<unknown[] | null>([]);
 
   // Update content and mark as dirty (only if content actually changed)
   const updateContent = (content: string) => {
@@ -221,11 +221,10 @@ export function DocumentProvider({
 
       if (result.success) {
         // Update local state to reflect published status
-        // Update local state to reflect published status
+        // Note: publishedUrl will be available after workflow completes
         setDocument({
           ...document,
           state: "published",
-          publishedUrl: result.publishedUrl,
         });
         // Disable publish button until next modification + save
         setCanPublish(false);
