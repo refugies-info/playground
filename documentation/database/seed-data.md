@@ -1,167 +1,51 @@
 # Seed Users Setup Guide
 
-This document describes how to set up test users in the local Supabase development environment.
+This document describes how to set up test users in the local Supabase development environment using the automated seeding script.
 
 ## Overview
 
-The seed setup creates two types of users:
-- **5 Bootstrap Admin users** created via migration (luis, jeremie, margot, nour, julie)
-- **3 Editor users** created via seed data (alice, claudia, xavier)
+We use an automated TypeScript script to seed users with their appropriate roles and language metadata directly into Supabase Auth.
 
-**Security Note**: No plaintext passwords are stored in version control. Passwords must be set manually via Supabase Studio.
+- **Admin/Editor users**: Core team accounts.
+- **Translator users**: One user per supported language (English, Arabic, Spanish, etc.).
 
-## Bootstrap Admin Users
+## 🚀 Recommended Workflow
 
-These users are created automatically by the migration `20251120_001_create_initial_admins.sql`:
+Instead of manual creation, use the provided script which handles everything (Auth + Metadata).
 
-| Email | Role | Password |
-|-------|------|----------|
-| luis@refugies.info | Admin | Set manually in Supabase Studio |
-| jeremie@refugies.info | Admin | Set manually in Supabase Studio |
-| margot@refugies.info | Admin | Set manually in Supabase Studio |
-| nour@refugies.info | Admin | Set manually in Supabase Studio |
-| julie@refugies.info | Admin | Set manually in Supabase Studio |
-
-## Editor Users
-
-These users are created via `supabase/seed.sql`:
-
-| Email | Role | Password |
-|-------|------|----------|
-| alice@refugies.info | Editor | Set manually in Supabase Studio |
-| claudia@refugies.info | Editor | Set manually in Supabase Studio |
-| xavier@refugies.info | Editor | Set manually in Supabase Studio |
-
-## Setup Instructions
-
-### Step 1: Start Local Supabase
-
+### 1. Configure Password
+Define the default password in your `.env` file:
 ```bash
-supabase start
+SEED_USER_PASSWORD="your-secure-password"
 ```
+*If not set, the script will generate a secure random password and display it in the console.*
 
-This will:
-- Start the local Supabase instance
-- Apply all migrations (including user table creation and initial admin creation)
-- Seed the database with user records from `supabase/seed.sql`
-
-### Step 2: Set Passwords in Supabase Studio
-
-Open Supabase Studio in your browser:
-
-```
-http://127.0.0.1:54323
-```
-
-Set passwords for the bootstrap admin users:
-
-1. Go to **Authentication** → **Users**
-2. Click on **luis@refugies.info**
-3. Click **Reset Password** → Set a secure password
-4. Repeat for **jeremie@refugies.info**
-
-### Step 3: Test Login
-
-Visit the frontend application and test login with:
-- Email: `luis@refugies.info`
-- Password: (the password you just set)
-
-### Step 4: Create Additional Users (Optional)
-
-Luis or Jeremie can now create additional admin/editor users via the admin panel:
-
-1. Log in as luis@refugies.info
-2. Go to **User Management**
-3. Click **Create User**
-4. Enter email and role
-5. User receives invitation email with password reset link
-
-## Database Seeding
-
-The database users are created automatically when you run `supabase start` via the `supabase/seed.sql` file.
-
-The seed file creates:
-- User records with email, role, and timestamps
-- Audit log entries for each user creation
-
-## Auth User Creation
-
-Auth users (with passwords) are created separately in Supabase Studio or via the Supabase Auth API.
-
-This is necessary because:
-1. **Passwords are hashed** by Supabase Auth and cannot be stored directly in the database
-2. **Auth users are managed by Supabase Auth service**, not the public.users table
-3. **The public.users table** stores user metadata (email, role, timestamps)
-
-### Creating Auth Users in Supabase Studio
-
-1. Open http://127.0.0.1:54323
-2. Go to **Authentication** → **Users**
-3. Click **Create User** (top right)
-4. Enter email and password
-5. Click **Create User**
-
-The auth user will be automatically linked to the database user by email address.
-
-## Resetting Everything
-
-To reset the database and start fresh:
-
+### 2. Run the Seed Script
 ```bash
-# Stop Supabase
-supabase stop
-
-# Reset the database (removes all data and re-runs migrations)
-supabase db reset
-
-# Start again
-supabase start
+npx tsx scripts/seed-users.ts
 ```
 
-After resetting, recreate auth users in Supabase Studio:
-1. Open http://127.0.0.1:54323
-2. Go to **Authentication** → **Users**
-3. Click **Create User** for each test user
-4. Enter email and password
+This script will:
+- Create or update users for all roles (`admin`, `editor`, `translator`).
+- For translators, it automatically creates one account per language defined in `LANGUAGES` constants.
+- Sets the correct `user_metadata` (role and language) required for RLS policies.
 
-## Troubleshooting
+## 👥 Test Accounts
 
-### Users in database but not in Auth
+After running the script, you can test the following accounts:
 
-If you see users in the `public.users` table but cannot log in, the auth users weren't created in Supabase Auth.
+| Role | Email | Language |
+| :--- | :--- | :--- |
+| **Admin** | `luis@refugies.info` | - |
+| **Editor** | `editor@refugies.info` | - |
+| **Translator** | `translator.en@refugies.info` | English (en) |
+| **Translator** | `translator.es@refugies.info` | Spanish (es) |
 
-**Solution**: Create auth users manually in Supabase Studio:
-1. Open http://127.0.0.1:54323
-2. Go to **Authentication** → **Users**
-3. Click **Create User** for each test user
-4. Enter email and password
-5. Click **Create User**
+## 🔒 Security & RLS
 
-### Cannot connect to Supabase
+The database uses **Row-Level Security**. Permissions are strictly enforced based on the role and language assigned during seeding:
+- **Translators** can only see/edit translations matching their assigned language.
+- **Admins/Editors** have full visibility across all languages.
 
-Make sure Supabase is running:
-
-```bash
-supabase status
-```
-
-If not running, start it:
-
-```bash
-supabase start
-```
-
-## Next Steps
-
-After seeding, you can:
-1. Test the login flow with different user roles
-2. Verify role-based access control (admins see admin panel, editors don't)
-3. Test user management features (create new users, change roles, deactivate)
-4. Validate audit logging (check audit_logs table for login events)
-
-## Notes
-
-- Passwords are stored securely in Supabase Auth (bcrypt hashed)
-- User metadata (email, role) is stored in the public.users table
-- All auth events are logged in the audit_logs table
-- Users are marked as `is_active = true` by default (can log in)
+---
+*Note: This script is automatically called when you run a full `supabase db reset` via our dev workflows.*

@@ -13,6 +13,9 @@ const badgeVariants = cva(
         warning: "bg-yellow-100 text-yellow-700 border border-yellow-200",
         info: "bg-blue-100 text-blue-700 border border-blue-200",
         neutral: "bg-gray-100 text-gray-700 border border-gray-200",
+        pink: "bg-pink-100 text-pink-700 border border-pink-200",
+        orange: "bg-orange-100 text-orange-700 border border-orange-200",
+        indigo: "bg-indigo-100 text-indigo-700 border border-indigo-200",
       },
       size: {
         sm: "text-xs px-2 py-0.5",

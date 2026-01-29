@@ -1,5 +1,6 @@
+import crypto from "node:crypto";
 import path from "node:path";
-import { logger } from "@playground/shared-types";
+import { LANGUAGES, logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
 import dotenv from "dotenv";
 
@@ -19,19 +20,43 @@ if (!supabaseUrl || !serviceRoleKey) {
 
 const supabase = getSupabaseAdmin(supabaseUrl, serviceRoleKey);
 
-const defaultPassword = process.env.SEED_USER_PASSWORD || "password123";
+const defaultPassword = process.env.SEED_USER_PASSWORD;
+let finalPassword = defaultPassword;
 
-const users = [
-  // Admins
-  { email: "luis@refugies.info", password: defaultPassword, role: "admin" },
-  { email: "jeremie@refugies.info", password: defaultPassword, role: "admin" },
-  { email: "margot@refugies.info", password: defaultPassword, role: "admin" },
-  { email: "nour@refugies.info", password: defaultPassword, role: "admin" },
-  { email: "julie@refugies.info", password: defaultPassword, role: "admin" },
+interface SeedUser {
+  email: string;
+  password?: string;
+  role: "admin" | "editor" | "translator";
+  language?: string;
+}
+
+if (!finalPassword) {
+  finalPassword = crypto.randomBytes(16).toString("hex");
+  logger.warn("SEED_USER_PASSWORD is not set in .env");
+  logger.warn("Generated secure temporary password for this session:");
+  logger.warn(`> ${finalPassword} <`);
+  logger.warn(
+    "Please copy this password or set SEED_USER_PASSWORD in your .env file.",
+  );
+}
+
+const users: SeedUser[] = [
+  // Admins / Developers
+  { email: "luis@refugies.info", password: finalPassword, role: "admin" },
+  { email: "jeremie@refugies.info", password: finalPassword, role: "admin" },
+
   // Editors
-  { email: "alice@refugies.info", password: defaultPassword, role: "editor" },
-  { email: "claudia@refugies.info", password: defaultPassword, role: "editor" },
-  { email: "xavier@refugies.info", password: defaultPassword, role: "editor" },
+  { email: "editor@refugies.info", password: finalPassword, role: "editor" },
+
+  // Translators (Generated from shared constants)
+  ...LANGUAGES.map(
+    (lang): SeedUser => ({
+      email: `translator.${lang.code}@refugies.info`,
+      password: finalPassword,
+      role: "translator",
+      language: lang.code,
+    }),
+  ),
 ];
 
 async function seedUsers() {
@@ -57,7 +82,13 @@ async function seedUsers() {
         logger.info(`Updating user ${user.email}...`);
         const { error: updateError } = await supabase.auth.admin.updateUserById(
           existingUser.id,
-          { user_metadata: { role: user.role } },
+          {
+            password: user.password,
+            user_metadata: {
+              role: user.role,
+              language: user.language,
+            },
+          },
         );
 
         if (updateError) throw updateError;
@@ -66,7 +97,7 @@ async function seedUsers() {
         const { error: createError } = await supabase.auth.admin.createUser({
           email: user.email,
           password: user.password,
-          user_metadata: { role: user.role },
+          user_metadata: { role: user.role, language: user.language },
           email_confirm: true,
         });
 

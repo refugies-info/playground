@@ -4,7 +4,6 @@ import type { Document } from "@playground/shared-types";
 import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { TopNav } from "@/components/TopNav";
 import { STATE_CONFIG } from "@/lib/document-labels";
 import { columns } from "./columns";
 
@@ -53,7 +52,6 @@ export function DocumentsList({
 
   return (
     <>
-      <TopNav />
       <div className="w-full h-full p-8 bg-gray-50 min-h-screen">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Documents</h1>

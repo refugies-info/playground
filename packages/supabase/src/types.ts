@@ -316,6 +316,70 @@ export type Database = {
         };
         Relationships: [];
       };
+      translation_records: {
+        Row: {
+          content_report_id: string | null;
+          created_at: string;
+          editorial_record_id: string;
+          id: string;
+          language: string;
+          markdown: string | null;
+          metadata: Json | null;
+          metadata_report_id: string | null;
+          status: string;
+          updated_at: string;
+          workflow_id: string | null;
+        };
+        Insert: {
+          content_report_id?: string | null;
+          created_at?: string;
+          editorial_record_id: string;
+          id?: string;
+          language: string;
+          markdown?: string | null;
+          metadata?: Json | null;
+          metadata_report_id?: string | null;
+          status: string;
+          updated_at?: string;
+          workflow_id?: string | null;
+        };
+        Update: {
+          content_report_id?: string | null;
+          created_at?: string;
+          editorial_record_id?: string;
+          id?: string;
+          language?: string;
+          markdown?: string | null;
+          metadata?: Json | null;
+          metadata_report_id?: string | null;
+          status?: string;
+          updated_at?: string;
+          workflow_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "translation_records_content_report_id_fkey";
+            columns: ["content_report_id"];
+            isOneToOne: false;
+            referencedRelation: "letta_reports";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "translation_records_editorial_record_id_fkey";
+            columns: ["editorial_record_id"];
+            isOneToOne: false;
+            referencedRelation: "editorial_records";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "translation_records_metadata_report_id_fkey";
+            columns: ["metadata_report_id"];
+            isOneToOne: false;
+            referencedRelation: "letta_reports";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       workflows: {
         Row: {
           conversation_id: string | null;

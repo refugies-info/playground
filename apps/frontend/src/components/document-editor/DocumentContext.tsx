@@ -24,10 +24,14 @@ interface DocumentData {
 interface DocumentContextType {
   document: DocumentData | null;
   setDocument: React.Dispatch<React.SetStateAction<DocumentData | null>>;
+  showDebug: boolean;
+  setShowDebug: (show: boolean) => void;
   updateContent: (content: string) => void;
   setAiSuggestion: (suggestion: string) => void;
   acceptAiSuggestion: () => void;
   rejectAiSuggestion: () => void;
+  debugBlocks: any[] | null;
+  setDebugBlocks: (blocks: any[]) => void;
   rollbackToOriginal: () => void;
   isComparisonMode: boolean;
   setIsComparisonMode: (mode: boolean) => void;
@@ -43,7 +47,7 @@ interface DocumentContextType {
   activeView: "edit" | "compliance";
   setActiveView: (view: "edit" | "compliance") => void;
   previewDocument: () => void;
-  publishDocument: () => Promise<{
+  publishDocument: (triggerTranslations?: boolean) => Promise<{
     success: boolean;
     remoteId?: string;
     publishedUrl?: string;
@@ -68,6 +72,7 @@ export function DocumentProvider({
   const [document, setDocument] = useState<DocumentData | null>(
     initialData || null,
   );
+  const [showDebug, setShowDebug] = useState(false);
   const [activeView, setActiveView] = useState<"edit" | "compliance">("edit");
   const [isLoading] = useState(false);
   const [isComparisonMode, setIsComparisonMode] = useState(false);
@@ -81,6 +86,7 @@ export function DocumentProvider({
   const [canPublish, setCanPublish] = useState(
     initialData?.state === "modified",
   );
+  const [debugBlocks, setDebugBlocks] = useState<any[] | null>([]);
 
   // Update content and mark as dirty (only if content actually changed)
   const updateContent = (content: string) => {
@@ -191,7 +197,9 @@ export function DocumentProvider({
     }
   };
 
-  const publishDocumentAction = async (): Promise<{
+  const publishDocumentAction = async (
+    triggerTranslations = false,
+  ): Promise<{
     success: boolean;
     remoteId?: string;
     publishedUrl?: string;
@@ -207,6 +215,8 @@ export function DocumentProvider({
         document.id,
         document.title,
         document.editorialContent,
+        undefined, // metadata
+        triggerTranslations,
       );
 
       if (result.success) {
@@ -269,6 +279,8 @@ export function DocumentProvider({
       value={{
         document,
         setDocument,
+        showDebug,
+        setShowDebug,
         updateContent,
         setAiSuggestion,
         acceptAiSuggestion,
@@ -292,6 +304,8 @@ export function DocumentProvider({
         isPublishing,
         archiveDocument: archiveDocumentWrapper,
         isArchiving,
+        debugBlocks,
+        setDebugBlocks,
       }}
     >
       {children}

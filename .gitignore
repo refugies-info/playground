@@ -52,5 +52,9 @@ supabase/functions/node_modules/
 supabase/snippets/
 .workflow-data/
 
+# Agents
+.agent
+.agents
+
 # Letta Code (user-specific settings and cache)
 .letta/

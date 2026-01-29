@@ -5,7 +5,13 @@ export async function proxy(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request);
 
   // Protected routes that require authentication
-  const PROTECTED_ROUTES = ["/documents", "/profile", "/account-linking"];
+  // Added /translations
+  const PROTECTED_ROUTES = [
+    "/documents",
+    "/profile",
+    "/account-linking",
+    "/translations",
+  ];
 
   // Public routes that don't require authentication
   const PUBLIC_ROUTES = ["/login", "/signup", "/password-reset", "/callback"];
@@ -23,6 +29,11 @@ export async function proxy(request: NextRequest) {
   // Handle root path "/"
   if (pathname === "/") {
     if (user) {
+      // Determine dashboard based on role
+      const role = user.user_metadata?.role;
+      if (role === "translator") {
+        return NextResponse.redirect(new URL("/translations", request.url));
+      }
       return NextResponse.redirect(new URL("/documents", request.url));
     } else {
       return NextResponse.redirect(new URL("/login", request.url));
@@ -36,10 +47,21 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // If accessing public auth route with session, redirect to documents
+  // If accessing public auth route with session, redirect to documents (or translations if translator)
   // EXCEPT for password-reset (allow password reset even when authenticated)
   if (isPublicRoute && user && !pathname.startsWith("/password-reset")) {
-    return NextResponse.redirect(new URL("/documents", request.url));
+    const role = user.user_metadata?.role;
+    const target = role === "translator" ? "/translations" : "/documents";
+    return NextResponse.redirect(new URL(target, request.url));
+  }
+
+  // Translator Access Control
+  // Block access to /documents for translators
+  if (user && pathname.startsWith("/documents")) {
+    const role = user.user_metadata?.role;
+    if (role === "translator") {
+      return NextResponse.redirect(new URL("/translations", request.url));
+    }
   }
 
   return supabaseResponse;
