@@ -35,8 +35,11 @@ import { unified } from "unified";
 
 // Placeholder types to avoid importing from @blocknote/core if they are not exported
 // or if we want to avoid dependency issues during this refactor.
+// biome-ignore lint/suspicious/noExplicitAny: Placeholder types for external library
 type AnyBlock = any;
+// biome-ignore lint/suspicious/noExplicitAny: Placeholder types for external library
 type AnyInlineContent = any;
+// biome-ignore lint/suspicious/noExplicitAny: Placeholder types for external library
 type AnyStyledText = any;
 
 // MDAST Node Types (simplified for our needs)
@@ -131,6 +134,7 @@ export function blocksToDirectiveMarkdown(blocks: AnyBlock[]): string {
   };
 
   // Stringify the AST to Markdown
+  // biome-ignore lint/suspicious/noExplicitAny: AST type compatibility
   return processor.stringify(root as any);
 }
 
@@ -354,15 +358,18 @@ function blockToMdast(block: AnyBlock): MdastNode | null {
  */
 function serializeTableToMdast(block: AnyBlock): MdastNode | null {
   // BlockNote table structure varies, assume standard structure for now
+  // biome-ignore lint/suspicious/noExplicitAny: external type
   const content = block.content as any;
   if (!content || !Array.isArray(content.rows)) return null;
 
   const rows = content.rows;
   if (rows.length === 0) return null;
 
+  // biome-ignore lint/suspicious/noExplicitAny: external type
   const tableRows = rows.map((row: any) => {
     const cells = Array.isArray(row.cells)
-      ? row.cells.map((cell: any) => {
+      ? // biome-ignore lint/suspicious/noExplicitAny: external type
+        row.cells.map((cell: any) => {
           const cellContent = Array.isArray(cell) ? cell : cell.content || [];
           return {
             type: "tableCell",
@@ -457,6 +464,7 @@ function inlineContentString(content: AnyInlineContent[] | undefined): string {
   return content
     .map((c) => {
       if (c.type === "text") return (c as AnyStyledText).text;
+      // biome-ignore lint/suspicious/noExplicitAny: external type
       if (c.type === "link") return (c as any).href; // or content
       return "";
     })

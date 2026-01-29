@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { getCustomSlashMenuItems } from "./slash-menu-config";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import { logger } from "@playground/shared-types";
 import { Loader2 } from "lucide-react";
 import { blocksToDirectiveMarkdown, markdownToBlocks } from "@/lib/markdown";
 import { AiSuggestionBanner } from "./AiSuggestionBanner"; // Keeping existing import
@@ -44,6 +45,7 @@ export function EditionView() {
   // We destroy the editor when in Raw Mode to ensure a fresh state when switching back.
   // Delayed content hydration state
   const [isEditorReady, setIsEditorReady] = useState(false);
+  // biome-ignore lint/suspicious/noExplicitAny: BlockNote content type
   const pendingInitialContent = useRef<any[] | null>(null);
 
   // Initialize (or re-initialize) editor when needed
@@ -58,11 +60,12 @@ export function EditionView() {
         // Now that imports are static, we can do this synchronously and safely.
         try {
           const currentBlocks = editor.document;
+          // biome-ignore lint/suspicious/noExplicitAny: BlockNote content type
           const markdown = blocksToDirectiveMarkdown(currentBlocks as any);
           setRawMarkdown(markdown);
           lastSyncedContent.current = markdown;
         } catch (e) {
-          console.error("Error snapshotting editor state:", e);
+          logger.error(e, "Error snapshotting editor state:");
         }
 
         setEditor(null);
@@ -102,6 +105,7 @@ export function EditionView() {
 
         // 4. Prime the sync ref
         const standardizedMarkdown = blocksToDirectiveMarkdown(
+          // biome-ignore lint/suspicious/noExplicitAny: BlockNote types compatibility
           initialBlocks as any,
         );
         lastSyncedContent.current = standardizedMarkdown;
@@ -114,7 +118,7 @@ export function EditionView() {
         // Also ensure raw markdown state is sync
         setRawMarkdown(standardizedMarkdown);
       } catch (error) {
-        console.error("Error initializing editor:", error);
+        logger.error(error, "Error initializing editor:");
       }
     };
 
@@ -139,7 +143,7 @@ export function EditionView() {
           setIsEditorReady(true);
           pendingInitialContent.current = null;
         } catch (e) {
-          console.error("Error hydrating content:", e);
+          logger.error(e, "Error hydrating content:");
         } finally {
           setTimeout(() => {
             isUpdating.current = false;
@@ -169,6 +173,7 @@ export function EditionView() {
       if (isUpdating.current) return;
 
       try {
+        // biome-ignore lint/suspicious/noExplicitAny: BlockNote types compatibility
         const markdown = blocksToDirectiveMarkdown(editor.document as any);
         lastSyncedContent.current = markdown;
         updateContent(markdown);
@@ -178,9 +183,9 @@ export function EditionView() {
           setDebugBlocks([...editor.document]);
         }
       } catch (error) {
-        console.error(
-          "Error syncing editor changes to document context:",
+        logger.error(
           error,
+          "Error syncing editor changes to document context:",
         );
       }
     };
@@ -226,15 +231,16 @@ export function EditionView() {
       isUpdating.current = true;
       try {
         const blocks = await markdownToBlocks(contentToShow ?? "");
+        // biome-ignore lint/suspicious/noExplicitAny: BlockNote types compatibility
         const futureMarkdown = blocksToDirectiveMarkdown(blocks as any);
         lastSyncedContent.current = futureMarkdown;
 
         editor.replaceBlocks(editor.document, blocks);
         setRawMarkdown(futureMarkdown);
       } catch (error) {
-        console.error(
-          "Error updating editor content from external source:",
+        logger.error(
           error,
+          "Error updating editor content from external source:",
         );
       } finally {
         // We wait for the next animation frame to ensure BlockNote has finished
