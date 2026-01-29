@@ -12,11 +12,21 @@ import {
   splitLheoXmlIntoActions,
 } from "@playground/rco";
 import { logger } from "@playground/shared-types";
-import { ingestProcessedData } from "@playground/supabase";
+import { getSupabaseAdmin, ingestProcessedData } from "@playground/supabase";
 import matter from "gray-matter";
-import { getSupabaseClient } from "./steps/common/supabase";
 
 // Define steps
+
+function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!key) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not defined");
+  }
+
+  return getSupabaseAdmin(url, key);
+}
 
 export async function fetchRcoXmlStep(rcoRecordId: string) {
   "use step";

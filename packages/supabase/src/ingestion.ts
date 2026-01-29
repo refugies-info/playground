@@ -274,17 +274,11 @@ export async function ingestProcessedData(
   logger.info(`Updating content_flow status to: ${status}`);
   const { error: statusError } = await supabase
     .from("workflows")
-    .update({
-      status,
-      ingestion_record_id: ingestionRecord.id,
-    })
+    .update({ status })
     .eq("rco_record_id", rcoRecordId);
 
   if (statusError) {
-    logger.error(
-      statusError,
-      "Error updating content_flow status and ingestion_record_id",
-    );
+    logger.error(statusError, "Error updating content_flow status");
   }
 
   return {

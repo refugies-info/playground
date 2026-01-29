@@ -2,89 +2,154 @@ import fs from "node:fs";
 import path from "node:path";
 import { logger } from "@playground/shared-types";
 import dotenv from "dotenv";
+import matter from "gray-matter";
 
 // Load env vars from root
 const envPath = path.resolve(__dirname, "../.env");
 logger.info({ envPath, exists: fs.existsSync(envPath) }, "Loading .env");
 dotenv.config({ path: envPath });
 
-/**
- * Seed ingestion by calling the workflow API endpoint.
- * This triggers the real Vercel Workflow, making runs visible in the inspector.
- */
 async function main() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
-  const rcoXmlPath = path.resolve(__dirname, "../packages/rco/samples/rco.xml");
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
 
-  // 1. Verify XML exists
+  // Note: We need to import ingestRcoData. Since we are in scripts/, we recall that this package's src exports it.
+  // However, running ts-node on scripts might not resolve ".." correctly if not compiled.
+  // But previously it imported `getSupabaseAdmin` from "../src/index". So we can do the same.
+  const {
+    getSupabaseAdmin,
+    ingestRcoData,
+  } = require("../packages/supabase/src/index");
+
+  const supabase = getSupabaseAdmin(url, key);
+  logger.info("Seeding ingestion tables...");
+
+  // Paths
+  const rcoXmlPath = path.resolve(__dirname, "../packages/rco/samples/rco.xml");
+  const rcoMdPath = path.resolve(__dirname, "../packages/rco/output/rco.md");
+  const ingestionMdPath = path.resolve(__dirname, "../output/rco_report.md");
+
+  // 1. Load Data
   if (!fs.existsSync(rcoXmlPath)) {
     logger.error(`RCO XML not found at ${rcoXmlPath}`);
-    process.exit(1);
+    return;
+  }
+  if (!fs.existsSync(rcoMdPath)) {
+    logger.error(
+      `RCO Markdown not found at ${rcoMdPath}. Please run 'pnpm generate:md' in packages/rco.`,
+    );
+    return;
   }
 
-  const xmlContent = fs.readFileSync(rcoXmlPath, "utf-8");
-  logger.info({ xmlPath: rcoXmlPath }, "Loaded XML content");
+  const rcoXml = fs.readFileSync(rcoXmlPath, "utf-8");
+  const rcoMdContent = fs.readFileSync(rcoMdPath, "utf-8");
+  const { data: rcoMetadata } = matter(rcoMdContent);
 
-  // 2. Call the workflow API endpoint
-  const workflowUrl = `${baseUrl}/api/workflow`;
-  logger.info({ workflowUrl }, "Calling workflow API...");
+  // 2. Load Reports (Optional or Generate)
+  // biome-ignore lint/suspicious/noExplicitAny: Script convenience
+  let ingestionReport: { markdown: string; metadata: any } | undefined;
 
-  try {
-    const response = await fetch(workflowUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ xmlContent }),
-    });
+  // Initialize client and conversation regardless of report existence
+  // because we might need conversationId for ingestion linkage
+  const {
+    createLettaClient,
+    generateIngestionReport,
+    parseIngestionResponse,
+  } = require("../packages/agents/src/index");
+  const lettaClient = createLettaClient();
+  const agentId = process.env.PLAYGROUND_AGENT_ID;
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      logger.error(
-        { status: response.status, error: errorData },
-        "Workflow API call failed",
-      );
-      process.exit(1);
+  if (!agentId) {
+    throw new Error("PLAYGROUND_AGENT_ID is not defined");
+  }
+
+  logger.info("Creating Letta conversation...");
+  const conversation = await lettaClient.conversations.create({
+    agent_id: agentId,
+  });
+  const conversationId = conversation.id;
+
+  if (fs.existsSync(ingestionMdPath)) {
+    const content = fs.readFileSync(ingestionMdPath, "utf-8");
+    const { data: metadata, content: markdown } = matter(content);
+    ingestionReport = { markdown, metadata };
+  } else {
+    logger.info(
+      "Report file not found. Generating ingestion report with Letta...",
+    );
+    try {
+      // Collect streaming response
+      let finalContent = "";
+      for await (const chunk of generateIngestionReport(
+        lettaClient,
+        rcoMdContent, // Pass markdown content instead of XML
+        conversationId,
+      )) {
+        if (chunk.message_type === "assistant_message") {
+          if (typeof chunk.content !== "string") {
+            throw new Error(
+              `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
+            );
+          }
+          finalContent = chunk.content;
+        }
+      }
+
+      // Parse the response
+      const reportResult = parseIngestionResponse(finalContent, agentId);
+
+      if (reportResult.status === "complete") {
+        // Save it for future use
+        fs.mkdirSync(path.dirname(ingestionMdPath), { recursive: true });
+        fs.writeFileSync(ingestionMdPath, reportResult.content);
+        logger.info(`Generated report saved to ${ingestionMdPath}`);
+
+        ingestionReport = {
+          markdown: reportResult.content,
+          metadata: reportResult.metadata,
+        };
+      } else {
+        logger.warn(
+          { rawResponse: reportResult.rawResponse },
+          "Ingestion report incomplete (no frontmatter found)",
+        );
+      }
+    } catch (error) {
+      logger.error(error, "Failed to generate ingestion report");
+      // Continue without report? Or fail?
+      // For seeding, maybe acceptable to continue, but improved logic.
     }
+  }
 
-    interface WorkflowResponse {
-      workflowId: string;
-      flowId: string;
-      rcoRecordId: string;
-      dashboardUrl?: string;
-    }
+  // 3. Call Ingestion Function
+  logger.info("Calling ingestRcoData...");
+  const result = await ingestRcoData(supabase, {
+    xmlContent: rcoXml,
+    markdownContent: rcoMdContent,
+    metadata: rcoMetadata,
+    conversationId,
+    ingestionReport,
+  });
 
-    const result = (await response.json()) as WorkflowResponse;
+  if (result.status === "success") {
     logger.info(
       {
-        workflowId: result.workflowId,
-        flowId: result.flowId,
         rcoRecordId: result.rcoRecordId,
-        dashboardUrl: result.dashboardUrl,
+        ingestionRecordId: result.ingestionRecordId,
       },
-      "Workflow started successfully!",
+      "Ingestion successful",
     );
-
-    logger.info(`
-╔══════════════════════════════════════════════════════════════════╗
-║  Workflow is now running!                                        ║
-║  Check the inspector at: http://localhost:3456                   ║
-║  Or the dashboard at: ${result.dashboardUrl?.slice(0, 45) || "N/A"}
-╚══════════════════════════════════════════════════════════════════╝
-    `);
-  } catch (error) {
-    logger.error(error, "Failed to call workflow API");
-    logger.info(`
-╔══════════════════════════════════════════════════════════════════╗
-║  ERROR: Make sure the dev server is running (pnpm dev)           ║
-║  The workflow API is served by Next.js at /api/workflow          ║
-╚══════════════════════════════════════════════════════════════════╝
-    `);
-    process.exit(1);
+    if (result.reportResults) {
+      // biome-ignore lint/suspicious/noExplicitAny: Script convenience
+      result.reportResults.forEach((r: any) => {
+        logger.info({ type: r.type, status: r.status }, "Report Status");
+      });
+    }
+  } else {
+    logger.error(result.error, "Ingestion failed");
   }
+
+  logger.info("Done.");
 }
 
-main().catch((err) => {
-  logger.error(err, "Unhandled error");
-  process.exit(1);
-});
+main().catch((err) => logger.error(err, "Unhandled error"));

@@ -1,55 +1,97 @@
 "use server";
 
-import { logger } from "@playground/shared-types";
+import { LANGUAGES, logger } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
-import {
-  archiveWorkflow,
-  publicationWorkflow,
-  saveWorkflow,
-  toggleStatusWorkflow,
-} from "@playground/workflows";
 import { cookies } from "next/headers";
-import { start } from "workflow/api";
+import { buildPublishPayload } from "../lib/payload-builder";
 
-// Debug logging to verify workflow imports
-
-/**
- * Server action to save a document via Vercel Workflow.
- *
- * This triggers a durable workflow that:
- * 1. Saves or updates the editorial record
- * 2. Updates workflow progress if needed
- */
 export async function saveDocument(
   workflowId: string,
   markdown: string,
-): Promise<{ success: boolean; workflowRunId?: string; error?: string }> {
+): Promise<{ success: boolean; error?: string }> {
+  // Cookies are required here to forward the user's session to Supabase
+  // This ensures the action is performed by the authenticated user
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
   try {
-    if (!saveWorkflow) {
-      logger.error("saveWorkflow is undefined - cannot start workflow");
-      return {
-        success: false,
-        error: "Configuration error: Workflow not loaded",
-      };
+    // First, get the workflow to check for existing editorial_record and get progress
+    const { data: workflow, error: workflowError } = await supabase
+      .from("workflows")
+      .select(
+        `
+        id,
+        editorial_record_id,
+        ingestion_record_id,
+        progress
+      `,
+      )
+      .eq("id", workflowId)
+      .single();
+
+    if (workflowError || !workflow) {
+      logger.error(workflowError, "Error fetching workflow for save");
+      return { success: false, error: "Workflow not found" };
     }
 
-    const result = await start(saveWorkflow, [workflowId, markdown]);
+    // Check if we need an ingestion_record_id (required for creating new editorial_records)
+    if (workflow.editorial_record_id) {
+      // Update existing editorial_record
+      const { error: updateError } = await supabase
+        .from("editorial_records")
+        .update({
+          markdown,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", workflow.editorial_record_id);
 
-    logger.info(
-      { workflowRunId: result.runId, workflowId },
-      "Save workflow started",
-    );
+      if (updateError) {
+        logger.error(updateError, "Error updating editorial_record");
+        return { success: false, error: "Failed to update editorial record" };
+      }
+    } else {
+      // Create new editorial_record - we need ingestion_record_id
+      if (!workflow.ingestion_record_id) {
+        return {
+          success: false,
+          error: "No ingestion record found for this workflow",
+        };
+      }
 
-    return {
-      success: true,
-      workflowRunId: result.runId,
-    };
+      const { error: insertError } = await supabase
+        .from("editorial_records")
+        .insert({
+          ingestion_record_id: workflow.ingestion_record_id,
+          markdown,
+        });
+
+      if (insertError) {
+        logger.error(insertError, "Error creating editorial_record");
+        return { success: false, error: "Failed to create editorial record" };
+      }
+    }
+
+    // If the document was published, set progress to 'modified'
+    // This indicates the document has local changes not yet republished
+    if (workflow.progress === "published") {
+      const { error: progressError } = await supabase
+        .from("workflows")
+        .update({ progress: "modified" })
+        .eq("id", workflowId);
+
+      if (progressError) {
+        logger.error(
+          progressError,
+          "Error updating workflow progress to modified",
+        );
+        // Don't fail the save operation for this
+      }
+    }
+
+    return { success: true };
   } catch (error) {
-    logger.error(error, "Unexpected error starting save workflow");
-    return {
-      success: false,
-      error: "Erreur inattendue lors de la sauvegarde",
-    };
+    logger.error(error, "Unexpected error saving document");
+    return { success: false, error: "Unexpected error occurred" };
   }
 }
 
@@ -63,52 +105,94 @@ export async function toggleWorkflowStatus(
   error?: string;
 }> {
   const cookieStore = await cookies();
-  const _supabase = createSupabaseServerClient(cookieStore);
+  const supabase = createSupabaseServerClient(cookieStore);
 
   try {
-    if (!toggleStatusWorkflow) {
-      logger.error("toggleStatusWorkflow is undefined");
-      return {
-        success: false,
-        error: "Configuration error: Workflow not loaded",
-      };
-    }
-
-    const result = await start(toggleStatusWorkflow, [
-      workflowId,
-      currentStatus,
-    ]);
-
-    logger.info(
-      { workflowRunId: result.runId, workflowId },
-      "Toggle status workflow started",
-    );
-
-    // Optimistic return is tricky with async workflow,
-    // but the UI likely invalidates path or we can return 'true'
-    // and let the UI wait for the workflow to finish via polling if needed.
-    // For now, we mimic the previous return shape but without immediate values
-    // as they are computed async.
-    // However, the previous code returned newStatus/newProgress immediately.
-    // To match UI expectations without rewriting UI, we can calculate them here purely for UI feedback,
-    // even though the REAL update happens in the background.
-
     const newStatus =
       currentStatus === "compliant" ? "non_compliant" : "compliant";
 
+    // Determine the new progress based on status transition
     let newProgress: string;
     if (currentStatus === "non_compliant" && newStatus === "compliant") {
+      // Non-conforme → Conforme: document needs to be processed before publication
       newProgress = "to_process";
     } else if (currentStatus === "compliant" && newStatus === "non_compliant") {
+      // Conforme → Non-conforme: document is archived
       newProgress = "archived";
     } else {
+      // Fallback: keep existing progress (shouldn't happen in normal flow)
       newProgress = currentStatus === "compliant" ? "to_process" : "archived";
+    }
+
+    const { error: updateError } = await supabase
+      .from("workflows")
+      .update({ status: newStatus, progress: newProgress })
+      .eq("id", workflowId);
+
+    if (updateError) {
+      logger.error(updateError, "Error updating workflow status");
+      return { success: false, error: "Failed to update workflow status" };
     }
 
     return { success: true, newStatus, newProgress };
   } catch (error) {
     logger.error(error, "Unexpected error removing workflow status");
     return { success: false, error: "Unexpected error occurred" };
+  }
+}
+
+async function createMissingTranslationRecords(
+  editorialRecordId: string,
+  workflowId: string,
+): Promise<void> {
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
+  try {
+    // 1. Get existing translation records for this editorial record
+    const { data: existingTranslations, error: fetchError } = await supabase
+      .from("translation_records")
+      .select("language")
+      .eq("editorial_record_id", editorialRecordId);
+
+    if (fetchError) {
+      logger.error(fetchError, "Error fetching existing translations");
+      return;
+    }
+
+    const existingLanguages = new Set(
+      existingTranslations?.map((t) => t.language) || [],
+    );
+
+    const targetLanguages = LANGUAGES.filter(
+      (lang) => !existingLanguages.has(lang.code) && lang.code !== "fr",
+    );
+
+    if (targetLanguages.length === 0) {
+      return;
+    }
+
+    // 3. Create missing translation records
+    const newRecords = targetLanguages.map((lang) => ({
+      editorial_record_id: editorialRecordId,
+      language: lang.code,
+      status: "draft", // Initial status
+      workflow_id: workflowId,
+    }));
+
+    const { error: insertError } = await supabase
+      .from("translation_records")
+      .insert(newRecords);
+
+    if (insertError) {
+      logger.error(insertError, "Error creating translation records");
+    } else {
+      logger.info(
+        `Created ${newRecords.length} translation records for editorial record ${editorialRecordId}`,
+      );
+    }
+  } catch (error) {
+    logger.error(error, "Unexpected error in createMissingTranslationRecords");
   }
 }
 
@@ -133,14 +217,13 @@ export async function getPreviewSecret(): Promise<{
 }
 
 /**
- * Server action to publish a document to refugies.info via Vercel Workflow.
- *
- * This triggers a durable workflow that:
- * 1. Calls the publication webhook
- * 2. Stores the publication record
- * 3. Updates workflow progress to 'published'
- * 4. Optionally creates translation records
+ * Server action to publish a document to refugies.info via webhook
+ * 1. Gets authenticated user email
+ * 2. Calls the publication webhook
+ * 3. Stores the publication record
+ * 4. Updates workflow progress to 'published'
  */
+
 export async function publishDocument(
   workflowId: string,
   title: string,
@@ -149,7 +232,10 @@ export async function publishDocument(
   triggerTranslations?: boolean,
 ): Promise<{
   success: boolean;
-  workflowRunId?: string;
+  publicationId?: string;
+  remoteId?: string;
+  isUpdate?: boolean;
+  publishedUrl?: string;
   error?: string;
 }> {
   const cookieStore = await cookies();
@@ -167,31 +253,170 @@ export async function publishDocument(
       return { success: false, error: "Utilisateur non authentifié" };
     }
 
-    // 2. Start the publication workflow
-    const result = await start(publicationWorkflow, [
-      {
-        workflowId,
-        title,
-        markdown,
-        metadata,
-        userId: user.id,
-        userEmail: user.email,
-        platform: "refugies.info",
-      },
-      triggerTranslations ?? false,
-    ]);
+    // 2. Get webhook configuration (Simplified)
+    const baseUrl = process.env.RI_BASE_URL;
+    const webhookSecret = process.env.RI_WEBHOOK_SECRET;
 
-    logger.info(
-      { workflowRunId: result.runId, workflowId },
-      "Publication workflow started",
+    if (!baseUrl || !webhookSecret) {
+      logger.error(
+        "Missing publication configuration (RI_BASE_URL or RI_WEBHOOK_SECRET)",
+      );
+      return {
+        success: false,
+        error: "Configuration de publication manquante",
+      };
+    }
+
+    // Construct the full webhook URL
+    // Remove trailing slash if present to avoid double slashes
+    const cleanBaseUrl = baseUrl.replace(/\/$/, "");
+    const webhookUrl = `${cleanBaseUrl}/api/webhook/dispositif`;
+
+    // 3. Check for existing publication (to determine CREATE vs UPDATE)
+    const { data: existingPublication } = await supabase
+      .from("publication_records")
+      .select("id, remote_id")
+      .eq("workflow_id", workflowId)
+      .eq("target", cleanBaseUrl)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    const existingRemoteId = existingPublication?.remote_id;
+    const isUpdate = !!existingRemoteId;
+
+    // 4. Build the payload using shared builder
+    const basePayload = buildPublishPayload(
+      {
+        title,
+        editorialContent: markdown,
+        metadata,
+      },
+      user.email,
     );
+
+    // If updating, include the remote_id as _id so the webhook updates instead of creates
+    const payload = isUpdate
+      ? {
+          ...basePayload,
+          dispositif: {
+            ...basePayload.dispositif,
+            _id: existingRemoteId,
+          },
+        }
+      : basePayload;
+
+    // 5. Call the webhook
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "webhook-secret": webhookSecret,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      logger.error(
+        { status: response.status, error: errorData },
+        "Publication webhook failed",
+      );
+      return {
+        success: false,
+        error: errorData.message || `Erreur ${response.status}`,
+      };
+    }
+
+    const result = (await response.json()) as { id?: string };
+    const remoteId = result.id;
+
+    if (!remoteId) {
+      logger.error(result, "Publication webhook did not return an ID");
+      return { success: false, error: "ID de publication non reçu" };
+    }
+
+    // 6. Store or update publication record
+    if (isUpdate && existingPublication) {
+      // Update the existing record's updated_at and payload
+      const { error: updateRecordError } = await supabase
+        .from("publication_records")
+        .update({
+          updated_at: new Date().toISOString(),
+          // biome-ignore lint/suspicious/noExplicitAny: Payload structure is complex but valid JSON
+          payload: payload as any,
+          published_by: user.id,
+        })
+        .eq("id", existingPublication.id);
+
+      if (updateRecordError) {
+        logger.error(updateRecordError, "Error updating publication record");
+      }
+    } else {
+      // Create new publication record
+      const { error: insertError } = await supabase
+        .from("publication_records")
+        .insert({
+          workflow_id: workflowId,
+          target: cleanBaseUrl,
+          remote_id: remoteId,
+          status: "published",
+          // biome-ignore lint/suspicious/noExplicitAny: Payload structure is complex but valid JSON
+          payload: payload as any,
+          published_by: user.id,
+        });
+
+      if (insertError) {
+        logger.error(insertError, "Error storing publication record");
+      }
+    }
+
+    // 7. Update workflow progress
+    const { error: updateError } = await supabase
+      .from("workflows")
+      .update({ progress: "published" })
+      .eq("id", workflowId);
+
+    if (updateError) {
+      logger.error(updateError, "Error updating workflow progress");
+    }
+
+    // 8. Trigger translations if requested
+    if (triggerTranslations) {
+      // We need the editorial_record_id.
+      // If we don't have it easily, we might need to fetch the workflow first or get it from parameters if we had it.
+      // But we can fetch it from the workflowId as we did in saveDocument.
+      const { data: workflow } = await supabase
+        .from("workflows")
+        .select("editorial_record_id")
+        .eq("id", workflowId)
+        .single();
+
+      if (workflow?.editorial_record_id) {
+        // Run asynchronously without awaiting to not block the response?
+        // Or await to ensure it's done?
+        // Given that server actions can timeout, better to await fast operations or offload.
+        // Creating records is fast.
+        await createMissingTranslationRecords(
+          workflow.editorial_record_id,
+          workflowId,
+        );
+      } else {
+        logger.warn(
+          `Could not trigger translations: No editorial_record_id found for workflow ${workflowId}`,
+        );
+      }
+    }
 
     return {
       success: true,
-      workflowRunId: result.runId,
+      publicationId: isUpdate ? existingPublication.id : result.id, // Using result ID if available, otherwise just success
+      remoteId,
+      isUpdate,
+      publishedUrl: `${cleanBaseUrl}/dispositif/${remoteId}`,
     };
   } catch (error) {
-    logger.error(error, "Unexpected error starting publication workflow");
+    logger.error(error, "Unexpected error publishing document");
     return {
       success: false,
       error: "Erreur inattendue lors de la publication",
@@ -200,12 +425,10 @@ export async function publishDocument(
 }
 
 /**
- * Server action to archive a document via Vercel Workflow.
- *
- * This triggers a durable workflow that:
- * 1. Archives the document on the target platform
- * 2. Updates the publication record status
- * 3. Updates workflow progress to 'archived'
+ * Server action to archive a document
+ * 1. Checks if document was previously published
+ * 2. Calls webhook with status 'Archivé'
+ * 3. Updates record and workflow status
  */
 export async function archiveDocument(
   workflowId: string,
@@ -214,7 +437,6 @@ export async function archiveDocument(
   metadata?: Record<string, unknown>,
 ): Promise<{
   success: boolean;
-  workflowRunId?: string;
   error?: string;
 }> {
   const cookieStore = await cookies();
@@ -231,39 +453,97 @@ export async function archiveDocument(
       return { success: false, error: "Utilisateur non authentifié" };
     }
 
-    if (!archiveWorkflow) {
-      logger.error("archiveWorkflow is undefined - cannot start workflow");
+    // 2. Get webhook config
+    const baseUrl = process.env.RI_BASE_URL;
+    const webhookSecret = process.env.RI_WEBHOOK_SECRET;
+
+    if (!baseUrl || !webhookSecret) {
+      return { success: false, error: "Configuration serveur manquante" };
+    }
+
+    const cleanBaseUrl = baseUrl.replace(/\/$/, "");
+    const webhookUrl = `${cleanBaseUrl}/api/webhook/dispositif`;
+
+    // 3. Find existing publication (MUST exist to archive)
+    const { data: existingPublication } = await supabase
+      .from("publication_records")
+      .select("id, remote_id")
+      .eq("workflow_id", workflowId)
+      .eq("target", cleanBaseUrl)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!existingPublication?.remote_id) {
+      return { success: false, error: "Document jamais publié" };
+    }
+
+    const remoteId = existingPublication.remote_id;
+
+    // 4. Build payload with status 'Archivé'
+    const payload = buildPublishPayload(
+      {
+        title,
+        editorialContent: markdown,
+        metadata,
+      },
+      user.email,
+      "Archivé", // Override status
+    );
+
+    // Include _id for update
+    const updatePayload = {
+      ...payload,
+      dispositif: {
+        ...payload.dispositif,
+        _id: remoteId,
+      },
+    };
+
+    // 5. Call webhook
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "webhook-secret": webhookSecret,
+      },
+      body: JSON.stringify(updatePayload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      logger.error(
+        { status: response.status, error: errorData },
+        "Archive webhook failed",
+      );
       return {
         success: false,
-        error: "Configuration error: Workflow not loaded",
+        error: errorData.message || `Erreur ${response.status}`,
       };
     }
 
-    // 2. Start the archive workflow
-    const result = await start(archiveWorkflow, [
-      {
-        workflowId,
-        title,
-        markdown,
-        metadata,
-        userId: user.id,
-        userEmail: user.email,
-        platform: "refugies.info",
-      },
-    ]);
+    // 6. Update existing publication record to archived status
+    await supabase
+      .from("publication_records")
+      .update({
+        status: "archived",
+        // biome-ignore lint/suspicious/noExplicitAny: Payload structure is complex but valid JSON
+        payload: updatePayload as any,
+        published_by: user.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingPublication.id);
 
-    logger.info(
-      { workflowRunId: result.runId, workflowId },
-      "Archive workflow started",
-    );
+    // 7. Update workflow status to 'archived'
+    await supabase
+      .from("workflows")
+      .update({ progress: "archived" })
+      .eq("id", workflowId);
 
-    return {
-      success: true,
-      workflowRunId: result.runId,
-    };
+    return { success: true };
   } catch (error) {
-    logger.error(error, "Unexpected error starting archive workflow");
-    return { success: false, error: "Erreur inattendue lors de l'archivage" };
+    logger.error(error, "Error archiving document");
+    return { success: false, error: "Erreur interne" };
   }
 }
 
