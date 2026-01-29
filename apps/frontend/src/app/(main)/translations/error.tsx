@@ -17,21 +17,19 @@ export default function TranslationsError({
   }, [error]);
 
   return (
-    <>
-      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900">
-          Une erreur est survenue !
-        </h2>
-        <p className="text-gray-500">Impossible de charger les traductions.</p>
-        <Button
-          onClick={
-            // Attempt to recover by trying to re-render the segment
-            () => reset()
-          }
-        >
-          Réessayer
-        </Button>
-      </div>
-    </>
+    <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+      <h2 className="text-2xl font-bold text-gray-900">
+        Une erreur est survenue !
+      </h2>
+      <p className="text-gray-500">Impossible de charger les traductions.</p>
+      <Button
+        onClick={
+          // Attempt to recover by trying to re-render the segment
+          () => reset()
+        }
+      >
+        Réessayer
+      </Button>
+    </div>
   );
 }

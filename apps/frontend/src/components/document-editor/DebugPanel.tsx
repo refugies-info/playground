@@ -1,5 +1,6 @@
 "use client";
 
+import { logger } from "@playground/shared-types";
 import { cn } from "@playground/ui";
 import {
   Drawer,
@@ -33,7 +34,7 @@ export function DebugPanel() {
         setLastRefreshed(new Date());
       }
     } catch (error) {
-      console.error("Error fetching server content for debug panel:", error);
+      logger.error(error, "Error fetching server content for debug panel:");
     } finally {
       setIsLoading(false);
     }
