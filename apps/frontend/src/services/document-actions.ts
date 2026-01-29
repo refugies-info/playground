@@ -164,9 +164,8 @@ async function createMissingTranslationRecords(
       existingTranslations?.map((t) => t.language) || [],
     );
 
-    // 2. Identify missing languages (exclude 'fr' as it is the source - implicitly handled as LANGUAGES does not contain 'fr')
     const targetLanguages = LANGUAGES.filter(
-      (lang) => !existingLanguages.has(lang.code),
+      (lang) => !existingLanguages.has(lang.code) && lang.code !== "fr",
     );
 
     if (targetLanguages.length === 0) {
