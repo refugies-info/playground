@@ -6,9 +6,11 @@ import { fetchAllCarifOrefItems, ingestCarifOrefItems } from "./generic";
 import type { DiIngestionOptions } from "./shared";
 
 export interface DiServicesIngestionResult {
+  runId: string;
   totalFetched: number;
   totalInserted: number;
-  totalSkipped: number;
+  totalUpdated: number;
+  totalUnchanged: number;
   errors: Array<{ serviceId: string; error: unknown }>;
 }
 
@@ -49,9 +51,11 @@ export async function ingestCarifOrefServices(
 
   // Transform generic result to specific result type
   return {
+    runId: result.runId,
     totalFetched: result.totalFetched,
     totalInserted: result.totalInserted,
-    totalSkipped: result.totalSkipped,
+    totalUpdated: result.totalUpdated,
+    totalUnchanged: result.totalUnchanged,
     errors: result.errors.map((e) => ({
       serviceId: e.id,
       error: e.error,

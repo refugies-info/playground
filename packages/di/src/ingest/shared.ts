@@ -1,6 +1,18 @@
+import { createHash } from "node:crypto";
+
 const DEFAULT_PAGE_SIZE = Number(process.env.DI_PAGE_SIZE) || 100;
 const DEFAULT_BATCH_SIZE = 100;
 const SOURCE_CARIF_OREF = "carif-oref";
+
+/**
+ * Compute SHA-1 hash of content (same algorithm as Git).
+ * Used for detecting changes in DI records between ingestion runs.
+ * @param data - The content to hash (typically raw JSON string)
+ * @returns 40-character hex string
+ */
+export function computeContentHash(data: string): string {
+  return createHash("sha1").update(data).digest("hex");
+}
 
 export interface DiIngestionOptions {
   /** Number of items per API page (default: 100) */
