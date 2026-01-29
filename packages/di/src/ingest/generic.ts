@@ -553,7 +553,7 @@ export async function ingestCarifOrefItems<T extends DiItem>(
 /** @deprecated Use DiIngestionResult instead */
 export type DiGenericIngestionResult = DiIngestionResult;
 
-/** @deprecated Use upsertItems via ingestCarifOrefItems instead */
+/** @deprecated Use ingestCarifOrefItems instead, which now handles inserts and updates. */
 export async function insertItems<T extends DiItem>(
   supabase: SupabaseClient<Database>,
   items: T[],
