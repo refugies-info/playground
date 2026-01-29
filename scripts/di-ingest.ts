@@ -5,12 +5,7 @@
  * Supports incremental updates with version tracking.
  *
  * Usage:
- *   pnpm di:ingest [--type TYPE] [--limit N] [--all]
- *
- * Options:
- *   --type TYPE  Type to ingest: structures|services (default: structures)
- *   --limit N    Fetch only N items (default: 5)
- *   --all        Fetch all items (no limit)
+ *   pnpm di:ingest [options]
  *
  * Examples:
  *   pnpm di:ingest                          # Ingest 5 structures (for testing)
@@ -23,28 +18,58 @@
 import path from "node:path";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
+import { program } from "commander";
 import dotenv from "dotenv";
 
 // Load env vars from root .env (includes DI_BASE_URL and DI_API_KEY)
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-// Parse CLI args
-const args = process.argv.slice(2);
-const typeIndex = args.indexOf("--type");
-const type = typeIndex !== -1 ? args[typeIndex + 1] : "structures";
-const limitIndex = args.indexOf("--limit");
-const fetchAll = args.includes("--all");
-const limit = fetchAll
-  ? undefined
-  : limitIndex !== -1
-    ? parseInt(args[limitIndex + 1], 10)
-    : 5;
+// Configure CLI with commander
+program
+  .name("di:ingest")
+  .description("Ingest data from Data Inclusion API into Supabase")
+  .option(
+    "-t, --type <type>",
+    "Type to ingest: structures or services",
+    "structures",
+  )
+  .option("-l, --limit <number>", "Fetch only N items (default: 5)", "5")
+  .option("-a, --all", "Fetch all items (no limit)")
+  .parse(process.argv);
+
+const opts = program.opts<{
+  type: string;
+  limit: string;
+  all?: boolean;
+}>();
 
 // Validate type
-if (type !== "structures" && type !== "services") {
-  logger.error(`Invalid type: ${type}. Must be 'structures' or 'services'`);
+const validTypes = ["structures", "services"] as const;
+type IngestType = (typeof validTypes)[number];
+
+if (!validTypes.includes(opts.type as IngestType)) {
+  logger.error(
+    `Invalid type: "${opts.type}". Must be one of: ${validTypes.join(", ")}`,
+  );
   process.exit(1);
 }
+
+const type = opts.type as IngestType;
+
+// Parse and validate limit
+const limit = (() => {
+  if (opts.all) {
+    return undefined;
+  }
+  const parsed = Number.parseInt(opts.limit, 10);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    logger.error(
+      `Invalid --limit value: "${opts.limit}". Must be a positive number.`,
+    );
+    process.exit(1);
+  }
+  return parsed;
+})();
 
 async function main() {
   logger.info({ type, limit: limit ?? "all" }, "=== DI Ingestion ===");
@@ -86,10 +111,10 @@ async function main() {
   const supabase = getSupabaseAdmin();
 
   // 3. Run ingestion
-  const isStructures = type === "structures";
-  const ingestFn = isStructures
-    ? diModule.ingestCarifOrefStructures
-    : diModule.ingestCarifOrefServices;
+  const ingestFn =
+    type === "structures"
+      ? diModule.ingestCarifOrefStructures
+      : diModule.ingestCarifOrefServices;
 
   logger.info(`Starting ${type} ingestion...`);
   const result = await ingestFn(supabase, { limit });
