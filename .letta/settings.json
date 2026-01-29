@@ -1,9 +1,0 @@
-{
-  "localSharedBlockIds": {
-    "project": "block-b501a8a4-1818-4c1d-a77f-05c4f8404c64",
-    "skills": "block-175c7690-d123-468b-9f31-fd7f636dc431"
-  },
-  "permissions": {
-    "allow": ["Skill"]
-  }
-}

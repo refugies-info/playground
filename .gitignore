@@ -57,3 +57,6 @@ supabase/functions/node_modules/
 # Agents
 .agent
 .agents
+
+# Letta Code (user-specific settings and cache)
+.letta/
