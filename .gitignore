@@ -51,5 +51,12 @@ Thumbs.db
 supabase/functions/node_modules/
 .workflow-data/
 
+# Letta
+.letta/*.local.json
+
+# Agents
+.agent
+.agents
+
 # Letta Code (user-specific settings and cache)
 .letta/

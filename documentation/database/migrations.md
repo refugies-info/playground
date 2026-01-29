@@ -123,18 +123,26 @@ CREATE INDEX IF NOT EXISTS idx_users_full_name ON public.users(full_name);
    CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON public.audit_logs(user_id);
    ```
 
-5. **Enable RLS** – Enforce security at database level
+5. **Enable RLS & Secure Functions** – Enforce security at database level. For helper functions and triggers, always set a strict `search_path` to prevent path hijacking.
    ```sql
    ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+
+   CREATE OR REPLACE FUNCTION public.get_data()
+   RETURNS text AS $$ ... $$ 
+   LANGUAGE sql STABLE 
+   SET search_path = ''; -- Security Hardening
    ```
 
-6. **Use Transactions** – Wrap related changes
+6. **Use Transactions & Consolidation** – Wrap related changes. For complex sprints, consolidate schema changes into a single migration file to ensure atomic application.
    ```sql
    BEGIN;
      CREATE TABLE public.new_table (...);
      CREATE INDEX idx_new_table_id ON public.new_table(id);
    COMMIT;
    ```
+
+7. **Automated Seeding** – Use the TypeScript seeder (`scripts/seed-users.ts`) instead of `seed.sql` for complex User/Auth seeding (Metadata, Passwords).
+
 
 ---
 
