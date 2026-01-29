@@ -34,51 +34,6 @@ export type Database = {
   };
   public: {
     Tables: {
-      di_ingestion_runs: {
-        Row: {
-          completed_at: string | null;
-          created_at: string;
-          error_details: Json | null;
-          id: string;
-          options: Json | null;
-          status: string;
-          total_errors: number;
-          total_fetched: number;
-          total_inserted: number;
-          total_unchanged: number;
-          total_updated: number;
-          type: string;
-        };
-        Insert: {
-          completed_at?: string | null;
-          created_at?: string;
-          error_details?: Json | null;
-          id?: string;
-          options?: Json | null;
-          status?: string;
-          total_errors?: number;
-          total_fetched?: number;
-          total_inserted?: number;
-          total_unchanged?: number;
-          total_updated?: number;
-          type: string;
-        };
-        Update: {
-          completed_at?: string | null;
-          created_at?: string;
-          error_details?: Json | null;
-          id?: string;
-          options?: Json | null;
-          status?: string;
-          total_errors?: number;
-          total_fetched?: number;
-          total_inserted?: number;
-          total_unchanged?: number;
-          total_updated?: number;
-          type?: string;
-        };
-        Relationships: [];
-      };
       di_services: {
         Row: {
           content_hash: string | null;
@@ -121,7 +76,7 @@ export type Database = {
             foreignKeyName: "di_services_ingestion_run_id_fkey";
             columns: ["ingestion_run_id"];
             isOneToOne: false;
-            referencedRelation: "di_ingestion_runs";
+            referencedRelation: "ingestion_runs";
             referencedColumns: ["id"];
           },
         ];
@@ -165,7 +120,7 @@ export type Database = {
             foreignKeyName: "di_structures_ingestion_run_id_fkey";
             columns: ["ingestion_run_id"];
             isOneToOne: false;
-            referencedRelation: "di_ingestion_runs";
+            referencedRelation: "ingestion_runs";
             referencedColumns: ["id"];
           },
         ];
@@ -276,6 +231,54 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      ingestion_runs: {
+        Row: {
+          completed_at: string | null;
+          created_at: string;
+          error_details: Json | null;
+          id: string;
+          options: Json | null;
+          source: string;
+          status: string;
+          total_errors: number;
+          total_fetched: number;
+          total_inserted: number;
+          total_unchanged: number;
+          total_updated: number;
+          type: string;
+        };
+        Insert: {
+          completed_at?: string | null;
+          created_at?: string;
+          error_details?: Json | null;
+          id?: string;
+          options?: Json | null;
+          source: string;
+          status?: string;
+          total_errors?: number;
+          total_fetched?: number;
+          total_inserted?: number;
+          total_unchanged?: number;
+          total_updated?: number;
+          type: string;
+        };
+        Update: {
+          completed_at?: string | null;
+          created_at?: string;
+          error_details?: Json | null;
+          id?: string;
+          options?: Json | null;
+          source?: string;
+          status?: string;
+          total_errors?: number;
+          total_fetched?: number;
+          total_inserted?: number;
+          total_unchanged?: number;
+          total_updated?: number;
+          type?: string;
+        };
+        Relationships: [];
       };
       letta_reports: {
         Row: {
@@ -579,7 +582,7 @@ export type Database = {
             foreignKeyName: "di_services_ingestion_run_id_fkey";
             columns: ["ingestion_run_id"];
             isOneToOne: false;
-            referencedRelation: "di_ingestion_runs";
+            referencedRelation: "ingestion_runs";
             referencedColumns: ["id"];
           },
         ];
@@ -601,7 +604,7 @@ export type Database = {
             foreignKeyName: "di_structures_ingestion_run_id_fkey";
             columns: ["ingestion_run_id"];
             isOneToOne: false;
-            referencedRelation: "di_ingestion_runs";
+            referencedRelation: "ingestion_runs";
             referencedColumns: ["id"];
           },
         ];

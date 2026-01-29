@@ -185,8 +185,9 @@ async function createIngestionRun(
   options: DiIngestionOptions,
 ): Promise<string> {
   const { data, error } = await supabase
-    .from("di_ingestion_runs")
+    .from("ingestion_runs")
     .insert({
+      source: "di",
       type,
       status: "running",
       options: options as Json,
@@ -218,7 +219,7 @@ async function completeIngestionRun(
   errorDetails?: unknown,
 ): Promise<void> {
   const { error } = await supabase
-    .from("di_ingestion_runs")
+    .from("ingestion_runs")
     .update({
       completed_at: new Date().toISOString(),
       status,
