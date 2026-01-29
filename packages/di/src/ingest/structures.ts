@@ -8,10 +8,12 @@ import {
 import { fetchAllCarifOrefItems, ingestCarifOrefItems } from "./generic";
 import type { DiIngestionOptions } from "./shared";
 
-export interface DiIngestionResult {
+export interface DiStructuresIngestionResult {
+  runId: string;
   totalFetched: number;
   totalInserted: number;
-  totalSkipped: number;
+  totalUpdated: number;
+  totalUnchanged: number;
   errors: Array<{ structureId: string; error: unknown }>;
 }
 
@@ -32,7 +34,7 @@ export interface DiIngestionResult {
 export async function ingestCarifOrefStructures(
   supabase: SupabaseClient<Database>,
   options: DiIngestionOptions = {},
-): Promise<DiIngestionResult> {
+): Promise<DiStructuresIngestionResult> {
   const result = await ingestCarifOrefItems(
     supabase,
     listStructuresEndpointApiV1StructuresGet,
@@ -43,9 +45,11 @@ export async function ingestCarifOrefStructures(
 
   // Transform generic result to specific result type
   return {
+    runId: result.runId,
     totalFetched: result.totalFetched,
     totalInserted: result.totalInserted,
-    totalSkipped: result.totalSkipped,
+    totalUpdated: result.totalUpdated,
+    totalUnchanged: result.totalUnchanged,
     errors: result.errors.map((e) => ({
       structureId: e.id,
       error: e.error,

@@ -36,51 +36,94 @@ export type Database = {
     Tables: {
       di_services: {
         Row: {
+          content_hash: string | null;
           created_at: string;
           data: Json | null;
+          di_id: string | null;
+          di_structure_id: string | null;
           id: number;
+          ingestion_run_id: string | null;
           raw_data: string;
           updated_at: string;
+          version: number;
         };
         Insert: {
+          content_hash?: string | null;
           created_at?: string;
           data?: Json | null;
+          di_id?: string | null;
+          di_structure_id?: string | null;
           id?: number;
+          ingestion_run_id?: string | null;
           raw_data: string;
           updated_at?: string;
+          version?: number;
         };
         Update: {
+          content_hash?: string | null;
           created_at?: string;
           data?: Json | null;
+          di_id?: string | null;
+          di_structure_id?: string | null;
           id?: number;
+          ingestion_run_id?: string | null;
           raw_data?: string;
           updated_at?: string;
+          version?: number;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "di_services_ingestion_run_id_fkey";
+            columns: ["ingestion_run_id"];
+            isOneToOne: false;
+            referencedRelation: "ingestion_runs";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       di_structures: {
         Row: {
+          content_hash: string | null;
           created_at: string;
           data: Json | null;
+          di_id: string | null;
           id: number;
+          ingestion_run_id: string | null;
           raw_data: string;
           updated_at: string;
+          version: number;
         };
         Insert: {
+          content_hash?: string | null;
           created_at?: string;
           data?: Json | null;
+          di_id?: string | null;
           id?: number;
+          ingestion_run_id?: string | null;
           raw_data: string;
           updated_at?: string;
+          version?: number;
         };
         Update: {
+          content_hash?: string | null;
           created_at?: string;
           data?: Json | null;
+          di_id?: string | null;
           id?: number;
+          ingestion_run_id?: string | null;
           raw_data?: string;
           updated_at?: string;
+          version?: number;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "di_structures_ingestion_run_id_fkey";
+            columns: ["ingestion_run_id"];
+            isOneToOne: false;
+            referencedRelation: "ingestion_runs";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       editorial_records: {
         Row: {
@@ -188,6 +231,54 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      ingestion_runs: {
+        Row: {
+          completed_at: string | null;
+          created_at: string;
+          error_details: Json | null;
+          id: string;
+          options: Json | null;
+          source: string;
+          status: string;
+          total_errors: number;
+          total_fetched: number;
+          total_inserted: number;
+          total_unchanged: number;
+          total_updated: number;
+          type: string;
+        };
+        Insert: {
+          completed_at?: string | null;
+          created_at?: string;
+          error_details?: Json | null;
+          id?: string;
+          options?: Json | null;
+          source: string;
+          status?: string;
+          total_errors?: number;
+          total_fetched?: number;
+          total_inserted?: number;
+          total_unchanged?: number;
+          total_updated?: number;
+          type: string;
+        };
+        Update: {
+          completed_at?: string | null;
+          created_at?: string;
+          error_details?: Json | null;
+          id?: string;
+          options?: Json | null;
+          source?: string;
+          status?: string;
+          total_errors?: number;
+          total_fetched?: number;
+          total_inserted?: number;
+          total_unchanged?: number;
+          total_updated?: number;
+          type?: string;
+        };
+        Relationships: [];
       };
       letta_reports: {
         Row: {
@@ -473,6 +564,51 @@ export type Database = {
       };
     };
     Views: {
+      di_services_latest: {
+        Row: {
+          content_hash: string | null;
+          created_at: string | null;
+          data: Json | null;
+          di_id: string | null;
+          di_structure_id: string | null;
+          id: number | null;
+          ingestion_run_id: string | null;
+          raw_data: string | null;
+          updated_at: string | null;
+          version: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "di_services_ingestion_run_id_fkey";
+            columns: ["ingestion_run_id"];
+            isOneToOne: false;
+            referencedRelation: "ingestion_runs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      di_structures_latest: {
+        Row: {
+          content_hash: string | null;
+          created_at: string | null;
+          data: Json | null;
+          di_id: string | null;
+          id: number | null;
+          ingestion_run_id: string | null;
+          raw_data: string | null;
+          updated_at: string | null;
+          version: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "di_structures_ingestion_run_id_fkey";
+            columns: ["ingestion_run_id"];
+            isOneToOne: false;
+            referencedRelation: "ingestion_runs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       user_profiles: {
         Row: {
           created_at: string | null;

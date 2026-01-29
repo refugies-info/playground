@@ -1,8 +1,9 @@
 import { logger } from "@playground/shared-types";
-import type { Database } from "@playground/supabase";
+import type { Database, Json } from "@playground/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { DiApiResponseSchema } from "./schemas";
 import {
+  computeContentHash,
   DEFAULT_BATCH_SIZE,
   DEFAULT_PAGE_SIZE,
   type DiIngestionOptions,
@@ -10,12 +11,20 @@ import {
 } from "./shared";
 
 /**
- * Generic result type for DI ingestion
+ * Result type for DI ingestion with version tracking
  */
-export interface DiGenericIngestionResult {
+export interface DiIngestionResult {
+  /** UUID of the ingestion run record */
+  runId: string;
+  /** Total items fetched from DI API */
   totalFetched: number;
+  /** New records inserted (version 1) */
   totalInserted: number;
-  totalSkipped: number;
+  /** Existing records updated (version 2+) */
+  totalUpdated: number;
+  /** Records skipped (hash unchanged) */
+  totalUnchanged: number;
+  /** Records that failed to insert */
   errors: Array<{ id: string; error: unknown }>;
 }
 
@@ -32,6 +41,15 @@ export interface DiPage<T> {
  * Generic DI item type
  */
 export type DiItem = { id: string; nom: string; source: string };
+
+/**
+ * Existing record info from database
+ */
+interface ExistingRecord {
+  di_id: string;
+  content_hash: string | null;
+  version: number;
+}
 
 /**
  * Generic fetch function for DI API
@@ -159,46 +177,198 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
 }
 
 /**
- * Generic insert function for DI items
- * Inserts items into Supabase table
- * Stores the full item as raw_data (JSON string) and the parsed item in data (jsonb)
- *
- * @param supabase - Supabase client with admin privileges
- * @param items - Items to insert
- * @param tableName - Name of the table to insert into
- * @param itemType - The type of item being inserted (for logging)
+ * Create an ingestion run record to track this ingestion
  */
-export async function insertItems<T extends DiItem>(
+async function createIngestionRun(
+  supabase: SupabaseClient<Database>,
+  type: "structures" | "services",
+  options: DiIngestionOptions,
+): Promise<string> {
+  const { data, error } = await supabase
+    .from("ingestion_runs")
+    .insert({
+      source: "di",
+      type,
+      status: "running",
+      options: options as Json,
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Failed to create ingestion run: ${error?.message}`);
+  }
+
+  return data.id;
+}
+
+/**
+ * Update ingestion run with final stats
+ */
+async function completeIngestionRun(
+  supabase: SupabaseClient<Database>,
+  runId: string,
+  stats: {
+    totalFetched: number;
+    totalInserted: number;
+    totalUpdated: number;
+    totalUnchanged: number;
+    totalErrors: number;
+  },
+  status: "completed" | "failed" = "completed",
+  errorDetails?: unknown,
+): Promise<void> {
+  const { error } = await supabase
+    .from("ingestion_runs")
+    .update({
+      completed_at: new Date().toISOString(),
+      status,
+      total_fetched: stats.totalFetched,
+      total_inserted: stats.totalInserted,
+      total_updated: stats.totalUpdated,
+      total_unchanged: stats.totalUnchanged,
+      total_errors: stats.totalErrors,
+      error_details: (errorDetails ?? null) as Json,
+    })
+    .eq("id", runId);
+
+  if (error) {
+    logger.error(
+      { runId, error: error.message },
+      "Failed to update ingestion run",
+    );
+  }
+}
+
+/**
+ * Fetch existing records to check for changes
+ */
+async function fetchExistingRecords(
+  supabase: SupabaseClient<Database>,
+  tableName: "di_structures" | "di_services",
+  diIds: string[],
+): Promise<Map<string, ExistingRecord>> {
+  const viewName =
+    tableName === "di_structures"
+      ? "di_structures_latest"
+      : "di_services_latest";
+
+  // Fetch in batches to avoid query size limits
+  const existingMap = new Map<string, ExistingRecord>();
+
+  for (let i = 0; i < diIds.length; i += DEFAULT_BATCH_SIZE) {
+    const batch = diIds.slice(i, i + DEFAULT_BATCH_SIZE);
+
+    const { data, error } = await supabase
+      .from(viewName)
+      .select("di_id, content_hash, version")
+      .in("di_id", batch);
+
+    if (error) {
+      logger.warn(
+        { error: error.message },
+        `Failed to fetch existing records from ${viewName}`,
+      );
+      continue;
+    }
+
+    for (const record of data ?? []) {
+      if (record.di_id) {
+        existingMap.set(record.di_id, {
+          di_id: record.di_id,
+          content_hash: record.content_hash,
+          version: record.version ?? 1,
+        });
+      }
+    }
+  }
+
+  return existingMap;
+}
+
+/**
+ * Upsert items into database with version tracking
+ * - New items: inserted with version 1
+ * - Changed items: inserted with version N+1
+ * - Unchanged items: skipped
+ */
+async function upsertItems<T extends DiItem>(
   supabase: SupabaseClient<Database>,
   items: T[],
   tableName: "di_structures" | "di_services",
   itemType: string,
+  runId: string,
 ): Promise<{
   inserted: number;
-  skipped: number;
+  updated: number;
+  unchanged: number;
   errors: Array<{ id: string; error: unknown }>;
 }> {
   let inserted = 0;
-  const skipped = 0;
+  let updated = 0;
+  let unchanged = 0;
   const errors: Array<{ id: string; error: unknown }> = [];
 
-  const totalBatches = Math.ceil(items.length / DEFAULT_BATCH_SIZE);
+  // Get all DI IDs from incoming items
+  const diIds = items.map((item) => item.id);
+
+  // Fetch existing records to compare hashes
+  const existingRecords = await fetchExistingRecords(
+    supabase,
+    tableName,
+    diIds,
+  );
+
   logger.info(
     {
       totalItems: items.length,
+      existingCount: existingRecords.size,
       batchSize: DEFAULT_BATCH_SIZE,
-      totalBatches,
     },
-    `Starting database insertion for ${itemType}`,
+    `Starting upsert for ${itemType}`,
   );
 
-  for (let i = 0; i < items.length; i += DEFAULT_BATCH_SIZE) {
-    const batchIndex = Math.floor(i / DEFAULT_BATCH_SIZE) + 1;
-    const batch = items.slice(i, i + DEFAULT_BATCH_SIZE);
+  // Categorize items
+  const toInsert: Array<{ item: T; hash: string; isUpdate: boolean }> = [];
 
-    const records = batch.map((item) => ({
+  for (const item of items) {
+    const rawData = JSON.stringify(item);
+    const hash = computeContentHash(rawData);
+    const existing = existingRecords.get(item.id);
+
+    if (!existing) {
+      // New record
+      toInsert.push({ item, hash, isUpdate: false });
+    } else if (existing.content_hash !== hash) {
+      // Changed record
+      toInsert.push({ item, hash, isUpdate: true });
+    } else {
+      // Unchanged
+      unchanged++;
+    }
+  }
+
+  logger.info(
+    {
+      newRecords: toInsert.filter((r) => !r.isUpdate).length,
+      updatedRecords: toInsert.filter((r) => r.isUpdate).length,
+      unchangedRecords: unchanged,
+    },
+    `${itemType} categorization complete`,
+  );
+
+  // Insert in batches
+  const totalBatches = Math.ceil(toInsert.length / DEFAULT_BATCH_SIZE);
+
+  for (let i = 0; i < toInsert.length; i += DEFAULT_BATCH_SIZE) {
+    const batchIndex = Math.floor(i / DEFAULT_BATCH_SIZE) + 1;
+    const batch = toInsert.slice(i, i + DEFAULT_BATCH_SIZE);
+
+    const records = batch.map(({ item, hash }) => ({
       raw_data: JSON.stringify(item),
       data: item,
+      content_hash: hash,
+      ingestion_run_id: runId,
     }));
 
     const { data, error } = await supabase
@@ -217,63 +387,62 @@ export async function insertItems<T extends DiItem>(
         `Batch insert failed for ${itemType}, falling back to individual inserts`,
       );
 
-      // If batch fails, try individual inserts to identify problematic records
-      let batchInserted = 0;
-      let batchErrors = 0;
-
-      for (const item of batch) {
+      // Fallback to individual inserts
+      for (const { item, hash, isUpdate } of batch) {
         const { error: singleError } = await supabase.from(tableName).insert({
           raw_data: JSON.stringify(item),
           data: item,
+          content_hash: hash,
+          ingestion_run_id: runId,
         });
 
         if (singleError) {
           errors.push({ id: item.id, error: singleError });
-          batchErrors++;
           logger.error(
-            {
-              id: item.id,
-              nom: item.nom,
-              error: singleError.message,
-            },
-            `Failed to insert ${itemType.slice(0, -1)}`, // Remove 's' for singular
+            { id: item.id, nom: item.nom, error: singleError.message },
+            `Failed to insert ${itemType.slice(0, -1)}`,
           );
         } else {
-          inserted++;
-          batchInserted++;
+          if (isUpdate) {
+            updated++;
+          } else {
+            inserted++;
+          }
         }
       }
-
-      logger.info(
-        { batchIndex, batchInserted, batchErrors },
-        `Completed fallback insertion for ${itemType} batch`,
-      );
     } else {
-      const count = data?.length ?? batch.length;
-      inserted += count;
+      // Count inserts vs updates
+      for (const { isUpdate } of batch) {
+        if (isUpdate) {
+          updated++;
+        } else {
+          inserted++;
+        }
+      }
 
       logger.debug(
         {
           batchIndex,
           totalBatches,
-          insertedInBatch: count,
+          insertedInBatch: data?.length ?? batch.length,
           totalInserted: inserted,
+          totalUpdated: updated,
         },
-        `${itemType.slice(0, -1).charAt(0).toUpperCase() + itemType.slice(0, -1).slice(1)} batch inserted successfully`,
+        `${itemType} batch inserted successfully`,
       );
     }
   }
 
   logger.info(
-    { inserted, skipped, errorCount: errors.length },
-    `Completed database insertion for ${itemType}`,
+    { inserted, updated, unchanged, errorCount: errors.length },
+    `Completed upsert for ${itemType}`,
   );
 
-  return { inserted, skipped, errors };
+  return { inserted, updated, unchanged, errors };
 }
 
 /**
- * Generic ingestion function for DI items
+ * Generic ingestion function for DI items with version tracking
  * Ingests items from Data Inclusion API into Supabase table
  *
  * @param supabase - Supabase client with admin privileges
@@ -294,50 +463,131 @@ export async function ingestCarifOrefItems<T extends DiItem>(
   tableName: "di_structures" | "di_services",
   itemType: string,
   options: DiIngestionOptions = {},
-): Promise<DiGenericIngestionResult> {
+): Promise<DiIngestionResult> {
   const startTime = Date.now();
+  const type = tableName === "di_structures" ? "structures" : "services";
+
   logger.info(
     { source: SOURCE_CARIF_OREF },
     `=== Starting DI ${itemType} ingestion ===`,
   );
 
-  // 1. Fetch all items from DI API
-  const items = await fetchAllCarifOrefItems(endpointFn, itemType, options);
+  // Create ingestion run record
+  const runId = await createIngestionRun(supabase, type, options);
+  logger.info({ runId }, "Created ingestion run");
 
-  // 2. Insert into Supabase
-  const { inserted, skipped, errors } = await insertItems(
-    supabase,
-    items,
-    tableName,
-    itemType,
-  );
+  try {
+    // 1. Fetch all items from DI API
+    const items = await fetchAllCarifOrefItems(endpointFn, itemType, options);
 
-  const durationMs = Date.now() - startTime;
-  const durationSec = (durationMs / 1000).toFixed(2);
+    // 2. Upsert into Supabase with version tracking
+    const { inserted, updated, unchanged, errors } = await upsertItems(
+      supabase,
+      items,
+      tableName,
+      itemType,
+      runId,
+    );
 
-  logger.info(
-    {
+    const durationMs = Date.now() - startTime;
+    const durationSec = (durationMs / 1000).toFixed(2);
+
+    // 3. Update ingestion run with stats
+    await completeIngestionRun(supabase, runId, {
       totalFetched: items.length,
       totalInserted: inserted,
-      totalSkipped: skipped,
-      errorCount: errors.length,
-      durationMs,
-      durationSec: `${durationSec}s`,
-    },
-    `=== DI ${itemType} ingestion completed ===`,
+      totalUpdated: updated,
+      totalUnchanged: unchanged,
+      totalErrors: errors.length,
+    });
+
+    logger.info(
+      {
+        runId,
+        totalFetched: items.length,
+        totalInserted: inserted,
+        totalUpdated: updated,
+        totalUnchanged: unchanged,
+        errorCount: errors.length,
+        durationMs,
+        durationSec: `${durationSec}s`,
+      },
+      `=== DI ${itemType} ingestion completed ===`,
+    );
+
+    if (errors.length > 0) {
+      logger.warn(
+        { errorCount: errors.length, firstErrors: errors.slice(0, 5) },
+        `Some ${itemType} failed to insert`,
+      );
+    }
+
+    return {
+      runId,
+      totalFetched: items.length,
+      totalInserted: inserted,
+      totalUpdated: updated,
+      totalUnchanged: unchanged,
+      errors,
+    };
+  } catch (error) {
+    // Mark run as failed
+    await completeIngestionRun(
+      supabase,
+      runId,
+      {
+        totalFetched: 0,
+        totalInserted: 0,
+        totalUpdated: 0,
+        totalUnchanged: 0,
+        totalErrors: 1,
+      },
+      "failed",
+      { message: error instanceof Error ? error.message : String(error) },
+    );
+    throw error;
+  }
+}
+
+// Legacy exports for backwards compatibility (deprecated)
+/** @deprecated Use DiIngestionResult instead */
+export type DiGenericIngestionResult = DiIngestionResult;
+
+/** @deprecated Use ingestCarifOrefItems instead, which now handles inserts and updates. */
+export async function insertItems<T extends DiItem>(
+  supabase: SupabaseClient<Database>,
+  items: T[],
+  tableName: "di_structures" | "di_services",
+  itemType: string,
+): Promise<{
+  inserted: number;
+  skipped: number;
+  errors: Array<{ id: string; error: unknown }>;
+}> {
+  logger.warn(
+    "insertItems is deprecated, use ingestCarifOrefItems with upsert logic instead",
   );
 
-  if (errors.length > 0) {
-    logger.warn(
-      { errorCount: errors.length, firstErrors: errors.slice(0, 5) },
-      `Some ${itemType} failed to insert`,
-    );
-  }
+  // Create a temporary run for legacy compatibility
+  const runId = await createIngestionRun(
+    supabase,
+    tableName === "di_structures" ? "structures" : "services",
+    {},
+  );
+
+  const result = await upsertItems(supabase, items, tableName, itemType, runId);
+
+  await completeIngestionRun(supabase, runId, {
+    totalFetched: items.length,
+    totalInserted: result.inserted,
+    totalUpdated: result.updated,
+    totalUnchanged: result.unchanged,
+    totalErrors: result.errors.length,
+  });
 
   return {
-    totalFetched: items.length,
-    totalInserted: inserted,
-    totalSkipped: skipped,
-    errors,
+    inserted: result.inserted + result.updated,
+    skipped: result.unchanged,
+    errors: result.errors,
   };
 }

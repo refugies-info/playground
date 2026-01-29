@@ -69,11 +69,14 @@ import { getSupabaseAdmin } from '@playground/supabase';
 
 const supabase = getSupabaseAdmin();
 
-// Ingest all structures
+// Ingest all structures (with version tracking)
 const result = await ingestCarifOrefStructures(supabase);
 
+console.log(`Run ID: ${result.runId}`);
 console.log(`Fetched: ${result.totalFetched}`);
-console.log(`Inserted: ${result.totalInserted}`);
+console.log(`Inserted: ${result.totalInserted} (new)`);
+console.log(`Updated: ${result.totalUpdated} (new versions)`);
+console.log(`Unchanged: ${result.totalUnchanged} (skipped)`);
 console.log(`Errors: ${result.errors.length}`);
 
 // Ingest with limit (for testing)
@@ -122,26 +125,44 @@ await listStructures({
 - The client uses the `@hey-api/client-fetch` adapter for HTTP requests
 - API endpoints use `/api/v1/` prefix (defined in the OpenAPI spec)
 
-## Smoke Test
+## Ingestion Command
 
-A smoke test script is available for testing the DI ingestion module:
+The official ingestion command for syncing data from the Data Inclusion API:
 
 ```bash
-# Fetch 5 structures (default)
-pnpm test:di
+# Ingest 5 structures (default, for testing)
+pnpm di:ingest
 
-# Fetch specific number
-pnpm test:di --limit 10
+# Ingest specific number
+pnpm di:ingest --limit 100
 
-# Fetch ALL structures
-pnpm test:di --all
+# Ingest ALL structures
+pnpm di:ingest --all
 
-# Fetch and cleanup after
-pnpm test:di --limit 10 --cleanup
+# Ingest services instead of structures
+pnpm di:ingest --type services --limit 50
 ```
 
-The script will:
-1. Fetch structures from DI API
-2. Insert them into local Supabase `di_structures` table
-3. Verify the insertion
-4. Optionally clean up test data
+### Features
+
+- **Incremental updates**: Detects new vs. existing records via SHA-1 content hashing
+- **Version tracking**: Each update creates a new version (append-only history)
+- **Run tracking**: Each ingestion run is logged to `di_ingestion_runs` table
+- **Idempotent**: Re-running with same data results in 0 inserts/updates
+
+### Result Fields
+
+| Field | Description |
+|-------|-------------|
+| `runId` | UUID of this ingestion run (traceable in `di_ingestion_runs`) |
+| `totalFetched` | Records fetched from DI API |
+| `totalInserted` | New records (version 1) |
+| `totalUpdated` | Changed records (version 2+) |
+| `totalUnchanged` | Skipped (hash unchanged) |
+| `errors` | Records that failed to insert |
+
+### Database Tables
+
+- `di_structures` / `di_services` - Main data tables with version history
+- `di_structures_latest` / `di_services_latest` - Views for current versions only
+- `di_ingestion_runs` - Tracks each ingestion run with stats
