@@ -1,0 +1,23 @@
+{
+  "name": "@refugies-info/di",
+  "version": "0.0.1",
+  "description": "Data Inclusion API Client",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "check:types": "tsc --noEmit",
+    "gen:client": "tsx gen-client.ts"
+  },
+  "dependencies": {
+    "@hey-api/client-fetch": "^0.8.1",
+    "@playground/shared-types": "workspace:*",
+    "@playground/supabase": "workspace:*",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.54.1",
+    "@types/node": "^20.0.0",
+    "dotenv-cli": "^11.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -12,6 +12,14 @@ Environment variables are configuration values that change between environments 
 
 ## Supabase Configuration
 
+### `SUPABASE_URL`
+
+- **Type**: String (URL)
+- **Required**: Yes (backend)
+- **Example**: `https://your-project.supabase.co`
+- **Description**: The URL of your Supabase project (for backend scripts)
+- **Where to find**: Supabase Dashboard → Settings → API → Project URL
+
 ### `NEXT_PUBLIC_SUPABASE_URL`
 
 - **Type**: String (URL)
@@ -67,6 +75,37 @@ Environment variables are configuration values that change between environments 
 - **Default**: `https://api.letta.com`
 - **Example**: `https://api.letta.com`
 - **Description**: Base URL for Letta API (for self-hosted instances)
+
+---
+
+## Data Inclusion Configuration
+
+### `DI_BASE_URL`
+
+- **Type**: String (URL)
+- **Required**: Yes
+- **Default**: `https://api-staging.data.inclusion.gouv.fr`
+- **Example**: `https://api-staging.data.inclusion.gouv.fr`
+- **Description**: Base URL for Data Inclusion API
+- **Where to find**: [Data Inclusion API Documentation](https://api.data.inclusion.gouv.fr/)
+
+### `DI_API_KEY`
+
+- **Type**: String (API Key)
+- **Required**: Yes
+- **Example**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+- **Description**: API key for authenticating with Data Inclusion API
+- **Where to find**: [Data Inclusion API Dashboard](https://api.data.inclusion.gouv.fr/)
+- **Security**: Secret (never expose publicly)
+
+### `DI_PAGE_SIZE`
+
+- **Type**: Number
+- **Required**: No
+- **Default**: `100`
+- **Max**: `10000`
+- **Description**: Number of structures to fetch per API page (pagination)
+- **Usage**: Adjust based on network conditions and API rate limits
 
 ---
 
@@ -203,6 +242,18 @@ Environment variables are configuration values that change between environments 
 
 ---
 
+## Scripts Configuration
+
+### `SEED_USER_PASSWORD`
+
+- **Type**: String
+- **Required**: No (only for `pnpm seed:users` script)
+- **Default**: `password123`
+- **Description**: Default password for seeded users
+- **Usage**: Run `pnpm seed:users` to create test users
+
+---
+
 ## Development Configuration
 
 ### `DEBUG`
@@ -233,16 +284,21 @@ Environment variables are configuration values that change between environments 
 2. Fill in required variables:
    ```bash
    # Supabase
-   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_URL=http://127.0.0.1:54321
+   NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
    SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
    # Letta
    LETTA_API_KEY=your-letta-api-key
-   LETTA_AGENT_ID=your-agent-id
+   LETTA_PROJECT_ID=your-project-id
+   PLAYGROUND_AGENT_ID=your-playground-agent-id
+
+   # Data Inclusion
+   DI_BASE_URL=https://api-staging.data.inclusion.gouv.fr
+   DI_API_KEY=your-di-api-key
 
    # App
-   NEXT_PUBLIC_APP_URL=http://localhost:3000
    NODE_ENV=development
    ```
 

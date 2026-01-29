@@ -34,6 +34,54 @@ export type Database = {
   };
   public: {
     Tables: {
+      di_services: {
+        Row: {
+          created_at: string;
+          data: Json | null;
+          id: number;
+          raw_data: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          data?: Json | null;
+          id?: number;
+          raw_data: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          data?: Json | null;
+          id?: number;
+          raw_data?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      di_structures: {
+        Row: {
+          created_at: string;
+          data: Json | null;
+          id: number;
+          raw_data: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          data?: Json | null;
+          id?: number;
+          raw_data: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          data?: Json | null;
+          id?: number;
+          raw_data?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       editorial_records: {
         Row: {
           content_report_id: string | null;
@@ -191,38 +239,58 @@ export type Database = {
       publication_records: {
         Row: {
           created_at: string;
+          editorial_record_id: string | null;
           id: string;
           payload: Json | null;
           published_by: string | null;
           remote_id: string;
           status: string;
           target: string;
+          translation_record_id: string | null;
           updated_at: string;
           workflow_id: string;
         };
         Insert: {
           created_at?: string;
+          editorial_record_id?: string | null;
           id?: string;
           payload?: Json | null;
           published_by?: string | null;
           remote_id: string;
           status?: string;
           target: string;
+          translation_record_id?: string | null;
           updated_at?: string;
           workflow_id: string;
         };
         Update: {
           created_at?: string;
+          editorial_record_id?: string | null;
           id?: string;
           payload?: Json | null;
           published_by?: string | null;
           remote_id?: string;
           status?: string;
           target?: string;
+          translation_record_id?: string | null;
           updated_at?: string;
           workflow_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "publication_records_editorial_record_id_fkey";
+            columns: ["editorial_record_id"];
+            isOneToOne: false;
+            referencedRelation: "editorial_records";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "publication_records_translation_record_id_fkey";
+            columns: ["translation_record_id"];
+            isOneToOne: false;
+            referencedRelation: "translation_records";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "publication_records_workflow_id_fkey";
             columns: ["workflow_id"];
@@ -291,7 +359,7 @@ export type Database = {
           markdown?: string | null;
           metadata?: Json | null;
           metadata_report_id?: string | null;
-          status: string;
+          status?: string;
           updated_at?: string;
           workflow_id?: string | null;
         };
@@ -328,6 +396,13 @@ export type Database = {
             columns: ["metadata_report_id"];
             isOneToOne: false;
             referencedRelation: "letta_reports";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "translation_records_workflow_id_fkey";
+            columns: ["workflow_id"];
+            isOneToOne: false;
+            referencedRelation: "workflows";
             referencedColumns: ["id"];
           },
         ];
@@ -398,10 +473,37 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      user_profiles: {
+        Row: {
+          created_at: string | null;
+          email: string | null;
+          id: string | null;
+          language: string | null;
+          last_sign_in_at: string | null;
+          role: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          email?: string | null;
+          id?: string | null;
+          language?: never;
+          last_sign_in_at?: string | null;
+          role?: never;
+        };
+        Update: {
+          created_at?: string | null;
+          email?: string | null;
+          id?: string | null;
+          language?: never;
+          last_sign_in_at?: string | null;
+          role?: never;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
-      [_ in never]: never;
+      get_my_language: { Args: never; Returns: string };
+      get_my_role: { Args: never; Returns: string };
     };
     Enums: {
       [_ in never]: never;
