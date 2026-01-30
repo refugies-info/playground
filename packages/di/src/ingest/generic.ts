@@ -332,8 +332,7 @@ async function upsertItems<T extends DiItem>(
   const toInsert: Array<{ item: T; hash: string; isUpdate: boolean }> = [];
 
   for (const item of items) {
-    const rawData = JSON.stringify(item);
-    const hash = computeContentHash(rawData);
+    const hash = computeContentHash(item);
     const existing = existingRecords.get(item.id);
 
     if (!existing) {
