@@ -17,7 +17,6 @@
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.54.1",
-    "@types/json-stable-stringify": "^1.2.0",
     "@types/node": "^20.0.0",
     "dotenv-cli": "^11.0.0",
     "typescript": "^5.0.0"
