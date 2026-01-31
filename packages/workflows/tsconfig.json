@@ -8,7 +8,7 @@
     "sourceMap": true,
     "noEmit": false,
     "composite": true,
-    "lib": ["ES2023"]
+    "lib": ["ES2023", "DOM"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
