@@ -41,7 +41,7 @@ export type Database = {
           data: Json | null;
           di_id: string | null;
           di_structure_id: string | null;
-          id: number;
+          id: string;
           ingestion_run_id: string | null;
           raw_data: string;
           updated_at: string;
@@ -53,7 +53,7 @@ export type Database = {
           data?: Json | null;
           di_id?: string | null;
           di_structure_id?: string | null;
-          id?: number;
+          id?: string;
           ingestion_run_id?: string | null;
           raw_data: string;
           updated_at?: string;
@@ -65,7 +65,7 @@ export type Database = {
           data?: Json | null;
           di_id?: string | null;
           di_structure_id?: string | null;
-          id?: number;
+          id?: string;
           ingestion_run_id?: string | null;
           raw_data?: string;
           updated_at?: string;
@@ -87,7 +87,7 @@ export type Database = {
           created_at: string;
           data: Json | null;
           di_id: string | null;
-          id: number;
+          id: string;
           ingestion_run_id: string | null;
           raw_data: string;
           updated_at: string;
@@ -98,7 +98,7 @@ export type Database = {
           created_at?: string;
           data?: Json | null;
           di_id?: string | null;
-          id?: number;
+          id?: string;
           ingestion_run_id?: string | null;
           raw_data: string;
           updated_at?: string;
@@ -109,7 +109,7 @@ export type Database = {
           created_at?: string;
           data?: Json | null;
           di_id?: string | null;
-          id?: number;
+          id?: string;
           ingestion_run_id?: string | null;
           raw_data?: string;
           updated_at?: string;
@@ -190,32 +190,69 @@ export type Database = {
       ingestion_records: {
         Row: {
           created_at: string;
+          di_service_id: string | null;
+          di_structure_id: string | null;
           id: string;
           ingestion_report_id: string | null;
           markdown: string;
           metadata: Json;
-          rco_record_id: string;
+          rco_record_id: string | null;
           updated_at: string;
+          version: number | null;
         };
         Insert: {
           created_at?: string;
+          di_service_id?: string | null;
+          di_structure_id?: string | null;
           id?: string;
           ingestion_report_id?: string | null;
           markdown: string;
           metadata: Json;
-          rco_record_id: string;
+          rco_record_id?: string | null;
           updated_at?: string;
+          version?: number | null;
         };
         Update: {
           created_at?: string;
+          di_service_id?: string | null;
+          di_structure_id?: string | null;
           id?: string;
           ingestion_report_id?: string | null;
           markdown?: string;
           metadata?: Json;
-          rco_record_id?: string;
+          rco_record_id?: string | null;
           updated_at?: string;
+          version?: number | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "ingestion_records_di_service_id_fkey";
+            columns: ["di_service_id"];
+            isOneToOne: false;
+            referencedRelation: "di_services";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ingestion_records_di_service_id_fkey";
+            columns: ["di_service_id"];
+            isOneToOne: false;
+            referencedRelation: "di_services_latest";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ingestion_records_di_structure_id_fkey";
+            columns: ["di_structure_id"];
+            isOneToOne: false;
+            referencedRelation: "di_structures";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ingestion_records_di_structure_id_fkey";
+            columns: ["di_structure_id"];
+            isOneToOne: false;
+            referencedRelation: "di_structures_latest";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "ingestion_records_ingestion_report_id_fkey";
             columns: ["ingestion_report_id"];
@@ -595,7 +632,7 @@ export type Database = {
           data: Json | null;
           di_id: string | null;
           di_structure_id: string | null;
-          id: number | null;
+          id: string | null;
           ingestion_run_id: string | null;
           raw_data: string | null;
           updated_at: string | null;
@@ -617,7 +654,7 @@ export type Database = {
           created_at: string | null;
           data: Json | null;
           di_id: string | null;
-          id: number | null;
+          id: string | null;
           ingestion_run_id: string | null;
           raw_data: string | null;
           updated_at: string | null;

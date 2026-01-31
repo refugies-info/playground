@@ -13,3 +13,5 @@ client.setConfig({
 
 export * from "./hey-api";
 export * from "./ingest";
+export { processIngestionRecords } from "./ingest/records";
+export { diRecordToIngestionRecord } from "./ingest/transform";
