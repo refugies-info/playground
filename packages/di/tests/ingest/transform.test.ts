@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
-import { diRecordToIngestionRecord } from "./transform";
+import { diRecordToIngestionRecord } from "../../src/ingest/transform";
 
 describe("diRecordToIngestionRecord", () => {
   const mockStructure = { id: "struct-1", nom: "Structure Test" };
