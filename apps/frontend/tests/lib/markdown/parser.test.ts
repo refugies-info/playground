@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { markdownToBlocks } from "./parser";
+import { markdownToBlocks } from "@/lib/markdown/parser";
 
 describe("Markdown Parser", () => {
   it("should parse flat directives correctly", async () => {

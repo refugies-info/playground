@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { markdownToBlocks } from "./parser";
-import { blocksToDirectiveMarkdown } from "./serializer";
+import { markdownToBlocks } from "@/lib/markdown/parser";
+import { blocksToDirectiveMarkdown } from "@/lib/markdown/serializer";
 
 describe("Markdown Serializer (Round-trip & Directives)", () => {
   it("should serialize flat nested toggles correctly (no indentation)", async () => {
