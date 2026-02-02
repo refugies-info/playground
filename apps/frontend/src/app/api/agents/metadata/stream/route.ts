@@ -1,14 +1,10 @@
-import {
-  createLettaClient,
-  generateMetadataReport,
-  type LettaReportType,
-  MetadataMetadataSchema,
-  parseAgentResponse,
-} from "@playground/agents";
+import { createLettaClient, generateMetadataReport } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
+import { persistMetadataWorkflow } from "@playground/workflows";
 import matter from "gray-matter";
 import type { NextRequest } from "next/server";
+import { start } from "workflow/api";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -163,16 +159,22 @@ export async function POST(request: NextRequest) {
           controller.enqueue(encoder.encode(data));
         }
 
-        // Persist the letta_report after successful streaming
+        /**
+         * Persist using Vercel Workflow
+         */
         if (finalAssistantContent) {
           try {
-            await persistMetadataReport(flowId, agentId, finalAssistantContent);
+            await start(persistMetadataWorkflow, [
+              flowId,
+              agentId,
+              finalAssistantContent,
+            ]);
+            logger.info({ flowId }, "Triggered persistMetadataWorkflow");
           } catch (persistError) {
             logger.error(
               { error: persistError },
-              "Failed to persist metadata report",
+              "Failed to trigger persistMetadataWorkflow",
             );
-            // Don't fail the stream, but log the error
           }
         }
 
@@ -198,93 +200,4 @@ export async function POST(request: NextRequest) {
       Connection: "keep-alive",
     },
   });
-}
-
-/**
- * Persists the metadata agent response to letta_reports and links it to the editorial_record.
- * The report is always stored for debugging purposes, even if linking fails.
- */
-async function persistMetadataReport(
-  flowId: string,
-  agentId: string,
-  responseContent: string,
-): Promise<void> {
-  const reportType: LettaReportType = "metadata";
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !key) {
-    throw new Error("Missing Supabase credentials");
-  }
-
-  const supabase = getSupabaseAdmin(url, key);
-
-  // Parse and validate metadata from responseContent (frontmatter)
-  const result = parseAgentResponse(
-    responseContent,
-    agentId,
-    MetadataMetadataSchema,
-  );
-
-  // 1. Insert the letta_report first (always, for debugging)
-  // The workflow_id enables the database trigger to auto-link to editorial_record
-  const { data: report, error: reportError } = await supabase
-    .from("letta_reports")
-    .insert({
-      agent_id: agentId,
-      report_type: reportType,
-      markdown: result.content,
-      metadata: result.metadata as any,
-      status: result.status,
-      raw_response: result.rawResponse,
-      workflow_id: flowId,
-    })
-    .select("id")
-    .single();
-
-  if (reportError) {
-    throw new Error(`Failed to insert letta_report: ${reportError.message}`);
-  }
-
-  logger.info(
-    { reportId: report.id, flowId, type: reportType },
-    "Metadata report stored successfully",
-  );
-
-  // 2. Try to get the editorial_record_id from the workflow
-  const { data: workflow, error: workflowError } = await supabase
-    .from("workflows")
-    .select("editorial_record_id")
-    .eq("id", flowId)
-    .single();
-
-  if (workflowError || !workflow?.editorial_record_id) {
-    logger.warn(
-      { flowId, reportId: report.id, error: workflowError },
-      "Could not find editorial_record for flowId - report stored but not linked",
-    );
-    return;
-  }
-
-  // 3. Link the report to the editorial_record
-  const { error: updateError } = await supabase
-    .from("editorial_records")
-    .update({ metadata_report_id: report.id })
-    .eq("id", workflow.editorial_record_id);
-
-  if (updateError) {
-    logger.error(
-      { error: updateError, reportId: report.id },
-      "Failed to link report to editorial_record",
-    );
-  } else {
-    logger.info(
-      {
-        reportId: report.id,
-        editorialRecordId: workflow.editorial_record_id,
-        type: reportType,
-      },
-      "Metadata report linked to editorial_record",
-    );
-  }
 }

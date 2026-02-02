@@ -1,0 +1,127 @@
+import { logger } from "@playground/shared-types";
+import type { StepResult } from "../../types";
+import { getSupabaseClient } from "../common/supabase";
+
+/**
+ * Result of saving a document.
+ */
+export interface SaveDocumentResult {
+  editorialRecordId: string;
+  isNew: boolean;
+  progressUpdated: boolean;
+}
+
+/**
+ * Saves or updates an editorial document.
+ *
+ * This step:
+ * 1. Gets the workflow to check for existing editorial_record
+ * 2. Updates existing record or creates new one
+ * 3. If document was published, updates progress to 'modified'
+ *
+ * @param workflowId - The workflow ID to save document for
+ * @param markdown - The markdown content to save
+ * @returns Result with editorial record ID and operation status
+ */
+export async function saveDocumentStep(
+  workflowId: string,
+  markdown: string,
+): Promise<StepResult<SaveDocumentResult>> {
+  "use step";
+
+  try {
+    const supabase = getSupabaseClient();
+
+    // 1. Get the workflow to check for existing editorial_record and get progress
+    const { data: workflow, error: workflowError } = await supabase
+      .from("workflows")
+      .select("id, editorial_record_id, ingestion_record_id, progress")
+      .eq("id", workflowId)
+      .single();
+
+    if (workflowError || !workflow) {
+      logger.error(workflowError, "Error fetching workflow for save");
+      return { success: false, error: "Workflow not found" };
+    }
+
+    let editorialRecordId: string;
+    let isNew = false;
+
+    if (workflow.editorial_record_id) {
+      // Update existing editorial_record
+      const { error: updateError } = await supabase
+        .from("editorial_records")
+        .update({
+          markdown,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", workflow.editorial_record_id);
+
+      if (updateError) {
+        logger.error(updateError, "Error updating editorial_record");
+        return { success: false, error: "Failed to update editorial record" };
+      }
+
+      editorialRecordId = workflow.editorial_record_id;
+    } else {
+      // Create new editorial_record - we need ingestion_record_id
+      if (!workflow.ingestion_record_id) {
+        return {
+          success: false,
+          error: "No ingestion record found for this workflow",
+        };
+      }
+
+      const { data: newRecord, error: insertError } = await supabase
+        .from("editorial_records")
+        .insert({
+          ingestion_record_id: workflow.ingestion_record_id,
+          markdown,
+        })
+        .select("id")
+        .single();
+
+      if (insertError || !newRecord) {
+        logger.error(insertError, "Error creating editorial_record");
+        return { success: false, error: "Failed to create editorial record" };
+      }
+
+      editorialRecordId = newRecord.id;
+      isNew = true;
+    }
+
+    // If the document was published, set progress to 'modified'
+    let progressUpdated = false;
+    if (workflow.progress === "published") {
+      const { error: progressError } = await supabase
+        .from("workflows")
+        .update({ progress: "modified" })
+        .eq("id", workflowId);
+
+      if (progressError) {
+        logger.error(
+          progressError,
+          "Error updating workflow progress to modified",
+        );
+      } else {
+        progressUpdated = true;
+      }
+    }
+
+    logger.info(
+      { workflowId, editorialRecordId, isNew, progressUpdated },
+      "Document saved successfully",
+    );
+
+    return {
+      success: true,
+      data: { editorialRecordId, isNew, progressUpdated },
+    };
+  } catch (error) {
+    logger.error(error, "Unexpected error in saveDocumentStep");
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
