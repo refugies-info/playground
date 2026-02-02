@@ -14,7 +14,7 @@ import {
 import { logger } from "@playground/shared-types";
 import { ingestProcessedData } from "@playground/supabase";
 import matter from "gray-matter";
-import { getSupabaseClient } from "./steps/common/supabase";
+import { getSupabaseClient } from "../common/supabase";
 
 // Define steps
 

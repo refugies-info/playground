@@ -1,48 +1,46 @@
 // =============================================================================
+// Types
+// =============================================================================
+export * from "./types";
+
+// =============================================================================
 // Pipelines (Orchestrators - "use workflow")
 // =============================================================================
-
 import {
   type ArchiveWorkflowResult,
   archiveWorkflow,
 } from "./pipelines/archive";
-
 export { archiveWorkflow, type ArchiveWorkflowResult };
 
 import {
   type PublicationWorkflowResult,
   publicationWorkflow,
 } from "./pipelines/publication";
-
 export { publicationWorkflow, type PublicationWorkflowResult };
 
 import { type SaveWorkflowResult, saveWorkflow } from "./pipelines/save";
-
 export { saveWorkflow, type SaveWorkflowResult };
 
 import {
   type PersistEditorialWorkflowResult,
   persistEditorialWorkflow,
 } from "./pipelines/persist-editorial";
-
 export { persistEditorialWorkflow, type PersistEditorialWorkflowResult };
 
 import {
   type PersistMetadataWorkflowResult,
   persistMetadataWorkflow,
 } from "./pipelines/persist-metadata";
-
 export { persistMetadataWorkflow, type PersistMetadataWorkflowResult };
 
 import {
   type ToggleStatusResult,
   toggleStatusWorkflow,
 } from "./pipelines/toggle-status";
-
 export { toggleStatusWorkflow, type ToggleStatusResult };
-export * from "./process-xml";
 export type { GetEditorialRecordIdResult } from "./steps/common/get-editorial-record-id";
 export { getEditorialRecordIdStep } from "./steps/common/get-editorial-record-id";
+
 // =============================================================================
 // Common Utilities
 // =============================================================================
@@ -57,9 +55,11 @@ export type { SaveDocumentResult } from "./steps/editorial/save-document";
 // =============================================================================
 export { saveDocumentStep } from "./steps/editorial/save-document";
 // =============================================================================
-// Adapters - Interfaces for extensibility
+// Steps - Ingestion
 // =============================================================================
-export type { SourceAdapter } from "./steps/ingestion/adapters/types";
+export * from "./steps/ingestion/ingest-di";
+export * from "./steps/ingestion/ingest-rco";
+
 // =============================================================================
 // Adapters - Platform implementations
 // =============================================================================
@@ -90,7 +90,3 @@ export type { CreateTranslationRecordsResult } from "./steps/translation/create-
 // Steps - Translation
 // =============================================================================
 export { createTranslationRecordsStep } from "./steps/translation/create-translation-records";
-// =============================================================================
-// Types
-// =============================================================================
-export * from "./types";
