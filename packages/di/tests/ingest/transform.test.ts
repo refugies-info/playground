@@ -73,7 +73,7 @@ describe("diRecordToIngestionRecord", () => {
     const match = result.match(/^---\n([\s\S]*?)\n---/);
     expect(match).not.toBeNull();
 
-    const frontmatter = parse(match![1]);
+    const frontmatter = parse(match?.[1] ?? "");
     expect(frontmatter.structure).toEqual(structure);
     expect(frontmatter.id).toBe("service-1");
   });

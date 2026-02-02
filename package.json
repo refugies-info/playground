@@ -37,7 +37,7 @@
     "generate:md": "tsx scripts/generate-md.ts",
     "copy:schema": "tsx scripts/copy-schema.ts",
     "seed:ingestion": "tsx scripts/seed-ingestion.ts",
-    "di:ingest": "tsx scripts/di-ingest.ts"
+    "di:ingest": "tsx scripts/ingest-di.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.6",
