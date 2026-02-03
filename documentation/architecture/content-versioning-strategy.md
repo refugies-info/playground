@@ -2,12 +2,12 @@
 
 > Document de référence pour l'architecture de versioning du contenu
 > Date : Février 2026
-> Auteurs : Jérémie, Luis, Agent
+> Auteurs : Jérémie et son armée de Letta Agents
 > Destinataires : Équipe produit
 
 ---
 
-## 🎯 Vue d'ensemble (pour Julie)
+## 🎯 Vue d'ensemble
 
 ### Le problème qu'on résout
 
