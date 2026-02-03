@@ -538,6 +538,30 @@ FROM workflows w;
 
 ---
 
+## ✅ Tech review (Supabase) — TODO
+
+1. **Indexes critiques** (FK + filtres dans `workflow_status_view`)
+   - `editorial_records(workflow_id)`, `editorial_records(based_on_ingestion_id)`, `editorial_records(work_status)`
+   - `translation_records(workflow_id)`, `translation_records(based_on_editorial_id)`, `translation_records(work_status)`, `translation_records(language)`
+   - `ingestion_records(workflow_id)`, `ingestion_records(version)`
+
+2. **Contraintes d’unicité**
+   - `unique (workflow_id, version)` sur `editorial_records`
+   - `unique (workflow_id, language, version)` sur `translation_records`
+   - `unique (workflow_id, version)` sur `ingestion_records`
+
+3. **Compléter la vue `workflow_status_view`**
+   - Ajouter le cas `draft_with_source_update`
+   - Vérifier fallback quand aucune ingestion n’existe
+
+4. **Transitions transactionnelles**
+   - `published → archived` et `draft → published` doivent être atomiques
+
+5. **Sécurité publication**
+   - Empêcher la publication d’un `draft` (contrainte ou garde applicative)
+
+---
+
 ## 🚀 Prochaines étapes
 
 1. Validation du document par Julie et Luis
