@@ -9,4 +9,5 @@ export * from "./data-table/data-table-pagination";
 export * from "./data-table/data-table-toolbar";
 export * from "./input";
 export * from "./input";
+export * from "./spinner";
 export * from "./table/table";

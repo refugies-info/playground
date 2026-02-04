@@ -18,9 +18,10 @@ interface IngestionRecordWithReport {
   markdown: string;
   metadata: Json;
   ingestion_report_id: string | null;
+  created_at?: string;
   letta_reports:
-    | { markdown: string; status?: string }
-    | { markdown: string; status?: string }[]
+    | { markdown: string; status?: string; created_at?: string }
+    | { markdown: string; status?: string; created_at?: string }[]
     | null;
 }
 
@@ -42,10 +43,17 @@ type WorkflowWithRelations =
       Database["public"]["Tables"]["rco_records"]["Row"],
       "source_raw" | "metadata"
     >;
-    ingestion_records: Pick<
-      Database["public"]["Tables"]["ingestion_records"]["Row"],
-      "markdown" | "metadata"
-    > | null;
+    ingestion_records:
+      | (Pick<
+          Database["public"]["Tables"]["ingestion_records"]["Row"],
+          "markdown" | "metadata" | "created_at" | "ingestion_report_id"
+        > & {
+          letta_reports:
+            | { markdown: string; status?: string; created_at?: string }
+            | { markdown: string; status?: string; created_at?: string }[]
+            | null;
+        })
+      | null;
     editorial_records:
       | Pick<
           Database["public"]["Tables"]["editorial_records"]["Row"],
@@ -55,10 +63,26 @@ type WorkflowWithRelations =
     publication_records:
       | Pick<
           Database["public"]["Tables"]["publication_records"]["Row"],
-          "remote_id"
+          "remote_id" | "status" | "updated_at" | "created_at"
         >[]
       | null;
   };
+
+function normalizeProgress(progress: string): Document["state"] {
+  if (progress === "editorial" || progress === "modified") {
+    return "draft";
+  }
+  if (progress === "rco" || progress === "ingestion") {
+    return "to_process";
+  }
+  return progress as Document["state"];
+}
+
+type WorkflowIngestionMetadata = {
+  workflow_id: string;
+  structure_name: string | null;
+  session_start_date: string | null;
+};
 
 export async function getDocuments(params: GetDocumentsParams) {
   const {
@@ -90,14 +114,22 @@ export async function getDocuments(params: GetDocumentsParams) {
       ),
       ingestion_records (
         markdown,
-        metadata
+        metadata,
+        created_at,
+        ingestion_report_id,
+        letta_reports (
+          created_at
+        )
       ),
       editorial_records (
         markdown,
         metadata
       ),
       publication_records (
-        remote_id
+        remote_id,
+        status,
+        updated_at,
+        created_at
       )
     `,
       { count: "exact" },
@@ -157,6 +189,19 @@ export async function getDocuments(params: GetDocumentsParams) {
   const rows = data as unknown as WorkflowWithRelations[];
 
   // Map to Document type with async title extraction
+  const workflowIds = rows.map((row) => row.id);
+  const { data: ingestionMetadata } = await supabase
+    .from("workflow_ingestion_metadata")
+    .select("workflow_id, structure_name, session_start_date")
+    .in("workflow_id", workflowIds);
+
+  const ingestionMetadataByWorkflow = new Map(
+    (ingestionMetadata as WorkflowIngestionMetadata[] | null)?.map((row) => [
+      row.workflow_id,
+      row,
+    ]) ?? [],
+  );
+
   const documents: Document[] = await Promise.all(
     rows.map(async (item) => {
       const rcoRecord = item.rco_records;
@@ -186,25 +231,44 @@ export async function getDocuments(params: GetDocumentsParams) {
         (await extractTitleFromMarkdown(content));
 
       const cleanBaseUrl = (process.env.RI_BASE_URL || "").replace(/\/$/, "");
-      const remoteId =
-        item.publication_records && item.publication_records.length > 0
-          ? item.publication_records[0].remote_id
-          : undefined;
+      const publishedPublication = item.publication_records
+        ? [...item.publication_records]
+            .filter((record) => record.status === "published")
+            .sort((a, b) => {
+              const aDate = new Date(a.updated_at || a.created_at).getTime();
+              const bDate = new Date(b.updated_at || b.created_at).getTime();
+              return bDate - aDate;
+            })[0]
+        : undefined;
 
       const publishedUrl =
-        item.progress === "published" && remoteId && cleanBaseUrl
-          ? `${cleanBaseUrl}/dispositif/${remoteId}`
+        publishedPublication?.remote_id && cleanBaseUrl
+          ? `${cleanBaseUrl}/dispositif/${publishedPublication.remote_id}`
           : undefined;
+
+      const ingestionCreatedAt = ingestionRecord?.created_at;
+      const reportCreatedAt = Array.isArray(ingestionRecord?.letta_reports)
+        ? ingestionRecord?.letta_reports[0]?.created_at
+        : ingestionRecord?.letta_reports?.created_at;
+      const dateAdded =
+        reportCreatedAt || ingestionCreatedAt || item.updated_at;
+      const metadataRow = ingestionMetadataByWorkflow.get(item.id);
+      const sourceSystem = item.rco_records ? "RCO" : "DI";
 
       return {
         id: item.id,
         title,
-        date_added: item.updated_at,
+        date_added: dateAdded,
         status: item.status,
-        state: item.progress,
+        state: normalizeProgress(item.progress),
         content,
         metadata,
         publishedUrl,
+        publicationStatus: publishedPublication?.status,
+        publicationRemoteId: publishedPublication?.remote_id,
+        structureName: metadataRow?.structure_name ?? undefined,
+        sessionStartDate: metadataRow?.session_start_date ?? undefined,
+        sourceSystem,
       };
     }),
   );
@@ -243,51 +307,66 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   }
 
   // Fetch the related records individually
-  const [rcoResult, ingestionResult, editorialResult, publicationResult] =
-    await Promise.all([
-      supabase
-        .from("rco_records")
-        .select("source_raw, metadata")
-        .eq("id", workflow.rco_record_id)
-        .single(),
-      workflow.ingestion_record_id
-        ? supabase
-            .from("ingestion_records")
-            .select(
-              `
+  const [
+    rcoResult,
+    ingestionResult,
+    editorialResult,
+    publicationResult,
+    ingestionMetadataResult,
+  ] = await Promise.all([
+    supabase
+      .from("rco_records")
+      .select("source_raw, metadata")
+      .eq("id", workflow.rco_record_id)
+      .single(),
+    workflow.ingestion_record_id
+      ? supabase
+          .from("ingestion_records")
+          .select(
+            `
             markdown,
             metadata,
+            created_at,
             ingestion_report_id,
             letta_reports (
               markdown,
-              status
+              status,
+              created_at
             )
           `,
-            )
-            .eq("id", workflow.ingestion_record_id)
-            .single()
-        : Promise.resolve({ data: null, error: null }),
-      workflow.editorial_record_id
-        ? supabase
-            .from("editorial_records")
-            .select("markdown, metadata")
-            .eq("id", workflow.editorial_record_id)
-            .single()
-        : Promise.resolve({ data: null, error: null }),
-      supabase
-        .from("publication_records")
-        .select("remote_id")
-        .eq("workflow_id", workflow.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single(),
-    ]);
+          )
+          .eq("id", workflow.ingestion_record_id)
+          .single()
+      : Promise.resolve({ data: null, error: null }),
+    workflow.editorial_record_id
+      ? supabase
+          .from("editorial_records")
+          .select("markdown, metadata")
+          .eq("id", workflow.editorial_record_id)
+          .single()
+      : Promise.resolve({ data: null, error: null }),
+    supabase
+      .from("publication_records")
+      .select("remote_id, status")
+      .eq("workflow_id", workflow.id)
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single(),
+    supabase
+      .from("workflow_ingestion_metadata")
+      .select("workflow_id, structure_name, session_start_date")
+      .eq("workflow_id", workflow.id)
+      .single(),
+  ]);
 
   const rcoRecord = rcoResult.data;
   const ingestionRecord =
     ingestionResult.data as IngestionRecordWithReport | null;
   const editorialRecord = editorialResult.data;
   const publicationRecord = publicationResult.data;
+  const ingestionMetadataRow =
+    ingestionMetadataResult.data as WorkflowIngestionMetadata | null;
 
   // Fetch compliance report from the joined data
   let complianceReport = "";
@@ -332,20 +411,31 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const cleanBaseUrl = (process.env.RI_BASE_URL || "").replace(/\/$/, "");
   const remoteId = publicationRecord?.remote_id;
   const publishedUrl =
-    workflow.progress === "published" && remoteId && cleanBaseUrl
+    publicationRecord?.status === "published" && remoteId && cleanBaseUrl
       ? `${cleanBaseUrl}/dispositif/${remoteId}`
       : undefined;
+
+  const reportCreatedAt = Array.isArray(ingestionRecord?.letta_reports)
+    ? ingestionRecord?.letta_reports[0]?.created_at
+    : ingestionRecord?.letta_reports?.created_at;
+  const dateAdded =
+    reportCreatedAt || ingestionRecord?.created_at || workflow.updated_at;
 
   return {
     id: workflow.id,
     title,
-    date_added: workflow.updated_at,
+    date_added: dateAdded,
     status: workflow.status,
-    state: workflow.progress,
+    state: normalizeProgress(workflow.progress),
     content,
     ingestionContent,
     complianceReport,
     metadata,
     publishedUrl,
+    publicationStatus: publicationRecord?.status,
+    publicationRemoteId: publicationRecord?.remote_id,
+    structureName: ingestionMetadataRow?.structure_name ?? undefined,
+    sessionStartDate: ingestionMetadataRow?.session_start_date ?? undefined,
+    sourceSystem: rcoRecord ? "RCO" : "DI",
   };
 }

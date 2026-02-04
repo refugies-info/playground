@@ -68,10 +68,10 @@ export async function publishDocumentStep(
     // Get base URL for target matching
     const baseUrl = process.env.RI_BASE_URL?.replace(/\/$/, "") || "";
 
-    // Check for existing publication (to determine CREATE vs UPDATE)
+    // Check for existing publication to reuse the remote_id if needed
     const { data: existingPublication } = await supabase
       .from("publication_records")
-      .select("id, remote_id")
+      .select("remote_id")
       .eq("workflow_id", workflowId)
       .eq("target", baseUrl)
       .order("created_at", { ascending: false })
@@ -79,7 +79,6 @@ export async function publishDocumentStep(
       .single();
 
     const existingRemoteId = existingPublication?.remote_id;
-    const isUpdate = !!existingRemoteId;
 
     // Use adapter to build payload
     const webhookPayload = adapter.buildPayload({
@@ -124,42 +123,26 @@ export async function publishDocumentStep(
     }
 
     // Store or update publication record
-    let publicationRecordId: string;
+    const { data: newRecord, error: insertError } = await supabase
+      .from("publication_records")
+      .insert({
+        workflow_id: workflowId,
+        target: baseUrl,
+        remote_id: remoteId,
+        status: "published",
+        mode: "publish",
+        payload: webhookPayload,
+        published_by: userId,
+      })
+      .select("id")
+      .single();
 
-    if (isUpdate && existingPublication) {
-      const { error: updateRecordError } = await supabase
-        .from("publication_records")
-        .update({
-          updated_at: new Date().toISOString(),
-          payload: webhookPayload,
-          published_by: userId,
-        })
-        .eq("id", existingPublication.id);
-
-      if (updateRecordError) {
-        logger.error(updateRecordError, "Error updating publication record");
-      }
-      publicationRecordId = existingPublication.id;
-    } else {
-      const { data: newRecord, error: insertError } = await supabase
-        .from("publication_records")
-        .insert({
-          workflow_id: workflowId,
-          target: baseUrl,
-          remote_id: remoteId,
-          status: "published",
-          payload: webhookPayload,
-          published_by: userId,
-        })
-        .select("id")
-        .single();
-
-      if (insertError || !newRecord) {
-        logger.error(insertError, "Error storing publication record");
-        return { success: false, error: "Failed to store publication record" };
-      }
-      publicationRecordId = newRecord.id;
+    if (insertError || !newRecord) {
+      logger.error(insertError, "Error storing publication record");
+      return { success: false, error: "Failed to store publication record" };
     }
+
+    const publicationRecordId = newRecord.id;
 
     // Update workflow progress
     const { error: updateError } = await supabase
@@ -174,7 +157,7 @@ export async function publishDocumentStep(
     const publishedUrl = adapter.buildPublishedUrl(remoteId);
 
     logger.info(
-      { workflowId, remoteId, isUpdate, publishedUrl },
+      { workflowId, remoteId, publishedUrl },
       "Document published successfully",
     );
 
@@ -183,7 +166,7 @@ export async function publishDocumentStep(
       data: {
         publicationRecordId,
         remoteId,
-        isUpdate,
+        isUpdate: false,
         publishedUrl,
       },
     };
