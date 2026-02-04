@@ -120,6 +120,7 @@ export async function processIngestionRecords(
     };
 
     ingestionInserts.push({
+      source: "DI",
       di_service_id: service.id,
       di_structure_id: structure.id,
       markdown,
