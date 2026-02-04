@@ -2,6 +2,7 @@ create or replace function public.handle_new_rco_record()
 returns trigger
 language plpgsql
 security definer
+set search_path = ''
 as $$
 begin
   insert into public.workflows (rco_record_id, progress, status)
@@ -14,6 +15,7 @@ create or replace function public.handle_new_ingestion_record()
 returns trigger
 language plpgsql
 security definer
+set search_path = ''
 as $$
 begin
   update public.workflows

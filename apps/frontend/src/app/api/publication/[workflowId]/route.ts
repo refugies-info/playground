@@ -1,3 +1,4 @@
+import { logger } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -20,6 +21,7 @@ export async function GET(
     .single();
 
   if (error) {
+    logger.error({ error, workflowId }, "Failed to fetch publication status");
     return NextResponse.json(
       { success: false, error: "Failed to fetch publication status" },
       { status: 500 },

@@ -2,6 +2,7 @@ create or replace function public.handle_new_editorial_record()
 returns trigger
 language plpgsql
 security definer
+set search_path = ''
 as $$
 begin
   update public.workflows
