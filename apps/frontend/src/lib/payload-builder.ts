@@ -3,6 +3,8 @@
  * Centralized construction of dispositif payloads for external APIs
  */
 
+import { normalizeMarkdown } from "./markdown/normalizeMarkdown";
+
 export interface DocumentPayloadInput {
   title: string;
   editorialContent: string;
@@ -47,6 +49,10 @@ export function buildDispositifPayload(
 ): DispositifPayload {
   const themeId = (doc.metadata?.theme as string) || "63286a015d31b2c0cad99615";
 
+  // Normalize markdown to ensure unambiguous directive nesting
+  // This prevents parsing issues in the Main App when it receives nested directives
+  const normalizedMarkdown = normalizeMarkdown(doc.editorialContent);
+
   return {
     dispositif: {
       typeContenu: "dispositif",
@@ -62,7 +68,7 @@ export function buildDispositifPayload(
             titreInformatif: doc.title,
             titreMarque: doc.title, // Fallback to title
             abstract: "", // Required field often
-            markdown: doc.editorialContent,
+            markdown: normalizedMarkdown,
           },
         },
       },
@@ -81,6 +87,7 @@ export function buildPublishPayload(
   email: string,
   status = "Actif",
 ): PublishPayload {
+  // buildDispositifPayload already normalizes the markdown
   const basePayload = buildDispositifPayload(doc, status);
   return {
     ...basePayload,

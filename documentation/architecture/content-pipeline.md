@@ -63,7 +63,129 @@ flowchart TB
 
 ---
 
-## 2. Format de Stockage (Directives)
+## 2. Normalisation des Directives (Nesting Strategy)
+
+### Le Problème : Parsing Ambigu des Fences
+
+Le plugin `remark-directive` repose sur l'**indentation** pour détecter l'imbrication. Or, notre éditeur WYSIWYG (BlockNote) produit du Markdown **à plat** (sans indentation) pour simplifier la gestion des états pendant l'édition en temps réel.
+
+**Exemple problématique (structure plate) :**
+```markdown
+:::toggle (Root)
+:::important (Child)
+::: (Ferme lequel ? Ambigu !)
+::: (Ferme le Root ?)
+```
+
+Sans indication de profondeur, le parser ne sait pas quelle fence de fermeture correspond à quel bloc d'ouverture.
+
+### La Solution : Normalisation par Longueur Décroissante
+
+Avant le parsing, nous pré-traitons le Markdown pour attribuer des **longueurs de fence uniques** selon la profondeur d'imbrication :
+
+| Niveau | Longueur | Exemple |
+|--------|----------|---------|
+| Root (niveau 0) | 12 colons | `::::::::::::toggle` |
+| Niveau 1 | 11 colons | `:::::::::::important` |
+| Niveau 2 | 10 colons | `::::::::::tip` |
+| ... | ... | ... |
+| Niveau 9 | 3 colons | `:::note` |
+
+**Pourquoi ça fonctionne ?**
+
+La spec CommonMark stipule qu'une fence de fermeture doit être **au moins aussi longue** que la fence d'ouverture pour fermer un bloc. En rendant les fences intérieures **plus courtes** que les fences extérieures, une fence de fermeture intérieure ne peut **jamais** fermer un bloc extérieur.
+
+**Exemple corrigé :**
+```markdown
+::::::::::::toggle    (Length 12 - Root)
+:::::::::::important  (Length 11 - Child)
+Contenu...
+::::::::::            (Length 10 - ferme Tip si présent, trop court pour Important/Root)
+:::::::::::           (Length 11 - ferme Important)
+::::::::::::          (Length 12 - ferme Root)
+```
+
+### Intégration dans la Pipeline
+
+```mermaid
+flowchart TB
+    subgraph Input["Entrée / Sortie"]
+        MD["Markdown String<br/>(:::directive)"]
+        MDOut["Markdown Sortie<br/>(::::::::::::directive)"]
+    end
+
+    subgraph Pipeline["Pipeline de Transformation"]
+        NormalizeIn["Normalisation Entrée<br/>(normalizeMarkdown.ts)<br/>::: → ::::::::::::"]
+        Import["Import (markdown/parser.ts)<br/>Markdown → BlockNote"]
+        Export["Export (markdown/serializer.ts)<br/>BlockNote → Markdown"]
+        NormalizeOut["Normalisation Sortie<br/>(payload-builder.ts)<br/>::: → ::::::::::::"]
+    end
+
+    subgraph Editor["Éditeur"]
+        BN["BlockNote.js<br/>(État JSON)"]
+    end
+
+    MD --> NormalizeIn
+    NormalizeIn --> Import
+    Import --> BN
+    BN --> Export
+    Export --> NormalizeOut
+    NormalizeOut --> MDOut
+```
+
+### Normalisation en Sortie (Publication / Preview)
+
+Le markdown envoyé à la Main App (refugies.info) via preview ou publication est **également normalisé** pour éviter les problèmes de parsing côté récepteur.
+
+**Pourquoi ?**
+- La Main App utilise probablement aussi `remark-directive` pour parser le contenu
+- Sans normalisation, les directives imbriquées avec des fences `:::` standard seraient ambiguës
+- La normalisation garantit que le contenu reçu peut être parsé correctement
+
+**Où ça se passe ?**
+- Fichier : `src/lib/payload-builder.ts`
+- Fonction : `buildDispositifPayload()`
+- Appel : `normalizeMarkdown(doc.editorialContent)` avant d'inclure le markdown dans le payload
+
+**Exemple de flux :**
+```typescript
+// Dans l'éditeur (stockage)
+editorialContent = ":::toggle\n:::important\nContenu\n:::\n:::"
+
+// Pour la preview/publication (payload-builder.ts)
+const normalizedMarkdown = normalizeMarkdown(editorialContent);
+// → "::::::::::::toggle\n:::::::::::important\nContenu\n::::::::::\n::::::::::::"
+
+// Envoyé à la Main App dans le payload
+{
+  dispositif: {
+    translations: {
+      fr: {
+        content: {
+          markdown: normalizedMarkdown  // ← Normalisé !
+        }
+      }
+    }
+  }
+}
+```
+
+### Fichier Clé
+
+| Fichier | Rôle |
+|---------|------|
+| `src/lib/markdown/normalizeMarkdown.ts` | Pré-processeur qui réécrit les fences `:::` en longueurs décroissantes selon la profondeur d'imbrication. Gère aussi les blocs de code (ignorés pendant la normalisation). |
+
+### Robustesse
+
+La stratégie adopte une approche **"best effort"** :
+- **Fences déséquilibrées** (fermeture sans ouverture) : Laissées telles quelles
+- **Fences non fermées** à la fin du document : Ignorées (le parser gère gracieusement)
+- **Blocs de code** (```) : Contenu préservé, pas de normalisation à l'intérieur
+
+---
+
+## 3. Format de Stockage (Directives)
 
 Le système utilise du Markdown standard enrichi de **Directives** pour gérer les composants complexes tout en restant lisible.
 
@@ -97,7 +219,7 @@ Le saviez-vous ? Cette démarche est gratuite.
 
 ---
 
-## 3. Ajout d'un Nouveau Bloc
+## 4. Ajout d'un Nouveau Bloc
 
 Pour ajouter un nouveau type de bloc (ex: `:::citation`) :
 
