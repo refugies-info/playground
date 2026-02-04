@@ -1,5 +1,11 @@
+import { APIError } from "@letta-ai/letta-client/error";
+import {
+  createLettaClient,
+  generateIngestionReport,
+  parseIngestionResponse,
+} from "@playground/agents";
 import { logger } from "@playground/shared-types";
-import { getSupabaseAdmin } from "@playground/supabase";
+import { getSupabaseAdmin, type Json } from "@playground/supabase";
 import {
   ingestCarifOrefItems,
   listServicesEndpointApiV1ServicesGet,
@@ -16,6 +22,259 @@ function getSupabaseClient() {
   }
 
   return getSupabaseAdmin(url, key);
+}
+
+const DI_AUDIT_LIMIT_ENV = "DI_INGESTION_AUDIT_LIMIT";
+const DI_FETCH_PAGE_SIZE = 1000;
+const DI_BATCH_SIZE = 100;
+
+type DiAuditTarget = {
+  id: string;
+  markdown: string;
+};
+
+function getDiAuditLimit(): number | null {
+  const rawLimit = process.env[DI_AUDIT_LIMIT_ENV];
+
+  if (!rawLimit || !rawLimit.trim()) {
+    return null;
+  }
+
+  const parsed = Number(rawLimit);
+
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    logger.warn(
+      { rawLimit },
+      `Invalid ${DI_AUDIT_LIMIT_ENV} value, defaulting to unlimited`,
+    );
+    return null;
+  }
+
+  return Math.floor(parsed);
+}
+
+async function fetchDiServiceIdsForRun(runId: string): Promise<string[]> {
+  const supabase = getSupabaseClient();
+  const serviceIds: string[] = [];
+  let page = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from("di_services")
+      .select("id")
+      .eq("ingestion_run_id", runId)
+      .range(page * DI_FETCH_PAGE_SIZE, (page + 1) * DI_FETCH_PAGE_SIZE - 1);
+
+    if (error) {
+      throw new Error(`Failed to fetch DI services: ${error.message}`);
+    }
+
+    if (!data || data.length === 0) {
+      break;
+    }
+
+    for (const service of data) {
+      serviceIds.push(String(service.id));
+    }
+
+    hasMore = data.length === DI_FETCH_PAGE_SIZE;
+    page += 1;
+  }
+
+  return serviceIds;
+}
+
+async function fetchDiAuditTargets(
+  serviceIds: string[],
+  limit: number | null,
+): Promise<{ targets: DiAuditTarget[]; totalCandidates: number }> {
+  const supabase = getSupabaseClient();
+  const targets: DiAuditTarget[] = [];
+  let totalCandidates = 0;
+
+  if (serviceIds.length === 0) {
+    return { targets, totalCandidates };
+  }
+
+  for (let i = 0; i < serviceIds.length; i += DI_BATCH_SIZE) {
+    const batch = serviceIds.slice(i, i + DI_BATCH_SIZE);
+
+    const { data, error } = await supabase
+      .from("ingestion_records")
+      .select("id, markdown, created_at")
+      .in("di_service_id", batch)
+      .is("ingestion_report_id", null)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      throw new Error(`Failed to fetch ingestion records: ${error.message}`);
+    }
+
+    const records = data ?? [];
+    totalCandidates += records.length;
+
+    for (const record of records) {
+      if (limit === null || targets.length < limit) {
+        targets.push({ id: record.id, markdown: record.markdown });
+      }
+    }
+  }
+
+  return {
+    targets: limit === null ? targets : targets.slice(0, limit),
+    totalCandidates,
+  };
+}
+
+export async function generateDiAuditReportsStep(runId: string) {
+  "use step";
+
+  const auditLimit = getDiAuditLimit();
+
+  if (auditLimit === 0) {
+    logger.info(
+      { runId, limit: auditLimit },
+      "DI audit limit set to 0, skipping Letta audit reports",
+    );
+    return { attempted: 0, succeeded: 0, failed: 0, limit: auditLimit };
+  }
+
+  const serviceIds = await fetchDiServiceIdsForRun(runId);
+
+  if (serviceIds.length === 0) {
+    logger.info({ runId }, "No DI services found for audit reporting");
+    return { attempted: 0, succeeded: 0, failed: 0, limit: auditLimit };
+  }
+
+  const { targets, totalCandidates } = await fetchDiAuditTargets(
+    serviceIds,
+    auditLimit,
+  );
+
+  if (targets.length === 0) {
+    logger.info({ runId }, "No ingestion records found for audit reporting");
+    return {
+      attempted: 0,
+      succeeded: 0,
+      failed: 0,
+      limit: auditLimit,
+      totalCandidates,
+      skipped: 0,
+    };
+  }
+
+  const agentId = process.env.PLAYGROUND_AGENT_ID;
+
+  if (!agentId) {
+    throw new Error("PLAYGROUND_AGENT_ID is not defined");
+  }
+
+  const lettaClient = createLettaClient();
+  const conversation = await lettaClient.conversations.create({
+    agent_id: agentId,
+  });
+  const conversationId = conversation.id;
+  const supabase = getSupabaseClient();
+
+  const skipped =
+    auditLimit === null ? 0 : Math.max(0, totalCandidates - targets.length);
+
+  logger.info(
+    {
+      runId,
+      limit: auditLimit ?? "unlimited",
+      totalCandidates,
+      selected: targets.length,
+      skipped,
+    },
+    "DI audit report selection",
+  );
+
+  let succeeded = 0;
+  let failed = 0;
+
+  for (const target of targets) {
+    let finalContent = "";
+
+    try {
+      for await (const chunk of generateIngestionReport(
+        lettaClient,
+        target.markdown,
+        conversationId,
+      )) {
+        if (chunk.message_type === "assistant_message") {
+          if (typeof chunk.content !== "string") {
+            throw new Error(
+              `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
+            );
+          }
+          finalContent += chunk.content;
+        }
+      }
+
+      if (!finalContent) {
+        throw new Error("No assistant response received for ingestion report");
+      }
+
+      const parsed = parseIngestionResponse(finalContent, agentId);
+
+      const { data: report, error: reportError } = await supabase
+        .from("letta_reports")
+        .insert({
+          agent_id: agentId,
+          report_type: "ingestion",
+          markdown: parsed.content,
+          metadata: parsed.metadata as Json,
+          status: parsed.status,
+          raw_response: parsed.rawResponse ?? null,
+        })
+        .select("id")
+        .single();
+
+      if (reportError || !report) {
+        throw new Error(
+          `Failed to insert letta_report: ${reportError?.message ?? "unknown error"}`,
+        );
+      }
+
+      const { error: updateError } = await supabase
+        .from("ingestion_records")
+        .update({ ingestion_report_id: report.id })
+        .eq("id", target.id);
+
+      if (updateError) {
+        throw new Error(
+          `Failed to link ingestion_report to ingestion_record: ${updateError.message}`,
+        );
+      }
+
+      succeeded += 1;
+    } catch (error) {
+      failed += 1;
+
+      if (error instanceof APIError) {
+        logger.error(
+          { status: error.status, body: error.error },
+          "Letta API error generating DI ingestion report",
+        );
+      } else {
+        logger.error(
+          { error, ingestionRecordId: target.id },
+          "Error generating DI ingestion report",
+        );
+      }
+    }
+  }
+
+  return {
+    attempted: targets.length,
+    succeeded,
+    failed,
+    limit: auditLimit,
+    totalCandidates,
+    skipped,
+  };
 }
 
 export async function ingestStructuresStep() {
@@ -68,12 +327,17 @@ export async function diIngestionWorkflow() {
   const servicesResult = await ingestServicesStep();
 
   // 3. Process new/updated services to create ingestion records
+  let auditResult:
+    | Awaited<ReturnType<typeof generateDiAuditReportsStep>>
+    | undefined;
   if (servicesResult.runId) {
     await processRecordsStep(servicesResult.runId);
+    auditResult = await generateDiAuditReportsStep(servicesResult.runId);
   }
 
   return {
     structures: structuresResult,
     services: servicesResult,
+    audit: auditResult,
   };
 }
