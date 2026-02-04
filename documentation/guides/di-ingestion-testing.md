@@ -260,6 +260,133 @@ console.log(`Services inserted: ${servicesResult.totalInserted}`);
 
 ---
 
+## Testing Ingestion Records Creation
+
+After ingesting DI services/structures, you can create `ingestion_records` which transform the raw data into markdown documents with YAML frontmatter.
+
+### Prerequisites
+
+1. Complete DI ingestion (structures or services)
+2. Note the `runId` from the ingestion output
+
+### Run Ingestion Records Processing
+
+```bash
+# Use latest ingestion run
+pnpm tsx scripts/create-di-ingestion-records.ts
+
+# Or specify a specific run ID
+pnpm tsx scripts/create-di-ingestion-records.ts <runId>
+```
+
+### What It Does
+
+1. **Fetches all services** from the ingestion run (handles pagination for >1000 records)
+2. **Fetches associated structures** in batches
+3. **Transforms each service** into markdown with YAML frontmatter
+4. **Inserts into `ingestion_records`** table with:
+   - `markdown`: YAML frontmatter + markdown content
+   - `metadata`: Service JSON with nested `structure` object
+   - `di_service_id`: FK to `di_services`
+   - `di_structure_id`: FK to `di_structures`
+   - `version`: Auto-incremented by trigger (starts at 1)
+
+### Expected Output
+
+```bash
+[INFO] Using latest ingestion run
+    runId: "84ef032c-15c9-45fa-967a-5d8082bf1320"
+    type: "services"
+    totalFetched: 6103
+    totalInserted: 6098
+
+[INFO] Processing ingestion records
+    serviceCount: 6098
+
+[INFO] Fetching structures
+    uniqueStructureCount: 2027
+
+[INFO] Structures fetched successfully
+    fetchedStructures: 2027
+
+[INFO] Ingestion records created successfully
+    totalInserted: 6098
+
+✅ Successfully processed ingestion records
+```
+
+### Verification in Supabase Studio
+
+Open [http://127.0.0.1:54323](http://127.0.0.1:54323) and run these queries:
+
+#### 1. Check Total Records
+
+```sql
+SELECT origin, COUNT(*) as count
+FROM ingestion_records
+GROUP BY origin;
+```
+
+Expected: Show counts for both `DI` and `RCO` (if any).
+
+#### 2. Verify Structure in Metadata
+
+```sql
+SELECT
+  id,
+  version,
+  metadata->>'id' as service_id,
+  metadata->>'nom' as service_name,
+  metadata->'structure'->>'id' as structure_id,
+  metadata->'structure'->>'nom' as structure_name
+FROM ingestion_records
+LIMIT 10;
+```
+
+Should show `structure_id` and `structure_name` populated.
+
+#### 3. Sample Markdown with Frontmatter
+
+```sql
+SELECT
+  id,
+  SUBSTRING(markdown FROM 1 FOR 500) as frontmatter_preview
+FROM ingestion_records
+LIMIT 1;
+```
+
+Should show YAML frontmatter like:
+```yaml
+---
+id: carif-oref--01_AL1730075
+nom: Service Name
+type: formation
+structure:
+  id: carif-oref--01_312
+  nom: Structure Name
+  ...
+---
+
+# Service Name
+
+Description here...
+```
+
+#### 4. Check Version Distribution
+
+```sql
+SELECT
+  version,
+  COUNT(*) as count
+FROM ingestion_records
+GROUP BY version
+ORDER BY version;
+```
+
+All records should be `version = 1` initially.
+
+---
+
 ## Next Steps
 
 After successful ingestion testing:
@@ -268,6 +395,7 @@ After successful ingestion testing:
 2. **Build features**: Create UI to display structures and services
 3. **Implement updates**: Add logic to refresh data periodically
 4. **Add filtering**: Use JSONB indexes for efficient queries
+5. **Create workflows**: Use ingestion records as input for editorial workflows
 
 ---
 

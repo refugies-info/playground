@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeContentHash } from "./shared";
+import { computeContentHash } from "../../src/ingest/shared";
 
 describe("computeContentHash", () => {
   it("should generate the same hash for the same object", () => {
