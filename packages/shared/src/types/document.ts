@@ -1,12 +1,5 @@
 export type DocumentStatus = "compliant" | "non_compliant" | "error";
-export type DocumentState =
-  | "rco"
-  | "ingestion"
-  | "draft"
-  | "editorial"
-  | "to_process"
-  | "archived"
-  | "published";
+export type DocumentState = "to_process" | "draft" | "published" | "archived";
 export type DocumentSortField =
   | "title"
   | "date_added"
@@ -25,6 +18,11 @@ export interface Document {
   complianceReport?: string; // Markdown content of the compliance report
   metadata: Record<string, unknown>;
   publishedUrl?: string;
+  publicationStatus?: string;
+  publicationRemoteId?: string;
+  structureName?: string;
+  sessionStartDate?: string;
+  sourceSystem?: string;
 }
 
 export interface ContentItem {

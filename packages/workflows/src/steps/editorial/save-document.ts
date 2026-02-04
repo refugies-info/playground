@@ -17,7 +17,7 @@ export interface SaveDocumentResult {
  * This step:
  * 1. Gets the workflow to check for existing editorial_record
  * 2. Updates existing record or creates new one
- * 3. If document was published, updates progress to 'modified'
+ * 3. Ensures progress is set to 'draft'
  *
  * @param workflowId - The workflow ID to save document for
  * @param markdown - The markdown content to save
@@ -90,12 +90,12 @@ export async function saveDocumentStep(
       isNew = true;
     }
 
-    // If the document was published, set progress to 'modified'
+    // Ensure progress is set to 'draft' after any save (doc-first)
     let progressUpdated = false;
-    if (workflow.progress === "published") {
+    if (workflow.progress !== "draft") {
       const { error: progressError } = await supabase
         .from("workflows")
-        .update({ progress: "modified" })
+        .update({ progress: "draft" })
         .eq("id", workflowId);
 
       if (progressError) {

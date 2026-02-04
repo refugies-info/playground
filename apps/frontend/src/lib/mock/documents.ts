@@ -8,11 +8,8 @@ import { SeededRandom } from "./seededRandom";
 const SOURCES = ["RCO", "Manual", "API"];
 const STATUSES: DocumentStatus[] = ["compliant", "non_compliant"];
 const STATES: DocumentState[] = [
-  "rco",
-  "ingestion",
-  "draft",
-  "editorial",
   "to_process",
+  "draft",
   "archived",
   "published",
 ];

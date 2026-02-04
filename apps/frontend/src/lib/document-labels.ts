@@ -5,15 +5,7 @@ import type { BadgeProps } from "@playground/ui/primitives";
  * Document Status Types
  */
 export type DocumentStatus = "compliant" | "non_compliant" | "error";
-export type DocumentState =
-  | "rco"
-  | "ingestion"
-  | "draft"
-  | "editorial"
-  | "to_process"
-  | "archived"
-  | "published"
-  | "modified";
+export type DocumentState = "to_process" | "draft" | "published" | "archived";
 
 /**
  * Badge variant type from UI primitives
@@ -54,24 +46,12 @@ export const STATE_CONFIG: Record<
     variant: BadgeVariant;
   }
 > = {
-  rco: {
-    label: "Nouveau",
-    variant: "neutral",
-  },
-  ingestion: {
-    label: "Ingestion terminée",
-    variant: "warning",
-  },
   draft: {
     label: "Brouillon",
     variant: "info",
   },
-  editorial: {
-    label: "Brouillon",
-    variant: "info",
-  },
   to_process: {
-    label: "En attente",
+    label: "À traiter",
     variant: "warning",
   },
   archived: {
@@ -81,10 +61,6 @@ export const STATE_CONFIG: Record<
   published: {
     label: "Publié",
     variant: "success",
-  },
-  modified: {
-    label: "Modifié",
-    variant: "info",
   },
 };
 

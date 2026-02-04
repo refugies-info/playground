@@ -53,7 +53,7 @@ create table if not exists "public"."translation_records" (
   "updated_at" timestamp with time zone not null default now(),
   "editorial_record_id" uuid not null references "public"."editorial_records"("id") on update cascade,
   "language" text not null,
-  "status" text not null default 'draft', -- draft, published
+  "status" text not null default 'to_process', -- to_process, draft, published
   "markdown" text, -- Renamed from content for consistency
   "metadata" jsonb, -- Restored for consistency
   "content_report_id" uuid references "public"."letta_reports"("id"),

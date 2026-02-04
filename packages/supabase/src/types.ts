@@ -322,6 +322,13 @@ export type Database = {
             foreignKeyName: "letta_reports_workflow_id_fkey";
             columns: ["workflow_id"];
             isOneToOne: false;
+            referencedRelation: "workflow_ingestion_metadata";
+            referencedColumns: ["workflow_id"];
+          },
+          {
+            foreignKeyName: "letta_reports_workflow_id_fkey";
+            columns: ["workflow_id"];
+            isOneToOne: false;
             referencedRelation: "workflows";
             referencedColumns: ["id"];
           },
@@ -332,6 +339,7 @@ export type Database = {
           created_at: string;
           editorial_record_id: string | null;
           id: string;
+          mode: string;
           payload: Json | null;
           published_by: string | null;
           remote_id: string;
@@ -345,6 +353,7 @@ export type Database = {
           created_at?: string;
           editorial_record_id?: string | null;
           id?: string;
+          mode?: string;
           payload?: Json | null;
           published_by?: string | null;
           remote_id: string;
@@ -358,6 +367,7 @@ export type Database = {
           created_at?: string;
           editorial_record_id?: string | null;
           id?: string;
+          mode?: string;
           payload?: Json | null;
           published_by?: string | null;
           remote_id?: string;
@@ -381,6 +391,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "translation_records";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "publication_records_workflow_id_fkey";
+            columns: ["workflow_id"];
+            isOneToOne: false;
+            referencedRelation: "workflow_ingestion_metadata";
+            referencedColumns: ["workflow_id"];
           },
           {
             foreignKeyName: "publication_records_workflow_id_fkey";
@@ -488,6 +505,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "letta_reports";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "translation_records_workflow_id_fkey";
+            columns: ["workflow_id"];
+            isOneToOne: false;
+            referencedRelation: "workflow_ingestion_metadata";
+            referencedColumns: ["workflow_id"];
           },
           {
             foreignKeyName: "translation_records_workflow_id_fkey";
@@ -635,6 +659,23 @@ export type Database = {
           role?: never;
         };
         Relationships: [];
+      };
+      workflow_ingestion_metadata: {
+        Row: {
+          ingestion_record_id: string | null;
+          session_start_date: string | null;
+          structure_name: string | null;
+          workflow_id: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "status_ingestion_record_id_fkey";
+            columns: ["ingestion_record_id"];
+            isOneToOne: false;
+            referencedRelation: "ingestion_records";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Functions: {
@@ -1159,44 +1200,26 @@ export type Database = {
         Returns: undefined;
       };
       operation: { Args: never; Returns: string };
-      search:
-        | {
-            Args: {
-              bucketname: string;
-              levels?: number;
-              limits?: number;
-              offsets?: number;
-              prefix: string;
-            };
-            Returns: {
-              created_at: string;
-              id: string;
-              last_accessed_at: string;
-              metadata: Json;
-              name: string;
-              updated_at: string;
-            }[];
-          }
-        | {
-            Args: {
-              bucketname: string;
-              levels?: number;
-              limits?: number;
-              offsets?: number;
-              prefix: string;
-              search?: string;
-              sortcolumn?: string;
-              sortorder?: string;
-            };
-            Returns: {
-              created_at: string;
-              id: string;
-              last_accessed_at: string;
-              metadata: Json;
-              name: string;
-              updated_at: string;
-            }[];
-          };
+      search: {
+        Args: {
+          bucketname: string;
+          levels?: number;
+          limits?: number;
+          offsets?: number;
+          prefix: string;
+          search?: string;
+          sortcolumn?: string;
+          sortorder?: string;
+        };
+        Returns: {
+          created_at: string;
+          id: string;
+          last_accessed_at: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        }[];
+      };
       search_legacy_v1: {
         Args: {
           bucketname: string;
@@ -1237,45 +1260,27 @@ export type Database = {
           updated_at: string;
         }[];
       };
-      search_v2:
-        | {
-            Args: {
-              bucket_name: string;
-              levels?: number;
-              limits?: number;
-              prefix: string;
-              start_after?: string;
-            };
-            Returns: {
-              created_at: string;
-              id: string;
-              key: string;
-              metadata: Json;
-              name: string;
-              updated_at: string;
-            }[];
-          }
-        | {
-            Args: {
-              bucket_name: string;
-              levels?: number;
-              limits?: number;
-              prefix: string;
-              sort_column?: string;
-              sort_column_after?: string;
-              sort_order?: string;
-              start_after?: string;
-            };
-            Returns: {
-              created_at: string;
-              id: string;
-              key: string;
-              last_accessed_at: string;
-              metadata: Json;
-              name: string;
-              updated_at: string;
-            }[];
-          };
+      search_v2: {
+        Args: {
+          bucket_name: string;
+          levels?: number;
+          limits?: number;
+          prefix: string;
+          sort_column?: string;
+          sort_column_after?: string;
+          sort_order?: string;
+          start_after?: string;
+        };
+        Returns: {
+          created_at: string;
+          id: string;
+          key: string;
+          last_accessed_at: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        }[];
+      };
     };
     Enums: {
       buckettype: "STANDARD" | "ANALYTICS" | "VECTOR";

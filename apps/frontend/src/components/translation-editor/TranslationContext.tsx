@@ -65,6 +65,10 @@ export function TranslationProvider({
       );
       if (result.success) {
         setIsDirty(false);
+        setTranslation({
+          ...translation,
+          status: "draft",
+        });
       } else {
         // biome-ignore lint/suspicious/noConsole: Error logging
         console.error(result.error);

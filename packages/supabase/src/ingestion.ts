@@ -271,11 +271,16 @@ export async function ingestProcessedData(
     }
   }
 
-  logger.info(`Updating content_flow status to: ${status}`);
+  const progress = status === "compliant" ? "to_process" : "archived";
+
+  logger.info(
+    `Updating content_flow status to: ${status} and progress to: ${progress}`,
+  );
   const { error: statusError } = await supabase
     .from("workflows")
     .update({
       status,
+      progress,
       ingestion_record_id: ingestionRecord.id,
     })
     .eq("rco_record_id", rcoRecordId);

@@ -43,10 +43,16 @@ export function TranslationTopBar() {
                 "px-2 py-0.5 text-xs font-medium rounded-full",
                 translation.status === "published"
                   ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-700",
+                  : translation.status === "to_process"
+                    ? "bg-yellow-100 text-yellow-700"
+                    : "bg-gray-100 text-gray-700",
               )}
             >
-              {translation.status === "published" ? "Publié" : "Brouillon"}
+              {translation.status === "published"
+                ? "Publié"
+                : translation.status === "to_process"
+                  ? "À traiter"
+                  : "Brouillon"}
             </span>
           )}
         </div>
