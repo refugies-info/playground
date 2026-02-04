@@ -11,8 +11,8 @@ function isAuthorized(request: Request): boolean {
   const secret = process.env.DI_INGESTION_CRON_SECRET;
 
   if (!secret) {
-    logger.warn("DI_INGESTION_CRON_SECRET is not set, cron is unprotected");
-    return true;
+    logger.error("DI_INGESTION_CRON_SECRET is not set, cron cannot run.");
+    return false;
   }
 
   const authHeader = request.headers.get("authorization");
