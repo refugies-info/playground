@@ -116,19 +116,24 @@ export async function archiveDocumentStep(
       };
     }
 
-    // Update existing publication record to archived status
-    const { error: updateRecordError } = await supabase
+    // Create a new publication record for archive (history)
+    const { data: newRecord, error: insertError } = await supabase
       .from("publication_records")
-      .update({
+      .insert({
+        workflow_id: workflowId,
+        target: baseUrl,
+        remote_id: remoteId,
         status: "archived",
+        mode: "archive",
         payload: webhookPayload,
         published_by: userId,
-        updated_at: new Date().toISOString(),
       })
-      .eq("id", existingPublication.id);
+      .select("id")
+      .single();
 
-    if (updateRecordError) {
-      logger.error(updateRecordError, "Error updating publication record");
+    if (insertError || !newRecord) {
+      logger.error(insertError, "Error storing archive publication record");
+      return { success: false, error: "Failed to store archive publication" };
     }
 
     // Update workflow progress to 'archived'
@@ -146,7 +151,7 @@ export async function archiveDocumentStep(
     return {
       success: true,
       data: {
-        publicationRecordId: existingPublication.id,
+        publicationRecordId: newRecord.id,
         remoteId,
       },
     };

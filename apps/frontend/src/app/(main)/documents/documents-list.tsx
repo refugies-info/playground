@@ -5,10 +5,11 @@ import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { STATE_CONFIG } from "@/lib/document-labels";
-import { columns } from "./columns";
+import { columns, inProgressColumns } from "./columns";
 
 interface DocumentsListProps {
   initialDocuments: Document[];
+  initialInProgressDocuments: Document[];
   initialFilters: {
     status: string;
     state: string;
@@ -19,6 +20,7 @@ interface DocumentsListProps {
 
 export function DocumentsList({
   initialDocuments,
+  initialInProgressDocuments,
   initialFilters,
 }: DocumentsListProps) {
   const router = useRouter();
@@ -50,6 +52,11 @@ export function DocumentsList({
     router.push("/documents");
   };
 
+  const inProgressDocuments = initialInProgressDocuments;
+  const readyDocuments = initialDocuments.filter(
+    (document) => document.status !== "unknown" && document.status !== "error",
+  );
+
   return (
     <div className="w-full h-full p-8 bg-gray-50 min-h-screen">
       <div className="mb-8">
@@ -68,7 +75,7 @@ export function DocumentsList({
                   }
                   className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
                 >
-                  <option value="">Statut</option>
+                  <option value="">État</option>
                   <option value="compliant">Conforme</option>
                   <option value="non_compliant">Non conforme</option>
                 </select>
@@ -81,7 +88,7 @@ export function DocumentsList({
                   }
                   className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
                 >
-                  <option value="">État</option>
+                  <option value="">Traitement</option>
                   {Object.entries(STATE_CONFIG)
                     .filter(
                       ([_key, config], index, array) =>
@@ -139,7 +146,26 @@ export function DocumentsList({
             )}
           </div>
         </div>
-        <DataTable columns={columns} data={initialDocuments} pageSize={50} />
+        <DataTable
+          columns={columns}
+          data={readyDocuments}
+          pageSize={50}
+          onRowClick={(row) => router.push(`/documents/${row.id}`)}
+        />
+
+        {inProgressDocuments.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">
+              Fiches en cours de traitement
+            </h2>
+            <DataTable
+              columns={inProgressColumns}
+              data={inProgressDocuments}
+              pageSize={50}
+              onRowClick={(row) => router.push(`/documents/${row.id}`)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -58,6 +58,7 @@ export function TranslationsList({
                   className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
                 >
                   <option value="">Statut</option>
+                  <option value="to_process">À traiter</option>
                   <option value="draft">Brouillon</option>
                   <option value="published">Publié</option>
                 </select>

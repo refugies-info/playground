@@ -161,7 +161,7 @@ BEGIN
   UPDATE public.workflows
   SET
     editorial_record_id = NEW.id,
-    progress = 'editorial'
+    progress = 'draft'
   WHERE ingestion_record_id = NEW.ingestion_record_id;
   RETURN NEW;
 END;
@@ -178,7 +178,7 @@ BEGIN
   UPDATE public.workflows
   SET
     ingestion_record_id = NEW.id,
-    progress = 'ingestion'
+    progress = 'to_process'
   WHERE rco_record_id = NEW.rco_record_id;
   RETURN NEW;
 END;
@@ -192,7 +192,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_rco_record()
 AS $function$
 BEGIN
   INSERT INTO public.workflows (rco_record_id, progress, status)
-  VALUES (NEW.id, 'rco', 'unknown');
+  VALUES (NEW.id, 'to_process', 'unknown');
   RETURN NEW;
 END;
 $function$

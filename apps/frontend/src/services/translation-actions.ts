@@ -16,6 +16,7 @@ export async function saveTranslation(
       .from("translation_records")
       .update({
         markdown,
+        status: "draft",
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);
@@ -40,11 +41,23 @@ export async function publishTranslation(
   publishedUrl?: string;
   error?: string;
 }> {
-  // TODO: Implement actual publication logic (webhook trigger + DB update + status change)
-  // For now, we simulate success to trigger the frontend alert
-  logger.info({ id }, "Mocking publication for translation");
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
 
-  return {
-    success: true,
-  };
+  try {
+    const { error } = await supabase
+      .from("translation_records")
+      .update({ status: "published", updated_at: new Date().toISOString() })
+      .eq("id", id);
+
+    if (error) {
+      logger.error(error, "Error publishing translation");
+      return { success: false, error: "Failed to publish translation" };
+    }
+
+    return { success: true };
+  } catch (error) {
+    logger.error(error, "Unexpected error publishing translation");
+    return { success: false, error: "Unexpected error occurred" };
+  }
 }

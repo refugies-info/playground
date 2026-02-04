@@ -20,6 +20,21 @@ export default async function DocumentsPage(props: PageProps) {
   };
 
   const { data: documents } = await getDocuments(serviceParams);
+  const [{ data: unknownDocuments }, { data: errorDocuments }] =
+    await Promise.all([
+      getDocuments({
+        page: 1,
+        pageSize: 50,
+        status: "unknown",
+      }),
+      getDocuments({
+        page: 1,
+        pageSize: 50,
+        status: "error",
+      }),
+    ]);
+
+  const inProgressDocuments = [...unknownDocuments, ...errorDocuments];
 
   const initialFilters = {
     status: typeof status === "string" ? status : "",
@@ -31,6 +46,7 @@ export default async function DocumentsPage(props: PageProps) {
   return (
     <DocumentsList
       initialDocuments={documents}
+      initialInProgressDocuments={inProgressDocuments}
       initialFilters={initialFilters}
     />
   );

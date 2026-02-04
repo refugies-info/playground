@@ -1,11 +1,7 @@
 "use client";
 
 import type { Document } from "@playground/shared-types";
-import {
-  Badge,
-  Button,
-  DataTableColumnHeader,
-} from "@playground/ui/primitives";
+import { Badge, DataTableColumnHeader } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ExternalLink } from "lucide-react";
 import {
@@ -17,18 +13,48 @@ import {
 
 export const columns: ColumnDef<Document>[] = [
   {
+    accessorKey: "status",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Arbitrage" />
+    ),
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      if (status === "unknown") {
+        return <Badge variant="neutral">En cours</Badge>;
+      }
+      if (status === "error") {
+        return <Badge variant="danger">Erreur</Badge>;
+      }
+      return (
+        <Badge variant={getStatusVariant(status)}>
+          {getStatusLabel(status)}
+        </Badge>
+      );
+    },
+  },
+  {
     accessorKey: "title",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Title" />
+      <DataTableColumnHeader column={column} title="Titre" />
     ),
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue("title")}</div>
     ),
   },
   {
+    accessorKey: "structureName",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Structure" />
+    ),
+    cell: ({ row }) => {
+      const value = row.getValue("structureName") as string | undefined;
+      return <div className="text-sm text-gray-700">{value || "—"}</div>;
+    },
+  },
+  {
     accessorKey: "date_added",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Date d'ajout" />
+      <DataTableColumnHeader column={column} title="Date d'import" />
     ),
     cell: ({ row }) => {
       const date = new Date(row.getValue("date_added") as string);
@@ -36,16 +62,48 @@ export const columns: ColumnDef<Document>[] = [
     },
   },
   {
-    accessorKey: "status",
+    accessorKey: "sessionStartDate",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Statut" />
+      <DataTableColumnHeader column={column} title="Date début session" />
     ),
     cell: ({ row }) => {
-      const status = row.getValue("status") as string;
+      const value = row.getValue("sessionStartDate") as string | undefined;
+      if (!value) return <div>—</div>;
+      const date = new Date(value);
+      return <div>{date.toLocaleDateString("fr-FR")}</div>;
+    },
+  },
+  {
+    accessorKey: "publishedUrl",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="En ligne" />
+    ),
+    cell: ({ row }) => {
+      const url = row.original.publishedUrl;
+      const debugStatus = row.original.publicationStatus;
+      const debugRemoteId = row.original.publicationRemoteId;
+      if (!url) {
+        return (
+          <span
+            className="text-xs text-gray-400"
+            title={`publication_status=${debugStatus ?? "null"} remote_id=${debugRemoteId ?? "null"}`}
+          >
+            —
+          </span>
+        );
+      }
       return (
-        <Badge variant={getStatusVariant(status)}>
-          {getStatusLabel(status)}
-        </Badge>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-gray-400 hover:text-blue-600 transition-colors flex items-center gap-2"
+          title="Voir la fiche publiée"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ExternalLink className="w-4 h-4" />
+          <span className="text-xs underline">Voir</span>
+        </a>
       );
     },
   },
@@ -56,44 +114,62 @@ export const columns: ColumnDef<Document>[] = [
     ),
     cell: ({ row }) => {
       const state = row.getValue("state") as string;
-      const document = row.original;
+      if (row.original.status === "unknown") {
+        return null;
+      }
       return (
-        <div className="flex items-center gap-2">
-          <Badge variant={getStateVariant(state)}>{getStateLabel(state)}</Badge>
-          {document.publishedUrl && (
-            <a
-              href={document.publishedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-400 hover:text-blue-600 transition-colors"
-              title="Voir la fiche publiée"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          )}
-        </div>
+        <Badge variant={getStateVariant(state)}>{getStateLabel(state)}</Badge>
       );
     },
   },
+];
 
+export const inProgressColumns: ColumnDef<Document>[] = [
   {
-    id: "actions",
-    header: "Actions",
+    accessorKey: "status",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Arbitrage" />
+    ),
     cell: ({ row }) => {
-      const document = row.original;
+      const status = row.getValue("status") as string;
+      if (status === "unknown") {
+        return <Badge variant="neutral">En cours</Badge>;
+      }
       return (
-        <Button
-          variant="secondary"
-          className="cursor-pointer"
-          onClick={() => {
-            // Navigate to document detail page
-            window.location.href = `/documents/${document.id}`;
-          }}
-        >
-          Voir le doc
-        </Button>
+        <Badge variant={getStatusVariant(status)}>
+          {getStatusLabel(status)}
+        </Badge>
       );
+    },
+  },
+  {
+    accessorKey: "sourceSystem",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Source" />
+    ),
+    cell: ({ row }) => {
+      const value = row.getValue("sourceSystem") as string | undefined;
+      return <div className="text-sm text-gray-700">{value || "—"}</div>;
+    },
+  },
+  {
+    accessorKey: "id",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Workflow ID" />
+    ),
+    cell: ({ row }) => {
+      const workflowId = row.original.id;
+      return <span className="text-xs text-gray-700">{workflowId}</span>;
+    },
+  },
+  {
+    accessorKey: "date_added",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date d'import" />
+    ),
+    cell: ({ row }) => {
+      const date = new Date(row.getValue("date_added") as string);
+      return <div>{date.toLocaleDateString("fr-FR")}</div>;
     },
   },
 ];

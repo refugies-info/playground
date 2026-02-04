@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@playground/ui";
-import { Button } from "@playground/ui/primitives";
+import { Button, Spinner } from "@playground/ui/primitives";
 import {
   Archive,
   Check,
@@ -12,8 +12,20 @@ import {
   Send,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDocument } from "./DocumentContext";
+
+async function fetchPublishedUrl(workflowId: string): Promise<{
+  success: boolean;
+  publishedUrl?: string;
+  error?: string;
+}> {
+  const response = await fetch(`/api/publication/${workflowId}`);
+  if (!response.ok) {
+    return { success: false, error: "Failed to fetch publication status" };
+  }
+  return response.json();
+}
 
 interface DocumentActionsProps {
   isCollapsed?: boolean;
@@ -40,6 +52,59 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
   const [hasCopied, setHasCopied] = useState(false);
   const [archiveError, setArchiveError] = useState<string | null>(null);
   const [archiveSuccess, setArchiveSuccess] = useState(false);
+  const [showPublishSuccessOverlay, setShowPublishSuccessOverlay] =
+    useState(false);
+  const [publishOverlayError, setPublishOverlayError] = useState<string | null>(
+    null,
+  );
+  const [isWaitingForLink, setIsWaitingForLink] = useState(false);
+
+  useEffect(() => {
+    if (
+      !showPublishSuccessOverlay ||
+      !isWaitingForLink ||
+      publishedUrl ||
+      !document?.id
+    )
+      return;
+
+    let isMounted = true;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    const interval = setInterval(async () => {
+      attempts += 1;
+      try {
+        const result = await fetchPublishedUrl(document.id);
+        if (!isMounted) return;
+        if (result.success && result.publishedUrl) {
+          setPublishedUrl(result.publishedUrl);
+          setIsWaitingForLink(false);
+          clearInterval(interval);
+          return;
+        }
+        if (attempts >= maxAttempts) {
+          setPublishOverlayError(
+            "Le lien n’est pas encore disponible. Réessaie dans quelques instants.",
+          );
+          setIsWaitingForLink(false);
+          clearInterval(interval);
+        }
+      } catch (error) {
+        if (!isMounted) return;
+        setPublishOverlayError(
+          "Impossible de récupérer le lien de publication.",
+        );
+        setIsWaitingForLink(false);
+        clearInterval(interval);
+      }
+    }, 2000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [showPublishSuccessOverlay, isWaitingForLink, publishedUrl, document?.id]);
 
   // Publication Overlay State
   const [showPublishOverlay, setShowPublishOverlay] = useState(false);
@@ -72,6 +137,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
     setPublishError(null);
     setPublishSuccess(false);
     setPublishedUrl(null);
+    setPublishOverlayError(null);
 
     const result = await publishDocument(triggerTranslations);
 
@@ -80,9 +146,14 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
       if (result.publishedUrl) {
         setPublishedUrl(result.publishedUrl);
       }
+      setShowPublishSuccessOverlay(true);
+      setIsWaitingForLink(!result.publishedUrl);
       setTimeout(() => setPublishSuccess(false), 3000);
     } else {
       setPublishError(result.error || "Échec de la publication");
+      setPublishOverlayError(result.error || "Échec de la publication");
+      setShowPublishSuccessOverlay(true);
+      setIsWaitingForLink(false);
     }
   };
 
@@ -120,10 +191,12 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
 
   // Workflow:
   // - Save: enabled when document is modified (isDirty) AND compliant
-  // - Publish: enabled when document is NOT modified (saved) AND compliant AND NOT already published/synced
+  // - Publish: enabled when document is saved (not dirty) AND compliant AND in draft
   const canSave = isDirty && isCompliant;
   const canPublishNow =
-    !isDirty && isCompliant && document?.state !== "published";
+    !isDirty &&
+    isCompliant &&
+    (document?.state === "draft" || document?.state === "archived");
 
   return (
     <div className="flex flex-col gap-2 p-4 border-t bg-white relative">
@@ -168,19 +241,21 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
       </Button>
 
       {/* Publish Button - enabled after save */}
-      <Button
-        variant="success"
-        size="sm"
-        className={cn("gap-2", isCollapsed && "justify-center px-0")}
-        onClick={handlePublishClick}
-        disabled={isPublishing || !canPublishNow}
-      >
-        <Send className="w-4 h-4" />
-        {!isCollapsed && (isPublishing ? "Publication..." : "Publier")}
-      </Button>
+      {document?.state !== "published" && (
+        <Button
+          variant="success"
+          size="sm"
+          className={cn("gap-2", isCollapsed && "justify-center px-0")}
+          onClick={handlePublishClick}
+          disabled={isPublishing || !canPublishNow}
+        >
+          <Send className="w-4 h-4" />
+          {!isCollapsed && (isPublishing ? "Publication..." : "Publier")}
+        </Button>
+      )}
 
-      {/* Archive Button - visible only for published/modified docs */}
-      {(document?.state === "published" || document?.state === "modified") && (
+      {/* Archive Button - visible when a publication exists */}
+      {document?.state === "published" && (
         <Button
           variant="outline"
           size="sm"
@@ -197,11 +272,11 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
       )}
 
       {/* Local Overlay */}
-      {publishedUrl && (
+      {showPublishSuccessOverlay && (
         <div className="absolute inset-0 z-10 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-4 animate-in fade-in duration-200">
           <button
             type="button"
-            onClick={() => setPublishedUrl(null)}
+            onClick={() => setShowPublishSuccessOverlay(false)}
             className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="w-4 h-4" />
@@ -209,32 +284,45 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
           <div className="text-sm font-medium text-green-600 text-center">
             Document publié !
           </div>
-          <div className="flex items-center gap-2 w-full">
-            <div className="flex-1 bg-gray-50 rounded border px-2 py-1.5 text-xs text-gray-600 truncate">
-              {publishedUrl}
+          {publishOverlayError ? (
+            <div className="text-xs text-red-600 text-center">
+              {publishOverlayError}
             </div>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="p-1.5 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-700 transition-colors border"
-              title="Copier le lien"
-            >
-              {hasCopied ? (
-                <Check className="w-3.5 h-3.5 text-green-600" />
-              ) : (
-                <Copy className="w-3.5 h-3.5" />
-              )}
-            </button>
-          </div>
-          <Button
-            onClick={() => window.open(publishedUrl, "_blank")}
-            variant="outline"
-            size="sm"
-            className="w-full gap-2 h-8 text-xs"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            Voir la fiche
-          </Button>
+          ) : publishedUrl ? (
+            <>
+              <div className="flex items-center gap-2 w-full">
+                <div className="flex-1 bg-gray-50 rounded border px-2 py-1.5 text-xs text-gray-600 truncate">
+                  {publishedUrl}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="p-1.5 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-700 transition-colors border"
+                  title="Copier le lien"
+                >
+                  {hasCopied ? (
+                    <Check className="w-3.5 h-3.5 text-green-600" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
+              <Button
+                onClick={() => window.open(publishedUrl, "_blank")}
+                variant="outline"
+                size="sm"
+                className="w-full gap-2 h-8 text-xs"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Voir la fiche
+              </Button>
+            </>
+          ) : (
+            <div className="text-xs text-gray-500 text-center flex items-center gap-2">
+              {isWaitingForLink && <Spinner size="xl" />}
+              <span>En cours de publication.</span>
+            </div>
+          )}
         </div>
       )}
 

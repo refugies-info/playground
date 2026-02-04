@@ -82,10 +82,8 @@ export function DocumentProvider({
   const [isPublishing, setIsPublishing] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  // If document is already in 'modified' state, it's ready to publish
-  const [canPublish, setCanPublish] = useState(
-    initialData?.state === "modified",
-  );
+  // If document is already in 'draft' state, it's ready to publish
+  const [canPublish, setCanPublish] = useState(initialData?.state === "draft");
   const [debugBlocks, setDebugBlocks] = useState<unknown[] | null>([]);
 
   // Update content and mark as dirty (only if content actually changed)
@@ -164,11 +162,11 @@ export function DocumentProvider({
       if (result.success) {
         setIsDirty(false);
         setCanPublish(true); // Now can publish
-        // If document was published, update local state to 'modified'
-        if (document.state === "published") {
+        // Ensure state is 'draft' after any save (doc-first)
+        if (document.state !== "draft") {
           setDocument({
             ...document,
-            state: "modified",
+            state: "draft",
           });
         }
       }

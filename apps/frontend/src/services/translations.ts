@@ -152,7 +152,7 @@ export async function getTranslations(params: GetTranslationsParams) {
         id: row.id,
         title,
         wordCount,
-        status: row.status || "draft",
+        status: row.status || "to_process",
         language: row.language,
         updatedAt: row.updated_at,
         publicationUrl,

@@ -32,29 +32,6 @@ export type Database = {
       [_ in never]: never;
     };
   };
-  pgbouncer: {
-    Tables: {
-      [_ in never]: never;
-    };
-    Views: {
-      [_ in never]: never;
-    };
-    Functions: {
-      get_auth: {
-        Args: { p_usename: string };
-        Returns: {
-          password: string;
-          username: string;
-        }[];
-      };
-    };
-    Enums: {
-      [_ in never]: never;
-    };
-    CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
   public: {
     Tables: {
       di_services: {
@@ -98,6 +75,7 @@ export type Database = {
           {
             foreignKeyName: "di_services_ingestion_run_id_fkey";
             columns: ["ingestion_run_id"];
+            isOneToOne: false;
             referencedRelation: "ingestion_runs";
             referencedColumns: ["id"];
           },
@@ -141,6 +119,7 @@ export type Database = {
           {
             foreignKeyName: "di_structures_ingestion_run_id_fkey";
             columns: ["ingestion_run_id"];
+            isOneToOne: false;
             referencedRelation: "ingestion_runs";
             referencedColumns: ["id"];
           },
@@ -171,7 +150,7 @@ export type Database = {
           content_report_id?: string | null;
           created_at?: string;
           id?: string;
-          ingestion_record_id: string;
+          ingestion_record_id?: string;
           markdown?: string | null;
           metadata?: Json | null;
           metadata_report_id?: string | null;
@@ -181,24 +160,28 @@ export type Database = {
           {
             foreignKeyName: "editorial_records_content_report_id_fkey";
             columns: ["content_report_id"];
+            isOneToOne: false;
             referencedRelation: "letta_reports";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "editorial_records_ingestion_record_id_fkey";
             columns: ["ingestion_record_id"];
+            isOneToOne: false;
             referencedRelation: "ingestion_records";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "editorial_records_metadata_report_id_fkey";
             columns: ["metadata_report_id"];
+            isOneToOne: false;
             referencedRelation: "letta_reports";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "editorial_records_rco_ingestion_record_id_fkey";
             columns: ["ingestion_record_id"];
+            isOneToOne: false;
             referencedRelation: "ingestion_records";
             referencedColumns: ["id"];
           },
@@ -248,36 +231,42 @@ export type Database = {
           {
             foreignKeyName: "ingestion_records_di_service_id_fkey";
             columns: ["di_service_id"];
+            isOneToOne: false;
             referencedRelation: "di_services";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "ingestion_records_di_service_id_fkey";
             columns: ["di_service_id"];
+            isOneToOne: false;
             referencedRelation: "di_services_latest";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "ingestion_records_di_structure_id_fkey";
             columns: ["di_structure_id"];
+            isOneToOne: false;
             referencedRelation: "di_structures";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "ingestion_records_di_structure_id_fkey";
             columns: ["di_structure_id"];
+            isOneToOne: false;
             referencedRelation: "di_structures_latest";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "ingestion_records_ingestion_report_id_fkey";
             columns: ["ingestion_report_id"];
+            isOneToOne: false;
             referencedRelation: "letta_reports";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "ingestion_records_rco_record_id_fkey";
             columns: ["rco_record_id"];
+            isOneToOne: false;
             referencedRelation: "rco_records";
             referencedColumns: ["id"];
           },
@@ -372,6 +361,14 @@ export type Database = {
           {
             foreignKeyName: "letta_reports_workflow_id_fkey";
             columns: ["workflow_id"];
+            isOneToOne: false;
+            referencedRelation: "workflow_ingestion_metadata";
+            referencedColumns: ["workflow_id"];
+          },
+          {
+            foreignKeyName: "letta_reports_workflow_id_fkey";
+            columns: ["workflow_id"];
+            isOneToOne: false;
             referencedRelation: "workflows";
             referencedColumns: ["id"];
           },
@@ -382,6 +379,7 @@ export type Database = {
           created_at: string;
           editorial_record_id: string | null;
           id: string;
+          mode: string;
           payload: Json | null;
           published_by: string | null;
           remote_id: string;
@@ -395,6 +393,7 @@ export type Database = {
           created_at?: string;
           editorial_record_id?: string | null;
           id?: string;
+          mode?: string;
           payload?: Json | null;
           published_by?: string | null;
           remote_id: string;
@@ -408,6 +407,7 @@ export type Database = {
           created_at?: string;
           editorial_record_id?: string | null;
           id?: string;
+          mode?: string;
           payload?: Json | null;
           published_by?: string | null;
           remote_id?: string;
@@ -421,18 +421,28 @@ export type Database = {
           {
             foreignKeyName: "publication_records_editorial_record_id_fkey";
             columns: ["editorial_record_id"];
+            isOneToOne: false;
             referencedRelation: "editorial_records";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "publication_records_translation_record_id_fkey";
             columns: ["translation_record_id"];
+            isOneToOne: false;
             referencedRelation: "translation_records";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "publication_records_workflow_id_fkey";
             columns: ["workflow_id"];
+            isOneToOne: false;
+            referencedRelation: "workflow_ingestion_metadata";
+            referencedColumns: ["workflow_id"];
+          },
+          {
+            foreignKeyName: "publication_records_workflow_id_fkey";
+            columns: ["workflow_id"];
+            isOneToOne: false;
             referencedRelation: "workflows";
             referencedColumns: ["id"];
           },
@@ -518,24 +528,35 @@ export type Database = {
           {
             foreignKeyName: "translation_records_content_report_id_fkey";
             columns: ["content_report_id"];
+            isOneToOne: false;
             referencedRelation: "letta_reports";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "translation_records_editorial_record_id_fkey";
             columns: ["editorial_record_id"];
+            isOneToOne: false;
             referencedRelation: "editorial_records";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "translation_records_metadata_report_id_fkey";
             columns: ["metadata_report_id"];
+            isOneToOne: false;
             referencedRelation: "letta_reports";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "translation_records_workflow_id_fkey";
             columns: ["workflow_id"];
+            isOneToOne: false;
+            referencedRelation: "workflow_ingestion_metadata";
+            referencedColumns: ["workflow_id"];
+          },
+          {
+            foreignKeyName: "translation_records_workflow_id_fkey";
+            columns: ["workflow_id"];
+            isOneToOne: false;
             referencedRelation: "workflows";
             referencedColumns: ["id"];
           },
@@ -558,6 +579,7 @@ export type Database = {
         Insert: {
           conversation_id?: string | null;
           created_at?: string;
+          editorial_record_id?: string | null;
           id?: string;
           ingestion_record_id?: string | null;
           progress: string;
@@ -570,6 +592,7 @@ export type Database = {
         Update: {
           conversation_id?: string | null;
           created_at?: string;
+          editorial_record_id?: string | null;
           id?: string;
           ingestion_record_id?: string | null;
           progress?: string;
@@ -583,18 +606,21 @@ export type Database = {
           {
             foreignKeyName: "status_editorial_record_id_fkey";
             columns: ["editorial_record_id"];
+            isOneToOne: false;
             referencedRelation: "editorial_records";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "status_ingestion_record_id_fkey";
             columns: ["ingestion_record_id"];
+            isOneToOne: false;
             referencedRelation: "ingestion_records";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "status_rco_record_id_fkey";
             columns: ["rco_record_id"];
+            isOneToOne: false;
             referencedRelation: "rco_records";
             referencedColumns: ["id"];
           },
@@ -619,6 +645,7 @@ export type Database = {
           {
             foreignKeyName: "di_services_ingestion_run_id_fkey";
             columns: ["ingestion_run_id"];
+            isOneToOne: false;
             referencedRelation: "ingestion_runs";
             referencedColumns: ["id"];
           },
@@ -640,6 +667,7 @@ export type Database = {
           {
             foreignKeyName: "di_structures_ingestion_run_id_fkey";
             columns: ["ingestion_run_id"];
+            isOneToOne: false;
             referencedRelation: "ingestion_runs";
             referencedColumns: ["id"];
           },
@@ -671,6 +699,23 @@ export type Database = {
           role?: never;
         };
         Relationships: [];
+      };
+      workflow_ingestion_metadata: {
+        Row: {
+          ingestion_record_id: string | null;
+          session_start_date: string | null;
+          structure_name: string | null;
+          workflow_id: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "status_ingestion_record_id_fkey";
+            columns: ["ingestion_record_id"];
+            isOneToOne: false;
+            referencedRelation: "ingestion_records";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Functions: {
@@ -718,8 +763,8 @@ export type Database = {
           avif_autodetection?: boolean | null;
           created_at?: string | null;
           file_size_limit?: number | null;
-          id: string;
-          name: string;
+          id?: string;
+          name?: string;
           owner?: string | null;
           owner_id?: string | null;
           public?: boolean | null;
@@ -811,6 +856,7 @@ export type Database = {
           {
             foreignKeyName: "iceberg_namespaces_catalog_id_fkey";
             columns: ["catalog_id"];
+            isOneToOne: false;
             referencedRelation: "buckets_analytics";
             referencedColumns: ["id"];
           },
@@ -860,12 +906,14 @@ export type Database = {
           {
             foreignKeyName: "iceberg_tables_catalog_id_fkey";
             columns: ["catalog_id"];
+            isOneToOne: false;
             referencedRelation: "buckets_analytics";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "iceberg_tables_namespace_id_fkey";
             columns: ["namespace_id"];
+            isOneToOne: false;
             referencedRelation: "iceberg_namespaces";
             referencedColumns: ["id"];
           },
@@ -898,6 +946,7 @@ export type Database = {
           created_at: string | null;
           id: string;
           last_accessed_at: string | null;
+          level: number | null;
           metadata: Json | null;
           name: string | null;
           owner: string | null;
@@ -912,6 +961,7 @@ export type Database = {
           created_at?: string | null;
           id?: string;
           last_accessed_at?: string | null;
+          level?: number | null;
           metadata?: Json | null;
           name?: string | null;
           owner?: string | null;
@@ -926,6 +976,7 @@ export type Database = {
           created_at?: string | null;
           id?: string;
           last_accessed_at?: string | null;
+          level?: number | null;
           metadata?: Json | null;
           name?: string | null;
           owner?: string | null;
@@ -939,6 +990,39 @@ export type Database = {
           {
             foreignKeyName: "objects_bucketId_fkey";
             columns: ["bucket_id"];
+            isOneToOne: false;
+            referencedRelation: "buckets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      prefixes: {
+        Row: {
+          bucket_id: string;
+          created_at: string | null;
+          level: number;
+          name: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          bucket_id: string;
+          created_at?: string | null;
+          level?: number;
+          name: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          bucket_id?: string;
+          created_at?: string | null;
+          level?: number;
+          name?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "prefixes_bucketId_fkey";
+            columns: ["bucket_id"];
+            isOneToOne: false;
             referencedRelation: "buckets";
             referencedColumns: ["id"];
           },
@@ -982,6 +1066,7 @@ export type Database = {
           {
             foreignKeyName: "s3_multipart_uploads_bucket_id_fkey";
             columns: ["bucket_id"];
+            isOneToOne: false;
             referencedRelation: "buckets";
             referencedColumns: ["id"];
           },
@@ -1028,12 +1113,14 @@ export type Database = {
           {
             foreignKeyName: "s3_multipart_uploads_parts_bucket_id_fkey";
             columns: ["bucket_id"];
+            isOneToOne: false;
             referencedRelation: "buckets";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "s3_multipart_uploads_parts_upload_id_fkey";
             columns: ["upload_id"];
+            isOneToOne: false;
             referencedRelation: "s3_multipart_uploads";
             referencedColumns: ["id"];
           },
@@ -1077,6 +1164,7 @@ export type Database = {
           {
             foreignKeyName: "vector_indexes_bucket_id_fkey";
             columns: ["bucket_id"];
+            isOneToOne: false;
             referencedRelation: "buckets_vectors";
             referencedColumns: ["id"];
           },
@@ -1087,17 +1175,28 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      add_prefixes: {
+        Args: { _bucket_id: string; _name: string };
+        Returns: undefined;
+      };
       can_insert_object: {
         Args: { bucketid: string; metadata: Json; name: string; owner: string };
         Returns: undefined;
       };
+      delete_leaf_prefixes: {
+        Args: { bucket_ids: string[]; names: string[] };
+        Returns: undefined;
+      };
+      delete_prefix: {
+        Args: { _bucket_id: string; _name: string };
+        Returns: boolean;
+      };
       extension: { Args: { name: string }; Returns: string };
       filename: { Args: { name: string }; Returns: string };
       foldername: { Args: { name: string }; Returns: string[] };
-      get_common_prefix: {
-        Args: { p_delimiter: string; p_key: string; p_prefix: string };
-        Returns: string;
-      };
+      get_level: { Args: { name: string }; Returns: number };
+      get_prefix: { Args: { name: string }; Returns: string };
+      get_prefixes: { Args: { name: string }; Returns: string[] };
       get_size_by_bucket: {
         Args: never;
         Returns: {
@@ -1122,22 +1221,23 @@ export type Database = {
       };
       list_objects_with_delimiter: {
         Args: {
-          _bucket_id: string;
+          bucket_id: string;
           delimiter_param: string;
           max_keys?: number;
           next_token?: string;
           prefix_param: string;
-          sort_order?: string;
           start_after?: string;
         };
         Returns: {
-          created_at: string;
           id: string;
-          last_accessed_at: string;
           metadata: Json;
           name: string;
           updated_at: string;
         }[];
+      };
+      lock_top_prefixes: {
+        Args: { bucket_ids: string[]; names: string[] };
+        Returns: undefined;
       };
       operation: { Args: never; Returns: string };
       search: {
@@ -1160,21 +1260,40 @@ export type Database = {
           updated_at: string;
         }[];
       };
-      search_by_timestamp: {
+      search_legacy_v1: {
         Args: {
-          p_bucket_id: string;
-          p_level: number;
-          p_limit: number;
-          p_prefix: string;
-          p_sort_column: string;
-          p_sort_column_after: string;
-          p_sort_order: string;
-          p_start_after: string;
+          bucketname: string;
+          levels?: number;
+          limits?: number;
+          offsets?: number;
+          prefix: string;
+          search?: string;
+          sortcolumn?: string;
+          sortorder?: string;
         };
         Returns: {
           created_at: string;
           id: string;
-          key: string;
+          last_accessed_at: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        }[];
+      };
+      search_v1_optimised: {
+        Args: {
+          bucketname: string;
+          levels?: number;
+          limits?: number;
+          offsets?: number;
+          prefix: string;
+          search?: string;
+          sortcolumn?: string;
+          sortorder?: string;
+        };
+        Returns: {
+          created_at: string;
+          id: string;
           last_accessed_at: string;
           metadata: Json;
           name: string;
@@ -1334,9 +1453,6 @@ export type CompositeTypes<
 
 export const Constants = {
   graphql_public: {
-    Enums: {},
-  },
-  pgbouncer: {
     Enums: {},
   },
   public: {
