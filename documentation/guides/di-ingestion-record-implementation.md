@@ -8,9 +8,9 @@ Implemented the complete DI (Data Inclusion) ingestion record workflow to transf
 ### 1. Database Schema
 **File**: `supabase/migrations/20260204090000_add_ingestion_records_source.sql`
 
-Added `source` column to `ingestion_records` table:
-- **Type**: `text` with CHECK constraint (`rco` or `di`)
-- **Default**: `rco` (backward compatible)
+Added `origin` column to `ingestion_records` table:
+- **Type**: `text` with CHECK constraint (`RCO` or `DI`)
+- **Default**: `RCO` (backward compatible)
 - **Index**: Added for efficient filtering
 - **Purpose**: Distinguish between RCO and DI ingestion sources
 
@@ -22,7 +22,7 @@ Added `source` column to `ingestion_records` table:
 - ✅ Batch structure fetches (100 IDs per query) to avoid URI length limits
 - ✅ Batch inserts (100 records per insert) for performance
 - ✅ Include structure data in metadata alongside service data
-- ✅ Set `source: "di"` for all DI records
+- ✅ Set `origin: "DI"` for all DI records
 - ✅ Detailed logging for debugging
 - ✅ TypeScript type safety (no `any`)
 
@@ -36,7 +36,7 @@ Added `source` column to `ingestion_records` table:
 ### 3. RCO Ingestion Records
 **File**: `packages/supabase/src/ingestion.ts`
 
-Updated to set `source: "rco"` for RCO records for consistency.
+Updated to set `origin: "RCO"` for RCO records for consistency.
 
 ### 4. Test Script
 **File**: `scripts/create-di-ingestion-records.ts`
@@ -62,7 +62,7 @@ Added comprehensive testing guide:
 ```sql
 CREATE TABLE ingestion_records (
   id uuid PRIMARY KEY,
-  source text NOT NULL DEFAULT 'rco' CHECK (source IN ('rco', 'di')),
+  origin text NOT NULL DEFAULT 'RCO' CHECK (origin IN ('RCO', 'DI')),
   markdown text NOT NULL,
   metadata jsonb NOT NULL,
   rco_record_id uuid REFERENCES rco_records(id),
@@ -126,17 +126,17 @@ pnpm tsx scripts/create-di-ingestion-records.ts
 -- Check total records
 SELECT COUNT(*) FROM ingestion_records;
 
--- Check by source
-SELECT source, COUNT(*)
+-- Check by origin
+SELECT origin, COUNT(*)
 FROM ingestion_records
-GROUP BY source;
+GROUP BY origin;
 
 -- Verify structure in metadata
 SELECT
   metadata->>'id' as service_id,
   metadata->'structure'->>'id' as structure_id
 FROM ingestion_records
-WHERE source = 'di'
+WHERE origin = 'DI'
 LIMIT 10;
 ```
 

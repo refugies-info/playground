@@ -322,11 +322,12 @@ Open [http://127.0.0.1:54323](http://127.0.0.1:54323) and run these queries:
 #### 1. Check Total Records
 
 ```sql
-SELECT COUNT(*) as total_records
-FROM ingestion_records;
+SELECT origin, COUNT(*) as count
+FROM ingestion_records
+GROUP BY origin;
 ```
 
-Expected: ~6,098 records
+Expected: Show counts for both `DI` and `RCO` (if any).
 
 #### 2. Verify Structure in Metadata
 

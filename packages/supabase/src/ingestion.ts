@@ -224,7 +224,7 @@ export async function ingestProcessedData(
   const { data: ingestionRecord, error: ingestionError } = await supabase
     .from("ingestion_records")
     .insert({
-      source: "RCO",
+      origin: "RCO",
       markdown: markdownContent,
       metadata: metadata,
       rco_record_id: rcoRecordId,
