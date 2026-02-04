@@ -1,7 +1,7 @@
 /**
- *  ┌─────────────────────────────────────────────────────────────────────────┐
- *  │                           Pipeline Overview                             │
- *  └─────────────────────────────────────────────────────────────────────────┘
+ *    ┌─────────────────────────────────────────────────────────────────────────┐
+ *    │                           Pipeline Overview                             │
+ *    └─────────────────────────────────────────────────────────────────────────┘
  *
  *    [Markdown String]        <-- Input (Raw MD + Directive + Front Matter)
  *          │
@@ -10,14 +10,20 @@
  *          │
  *          ├─ Step 1: Front Matter Stripping (gray-matter)
  *          │
- *          ├─ Step 2: Unified Parsing (Remark + Directives)
+ *          ├─ Step 2: Fence Normalization (normalizeMarkdown)
+ *          │    └─ Ensures unambiguous nesting lengths
  *          │
- *          ├─ Step 3: Node Conversion (astToBlocks)
+ *          ├─ Step 3: Unified Parsing (Remark + Directives)
+ *          │
+ *          ├─ Step 4: Node Conversion (astToBlocks)
  *          │    ├─ nodeToBlock (Dispatcher)
  *          │    └─ parseDirective (Custom Blocks)
  *          │
- *          └─ Step 4: Inline Serialization (serializeInline)
- *               └─ Text, Links, Bold, Italic...
+ *          ├─ Step 5: Inline Serialization (serializeInline)
+ *          │    └─ Text, Links, Bold, Italic...
+ *          │
+ *          └─ Step 6: Validation & Cleanup (validateAndFixBlocks)
+ *               └─ Stray fences removal & structure checks
  *          │
  *          ▼
  *    [BlockNote PartialBlocks] <-- Output (Ready for Editor)
@@ -35,6 +41,7 @@ import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
+import { normalizeMarkdown } from "./normalizeMarkdown";
 
 // biome-ignore lint/suspicious/noExplicitAny: Generic type alias requires any
 type InlineContent = BNInlineContentGeneric<any, any>;
@@ -62,26 +69,22 @@ interface MarkdownNode {
  *
  * @param {string} markdown - The raw markdown string to parse
  * @returns {Promise<PartialBlock[]>} A promise that resolves to an array of PartialBlock objects
- *
- * @description
- * Pipeline Step: 1. Raw MD -> [This Function] -> BlockNote Blocks -> Editor
- * Usage: Called by EditionView.tsx when loading content or applying AI updates.
  */
-import { remarkRestoreHierarchy } from "./remark-restore-hierarchy";
-
 export async function markdownToBlocks(
   markdown: string,
 ): Promise<PartialBlock[]> {
   // Step 1: Strip YAML frontmatter
   const { content: contentWithoutFrontmatter } = matter(markdown);
 
+  // Step 2: Normalize markdown nesting (explicit fence lengths)
+  const normalizedContent = normalizeMarkdown(contentWithoutFrontmatter);
+
   const processor = unified()
     .use(remarkParse)
     .use(remarkGfm)
-    .use(remarkDirective)
-    .use(remarkRestoreHierarchy);
+    .use(remarkDirective);
 
-  const ast = processor.parse(contentWithoutFrontmatter);
+  const ast = processor.parse(normalizedContent);
 
   // Apply hierarchy restoration (Remark plugins usually run in the 'run' phase)
   const transformedAst = await processor.run(ast);
@@ -393,7 +396,7 @@ function parseDirective(node: MarkdownNode): PartialBlock {
 
     return {
       type: "toggleListItem",
-      props: {},
+      props: props, // Pass remaining attributes (id, class)
       content: toggleContent,
       children: childrenBlocks,
     };

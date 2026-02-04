@@ -10,6 +10,7 @@ import {
 } from "@playground/workflows";
 import { cookies } from "next/headers";
 import { start } from "workflow/api";
+import { normalizeMarkdown } from "../lib/markdown/normalizeMarkdown";
 
 // Debug logging to verify workflow imports
 
@@ -164,7 +165,11 @@ export async function publishDocument(
       return { success: false, error: "Utilisateur non authentifié" };
     }
 
-    // 2. Start the publication workflow
+    // 2. Normalize markdown to ensure unambiguous directive nesting
+    // This prevents parsing issues in Main App when it receives nested directives
+    const normalizedMarkdown = normalizeMarkdown(markdown);
+
+    // 3. Start the publication workflow
     if (!publicationWorkflow) {
       logger.error("publicationWorkflow is undefined - cannot start workflow");
       return {
@@ -177,7 +182,7 @@ export async function publishDocument(
       {
         workflowId,
         title,
-        markdown,
+        markdown: normalizedMarkdown,
         metadata,
         userId: user.id,
         userEmail: user.email,
