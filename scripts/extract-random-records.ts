@@ -27,13 +27,13 @@ program
   .description("Extract random ingestion records to individual markdown files")
   .option("-c, --count <number>", "Number of records to extract", "20")
   .option("-o, --out <directory>", "Output directory", "extracts")
-  .option("-s, --source <source>", "Filter by source (DI or RCO)")
+  .option("-s, --origin <origin>", "Filter by origin (DI or RCO)")
   .parse(process.argv);
 
 const opts = program.opts<{
   count: string;
   out: string;
-  source?: string;
+  origin?: string;
 }>();
 
 interface IngestionRecord {
@@ -45,7 +45,7 @@ async function main() {
   const outputDir = path.resolve(process.cwd(), opts.out);
 
   logger.info(
-    { count, outputDir, source: opts.source ?? "any" },
+    { count, outputDir, origin: opts.origin ?? "any" },
     "=== Starting Random Extraction ===",
   );
 
@@ -56,8 +56,8 @@ async function main() {
     // doesn't support ORDER BY random() and we want to avoid complex RPC setup for a simple extract.
     let query = supabase.from("ingestion_records").select("markdown");
 
-    if (opts.source) {
-      query = query.eq("source", opts.source.toUpperCase());
+    if (opts.origin) {
+      query = query.eq("origin", opts.origin.toUpperCase());
     }
 
     // Fetch up to 1000 records to sample from

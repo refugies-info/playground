@@ -42,7 +42,7 @@ async function main() {
     );
 
     logger.info("✅ Workflow executed successfully!");
-    logger.info("Check Supabase Studio for ingestion_records with source='DI'");
+    logger.info("Check Supabase Studio for ingestion_records with origin='DI'");
   } catch (error) {
     logger.error(
       { error: error instanceof Error ? error.message : String(error) },
