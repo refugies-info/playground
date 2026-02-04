@@ -75,9 +75,7 @@ async function fetchDiServiceIdsForRun(runId: string): Promise<string[]> {
     }
 
     for (const service of data) {
-      if (service.id) {
-        serviceIds.push(service.id);
-      }
+      serviceIds.push(String(service.id));
     }
 
     hasMore = data.length === DI_FETCH_PAGE_SIZE;
@@ -99,8 +97,6 @@ async function fetchDiAuditTargets(
     return { targets, totalCandidates };
   }
 
-  let reachedLimit = false;
-
   for (let i = 0; i < serviceIds.length; i += DI_BATCH_SIZE) {
     const batch = serviceIds.slice(i, i + DI_BATCH_SIZE);
 
@@ -119,12 +115,8 @@ async function fetchDiAuditTargets(
     totalCandidates += records.length;
 
     for (const record of records) {
-      if (!reachedLimit) {
+      if (limit === null || targets.length < limit) {
         targets.push({ id: record.id, markdown: record.markdown });
-      }
-
-      if (limit !== null && targets.length >= limit) {
-        reachedLimit = true;
       }
     }
   }
@@ -217,7 +209,7 @@ export async function generateDiAuditReportsStep(runId: string) {
               `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
             );
           }
-          finalContent = chunk.content;
+          finalContent += chunk.content;
         }
       }
 
