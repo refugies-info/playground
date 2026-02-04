@@ -3,7 +3,7 @@ import { stringify } from "yaml";
 /**
  * Converts a raw DI record into an ingestion record (markdown with frontmatter).
  *
- * @param record - The raw DI record
+ * @param service - The raw DI service record
  * @param structure - The optional structure record associated with the service
  * @returns The ingestion record as a markdown string
  */
