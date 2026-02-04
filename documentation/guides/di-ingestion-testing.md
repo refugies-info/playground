@@ -273,10 +273,10 @@ After ingesting DI services/structures, you can create `ingestion_records` which
 
 ```bash
 # Use latest ingestion run
-pnpm tsx scripts/test-di-ingestion-records.ts
+pnpm tsx scripts/create-di-ingestion-records.ts
 
 # Or specify a specific run ID
-pnpm tsx scripts/test-di-ingestion-records.ts <runId>
+pnpm tsx scripts/create-di-ingestion-records.ts <runId>
 ```
 
 ### What It Does

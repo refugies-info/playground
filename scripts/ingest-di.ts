@@ -8,11 +8,11 @@
  *   pnpm di:ingest [options]
  *
  * Examples:
- *   pnpm di:ingest                          # Ingest 5 structures (for testing)
- *   pnpm di:ingest --type services          # Ingest 5 services
- *   pnpm di:ingest --limit 100              # Ingest 100 structures
- *   pnpm di:ingest --all                    # Ingest ALL structures
- *   pnpm di:ingest --type services --all    # Ingest ALL services
+ *   pnpm di:ingest                          # Ingest ALL structures and services
+ *   pnpm di:ingest --type services          # Ingest ALL services only
+ *   pnpm di:ingest --type structures        # Ingest ALL structures only
+ *   pnpm di:ingest --limit 20               # Ingest 20 structures and 20 services (for testing)
+ *   pnpm di:ingest --type services --limit 10  # Ingest 10 services only (for testing)
  */
 
 import path from "node:path";
@@ -30,21 +30,22 @@ program
   .description("Ingest data from Data Inclusion API into Supabase")
   .option(
     "-t, --type <type>",
-    "Type to ingest: structures or services",
-    "structures",
+    "Type to ingest: structures, services, or both (default: both)",
+    "both",
   )
-  .option("-l, --limit <number>", "Fetch only N items (default: 5)", "5")
-  .option("-a, --all", "Fetch all items (no limit)")
+  .option(
+    "-l, --limit <number>",
+    "Fetch only N items per type (for testing, default: fetch all)",
+  )
   .parse(process.argv);
 
 const opts = program.opts<{
   type: string;
-  limit: string;
-  all?: boolean;
+  limit?: string;
 }>();
 
 // Validate type
-const validTypes = ["structures", "services"] as const;
+const validTypes = ["structures", "services", "both"] as const;
 type IngestType = (typeof validTypes)[number];
 
 if (!validTypes.includes(opts.type as IngestType)) {
@@ -56,10 +57,10 @@ if (!validTypes.includes(opts.type as IngestType)) {
 
 const type = opts.type as IngestType;
 
-// Parse and validate limit
+// Parse and validate limit (undefined = fetch all)
 const limit = (() => {
-  if (opts.all) {
-    return undefined;
+  if (!opts.limit) {
+    return undefined; // Default: fetch all
   }
   const parsed = Number.parseInt(opts.limit, 10);
   if (Number.isNaN(parsed) || parsed <= 0) {
@@ -70,6 +71,44 @@ const limit = (() => {
   }
   return parsed;
 })();
+
+async function ingestType(
+  diModule: typeof import("@refugies-info/di"),
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  ingestType: "structures" | "services",
+  limit: number | undefined,
+) {
+  const ingestFn =
+    ingestType === "structures"
+      ? diModule.ingestCarifOrefStructures
+      : diModule.ingestCarifOrefServices;
+
+  logger.info(`Starting ${ingestType} ingestion...`);
+  const result = await ingestFn(supabase, { limit });
+
+  // Log results
+  logger.info(
+    {
+      type: ingestType,
+      runId: result.runId,
+      totalFetched: result.totalFetched,
+      totalInserted: result.totalInserted,
+      totalUpdated: result.totalUpdated,
+      totalUnchanged: result.totalUnchanged,
+      errorCount: result.errors.length,
+    },
+    `=== ${ingestType.charAt(0).toUpperCase() + ingestType.slice(1)} Ingestion Complete ===`,
+  );
+
+  if (result.errors.length > 0) {
+    logger.warn(
+      { errors: result.errors.slice(0, 5) },
+      `${result.errors.length} ${ingestType} failed to insert`,
+    );
+  }
+
+  return result;
+}
 
 async function main() {
   logger.info({ type, limit: limit ?? "all" }, "=== DI Ingestion ===");
@@ -110,47 +149,57 @@ async function main() {
   const diModule = await import("@refugies-info/di");
   const supabase = getSupabaseAdmin();
 
-  // 3. Run ingestion
-  const ingestFn =
-    type === "structures"
-      ? diModule.ingestCarifOrefStructures
-      : diModule.ingestCarifOrefServices;
+  // 3. Run ingestion(s)
+  const results: {
+    type: string;
+    result: Awaited<ReturnType<typeof ingestType>>;
+  }[] = [];
 
-  logger.info(`Starting ${type} ingestion...`);
-  const result = await ingestFn(supabase, { limit });
-
-  // 4. Log results
-  logger.info(
-    {
-      runId: result.runId,
-      totalFetched: result.totalFetched,
-      totalInserted: result.totalInserted,
-      totalUpdated: result.totalUpdated,
-      totalUnchanged: result.totalUnchanged,
-      errorCount: result.errors.length,
-    },
-    "=== Ingestion Complete ===",
-  );
-
-  if (result.errors.length > 0) {
-    logger.warn(
-      { errors: result.errors.slice(0, 5) },
-      `${result.errors.length} records failed to insert`,
+  if (type === "both") {
+    // Ingest structures first (services have FK to structures)
+    const structuresResult = await ingestType(
+      diModule,
+      supabase,
+      "structures",
+      limit,
     );
+    results.push({ type: "structures", result: structuresResult });
+
+    // Then ingest services
+    const servicesResult = await ingestType(
+      diModule,
+      supabase,
+      "services",
+      limit,
+    );
+    results.push({ type: "services", result: servicesResult });
+  } else {
+    // Ingest single type
+    const result = await ingestType(
+      diModule,
+      supabase,
+      type as "structures" | "services",
+      limit,
+    );
+    results.push({ type, result });
   }
 
-  // Summary for quick glance
-  logger.info(
-    {
-      runId: result.runId,
-      fetched: result.totalFetched,
-      inserted: result.totalInserted,
-      updated: result.totalUpdated,
-      unchanged: result.totalUnchanged,
-      errors: result.errors.length,
-    },
-    "📊 Summary",
-  );
+  // 4. Overall summary
+  logger.info("=== Overall Summary ===");
+  for (const { type: resultType, result } of results) {
+    logger.info(
+      {
+        type: resultType,
+        runId: result.runId,
+        fetched: result.totalFetched,
+        inserted: result.totalInserted,
+        updated: result.totalUpdated,
+        unchanged: result.totalUnchanged,
+        errors: result.errors.length,
+      },
+      `📊 ${resultType.charAt(0).toUpperCase() + resultType.slice(1)}`,
+    );
+  }
 }
 
 main().catch((err) => {
