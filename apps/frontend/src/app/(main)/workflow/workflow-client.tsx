@@ -6,84 +6,70 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { triggerDiIngestionAction } from "@/app/actions/di";
 import { inProgressColumns } from "../documents/columns";
+import { DocumentPreviewDrawer } from "./document-preview-drawer";
 
 interface WorkflowClientProps {
   inProgressDocuments: Document[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
 }
 
-export function WorkflowClient({ inProgressDocuments }: WorkflowClientProps) {
+export function WorkflowClient(props: WorkflowClientProps) {
+  const { inProgressDocuments, totalCount, currentPage, totalPages, pageSize } =
+    props;
   const router = useRouter();
-  const [xmlInput, setXmlInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<Record<string, string> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [workflowId, setWorkflowId] = useState<string | null>(null);
-
+  const [results, setResults] = useState<Record<string, unknown> | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [arbitrationLoading, setArbitrationLoading] = useState<string | null>(
+    null,
+  );
 
-  const handleRunVercel = async () => {
-    setIsLoading(true);
-    setError(null);
-    setResults(null);
-    setWorkflowId(null);
-    setStatus(null);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(
+    null,
+  );
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-    try {
-      const response = await fetch("/api/workflow", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ xmlContent: xmlInput }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setWorkflowId(data.workflowId);
-        setStatus("running");
-      } else {
-        setError(data.error || "Failed to start workflow");
-        setStatus("failed");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setStatus("failed");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleOpenDrawer = (doc: Document) => {
+    setSelectedDocument(doc);
+    setIsDrawerOpen(true);
   };
 
   const handleRunDiIngestion = async () => {
     setIsLoading(true);
     setError(null);
-    setResults(null);
     setWorkflowId(null);
+    setResults(null);
     setStatus(null);
 
     try {
       const result = await triggerDiIngestionAction();
 
-      if (result.success && result.workflowId) {
-        setWorkflowId(result.workflowId);
-        setStatus("running");
-        setResults({
-          "Ingestion Type": "Data Inclusion",
-          Status: "Started",
-        });
+      if (!result.success) {
+        setError(result.error || "Unknown error occurred");
       } else {
-        setError(result.error || "Failed to start DI workflow");
-        setStatus("failed");
+        setWorkflowId(result.workflowId || null);
+        if (result.dashboardUrl) {
+          // Optional: Open dashboard in new tab
+          // window.open(result.dashboardUrl, '_blank');
+        }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setStatus("failed");
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ... rest of functions ...
+
   const handleRefreshStatus = async () => {
     if (!workflowId) return;
-
+    // Implementation for status refresh if needed
     try {
       const response = await fetch(`/api/workflow/${workflowId}`);
       if (!response.ok) {
@@ -93,17 +79,9 @@ export function WorkflowClient({ inProgressDocuments }: WorkflowClientProps) {
       setStatus(data.status);
 
       if (data.status === "completed" && data.output) {
-        // Parse the output format from workflow package
-        // The output seems to be [returnObject, value1, value2, ...]
-        // where returnObject values are indices pointing to the values in the array
         const [resultMap, ...values] = data.output;
 
-        // Check if we have ingestion result
-        // The new return structure is { files: {...}, ingestion: {...} }
-        // We need to access it via the resultMap
-
         if (resultMap && typeof resultMap === "object") {
-          // We'll reconstruct the object for easier handling
           // biome-ignore lint/suspicious/noExplicitAny: Recursive reconstruction
           const reconstruct = (val: any): any => {
             if (typeof val === "number") return values[val - 1];
@@ -122,7 +100,6 @@ export function WorkflowClient({ inProgressDocuments }: WorkflowClientProps) {
           const fullResult = reconstruct(resultMap);
 
           if (fullResult.ingestion) {
-            // Use ingestion result
             setResults({
               ...fullResult.files,
               "Ingestion Status": fullResult.ingestion.status,
@@ -131,7 +108,6 @@ export function WorkflowClient({ inProgressDocuments }: WorkflowClientProps) {
                 fullResult.ingestion.ingestionRecordId || "N/A",
             });
           } else if (fullResult.structures && fullResult.services) {
-            // Handle DI result structure
             setResults({
               "Ingestion Type": "Data Inclusion",
               "Structures Fetched": String(fullResult.structures.totalFetched),
@@ -143,81 +119,147 @@ export function WorkflowClient({ inProgressDocuments }: WorkflowClientProps) {
                 : "N/A",
             });
           } else {
-            // Fallback to old format (flat) if no ingestion key
             setResults(fullResult);
           }
         }
       }
     } catch (err) {
       logger.error(err, "Error refreshing status");
-      // Don't set error state here to avoid clearing the workflow ID view
     }
   };
 
+  const handleForceArbitration = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (arbitrationLoading) return;
+
+    setArbitrationLoading(id);
+    try {
+      const { forceArbitrationAction } = await import("@/app/actions/di");
+      const result = await forceArbitrationAction(id);
+
+      if (result.success) {
+        alert("Arbitrage lancé avec succès");
+        router.refresh();
+      } else {
+        setArbitrationLoading(null);
+        logger.error({ error: result.error }, "Arbitration failed");
+        alert(`Arbitration failed: ${result.error}`);
+      }
+    } catch (err) {
+      setArbitrationLoading(null);
+      logger.error({ error: err }, "Error forcing arbitration");
+      alert("Error forcing arbitration");
+    }
+  };
+
+  const columns = [
+    ...inProgressColumns,
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }: { row: { original: Document } }) => {
+        const isLoading = arbitrationLoading === row.original.id;
+        return (
+          <div className="flex items-center gap-2 justify-end">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenDrawer(row.original);
+              }}
+              className="px-3 py-1 text-sm border rounded hover:bg-gray-50 transition-colors"
+            >
+              Voir
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleForceArbitration(row.original.id, e)}
+              disabled={isLoading}
+              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-1"
+              title="Forcer l'arbitrage (générer le rapport IA)"
+            >
+              {isLoading ? (
+                <>
+                  <svg
+                    className="animate-spin h-3 w-3 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <title>Chargement</title>
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  <span>Arbitrage en cours...</span>
+                </>
+              ) : (
+                <>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-3 h-3"
+                  >
+                    <title>Arbitrer</title>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+                    />
+                  </svg>
+                  <span>Arbitrer</span>
+                </>
+              )}
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <div className="w-full h-full p-8 bg-gray-50 min-h-screen">
-      <div className="mb-8">
+      <div className="mb-8 flex justify-between items-center">
         <h1 className="text-3xl font-bold">Importer du contenu</h1>
+        <button
+          type="button"
+          onClick={handleRunDiIngestion}
+          disabled={isLoading}
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-4 h-4"
+          >
+            <title>Refresh Icon</title>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+            />
+          </svg>
+          {isLoading ? "En cours..." : "Lancer l'import DI"}
+        </button>
       </div>
 
       <div className="container mx-auto max-w-4xl">
-        <div className="mb-6">
-          <label htmlFor="xmlInput" className="block text-sm font-medium mb-2">
-            Coller le contenu XML de Lhéo
-          </label>
-          <textarea
-            id="xmlInput"
-            className="w-full h-64 p-4 border rounded-lg font-mono text-sm bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-700"
-            value={xmlInput}
-            onChange={(e) => setXmlInput(e.target.value)}
-            placeholder="<lheo>...</lheo>"
-          />
-        </div>
-
-        <div className="flex gap-4">
-          <button
-            type="button"
-            onClick={handleRunVercel}
-            disabled={isLoading || !xmlInput.trim()}
-            className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-          >
-            <svg
-              viewBox="0 0 76 65"
-              fill="currentColor"
-              className="w-4 h-4"
-              aria-label="Vercel Logo"
-            >
-              <title>Vercel Logo</title>
-              <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" />
-            </svg>
-            {isLoading ? "En cours..." : "Lancer l'importation Lhéo"}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleRunDiIngestion}
-            disabled={isLoading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-4 h-4"
-            >
-              <title>Refresh Icon</title>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
-              />
-            </svg>
-            {isLoading ? "En cours..." : "Lancer l'import DI"}
-          </button>
-        </div>
-
         {error && (
           <div className="mt-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
             <h3 className="font-bold mb-2">Error</h3>
@@ -317,19 +359,99 @@ export function WorkflowClient({ inProgressDocuments }: WorkflowClientProps) {
         )}
       </div>
 
-      {inProgressDocuments.length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
-            Fiches en cours de traitement
+      <div className="mt-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Fiches en cours de traitement ({totalCount})
           </h2>
-          <DataTable
-            columns={inProgressColumns}
-            data={inProgressDocuments}
-            pageSize={50}
-            onRowClick={(row) => router.push(`/documents/${row.id}`)}
-          />
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-700 mr-2">
+                Page {currentPage} sur {totalPages}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const params = new URLSearchParams(window.location.search);
+                    params.set("page", String(currentPage - 1));
+                    router.push(`/workflow?${params.toString()}`);
+                  }}
+                  disabled={currentPage <= 1}
+                  className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  Précédent
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const params = new URLSearchParams(window.location.search);
+                    params.set("page", String(currentPage + 1));
+                    router.push(`/workflow?${params.toString()}`);
+                  }}
+                  disabled={currentPage >= totalPages}
+                  className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  Suivant
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+        {inProgressDocuments.length > 0 ? (
+          <>
+            <DataTable
+              columns={columns}
+              data={inProgressDocuments}
+              pageSize={pageSize}
+              onRowClick={(row) => router.push(`/documents/${row.id}`)}
+              manualPagination
+            />
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-end px-2 py-4">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const params = new URLSearchParams(
+                        window.location.search,
+                      );
+                      params.set("page", String(currentPage - 1));
+                      router.push(`/workflow?${params.toString()}`);
+                    }}
+                    disabled={currentPage <= 1}
+                    className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    Précédent
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const params = new URLSearchParams(
+                        window.location.search,
+                      );
+                      params.set("page", String(currentPage + 1));
+                      router.push(`/workflow?${params.toString()}`);
+                    }}
+                    disabled={currentPage >= totalPages}
+                    className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    Suivant
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="text-gray-500 italic">Aucune fiche en cours.</p>
+        )}
+      </div>
+      <DocumentPreviewDrawer
+        document={selectedDocument}
+        open={isDrawerOpen}
+        onOpenChange={setIsDrawerOpen}
+      />
     </div>
   );
 }

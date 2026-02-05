@@ -54,11 +54,11 @@ export type { SaveDocumentResult } from "./steps/editorial/save-document";
 // Steps - Editorial
 // =============================================================================
 export { saveDocumentStep } from "./steps/editorial/save-document";
+export { forceArbitrationWorkflow } from "./steps/ingestion/force-arbitration";
 // =============================================================================
 // Steps - Ingestion
 // =============================================================================
 export * from "./steps/ingestion/ingest-di";
-export * from "./steps/ingestion/ingest-rco";
 
 // =============================================================================
 // Adapters - Platform implementations

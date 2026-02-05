@@ -164,23 +164,43 @@ export const inProgressColumns: ColumnDef<Document>[] = [
     },
   },
   {
-    accessorKey: "sourceSystem",
+    accessorKey: "qualityScore",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Source" />
+      <DataTableColumnHeader column={column} title="Score de qualité DI" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("sourceSystem") as string | undefined;
-      return <div className="text-sm text-gray-700">{value || "—"}</div>;
+      const score = row.getValue("qualityScore") as number | undefined;
+      if (score === undefined || score === null) {
+        return <div className="text-gray-400">—</div>;
+      }
+      const percentage = Math.round(score * 100);
+      let variant: "success" | "warning" | "danger" | "info" | "neutral" =
+        "neutral";
+
+      if (percentage >= 80) variant = "success";
+      else if (percentage >= 50) variant = "warning";
+      else if (percentage > 0) variant = "danger";
+
+      return <Badge variant={variant}>{percentage}%</Badge>;
     },
   },
   {
-    accessorKey: "id",
+    accessorKey: "title",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Workflow ID" />
+      <DataTableColumnHeader column={column} title="Titre" />
+    ),
+    cell: ({ row }) => (
+      <div className="font-medium">{row.getValue("title")}</div>
+    ),
+  },
+  {
+    accessorKey: "structureName",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Structure" />
     ),
     cell: ({ row }) => {
-      const workflowId = row.original.id;
-      return <span className="text-xs text-gray-700">{workflowId}</span>;
+      const value = row.getValue("structureName") as string | undefined;
+      return <div className="text-sm text-gray-700">{value || "—"}</div>;
     },
   },
   {

@@ -30,7 +30,7 @@ export interface GetDocumentsParams {
   pageSize?: number;
   sortBy?: DocumentSortField;
   sortOrder?: "asc" | "desc";
-  status?: string;
+  status?: string | string[];
   state?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -135,7 +135,11 @@ export async function getDocuments(params: GetDocumentsParams) {
 
   // Apply filters
   if (status) {
-    query = query.eq("status", status);
+    if (Array.isArray(status)) {
+      query = query.in("status", status);
+    } else {
+      query = query.eq("status", status);
+    }
   } else {
     // Exclude documents with status "unknown" or "error" unless explicitly filtered
     // These are shown in the workflow/import page
@@ -252,6 +256,7 @@ export async function getDocuments(params: GetDocumentsParams) {
       const reportCreatedAt = Array.isArray(letReportsData)
         ? letReportsData[0]?.created_at
         : letReportsData?.created_at;
+
       const dateAdded =
         reportCreatedAt || ingestionCreatedAt || item.updated_at;
       const metadataRow = ingestionMetadataByWorkflow.get(item.id);
