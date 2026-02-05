@@ -7,16 +7,16 @@ DROP VIEW IF EXISTS public.di_services_latest;
 CREATE VIEW public.di_structures_latest
 WITH (security_invoker = true)
 AS
-SELECT DISTINCT ON (di_id) *
-FROM public.di_structures
-ORDER BY di_id, version DESC;
+SELECT DISTINCT ON (s.di_id) s.*
+FROM public.di_structures AS s
+ORDER BY s.di_id, s.version DESC;
 
 CREATE VIEW public.di_services_latest
 WITH (security_invoker = true)
 AS
-SELECT DISTINCT ON (di_id) *
-FROM public.di_services
-ORDER BY di_id, version DESC;
+SELECT DISTINCT ON (s.di_id) s.*
+FROM public.di_services AS s
+ORDER BY s.di_id, s.version DESC;
 
 GRANT SELECT ON public.di_structures_latest TO authenticated, postgres, service_role;
 GRANT SELECT ON public.di_services_latest TO authenticated, postgres, service_role;
