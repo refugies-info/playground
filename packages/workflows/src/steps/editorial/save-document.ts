@@ -1,4 +1,4 @@
-import { logger } from "@playground/shared-types";
+import { extractTitleFromMarkdown, logger } from "@playground/shared-types";
 import type { StepResult } from "../../types";
 import { getSupabaseClient } from "../common/supabase";
 
@@ -9,6 +9,7 @@ export interface SaveDocumentResult {
   editorialRecordId: string;
   isNew: boolean;
   progressUpdated: boolean;
+  metadata: Record<string, unknown>;
 }
 
 /**
@@ -17,7 +18,8 @@ export interface SaveDocumentResult {
  * This step:
  * 1. Gets the workflow to check for existing editorial_record
  * 2. Updates existing record or creates new one
- * 3. Ensures progress is set to 'draft'
+ * 3. Extracts title from markdown and syncs it to metadata
+ * 4. Ensures progress is set to 'draft'
  *
  * @param workflowId - The workflow ID to save document for
  * @param markdown - The markdown content to save
@@ -32,10 +34,19 @@ export async function saveDocumentStep(
   try {
     const supabase = getSupabaseClient();
 
-    // 1. Get the workflow to check for existing editorial_record and get progress
+    // 1. Get the workflow and related records to get existing metadata
     const { data: workflow, error: workflowError } = await supabase
       .from("workflows")
-      .select("id, editorial_record_id, ingestion_record_id, progress")
+      .select(
+        `
+        id, 
+        editorial_record_id, 
+        ingestion_record_id, 
+        progress,
+        editorial_records (metadata),
+        ingestion_records (metadata)
+      `,
+      )
       .eq("id", workflowId)
       .single();
 
@@ -43,6 +54,27 @@ export async function saveDocumentStep(
       logger.error(workflowError, "Error fetching workflow for save");
       return { success: false, error: "Workflow not found" };
     }
+
+    // 2. Extract title and prepare metadata
+    const title = await extractTitleFromMarkdown(markdown);
+
+    // Supabase join can return array or object
+    const existingEditorialMetadata = Array.isArray(workflow.editorial_records)
+      ? workflow.editorial_records[0]?.metadata
+      : (workflow.editorial_records as Record<string, unknown>)?.metadata;
+
+    const ingestionMetadata = Array.isArray(workflow.ingestion_records)
+      ? workflow.ingestion_records[0]?.metadata
+      : (workflow.ingestion_records as Record<string, unknown>)?.metadata;
+
+    const baseMetadata = (existingEditorialMetadata ||
+      ingestionMetadata ||
+      {}) as Record<string, unknown>;
+    const updatedMetadata = {
+      ...baseMetadata,
+      title,
+      "intitule-formation": title, // Sync for LHEO compatibility
+    };
 
     let editorialRecordId: string;
     let isNew = false;
@@ -53,6 +85,7 @@ export async function saveDocumentStep(
         .from("editorial_records")
         .update({
           markdown,
+          metadata: updatedMetadata,
           updated_at: new Date().toISOString(),
         })
         .eq("id", workflow.editorial_record_id);
@@ -77,6 +110,7 @@ export async function saveDocumentStep(
         .insert({
           ingestion_record_id: workflow.ingestion_record_id,
           markdown,
+          metadata: updatedMetadata,
         })
         .select("id")
         .single();
@@ -109,13 +143,18 @@ export async function saveDocumentStep(
     }
 
     logger.info(
-      { workflowId, editorialRecordId, isNew, progressUpdated },
+      { workflowId, editorialRecordId, isNew, progressUpdated, title },
       "Document saved successfully",
     );
 
     return {
       success: true,
-      data: { editorialRecordId, isNew, progressUpdated },
+      data: {
+        editorialRecordId,
+        isNew,
+        progressUpdated,
+        metadata: updatedMetadata,
+      },
     };
   } catch (error) {
     logger.error(error, "Unexpected error in saveDocumentStep");

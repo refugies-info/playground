@@ -1,3 +1,4 @@
+import { stripFirstH1 } from "@playground/shared-types";
 import type { PublisherAdapter, WebhookPayload } from "./types";
 
 /**
@@ -18,10 +19,13 @@ export const refugiesInfoAdapter: PublisherAdapter = {
     return `${cleanBaseUrl}/api/webhook/dispositif`;
   },
 
-  buildPayload(doc): WebhookPayload {
+  async buildPayload(doc): Promise<WebhookPayload> {
     const themeId =
       (doc.metadata?.theme as string) || "63286a015d31b2c0cad99615";
     const status = doc.status || "Actif";
+
+    // Strip the first H1 heading for the payload (it's passed in metadata)
+    const cleanedMarkdown = await stripFirstH1(doc.markdown);
 
     return {
       email: doc.userEmail,
@@ -38,7 +42,7 @@ export const refugiesInfoAdapter: PublisherAdapter = {
               titreInformatif: doc.title,
               titreMarque: doc.title,
               abstract: "",
-              markdown: doc.markdown,
+              markdown: cleanedMarkdown,
             },
           },
         },

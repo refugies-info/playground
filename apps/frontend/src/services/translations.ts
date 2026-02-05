@@ -1,14 +1,14 @@
-import { logger } from "@playground/shared-types";
+import {
+  extractTitleFromMarkdown,
+  extractTitleFromMetadata,
+  logger,
+  type Metadata,
+} from "@playground/shared-types";
 import {
   createSupabaseServerClient,
   type Database,
 } from "@playground/supabase";
 import { cookies } from "next/headers";
-import {
-  extractTitleFromMarkdown,
-  extractTitleFromMetadata,
-  type Metadata,
-} from "./title-extraction";
 
 // Define the shape of a translation item for the frontend
 export interface TranslationItem {

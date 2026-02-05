@@ -36,6 +36,11 @@ import type {
   InlineContent as BNInlineContentGeneric,
   PartialBlock,
 } from "@blocknote/core";
+import {
+  ensureH1AndInjectAfter,
+  extractTitleFromMetadata,
+  type Metadata,
+} from "@playground/shared-types";
 import matter from "gray-matter";
 import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
@@ -79,32 +84,24 @@ export async function markdownToBlocks(
 
   // Step 1.5: Inject frontmatter content into body for DI records
   // DI records store the main content in frontmatter.description, not in the body
-  // TODO: find a cleaner way to handle this
-  let enrichedContent = contentWithoutFrontmatter;
-
-  if (
-    frontmatterData.description &&
+  // We use a robust AST-based utility to handle H1 injection and content placement.
+  const title =
+    extractTitleFromMetadata(frontmatterData as Metadata) || undefined;
+  const description =
     typeof frontmatterData.description === "string"
-  ) {
-    // Insert description after the title (first heading)
-    const lines = enrichedContent.split("\n");
-    const firstHeadingIndex = lines.findIndex((line) => line.startsWith("#"));
+      ? (frontmatterData.description as string)
+      : undefined;
 
-    if (firstHeadingIndex !== -1) {
-      // Insert after the heading
-      lines.splice(
-        firstHeadingIndex + 1,
-        0,
-        "",
-        frontmatterData.description,
-        "",
-      );
-      enrichedContent = lines.join("\n");
-    }
-  }
+  const content = await ensureH1AndInjectAfter(
+    contentWithoutFrontmatter.trim(),
+    {
+      title,
+      injectContent: description,
+    },
+  );
 
   // Step 2: Normalize markdown nesting (explicit fence lengths)
-  const normalizedContent = normalizeMarkdown(enrichedContent);
+  const normalizedContent = normalizeMarkdown(content);
 
   const processor = unified()
     .use(remarkParse)

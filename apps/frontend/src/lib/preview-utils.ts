@@ -16,7 +16,7 @@ interface PreviewDocument {
  */
 export const submitPreview = async (document: PreviewDocument) => {
   // Build the preview payload using shared builder
-  const payload = buildDispositifPayload({
+  const payload = await buildDispositifPayload({
     title: document.title,
     editorialContent: document.editorialContent,
     metadata: document.metadata,

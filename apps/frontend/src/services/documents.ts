@@ -1,14 +1,12 @@
-import type { Document, DocumentSortField } from "@playground/shared-types";
+import type {
+  Document,
+  DocumentSortField,
+  Metadata,
+} from "@playground/shared-types";
 import { logger } from "@playground/shared-types";
 import type { Database, Json } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
-
-import {
-  extractTitleFromMarkdown,
-  extractTitleFromMetadata,
-  type Metadata,
-} from "./title-extraction";
 
 /**
  * Type for ingestion record with joined letta_reports.
@@ -76,6 +74,7 @@ function normalizeProgress(progress: string): Document["state"] {
 
 type WorkflowIngestionMetadata = {
   workflow_id: string;
+  title: string;
   structure_name: string | null;
   session_start_date: string | null;
   quality_score: number | null;
@@ -164,7 +163,7 @@ export async function getDocuments(params: GetDocumentsParams) {
     updated_at: "updated_at",
     status: "status",
     state: "progress", // state maps to progress column
-    title: "updated_at", // title is computed, fall back to updated_at
+    title: "title", // Now supported via updated view
   };
 
   const dbColumn = sortFieldMap[sortBy];
@@ -194,14 +193,17 @@ export async function getDocuments(params: GetDocumentsParams) {
   const workflowIds = rows.map((row) => row.id);
   const { data: ingestionMetadata } = await supabase
     .from("workflow_ingestion_metadata")
-    .select("workflow_id, structure_name, session_start_date, quality_score")
+    .select(
+      "workflow_id, title, structure_name, session_start_date, quality_score",
+    )
     .in("workflow_id", workflowIds);
 
   const ingestionMetadataByWorkflow = new Map(
-    (ingestionMetadata as WorkflowIngestionMetadata[] | null)?.map((row) => [
-      row.workflow_id,
-      row,
-    ]) ?? [],
+    (
+      ingestionMetadata as
+        | (WorkflowIngestionMetadata & { title: string })[]
+        | null
+    )?.map((row) => [row.workflow_id, row]) ?? [],
   );
 
   const documents: Document[] = await Promise.all(
@@ -223,17 +225,12 @@ export async function getDocuments(params: GetDocumentsParams) {
         {}) as Metadata;
 
       // Priority: editorial > ingestion > empty
-      // We do not use rcoRecord.source_raw as per requirements
       const content =
         editorialRecord?.markdown || ingestionRecord?.markdown || "";
 
-      // Title extraction priority:
-      // 1. Extract from metadata (handles LHEO structure, title, intitule-formation)
-      // 2. Extract from markdown content (YAML frontmatter or first H1)
-      // 3. "Untitled" as final fallback
-      const title =
-        extractTitleFromMetadata(metadata) ||
-        (await extractTitleFromMarkdown(content));
+      // Title extraction: use the calculated title from our view
+      const metadataRow = ingestionMetadataByWorkflow.get(item.id);
+      const title = metadataRow?.title || "Untitled";
 
       const cleanBaseUrl = (process.env.RI_BASE_URL || "").replace(/\/$/, "");
       const publishedPublication = item.publication_records
@@ -259,7 +256,6 @@ export async function getDocuments(params: GetDocumentsParams) {
 
       const dateAdded =
         reportCreatedAt || ingestionCreatedAt || item.updated_at;
-      const metadataRow = ingestionMetadataByWorkflow.get(item.id);
 
       return {
         id: item.id,
@@ -356,7 +352,9 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       .single(),
     supabase
       .from("workflow_ingestion_metadata")
-      .select("workflow_id, structure_name, session_start_date, quality_score")
+      .select(
+        "workflow_id, title, structure_name, session_start_date, quality_score",
+      )
       .eq("workflow_id", workflow.id)
       .single(),
   ]);
@@ -378,8 +376,10 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     ? publicationRecordRaw[0]
     : publicationRecordRaw;
 
-  const ingestionMetadataRow =
-    ingestionMetadataResult.data as WorkflowIngestionMetadata | null;
+  // Use the updated type with title
+  const ingestionMetadataRow = ingestionMetadataResult.data as
+    | (WorkflowIngestionMetadata & { title: string })
+    | null;
 
   // Fetch compliance report from the joined data
   let complianceReport = "";
@@ -413,13 +413,8 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   // Immutable ingestion content (always from ingestion_records)
   const ingestionContent = ingestionRecord?.markdown || "";
 
-  // Title extraction priority:
-  // 1. Extract from metadata (handles LHEO structure, title, intitule-formation)
-  // 2. Extract from markdown content (YAML frontmatter or first H1)
-  // 3. "Untitled" as final fallback
-  const title =
-    extractTitleFromMetadata(metadata) ||
-    (await extractTitleFromMarkdown(content));
+  // Title extraction: use the calculated title from our view
+  const title = ingestionMetadataRow?.title || "Untitled";
 
   const cleanBaseUrl = (process.env.RI_BASE_URL || "").replace(/\/$/, "");
   const remoteId = publicationRecord?.remote_id;

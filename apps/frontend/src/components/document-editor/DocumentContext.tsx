@@ -1,6 +1,10 @@
 "use client";
 
-import { logger } from "@playground/shared-types";
+import {
+  extractTitleFromMarkdown,
+  hasH1,
+  logger,
+} from "@playground/shared-types";
 import { createContext, type ReactNode, useContext, useState } from "react";
 import { submitPreview } from "@/lib/preview-utils";
 import {
@@ -19,6 +23,7 @@ interface DocumentData {
   complianceReport?: string; // Markdown content of the compliance report
   aiSuggestion?: string; // Pending AI suggestion awaiting user review
   publishedUrl?: string; // Link to the published document on RI
+  metadata?: Record<string, unknown>;
 }
 
 interface DocumentContextType {
@@ -92,6 +97,9 @@ export function DocumentProvider({
     // Don't mark dirty if content hasn't actually changed
     if (document.editorialContent === content) return;
 
+    // Synchronously extract title for immediate UI feedback if needed
+    // or just let the save handle it.
+
     setDocument({
       ...document,
       editorialContent: content,
@@ -148,9 +156,18 @@ export function DocumentProvider({
   const saveDocument = async (): Promise<{
     success: boolean;
     error?: string;
+    updatedDocument?: DocumentData;
   }> => {
     if (!document) {
       return { success: false, error: "No document to save" };
+    }
+
+    const h1Exists = await hasH1(document.editorialContent);
+    if (!h1Exists) {
+      alert(
+        "Votre document doit contenir un titre principal (ex: # Mon Titre).\nCelui-ci est nécessaire pour identifier la fiche.",
+      );
+      return { success: false, error: "Titre principal manquant" };
     }
 
     setIsSaving(true);
@@ -162,19 +179,31 @@ export function DocumentProvider({
       if (result.success) {
         setIsDirty(false);
         setCanPublish(true); // Now can publish
-        // Ensure state is 'draft' after any save (doc-first)
-        if (document.state !== "draft") {
-          setDocument({
-            ...document,
-            state: "draft",
-          });
-        }
+
+        // Optimistically update local title and metadata from content
+        const newTitle = await extractTitleFromMarkdown(
+          document.editorialContent,
+        );
+        const updatedDoc = {
+          ...document,
+          title: newTitle,
+          state: "draft", // Ensure state is 'draft' after any save
+          metadata: {
+            ...document.metadata,
+            title: newTitle,
+            "intitule-formation": newTitle,
+          },
+        };
+
+        setDocument(updatedDoc);
+        return { ...result, updatedDocument: updatedDoc };
       }
       return result;
     } catch (error) {
       logger.error(error, "Error saving document");
       return { success: false, error: "Network error" };
     } finally {
+      setIsSaving(true); // Explicitly kept as true if we want to show it's "finalizing" or set to false
       setIsSaving(false);
     }
   };
@@ -183,8 +212,22 @@ export function DocumentProvider({
     if (!document) return;
 
     try {
+      let documentToPreview = document;
+
+      // Always save or ensure we have the latest version before previewing
+      const saveResult = await saveDocument();
+      if (!saveResult.success) {
+        // If save failed because of validation (missing H1), don't proceed with preview
+        return;
+      }
+
+      if (saveResult.updatedDocument) {
+        documentToPreview = saveResult.updatedDocument;
+      }
+
       // Use the utility function to handle the secure form submission
-      await submitPreview(document);
+      // documentToPreview is now guaranteed to be the latest saved version
+      await submitPreview(documentToPreview);
     } catch (e) {
       logger.error(e, "Error previewing document");
       alert(

@@ -3,6 +3,7 @@
  * Centralized construction of dispositif payloads for external APIs
  */
 
+import { stripFirstH1 } from "@playground/shared-types";
 import { normalizeMarkdown } from "./markdown/normalizeMarkdown";
 
 export interface DocumentPayloadInput {
@@ -43,15 +44,17 @@ export interface PublishPayload extends DispositifPayload {
  * @param doc - Document data from the editor
  * @returns Structured payload matching Main App webhook expectations
  */
-export function buildDispositifPayload(
+export async function buildDispositifPayload(
   doc: DocumentPayloadInput,
   status = "Actif",
-): DispositifPayload {
+): Promise<DispositifPayload> {
   const themeId = (doc.metadata?.theme as string) || "63286a015d31b2c0cad99615";
 
   // Normalize markdown to ensure unambiguous directive nesting
   // This prevents parsing issues in the Main App when it receives nested directives
-  const normalizedMarkdown = normalizeMarkdown(doc.editorialContent);
+  // We ALSO strip the first H1 heading for the payload (it's passed in metadata)
+  const cleanedMarkdown = await stripFirstH1(doc.editorialContent);
+  const normalizedMarkdown = normalizeMarkdown(cleanedMarkdown);
 
   return {
     dispositif: {
@@ -82,13 +85,13 @@ export function buildDispositifPayload(
  * @param email - Email of the authenticated user
  * @returns Structured payload for publication webhook
  */
-export function buildPublishPayload(
+export async function buildPublishPayload(
   doc: DocumentPayloadInput,
   email: string,
   status = "Actif",
-): PublishPayload {
+): Promise<PublishPayload> {
   // buildDispositifPayload already normalizes the markdown
-  const basePayload = buildDispositifPayload(doc, status);
+  const basePayload = await buildDispositifPayload(doc, status);
   return {
     ...basePayload,
     email,
