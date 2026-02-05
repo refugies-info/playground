@@ -4,6 +4,8 @@ import { logger } from "@playground/shared-types";
 
 import { useState } from "react";
 
+import { triggerDiIngestionAction } from "@/app/actions/di";
+
 export default function WorkflowPage() {
   const [xmlInput, setXmlInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +36,35 @@ export default function WorkflowPage() {
         setStatus("running");
       } else {
         setError(data.error || "Failed to start workflow");
+        setStatus("failed");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setStatus("failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRunDiIngestion = async () => {
+    setIsLoading(true);
+    setError(null);
+    setResults(null);
+    setWorkflowId(null);
+    setStatus(null);
+
+    try {
+      const result = await triggerDiIngestionAction();
+
+      if (result.success && result.workflowId) {
+        setWorkflowId(result.workflowId);
+        setStatus("running");
+        setResults({
+          "Ingestion Type": "Data Inclusion",
+          Status: "Started",
+        });
+      } else {
+        setError(result.error || "Failed to start DI workflow");
         setStatus("failed");
       }
     } catch (err) {
@@ -93,6 +124,18 @@ export default function WorkflowPage() {
               "Ingestion Record ID":
                 fullResult.ingestion.ingestionRecordId || "N/A",
             });
+          } else if (fullResult.structures && fullResult.services) {
+            // Handle DI result structure
+            setResults({
+              "Ingestion Type": "Data Inclusion",
+              "Structures Fetched": String(fullResult.structures.totalFetched),
+              "Services Fetched": String(fullResult.services.totalFetched),
+              "Services Inserted": String(fullResult.services.totalInserted),
+              "Services Updated": String(fullResult.services.totalUpdated),
+              "Audit Reports": fullResult.audit
+                ? `${fullResult.audit.succeeded}/${fullResult.audit.attempted}`
+                : "N/A",
+            });
           } else {
             // Fallback to old format (flat) if no ingestion key
             setResults(fullResult);
@@ -138,7 +181,31 @@ export default function WorkflowPage() {
             <title>Vercel Logo</title>
             <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" />
           </svg>
-          {isLoading ? "En cours..." : "Lancer l'importation"}
+          {isLoading ? "En cours..." : "Lancer l'importation Lhéo"}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleRunDiIngestion}
+          disabled={isLoading}
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-4 h-4"
+          >
+            <title>Refresh Icon</title>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+            />
+          </svg>
+          {isLoading ? "En cours..." : "Lancer l'import DI"}
         </button>
       </div>
 

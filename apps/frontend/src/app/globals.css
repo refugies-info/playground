@@ -135,7 +135,7 @@
       @apply border border-gray-200 rounded-sm content-[''] pointer-events-none absolute inset-0 z-0;
     }
     [data-content-type="toggleListItem"] {
-      @apply text-3xl font-bold;
+      @apply text-xl font-bold;
     }
   }
 }

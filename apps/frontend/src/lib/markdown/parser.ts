@@ -74,10 +74,37 @@ export async function markdownToBlocks(
   markdown: string,
 ): Promise<PartialBlock[]> {
   // Step 1: Strip YAML frontmatter
-  const { content: contentWithoutFrontmatter } = matter(markdown);
+  const { data: frontmatterData, content: contentWithoutFrontmatter } =
+    matter(markdown);
+
+  // Step 1.5: Inject frontmatter content into body for DI records
+  // DI records store the main content in frontmatter.description, not in the body
+  // TODO: find a cleaner way to handle this
+  let enrichedContent = contentWithoutFrontmatter;
+
+  if (
+    frontmatterData.description &&
+    typeof frontmatterData.description === "string"
+  ) {
+    // Insert description after the title (first heading)
+    const lines = enrichedContent.split("\n");
+    const firstHeadingIndex = lines.findIndex((line) => line.startsWith("#"));
+
+    if (firstHeadingIndex !== -1) {
+      // Insert after the heading
+      lines.splice(
+        firstHeadingIndex + 1,
+        0,
+        "",
+        frontmatterData.description,
+        "",
+      );
+      enrichedContent = lines.join("\n");
+    }
+  }
 
   // Step 2: Normalize markdown nesting (explicit fence lengths)
-  const normalizedContent = normalizeMarkdown(contentWithoutFrontmatter);
+  const normalizedContent = normalizeMarkdown(enrichedContent);
 
   const processor = unified()
     .use(remarkParse)

@@ -38,7 +38,6 @@ Info content
 
   it("should handle complex mixed content", async () => {
     const input = `
-# Title
 
 :::toggle{title="Section"}
 * List item
@@ -52,7 +51,6 @@ Warning
     const blocks = await markdownToBlocks(input);
     const serialized = blocksToDirectiveMarkdown(blocks);
 
-    expect(serialized).toContain("# Title");
     expect(serialized).toContain(":::toggle");
     expect(serialized).toContain(":::important");
     expect(serialized).toMatch(/- List item/);

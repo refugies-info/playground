@@ -52,7 +52,7 @@ export const STATE_CONFIG: Record<
   },
   to_process: {
     label: "À traiter",
-    variant: "warning",
+    variant: "info",
   },
   archived: {
     label: "Archivé",

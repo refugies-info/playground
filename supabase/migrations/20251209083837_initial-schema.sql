@@ -63,7 +63,7 @@ alter table "public"."rco_records" enable row level security;
     "id" uuid not null default gen_random_uuid(),
     "created_at" timestamp with time zone not null default now(),
     "updated_at" timestamp with time zone not null default now(),
-    "rco_record_id" uuid not null,
+    "rco_record_id" uuid,
     "ingestion_record_id" uuid,
     "editorial_record_id" uuid,
     "progress" text not null,

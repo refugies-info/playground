@@ -128,9 +128,21 @@ export function blocksToDirectiveMarkdown(blocks: AnyBlock[]): string {
       },
     });
 
+  // Filter out the first H1 heading to prevent title duplication
+  // (Title is managed separately in the document metadata)
+  const mdastNodes = blocksToMdast(blocks);
+  let foundFirstH1 = false;
+  const filteredNodes = mdastNodes.filter((node) => {
+    if (!foundFirstH1 && node.type === "heading" && node.depth === 1) {
+      foundFirstH1 = true;
+      return false; // Skip this node
+    }
+    return true;
+  });
+
   const root: MdastNode = {
     type: "root",
-    children: blocksToMdast(blocks),
+    children: filteredNodes,
   };
 
   // Stringify the AST to Markdown

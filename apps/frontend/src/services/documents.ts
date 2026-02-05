@@ -39,10 +39,6 @@ export interface GetDocumentsParams {
 // Helper type for the joined query result
 type WorkflowWithRelations =
   Database["public"]["Tables"]["workflows"]["Row"] & {
-    rco_records: Pick<
-      Database["public"]["Tables"]["rco_records"]["Row"],
-      "source_raw" | "metadata"
-    >;
     ingestion_records:
       | (Pick<
           Database["public"]["Tables"]["ingestion_records"]["Row"],
@@ -82,6 +78,7 @@ type WorkflowIngestionMetadata = {
   workflow_id: string;
   structure_name: string | null;
   session_start_date: string | null;
+  quality_score: number | null;
 };
 
 export async function getDocuments(params: GetDocumentsParams) {
@@ -108,10 +105,7 @@ export async function getDocuments(params: GetDocumentsParams) {
       status,
       progress,
       updated_at,
-      rco_records!inner (
-        source_raw,
-        metadata
-      ),
+      rco_record_id,
       ingestion_records (
         markdown,
         metadata,
@@ -192,7 +186,7 @@ export async function getDocuments(params: GetDocumentsParams) {
   const workflowIds = rows.map((row) => row.id);
   const { data: ingestionMetadata } = await supabase
     .from("workflow_ingestion_metadata")
-    .select("workflow_id, structure_name, session_start_date")
+    .select("workflow_id, structure_name, session_start_date, quality_score")
     .in("workflow_id", workflowIds);
 
   const ingestionMetadataByWorkflow = new Map(
@@ -204,17 +198,20 @@ export async function getDocuments(params: GetDocumentsParams) {
 
   const documents: Document[] = await Promise.all(
     rows.map(async (item) => {
-      const rcoRecord = item.rco_records;
-      const ingestionRecord = item.ingestion_records;
-      const editorialRecord =
-        item.editorial_records && item.editorial_records.length > 0
-          ? item.editorial_records[0]
-          : null;
+      // Supabase can return arrays or objects for joins
+      const ingestionRecordRaw = item.ingestion_records;
+      const ingestionRecord = Array.isArray(ingestionRecordRaw)
+        ? ingestionRecordRaw[0]
+        : ingestionRecordRaw;
 
-      // Priority: editorial > ingestion > rco
+      const editorialRecordRaw = item.editorial_records;
+      const editorialRecord = Array.isArray(editorialRecordRaw)
+        ? editorialRecordRaw[0]
+        : editorialRecordRaw;
+
+      // Priority: editorial > ingestion
       const metadata = (editorialRecord?.metadata ||
         ingestionRecord?.metadata ||
-        rcoRecord?.metadata ||
         {}) as Metadata;
 
       // Priority: editorial > ingestion > empty
@@ -247,13 +244,13 @@ export async function getDocuments(params: GetDocumentsParams) {
           : undefined;
 
       const ingestionCreatedAt = ingestionRecord?.created_at;
-      const reportCreatedAt = Array.isArray(ingestionRecord?.letta_reports)
-        ? ingestionRecord?.letta_reports[0]?.created_at
-        : ingestionRecord?.letta_reports?.created_at;
+      const letReportsData = ingestionRecord?.letta_reports;
+      const reportCreatedAt = Array.isArray(letReportsData)
+        ? letReportsData[0]?.created_at
+        : letReportsData?.created_at;
       const dateAdded =
         reportCreatedAt || ingestionCreatedAt || item.updated_at;
       const metadataRow = ingestionMetadataByWorkflow.get(item.id);
-      const sourceSystem = item.rco_records ? "RCO" : "DI";
 
       return {
         id: item.id,
@@ -268,7 +265,8 @@ export async function getDocuments(params: GetDocumentsParams) {
         publicationRemoteId: publishedPublication?.remote_id,
         structureName: metadataRow?.structure_name ?? undefined,
         sessionStartDate: metadataRow?.session_start_date ?? undefined,
-        sourceSystem,
+        qualityScore: metadataRow?.quality_score ?? undefined,
+        sourceSystem: item.rco_record_id ? "RCO" : "DI",
       };
     }),
   );
@@ -308,17 +306,11 @@ export async function getDocumentById(id: string): Promise<Document | null> {
 
   // Fetch the related records individually
   const [
-    rcoResult,
     ingestionResult,
     editorialResult,
     publicationResult,
     ingestionMetadataResult,
   ] = await Promise.all([
-    supabase
-      .from("rco_records")
-      .select("source_raw, metadata")
-      .eq("id", workflow.rco_record_id)
-      .single(),
     workflow.ingestion_record_id
       ? supabase
           .from("ingestion_records")
@@ -355,16 +347,28 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       .single(),
     supabase
       .from("workflow_ingestion_metadata")
-      .select("workflow_id, structure_name, session_start_date")
+      .select("workflow_id, structure_name, session_start_date, quality_score")
       .eq("workflow_id", workflow.id)
       .single(),
   ]);
 
-  const rcoRecord = rcoResult.data;
-  const ingestionRecord =
-    ingestionResult.data as IngestionRecordWithReport | null;
-  const editorialRecord = editorialResult.data;
-  const publicationRecord = publicationResult.data;
+  const ingestionRecordRaw = ingestionResult.data;
+  const ingestionRecord = (
+    Array.isArray(ingestionRecordRaw)
+      ? ingestionRecordRaw[0]
+      : ingestionRecordRaw
+  ) as IngestionRecordWithReport | null;
+
+  const editorialRecordRaw = editorialResult.data;
+  const editorialRecord = Array.isArray(editorialRecordRaw)
+    ? editorialRecordRaw[0]
+    : editorialRecordRaw;
+
+  const publicationRecordRaw = publicationResult.data;
+  const publicationRecord = Array.isArray(publicationRecordRaw)
+    ? publicationRecordRaw[0]
+    : publicationRecordRaw;
+
   const ingestionMetadataRow =
     ingestionMetadataResult.data as WorkflowIngestionMetadata | null;
 
@@ -383,15 +387,15 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     }
   }
 
-  if (!rcoRecord) {
-    logger.error(rcoResult.error, "Error fetching rco_record");
+  // RCO Record is optional now (DI flows use Ingestion Record as source)
+  if (!ingestionRecord) {
+    logger.error({ workflowId: id }, "Workflow has no Ingestion record");
     return null;
   }
 
-  // Priority: editorial > ingestion > rco
+  // Priority: editorial > ingestion
   const metadata = (editorialRecord?.metadata ||
     ingestionRecord?.metadata ||
-    rcoRecord?.metadata ||
     {}) as Metadata;
 
   // Current working content: editorial > ingestion > empty
@@ -436,6 +440,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     publicationRemoteId: publicationRecord?.remote_id,
     structureName: ingestionMetadataRow?.structure_name ?? undefined,
     sessionStartDate: ingestionMetadataRow?.session_start_date ?? undefined,
-    sourceSystem: rcoRecord ? "RCO" : "DI",
+    qualityScore: ingestionMetadataRow?.quality_score ?? undefined,
+    sourceSystem: workflow.rco_record_id ? "RCO" : "DI",
   };
 }
