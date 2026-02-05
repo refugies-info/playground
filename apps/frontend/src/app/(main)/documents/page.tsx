@@ -1,52 +1,85 @@
+import type { DocumentSortField } from "@playground/shared-types";
 import { type GetDocumentsParams, getDocuments } from "@/services/documents";
 import { DocumentsList } from "./documents-list";
 
 interface PageProps {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function DocumentsPage(props: PageProps) {
   const searchParams = await props.searchParams;
-  const { status, state, dateFrom, dateTo } = searchParams;
 
-  // Convert searchParams to the expected types for our service
+  const currentPage =
+    typeof searchParams.page === "string"
+      ? Number.parseInt(searchParams.page, 10) || 1
+      : 1;
+
+  const pageSizeRaw =
+    typeof searchParams.pageSize === "string"
+      ? Number.parseInt(searchParams.pageSize, 10) || 50
+      : 50;
+  const pageSize = Math.min(Math.max(pageSizeRaw, 1), 100);
+
+  // Parse and validate sort parameters
+  const sortByParam =
+    typeof searchParams.sortBy === "string" ? searchParams.sortBy : undefined;
+  const validSortFields: DocumentSortField[] = [
+    "date_added",
+    "updated_at",
+    "status",
+    "state",
+    "title",
+  ];
+  const sortBy =
+    sortByParam && validSortFields.includes(sortByParam as DocumentSortField)
+      ? (sortByParam as DocumentSortField)
+      : "date_added";
+
+  const sortOrderParam =
+    typeof searchParams.sortOrder === "string"
+      ? searchParams.sortOrder
+      : undefined;
+  const sortOrder =
+    sortOrderParam === "asc" || sortOrderParam === "desc"
+      ? sortOrderParam
+      : "desc";
+
   const serviceParams: GetDocumentsParams = {
-    page: 1, // Keep page 1 for now as we rely on client-side pagination for the batch
-    pageSize: 50,
-    status: typeof status === "string" ? status : undefined,
-    state: typeof state === "string" ? state : undefined,
-    dateFrom: typeof dateFrom === "string" ? dateFrom : undefined,
-    dateTo: typeof dateTo === "string" ? dateTo : undefined,
+    page: currentPage,
+    pageSize,
+    sortBy,
+    sortOrder,
+    status:
+      typeof searchParams.status === "string" ? searchParams.status : undefined,
+    state:
+      typeof searchParams.state === "string" ? searchParams.state : undefined,
+    dateFrom:
+      typeof searchParams.dateFrom === "string"
+        ? searchParams.dateFrom
+        : undefined,
+    dateTo:
+      typeof searchParams.dateTo === "string" ? searchParams.dateTo : undefined,
   };
 
-  const { data: documents } = await getDocuments(serviceParams);
-  const [{ data: unknownDocuments }, { data: errorDocuments }] =
-    await Promise.all([
-      getDocuments({
-        page: 1,
-        pageSize: 50,
-        status: "unknown",
-      }),
-      getDocuments({
-        page: 1,
-        pageSize: 50,
-        status: "error",
-      }),
-    ]);
-
-  const inProgressDocuments = [...unknownDocuments, ...errorDocuments];
+  const result = await getDocuments(serviceParams);
 
   const initialFilters = {
-    status: typeof status === "string" ? status : "",
-    state: typeof state === "string" ? state : "",
-    dateFrom: typeof dateFrom === "string" ? dateFrom : "",
-    dateTo: typeof dateTo === "string" ? dateTo : "",
+    status: typeof searchParams.status === "string" ? searchParams.status : "",
+    state: typeof searchParams.state === "string" ? searchParams.state : "",
+    dateFrom:
+      typeof searchParams.dateFrom === "string" ? searchParams.dateFrom : "",
+    dateTo: typeof searchParams.dateTo === "string" ? searchParams.dateTo : "",
   };
 
   return (
     <DocumentsList
-      initialDocuments={documents}
-      initialInProgressDocuments={inProgressDocuments}
+      initialDocuments={result.data}
+      totalCount={result.total}
+      currentPage={result.page}
+      totalPages={result.totalPages}
+      pageSize={result.pageSize}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
       initialFilters={initialFilters}
     />
   );

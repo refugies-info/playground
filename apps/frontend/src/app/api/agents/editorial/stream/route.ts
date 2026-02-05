@@ -71,14 +71,44 @@ export async function POST(request: NextRequest) {
     .eq("id", flowId)
     .single();
 
-  if (workflowError || !workflow?.conversation_id) {
-    logger.error(
-      { error: workflowError, flowId },
-      "Workflow not found or missing conversation_id",
-    );
-    return new Response(
-      JSON.stringify({ error: "Workflow or conversation not found" }),
-      { status: 404, headers: { "Content-Type": "application/json" } },
+  if (workflowError || !workflow) {
+    logger.error({ error: workflowError, flowId }, "Workflow not found");
+    return new Response(JSON.stringify({ error: "Workflow not found" }), {
+      status: 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  // Create Letta conversation if missing (for DI workflows created by trigger)
+  let conversationId = workflow.conversation_id;
+  if (!conversationId) {
+    logger.info({ flowId }, "Creating conversation for workflow");
+    const lettaClient = createLettaClient();
+    const conversation = await lettaClient.conversations.create({
+      agent_id: agentId,
+    });
+    conversationId = conversation.id;
+
+    // Link conversation to workflow
+    const { error: convLinkError } = await supabase
+      .from("workflows")
+      .update({ conversation_id: conversationId })
+      .eq("id", flowId);
+
+    if (convLinkError) {
+      logger.error(
+        { error: convLinkError, flowId, conversationId },
+        "Failed to link conversation to workflow",
+      );
+      return new Response(
+        JSON.stringify({ error: "Failed to create conversation" }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    logger.info(
+      { flowId, conversationId },
+      "Created and linked conversation to workflow",
     );
   }
 
@@ -134,7 +164,6 @@ export async function POST(request: NextRequest) {
     fullContent = matter.stringify(content, metadata);
   }
 
-  const conversationId = workflow.conversation_id;
   const encoder = new TextEncoder();
 
   // Track the final assistant response for persistence

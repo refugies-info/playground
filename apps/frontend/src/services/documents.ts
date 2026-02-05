@@ -136,6 +136,10 @@ export async function getDocuments(params: GetDocumentsParams) {
   // Apply filters
   if (status) {
     query = query.eq("status", status);
+  } else {
+    // Exclude documents with status "unknown" or "error" unless explicitly filtered
+    // These are shown in the workflow/import page
+    query = query.not("status", "in", '("unknown","error")');
   }
 
   if (state) {
