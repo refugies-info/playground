@@ -93,6 +93,17 @@ export function getStateVariant(state: string): BadgeVariant {
 }
 
 /**
+ * Helper function to get quality score badge variant
+ */
+export function getQualityScoreVariant(score: number): BadgeVariant {
+  const percentage = Math.round(score * 100);
+  if (percentage >= 80) return "success";
+  if (percentage >= 50) return "warning";
+  if (percentage > 0) return "danger";
+  return "neutral";
+}
+
+/**
  * Get the CSS class for the flag icon
  * Requires 'flag-icons' to be imported
  */

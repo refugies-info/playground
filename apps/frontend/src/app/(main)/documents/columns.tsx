@@ -5,11 +5,21 @@ import { Badge, DataTableColumnHeader } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ExternalLink } from "lucide-react";
 import {
+  getQualityScoreVariant,
   getStateLabel,
   getStateVariant,
   getStatusLabel,
   getStatusVariant,
 } from "@/lib/document-labels";
+
+const QualityScoreCell = ({ score }: { score: number | undefined | null }) => {
+  if (score === undefined || score === null) {
+    return <div className="text-gray-400">—</div>;
+  }
+  const percentage = Math.round(score * 100);
+
+  return <Badge variant={getQualityScoreVariant(score)}>{percentage}%</Badge>;
+};
 
 export const columns: ColumnDef<Document>[] = [
   {
@@ -37,21 +47,9 @@ export const columns: ColumnDef<Document>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Score de qualité DI" />
     ),
-    cell: ({ row }) => {
-      const score = row.getValue("qualityScore") as number | undefined;
-      if (score === undefined || score === null) {
-        return <div className="text-gray-400">—</div>;
-      }
-      const percentage = Math.round(score * 100);
-      let variant: "success" | "warning" | "danger" | "info" | "neutral" =
-        "neutral";
-
-      if (percentage >= 80) variant = "success";
-      else if (percentage >= 50) variant = "warning";
-      else if (percentage > 0) variant = "danger";
-
-      return <Badge variant={variant}>{percentage}%</Badge>;
-    },
+    cell: ({ row }) => (
+      <QualityScoreCell score={row.getValue("qualityScore") as number} />
+    ),
   },
   {
     accessorKey: "title",
@@ -168,21 +166,9 @@ export const inProgressColumns: ColumnDef<Document>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Score de qualité DI" />
     ),
-    cell: ({ row }) => {
-      const score = row.getValue("qualityScore") as number | undefined;
-      if (score === undefined || score === null) {
-        return <div className="text-gray-400">—</div>;
-      }
-      const percentage = Math.round(score * 100);
-      let variant: "success" | "warning" | "danger" | "info" | "neutral" =
-        "neutral";
-
-      if (percentage >= 80) variant = "success";
-      else if (percentage >= 50) variant = "warning";
-      else if (percentage > 0) variant = "danger";
-
-      return <Badge variant={variant}>{percentage}%</Badge>;
-    },
+    cell: ({ row }) => (
+      <QualityScoreCell score={row.getValue("qualityScore") as number} />
+    ),
   },
   {
     accessorKey: "title",
