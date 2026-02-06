@@ -117,3 +117,69 @@ export async function hasH1(markdown: string): Promise<boolean> {
     return /^#\s+.+$/m.test(markdown);
   }
 }
+
+/**
+ * Utility to extract markdown content without YAML frontmatter.
+ * This is useful for displaying raw ingestion records where the content
+ * is in the frontmatter fields (description, conditions_acces, etc.)
+ * but we want to show only the markdown body.
+ */
+export function stripFrontmatter(markdown: string): string {
+  if (!markdown) return "";
+
+  try {
+    const { content } = matter(markdown);
+    return content.trim();
+  } catch (error) {
+    logger.error(error, "Failed to strip frontmatter from markdown");
+    // If parsing fails, return the original markdown
+    return markdown;
+  }
+}
+
+/**
+ * Utility to inject content from frontmatter fields into the markdown body.
+ * This is specifically for DI records where description and conditions_acces
+ * are stored in the frontmatter but need to be displayed in the editor.
+ *
+ * @param markdown - The full markdown with frontmatter
+ * @returns Markdown with content injected into the body
+ */
+export function injectFrontmatterContent(markdown: string): string {
+  if (!markdown) return "";
+
+  try {
+    const { data, content } = matter(markdown);
+
+    // Build the body from frontmatter fields
+    // We prioritize frontmatter content over existing body for DI records
+    // because the body often only contains the title while rich content is in frontmatter
+    let body = "";
+
+    // Add title (H1) from 'nom' field
+    if (data.nom && typeof data.nom === "string") {
+      body += `# ${data.nom}\n\n`;
+    }
+
+    // Add description
+    if (data.description && typeof data.description === "string") {
+      body += `${data.description.trim()}\n\n`;
+    }
+
+    // Add conditions_acces as a section
+    if (data.conditions_acces && typeof data.conditions_acces === "string") {
+      body += `## Conditions d'accès\n\n${data.conditions_acces.trim()}\n\n`;
+    }
+
+    // If we didn't extract anything from frontmatter, fall back to existing body
+    if (!body && content && content.trim()) {
+      return content.trim();
+    }
+
+    return body.trim();
+  } catch (error) {
+    logger.error(error, "Failed to inject frontmatter content");
+    // If parsing fails, return the original markdown
+    return markdown;
+  }
+}

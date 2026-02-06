@@ -9,17 +9,48 @@ import { createClient } from "@/lib/supabase/client";
 export default function PasswordResetPage() {
   const router = useRouter();
   const [isConfirming, setIsConfirming] = useState(false);
+  const [lastResetTime, setLastResetTime] = useState<number>(0);
   const supabase = createClient();
 
+  const RATE_LIMIT_MS = 60000; // 1 minute
+
   useEffect(() => {
-    // Check if we have a recovery token in the hash
-    const hash = window.location.hash;
-    if (hash.includes("access_token") && hash.includes("type=recovery")) {
-      setIsConfirming(true);
-    }
-  }, []);
+    // Check if user has an active session (from PKCE recovery flow)
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session) {
+        setIsConfirming(true);
+      }
+    };
+
+    checkSession();
+
+    // Listen for PASSWORD_RECOVERY event
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsConfirming(true);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase.auth]);
 
   const handleResetPassword = async (email: string) => {
+    // Client-side rate limiting
+    const now = Date.now();
+    if (now - lastResetTime < RATE_LIMIT_MS) {
+      throw new Error(
+        "Veuillez attendre avant de renvoyer un email de réinitialisation",
+      );
+    }
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/password-reset`,
     });
@@ -27,6 +58,9 @@ export default function PasswordResetPage() {
     if (error) {
       throw error;
     }
+
+    // Update last reset time on success
+    setLastResetTime(now);
   };
 
   const handleConfirmPassword = async (password: string) => {
