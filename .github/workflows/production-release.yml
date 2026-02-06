@@ -27,6 +27,14 @@ jobs:
           supabase link --project-ref $SUPABASE_PROJECT_ID
           supabase db push
 
+  seed_data:
+    needs: deploy_migrations
+    runs-on: ubuntu-latest
+    name: Seed Production Data
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
