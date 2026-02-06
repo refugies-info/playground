@@ -3,7 +3,7 @@ import type {
   DocumentSortField,
   Metadata,
 } from "@playground/shared-types";
-import { logger } from "@playground/shared-types";
+import { injectFrontmatterContent, logger } from "@playground/shared-types";
 import type { Database, Json } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
@@ -409,10 +409,17 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     {}) as Metadata;
 
   // Current working content: editorial > ingestion > empty
-  const content = editorialRecord?.markdown || ingestionRecord?.markdown || "";
+  // For DI records without editorial content, inject frontmatter content into body
+  let content = editorialRecord?.markdown || ingestionRecord?.markdown || "";
+  if (!editorialRecord && ingestionRecord?.markdown) {
+    content = injectFrontmatterContent(ingestionRecord.markdown);
+  }
 
   // Immutable ingestion content (always from ingestion_records)
-  const ingestionContent = ingestionRecord?.markdown || "";
+  // Inject content from frontmatter fields (description, conditions_acces) into body
+  const ingestionContent = ingestionRecord?.markdown
+    ? injectFrontmatterContent(ingestionRecord.markdown)
+    : "";
 
   // Title extraction: use the calculated title from our view
   const title = ingestionMetadataRow?.title || "Untitled";
