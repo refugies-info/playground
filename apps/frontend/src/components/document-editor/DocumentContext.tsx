@@ -203,7 +203,6 @@ export function DocumentProvider({
       logger.error(error, "Error saving document");
       return { success: false, error: "Network error" };
     } finally {
-      setIsSaving(true); // Explicitly kept as true if we want to show it's "finalizing" or set to false
       setIsSaving(false);
     }
   };
