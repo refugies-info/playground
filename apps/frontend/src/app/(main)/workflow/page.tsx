@@ -5,6 +5,10 @@ interface PageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
+const DEFAULT_PAGE_SIZE = 20;
+const MIN_PAGE_SIZE = 1;
+const MAX_PAGE_SIZE = 100;
+
 export default async function WorkflowPage(props: PageProps) {
   const searchParams = await props.searchParams;
   const page =
@@ -13,9 +17,12 @@ export default async function WorkflowPage(props: PageProps) {
       : 1;
   const pageSizeRaw =
     typeof searchParams.pageSize === "string"
-      ? Number.parseInt(searchParams.pageSize, 10) || 20
-      : 20;
-  const pageSize = Math.min(Math.max(pageSizeRaw, 1), 100);
+      ? Number.parseInt(searchParams.pageSize, 10) || DEFAULT_PAGE_SIZE
+      : DEFAULT_PAGE_SIZE;
+  const pageSize = Math.min(
+    Math.max(pageSizeRaw, MIN_PAGE_SIZE),
+    MAX_PAGE_SIZE,
+  );
 
   const {
     data: inProgressDocuments,
