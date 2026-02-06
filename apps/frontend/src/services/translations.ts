@@ -27,6 +27,8 @@ export interface GetTranslationsParams {
   pageSize?: number;
   language?: string; // Filter by specific language
   status?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 // Helper type for the joined query result
@@ -57,16 +59,21 @@ function countWords(markdown: string): number {
 }
 
 export async function getTranslations(params: GetTranslationsParams) {
-  const { page = 1, pageSize = 20, language, status } = params;
+  const {
+    page = 1,
+    pageSize = 20,
+    language,
+    status,
+    sortBy = "updated_at",
+    sortOrder = "desc",
+  } = params;
 
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
   // Start query on translation_records
-  let query = supabase
-    .from("translation_records")
-    .select(
-      `
+  let query = supabase.from("translation_records").select(
+    `
       *,
       editorial_records (
         markdown,
@@ -81,9 +88,8 @@ export async function getTranslations(params: GetTranslationsParams) {
         )
       )
     `,
-      { count: "exact" },
-    )
-    .order("updated_at", { ascending: false });
+    { count: "exact" },
+  );
 
   // Apply Filters
   if (language) {
@@ -93,6 +99,17 @@ export async function getTranslations(params: GetTranslationsParams) {
   if (status) {
     query = query.eq("status", status);
   }
+
+  // Sorting
+  // Map frontend sort keys to DB columns if necessary
+  let dbSortColumn = "updated_at";
+  if (sortBy === "language") dbSortColumn = "language";
+  else if (sortBy === "status") dbSortColumn = "status";
+  // We default to updated_at for unknown keys or 'updatedAt'
+
+  // Note: Title sorting is not efficiently supported yet as it depends on metadata/markdown
+
+  query = query.order(dbSortColumn, { ascending: sortOrder === "asc" });
 
   // Pagination
   const startIndex = (page - 1) * pageSize;

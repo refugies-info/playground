@@ -4,6 +4,7 @@ import type { Document, DocumentSortField } from "@playground/shared-types";
 import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AppPaginationControls } from "@/components/common/app-pagination";
 import { STATE_CONFIG } from "@/lib/document-labels";
 import { columns } from "./columns";
 
@@ -177,30 +178,10 @@ export function DocumentsList({
               {totalCount > 1 ? "s" : ""})
             </div>
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const params = new URLSearchParams(window.location.search);
-                  params.set("page", String(currentPage - 1));
-                  router.push(`/documents?${params.toString()}`);
-                }}
-                disabled={currentPage <= 1}
-                className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Précédent
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const params = new URLSearchParams(window.location.search);
-                  params.set("page", String(currentPage + 1));
-                  router.push(`/documents?${params.toString()}`);
-                }}
-                disabled={currentPage >= totalPages}
-                className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Suivant
-              </button>
+              <AppPaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+              />
             </div>
           </div>
         )}

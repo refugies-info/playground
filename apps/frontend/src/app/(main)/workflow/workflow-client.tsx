@@ -5,6 +5,7 @@ import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { triggerDiIngestionAction } from "@/app/actions/di";
+import { AppPaginationControls } from "@/components/common/app-pagination";
 import { inProgressColumns } from "../documents/columns";
 import { DocumentPreviewDrawer } from "./document-preview-drawer";
 
@@ -369,32 +370,10 @@ export function WorkflowClient(props: WorkflowClientProps) {
               <span className="text-sm text-gray-700 mr-2">
                 Page {currentPage} sur {totalPages}
               </span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const params = new URLSearchParams(window.location.search);
-                    params.set("page", String(currentPage - 1));
-                    router.push(`/workflow?${params.toString()}`);
-                  }}
-                  disabled={currentPage <= 1}
-                  className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                >
-                  Précédent
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const params = new URLSearchParams(window.location.search);
-                    params.set("page", String(currentPage + 1));
-                    router.push(`/workflow?${params.toString()}`);
-                  }}
-                  disabled={currentPage >= totalPages}
-                  className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                >
-                  Suivant
-                </button>
-              </div>
+              <AppPaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+              />
             </div>
           )}
         </div>
@@ -410,36 +389,10 @@ export function WorkflowClient(props: WorkflowClientProps) {
 
             {totalPages > 1 && (
               <div className="flex items-center justify-end px-2 py-4">
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const params = new URLSearchParams(
-                        window.location.search,
-                      );
-                      params.set("page", String(currentPage - 1));
-                      router.push(`/workflow?${params.toString()}`);
-                    }}
-                    disabled={currentPage <= 1}
-                    className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                  >
-                    Précédent
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const params = new URLSearchParams(
-                        window.location.search,
-                      );
-                      params.set("page", String(currentPage + 1));
-                      router.push(`/workflow?${params.toString()}`);
-                    }}
-                    disabled={currentPage >= totalPages}
-                    className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                  >
-                    Suivant
-                  </button>
-                </div>
+                <AppPaginationControls
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                />
               </div>
             )}
           </>
