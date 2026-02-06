@@ -123,7 +123,7 @@ async function main() {
         version: sample.version,
         di_service_id: sample.di_service_id,
         di_structure_id: sample.di_structure_id,
-        markdownPreview: `${sample.markdown?.substring(0, 200)}...`,
+        markdownPreview: `${sample.markdown?.substring(0, 200) ?? ""}...`,
       },
       "Sample ingestion record",
     );
