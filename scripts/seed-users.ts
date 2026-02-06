@@ -44,9 +44,15 @@ const users: SeedUser[] = [
   // Admins / Developers
   { email: "luis@refugies.info", password: finalPassword, role: "admin" },
   { email: "jeremie@refugies.info", password: finalPassword, role: "admin" },
+  { email: "julie@refugies.info", password: finalPassword, role: "admin" },
+  { email: "nour@refugies.info", password: finalPassword, role: "admin" },
+  { email: "margot@refugies.info", password: finalPassword, role: "admin" },
 
   // Editors
   { email: "editor@refugies.info", password: finalPassword, role: "editor" },
+  { email: "alice@refugies.info", password: finalPassword, role: "editor" },
+  { email: "claudia@refugies.info", password: finalPassword, role: "editor" },
+  { email: "xavier@refugies.info", password: finalPassword, role: "editor" },
 
   // Translators (Generated from shared constants)
   ...LANGUAGES.map(

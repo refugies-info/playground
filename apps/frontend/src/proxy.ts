@@ -36,6 +36,14 @@ export async function proxy(request: NextRequest) {
       }
       return NextResponse.redirect(new URL("/documents", request.url));
     } else {
+      // Allow PKCE flow (password recovery, email confirmation, etc.)
+      const code = request.nextUrl.searchParams.get("code");
+      if (code) {
+        // Redirect to callback to exchange the code
+        return NextResponse.redirect(
+          new URL(`/auth/callback?code=${code}`, request.url),
+        );
+      }
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
