@@ -1,8 +1,8 @@
 import matter from "gray-matter";
 import type { Heading, Root } from "mdast";
+import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
-import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 import { logger } from "../logger";
 
@@ -67,7 +67,7 @@ export async function stripFirstH1(markdown: string): Promise<string> {
     const processor = unified()
       .use(remarkParse)
       .use(remarkGfm)
-      .use(remarkStringify);
+      .use(remarkDirective);
 
     const tree = processor.parse(content) as Root;
 
@@ -77,19 +77,23 @@ export async function stripFirstH1(markdown: string): Promise<string> {
     );
 
     if (h1Index !== -1) {
-      tree.children.splice(h1Index, 1);
+      const h1Node = tree.children[h1Index];
+      // Get position of H1
+      if (h1Node.position) {
+        const startLine = h1Node.position.start.line - 1; // 0-indexed
+        const endLine = h1Node.position.end.line - 1; // 0-indexed
+
+        const lines = content.split("\n");
+        // Remove lines occupied by H1
+        lines.splice(startLine, endLine - startLine + 1);
+        return lines.join("\n").trim();
+      }
     }
 
-    // Stringify back to markdown
-    const strippedContent = processor.stringify(tree);
-
-    // If there was frontmatter, re-attach it (though usually it's stripped for delivery)
-    // For our current use case (RCO payload), we usually don't want frontmatter in the body either
-    // as it's passed separately in metadata.
-    return strippedContent.trim();
+    return markdown.trim();
   } catch (error) {
     logger.error(error, "Failed to strip H1 from markdown");
-    // Fallback to regex if AST fails for some reason
+    // Fallback solely to regex if AST fails
     return markdown.replace(/^#\s+.+$\n?/m, "").trim();
   }
 }
@@ -111,59 +115,5 @@ export async function hasH1(markdown: string): Promise<boolean> {
     logger.error(error, "Failed to parse markdown to check for H1");
     // Fallback to regex if AST fails
     return /^#\s+.+$/m.test(markdown);
-  }
-}
-
-/**
- * Utility to ensure a markdown string has an H1 heading and optionally inject content after it.
- * Uses AST transformation for robustness.
- */
-export async function ensureH1AndInjectAfter(
-  content: string,
-  options: { title?: string; injectContent?: string },
-): Promise<string> {
-  if (!content && !options.title && !options.injectContent) return "";
-
-  try {
-    const processor = unified()
-      .use(remarkParse)
-      .use(remarkGfm)
-      .use(remarkStringify);
-
-    const tree = processor.parse(content) as Root;
-
-    // 1. Find H1 heading
-    let h1Index = tree.children.findIndex(
-      (node) => node.type === "heading" && (node as Heading).depth === 1,
-    );
-
-    // 2. Add H1 if missing and title provided
-    if (h1Index === -1 && options.title) {
-      const h1Node: Heading = {
-        type: "heading",
-        depth: 1,
-        children: [{ type: "text", value: options.title }],
-      };
-      tree.children.unshift(h1Node);
-      h1Index = 0;
-    }
-
-    // 3. Inject content after H1 (or at start if no H1 and no title to add)
-    if (options.injectContent) {
-      // Parse the content to inject to get nodes
-      const injectTree = processor.parse(options.injectContent) as Root;
-      const injectNodes = injectTree.children;
-
-      if (h1Index !== -1) {
-        tree.children.splice(h1Index + 1, 0, ...injectNodes);
-      } else {
-        tree.children.unshift(...injectNodes);
-      }
-    }
-
-    return processor.stringify(tree).trim();
-  } catch (error) {
-    logger.error(error, "Failed to enrich markdown with AST");
-    return content;
   }
 }

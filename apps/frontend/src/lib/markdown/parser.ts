@@ -36,11 +36,7 @@ import type {
   InlineContent as BNInlineContentGeneric,
   PartialBlock,
 } from "@blocknote/core";
-import {
-  ensureH1AndInjectAfter,
-  extractTitleFromMetadata,
-  type Metadata,
-} from "@playground/shared-types";
+
 import matter from "gray-matter";
 import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
@@ -79,29 +75,13 @@ export async function markdownToBlocks(
   markdown: string,
 ): Promise<PartialBlock[]> {
   // Step 1: Strip YAML frontmatter
-  const { data: frontmatterData, content: contentWithoutFrontmatter } =
-    matter(markdown);
+  const { content: contentWithoutFrontmatter } = matter(markdown);
 
   // Step 1.5: Inject frontmatter content into body for DI records
   // DI records store the main content in frontmatter.description, not in the body
   // We use a robust AST-based utility to handle H1 injection and content placement.
-  const title =
-    extractTitleFromMetadata(frontmatterData as Metadata) || undefined;
-  const description =
-    typeof frontmatterData.description === "string"
-      ? (frontmatterData.description as string)
-      : undefined;
-
-  const content = await ensureH1AndInjectAfter(
-    contentWithoutFrontmatter.trim(),
-    {
-      title,
-      injectContent: description,
-    },
-  );
-
   // Step 2: Normalize markdown nesting (explicit fence lengths)
-  const normalizedContent = normalizeMarkdown(content);
+  const normalizedContent = normalizeMarkdown(contentWithoutFrontmatter.trim());
 
   const processor = unified()
     .use(remarkParse)

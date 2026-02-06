@@ -25,7 +25,7 @@ We use a **centralized approach**: all title manipulation logic resides in a sin
 
 The lifecycle of a title follows these major steps:
 
-1.  **Ingestion/Creation**: We ensure the raw content has an H1 so the editor can display it properly.
+1.  **Ingestion/Creation**: We parse the raw content directly (assuming providing AI/System ensures H1 presence).
 2.  **Modification (Editor)**: The user visually modifies the H1.
 3.  **Save**: We extract the H1 from the content to update the database metadata.
 4.  **Publication**: We strip the H1 from the Markdown content sent to the API, as the API expects the title in a separate field (to avoid duplication).
@@ -35,8 +35,7 @@ The lifecycle of a title follows these major steps:
 ```mermaid
 graph TD
     subgraph Creation [1. Creation / Ingestion]
-        Raw[DI Flow / Raw Data] -->|Title + Description| EnsureUtil[ensureH1AndInjectAfter]
-        EnsureUtil -->|Enriched Markdown| Editor[BlockNote Editor]
+        Raw[DI Flow / Raw Data] -->|Markdown| Editor[BlockNote Editor]
     end
 
     subgraph Edition [2. Edition & Save]
@@ -53,7 +52,6 @@ graph TD
         Payload -->|Webhook| MainApp[Refugies.info Main App]
     end
 
-    style EnsureUtil fill:#e1f5fe,stroke:#01579b
     style ExtractUtil fill:#e1f5fe,stroke:#01579b
     style StripUtil fill:#e1f5fe,stroke:#01579b
 ```
@@ -66,7 +64,7 @@ Location: `packages/shared/src/lib/markdown.ts`
 
 | Utility | Role | Main Usage |
 | :--- | :--- | :--- |
-| **`ensureH1AndInjectAfter`** | **Preparation**. Checks if an H1 exists. If not, creates one via metadata. Can also inject a description after the title. | Preparing content for the Editor during DI import. |
+
 | **`extractTitleFromMarkdown`** | **Synchronization**. Reads Markdown, finds the first H1 (or frontmatter), and returns clean text. | Updating the title in the database on every save. |
 | **`stripFirstH1`** | **Cleanup**. Physically removes the first H1 node from the Markdown file. | Building the JSON payload for the Refugies.info API (which adds the title itself). |
 | **`hasH1`** | **Validation**. Returns `true` if an H1 exists. | Checking before save that the user hasn't deleted the title. |
