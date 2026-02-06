@@ -3,39 +3,79 @@
 import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AppPaginationControls } from "@/components/common/app-pagination";
 import type { TranslationItem } from "@/services/translations";
 import { columns } from "./columns";
+
+const LANGUAGES = [
+  { value: "en", label: "Anglais" },
+  { value: "uk", label: "Ukrainien" },
+  { value: "ar", label: "Arabe" },
+  { value: "ps", label: "Pachto" },
+  { value: "fa", label: "Persan" },
+  { value: "ru", label: "Russe" },
+  { value: "ti", label: "Tigrinya" },
+];
 
 interface TranslationsListProps {
   initialTranslations: TranslationItem[];
   initialFilters: {
     status: string;
+    language: string;
   };
   title: string;
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  pageSize: number;
+  showLanguageFilter: boolean;
+  initialSorting: {
+    sortBy: string;
+    sortOrder: "asc" | "desc";
+  };
 }
 
 export function TranslationsList({
   initialTranslations,
   initialFilters,
   title,
+  currentPage,
+  totalPages,
+  totalCount,
+  pageSize,
+  showLanguageFilter,
+  initialSorting,
 }: TranslationsListProps) {
   const router = useRouter();
   const [filters, setFilters] = useState(initialFilters);
 
   const updateFilters = (newFilters: typeof filters) => {
     setFilters(newFilters);
-    const params = new URLSearchParams();
-    // Default pagination
+    const params = new URLSearchParams(window.location.search);
+    // Reset to page 1 on filter change
     params.set("page", "1");
-    params.set("pageSize", "50");
 
     if (newFilters.status) params.set("status", newFilters.status);
+    else params.delete("status");
+
+    if (newFilters.language && showLanguageFilter) {
+      params.set("language", newFilters.language);
+    } else {
+      params.delete("language");
+    }
 
     router.push(`/translations?${params.toString()}`);
   };
 
+  const handleSortChange = (sortBy: string, sortOrder: "asc" | "desc") => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("sortBy", sortBy);
+    params.set("sortOrder", sortOrder);
+    router.push(`/translations?${params.toString()}`);
+  };
+
   const clearFilters = () => {
-    setFilters({ status: "" });
+    setFilters({ status: "", language: "" });
     router.push("/translations");
   };
 
@@ -63,8 +103,26 @@ export function TranslationsList({
                   <option value="published">Publié</option>
                 </select>
               </div>
+              {showLanguageFilter && (
+                <div>
+                  <select
+                    value={filters.language}
+                    onChange={(e) =>
+                      updateFilters({ ...filters, language: e.target.value })
+                    }
+                    className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
+                  >
+                    <option value="">Langue</option>
+                    {LANGUAGES.map((lang) => (
+                      <option key={lang.value} value={lang.value}>
+                        {lang.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
-            {filters.status && (
+            {(filters.status || (showLanguageFilter && filters.language)) && (
               <button
                 type="button"
                 onClick={clearFilters}
@@ -75,7 +133,31 @@ export function TranslationsList({
             )}
           </div>
         </div>
-        <DataTable columns={columns} data={initialTranslations} pageSize={50} />
+        <DataTable
+          columns={columns}
+          data={initialTranslations}
+          pageSize={pageSize}
+          manualPagination
+          manualSorting
+          sortBy={initialSorting.sortBy}
+          sortOrder={initialSorting.sortOrder}
+          onSortChange={handleSortChange}
+        />
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-2 py-4">
+            <div className="text-sm text-gray-700">
+              Page {currentPage} sur {totalPages} ({totalCount} traduction
+              {totalCount > 1 ? "s" : ""})
+            </div>
+            <div className="flex gap-2">
+              <AppPaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

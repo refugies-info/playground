@@ -61,6 +61,7 @@ export function generateMockDocuments(count: number = 50): Document[] {
     date_added: new Date("2025-11-25").toISOString(),
     status: "compliant",
     state: "published",
+    sourceSystem: "RCO",
     content: `# Actions socio-linguistiques complémentaires du CIR (ASL) - Langu'Action - métiers en tension
 
 Date de mise à jour : 25/11/2025 | Identifiant OffreInfo : 14_AF_0000214846
@@ -269,6 +270,7 @@ Contactez-nous pour plus d'informations et pour vous inscrire.
       date_added: date.toISOString(),
       status: STATUSES[rng.randomInt(0, STATUSES.length)],
       state: STATES[rng.randomInt(0, STATES.length)],
+      sourceSystem: (rng.random() > 0.5 ? "RCO" : "DI") as "RCO" | "DI",
       content,
       metadata: {
         location,
@@ -284,6 +286,7 @@ Contactez-nous pour plus d'informations et pour vous inscrire.
   });
 
   // Cache the generated documents with ASL document first
-  cachedDocuments = [aslDocument, ...documents];
-  return cachedDocuments;
+  const result: Document[] = [aslDocument, ...documents];
+  cachedDocuments = result;
+  return result;
 }

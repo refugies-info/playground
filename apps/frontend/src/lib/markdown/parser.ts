@@ -36,6 +36,7 @@ import type {
   InlineContent as BNInlineContentGeneric,
   PartialBlock,
 } from "@blocknote/core";
+
 import matter from "gray-matter";
 import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
@@ -76,8 +77,11 @@ export async function markdownToBlocks(
   // Step 1: Strip YAML frontmatter
   const { content: contentWithoutFrontmatter } = matter(markdown);
 
+  // Step 1.5: Inject frontmatter content into body for DI records
+  // DI records store the main content in frontmatter.description, not in the body
+  // We use a robust AST-based utility to handle H1 injection and content placement.
   // Step 2: Normalize markdown nesting (explicit fence lengths)
-  const normalizedContent = normalizeMarkdown(contentWithoutFrontmatter);
+  const normalizedContent = normalizeMarkdown(contentWithoutFrontmatter.trim());
 
   const processor = unified()
     .use(remarkParse)

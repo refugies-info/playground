@@ -52,7 +52,7 @@ export const STATE_CONFIG: Record<
   },
   to_process: {
     label: "À traiter",
-    variant: "warning",
+    variant: "info",
   },
   archived: {
     label: "Archivé",
@@ -90,6 +90,17 @@ export function getStateLabel(state: string): string {
  */
 export function getStateVariant(state: string): BadgeVariant {
   return STATE_CONFIG[state as DocumentState]?.variant || "neutral";
+}
+
+/**
+ * Helper function to get quality score badge variant
+ */
+export function getQualityScoreVariant(score: number): BadgeVariant {
+  const percentage = Math.round(score * 100);
+  if (percentage >= 80) return "success";
+  if (percentage >= 50) return "warning";
+  if (percentage > 0) return "danger";
+  return "neutral";
 }
 
 /**

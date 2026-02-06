@@ -81,7 +81,7 @@ export async function publishDocumentStep(
     const existingRemoteId = existingPublication?.remote_id;
 
     // Use adapter to build payload
-    const webhookPayload = adapter.buildPayload({
+    const webhookPayload = await adapter.buildPayload({
       title,
       markdown,
       metadata: metadata || {},

@@ -128,9 +128,10 @@ export function blocksToDirectiveMarkdown(blocks: AnyBlock[]): string {
       },
     });
 
+  const mdastNodes = blocksToMdast(blocks);
   const root: MdastNode = {
     type: "root",
-    children: blocksToMdast(blocks),
+    children: mdastNodes,
   };
 
   // Stringify the AST to Markdown

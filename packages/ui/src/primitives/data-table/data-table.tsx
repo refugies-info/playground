@@ -29,6 +29,11 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   pageSize?: number;
   onRowClick?: (row: TData) => void;
+  manualPagination?: boolean;
+  manualSorting?: boolean;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  onSortChange?: (sortBy: string, sortOrder: "asc" | "desc") => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -36,8 +41,15 @@ export function DataTable<TData, TValue>({
   data,
   pageSize = 10,
   onRowClick,
+  manualPagination = false,
+  manualSorting = false,
+  sortBy,
+  sortOrder,
+  onSortChange,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>(
+    sortBy && sortOrder ? [{ id: sortBy, desc: sortOrder === "desc" }] : [],
+  );
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
@@ -48,10 +60,22 @@ export function DataTable<TData, TValue>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: manualPagination
+      ? undefined
+      : getPaginationRowModel(),
+    getSortedRowModel: manualSorting ? undefined : getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onSortingChange: setSorting,
+    onSortingChange: manualSorting
+      ? (updater) => {
+          const newSorting =
+            typeof updater === "function" ? updater(sorting) : updater;
+          setSorting(newSorting);
+          if (onSortChange && newSorting.length > 0) {
+            const sort = newSorting[0];
+            onSortChange(sort.id, sort.desc ? "desc" : "asc");
+          }
+        }
+      : setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     state: {
@@ -64,6 +88,8 @@ export function DataTable<TData, TValue>({
         pageSize,
       },
     },
+    manualPagination,
+    manualSorting,
   });
 
   return (
@@ -149,9 +175,11 @@ export function DataTable<TData, TValue>({
           )}
         </TableBody>
       </Table>
-      <div className="py-4">
-        <DataTablePagination table={table} />
-      </div>
+      {!manualPagination && (
+        <div className="py-4">
+          <DataTablePagination table={table} />
+        </div>
+      )}
     </div>
   );
 }

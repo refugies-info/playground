@@ -90,7 +90,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
           setIsWaitingForLink(false);
           clearInterval(interval);
         }
-      } catch (error) {
+      } catch (_error) {
         if (!isMounted) return;
         setPublishOverlayError(
           "Impossible de récupérer le lien de publication.",

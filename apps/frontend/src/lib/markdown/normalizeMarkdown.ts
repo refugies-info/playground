@@ -167,9 +167,11 @@ export function normalizeMarkdown(markdown: string): string {
     if (endMatch) {
       const [_, indent] = endMatch;
       if (stack.length > 0) {
-        const len = stack.pop()!;
-        const newFence = ":".repeat(len);
-        rewrites.push(`${indent}${newFence}`);
+        const len = stack.pop();
+        if (len !== undefined) {
+          const newFence = ":".repeat(len);
+          rewrites.push(`${indent}${newFence}`);
+        }
       } else {
         // Unbalanced fence.
         // We leave it as is. It acts as text or broken fence.

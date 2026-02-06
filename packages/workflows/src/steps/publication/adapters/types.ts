@@ -50,7 +50,7 @@ export interface PublisherAdapter {
     userEmail: string;
     status?: string;
     existingRemoteId?: string;
-  }): WebhookPayload;
+  }): WebhookPayload | Promise<WebhookPayload>;
 
   /**
    * Generates the public URL for a published document.

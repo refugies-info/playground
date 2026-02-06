@@ -1,15 +1,21 @@
 "use client";
 
-import type { Document } from "@playground/shared-types";
+import type { Document, DocumentSortField } from "@playground/shared-types";
 import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AppPaginationControls } from "@/components/common/app-pagination";
 import { STATE_CONFIG } from "@/lib/document-labels";
-import { columns, inProgressColumns } from "./columns";
+import { columns } from "./columns";
 
 interface DocumentsListProps {
   initialDocuments: Document[];
-  initialInProgressDocuments: Document[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  sortBy: DocumentSortField;
+  sortOrder: "asc" | "desc";
   initialFilters: {
     status: string;
     state: string;
@@ -20,7 +26,12 @@ interface DocumentsListProps {
 
 export function DocumentsList({
   initialDocuments,
-  initialInProgressDocuments,
+  totalCount,
+  currentPage,
+  totalPages,
+  pageSize,
+  sortBy,
+  sortOrder,
   initialFilters,
 }: DocumentsListProps) {
   const router = useRouter();
@@ -31,9 +42,8 @@ export function DocumentsList({
   const updateFilters = (newFilters: typeof filters) => {
     setFilters(newFilters);
     const params = new URLSearchParams();
-    // We keep page size consistent
+    // Reset to page 1 when filters change
     params.set("page", "1");
-    params.set("pageSize", "50");
 
     Object.entries(newFilters).forEach(([key, value]) => {
       if (value) params.set(key, value);
@@ -51,11 +61,6 @@ export function DocumentsList({
     setFilters(emptyFilters);
     router.push("/documents");
   };
-
-  const inProgressDocuments = initialInProgressDocuments;
-  const readyDocuments = initialDocuments.filter(
-    (document) => document.status !== "unknown" && document.status !== "error",
-  );
 
   return (
     <div className="w-full h-full p-8 bg-gray-50 min-h-screen">
@@ -148,22 +153,36 @@ export function DocumentsList({
         </div>
         <DataTable
           columns={columns}
-          data={readyDocuments}
-          pageSize={50}
+          data={initialDocuments}
+          pageSize={pageSize}
           onRowClick={(row) => router.push(`/documents/${row.id}`)}
+          manualPagination
+          manualSorting
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={(newSortBy, newSortOrder) => {
+            const params = new URLSearchParams(window.location.search);
+            params.set("sortBy", newSortBy);
+            params.set("sortOrder", newSortOrder);
+            // Reset to page 1 when sorting changes
+            params.set("page", "1");
+            router.push(`/documents?${params.toString()}`);
+          }}
         />
 
-        {inProgressDocuments.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">
-              Fiches en cours de traitement
-            </h2>
-            <DataTable
-              columns={inProgressColumns}
-              data={inProgressDocuments}
-              pageSize={50}
-              onRowClick={(row) => router.push(`/documents/${row.id}`)}
-            />
+        {/* Custom server-side pagination controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-2 py-4">
+            <div className="text-sm text-gray-700">
+              Page {currentPage} sur {totalPages} ({totalCount} document
+              {totalCount > 1 ? "s" : ""})
+            </div>
+            <div className="flex gap-2">
+              <AppPaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+              />
+            </div>
           </div>
         )}
       </div>

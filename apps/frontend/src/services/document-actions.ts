@@ -24,7 +24,12 @@ import { normalizeMarkdown } from "../lib/markdown/normalizeMarkdown";
 export async function saveDocument(
   workflowId: string,
   markdown: string,
-): Promise<{ success: boolean; workflowRunId?: string; error?: string }> {
+): Promise<{
+  success: boolean;
+  workflowRunId?: string;
+  error?: string;
+  metadata?: Record<string, unknown>;
+}> {
   try {
     if (!saveWorkflow) {
       logger.error("saveWorkflow is undefined - cannot start workflow");
@@ -40,6 +45,10 @@ export async function saveDocument(
       { workflowRunId: result.runId, workflowId },
       "Save workflow started",
     );
+
+    // Note: Since this is an async workflow, the metadata returned by 'start'
+    // is NOT the final metadata from the saved record (which happens later).
+    // The UI handles its own state synchronization (e.g. in DocumentContext).
 
     return {
       success: true,

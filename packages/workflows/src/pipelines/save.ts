@@ -7,6 +7,7 @@ export interface SaveWorkflowResult {
   editorialRecordId: string;
   isNew: boolean;
   progressUpdated: boolean;
+  metadata: Record<string, unknown>;
 }
 
 /**
@@ -37,5 +38,6 @@ export async function saveWorkflow(
     editorialRecordId: saveResult.data.editorialRecordId,
     isNew: saveResult.data.isNew,
     progressUpdated: saveResult.data.progressUpdated,
+    metadata: saveResult.data.metadata,
   };
 }

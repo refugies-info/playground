@@ -26,6 +26,10 @@
     "./overlays": {
       "import": "./dist/overlays/index.js",
       "types": "./dist/overlays/index.d.ts"
+    },
+    "./composites": {
+      "import": "./dist/composites/index.js",
+      "types": "./dist/composites/index.d.ts"
     }
   },
   "scripts": {

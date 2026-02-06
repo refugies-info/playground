@@ -22,7 +22,8 @@ export interface Document {
   publicationRemoteId?: string;
   structureName?: string;
   sessionStartDate?: string;
-  sourceSystem?: string;
+  qualityScore?: number | null;
+  sourceSystem: "RCO" | "DI";
 }
 
 export interface ContentItem {
