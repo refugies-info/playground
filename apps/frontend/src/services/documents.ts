@@ -140,8 +140,9 @@ export async function getDocuments(params: GetDocumentsParams) {
       query = query.eq("status", status);
     }
   } else {
-    // Exclude documents with status "unknown" or "error" unless explicitly filtered
-    // These are shown in the workflow/import page
+    // By default, exclude documents that are still being processed or have failed,
+    // as they are handled on the "Workflow / Import" page.
+    // They can be fetched explicitly by providing a status filter.
     query = query.not("status", "in", '("unknown","error")');
   }
 
