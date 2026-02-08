@@ -1,6 +1,30 @@
 import { logger } from "@playground/shared-types";
 import type { Database, Json } from "@playground/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { z } from "zod";
+import type { Page } from "../types";
+import {
+  computeContentHash,
+  DEFAULT_BATCH_SIZE,
+  DEFAULT_PAGE_SIZE,
+  type DiIngestionOptions,
+  SOURCE_CARIF_OREF,
+} from "./shared";
+
+/**
+ * Zod schema for Page structure
+ */
+const PageSchema = z.object({
+  items: z.array(z.unknown()),
+  total: z.number(),
+  pages: z.number(),
+});
+
+/**
+ * Generic fetch function for DI API
+
+import type { Database, Json } from "@playground/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Page } from "../types";
 import {
   computeContentHash,
@@ -40,19 +64,6 @@ interface ExistingRecord {
   di_id: string;
   content_hash: string | null;
   version: number;
-}
-
-/**
- * Type guard for Page<T>
- */
-function isPage<T>(data: unknown): data is Page<T> {
-  if (!data || typeof data !== "object") return false;
-  const page = data as Record<string, unknown>;
-  return (
-    Array.isArray(page.items) &&
-    typeof page.total === "number" &&
-    typeof page.pages === "number"
-  );
 }
 
 /**
@@ -101,13 +112,14 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
         ...extraQueryParams,
       });
 
-      if (!isPage<T>(data)) {
+      const parsed = PageSchema.safeParse(data);
+      if (!parsed.success) {
         logger.error(
-          { page: currentPage, data },
+          { page: currentPage, error: parsed.error.format() },
           `Invalid API response structure for ${itemType}`,
         );
         throw new Error(
-          `Invalid API response for ${itemType} page ${currentPage}: missing items, total or pages`,
+          `Invalid API response for ${itemType} page ${currentPage}: ${parsed.error.message}`,
         );
       }
 

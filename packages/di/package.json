@@ -11,7 +11,8 @@
     "@playground/shared-types": "workspace:*",
     "@playground/supabase": "workspace:*",
     "json-stable-stringify": "^1.3.0",
-    "yaml": "^2.8.1"
+    "yaml": "^2.8.1",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
