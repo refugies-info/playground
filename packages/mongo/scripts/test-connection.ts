@@ -1,9 +1,7 @@
 /** biome-ignore-all lint/suspicious/noConsole: Fine for test scripts */
 
-import dotenv from "dotenv";
+import "dotenv/config";
 import { getDispositifs } from "../src";
-
-dotenv.config();
 
 // Mock process.env.MONGODB_URI if not present for testing purposes,
 // or rely on the user having it.

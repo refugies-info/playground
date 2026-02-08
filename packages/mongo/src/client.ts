@@ -1,7 +1,5 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import { type Db, MongoClient } from "mongodb";
-
-dotenv.config();
 
 let clientPromise: Promise<MongoClient> | null = null;
 
@@ -10,7 +8,7 @@ export const getMongoDb = async (): Promise<Db> => {
 
   if (!uri) {
     throw new Error(
-      "Please define the MONGODB_URI environment variable inside .env",
+      "Please define the MONGODB_URI environment variable in the root .env file",
     );
   }
 

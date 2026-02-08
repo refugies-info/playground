@@ -11,15 +11,12 @@
  *   pnpm di:extract --count 50 --out samples  # Extract 50 random records to samples/
  */
 
+import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
 import { program } from "commander";
-import dotenv from "dotenv";
-
-// Load environment variables
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 // Configure CLI
 program

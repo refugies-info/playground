@@ -1,12 +1,7 @@
+import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
 import { logger } from "@playground/shared-types";
-import dotenv from "dotenv";
-
-// Load env vars from root
-const envPath = path.resolve(__dirname, "../.env");
-logger.info({ envPath, exists: fs.existsSync(envPath) }, "Loading .env");
-dotenv.config({ path: envPath });
 
 /**
  * Seed ingestion by calling the workflow API endpoint.

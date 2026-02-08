@@ -1,11 +1,7 @@
 import crypto from "node:crypto";
-import path from "node:path";
+import "dotenv/config";
 import { LANGUAGES, logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
-import dotenv from "dotenv";
-
-// Load environment variables from .env
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 const supabaseUrl =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
