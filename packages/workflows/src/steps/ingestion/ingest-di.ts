@@ -7,9 +7,8 @@ import {
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin, type Json } from "@playground/supabase";
 import {
-  ingestCarifOrefItems,
-  listServicesEndpointApiV1ServicesGet,
-  listStructuresEndpointApiV1StructuresGet,
+  ingestCarifOrefServices,
+  ingestCarifOrefStructures,
   processIngestionRecords,
 } from "@refugies-info/di";
 
@@ -281,12 +280,8 @@ export async function ingestStructuresStep() {
   "use step";
   const supabase = getSupabaseClient();
   logger.info("Starting DI Structures Ingestion Step...");
-  const result = await ingestCarifOrefItems(
-    supabase,
-    listStructuresEndpointApiV1StructuresGet,
-    "di_structures",
-    "structures",
-  );
+  logger.info("Starting DI Structures Ingestion Step...");
+  const result = await ingestCarifOrefStructures(supabase);
   logger.info({ result }, "DI Structures Ingestion Step Completed");
   return result;
 }
@@ -295,12 +290,8 @@ export async function ingestServicesStep() {
   "use step";
   const supabase = getSupabaseClient();
   logger.info("Starting DI Services Ingestion Step...");
-  const result = await ingestCarifOrefItems(
-    supabase,
-    listServicesEndpointApiV1ServicesGet,
-    "di_services",
-    "services",
-  );
+  logger.info("Starting DI Services Ingestion Step...");
+  const result = await ingestCarifOrefServices(supabase);
   logger.info({ result }, "DI Services Ingestion Step Completed");
   return result;
 }

@@ -1,7 +1,7 @@
 import { logger } from "@playground/shared-types";
 import type { Database, Json } from "@playground/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { DiApiResponseSchema } from "./schemas";
+import type { Page } from "../types";
 import {
   computeContentHash,
   DEFAULT_BATCH_SIZE,
@@ -29,15 +29,6 @@ export interface DiIngestionResult {
 }
 
 /**
- * Generic page type for DI API responses
- */
-export interface DiPage<T> {
-  items: T[];
-  total: number;
-  pages: number;
-}
-
-/**
  * Generic DI item type
  */
 export type DiItem = { id: string; nom: string; source: string };
@@ -57,17 +48,18 @@ interface ExistingRecord {
  * Filters by source = "carif-oref"
  * Stops when limit is reached (if specified)
  *
- * @param endpointFn - The API endpoint function to call
+ * @param fetchFn - The API client function to call
  * @param itemType - The type of item being fetched (for logging)
  * @param options - Ingestion options (pageSize, limit, onProgress callback)
  */
 export async function fetchAllCarifOrefItems<T extends DiItem>(
-  endpointFn: (params: {
-    query: { page: number; size: number; sources: string[] } & Record<
-      string,
-      unknown
-    >;
-  }) => Promise<{ data?: DiPage<T>; error?: unknown }>,
+  fetchFn: (
+    params: {
+      page: number;
+      size: number;
+      sources: string[];
+    } & Record<string, any>,
+  ) => Promise<Page<T>>,
   itemType: string,
   options: DiIngestionOptions = {},
 ): Promise<T[]> {
@@ -88,81 +80,59 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
   );
 
   while (true) {
-    const response = await endpointFn({
-      query: {
+    try {
+      const data = await fetchFn({
         page: currentPage,
         size: pageSize,
         sources: [SOURCE_CARIF_OREF],
         ...extraQueryParams,
-      },
-    });
+      });
 
-    // Validate API response structure with Zod
-    const parsed = DiApiResponseSchema.safeParse(response);
-    if (!parsed.success) {
-      logger.error(
-        { page: currentPage, error: parsed.error.format() },
-        `Invalid API response structure for ${itemType}`,
-      );
-      throw new Error(
-        `Invalid API response for ${itemType} page ${currentPage}: ${parsed.error.message}`,
-      );
-    }
+      allItems.push(...data.items);
 
-    if (parsed.data.error) {
+      if (totalPages === null) {
+        totalPages = data.pages;
+        totalItems = data.total;
+        logger.info(
+          { totalItems, totalPages, pageSize, limit: limit ?? "unlimited" },
+          `DI API pagination initialized for ${itemType}`,
+        );
+      }
+
+      logger.debug(
+        {
+          page: currentPage,
+          totalPages,
+          itemsInPage: data.items.length,
+          fetchedSoFar: allItems.length,
+          totalItems,
+        },
+        `Fetched ${itemType} page`,
+      );
+
+      onProgress?.(allItems.length, limit ?? data.total);
+
+      // Stop if we've reached the limit
+      if (limit && allItems.length >= limit) {
+        logger.info(
+          { limit, fetched: allItems.length },
+          `Limit reached, stopping ${itemType} fetch`,
+        );
+        break;
+      }
+
+      if (currentPage >= data.pages) {
+        break;
+      }
+
+      currentPage++;
+    } catch (error) {
       logger.error(
-        { page: currentPage, error: parsed.data.error },
+        { page: currentPage, error },
         `Failed to fetch ${itemType} page`,
       );
-      throw new Error(
-        `Failed to fetch ${itemType} page ${currentPage}: ${JSON.stringify(parsed.data.error)}`,
-      );
+      throw error;
     }
-
-    const data = parsed.data.data;
-    if (!data) {
-      throw new Error(
-        `Failed to fetch ${itemType} page ${currentPage}: no data returned`,
-      );
-    }
-    allItems.push(...(data.items as T[]));
-
-    if (totalPages === null) {
-      totalPages = data.pages;
-      totalItems = data.total;
-      logger.info(
-        { totalItems, totalPages, pageSize, limit: limit ?? "unlimited" },
-        `DI API pagination initialized for ${itemType}`,
-      );
-    }
-
-    logger.debug(
-      {
-        page: currentPage,
-        totalPages,
-        itemsInPage: data.items.length,
-        fetchedSoFar: allItems.length,
-        totalItems,
-      },
-      `Fetched ${itemType} page`,
-    );
-
-    onProgress?.(allItems.length, limit ?? data.total);
-
-    // Stop if we've reached the limit
-    if (limit && allItems.length >= limit) {
-      logger.info(
-        { limit, fetched: allItems.length },
-        `Limit reached, stopping ${itemType} fetch`,
-      );
-      break;
-    }
-
-    if (currentPage >= data.pages) {
-      break;
-    }
-
-    currentPage++;
   }
 
   // Trim to exact limit if we fetched more
@@ -445,7 +415,7 @@ async function upsertItems<T extends DiItem>(
  * Ingests items from Data Inclusion API into Supabase table
  *
  * @param supabase - Supabase client with admin privileges
- * @param endpointFn - The API endpoint function to call
+ * @param fetchFn - The API client function to call
  * @param tableName - Name of the table to insert into
  * @param itemType - The type of item being ingested (for logging)
  * @param options - Ingestion options (pageSize, limit, onProgress callback)
@@ -453,12 +423,13 @@ async function upsertItems<T extends DiItem>(
  */
 export async function ingestCarifOrefItems<T extends DiItem>(
   supabase: SupabaseClient<Database>,
-  endpointFn: (params: {
-    query: { page: number; size: number; sources: string[] } & Record<
-      string,
-      unknown
-    >;
-  }) => Promise<{ data?: DiPage<T>; error?: unknown }>,
+  fetchFn: (
+    params: {
+      page: number;
+      size: number;
+      sources: string[];
+    } & Record<string, any>,
+  ) => Promise<Page<T>>,
   tableName: "di_structures" | "di_services",
   itemType: string,
   options: DiIngestionOptions = {},
@@ -477,7 +448,7 @@ export async function ingestCarifOrefItems<T extends DiItem>(
 
   try {
     // 1. Fetch all items from DI API
-    const items = await fetchAllCarifOrefItems(endpointFn, itemType, options);
+    const items = await fetchAllCarifOrefItems(fetchFn, itemType, options);
 
     // 2. Upsert into Supabase with version tracking
     const { inserted, updated, unchanged, errors } = await upsertItems(

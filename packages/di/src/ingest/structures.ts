@@ -1,10 +1,8 @@
 import { logger } from "@playground/shared-types";
 import type { Database } from "@playground/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  type ListedStructure,
-  listStructuresEndpointApiV1StructuresGet,
-} from "../hey-api";
+import { diClient } from "../client";
+import type { StructureSummary } from "../types";
 import { fetchAllCarifOrefItems, ingestCarifOrefItems } from "./generic";
 import type { DiIngestionOptions } from "./shared";
 
@@ -35,9 +33,9 @@ export async function ingestCarifOrefStructures(
   supabase: SupabaseClient<Database>,
   options: DiIngestionOptions = {},
 ): Promise<DiStructuresIngestionResult> {
-  const result = await ingestCarifOrefItems(
+  const result = await ingestCarifOrefItems<StructureSummary>(
     supabase,
-    listStructuresEndpointApiV1StructuresGet,
+    (params) => diClient.getStructures(params),
     "di_structures",
     "structures",
     options,
@@ -62,10 +60,10 @@ export async function ingestCarifOrefStructures(
  */
 export async function fetchCarifOrefStructures(
   options: DiIngestionOptions = {},
-): Promise<ListedStructure[]> {
+): Promise<StructureSummary[]> {
   logger.info("Fetching structures (inspect mode, no storage)");
-  return fetchAllCarifOrefItems(
-    listStructuresEndpointApiV1StructuresGet,
+  return fetchAllCarifOrefItems<StructureSummary>(
+    (params) => diClient.getStructures(params),
     "structures",
     options,
   );
