@@ -1,7 +1,8 @@
 import { logger } from "@playground/shared-types";
 import type { Database } from "@playground/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { listServicesEndpointApiV1ServicesGet, type Service } from "../hey-api";
+import { diClient } from "../client";
+import type { Service } from "../types";
 import { fetchAllCarifOrefItems, ingestCarifOrefItems } from "./generic";
 import type { DiIngestionOptions } from "./shared";
 
@@ -41,9 +42,9 @@ export async function ingestCarifOrefServices(
     },
   };
 
-  const result = await ingestCarifOrefItems(
+  const result = await ingestCarifOrefItems<Service>(
     supabase,
-    listServicesEndpointApiV1ServicesGet,
+    (params) => diClient.getServices(params),
     "di_services",
     "services",
     optionsWithExtra,
@@ -79,8 +80,8 @@ export async function fetchCarifOrefServices(
   };
 
   logger.info("Fetching services (inspect mode, no storage)");
-  return fetchAllCarifOrefItems(
-    listServicesEndpointApiV1ServicesGet,
+  return fetchAllCarifOrefItems<Service>(
+    (params) => diClient.getServices(params),
     "services",
     optionsWithExtra,
   );
