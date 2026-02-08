@@ -1,5 +1,5 @@
-import crypto from "node:crypto";
 import "dotenv/config";
+import crypto from "node:crypto";
 import { LANGUAGES, logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
 

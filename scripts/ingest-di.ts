@@ -1,3 +1,4 @@
+import "dotenv/config";
 /**
  * DI Ingestion CLI
  *
@@ -18,7 +19,6 @@
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
 import { program } from "commander";
-import "dotenv/config";
 
 // Configure CLI with commander
 program

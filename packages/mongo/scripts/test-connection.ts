@@ -1,5 +1,4 @@
 /** biome-ignore-all lint/suspicious/noConsole: Fine for test scripts */
-
 import "dotenv/config";
 import { getDispositifs } from "../src";
 

@@ -1,3 +1,4 @@
+import "dotenv/config";
 /**
  * Test DI Ingestion Records Creation
  *
@@ -11,8 +12,6 @@
  *   pnpm tsx scripts/test-di-ingestion-records.ts                    # Use latest run
  *   pnpm tsx scripts/test-di-ingestion-records.ts <specific-run-id>  # Use specific run
  */
-
-import "dotenv/config";
 
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
