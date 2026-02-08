@@ -43,6 +43,19 @@ interface ExistingRecord {
 }
 
 /**
+ * Type guard for Page<T>
+ */
+function isPage<T>(data: unknown): data is Page<T> {
+  if (!data || typeof data !== "object") return false;
+  const page = data as Record<string, unknown>;
+  return (
+    Array.isArray(page.items) &&
+    typeof page.total === "number" &&
+    typeof page.pages === "number"
+  );
+}
+
+/**
  * Generic fetch function for DI API
  * Fetches items from Data Inclusion API with pagination
  * Filters by source = "carif-oref"
@@ -87,6 +100,16 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
         sources: [SOURCE_CARIF_OREF],
         ...extraQueryParams,
       });
+
+      if (!isPage<T>(data)) {
+        logger.error(
+          { page: currentPage, data },
+          `Invalid API response structure for ${itemType}`,
+        );
+        throw new Error(
+          `Invalid API response for ${itemType} page ${currentPage}: missing items, total or pages`,
+        );
+      }
 
       allItems.push(...data.items);
 

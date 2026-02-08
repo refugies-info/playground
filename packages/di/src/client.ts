@@ -27,23 +27,22 @@ export class DIClient {
     }
   }
 
-  private async fetch<T>(
-    path: string,
-    params?: Record<string, any>,
-  ): Promise<T> {
+  private async fetch<T>(path: string, params?: unknown): Promise<T> {
     const url = new URL(`${this.baseUrl}${path}`);
 
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value === undefined || value === null) return;
-        if (Array.isArray(value)) {
-          for (const v of value) {
-            url.searchParams.append(key, String(v));
+    if (params && typeof params === "object") {
+      Object.entries(params as Record<string, unknown>).forEach(
+        ([key, value]) => {
+          if (value === undefined || value === null) return;
+          if (Array.isArray(value)) {
+            for (const v of value) {
+              url.searchParams.append(key, String(v));
+            }
+          } else {
+            url.searchParams.append(key, String(value));
           }
-        } else {
-          url.searchParams.append(key, String(value));
-        }
-      });
+        },
+      );
     }
 
     const headers: HeadersInit = {
@@ -62,7 +61,7 @@ export class DIClient {
     if (!response.ok) {
       const errorBody = await response.text();
       throw new Error(
-        `DI API Error ${response.status}: ${status} - ${errorBody}`,
+        `DI API Error ${response.status}: ${response.statusText} - ${errorBody}`,
       );
     }
 
