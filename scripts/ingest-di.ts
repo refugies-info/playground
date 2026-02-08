@@ -1,3 +1,4 @@
+import "dotenv/config";
 /**
  * DI Ingestion CLI
  *
@@ -15,14 +16,9 @@
  *   pnpm di:ingest --type services --limit 10  # Ingest 10 services only (for testing)
  */
 
-import path from "node:path";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
 import { program } from "commander";
-import dotenv from "dotenv";
-
-// Load env vars from root .env (includes DI_BASE_URL and DI_API_KEY)
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 // Configure CLI with commander
 program

@@ -13,7 +13,7 @@ The `dispositifs` module exports an aggregation pipeline `getDispositifsPipeline
 ```typescript
 import { getDispositifs } from '@playground/mongo';
 
-// Ensure MONGODB_URI is set in your .env file
+// Ensure MONGODB_URI is set in the root .env file
 
 async function run() {
   try {

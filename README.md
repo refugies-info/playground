@@ -6,7 +6,7 @@ An experimental **AI-assisted content workflow** with a **Human-in-the-Loop** ap
 
 ## 🚀 Overview
 
-This project aims to streamline the publication workflow by combining **AI-driven rewriting** with **human validation**.  
+This project aims to streamline the publication workflow by combining **AI-driven rewriting** with **human validation**.
 It ingests data from multiple sources, automatically sorts and clarifies content using AI, and enables editors to review and approve before export.
 
 ### Core Pipeline
@@ -33,7 +33,7 @@ Each stage is designed to be transparent, auditable, and collaborative — ensur
 
 ## 👥 Target Users
 
-- **Editorial team members** at Refugies.info (writers, translators)  
+- **Editorial team members** at Refugies.info (writers, translators)
 - Goal: reduce repetitive editing tasks while keeping full control over content quality and clarity
 
 ---
@@ -141,7 +141,8 @@ Get the local development environment running in 3 steps:
 supabase start
 
 # 2. Configure environment variables
-# Copy credentials from supabase start output to apps/frontend/.env.local
+# Copy .env.example to .env and fill in your actual values
+cp .env.example .env
 
 # 3. Access Supabase Studio
 # Open http://127.0.0.1:54323 in your browser
@@ -181,7 +182,7 @@ Complete guides and architecture documentation available in the [documentation/]
 #### Sprint 2 → Rewrite, Metadata Mapping & Export
 - Add Letta rewrite agent and collaborative editor interface for content rewriting
 - Enable metadata mapping and validation workflow with editor attribution tracking
-- Enable export process with complete audit trail and deliver functional end-to-end demo  
+- Enable export process with complete audit trail and deliver functional end-to-end demo
 
 ---
 
@@ -269,8 +270,8 @@ While POC/MVP/V1 focus on single-language (French) editorial workflows, the syst
 
 ## 🧠 Notes
 
-This project follows the **[Letta Development Guidelines](https://docs.letta.com)** for API, ADE, and MCP integration.  
+This project follows the **[Letta Development Guidelines](https://docs.letta.com)** for API, ADE, and MCP integration.
 The goal of this POC is to validate the technical chain:
 
-**Import → Sort → Rewrite → Export**  
+**Import → Sort → Rewrite → Export**
 with full **Human-in-the-Loop** control.

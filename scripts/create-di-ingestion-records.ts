@@ -1,3 +1,4 @@
+import "dotenv/config";
 /**
  * Test DI Ingestion Records Creation
  *
@@ -12,14 +13,9 @@
  *   pnpm tsx scripts/test-di-ingestion-records.ts <specific-run-id>  # Use specific run
  */
 
-import path from "node:path";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
 import { processIngestionRecords } from "@refugies-info/di";
-import dotenv from "dotenv";
-
-// Load env vars from root .env
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 async function main() {
   logger.info("=== DI Ingestion Records Test ===");
