@@ -1,17 +1,23 @@
 import type {
+  ComplianceStatus,
   Document,
-  DocumentState,
-  DocumentStatus,
+  OnlineStatus,
+  WorkStatus,
 } from "@playground/shared-types";
 import { SeededRandom } from "./seededRandom";
 
 const SOURCES = ["RCO", "Manual", "API"];
-const STATUSES: DocumentStatus[] = ["compliant", "non_compliant"];
-const STATES: DocumentState[] = [
-  "to_process",
-  "draft",
-  "archived",
+const COMPLIANCE_STATUSES: ComplianceStatus[] = [
+  "compliant",
+  "non_compliant",
+  "pending",
+  "error",
+];
+const WORK_STATUSES: WorkStatus[] = ["to_process", "draft"];
+const ONLINE_STATUSES: OnlineStatus[] = [
   "published",
+  "unpublished",
+  "archived",
 ];
 
 // Cache to store generated documents
@@ -59,8 +65,9 @@ export function generateMockDocuments(count: number = 50): Document[] {
     title:
       "Actions socio-linguistiques complémentaires du CIR (ASL) - Langu'Action - métiers en tension",
     date_added: new Date("2025-11-25").toISOString(),
-    status: "compliant",
-    state: "published",
+    complianceStatus: "compliant",
+    workStatus: "to_process",
+    onlineStatus: "published",
     sourceSystem: "RCO",
     content: `# Actions socio-linguistiques complémentaires du CIR (ASL) - Langu'Action - métiers en tension
 
@@ -268,8 +275,10 @@ Contactez-nous pour plus d'informations et pour vous inscrire.
       id,
       title,
       date_added: date.toISOString(),
-      status: STATUSES[rng.randomInt(0, STATUSES.length)],
-      state: STATES[rng.randomInt(0, STATES.length)],
+      complianceStatus:
+        COMPLIANCE_STATUSES[rng.randomInt(0, COMPLIANCE_STATUSES.length)],
+      workStatus: WORK_STATUSES[rng.randomInt(0, WORK_STATUSES.length)],
+      onlineStatus: ONLINE_STATUSES[rng.randomInt(0, ONLINE_STATUSES.length)],
       sourceSystem: (rng.random() > 0.5 ? "RCO" : "DI") as "RCO" | "DI",
       content,
       metadata: {

@@ -39,7 +39,7 @@ export function EditionView() {
   const editorJustInitialized = useRef(false);
 
   // Check if document is compliant (editable)
-  const isCompliant = document?.status === "compliant";
+  const isCompliant = document?.complianceStatus === "compliant";
 
   // Initialize (or re-initialize) editor when needed
   // We destroy the editor when in Raw Mode to ensure a fresh state when switching back.

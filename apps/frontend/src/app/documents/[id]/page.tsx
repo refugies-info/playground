@@ -24,8 +24,9 @@ export default async function DocumentPage(props: DocumentPageProps) {
   const initialData = {
     id: document.id,
     title: document.title,
-    status: document.status,
-    state: document.state,
+    complianceStatus: document.complianceStatus,
+    workStatus: document.workStatus,
+    onlineStatus: document.onlineStatus,
     editorialContent: document.content, // Current working version (editorial or ingestion)
     ingestionContent: document.ingestionContent, // Immutable original from ingestion_records
     complianceReport: document.complianceReport,

@@ -1,6 +1,11 @@
 "use server";
 
-import { logger } from "@playground/shared-types";
+import {
+  type ComplianceStatus,
+  logger,
+  type OnlineStatus,
+  type WorkStatus,
+} from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import {
   archiveWorkflow,
@@ -68,8 +73,9 @@ export async function toggleWorkflowStatus(
   currentStatus: string,
 ): Promise<{
   success: boolean;
-  newStatus?: string;
-  newProgress?: string;
+  newComplianceStatus?: ComplianceStatus;
+  newWorkStatus?: WorkStatus | null;
+  newOnlineStatus?: OnlineStatus;
   error?: string;
 }> {
   try {
@@ -100,19 +106,26 @@ export async function toggleWorkflowStatus(
     // To match UI expectations without rewriting UI, we can calculate them here purely for UI feedback,
     // even though the REAL update happens in the background.
 
-    const newStatus =
+    const newComplianceStatus =
       currentStatus === "compliant" ? "non_compliant" : "compliant";
 
-    let newProgress: string;
-    if (currentStatus === "non_compliant" && newStatus === "compliant") {
-      newProgress = "to_process";
-    } else if (currentStatus === "compliant" && newStatus === "non_compliant") {
-      newProgress = "archived";
+    let newWorkStatus: WorkStatus | null;
+    let newOnlineStatus: OnlineStatus;
+
+    if (newComplianceStatus === "compliant") {
+      newWorkStatus = "to_process";
+      newOnlineStatus = "unpublished";
     } else {
-      newProgress = currentStatus === "compliant" ? "to_process" : "archived";
+      newWorkStatus = null;
+      newOnlineStatus = "archived";
     }
 
-    return { success: true, newStatus, newProgress };
+    return {
+      success: true,
+      newComplianceStatus,
+      newWorkStatus,
+      newOnlineStatus,
+    };
   } catch (error) {
     logger.error(error, "Unexpected error removing workflow status");
     return { success: false, error: "Unexpected error occurred" };

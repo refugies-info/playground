@@ -1,7 +1,10 @@
 import type {
+  ComplianceStatus,
   Document,
   DocumentSortField,
   Metadata,
+  OnlineStatus,
+  WorkStatus,
 } from "@playground/shared-types";
 import { injectFrontmatterContent, logger } from "@playground/shared-types";
 import type { Database, Json } from "@playground/supabase";
@@ -28,10 +31,12 @@ export interface GetDocumentsParams {
   pageSize?: number;
   sortBy?: DocumentSortField;
   sortOrder?: "asc" | "desc";
-  status?: string | string[];
-  state?: string;
+  complianceStatus?: (string | null)[] | string | null; // Allow null for unevaluated documents
+  workStatus?: string | null;
+  onlineStatus?: string | null;
   dateFrom?: string;
   dateTo?: string;
+  searchId?: string;
 }
 
 // Helper type for the joined query result
@@ -62,22 +67,6 @@ type WorkflowWithRelations =
       | null;
   };
 
-// Helper to determine document state from work_status and online_status
-function normalizeState(
-  workStatus: string | null,
-  onlineStatus: string | null,
-): Document["state"] {
-  // Priority: online_status > work_status
-  if (onlineStatus) {
-    return onlineStatus as Document["state"];
-  }
-  if (workStatus) {
-    return workStatus as Document["state"];
-  }
-  // Default to to_process if both are null (shouldn't happen normally)
-  return "to_process";
-}
-
 type WorkflowIngestionMetadata = {
   workflow_id: string;
   title: string;
@@ -92,27 +81,26 @@ export async function getDocuments(params: GetDocumentsParams) {
     pageSize = 10,
     sortBy = "date_added",
     sortOrder = "desc",
-    status,
-    state,
+    complianceStatus,
+    workStatus,
+    onlineStatus,
     dateFrom,
     dateTo,
+    searchId,
   } = params;
 
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
   // Base query on workflows table
-  let query = supabase
-    .from("workflows")
-    .select(
-      `
+  const selectString = `
       id,
       compliance_status,
       work_status,
       online_status,
       updated_at,
       rco_record_id,
-      ingestion_records (
+      ingestion_records${searchId ? "!inner" : ""} (
         markdown,
         metadata,
         created_at,
@@ -131,20 +119,41 @@ export async function getDocuments(params: GetDocumentsParams) {
         updated_at,
         created_at
       )
-    `,
-      { count: "exact" },
-    )
+    `;
+
+  let query = supabase
+    .from("workflows")
+    .select(selectString, { count: "exact" })
     .order("created_at", {
       ascending: false,
       referencedTable: "editorial_records",
     });
 
   // Apply filters
-  if (status) {
-    if (Array.isArray(status)) {
-      query = query.in("compliance_status", status);
+  if (complianceStatus) {
+    if (Array.isArray(complianceStatus)) {
+      // Separate null from other values
+      const nonNullStatuses = complianceStatus.filter(
+        (s) => s !== null,
+      ) as string[];
+      const hasNull = complianceStatus.includes(null);
+
+      if (nonNullStatuses.length > 0 && hasNull) {
+        // Include both specific statuses and NULL
+        query = query.or(
+          `compliance_status.in.(${nonNullStatuses.map((s) => `"${s}"`).join(",")}),compliance_status.is.null`,
+        );
+      } else if (hasNull) {
+        // Only NULL
+        query = query.is("compliance_status", null);
+      } else {
+        // Only specific statuses
+        query = query.in("compliance_status", nonNullStatuses);
+      }
+    } else if (complianceStatus === null) {
+      query = query.is("compliance_status", null);
     } else {
-      query = query.eq("compliance_status", status);
+      query = query.eq("compliance_status", complianceStatus);
     }
   } else {
     // By default, exclude documents that are still being processed or have failed
@@ -153,13 +162,12 @@ export async function getDocuments(params: GetDocumentsParams) {
     query = query.not("compliance_status", "is", null);
   }
 
-  if (state) {
-    // State can come from either work_status or online_status
-    if (state === "to_process" || state === "draft") {
-      query = query.eq("work_status", state);
-    } else if (state === "published" || state === "archived") {
-      query = query.eq("online_status", state);
-    }
+  if (workStatus) {
+    query = query.eq("work_status", workStatus);
+  }
+
+  if (onlineStatus) {
+    query = query.eq("online_status", onlineStatus);
   }
 
   if (dateFrom) {
@@ -170,12 +178,19 @@ export async function getDocuments(params: GetDocumentsParams) {
     query = query.lte("updated_at", dateTo);
   }
 
+  if (searchId) {
+    // Filter by metadata->>id in joined ingestion_records
+    // Note: In Supabase/PostgREST, filtering on joined tables uses dot notation
+    query = query.ilike("ingestion_records.metadata->>id", `%${searchId}%`);
+  }
+
   // Apply sorting
   const sortFieldMap: Record<DocumentSortField, string> = {
     date_added: "updated_at",
     updated_at: "updated_at",
-    status: "compliance_status",
-    state: "work_status", // Default to work_status for state sorting
+    compliance_status: "compliance_status",
+    work_status: "work_status",
+    online_status: "online_status",
     title: "title",
   };
 
@@ -232,10 +247,11 @@ export async function getDocuments(params: GetDocumentsParams) {
         ? editorialRecordRaw[0]
         : editorialRecordRaw;
 
-      // Priority: editorial > ingestion
-      const metadata = (editorialRecord?.metadata ||
-        ingestionRecord?.metadata ||
-        {}) as Metadata;
+      // Priority: metadata id/structure_id from ingestion, rest can be editorial
+      const metadata = {
+        ...((ingestionRecord?.metadata as object) || {}),
+        ...((editorialRecord?.metadata as object) || {}),
+      } as Metadata;
 
       // Priority: editorial > ingestion > empty
       const content =
@@ -274,8 +290,9 @@ export async function getDocuments(params: GetDocumentsParams) {
         id: item.id,
         title,
         date_added: dateAdded,
-        status: item.compliance_status ?? "pending",
-        state: normalizeState(item.work_status, item.online_status),
+        complianceStatus: (item.compliance_status as ComplianceStatus) ?? null,
+        workStatus: item.work_status as WorkStatus,
+        onlineStatus: item.online_status as OnlineStatus,
         content,
         metadata,
         publishedUrl,
@@ -453,8 +470,9 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     id: workflow.id,
     title,
     date_added: dateAdded,
-    status: workflow.compliance_status ?? "pending",
-    state: normalizeState(workflow.work_status, workflow.online_status),
+    complianceStatus: (workflow.compliance_status as ComplianceStatus) ?? null,
+    workStatus: workflow.work_status as WorkStatus,
+    onlineStatus: workflow.online_status as OnlineStatus,
     content,
     ingestionContent,
     complianceReport,

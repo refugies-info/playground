@@ -24,6 +24,11 @@ export default async function WorkflowPage(props: PageProps) {
     MAX_PAGE_SIZE,
   );
 
+  const searchId =
+    typeof searchParams.searchId === "string"
+      ? searchParams.searchId
+      : undefined;
+
   const {
     data: inProgressDocuments,
     total,
@@ -31,9 +36,10 @@ export default async function WorkflowPage(props: PageProps) {
   } = await getDocuments({
     page,
     pageSize,
-    status: ["unknown", "error"],
+    complianceStatus: ["pending", "error", null], // Include pending, error, and NULL (unevaluated)
     sortBy: "updated_at",
     sortOrder: "desc",
+    searchId,
   });
 
   return (
@@ -43,6 +49,7 @@ export default async function WorkflowPage(props: PageProps) {
       currentPage={page}
       totalPages={totalPages}
       pageSize={pageSize}
+      initialSearchId={searchId}
     />
   );
 }

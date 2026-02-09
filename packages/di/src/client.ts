@@ -50,7 +50,8 @@ export class DIClient {
     };
 
     if (this.apiKey) {
-      headers["Authorization"] = `Bearer ${this.apiKey}`;
+      (headers as Record<string, string>).Authorization =
+        `Bearer ${this.apiKey}`;
     }
 
     const response = await fetch(url.toString(), {

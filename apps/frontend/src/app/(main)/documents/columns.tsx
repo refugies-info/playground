@@ -5,11 +5,13 @@ import { Badge, DataTableColumnHeader } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ExternalLink } from "lucide-react";
 import {
+  getComplianceStatusLabel,
+  getComplianceStatusVariant,
+  getOnlineStatusLabel,
+  getOnlineStatusVariant,
   getQualityScoreVariant,
-  getStateLabel,
-  getStateVariant,
-  getStatusLabel,
-  getStatusVariant,
+  getWorkStatusLabel,
+  getWorkStatusVariant,
 } from "@/lib/document-labels";
 
 const QualityScoreCell = ({ score }: { score: number | undefined | null }) => {
@@ -23,21 +25,15 @@ const QualityScoreCell = ({ score }: { score: number | undefined | null }) => {
 
 export const columns: ColumnDef<Document>[] = [
   {
-    accessorKey: "status",
+    accessorKey: "complianceStatus",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Arbitrage" />
+      <DataTableColumnHeader column={column} title="Conformité" />
     ),
     cell: ({ row }) => {
-      const status = row.getValue("status") as string;
-      if (status === "unknown") {
-        return <Badge variant="neutral">En cours</Badge>;
-      }
-      if (status === "error") {
-        return <Badge variant="danger">Erreur</Badge>;
-      }
+      const status = row.original.complianceStatus;
       return (
-        <Badge variant={getStatusVariant(status)}>
-          {getStatusLabel(status)}
+        <Badge variant={getComplianceStatusVariant(status)}>
+          {getComplianceStatusLabel(status)}
         </Badge>
       );
     },
@@ -45,7 +41,7 @@ export const columns: ColumnDef<Document>[] = [
   {
     accessorKey: "qualityScore",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Score de qualité DI" />
+      <DataTableColumnHeader column={column} title="Score de qualité" />
     ),
     cell: ({ row }) => (
       <QualityScoreCell score={row.getValue("qualityScore") as number} />
@@ -68,6 +64,68 @@ export const columns: ColumnDef<Document>[] = [
     cell: ({ row }) => {
       const value = row.getValue("structureName") as string | undefined;
       return <div className="text-sm text-gray-700">{value || "—"}</div>;
+    },
+  },
+  {
+    accessorKey: "sessionStartDate",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date de début" />
+    ),
+    cell: ({ row }) => {
+      const dateStr = row.getValue("sessionStartDate") as string | undefined;
+      if (!dateStr) return <div className="text-gray-400">—</div>;
+      const date = new Date(dateStr);
+      return <div>{date.toLocaleDateString("fr-FR")}</div>;
+    },
+  },
+  {
+    accessorKey: "onlineStatus",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Visibilité" />
+    ),
+    cell: ({ row }) => {
+      const status = row.original.onlineStatus;
+      if (!status) return <div className="text-gray-400">—</div>;
+      // Also show link if published
+      if (status === "published" && row.original.publishedUrl) {
+        return (
+          <div className="flex items-center gap-2">
+            <Badge variant={getOnlineStatusVariant(status)}>
+              {getOnlineStatusLabel(status)}
+            </Badge>
+            <a
+              href={row.original.publishedUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-blue-600 transition-colors"
+              title="Voir la fiche publiée"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+        );
+      }
+      return (
+        <Badge variant={getOnlineStatusVariant(status)}>
+          {getOnlineStatusLabel(status)}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "workStatus",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Traitement" />
+    ),
+    cell: ({ row }) => {
+      const status = row.original.workStatus;
+      if (!status) return <div className="text-gray-400">—</div>;
+      return (
+        <Badge variant={getWorkStatusVariant(status)}>
+          {getWorkStatusLabel(status)}
+        </Badge>
+      );
     },
   },
   {
@@ -80,83 +138,47 @@ export const columns: ColumnDef<Document>[] = [
       return <div>{date.toLocaleDateString("fr-FR")}</div>;
     },
   },
-  {
-    accessorKey: "sessionStartDate",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Date début session" />
-    ),
-    cell: ({ row }) => {
-      const value = row.getValue("sessionStartDate") as string | undefined;
-      if (!value) return <div>—</div>;
-      const date = new Date(value);
-      return <div>{date.toLocaleDateString("fr-FR")}</div>;
-    },
-  },
-  {
-    accessorKey: "publishedUrl",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="En ligne" />
-    ),
-    cell: ({ row }) => {
-      const url = row.original.publishedUrl;
-      const debugStatus = row.original.publicationStatus;
-      const debugRemoteId = row.original.publicationRemoteId;
-      if (!url) {
-        return (
-          <span
-            className="text-xs text-gray-400"
-            title={`publication_status=${debugStatus ?? "null"} remote_id=${debugRemoteId ?? "null"}`}
-          >
-            —
-          </span>
-        );
-      }
-      return (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-400 hover:text-blue-600 transition-colors flex items-center gap-2"
-          title="Voir la fiche publiée"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ExternalLink className="w-4 h-4" />
-          <span className="text-xs underline">Voir</span>
-        </a>
-      );
-    },
-  },
-  {
-    accessorKey: "state",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="État" />
-    ),
-    cell: ({ row }) => {
-      const state = row.getValue("state") as string;
-      if (row.original.status === "unknown") {
-        return null;
-      }
-      return (
-        <Badge variant={getStateVariant(state)}>{getStateLabel(state)}</Badge>
-      );
-    },
-  },
 ];
 
 export const inProgressColumns: ColumnDef<Document>[] = [
   {
-    accessorKey: "status",
+    accessorKey: "id",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Arbitrage" />
+      <DataTableColumnHeader column={column} title="ID Workflow" />
+    ),
+    cell: ({ row }) => (
+      <div
+        className="text-xs font-mono text-gray-500 truncate w-16"
+        title={row.original.id}
+      >
+        {row.original.id.split("-")[0]}...
+      </div>
+    ),
+  },
+  {
+    id: "externalId",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="ID Carif-Oref" />
     ),
     cell: ({ row }) => {
-      const status = row.getValue("status") as string;
-      if (status === "unknown") {
-        return <Badge variant="neutral">En cours</Badge>;
-      }
+      const externalId = row.original.metadata?.id as string | undefined;
       return (
-        <Badge variant={getStatusVariant(status)}>
-          {getStatusLabel(status)}
+        <div className="text-xs font-mono text-gray-500">
+          {externalId || "—"}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "complianceStatus",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Conformité" />
+    ),
+    cell: ({ row }) => {
+      const status = row.original.complianceStatus;
+      return (
+        <Badge variant={getComplianceStatusVariant(status)}>
+          {getComplianceStatusLabel(status)}
         </Badge>
       );
     },
@@ -164,7 +186,7 @@ export const inProgressColumns: ColumnDef<Document>[] = [
   {
     accessorKey: "qualityScore",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Score de qualité DI" />
+      <DataTableColumnHeader column={column} title="Score de qualité" />
     ),
     cell: ({ row }) => (
       <QualityScoreCell score={row.getValue("qualityScore") as number} />
@@ -189,6 +211,7 @@ export const inProgressColumns: ColumnDef<Document>[] = [
       return <div className="text-sm text-gray-700">{value || "—"}</div>;
     },
   },
+
   {
     accessorKey: "date_added",
     header: ({ column }) => (

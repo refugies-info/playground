@@ -1,18 +1,27 @@
-export type DocumentStatus = "compliant" | "non_compliant" | "error";
-export type DocumentState = "to_process" | "draft" | "published" | "archived";
+export type ComplianceStatus =
+  | "compliant"
+  | "non_compliant"
+  | "error"
+  | "pending";
+export type WorkStatus = "to_process" | "draft";
+export type OnlineStatus = "published" | "unpublished" | "archived";
+
+// Derived state for backward compatibility or UI logic
 export type DocumentSortField =
   | "title"
   | "date_added"
   | "updated_at"
-  | "status"
-  | "state";
+  | "compliance_status"
+  | "work_status"
+  | "online_status";
 
 export interface Document {
   id: string;
   title: string;
   date_added: string;
-  status: string;
-  state: string;
+  complianceStatus: ComplianceStatus | null;
+  workStatus: WorkStatus | null;
+  onlineStatus: OnlineStatus;
   content: string;
   ingestionContent?: string; // Immutable original content from ingestion_records
   complianceReport?: string; // Markdown content of the compliance report
@@ -31,8 +40,9 @@ export interface ContentItem {
   title: string;
   content: string;
   source: string;
-  status: DocumentStatus;
-  state: DocumentState;
+  complianceStatus: ComplianceStatus | null;
+  workStatus: WorkStatus;
+  onlineStatus: OnlineStatus;
   date_added: string;
   metadata: Record<string, unknown>;
   originalText?: string;

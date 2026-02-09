@@ -31,16 +31,16 @@ export default async function DocumentsPage(props: PageProps) {
   const sortByParam =
     typeof searchParams.sortBy === "string" ? searchParams.sortBy : undefined;
   const validSortFields: DocumentSortField[] = [
-    "date_added",
-    "updated_at",
-    "status",
-    "state",
     "title",
+    "updated_at",
+    "compliance_status",
+    "work_status",
+    "online_status",
   ];
   const sortBy =
     sortByParam && validSortFields.includes(sortByParam as DocumentSortField)
       ? (sortByParam as DocumentSortField)
-      : "date_added";
+      : "updated_at";
 
   const sortOrderParam =
     typeof searchParams.sortOrder === "string"
@@ -56,10 +56,12 @@ export default async function DocumentsPage(props: PageProps) {
     pageSize,
     sortBy,
     sortOrder,
-    status:
-      typeof searchParams.status === "string" ? searchParams.status : undefined,
-    state:
-      typeof searchParams.state === "string" ? searchParams.state : undefined,
+    // Map 'status' query param to complianceStatus for backward compatibility or ease of use
+    complianceStatus: searchParams.status
+      ? (searchParams.status as string).split(",")
+      : undefined,
+    workStatus: searchParams.workStatus as string | undefined,
+    onlineStatus: searchParams.onlineStatus as string | undefined,
     dateFrom:
       typeof searchParams.dateFrom === "string"
         ? searchParams.dateFrom
@@ -71,8 +73,16 @@ export default async function DocumentsPage(props: PageProps) {
   const result = await getDocuments(serviceParams);
 
   const initialFilters = {
-    status: typeof searchParams.status === "string" ? searchParams.status : "",
-    state: typeof searchParams.state === "string" ? searchParams.state : "",
+    complianceStatus:
+      typeof searchParams.status === "string" ? searchParams.status : "",
+    workStatus:
+      typeof searchParams.workStatus === "string"
+        ? searchParams.workStatus
+        : "",
+    onlineStatus:
+      typeof searchParams.onlineStatus === "string"
+        ? searchParams.onlineStatus
+        : "",
     dateFrom:
       typeof searchParams.dateFrom === "string" ? searchParams.dateFrom : "",
     dateTo: typeof searchParams.dateTo === "string" ? searchParams.dateTo : "",

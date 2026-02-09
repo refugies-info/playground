@@ -35,8 +35,9 @@ export async function GET(
     "title",
     "date_added",
     "updated_at",
-    "status",
-    "state",
+    "compliance_status",
+    "work_status",
+    "online_status",
   ];
   if (!validSortFields.includes(sortByParam as DocumentSortField)) {
     return NextResponse.json(
@@ -51,21 +52,29 @@ export async function GET(
   const sortBy = sortByParam as DocumentSortField;
 
   // Filter parameters
-  const statusFilter = searchParams.get("status");
-  const stateFilter = searchParams.get("state");
+  const complianceStatusFilter = searchParams.get("complianceStatus");
+  const workStatusFilter = searchParams.get("workStatus");
+  const onlineStatusFilter = searchParams.get("onlineStatus");
   const dateFromFilter = searchParams.get("dateFrom");
   const dateToFilter = searchParams.get("dateTo");
 
   // Generate mock data
   let documents = generateMockDocuments(100);
 
-  // Apply filters
-  if (statusFilter) {
-    documents = documents.filter((doc) => doc.status === statusFilter);
+  if (complianceStatusFilter) {
+    documents = documents.filter(
+      (doc) => doc.complianceStatus === complianceStatusFilter, // Corrected property name from compliance_status
+    );
   }
 
-  if (stateFilter) {
-    documents = documents.filter((doc) => doc.state === stateFilter);
+  if (workStatusFilter) {
+    documents = documents.filter((doc) => doc.workStatus === workStatusFilter); // Corrected property name from work_status
+  }
+
+  if (onlineStatusFilter) {
+    documents = documents.filter(
+      (doc) => doc.onlineStatus === onlineStatusFilter, // Corrected property name from online_status
+    );
   }
 
   if (dateFromFilter) {
@@ -78,14 +87,31 @@ export async function GET(
     documents = documents.filter((doc) => new Date(doc.date_added) <= dateTo);
   }
 
+  // Map sort fields to document properties
+  const sortMapping: Record<DocumentSortField, keyof Document> = {
+    title: "title",
+    date_added: "date_added",
+    updated_at: "date_added", // Fallback or incorrect mapping? Document uses date_added. 'updated_at' is in SortField but not in Document?
+    compliance_status: "complianceStatus",
+    work_status: "workStatus",
+    online_status: "onlineStatus",
+  };
+
   // Apply sorting
   documents.sort((a, b) => {
-    let aValue: string | number = a[sortBy as keyof Document] as
+    const sortProperty = sortMapping[sortBy as DocumentSortField];
+    let aValue: string | number | undefined = a[sortProperty] as
       | string
-      | number;
-    let bValue: string | number = b[sortBy as keyof Document] as
+      | number
+      | undefined;
+    let bValue: string | number | undefined = b[sortProperty] as
       | string
-      | number;
+      | number
+      | undefined;
+
+    if (aValue === undefined && bValue === undefined) return 0;
+    if (aValue === undefined) return 1;
+    if (bValue === undefined) return -1;
 
     if (typeof aValue === "string" && typeof bValue === "string") {
       aValue = aValue.toLowerCase();
