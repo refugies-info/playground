@@ -247,11 +247,18 @@ export async function getDocuments(params: GetDocumentsParams) {
         ? editorialRecordRaw[0]
         : editorialRecordRaw;
 
-      // Priority: metadata id/structure_id from ingestion, rest can be editorial
-      const metadata = {
-        ...((ingestionRecord?.metadata as object) || {}),
-        ...((editorialRecord?.metadata as object) || {}),
-      } as Metadata;
+      // Merge metadata, protecting technical IDs from ingestion
+      const ingestionMetadata = (ingestionRecord?.metadata as Metadata) || {};
+      const editorialMetadata = (editorialRecord?.metadata as Metadata) || {};
+      const metadata: Metadata = {
+        ...ingestionMetadata,
+        ...editorialMetadata,
+      };
+
+      // Ensure critical identifiers from ingestion are preserved
+      if (ingestionMetadata.id) metadata.id = ingestionMetadata.id;
+      if (ingestionMetadata.structure_id)
+        metadata.structure_id = ingestionMetadata.structure_id;
 
       // Priority: editorial > ingestion > empty
       const content =
@@ -433,10 +440,18 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     return null;
   }
 
-  // Priority: editorial > ingestion
-  const metadata = (editorialRecord?.metadata ||
-    ingestionRecord?.metadata ||
-    {}) as Metadata;
+  // Merge metadata, protecting technical IDs from ingestion
+  const ingestionMetadata = (ingestionRecord?.metadata as Metadata) || {};
+  const editorialMetadata = (editorialRecord?.metadata as Metadata) || {};
+  const metadata: Metadata = {
+    ...ingestionMetadata,
+    ...editorialMetadata,
+  };
+
+  // Ensure critical identifiers from ingestion are preserved
+  if (ingestionMetadata.id) metadata.id = ingestionMetadata.id;
+  if (ingestionMetadata.structure_id)
+    metadata.structure_id = ingestionMetadata.structure_id;
 
   // Current working content: editorial > ingestion > empty
   // For DI records without editorial content, inject frontmatter content into body
