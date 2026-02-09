@@ -30,6 +30,12 @@ export async function forceArbitrationStep(workflowId: string) {
     .eq("id", workflowId)
     .single();
 
+  // Set compliance status to pending immediately
+  await supabase
+    .from("workflows")
+    .update({ compliance_status: "pending" })
+    .eq("id", workflowId);
+
   if (workflowError || !workflow?.ingestion_record_id) {
     logger.error(
       { workflowId, error: workflowError },
@@ -118,6 +124,19 @@ export async function forceArbitrationStep(workflowId: string) {
     if (updateError) {
       throw new Error(
         `Failed to link ingestion_report to ingestion_record: ${updateError.message}`,
+      );
+    }
+
+    // Update workflow with final status from report
+    const { error: finalStatusError } = await supabase
+      .from("workflows")
+      .update({ compliance_status: parsed.status })
+      .eq("id", workflowId);
+
+    if (finalStatusError) {
+      logger.error(
+        { error: finalStatusError, workflowId },
+        "Failed to update workflow final status",
       );
     }
 

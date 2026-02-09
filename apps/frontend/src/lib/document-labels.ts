@@ -1,101 +1,118 @@
-import { LANGUAGE_NAMES, LANGUAGE_TO_COUNTRY } from "@playground/shared-types";
+import {
+  type ComplianceStatus,
+  LANGUAGE_NAMES,
+  LANGUAGE_TO_COUNTRY,
+  type OnlineStatus,
+  type WorkStatus,
+} from "@playground/shared-types";
 import type { BadgeProps } from "@playground/ui/primitives";
-
-/**
- * Document Status Types
- */
-export type DocumentStatus = "compliant" | "non_compliant" | "error";
-export type DocumentState = "to_process" | "draft" | "published" | "archived";
 
 /**
  * Badge variant type from UI primitives
  */
 type BadgeVariant = NonNullable<BadgeProps["variant"]>;
 
-/**
- * Status configuration for documents
- */
-export const STATUS_CONFIG: Record<
-  DocumentStatus,
-  {
-    label: string;
-    variant: BadgeVariant;
+// Compliance Status Helpers
+export function getComplianceStatusLabel(
+  status: ComplianceStatus | null | undefined,
+): string {
+  if (!status) return "À traiter";
+  switch (status) {
+    case "compliant":
+      return "Conforme";
+    case "non_compliant":
+      return "Non conforme";
+    case "pending":
+      return "En cours d'arbitrage";
+    case "error":
+      return "Erreur";
+    default:
+      return status;
   }
-> = {
-  compliant: {
-    label: "Conforme",
-    variant: "success",
-  },
-  non_compliant: {
-    label: "Non conforme",
-    variant: "danger",
-  },
-  error: {
-    label: "Erreur",
-    variant: "danger",
-  },
-};
+}
 
-/**
- * State configuration for documents
- */
-export const STATE_CONFIG: Record<
-  DocumentState,
-  {
-    label: string;
-    variant: BadgeVariant;
+export function getComplianceStatusVariant(
+  status: ComplianceStatus | null | undefined,
+): BadgeVariant {
+  if (!status) return "info";
+  switch (status) {
+    case "compliant":
+      return "success";
+    case "non_compliant":
+      return "danger";
+    case "pending":
+      return "warning";
+    case "error":
+      return "danger";
+    default:
+      return "neutral";
   }
-> = {
-  draft: {
-    label: "Brouillon",
-    variant: "info",
-  },
-  to_process: {
-    label: "À traiter",
-    variant: "info",
-  },
-  archived: {
-    label: "Archivé",
-    variant: "warning",
-  },
-  published: {
-    label: "Publié",
-    variant: "success",
-  },
-};
-
-/**
- * Helper function to get status label
- */
-export function getStatusLabel(status: string): string {
-  return STATUS_CONFIG[status as DocumentStatus]?.label || status;
 }
 
-/**
- * Helper function to get status badge variant
- */
-export function getStatusVariant(status: string): BadgeVariant {
-  return STATUS_CONFIG[status as DocumentStatus]?.variant || "neutral";
+export function getWorkStatusLabel(
+  status: WorkStatus | null | undefined,
+): string {
+  if (!status) return "—";
+  switch (status) {
+    case "draft":
+      return "Brouillon";
+    case "to_process":
+      return "À traiter";
+    default:
+      return status;
+  }
 }
 
-/**
- * Helper function to get state label
- */
-export function getStateLabel(state: string): string {
-  return STATE_CONFIG[state as DocumentState]?.label || state.replace("_", " ");
+export function getWorkStatusVariant(
+  status: WorkStatus | null | undefined,
+): BadgeVariant {
+  if (!status) return "neutral";
+  switch (status) {
+    case "draft":
+      return "info"; // Requested "blue"
+    case "to_process":
+      return "info"; // Requested "blue"
+    default:
+      return "neutral";
+  }
 }
 
-/**
- * Helper function to get state badge variant
- */
-export function getStateVariant(state: string): BadgeVariant {
-  return STATE_CONFIG[state as DocumentState]?.variant || "neutral";
+// Online Status Helpers
+export function getOnlineStatusLabel(status: OnlineStatus | undefined): string {
+  if (!status) return "Hors ligne";
+  switch (status) {
+    case "published":
+      return "Publié";
+    case "unpublished":
+      return "Non publié";
+    case "archived":
+      return "Archivé";
+    default:
+      return status;
+  }
+}
+
+export function getOnlineStatusVariant(
+  status: OnlineStatus | undefined,
+): BadgeVariant {
+  if (!status) return "neutral";
+  switch (status) {
+    case "published":
+      return "success";
+    case "unpublished":
+      return "warning";
+    case "archived":
+      return "warning"; // Requested "yellow"
+    default:
+      return "neutral";
+  }
 }
 
 /**
  * Helper function to get quality score badge variant
  */
-export function getQualityScoreVariant(score: number): BadgeVariant {
+export function getQualityScoreVariant(score: number | null): BadgeVariant {
+  if (score === null) return "warning";
   const percentage = Math.round(score * 100);
   if (percentage >= 80) return "success";
   if (percentage >= 50) return "warning";
@@ -116,6 +133,41 @@ export function getLanguageFlag(lang: string): string {
   // Kept for backward compatibility if needed, but we should switch to classes
   // This will now return the class name, so components need to adapt
   return getFlagClass(lang);
+}
+
+// Translation Status Helpers
+export function getTranslationStatusLabel(status: string | undefined): string {
+  if (!status) return "Inconnu";
+  switch (status) {
+    case "to_process":
+      return "À traiter";
+    case "processing":
+      return "En cours";
+    case "done":
+      return "Terminé";
+    case "error":
+      return "Erreur";
+    default:
+      return status;
+  }
+}
+
+export function getTranslationStatusVariant(
+  status: string | undefined,
+): BadgeVariant {
+  if (!status) return "neutral";
+  switch (status) {
+    case "to_process":
+      return "neutral";
+    case "processing":
+      return "warning";
+    case "done":
+      return "success";
+    case "error":
+      return "danger";
+    default:
+      return "neutral";
+  }
 }
 
 export function getLanguageName(lang: string): string {

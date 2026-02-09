@@ -42,7 +42,7 @@ export async function saveDocumentStep(
         id, 
         editorial_record_id, 
         ingestion_record_id, 
-        progress,
+        work_status,
         editorial_records (metadata),
         ingestion_records (metadata)
       `,
@@ -124,18 +124,18 @@ export async function saveDocumentStep(
       isNew = true;
     }
 
-    // Ensure progress is set to 'draft' after any save (doc-first)
+    // Ensure work_status is set to 'draft' after any save (doc-first)
     let progressUpdated = false;
-    if (workflow.progress !== "draft") {
+    if (workflow.work_status !== "draft") {
       const { error: progressError } = await supabase
         .from("workflows")
-        .update({ progress: "draft" })
+        .update({ work_status: "draft" })
         .eq("id", workflowId);
 
       if (progressError) {
         logger.error(
           progressError,
-          "Error updating workflow progress to modified",
+          "Error updating workflow work_status to draft",
         );
       } else {
         progressUpdated = true;

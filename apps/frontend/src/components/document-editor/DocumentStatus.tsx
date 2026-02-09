@@ -3,10 +3,12 @@
 import { Badge } from "@playground/ui/primitives";
 import { ExternalLink } from "lucide-react";
 import {
-  getStateLabel,
-  getStateVariant,
-  getStatusLabel,
-  getStatusVariant,
+  getComplianceStatusLabel,
+  getComplianceStatusVariant,
+  getOnlineStatusLabel,
+  getOnlineStatusVariant,
+  getWorkStatusLabel,
+  getWorkStatusVariant,
 } from "@/lib/document-labels";
 import { useDocument } from "./DocumentContext";
 
@@ -17,11 +19,14 @@ export function DocumentStatus() {
 
   return (
     <div className="flex items-center gap-2">
-      <Badge variant={getStatusVariant(document.status)}>
-        {getStatusLabel(document.status)}
+      <Badge variant={getComplianceStatusVariant(document.complianceStatus)}>
+        {getComplianceStatusLabel(document.complianceStatus)}
       </Badge>
-      <Badge variant={getStateVariant(document.state)}>
-        {getStateLabel(document.state)}
+      <Badge variant={getWorkStatusVariant(document.workStatus)}>
+        {getWorkStatusLabel(document.workStatus)}
+      </Badge>
+      <Badge variant={getOnlineStatusVariant(document.onlineStatus)}>
+        {getOnlineStatusLabel(document.onlineStatus)}
       </Badge>
       {document.publishedUrl && (
         <a

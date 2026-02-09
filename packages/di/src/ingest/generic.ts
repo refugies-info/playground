@@ -82,7 +82,7 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
       page: number;
       size: number;
       sources: string[];
-    } & Record<string, any>,
+    } & Record<string, unknown>,
   ) => Promise<Page<T>>,
   itemType: string,
   options: DiIngestionOptions = {},
@@ -463,7 +463,7 @@ export async function ingestCarifOrefItems<T extends DiItem>(
       page: number;
       size: number;
       sources: string[];
-    } & Record<string, any>,
+    } & Record<string, unknown>,
   ) => Promise<Page<T>>,
   tableName: "di_structures" | "di_services",
   itemType: string,

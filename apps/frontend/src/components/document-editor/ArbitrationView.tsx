@@ -1,8 +1,17 @@
 "use client";
 
+import type {
+  ComplianceStatus,
+  OnlineStatus,
+  WorkStatus,
+} from "@playground/shared-types";
+
 import { Badge, Button } from "@playground/ui/primitives";
 import { useMemo, useState } from "react";
-import { getStatusLabel, getStatusVariant } from "@/lib/document-labels";
+import {
+  getComplianceStatusLabel,
+  getComplianceStatusVariant,
+} from "@/lib/document-labels";
 import { toggleWorkflowStatus } from "@/services/document-actions";
 import { useDocument } from "./DocumentContext";
 import { MarkdownViewer } from "./MarkdownViewer";
@@ -17,22 +26,30 @@ export function ArbitrationView() {
   }, [document?.complianceReport]);
 
   // Check for error state (agent failed to produce valid output)
-  const isError = document?.status === "error";
+  const isError = document?.complianceStatus === "error";
 
   // Simplified status logic
-  const isCompliant = document?.status === "compliant";
+  const isCompliant = document?.complianceStatus === "compliant";
 
   const handleToggleStatus = async () => {
     if (!document) return;
     setIsUpdating(true);
     try {
-      const result = await toggleWorkflowStatus(document.id, document.status);
+      const result = await toggleWorkflowStatus(
+        document.id,
+        document.complianceStatus || "pending",
+      );
 
-      if (result.success && result.newStatus) {
+      if (result.success && result.newComplianceStatus) {
         setDocument({
           ...document,
-          status: result.newStatus,
-          state: result.newProgress || document.state,
+          complianceStatus:
+            (result.newComplianceStatus as ComplianceStatus) ||
+            document.complianceStatus,
+          workStatus:
+            (result.newWorkStatus as WorkStatus) || document.workStatus,
+          onlineStatus:
+            (result.newOnlineStatus as OnlineStatus) || document.onlineStatus,
         });
       }
     } catch (error) {
@@ -52,8 +69,12 @@ export function ArbitrationView() {
             <div className="p-4 border-b grid grid-cols-2 items-center  shadow">
               <p className="flex items-center gap-2">
                 Etat de la fiche :{" "}
-                <Badge variant={getStatusVariant(document?.status || "")}>
-                  {getStatusLabel(document?.status || "")}
+                <Badge
+                  variant={getComplianceStatusVariant(
+                    document?.complianceStatus,
+                  )}
+                >
+                  {getComplianceStatusLabel(document?.complianceStatus)}
                 </Badge>
               </p>
 

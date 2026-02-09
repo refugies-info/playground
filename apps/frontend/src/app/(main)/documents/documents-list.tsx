@@ -5,7 +5,6 @@ import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AppPaginationControls } from "@/components/common/app-pagination";
-import { STATE_CONFIG } from "@/lib/document-labels";
 import { columns } from "./columns";
 
 interface DocumentsListProps {
@@ -17,8 +16,9 @@ interface DocumentsListProps {
   sortBy: DocumentSortField;
   sortOrder: "asc" | "desc";
   initialFilters: {
-    status: string;
-    state: string;
+    status?: string; // compliance status
+    workStatus?: string;
+    onlineStatus?: string;
     dateFrom: string;
     dateTo: string;
   };
@@ -54,7 +54,8 @@ export function DocumentsList({
   const clearFilters = () => {
     const emptyFilters = {
       status: "",
-      state: "",
+      workStatus: "",
+      onlineStatus: "",
       dateFrom: "",
       dateTo: "",
     };
@@ -71,41 +72,47 @@ export function DocumentsList({
       <div className="">
         <div className=" border rounded mb-8 bg-white">
           <div className="px-4 py-3 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div>
                 <select
-                  value={filters.status}
+                  value={filters.status || ""}
                   onChange={(e) =>
                     updateFilters({ ...filters, status: e.target.value })
                   }
                   className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
                 >
-                  <option value="">État</option>
+                  <option value="">Conformité</option>
+                  <option value="pending">En cours</option>
                   <option value="compliant">Conforme</option>
                   <option value="non_compliant">Non conforme</option>
+                  <option value="error">Erreur</option>
                 </select>
               </div>
               <div>
                 <select
-                  value={filters.state}
+                  value={filters.onlineStatus || ""}
                   onChange={(e) =>
-                    updateFilters({ ...filters, state: e.target.value })
+                    updateFilters({ ...filters, onlineStatus: e.target.value })
+                  }
+                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
+                >
+                  <option value="">Visibilité</option>
+                  <option value="published">Publié</option>
+                  <option value="unpublished">Non publié</option>
+                  <option value="archived">Archivé</option>
+                </select>
+              </div>
+              <div>
+                <select
+                  value={filters.workStatus || ""}
+                  onChange={(e) =>
+                    updateFilters({ ...filters, workStatus: e.target.value })
                   }
                   className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
                 >
                   <option value="">Traitement</option>
-                  {Object.entries(STATE_CONFIG)
-                    .filter(
-                      ([_key, config], index, array) =>
-                        // Garder seulement la première occurrence de chaque label
-                        array.findIndex(([, c]) => c.label === config.label) ===
-                        index,
-                    )
-                    .map(([key, config]) => (
-                      <option key={key} value={key}>
-                        {config.label}
-                      </option>
-                    ))}
+                  <option value="draft">Brouillon</option>
+                  <option value="to_process">À traiter</option>
                 </select>
               </div>
               <div className="flex items-center gap-2">
@@ -138,7 +145,8 @@ export function DocumentsList({
               </div>
             </div>
             {(filters.status ||
-              filters.state ||
+              filters.workStatus ||
+              filters.onlineStatus ||
               filters.dateFrom ||
               filters.dateTo) && (
               <button

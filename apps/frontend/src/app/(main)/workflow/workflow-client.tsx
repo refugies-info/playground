@@ -15,11 +15,18 @@ interface WorkflowClientProps {
   currentPage: number;
   totalPages: number;
   pageSize: number;
+  initialSearchId?: string;
 }
 
 export function WorkflowClient(props: WorkflowClientProps) {
-  const { inProgressDocuments, totalCount, currentPage, totalPages, pageSize } =
-    props;
+  const {
+    inProgressDocuments,
+    totalCount,
+    currentPage,
+    totalPages,
+    pageSize,
+    initialSearchId,
+  } = props;
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +41,22 @@ export function WorkflowClient(props: WorkflowClientProps) {
     null,
   );
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Search state
+  const [searchId, setSearchId] = useState(initialSearchId || "");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams(window.location.search);
+    if (searchId) {
+      params.set("searchId", searchId);
+    } else {
+      params.delete("searchId");
+    }
+    // Reset to page 1 on search
+    params.set("page", "1");
+    router.push(`/workflow?${params.toString()}`);
+  };
 
   const handleOpenDrawer = (doc: Document) => {
     setSelectedDocument(doc);
@@ -139,7 +162,6 @@ export function WorkflowClient(props: WorkflowClientProps) {
       const result = await forceArbitrationAction(id);
 
       if (result.success) {
-        alert("Arbitrage lancé avec succès");
         router.refresh();
       } else {
         setArbitrationLoading(null);
@@ -361,6 +383,48 @@ export function WorkflowClient(props: WorkflowClientProps) {
       </div>
 
       <div className="mt-8">
+        <div className="mb-6 flex items-end gap-4">
+          <form
+            onSubmit={handleSearch}
+            className="flex-1 max-w-sm flex items-end gap-2"
+          >
+            <div className="flex-1">
+              <label
+                htmlFor="searchId"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Rechercher par ID Carif-Oref
+              </label>
+              <input
+                id="searchId"
+                type="text"
+                placeholder="Ex: carif-oref--10_396692S"
+                value={searchId}
+                onChange={(e) => setSearchId(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors border"
+            >
+              Rechercher
+            </button>
+            {initialSearchId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchId("");
+                  router.push("/workflow");
+                }}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium pb-2"
+              >
+                Réinitialiser
+              </button>
+            )}
+          </form>
+        </div>
+
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-900">
             Fiches en cours de traitement ({totalCount})

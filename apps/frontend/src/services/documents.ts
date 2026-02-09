@@ -1,7 +1,10 @@
 import type {
+  ComplianceStatus,
   Document,
   DocumentSortField,
   Metadata,
+  OnlineStatus,
+  WorkStatus,
 } from "@playground/shared-types";
 import { injectFrontmatterContent, logger } from "@playground/shared-types";
 import type { Database, Json } from "@playground/supabase";
@@ -28,10 +31,12 @@ export interface GetDocumentsParams {
   pageSize?: number;
   sortBy?: DocumentSortField;
   sortOrder?: "asc" | "desc";
-  status?: string | string[];
-  state?: string;
+  complianceStatus?: (string | null)[] | string | null; // Allow null for unevaluated documents
+  workStatus?: string | null;
+  onlineStatus?: string | null;
   dateFrom?: string;
   dateTo?: string;
+  searchId?: string;
 }
 
 // Helper type for the joined query result
@@ -62,16 +67,6 @@ type WorkflowWithRelations =
       | null;
   };
 
-function normalizeProgress(progress: string): Document["state"] {
-  if (progress === "editorial" || progress === "modified") {
-    return "draft";
-  }
-  if (progress === "rco" || progress === "ingestion") {
-    return "to_process";
-  }
-  return progress as Document["state"];
-}
-
 type WorkflowIngestionMetadata = {
   workflow_id: string;
   title: string;
@@ -86,26 +81,26 @@ export async function getDocuments(params: GetDocumentsParams) {
     pageSize = 10,
     sortBy = "date_added",
     sortOrder = "desc",
-    status,
-    state,
+    complianceStatus,
+    workStatus,
+    onlineStatus,
     dateFrom,
     dateTo,
+    searchId,
   } = params;
 
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
   // Base query on workflows table
-  let query = supabase
-    .from("workflows")
-    .select(
-      `
+  const selectString = `
       id,
-      status,
-      progress,
+      compliance_status,
+      work_status,
+      online_status,
       updated_at,
       rco_record_id,
-      ingestion_records (
+      ingestion_records${searchId ? "!inner" : ""} (
         markdown,
         metadata,
         created_at,
@@ -124,30 +119,55 @@ export async function getDocuments(params: GetDocumentsParams) {
         updated_at,
         created_at
       )
-    `,
-      { count: "exact" },
-    )
+    `;
+
+  let query = supabase
+    .from("workflows")
+    .select(selectString, { count: "exact" })
     .order("created_at", {
       ascending: false,
       referencedTable: "editorial_records",
     });
 
   // Apply filters
-  if (status) {
-    if (Array.isArray(status)) {
-      query = query.in("status", status);
+  if (complianceStatus) {
+    if (Array.isArray(complianceStatus)) {
+      // Separate null from other values
+      const nonNullStatuses = complianceStatus.filter(
+        (s) => s !== null,
+      ) as string[];
+      const hasNull = complianceStatus.includes(null);
+
+      if (nonNullStatuses.length > 0 && hasNull) {
+        // Include both specific statuses and NULL
+        query = query.or(
+          `compliance_status.in.(${nonNullStatuses.map((s) => `"${s}"`).join(",")}),compliance_status.is.null`,
+        );
+      } else if (hasNull) {
+        // Only NULL
+        query = query.is("compliance_status", null);
+      } else {
+        // Only specific statuses
+        query = query.in("compliance_status", nonNullStatuses);
+      }
+    } else if (complianceStatus === null) {
+      query = query.is("compliance_status", null);
     } else {
-      query = query.eq("status", status);
+      query = query.eq("compliance_status", complianceStatus);
     }
   } else {
-    // By default, exclude documents that are still being processed or have failed,
-    // as they are handled on the "Workflow / Import" page.
-    // They can be fetched explicitly by providing a status filter.
-    query = query.not("status", "in", '("unknown","error")');
+    // By default, exclude documents that are still being processed or have failed
+    // NULL = not yet evaluated, pending = AI processing, error = failed
+    query = query.not("compliance_status", "in", '("error")');
+    query = query.not("compliance_status", "is", null);
   }
 
-  if (state) {
-    query = query.eq("progress", state);
+  if (workStatus) {
+    query = query.eq("work_status", workStatus);
+  }
+
+  if (onlineStatus) {
+    query = query.eq("online_status", onlineStatus);
   }
 
   if (dateFrom) {
@@ -158,13 +178,20 @@ export async function getDocuments(params: GetDocumentsParams) {
     query = query.lte("updated_at", dateTo);
   }
 
+  if (searchId) {
+    // Filter by metadata->>id in joined ingestion_records
+    // Note: In Supabase/PostgREST, filtering on joined tables uses dot notation
+    query = query.ilike("ingestion_records.metadata->>id", `%${searchId}%`);
+  }
+
   // Apply sorting
   const sortFieldMap: Record<DocumentSortField, string> = {
-    date_added: "updated_at", // date_added is computed from updated_at
+    date_added: "updated_at",
     updated_at: "updated_at",
-    status: "status",
-    state: "progress", // state maps to progress column
-    title: "title", // Now supported via updated view
+    compliance_status: "compliance_status",
+    work_status: "work_status",
+    online_status: "online_status",
+    title: "title",
   };
 
   const dbColumn = sortFieldMap[sortBy];
@@ -220,10 +247,18 @@ export async function getDocuments(params: GetDocumentsParams) {
         ? editorialRecordRaw[0]
         : editorialRecordRaw;
 
-      // Priority: editorial > ingestion
-      const metadata = (editorialRecord?.metadata ||
-        ingestionRecord?.metadata ||
-        {}) as Metadata;
+      // Merge metadata, protecting technical IDs from ingestion
+      const ingestionMetadata = (ingestionRecord?.metadata as Metadata) || {};
+      const editorialMetadata = (editorialRecord?.metadata as Metadata) || {};
+      const metadata: Metadata = {
+        ...ingestionMetadata,
+        ...editorialMetadata,
+      };
+
+      // Ensure critical identifiers from ingestion are preserved
+      if (ingestionMetadata.id) metadata.id = ingestionMetadata.id;
+      if (ingestionMetadata.structure_id)
+        metadata.structure_id = ingestionMetadata.structure_id;
 
       // Priority: editorial > ingestion > empty
       const content =
@@ -262,8 +297,9 @@ export async function getDocuments(params: GetDocumentsParams) {
         id: item.id,
         title,
         date_added: dateAdded,
-        status: item.status,
-        state: normalizeProgress(item.progress),
+        complianceStatus: (item.compliance_status as ComplianceStatus) ?? null,
+        workStatus: item.work_status as WorkStatus,
+        onlineStatus: item.online_status as OnlineStatus,
         content,
         metadata,
         publishedUrl,
@@ -273,6 +309,7 @@ export async function getDocuments(params: GetDocumentsParams) {
         sessionStartDate: metadataRow?.session_start_date ?? undefined,
         qualityScore: metadataRow?.quality_score ?? undefined,
         sourceSystem: item.rco_record_id ? "RCO" : "DI",
+        updated_at: item.updated_at,
       };
     }),
   );
@@ -294,7 +331,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const { data: workflow, error: workflowError } = await supabase
     .from("workflows")
     .select(
-      "id, status, progress, updated_at, editorial_record_id, ingestion_record_id, rco_record_id",
+      "id, compliance_status, work_status, online_status, updated_at, editorial_record_id, ingestion_record_id, rco_record_id",
     )
     .eq("id", id)
     .single();
@@ -403,10 +440,18 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     return null;
   }
 
-  // Priority: editorial > ingestion
-  const metadata = (editorialRecord?.metadata ||
-    ingestionRecord?.metadata ||
-    {}) as Metadata;
+  // Merge metadata, protecting technical IDs from ingestion
+  const ingestionMetadata = (ingestionRecord?.metadata as Metadata) || {};
+  const editorialMetadata = (editorialRecord?.metadata as Metadata) || {};
+  const metadata: Metadata = {
+    ...ingestionMetadata,
+    ...editorialMetadata,
+  };
+
+  // Ensure critical identifiers from ingestion are preserved
+  if (ingestionMetadata.id) metadata.id = ingestionMetadata.id;
+  if (ingestionMetadata.structure_id)
+    metadata.structure_id = ingestionMetadata.structure_id;
 
   // Current working content: editorial > ingestion > empty
   // For DI records without editorial content, inject frontmatter content into body
@@ -441,8 +486,9 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     id: workflow.id,
     title,
     date_added: dateAdded,
-    status: workflow.status,
-    state: normalizeProgress(workflow.progress),
+    complianceStatus: (workflow.compliance_status as ComplianceStatus) ?? null,
+    workStatus: workflow.work_status as WorkStatus,
+    onlineStatus: workflow.online_status as OnlineStatus,
     content,
     ingestionContent,
     complianceReport,
@@ -454,5 +500,6 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     sessionStartDate: ingestionMetadataRow?.session_start_date ?? undefined,
     qualityScore: ingestionMetadataRow?.quality_score ?? undefined,
     sourceSystem: workflow.rco_record_id ? "RCO" : "DI",
+    updated_at: workflow.updated_at,
   };
 }

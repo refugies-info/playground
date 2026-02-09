@@ -1,9 +1,13 @@
 "use client";
 
 import {
+  type ComplianceStatus,
   extractTitleFromMarkdown,
   hasH1,
   logger,
+  type OnlineStatus,
+  type Document as SharedDocument,
+  type WorkStatus,
 } from "@playground/shared-types";
 import { createContext, type ReactNode, useContext, useState } from "react";
 import { submitPreview } from "@/lib/preview-utils";
@@ -13,16 +17,19 @@ import {
   saveDocument as saveDocumentAction,
 } from "@/services/document-actions";
 
-interface DocumentData {
-  id: string;
-  title: string;
-  status: string; // Workflow status
-  state: string; // Workflow progress state
-  editorialContent: string; // Current working content from editorial_records (edited by humans or accepted AI suggestions)
-  ingestionContent?: string; // Immutable original content from ingestion_records (for comparison/rollback)
-  complianceReport?: string; // Markdown content of the compliance report
-  aiSuggestion?: string; // Pending AI suggestion awaiting user review
-  publishedUrl?: string; // Link to the published document on RI
+// Extend or adapt the shared Document type for the editor context
+interface DocumentData
+  extends Omit<
+    SharedDocument,
+    "content" | "metadata" | "complianceStatus" | "workStatus" | "onlineStatus"
+  > {
+  editorialContent: string; // Mapped from 'content' in SharedDocument
+  ingestionContent?: string;
+  aiSuggestion?: string;
+  // Override statuses with exact shared types to be sure
+  complianceStatus: ComplianceStatus | null;
+  workStatus: WorkStatus;
+  onlineStatus: OnlineStatus;
   metadata?: Record<string, unknown>;
 }
 
@@ -87,8 +94,13 @@ export function DocumentProvider({
   const [isPublishing, setIsPublishing] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  // If document is already in 'draft' state, it's ready to publish
-  const [canPublish, setCanPublish] = useState(initialData?.state === "draft");
+  // If document is already in 'draft' state (workStatus is 'in_progress' or 'finished'), it's ready to publish
+  // We simplify: if it's not new, we can arguably publish, or logic depends on specific requirements.
+  // For now let's say if we have content we can publish.
+  const [canPublish, setCanPublish] = useState(
+    initialData?.workStatus === "draft" ||
+      initialData?.workStatus === "to_process",
+  );
   const [debugBlocks, setDebugBlocks] = useState<unknown[] | null>([]);
 
   // Update content and mark as dirty (only if content actually changed)
@@ -187,7 +199,7 @@ export function DocumentProvider({
         const updatedDoc = {
           ...document,
           title: newTitle,
-          state: "draft", // Ensure state is 'draft' after any save
+          workStatus: "draft" as WorkStatus, // Ensure workStatus is 'draft' after save
           metadata: {
             ...document.metadata,
             title: newTitle,
@@ -264,7 +276,8 @@ export function DocumentProvider({
         // Note: publishedUrl will be available after workflow completes
         setDocument({
           ...document,
-          state: "published",
+          onlineStatus: "published",
+          // workStatus likely stays 'finished' or 'in_progress'
         });
         // Disable publish button until next modification + save
         setCanPublish(false);
@@ -299,7 +312,7 @@ export function DocumentProvider({
         // Update local state to reflect archived status
         setDocument({
           ...document,
-          state: "archived",
+          onlineStatus: "archived",
         });
         setCanPublish(false);
       }

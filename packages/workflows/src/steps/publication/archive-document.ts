@@ -31,7 +31,7 @@ export interface ArchiveDocumentInput {
  * 1. Finds existing publication (MUST exist to archive)
  * 2. Calls the platform webhook with 'Archivé' status
  * 3. Updates the publication record status
- * 4. Updates workflow progress to 'archived'
+ * 4. Updates workflow online_status to 'archived' and clears work_status
  *
  * @param input - Archive input with document data and user context
  * @returns Result with archive details
@@ -136,14 +136,14 @@ export async function archiveDocumentStep(
       return { success: false, error: "Failed to store archive publication" };
     }
 
-    // Update workflow progress to 'archived'
+    // Update workflow online_status to 'archived' and clear work_status
     const { error: updateError } = await supabase
       .from("workflows")
-      .update({ progress: "archived" })
+      .update({ online_status: "archived", work_status: null })
       .eq("id", workflowId);
 
     if (updateError) {
-      logger.error(updateError, "Error updating workflow progress");
+      logger.error(updateError, "Error updating workflow online_status");
     }
 
     logger.info({ workflowId, remoteId }, "Document archived successfully");

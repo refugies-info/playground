@@ -11,8 +11,8 @@ import Link from "next/link";
 import {
   getLanguageFlag,
   getLanguageName,
-  getStateLabel,
-  getStateVariant,
+  getTranslationStatusLabel,
+  getTranslationStatusVariant,
 } from "@/lib/document-labels";
 import type { TranslationItem } from "@/services/translations";
 
@@ -70,8 +70,8 @@ export const columns: ColumnDef<TranslationItem>[] = [
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
       return (
-        <Badge variant={getStateVariant(status)}>
-          {getStateLabel(status) || status}
+        <Badge variant={getTranslationStatusVariant(status)}>
+          {getTranslationStatusLabel(status)}
         </Badge>
       );
     },

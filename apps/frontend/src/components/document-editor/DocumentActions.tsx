@@ -187,7 +187,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
     }
   };
 
-  const isCompliant = document?.status === "compliant";
+  const isCompliant = document?.complianceStatus === "compliant";
 
   // Workflow:
   // - Save: enabled when document is modified (isDirty) AND compliant
@@ -196,7 +196,9 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
   const canPublishNow =
     !isDirty &&
     isCompliant &&
-    (document?.state === "draft" || document?.state === "archived");
+    (document?.workStatus === "draft" ||
+      document?.workStatus === "to_process" ||
+      document?.onlineStatus === "archived");
 
   return (
     <div className="flex flex-col gap-2 p-4 border-t bg-white relative">
@@ -240,31 +242,43 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
         {!isCollapsed && (isSaving ? "Enregistrement..." : "Enregistrer")}
       </Button>
 
-      {/* Publish Button - enabled after save */}
-      {document?.state !== "published" && (
-        <Button
-          variant="success"
-          size="sm"
-          className={cn("gap-2", isCollapsed && "justify-center px-0")}
-          onClick={handlePublishClick}
-          disabled={isPublishing || !canPublishNow}
-        >
-          <Send className="w-4 h-4" />
-          {!isCollapsed && (isPublishing ? "Publication..." : "Publier")}
-        </Button>
-      )}
-
-      {/* Archive Button - visible when a publication exists */}
-      {document?.state === "published" && (
+      {/* View Published - shows if onlineStatus is published */}
+      {document?.onlineStatus === "published" && (
         <Button
           variant="outline"
           size="sm"
+          className="text-blue-600 border-blue-200 hover:bg-blue-50 gap-2"
+          onClick={() => window.open(document.publishedUrl, "_blank")}
+        >
+          <ExternalLink className="w-4 h-4" />
+          Voir la fiche
+        </Button>
+      )}
+
+      {/* Publish Button - shows if not published */}
+      {document?.onlineStatus !== "published" && (
+        <Button
+          variant="success"
+          size="sm"
+          onClick={handlePublishClick} // Changed from handlePublish to handlePublishClick to match existing logic
+          disabled={isPublishing || !canPublishNow} // Changed from !canPublish to !canPublishNow to match existing logic
+          className="bg-green-600 hover:bg-green-700"
+        >
+          {isPublishing ? "Publication..." : "Publier"}
+        </Button>
+      )}
+
+      {/* Archive - shows if not archived */}
+      {document?.onlineStatus !== "archived" && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleArchive}
+          disabled={isArchiving}
           className={cn(
             "gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700",
             isCollapsed && "justify-center px-0",
           )}
-          onClick={handleArchive}
-          disabled={isArchiving}
         >
           <Archive className="w-4 h-4" />
           {!isCollapsed && (isArchiving ? "Archivage..." : "Archiver")}
