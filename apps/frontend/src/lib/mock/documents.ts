@@ -65,6 +65,7 @@ export function generateMockDocuments(count: number = 50): Document[] {
     title:
       "Actions socio-linguistiques complémentaires du CIR (ASL) - Langu'Action - métiers en tension",
     date_added: new Date("2025-11-25").toISOString(),
+    updated_at: new Date("2025-11-25").toISOString(),
     complianceStatus: "compliant",
     workStatus: "to_process",
     onlineStatus: "published",
@@ -281,6 +282,7 @@ Contactez-nous pour plus d'informations et pour vous inscrire.
       onlineStatus: ONLINE_STATUSES[rng.randomInt(0, ONLINE_STATUSES.length)],
       sourceSystem: (rng.random() > 0.5 ? "RCO" : "DI") as "RCO" | "DI",
       content,
+      updated_at: date.toISOString(),
       metadata: {
         location,
         duration: `${duration} heures`,

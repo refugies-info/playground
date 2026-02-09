@@ -302,6 +302,7 @@ export async function getDocuments(params: GetDocumentsParams) {
         sessionStartDate: metadataRow?.session_start_date ?? undefined,
         qualityScore: metadataRow?.quality_score ?? undefined,
         sourceSystem: item.rco_record_id ? "RCO" : "DI",
+        updated_at: item.updated_at,
       };
     }),
   );
@@ -484,5 +485,6 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     sessionStartDate: ingestionMetadataRow?.session_start_date ?? undefined,
     qualityScore: ingestionMetadataRow?.quality_score ?? undefined,
     sourceSystem: workflow.rco_record_id ? "RCO" : "DI",
+    updated_at: workflow.updated_at,
   };
 }

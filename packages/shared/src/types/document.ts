@@ -33,6 +33,7 @@ export interface Document {
   sessionStartDate?: string;
   qualityScore?: number | null;
   sourceSystem: "RCO" | "DI";
+  updated_at: string;
 }
 
 export interface ContentItem {
@@ -51,4 +52,5 @@ export interface ContentItem {
   sourceRecordId?: string;
   createdAt?: string;
   createdBy?: string;
+  updated_at?: string;
 }
