@@ -44,7 +44,20 @@ export async function saveDocument(
       };
     }
 
-    const result = await start(saveWorkflow, [workflowId, markdown]);
+    const cookieStore = await cookies();
+    const supabase = createSupabaseServerClient(cookieStore);
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      logger.error(userError, "Error getting user for save");
+      return { success: false, error: "Utilisateur non authentifié" };
+    }
+
+    const result = await start(saveWorkflow, [workflowId, markdown, user.id]);
 
     logger.info(
       { workflowRunId: result.runId, workflowId },

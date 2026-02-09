@@ -122,6 +122,48 @@ export async function publishDocumentStep(
       return { success: false, error: "Publication ID not received" };
     }
 
+    // 3. fetch the author_id from the editorial_record or translation_record
+    // We need to know which record to fetch based on the workflow
+    // For now, let's assume it's an editorial_record based workflow if not translation logic
+    // But better: fetch the workflow to see what record is attached
+    const { data: workflow, error: workflowError } = await supabase
+      .from("workflows")
+      .select(
+        "editorial_record:editorial_record_id(author_id), translation_record:translation_record_id(author_id)",
+      )
+      .eq("id", workflowId)
+      .single();
+
+    if (workflowError) {
+      logger.error(workflowError, "Error fetching workflow for author_id");
+    }
+
+    // Simplified strictly typed author extraction
+    type JoinedRecord = { author_id: string | null };
+    type WorkflowWithAuthors = {
+      editorial_record: JoinedRecord | JoinedRecord[] | null;
+      translation_record: JoinedRecord | JoinedRecord[] | null;
+    };
+
+    const getAuthorDetail = (
+      record: JoinedRecord | JoinedRecord[] | null | undefined,
+    ) => {
+      if (!record) return null;
+      if (Array.isArray(record)) {
+        return record.length > 0 ? record[0].author_id : null;
+      }
+      return record.author_id;
+    };
+
+    // Cast the workflow result to a known shape to avoid implicit any errors on join
+    // Supabase JS client types for joined tables can vary (array vs object) based on relationships
+    const typedWorkflow = workflow as unknown as WorkflowWithAuthors;
+
+    const author_id =
+      getAuthorDetail(typedWorkflow.editorial_record) ||
+      getAuthorDetail(typedWorkflow.translation_record) ||
+      null;
+
     // Store or update publication record
     const { data: newRecord, error: insertError } = await supabase
       .from("publication_records")
@@ -133,6 +175,7 @@ export async function publishDocumentStep(
         mode: "publish",
         payload: webhookPayload,
         published_by: userId,
+        author_id,
       })
       .select("id")
       .single();

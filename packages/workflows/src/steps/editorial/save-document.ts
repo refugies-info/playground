@@ -28,6 +28,7 @@ export interface SaveDocumentResult {
 export async function saveDocumentStep(
   workflowId: string,
   markdown: string,
+  userId: string,
 ): Promise<StepResult<SaveDocumentResult>> {
   "use step";
 
@@ -86,6 +87,7 @@ export async function saveDocumentStep(
         .update({
           markdown,
           metadata: updatedMetadata,
+          author_id: userId,
           updated_at: new Date().toISOString(),
         })
         .eq("id", workflow.editorial_record_id);
@@ -111,6 +113,7 @@ export async function saveDocumentStep(
           ingestion_record_id: workflow.ingestion_record_id,
           markdown,
           metadata: updatedMetadata,
+          author_id: userId,
         })
         .select("id")
         .single();
