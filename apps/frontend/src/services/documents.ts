@@ -62,14 +62,20 @@ type WorkflowWithRelations =
       | null;
   };
 
-function normalizeProgress(progress: string): Document["state"] {
-  if (progress === "editorial" || progress === "modified") {
-    return "draft";
+// Helper to determine document state from work_status and online_status
+function normalizeState(
+  workStatus: string | null,
+  onlineStatus: string | null,
+): Document["state"] {
+  // Priority: online_status > work_status
+  if (onlineStatus) {
+    return onlineStatus as Document["state"];
   }
-  if (progress === "rco" || progress === "ingestion") {
-    return "to_process";
+  if (workStatus) {
+    return workStatus as Document["state"];
   }
-  return progress as Document["state"];
+  // Default to to_process if both are null (shouldn't happen normally)
+  return "to_process";
 }
 
 type WorkflowIngestionMetadata = {
@@ -101,8 +107,9 @@ export async function getDocuments(params: GetDocumentsParams) {
     .select(
       `
       id,
-      status,
-      progress,
+      compliance_status,
+      work_status,
+      online_status,
       updated_at,
       rco_record_id,
       ingestion_records (
@@ -135,19 +142,24 @@ export async function getDocuments(params: GetDocumentsParams) {
   // Apply filters
   if (status) {
     if (Array.isArray(status)) {
-      query = query.in("status", status);
+      query = query.in("compliance_status", status);
     } else {
-      query = query.eq("status", status);
+      query = query.eq("compliance_status", status);
     }
   } else {
-    // By default, exclude documents that are still being processed or have failed,
-    // as they are handled on the "Workflow / Import" page.
-    // They can be fetched explicitly by providing a status filter.
-    query = query.not("status", "in", '("unknown","error")');
+    // By default, exclude documents that are still being processed or have failed
+    // NULL = not yet evaluated, pending = AI processing, error = failed
+    query = query.not("compliance_status", "in", '("error")');
+    query = query.not("compliance_status", "is", null);
   }
 
   if (state) {
-    query = query.eq("progress", state);
+    // State can come from either work_status or online_status
+    if (state === "to_process" || state === "draft") {
+      query = query.eq("work_status", state);
+    } else if (state === "published" || state === "archived") {
+      query = query.eq("online_status", state);
+    }
   }
 
   if (dateFrom) {
@@ -160,11 +172,11 @@ export async function getDocuments(params: GetDocumentsParams) {
 
   // Apply sorting
   const sortFieldMap: Record<DocumentSortField, string> = {
-    date_added: "updated_at", // date_added is computed from updated_at
+    date_added: "updated_at",
     updated_at: "updated_at",
-    status: "status",
-    state: "progress", // state maps to progress column
-    title: "title", // Now supported via updated view
+    status: "compliance_status",
+    state: "work_status", // Default to work_status for state sorting
+    title: "title",
   };
 
   const dbColumn = sortFieldMap[sortBy];
@@ -262,8 +274,8 @@ export async function getDocuments(params: GetDocumentsParams) {
         id: item.id,
         title,
         date_added: dateAdded,
-        status: item.status,
-        state: normalizeProgress(item.progress),
+        status: item.compliance_status ?? "pending",
+        state: normalizeState(item.work_status, item.online_status),
         content,
         metadata,
         publishedUrl,
@@ -294,7 +306,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const { data: workflow, error: workflowError } = await supabase
     .from("workflows")
     .select(
-      "id, status, progress, updated_at, editorial_record_id, ingestion_record_id, rco_record_id",
+      "id, compliance_status, work_status, online_status, updated_at, editorial_record_id, ingestion_record_id, rco_record_id",
     )
     .eq("id", id)
     .single();
@@ -441,8 +453,8 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     id: workflow.id,
     title,
     date_added: dateAdded,
-    status: workflow.status,
-    state: normalizeProgress(workflow.progress),
+    status: workflow.compliance_status ?? "pending",
+    state: normalizeState(workflow.work_status, workflow.online_status),
     content,
     ingestionContent,
     complianceReport,

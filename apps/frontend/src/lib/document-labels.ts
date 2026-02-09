@@ -4,7 +4,11 @@ import type { BadgeProps } from "@playground/ui/primitives";
 /**
  * Document Status Types
  */
-export type DocumentStatus = "compliant" | "non_compliant" | "error";
+export type DocumentStatus =
+  | "pending"
+  | "compliant"
+  | "non_compliant"
+  | "error";
 export type DocumentState = "to_process" | "draft" | "published" | "archived";
 
 /**
@@ -22,6 +26,10 @@ export const STATUS_CONFIG: Record<
     variant: BadgeVariant;
   }
 > = {
+  pending: {
+    label: "En cours",
+    variant: "info",
+  },
   compliant: {
     label: "Conforme",
     variant: "success",

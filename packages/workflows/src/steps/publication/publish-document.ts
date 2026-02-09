@@ -33,7 +33,7 @@ export interface PublishDocumentInput {
  * 1. Checks for existing publication (CREATE vs UPDATE)
  * 2. Calls the platform webhook
  * 3. Stores/updates the publication record
- * 4. Updates workflow progress to 'published'
+ * 4. Updates workflow online_status to 'published' and clears work_status
  *
  * @param input - Publication input with document data and user context
  * @returns Result with publication details
@@ -144,14 +144,14 @@ export async function publishDocumentStep(
 
     const publicationRecordId = newRecord.id;
 
-    // Update workflow progress
+    // Update workflow online_status to 'published' and clear work_status
     const { error: updateError } = await supabase
       .from("workflows")
-      .update({ progress: "published" })
+      .update({ online_status: "published", work_status: null })
       .eq("id", workflowId);
 
     if (updateError) {
-      logger.error(updateError, "Error updating workflow progress");
+      logger.error(updateError, "Error updating workflow online_status");
     }
 
     const publishedUrl = adapter.buildPublishedUrl(remoteId);

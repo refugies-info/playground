@@ -3,24 +3,25 @@ import type { StepResult } from "../../types";
 import { getSupabaseClient } from "../common/supabase";
 
 /**
- * Result of toggling workflow status.
+ * Result of toggling workflow compliance status.
  */
 export interface ToggleStatusResult {
-  newStatus: string;
-  newProgress: string;
+  newComplianceStatus: string;
+  newOnlineStatus: string | null;
+  newWorkStatus: string | null;
 }
 
 /**
  * Toggles the compliance status of a workflow.
  *
  * This step:
- * 1. Calculates the new status (compliant <-> non_compliant)
- * 2. Determines the new progress state (to_process vs archived)
+ * 1. Calculates the new compliance_status (compliant <-> non_compliant)
+ * 2. Determines the new online_status and work_status based on transition
  * 3. Updates the workflow record
  *
  * @param workflowId - The workflow ID to update
- * @param currentStatus - The current status of the workflow
- * @returns Result with new status and progress
+ * @param currentStatus - The current compliance status of the workflow
+ * @returns Result with new statuses
  */
 export async function toggleStatusStep(
   workflowId: string,
@@ -31,25 +32,30 @@ export async function toggleStatusStep(
   try {
     const supabase = getSupabaseClient();
 
-    const newStatus =
+    const newComplianceStatus =
       currentStatus === "compliant" ? "non_compliant" : "compliant";
 
-    // Determine the new progress based on status transition
-    let newProgress: string;
-    if (currentStatus === "non_compliant" && newStatus === "compliant") {
-      // Non-conforme → Conforme: document needs to be processed before publication
-      newProgress = "to_process";
-    } else if (currentStatus === "compliant" && newStatus === "non_compliant") {
-      // Conforme → Non_conforme: document is effectively archived/rejected
-      newProgress = "archived";
+    // Determine the new online_status and work_status based on compliance transition
+    let newOnlineStatus: string | null;
+    let newWorkStatus: string | null;
+
+    if (newComplianceStatus === "compliant") {
+      // Becoming compliant: ready to process, not archived
+      newOnlineStatus = null;
+      newWorkStatus = "to_process";
     } else {
-      // Fallback logic
-      newProgress = currentStatus === "compliant" ? "to_process" : "archived";
+      // Becoming non-compliant: archived, no work needed
+      newOnlineStatus = "archived";
+      newWorkStatus = null;
     }
 
     const { error: updateError } = await supabase
       .from("workflows")
-      .update({ status: newStatus, progress: newProgress })
+      .update({
+        compliance_status: newComplianceStatus,
+        online_status: newOnlineStatus,
+        work_status: newWorkStatus,
+      })
       .eq("id", workflowId);
 
     if (updateError) {
@@ -61,13 +67,19 @@ export async function toggleStatusStep(
     }
 
     logger.info(
-      { workflowId, oldStatus: currentStatus, newStatus, newProgress },
+      {
+        workflowId,
+        oldStatus: currentStatus,
+        newComplianceStatus,
+        newOnlineStatus,
+        newWorkStatus,
+      },
       "Workflow status toggled successfully",
     );
 
     return {
       success: true,
-      data: { newStatus, newProgress },
+      data: { newComplianceStatus, newOnlineStatus, newWorkStatus },
     };
   } catch (error) {
     logger.error(error, "Unexpected error in toggleStatusStep");
