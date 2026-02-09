@@ -2,7 +2,9 @@
 -- Drop first because we are changing column types/logic
 DROP VIEW IF EXISTS public.workflow_ingestion_metadata;
 
-CREATE VIEW public.workflow_ingestion_metadata AS
+CREATE VIEW public.workflow_ingestion_metadata 
+WITH (security_invoker = true)
+AS
 SELECT
   w.id as workflow_id,
   w.ingestion_record_id,
