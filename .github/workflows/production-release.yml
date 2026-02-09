@@ -51,4 +51,5 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://${{ secrets.SUPABASE_PROJECT_ID }}.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SEED_USER_PASSWORD: ${{ secrets.SEED_USER_PASSWORD }}
         run: pnpm seed:users
