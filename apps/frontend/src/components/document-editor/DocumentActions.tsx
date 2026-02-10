@@ -234,7 +234,9 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
         <div className="text-xs text-center mb-1">
           {saveSuccess && <span className="text-green-600">Enregistré ✓</span>}
           {saveError && <span className="text-red-600">{saveError}</span>}
-          {publishSuccess && <span className="text-green-600">Publié ✓</span>}
+          {publishSuccess && !isWaitingForLink && (
+            <span className="text-green-600">Publié ✓</span>
+          )}
           {publishError && <span className="text-red-600">{publishError}</span>}
           {archiveSuccess && <span className="text-green-600">Archivé ✓</span>}
           {archiveError && <span className="text-red-600">{archiveError}</span>}
@@ -317,9 +319,11 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
           >
             <X className="w-4 h-4" />
           </button>
-          <div className="text-sm font-medium text-green-600 text-center">
-            Document publié !
-          </div>
+          {!isWaitingForLink && (
+            <div className="text-sm font-medium text-green-600 text-center">
+              Document publié !
+            </div>
+          )}
           {publishOverlayError ? (
             <div className="text-xs text-red-600 text-center">
               {publishOverlayError}
