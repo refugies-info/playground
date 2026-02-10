@@ -202,12 +202,15 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
     setArchiveError(null);
     setArchiveSuccess(false);
 
-    if (
-      !confirm(
-        "Êtes-vous sûr de vouloir archiver ce document ? Il ne sera plus visible publiquement.",
-      )
-    ) {
-      return;
+    // Only ask for confirmation if the document has been published before
+    if (document?.publicationRemoteId) {
+      if (
+        !confirm(
+          "Êtes-vous sûr de vouloir archiver ce document ? Il ne sera plus visible publiquement.",
+        )
+      ) {
+        return;
+      }
     }
 
     const result = await archiveDocument();

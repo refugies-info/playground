@@ -6,9 +6,12 @@ import { getPublisherAdapter } from "./adapters/refugies-info";
 /**
  * Result of archiving a document.
  */
+/**
+ * Result of archiving a document.
+ */
 export interface ArchiveDocumentResult {
-  publicationRecordId: string;
-  remoteId: string;
+  publicationRecordId?: string;
+  remoteId?: string;
 }
 
 /**
@@ -66,7 +69,7 @@ export async function archiveDocumentStep(
     // Get base URL for target matching
     const baseUrl = process.env.RI_BASE_URL?.replace(/\/$/, "") || "";
 
-    // Find existing publication (MUST exist to archive)
+    // Check for existing publication (optional)
     const { data: existingPublication } = await supabase
       .from("publication_records")
       .select("id, remote_id")
@@ -76,67 +79,76 @@ export async function archiveDocumentStep(
       .limit(1)
       .single();
 
-    if (!existingPublication?.remote_id) {
-      return { success: false, error: "Document was never published" };
-    }
+    let remoteId: string | undefined;
+    let newRecordId: string | undefined;
 
-    const remoteId = existingPublication.remote_id;
+    // Only proceed with webhook and new record if publication exists
+    if (existingPublication?.remote_id) {
+      remoteId = existingPublication.remote_id;
 
-    // Use adapter to build payload
-    const webhookPayload = await adapter.buildPayload({
-      title,
-      markdown,
-      metadata: metadata || {},
-      userEmail,
-      status: "Archivé",
-      existingRemoteId: remoteId,
-    });
+      // Use adapter to build payload
+      const webhookPayload = await adapter.buildPayload({
+        title,
+        markdown,
+        metadata: metadata || {},
+        userEmail,
+        status: "Archivé",
+        existingRemoteId: remoteId,
+      });
 
-    // Call the webhook
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "webhook-secret": webhookSecret,
-      },
-      body: JSON.stringify(webhookPayload),
-    });
+      // Call the webhook
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "webhook-secret": webhookSecret,
+        },
+        body: JSON.stringify(webhookPayload),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      logger.error(
-        { status: response.status, error: errorData },
-        "Archive webhook failed",
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        logger.error(
+          { status: response.status, error: errorData },
+          "Archive webhook failed",
+        );
+        return {
+          success: false,
+          error:
+            (errorData as { message?: string }).message ||
+            `Webhook error ${response.status}`,
+        };
+      }
+
+      // Create a new publication record for archive (history)
+      const { data: newRecord, error: insertError } = await supabase
+        .from("publication_records")
+        .insert({
+          workflow_id: workflowId,
+          target: baseUrl,
+          remote_id: remoteId,
+          status: "archived",
+          mode: "archive",
+          payload: webhookPayload,
+          published_by: userId,
+        })
+        .select("id")
+        .single();
+
+      if (insertError || !newRecord) {
+        logger.error(insertError, "Error storing archive publication record");
+        return { success: false, error: "Failed to store archive publication" };
+      }
+      newRecordId = newRecord.id;
+    } else {
+      logger.info(
+        { workflowId },
+        "Document never published - skipping webhook and record creation",
       );
-      return {
-        success: false,
-        error:
-          (errorData as { message?: string }).message ||
-          `Webhook error ${response.status}`,
-      };
-    }
-
-    // Create a new publication record for archive (history)
-    const { data: newRecord, error: insertError } = await supabase
-      .from("publication_records")
-      .insert({
-        workflow_id: workflowId,
-        target: baseUrl,
-        remote_id: remoteId,
-        status: "archived",
-        mode: "archive",
-        payload: webhookPayload,
-        published_by: userId,
-      })
-      .select("id")
-      .single();
-
-    if (insertError || !newRecord) {
-      logger.error(insertError, "Error storing archive publication record");
-      return { success: false, error: "Failed to store archive publication" };
     }
 
     // Update workflow online_status to 'archived' and clear work_status
+    // This happens regardless of whether it was published before
     const { error: updateError } = await supabase
       .from("workflows")
       .update({ online_status: "archived", work_status: null })
@@ -144,6 +156,7 @@ export async function archiveDocumentStep(
 
     if (updateError) {
       logger.error(updateError, "Error updating workflow online_status");
+      return { success: false, error: "Failed to update workflow status" };
     }
 
     logger.info({ workflowId, remoteId }, "Document archived successfully");
@@ -151,7 +164,7 @@ export async function archiveDocumentStep(
     return {
       success: true,
       data: {
-        publicationRecordId: newRecord.id,
+        publicationRecordId: newRecordId,
         remoteId,
       },
     };
