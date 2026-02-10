@@ -17,9 +17,9 @@ create table if not exists public.profiles (
 alter table public.profiles enable row level security;
 
 -- Create policies
-create policy "Public profiles are viewable by everyone"
+create policy "Public profiles are viewable by authenticated users"
   on public.profiles for select
-  using ( true );
+  using ( auth.role() = 'authenticated' );
 
 create policy "Users can insert their own profile"
   on public.profiles for insert
