@@ -139,6 +139,30 @@ export async function toggleWorkflowStatus(
 
     const auth = await getAuthorizedSession(workflowId, "modify");
     if (auth.errorResponse) return auth.errorResponse;
+    const { supabase } = auth;
+
+    // Check if the document is already being handled by an editor
+    const { data: workflow, error: workflowError } = await supabase
+      .from("workflows")
+      .select("work_status, online_status")
+      .eq("id", workflowId)
+      .single();
+
+    if (workflowError || !workflow) {
+      logger.error(workflowError, "Error fetching workflow for status toggle");
+      return { success: false, error: "Workflow non trouvé" };
+    }
+
+    if (
+      workflow.work_status === "draft" ||
+      workflow.online_status === "published"
+    ) {
+      return {
+        success: false,
+        error:
+          "Impossible de changer l'arbitrage d'un document en cours de traitement",
+      };
+    }
 
     const result = await start(toggleStatusWorkflow, [
       workflowId,

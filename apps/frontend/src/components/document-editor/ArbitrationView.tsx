@@ -79,19 +79,31 @@ export function ArbitrationView() {
               </p>
 
               {!isError && (
-                <Button
-                  variant={isCompliant ? "danger" : "primary"}
-                  className="w-fit flex gap-2 items-center justify-center cursor-pointer ml-auto"
-                  onClick={handleToggleStatus}
-                  disabled={isUpdating}
-                >
-                  <b className="uppercase">Je ne suis pas d'accord</b>{" "}
-                  <span>
-                    {isCompliant
-                      ? "(passer en non conforme)"
-                      : "(passer en conforme)"}
-                  </span>
-                </Button>
+                <div className="flex flex-col items-end gap-2 ml-auto">
+                  {!(
+                    document?.workStatus === "draft" ||
+                    document?.onlineStatus === "published"
+                  ) ? (
+                    <Button
+                      variant={isCompliant ? "danger" : "primary"}
+                      className="w-fit flex gap-2 items-center justify-center cursor-pointer"
+                      onClick={handleToggleStatus}
+                      disabled={isUpdating}
+                    >
+                      <b className="uppercase">Je ne suis pas d'accord</b>{" "}
+                      <span>
+                        {isCompliant
+                          ? "(passer en non conforme)"
+                          : "(passer en conforme)"}
+                      </span>
+                    </Button>
+                  ) : (
+                    <p className="text-xs font-medium ">
+                      L'arbitrage ne peut plus être modifié (fiche en cours de
+                      traitement).
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           </div>
