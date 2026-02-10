@@ -22,9 +22,11 @@ export function DocumentStatus() {
       <Badge variant={getComplianceStatusVariant(document.complianceStatus)}>
         {getComplianceStatusLabel(document.complianceStatus)}
       </Badge>
-      <Badge variant={getWorkStatusVariant(document.workStatus)}>
-        {getWorkStatusLabel(document.workStatus)}
-      </Badge>
+      {document.workStatus && (
+        <Badge variant={getWorkStatusVariant(document.workStatus)}>
+          {getWorkStatusLabel(document.workStatus)}
+        </Badge>
+      )}
       <Badge variant={getOnlineStatusVariant(document.onlineStatus)}>
         {getOnlineStatusLabel(document.onlineStatus)}
       </Badge>
