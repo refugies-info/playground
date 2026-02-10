@@ -83,7 +83,7 @@ export async function archiveDocumentStep(
     const remoteId = existingPublication.remote_id;
 
     // Use adapter to build payload
-    const webhookPayload = adapter.buildPayload({
+    const webhookPayload = await adapter.buildPayload({
       title,
       markdown,
       metadata: metadata || {},

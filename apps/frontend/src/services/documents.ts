@@ -10,6 +10,7 @@ import { injectFrontmatterContent, logger } from "@playground/shared-types";
 import type { Database, Json } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
+import { extractAuthorProfile } from "./helpers";
 
 /**
  * Type for ingestion record with joined letta_reports.
@@ -18,13 +19,33 @@ import { cookies } from "next/headers";
 interface IngestionRecordWithReport {
   markdown: string;
   metadata: Json;
+  created_at: string;
   ingestion_report_id: string | null;
-  created_at?: string;
   letta_reports:
     | { markdown: string; status?: string; created_at?: string }
     | { markdown: string; status?: string; created_at?: string }[]
     | null;
 }
+
+// Helper type for the joined query result
+type WorkflowWithRelations =
+  Database["public"]["Tables"]["workflows"]["Row"] & {
+    ingestion_records: IngestionRecordWithReport | null;
+    editorial_records:
+      | (Pick<
+          Database["public"]["Tables"]["editorial_records"]["Row"],
+          "markdown" | "metadata"
+        > & {
+          profiles: { email: string; role: string } | null;
+        })[]
+      | null;
+    publication_records:
+      | Pick<
+          Database["public"]["Tables"]["publication_records"]["Row"],
+          "remote_id" | "status" | "updated_at" | "created_at"
+        >[]
+      | null;
+  };
 
 export interface GetDocumentsParams {
   page?: number;
@@ -38,34 +59,6 @@ export interface GetDocumentsParams {
   dateTo?: string;
   searchId?: string;
 }
-
-// Helper type for the joined query result
-type WorkflowWithRelations =
-  Database["public"]["Tables"]["workflows"]["Row"] & {
-    ingestion_records:
-      | (Pick<
-          Database["public"]["Tables"]["ingestion_records"]["Row"],
-          "markdown" | "metadata" | "created_at" | "ingestion_report_id"
-        > & {
-          letta_reports:
-            | { markdown: string; status?: string; created_at?: string }
-            | { markdown: string; status?: string; created_at?: string }[]
-            | null;
-        })
-      | null;
-    editorial_records:
-      | Pick<
-          Database["public"]["Tables"]["editorial_records"]["Row"],
-          "markdown" | "metadata"
-        >[]
-      | null;
-    publication_records:
-      | Pick<
-          Database["public"]["Tables"]["publication_records"]["Row"],
-          "remote_id" | "status" | "updated_at" | "created_at"
-        >[]
-      | null;
-  };
 
 type WorkflowIngestionMetadata = {
   workflow_id: string;
@@ -111,7 +104,12 @@ export async function getDocuments(params: GetDocumentsParams) {
       ),
       editorial_records (
         markdown,
-        metadata
+        metadata,
+        author_id,
+        profiles (
+          email,
+          role
+        )
       ),
       publication_records (
         remote_id,
@@ -247,6 +245,11 @@ export async function getDocuments(params: GetDocumentsParams) {
         ? editorialRecordRaw[0]
         : editorialRecordRaw;
 
+      // Extract author info
+      const { email: authorEmail, role: authorRole } = extractAuthorProfile(
+        editorialRecord?.profiles,
+      );
+
       // Merge metadata, protecting technical IDs from ingestion
       const ingestionMetadata = (ingestionRecord?.metadata as Metadata) || {};
       const editorialMetadata = (editorialRecord?.metadata as Metadata) || {};
@@ -310,6 +313,8 @@ export async function getDocuments(params: GetDocumentsParams) {
         qualityScore: metadataRow?.quality_score ?? undefined,
         sourceSystem: item.rco_record_id ? "RCO" : "DI",
         updated_at: item.updated_at,
+        authorEmail,
+        authorRole,
       };
     }),
   );

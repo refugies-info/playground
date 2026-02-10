@@ -9,6 +9,7 @@ import {
   type Database,
 } from "@playground/supabase";
 import { cookies } from "next/headers";
+import { extractAuthorProfile } from "./helpers";
 
 // Define the shape of a translation item for the frontend
 export interface TranslationItem {
@@ -20,18 +21,11 @@ export interface TranslationItem {
   updatedAt: string;
   publicationUrl?: string;
   sourceMarkdown?: string; // from editorial_record
+  author: string;
+  authorRole: string;
 }
 
-export interface GetTranslationsParams {
-  page?: number;
-  pageSize?: number;
-  language?: string; // Filter by specific language
-  status?: string;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
-}
-
-// Helper type for the joined query result
+// Extended helper type including profiles
 type TranslationWithRelations =
   Database["public"]["Tables"]["translation_records"]["Row"] & {
     editorial_records: Pick<
@@ -46,7 +40,17 @@ type TranslationWithRelations =
           >[];
         })
       | null;
+    profiles: { email: string; role: string } | null;
   };
+
+export interface GetTranslationsParams {
+  page?: number;
+  pageSize?: number;
+  language?: string; // Filter by specific language
+  status?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
 
 /**
  * Simple word count estimation from markdown
@@ -86,6 +90,10 @@ export async function getTranslations(params: GetTranslationsParams) {
           target,
           payload
         )
+      ),
+      profiles (
+        email,
+        role
       )
     `,
     { count: "exact" },
@@ -165,6 +173,11 @@ export async function getTranslations(params: GetTranslationsParams) {
         publicationUrl = `${cleanBaseUrl}/dispositif/${pubRecord.remote_id}`;
       }
 
+      // Extract author info
+      const { email: authorEmail, role: authorRole } = extractAuthorProfile(
+        row.profiles,
+      );
+
       return {
         id: row.id,
         title,
@@ -174,6 +187,8 @@ export async function getTranslations(params: GetTranslationsParams) {
         updatedAt: row.updated_at,
         publicationUrl,
         sourceMarkdown,
+        author: authorEmail || "",
+        authorRole: authorRole || "",
       };
     }),
   );

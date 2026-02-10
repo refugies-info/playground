@@ -337,7 +337,7 @@ export async function getEditorialContent(
       return { success: false, error: "Workflow not found" };
     }
 
-    const markdown = workflow.editorial_record?.markdown || "";
+    const markdown = workflow?.editorial_record?.markdown || "";
 
     return { success: true, content: markdown };
   } catch (error) {

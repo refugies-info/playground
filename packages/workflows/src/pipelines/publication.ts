@@ -69,7 +69,6 @@ export async function publicationWorkflow(
         result.translationsCreated = translationResult.data.created;
       }
     }
-    // Note: No logging here - would require Node.js modules
   }
 
   return result;

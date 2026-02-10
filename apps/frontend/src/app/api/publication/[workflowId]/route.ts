@@ -18,7 +18,7 @@ export async function GET(
     .eq("status", "published")
     .order("created_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (error) {
     logger.error({ error, workflowId }, "Failed to fetch publication status");

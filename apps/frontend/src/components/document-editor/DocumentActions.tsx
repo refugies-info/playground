@@ -1,5 +1,6 @@
 "use client";
 
+import { logger } from "@playground/shared-types";
 import { cn } from "@playground/ui";
 import { Button, Spinner } from "@playground/ui/primitives";
 import {
@@ -12,7 +13,7 @@ import {
   Send,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDocument } from "./DocumentContext";
 
 async function fetchPublishedUrl(workflowId: string): Promise<{
@@ -59,52 +60,46 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
   );
   const [isWaitingForLink, setIsWaitingForLink] = useState(false);
 
-  useEffect(() => {
-    if (
-      !showPublishSuccessOverlay ||
-      !isWaitingForLink ||
-      publishedUrl ||
-      !document?.id
-    )
-      return;
-
-    let isMounted = true;
+  const startPollingForLink = async (workflowId: string) => {
     let attempts = 0;
-    const maxAttempts = 10;
+    const maxAttempts = 15;
 
-    const interval = setInterval(async () => {
-      attempts += 1;
+    setIsWaitingForLink(true);
+    setPublishOverlayError(null);
+
+    while (attempts < maxAttempts) {
+      if (publishedUrl) break; // Already found (maybe returned immediately)
+
+      attempts++;
       try {
-        const result = await fetchPublishedUrl(document.id);
-        if (!isMounted) return;
+        const result = await fetchPublishedUrl(workflowId);
+
         if (result.success && result.publishedUrl) {
           setPublishedUrl(result.publishedUrl);
           setIsWaitingForLink(false);
-          clearInterval(interval);
           return;
         }
+
         if (attempts >= maxAttempts) {
           setPublishOverlayError(
             "Le lien n’est pas encore disponible. Réessaie dans quelques instants.",
           );
           setIsWaitingForLink(false);
-          clearInterval(interval);
+          return;
         }
-      } catch (_error) {
-        if (!isMounted) return;
+
+        // Wait 2 seconds before next attempt
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      } catch (error) {
+        logger.error(error, "Error polling publication status");
         setPublishOverlayError(
           "Impossible de récupérer le lien de publication.",
         );
         setIsWaitingForLink(false);
-        clearInterval(interval);
+        return;
       }
-    }, 2000);
-
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, [showPublishSuccessOverlay, isWaitingForLink, publishedUrl, document?.id]);
+    }
+  };
 
   // Publication Overlay State
   const [showPublishOverlay, setShowPublishOverlay] = useState(false);
@@ -148,6 +143,12 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
       }
       setShowPublishSuccessOverlay(true);
       setIsWaitingForLink(!result.publishedUrl);
+
+      // Start polling if we don't have the URL yet
+      if (!result.publishedUrl && document?.id) {
+        startPollingForLink(document.id);
+      }
+
       setTimeout(() => setPublishSuccess(false), 3000);
     } else {
       setPublishError(result.error || "Échec de la publication");

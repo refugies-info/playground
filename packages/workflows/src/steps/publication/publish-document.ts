@@ -76,7 +76,7 @@ export async function publishDocumentStep(
       .eq("target", baseUrl)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     const existingRemoteId = existingPublication?.remote_id;
 
@@ -91,6 +91,7 @@ export async function publishDocumentStep(
     });
 
     // Call the webhook
+
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
@@ -122,53 +123,49 @@ export async function publishDocumentStep(
       return { success: false, error: "Publication ID not received" };
     }
 
-    // 3. fetch the author_id from the editorial_record or translation_record
-    // We need to know which record to fetch based on the workflow
-    // For now, let's assume it's an editorial_record based workflow if not translation logic
-    // But better: fetch the workflow to see what record is attached
+    // 3. fetch the workflow to get linked record IDs
+
     const { data: workflow, error: workflowError } = await supabase
       .from("workflows")
-      .select(
-        "editorial_record:editorial_record_id(author_id), translation_record:translation_record_id(author_id)",
-      )
+      .select("editorial_record_id")
       .eq("id", workflowId)
-      .single();
+      .maybeSingle();
 
     if (workflowError) {
-      logger.error(workflowError, "Error fetching workflow for author_id");
+      logger.error(
+        workflowError,
+        "Error fetching workflow in publishDocumentStep",
+      );
     }
 
-    // Simplified strictly typed author extraction
-    type JoinedRecord = { author_id: string | null };
-    type WorkflowWithAuthors = {
-      editorial_record: JoinedRecord | JoinedRecord[] | null;
-      translation_record: JoinedRecord | JoinedRecord[] | null;
-    };
+    if (!workflow) {
+      logger.error({ workflowId }, "Workflow not found in publishDocumentStep");
+      return { success: false, error: "Workflow not found" };
+    }
 
-    const getAuthorDetail = (
-      record: JoinedRecord | JoinedRecord[] | null | undefined,
-    ) => {
-      if (!record) return null;
-      if (Array.isArray(record)) {
-        return record.length > 0 ? record[0].author_id : null;
+    // 4. Fetch the author_id from the editorial record
+    let author_id: string | null = null;
+    if (workflow.editorial_record_id) {
+      const { data: edRecord, error: edError } = await supabase
+        .from("editorial_records")
+        .select("author_id")
+        .eq("id", workflow.editorial_record_id)
+        .maybeSingle();
+
+      if (edError) {
+        logger.error(edError, "Error fetching editorial record author");
+      } else if (edRecord) {
+        author_id = edRecord.author_id;
       }
-      return record.author_id;
-    };
-
-    // Cast the workflow result to a known shape to avoid implicit any errors on join
-    // Supabase JS client types for joined tables can vary (array vs object) based on relationships
-    const typedWorkflow = workflow as unknown as WorkflowWithAuthors;
-
-    const author_id =
-      getAuthorDetail(typedWorkflow.editorial_record) ||
-      getAuthorDetail(typedWorkflow.translation_record) ||
-      null;
+    }
 
     // Store or update publication record
+
     const { data: newRecord, error: insertError } = await supabase
       .from("publication_records")
       .insert({
         workflow_id: workflowId,
+        editorial_record_id: workflow.editorial_record_id,
         target: baseUrl,
         remote_id: remoteId,
         status: "published",
@@ -178,7 +175,7 @@ export async function publishDocumentStep(
         author_id,
       })
       .select("id")
-      .single();
+      .maybeSingle();
 
     if (insertError || !newRecord) {
       logger.error(insertError, "Error storing publication record");
@@ -188,6 +185,7 @@ export async function publishDocumentStep(
     const publicationRecordId = newRecord.id;
 
     // Update workflow online_status to 'published' and clear work_status
+
     const { error: updateError } = await supabase
       .from("workflows")
       .update({ online_status: "published", work_status: null })
@@ -214,10 +212,12 @@ export async function publishDocumentStep(
       },
     };
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+
     logger.error(error, "Unexpected error in publishDocumentStep");
     return {
       success: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMsg,
     };
   }
 }

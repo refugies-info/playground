@@ -1,19 +1,14 @@
 "use client";
 
 import {
+  Avatar,
   Badge,
-  // Button, // unused for now
   DataTableColumnHeader,
 } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
-import {
-  getLanguageFlag,
-  getLanguageName,
-  getTranslationStatusLabel,
-  getTranslationStatusVariant,
-} from "@/lib/document-labels";
+import { getLanguageFlag, getLanguageName } from "@/lib/document-labels";
 import type { TranslationItem } from "@/services/translations";
 
 export const columns: ColumnDef<TranslationItem>[] = [
@@ -63,20 +58,6 @@ export const columns: ColumnDef<TranslationItem>[] = [
     cell: ({ row }) => <div>{row.getValue("wordCount")}</div>,
   },
   {
-    accessorKey: "status",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Statut" />
-    ),
-    cell: ({ row }) => {
-      const status = row.getValue("status") as string;
-      return (
-        <Badge variant={getTranslationStatusVariant(status)}>
-          {getTranslationStatusLabel(status)}
-        </Badge>
-      );
-    },
-  },
-  {
     accessorKey: "publicationUrl",
     header: "Lien",
     cell: ({ row }) => {
@@ -94,6 +75,17 @@ export const columns: ColumnDef<TranslationItem>[] = [
           <span className="text-xs underline">Voir</span>
         </a>
       );
+    },
+  },
+  {
+    accessorKey: "author",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Auteur" />
+    ),
+    cell: ({ row }) => {
+      const email = row.original.author;
+      const role = row.original.authorRole;
+      return <Avatar email={email} userRole={role} size="sm" />;
     },
   },
 ];
