@@ -13,7 +13,7 @@ import {
   Send,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDocument } from "./DocumentContext";
 
 async function fetchPublishedUrl(workflowId: string): Promise<{
@@ -60,19 +60,33 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
   );
   const [isWaitingForLink, setIsWaitingForLink] = useState(false);
 
+  // Track mounted state to avoid updates on unmounted component
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
   const startPollingForLink = async (workflowId: string) => {
     let attempts = 0;
     const maxAttempts = 15;
 
+    if (!isMounted.current) return;
     setIsWaitingForLink(true);
     setPublishOverlayError(null);
 
     while (attempts < maxAttempts) {
+      if (!isMounted.current) return;
       if (publishedUrl) break; // Already found (maybe returned immediately)
 
       attempts++;
       try {
         const result = await fetchPublishedUrl(workflowId);
+
+        if (!isMounted.current) return;
 
         if (result.success && result.publishedUrl) {
           setPublishedUrl(result.publishedUrl);
@@ -91,6 +105,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
         // Wait 2 seconds before next attempt
         await new Promise((resolve) => setTimeout(resolve, 2000));
       } catch (error) {
+        if (!isMounted.current) return;
         logger.error(error, "Error polling publication status");
         setPublishOverlayError(
           "Impossible de récupérer le lien de publication.",
@@ -111,9 +126,11 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
 
     const result = await saveDocument();
 
+    if (!isMounted.current) return;
+
     if (result.success) {
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      setTimeout(() => isMounted.current && setSaveSuccess(false), 3000);
     } else {
       setSaveError(result.error || "Échec de l'enregistrement");
     }
@@ -136,6 +153,8 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
 
     const result = await publishDocument(triggerTranslations);
 
+    if (!isMounted.current) return;
+
     if (result.success) {
       setPublishSuccess(true);
       if (result.publishedUrl) {
@@ -149,7 +168,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
         startPollingForLink(document.id);
       }
 
-      setTimeout(() => setPublishSuccess(false), 3000);
+      setTimeout(() => isMounted.current && setPublishSuccess(false), 3000);
     } else {
       setPublishError(result.error || "Échec de la publication");
       setPublishOverlayError(result.error || "Échec de la publication");
@@ -180,9 +199,11 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
 
     const result = await archiveDocument();
 
+    if (!isMounted.current) return;
+
     if (result.success) {
       setArchiveSuccess(true);
-      setTimeout(() => setArchiveSuccess(false), 3000);
+      setTimeout(() => isMounted.current && setArchiveSuccess(false), 3000);
     } else {
       setArchiveError(result.error || "Échec de l'archivage");
     }
