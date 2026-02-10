@@ -6,19 +6,20 @@ import type { LettaMetadata, LettaReportResult } from "./types";
  * Checks if the content contains valid YAML frontmatter.
  */
 function checkHasFrontmatter(content: string): boolean {
-  return content.match(/(?:^|\n)---/) !== null;
+  // Use a more permissive regex that finds --- followed by a newline,
+  // even if it's preceded by conversational text.
+  return content.match(/---\r?\n/) !== null;
 }
 
 /**
  * Extracts valid markdown content by locating the start of the frontmatter.
  */
 function extractValidContent(content: string): string {
-  const match = content.match(/(?:^|\n)---/);
+  // Find the first occurrence of --- that looks like a frontmatter delimiter
+  // (i.e. it finishes a line).
+  const match = content.match(/---\r?\n/);
   if (match && match.index !== undefined) {
-    const startIndex = match[0].startsWith("\n")
-      ? match.index + 1
-      : match.index;
-    return content.slice(startIndex);
+    return content.slice(match.index);
   }
   return content;
 }

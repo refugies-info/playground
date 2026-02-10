@@ -227,6 +227,7 @@ export async function generateDiAuditReportsStep(runId: string) {
           metadata: parsed.metadata as Json,
           status: parsed.status,
           raw_response: parsed.rawResponse ?? null,
+          workflow_id: runId,
         })
         .select("id")
         .single();
