@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import { DocumentLayout } from "@/components/document-editor/DocumentLayout";
 import { getDocumentById } from "@/services/documents";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface DocumentPageProps {
   params: Promise<{
     id: string;

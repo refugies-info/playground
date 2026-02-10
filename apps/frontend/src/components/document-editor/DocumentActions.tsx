@@ -13,28 +13,20 @@ import {
   Send,
   X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { getPublicationStatus } from "@/services/document-actions";
 import { useDocument } from "./DocumentContext";
-
-async function fetchPublishedUrl(workflowId: string): Promise<{
-  success: boolean;
-  publishedUrl?: string;
-  error?: string;
-}> {
-  const response = await fetch(`/api/publication/${workflowId}`);
-  if (!response.ok) {
-    return { success: false, error: "Failed to fetch publication status" };
-  }
-  return response.json();
-}
 
 interface DocumentActionsProps {
   isCollapsed?: boolean;
 }
 
 export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
+  const router = useRouter();
   const {
     document,
+    setDocument,
     saveDocument,
     isSaving,
     isDirty,
@@ -72,7 +64,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
 
   const startPollingForLink = async (workflowId: string) => {
     let attempts = 0;
-    const maxAttempts = 15;
+    const maxAttempts = 30; // 1 minute total
 
     if (!isMounted.current) return;
     setIsWaitingForLink(true);
@@ -80,17 +72,27 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
 
     while (attempts < maxAttempts) {
       if (!isMounted.current) return;
-      if (publishedUrl) break; // Already found (maybe returned immediately)
 
       attempts++;
       try {
-        const result = await fetchPublishedUrl(workflowId);
+        const result = await getPublicationStatus(workflowId);
 
         if (!isMounted.current) return;
 
         if (result.success && result.publishedUrl) {
           setPublishedUrl(result.publishedUrl);
           setIsWaitingForLink(false);
+          // Update global context so TopBar sees the new link immediately
+          setDocument((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              onlineStatus: "published",
+              workStatus: null, // Clear Draft on success
+              publishedUrl: result.publishedUrl,
+            };
+          });
+          router.refresh(); // Refresh TopBar and other server components
           return;
         }
 
@@ -130,6 +132,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
 
     if (result.success) {
       setSaveSuccess(true);
+      router.refresh();
       setTimeout(() => isMounted.current && setSaveSuccess(false), 3000);
     } else {
       setSaveError(result.error || "Échec de l'enregistrement");
@@ -159,6 +162,16 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
       setPublishSuccess(true);
       if (result.publishedUrl) {
         setPublishedUrl(result.publishedUrl);
+        setDocument((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            onlineStatus: "published",
+            workStatus: null, // Clear Draft on success
+            publishedUrl: result.publishedUrl,
+          };
+        });
+        router.refresh();
       }
       setShowPublishSuccessOverlay(true);
       setIsWaitingForLink(!result.publishedUrl);
@@ -203,6 +216,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
 
     if (result.success) {
       setArchiveSuccess(true);
+      router.refresh();
       setTimeout(() => isMounted.current && setArchiveSuccess(false), 3000);
     } else {
       setArchiveError(result.error || "Échec de l'archivage");
@@ -215,12 +229,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
   // - Save: enabled when document is modified (isDirty) AND compliant
   // - Publish: enabled when document is saved (not dirty) AND compliant AND in draft
   const canSave = isDirty && isCompliant;
-  const canPublishNow =
-    !isDirty &&
-    isCompliant &&
-    (document?.workStatus === "draft" ||
-      document?.workStatus === "to_process" ||
-      document?.onlineStatus === "archived");
+  const canPublishNow = !isDirty && isCompliant;
 
   return (
     <div className="flex flex-col gap-2 p-4 border-t bg-white relative">
@@ -266,31 +275,20 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
         {!isCollapsed && (isSaving ? "Enregistrement..." : "Enregistrer")}
       </Button>
 
-      {/* View Published - shows if onlineStatus is published */}
-      {document?.onlineStatus === "published" && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-blue-600 border-blue-200 hover:bg-blue-50 gap-2"
-          onClick={() => window.open(document.publishedUrl, "_blank")}
-        >
-          <ExternalLink className="w-4 h-4" />
-          Voir la fiche
-        </Button>
-      )}
-
-      {/* Publish Button - shows if not published */}
-      {document?.onlineStatus !== "published" && (
-        <Button
-          variant="success"
-          size="sm"
-          onClick={handlePublishClick} // Changed from handlePublish to handlePublishClick to match existing logic
-          disabled={isPublishing || !canPublishNow} // Changed from !canPublish to !canPublishNow to match existing logic
-          className="bg-green-600 hover:bg-green-700"
-        >
-          {isPublishing ? "Publication..." : "Publier"}
-        </Button>
-      )}
+      {/* Publish Button - always show if not archived (wait, user wants to republish if archived) */}
+      <Button
+        variant="success"
+        size="sm"
+        onClick={handlePublishClick}
+        disabled={isPublishing || !canPublishNow}
+        className={cn(
+          "bg-green-600 hover:bg-green-700 gap-2",
+          isCollapsed && "justify-center px-0",
+        )}
+      >
+        <Send className="w-4 h-4" />
+        {!isCollapsed && (isPublishing ? "Publication..." : "Publier")}
+      </Button>
 
       {/* Archive - shows if not archived */}
       {document?.onlineStatus !== "archived" && (
@@ -325,8 +323,18 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
             </div>
           )}
           {publishOverlayError ? (
-            <div className="text-xs text-red-600 text-center">
-              {publishOverlayError}
+            <div className="flex flex-col items-center gap-2">
+              <div className="text-xs text-red-600 text-center">
+                {publishOverlayError}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => document?.id && startPollingForLink(document.id)}
+                className="h-7 text-[10px] px-2"
+              >
+                Réessayer
+              </Button>
             </div>
           ) : publishedUrl ? (
             <>

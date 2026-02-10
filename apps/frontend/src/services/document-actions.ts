@@ -13,6 +13,7 @@ import {
   saveWorkflow,
   toggleStatusWorkflow,
 } from "@playground/workflows";
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { start } from "workflow/api";
 import { normalizeMarkdown } from "../lib/markdown/normalizeMarkdown";
@@ -21,7 +22,14 @@ import { verifyWorkflowPermission } from "./permission-helper";
 // Debug logging to verify workflow imports
 
 /**
- * Helper to get authenticated user and verify permissions for a workflow.
+ * Verifies user authentication and permissions for a specific action on a workflow.
+ *
+ * Checks if the user is logged in and has the required role/permissions
+ * to perform the requested action ('modify', 'publish', 'archive').
+ *
+ * @param workflowId - The ID of the workflow to access.
+ * @param action - The action being performed.
+ * @returns An object containing the user session and Supabase client if successful, or an error response.
  */
 async function getAuthorizedSession(
   workflowId: string,
@@ -66,11 +74,15 @@ async function getAuthorizedSession(
 }
 
 /**
- * Server action to save a document via Vercel Workflow.
+ * Saves the editorial content of a document.
  *
- * This triggers a durable workflow that:
- * 1. Saves or updates the editorial record
- * 2. Updates workflow progress if needed
+ * Initiates a background workflow to:
+ * 1. Update the editorial record with new markdown content.
+ * 2. Update the workflow history and metadata.
+ *
+ * @param workflowId - The ID of the document workflow.
+ * @param markdown - The new markdown content to save.
+ * @returns The result of the operation, including the workflow run ID.
  */
 export async function saveDocument(
   workflowId: string,
@@ -101,9 +113,10 @@ export async function saveDocument(
       "Save workflow started",
     );
 
-    // Note: Since this is an async workflow, the metadata returned by 'start'
-    // is NOT the final metadata from the saved record (which happens later).
-    // The UI handles its own state synchronization (e.g. in DocumentContext).
+    revalidatePath("/documents/[id]", "page");
+
+    // Note: The UI handles optimistic updates.
+    // We return success immediately knowing the workflow is processing in background.
 
     return {
       success: true,
@@ -118,6 +131,16 @@ export async function saveDocument(
   }
 }
 
+/**
+ * Toggles the compliance status of a document (e.g., compliant <-> non_compliant).
+ *
+ * Triggers a workflow to update the status and calculates expected new states
+ * for immediate UI feedback (optimistic update pattern).
+ *
+ * @param workflowId - The ID of the document workflow.
+ * @param currentStatus - The current compliance status ('compliant' or 'non_compliant').
+ * @returns The new status values for optimistic UI updates.
+ */
 export async function toggleWorkflowStatus(
   workflowId: string,
   currentStatus: string,
@@ -141,7 +164,7 @@ export async function toggleWorkflowStatus(
     if (auth.errorResponse) return auth.errorResponse;
     const { supabase } = auth;
 
-    // Check if the document is already being handled by an editor
+    // Verify document state (prevent arbitration on already processed docs)
     const { data: workflow, error: workflowError } = await supabase
       .from("workflows")
       .select("work_status, online_status")
@@ -174,15 +197,7 @@ export async function toggleWorkflowStatus(
       "Toggle status workflow started",
     );
 
-    // Optimistic return is tricky with async workflow,
-    // but the UI likely invalidates path or we can return 'true'
-    // and let the UI wait for the workflow to finish via polling if needed.
-    // For now, we mimic the previous return shape but without immediate values
-    // as they are computed async.
-    // However, the previous code returned newStatus/newProgress immediately.
-    // To match UI expectations without rewriting UI, we can calculate them here purely for UI feedback,
-    // even though the REAL update happens in the background.
-
+    // Calculate optimistic new status for immediate UI feedback
     const newComplianceStatus =
       currentStatus === "compliant" ? "non_compliant" : "compliant";
 
@@ -197,6 +212,8 @@ export async function toggleWorkflowStatus(
       newOnlineStatus = "archived";
     }
 
+    revalidatePath("/documents/[id]", "page");
+
     return {
       success: true,
       newComplianceStatus,
@@ -210,9 +227,12 @@ export async function toggleWorkflowStatus(
 }
 
 /**
- * Server action to get the webhook secret for preview authentication
- * This allows secure transmission of the webhook secret without exposing it client-side
- * The Main App expects the raw secret, not an HMAC signature
+ * Retrieves the webhook secret for preview authentication.
+ *
+ * This server action allows the client to obtain the secret securely
+ * without embedding it in the client-side bundle.
+ *
+ * @returns The webhook secret string.
  */
 export async function getPreviewSecret(): Promise<{
   success: boolean;
@@ -230,13 +250,20 @@ export async function getPreviewSecret(): Promise<{
 }
 
 /**
- * Server action to publish a document to refugies.info via Vercel Workflow.
+ * Publishes a document to Réfugiés.info.
  *
- * This triggers a durable workflow that:
- * 1. Calls the publication webhook
- * 2. Stores the publication record
- * 3. Updates workflow progress to 'published'
- * 4. Optionally creates translation records
+ * Initiates the publication workflow which:
+ * 1. Sends the normalized markdown to the main application via webhook.
+ * 2. Creates a publication record.
+ * 3. Updates the document status to 'published'.
+ * 4. Optionally triggers translation workflows.
+ *
+ * @param workflowId - The ID of the document workflow.
+ * @param title - The title of the document.
+ * @param markdown - The markdown content to publish.
+ * @param metadata - Additional metadata for the publication.
+ * @param triggerTranslations - Whether to automatically start translation workflows.
+ * @returns The result of the operation, including the workflow run ID.
  */
 export async function publishDocument(
   workflowId: string,
@@ -254,11 +281,9 @@ export async function publishDocument(
     if (auth.errorResponse) return auth.errorResponse;
     const { user } = auth;
 
-    // 2. Normalize markdown to ensure unambiguous directive nesting
-    // This prevents parsing issues in Main App when it receives nested directives
+    // Normalize markdown to prevent parsing issues with nested directives
     const normalizedMarkdown = normalizeMarkdown(markdown);
 
-    // 3. Start the publication workflow
     if (!publicationWorkflow) {
       logger.error("publicationWorkflow is undefined - cannot start workflow");
       return {
@@ -285,6 +310,8 @@ export async function publishDocument(
       "Publication workflow started",
     );
 
+    revalidatePath("/documents/[id]", "page");
+
     return {
       success: true,
       workflowRunId: result.runId,
@@ -299,12 +326,17 @@ export async function publishDocument(
 }
 
 /**
- * Server action to archive a document via Vercel Workflow.
+ * Archives a document.
  *
- * This triggers a durable workflow that:
- * 1. Archives the document on the target platform
- * 2. Updates the publication record status
- * 3. Updates workflow progress to 'archived'
+ * Initiates the archive workflow which:
+ * 1. Marks the document as archived on the main application.
+ * 2. Updates local records and status.
+ *
+ * @param workflowId - The ID of the document workflow.
+ * @param title - The title of the document.
+ * @param markdown - The current markdown content.
+ * @param metadata - Additional metadata.
+ * @returns The result of the operation, including the workflow run ID.
  */
 export async function archiveDocument(
   workflowId: string,
@@ -329,7 +361,6 @@ export async function archiveDocument(
       };
     }
 
-    // 2. Start the archive workflow
     const result = await start(archiveWorkflow, [
       {
         workflowId,
@@ -347,6 +378,8 @@ export async function archiveDocument(
       "Archive workflow started",
     );
 
+    revalidatePath("/documents/[id]");
+
     return {
       success: true,
       workflowRunId: result.runId,
@@ -357,6 +390,15 @@ export async function archiveDocument(
   }
 }
 
+/**
+ * Retrieves the raw editorial content of a workflow.
+ *
+ * Primarily used for debugging or inspecting the exact markdown stored
+ * in the `editorial_record` associated with a workflow.
+ *
+ * @param workflowId - The ID of the workflow.
+ * @returns Object containing the markdown content string.
+ */
 export async function getEditorialContent(
   workflowId: string,
 ): Promise<{ success: boolean; content?: string; error?: string }> {
@@ -387,6 +429,51 @@ export async function getEditorialContent(
     return { success: true, content: markdown };
   } catch (error) {
     logger.error(error, "Unexpected error getting editorial content");
+    return { success: false, error: "Unexpected error" };
+  }
+}
+
+/**
+ * Retrieves the current publication status and public URL of a document.
+ *
+ * Used for polling after a publication workflow is started to detect when
+ * the document is successfully published on the remote platform.
+ *
+ * @param workflowId - The ID of the workflow to check.
+ * @returns Object containing the publication URL if published.
+ */
+export async function getPublicationStatus(workflowId: string): Promise<{
+  success: boolean;
+  publishedUrl?: string;
+  error?: string;
+}> {
+  try {
+    const cookieStore = await cookies();
+    const supabase = createSupabaseServerClient(cookieStore);
+
+    const { data: publicationRecord, error } = await supabase
+      .from("publication_records")
+      .select("remote_id, status")
+      .eq("workflow_id", workflowId)
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      logger.error({ error, workflowId }, "Failed to fetch publication status");
+      return { success: false, error: "Failed to fetch publication status" };
+    }
+
+    const cleanBaseUrl = (process.env.RI_BASE_URL || "").replace(/\/$/, "");
+    const publishedUrl =
+      publicationRecord?.remote_id && cleanBaseUrl
+        ? `${cleanBaseUrl}/dispositif/${publicationRecord.remote_id}`
+        : undefined;
+
+    return { success: true, publishedUrl };
+  } catch (error) {
+    logger.error(error, "Unexpected error fetching publication status");
     return { success: false, error: "Unexpected error" };
   }
 }

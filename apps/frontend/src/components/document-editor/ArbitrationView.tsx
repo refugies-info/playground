@@ -7,6 +7,7 @@ import type {
 } from "@playground/shared-types";
 
 import { Badge, Button } from "@playground/ui/primitives";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
   getComplianceStatusLabel,
@@ -17,6 +18,7 @@ import { useDocument } from "./DocumentContext";
 import { MarkdownViewer } from "./MarkdownViewer";
 
 export function ArbitrationView() {
+  const router = useRouter();
   const { document, setDocument } = useDocument();
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -51,6 +53,7 @@ export function ArbitrationView() {
           onlineStatus:
             (result.newOnlineStatus as OnlineStatus) || document.onlineStatus,
         });
+        router.refresh();
       }
     } catch (error) {
       // biome-ignore lint/suspicious/noConsole: For quick debugging

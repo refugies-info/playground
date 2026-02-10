@@ -9,7 +9,13 @@ import {
   type Document as SharedDocument,
   type WorkStatus,
 } from "@playground/shared-types";
-import { createContext, type ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { submitPreview } from "@/lib/preview-utils";
 import {
   archiveDocument,
@@ -28,7 +34,7 @@ interface DocumentData
   aiSuggestion?: string;
   // Override statuses with exact shared types to be sure
   complianceStatus: ComplianceStatus | null;
-  workStatus: WorkStatus;
+  workStatus: WorkStatus | null;
   onlineStatus: OnlineStatus;
   metadata?: Record<string, unknown>;
 }
@@ -102,6 +108,26 @@ export function DocumentProvider({
       initialData?.workStatus === "to_process",
   );
   const [debugBlocks, setDebugBlocks] = useState<unknown[] | null>([]);
+
+  // Synchronize local state only on navigation (initial load)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Safe Mode - only re-initialize on navigation (ID change)
+  useEffect(() => {
+    if (initialData) {
+      setDocument(initialData);
+    }
+  }, [initialData?.id]);
+
+  // Update publishability based on server data
+  useEffect(() => {
+    if (!initialData) return;
+    if (!isDirty) {
+      setCanPublish(
+        initialData.workStatus === "draft" ||
+          initialData.workStatus === "to_process" ||
+          initialData.onlineStatus === "archived",
+      );
+    }
+  }, [initialData, isDirty]);
 
   // Update content and mark as dirty (only if content actually changed)
   const updateContent = (content: string) => {
@@ -199,7 +225,7 @@ export function DocumentProvider({
         const updatedDoc = {
           ...document,
           title: newTitle,
-          workStatus: "draft" as WorkStatus, // Ensure workStatus is 'draft' after save
+          workStatus: "draft" as WorkStatus, // Explicitly set to draft on save
           metadata: {
             ...document.metadata,
             title: newTitle,
@@ -277,7 +303,7 @@ export function DocumentProvider({
         setDocument({
           ...document,
           onlineStatus: "published",
-          // workStatus likely stays 'finished' or 'in_progress'
+          workStatus: null, // Clear Draft status on publish
         });
         // Disable publish button until next modification + save
         setCanPublish(false);
@@ -313,6 +339,7 @@ export function DocumentProvider({
         setDocument({
           ...document,
           onlineStatus: "archived",
+          workStatus: null, // Clear Draft status on archive
         });
         setCanPublish(false);
       }
