@@ -7,8 +7,8 @@ import {
  * Result of the archive workflow.
  */
 export interface ArchiveWorkflowResult {
-  publicationRecordId: string;
-  remoteId: string;
+  publicationRecordId?: string;
+  remoteId?: string;
 }
 
 /**
