@@ -25,10 +25,11 @@ export interface SaveWorkflowResult {
 export async function saveWorkflow(
   workflowId: string,
   markdown: string,
+  userId: string,
 ): Promise<SaveWorkflowResult> {
   "use workflow";
 
-  const saveResult = await saveDocumentStep(workflowId, markdown);
+  const saveResult = await saveDocumentStep(workflowId, markdown, userId);
 
   if (!saveResult.success || !saveResult.data) {
     throw new Error(saveResult.error || "Save failed");

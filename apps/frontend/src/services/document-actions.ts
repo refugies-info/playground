@@ -16,8 +16,54 @@ import {
 import { cookies } from "next/headers";
 import { start } from "workflow/api";
 import { normalizeMarkdown } from "../lib/markdown/normalizeMarkdown";
+import { verifyWorkflowPermission } from "./permission-helper";
 
 // Debug logging to verify workflow imports
+
+/**
+ * Helper to get authenticated user and verify permissions for a workflow.
+ */
+async function getAuthorizedSession(
+  workflowId: string,
+  action: "modify" | "publish" | "archive",
+) {
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user || !user.email) {
+    logger.error(userError, `Error getting user for ${action}`);
+    return {
+      errorResponse: { success: false, error: "Utilisateur non authentifié" },
+    };
+  }
+
+  const hasPermission = await verifyWorkflowPermission(
+    supabase,
+    workflowId,
+    user.id,
+    user.user_metadata?.role,
+  );
+
+  if (!hasPermission) {
+    logger.warn(
+      { userId: user.id, workflowId },
+      `Unauthorized attempt to ${action}`,
+    );
+    const errorMessages = {
+      modify: "Vous n'avez pas la permission de modifier ce document",
+      publish: "Vous n'avez pas la permission de publier ce document",
+      archive: "Vous n'avez pas la permission d'archiver ce document",
+    };
+    return { errorResponse: { success: false, error: errorMessages[action] } };
+  }
+
+  return { user, supabase };
+}
 
 /**
  * Server action to save a document via Vercel Workflow.
@@ -44,7 +90,11 @@ export async function saveDocument(
       };
     }
 
-    const result = await start(saveWorkflow, [workflowId, markdown]);
+    const auth = await getAuthorizedSession(workflowId, "modify");
+    if (auth.errorResponse) return auth.errorResponse;
+    const { user } = auth;
+
+    const result = await start(saveWorkflow, [workflowId, markdown, user.id]);
 
     logger.info(
       { workflowRunId: result.runId, workflowId },
@@ -86,6 +136,9 @@ export async function toggleWorkflowStatus(
         error: "Configuration error: Workflow not loaded",
       };
     }
+
+    const auth = await getAuthorizedSession(workflowId, "modify");
+    if (auth.errorResponse) return auth.errorResponse;
 
     const result = await start(toggleStatusWorkflow, [
       workflowId,
@@ -172,20 +225,10 @@ export async function publishDocument(
   workflowRunId?: string;
   error?: string;
 }> {
-  const cookieStore = await cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
-
   try {
-    // 1. Get authenticated user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user?.email) {
-      logger.error(userError, "Error getting user for publication");
-      return { success: false, error: "Utilisateur non authentifié" };
-    }
+    const auth = await getAuthorizedSession(workflowId, "publish");
+    if (auth.errorResponse) return auth.errorResponse;
+    const { user } = auth;
 
     // 2. Normalize markdown to ensure unambiguous directive nesting
     // This prevents parsing issues in Main App when it receives nested directives
@@ -207,7 +250,7 @@ export async function publishDocument(
         markdown: normalizedMarkdown,
         metadata,
         userId: user.id,
-        userEmail: user.email,
+        userEmail: user.email ?? "",
         platform: "refugies.info",
       },
       triggerTranslations ?? false,
@@ -249,19 +292,10 @@ export async function archiveDocument(
   workflowRunId?: string;
   error?: string;
 }> {
-  const cookieStore = await cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
-
   try {
-    // 1. Get authenticated user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user?.email) {
-      return { success: false, error: "Utilisateur non authentifié" };
-    }
+    const auth = await getAuthorizedSession(workflowId, "archive");
+    if (auth.errorResponse) return auth.errorResponse;
+    const { user } = auth;
 
     if (!archiveWorkflow) {
       logger.error("archiveWorkflow is undefined - cannot start workflow");
@@ -279,7 +313,7 @@ export async function archiveDocument(
         markdown,
         metadata,
         userId: user.id,
-        userEmail: user.email,
+        userEmail: user.email ?? "",
         platform: "refugies.info",
       },
     ]);
@@ -324,7 +358,7 @@ export async function getEditorialContent(
       return { success: false, error: "Workflow not found" };
     }
 
-    const markdown = workflow.editorial_record?.markdown || "";
+    const markdown = workflow?.editorial_record?.markdown || "";
 
     return { success: true, content: markdown };
   } catch (error) {

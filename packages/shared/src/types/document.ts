@@ -34,6 +34,8 @@ export interface Document {
   qualityScore?: number | null;
   sourceSystem: "RCO" | "DI";
   updated_at: string;
+  authorEmail?: string;
+  authorRole?: string;
 }
 
 export interface ContentItem {

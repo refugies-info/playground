@@ -1,7 +1,11 @@
 "use client";
 
 import type { Document } from "@playground/shared-types";
-import { Badge, DataTableColumnHeader } from "@playground/ui/primitives";
+import {
+  Avatar,
+  Badge,
+  DataTableColumnHeader,
+} from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ExternalLink } from "lucide-react";
 import {
@@ -136,6 +140,17 @@ export const columns: ColumnDef<Document>[] = [
     cell: ({ row }) => {
       const date = new Date(row.getValue("date_added") as string);
       return <div>{date.toLocaleDateString("fr-FR")}</div>;
+    },
+  },
+  {
+    accessorKey: "author",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Auteur" />
+    ),
+    cell: ({ row }) => {
+      const email = row.original.authorEmail;
+      const role = row.original.authorRole;
+      return <Avatar email={email} userRole={role} size="sm" />;
     },
   },
 ];

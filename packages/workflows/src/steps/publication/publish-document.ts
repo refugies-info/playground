@@ -76,7 +76,7 @@ export async function publishDocumentStep(
       .eq("target", baseUrl)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     const existingRemoteId = existingPublication?.remote_id;
 
@@ -91,6 +91,7 @@ export async function publishDocumentStep(
     });
 
     // Call the webhook
+
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
@@ -122,20 +123,59 @@ export async function publishDocumentStep(
       return { success: false, error: "Publication ID not received" };
     }
 
+    // 3. fetch the workflow to get linked record IDs
+
+    const { data: workflow, error: workflowError } = await supabase
+      .from("workflows")
+      .select("editorial_record_id")
+      .eq("id", workflowId)
+      .maybeSingle();
+
+    if (workflowError) {
+      logger.error(
+        workflowError,
+        "Error fetching workflow in publishDocumentStep",
+      );
+    }
+
+    if (!workflow) {
+      logger.error({ workflowId }, "Workflow not found in publishDocumentStep");
+      return { success: false, error: "Workflow not found" };
+    }
+
+    // 4. Fetch the author_id from the editorial record
+    let author_id: string | null = null;
+    if (workflow.editorial_record_id) {
+      const { data: edRecord, error: edError } = await supabase
+        .from("editorial_records")
+        .select("author_id")
+        .eq("id", workflow.editorial_record_id)
+        .maybeSingle();
+
+      if (edError) {
+        logger.error(edError, "Error fetching editorial record author");
+      } else if (edRecord) {
+        author_id = edRecord.author_id;
+      }
+    }
+
     // Store or update publication record
+
     const { data: newRecord, error: insertError } = await supabase
       .from("publication_records")
       .insert({
         workflow_id: workflowId,
+        editorial_record_id: workflow.editorial_record_id,
         target: baseUrl,
         remote_id: remoteId,
         status: "published",
         mode: "publish",
         payload: webhookPayload,
         published_by: userId,
+        author_id,
       })
       .select("id")
-      .single();
+      .maybeSingle();
 
     if (insertError || !newRecord) {
       logger.error(insertError, "Error storing publication record");
@@ -145,6 +185,7 @@ export async function publishDocumentStep(
     const publicationRecordId = newRecord.id;
 
     // Update workflow online_status to 'published' and clear work_status
+
     const { error: updateError } = await supabase
       .from("workflows")
       .update({ online_status: "published", work_status: null })
@@ -171,10 +212,12 @@ export async function publishDocumentStep(
       },
     };
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+
     logger.error(error, "Unexpected error in publishDocumentStep");
     return {
       success: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMsg,
     };
   }
 }
