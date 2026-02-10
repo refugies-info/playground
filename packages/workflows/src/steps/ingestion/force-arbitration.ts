@@ -128,9 +128,18 @@ export async function forceArbitrationStep(workflowId: string) {
     }
 
     // Update workflow with final status from report
+    // If status is 'incomplete', we force 'error' in DB to avoid stuck 'pending'
+    // Otherwise, we use the business status from metadata
+    const finalComplianceStatus =
+      parsed.status === "incomplete"
+        ? "error"
+        : parsed.metadata.compliant
+          ? "compliant"
+          : "non_compliant";
+
     const { error: finalStatusError } = await supabase
       .from("workflows")
-      .update({ compliance_status: parsed.status })
+      .update({ compliance_status: finalComplianceStatus })
       .eq("id", workflowId);
 
     if (finalStatusError) {
@@ -158,6 +167,20 @@ export async function forceArbitrationStep(workflowId: string) {
         "Error generating forced ingestion report",
       );
     }
+
+    // FINAL SECURITY: Ensure workflow is no longer 'pending' if we hit an error
+    try {
+      await supabase
+        .from("workflows")
+        .update({ compliance_status: "error" })
+        .eq("id", workflowId);
+    } catch (dbError) {
+      logger.error(
+        { dbError, workflowId },
+        "Failed to force error status on catch",
+      );
+    }
+
     throw error;
   }
 }
