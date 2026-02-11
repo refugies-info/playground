@@ -90,6 +90,7 @@ content-playground/
 
 - Refer to `README.md` for high-level objectives.
 - Refer to `documentation/monorepo-structure.md` for detailed architectural decisions and Sprint scopes.
+- **Agent Context**: Refer to `.agents/memory/system/` for fine-grained context on team members, project history, and behavioral rules (mirrors Letta Code memory structure).
 - **Features**:
   - [Publication & Archive](documentation/frontend/publication/index.md)
 - **Database**:
