@@ -58,3 +58,7 @@ supabase/snippets/
 
 # Letta Code (user-specific settings and cache)
 .letta/
+
+# Claude Code
+.claude/
+!.claude/settings.json
