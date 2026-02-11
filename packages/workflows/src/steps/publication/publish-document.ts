@@ -186,13 +186,25 @@ export async function publishDocumentStep(
 
     // Update workflow online_status to 'published' and clear work_status
 
-    const { error: updateError } = await supabase
-      .from("workflows")
-      .update({ online_status: "published", work_status: null })
-      .eq("id", workflowId);
+    // Update workflow online_status to 'published' and clear work_status
+    // Now targeting editorial_records
+    if (workflow.editorial_record_id) {
+      const { error: updateError } = await supabase
+        .from("editorial_records")
+        .update({ online_status: "published", work_status: null })
+        .eq("id", workflow.editorial_record_id);
 
-    if (updateError) {
-      logger.error(updateError, "Error updating workflow online_status");
+      if (updateError) {
+        logger.error(
+          updateError,
+          "Error updating editorial_record online_status",
+        );
+      }
+    } else {
+      logger.warn(
+        { workflowId },
+        "No editorial record found to update status on publish",
+      );
     }
 
     const publishedUrl = adapter.buildPublishedUrl(remoteId);

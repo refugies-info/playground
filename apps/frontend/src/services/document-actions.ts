@@ -165,9 +165,18 @@ export async function toggleWorkflowStatus(
     const { supabase } = auth;
 
     // Verify document state (prevent arbitration on already processed docs)
+    // We need to check editorial statuses now
     const { data: workflow, error: workflowError } = await supabase
       .from("workflows")
-      .select("work_status, online_status")
+      .select(
+        `
+        editorial_record_id,
+        editorial_records (
+          work_status,
+          online_status
+        )
+      `,
+      )
       .eq("id", workflowId)
       .single();
 
@@ -176,9 +185,17 @@ export async function toggleWorkflowStatus(
       return { success: false, error: "Workflow non trouvé" };
     }
 
+    // Safely access nested editorial record
+    // Supabase returns an array or single object depending on the relationship.
+    const editorialRecords = workflow.editorial_records;
+    const editorialRecord = Array.isArray(editorialRecords)
+      ? editorialRecords[0]
+      : editorialRecords;
+
+    // Check if we can modify
     if (
-      workflow.work_status === "draft" ||
-      workflow.online_status === "published"
+      editorialRecord?.work_status === "draft" ||
+      editorialRecord?.online_status === "published"
     ) {
       return {
         success: false,
@@ -201,8 +218,8 @@ export async function toggleWorkflowStatus(
     const newComplianceStatus =
       currentStatus === "compliant" ? "non_compliant" : "compliant";
 
-    let newWorkStatus: WorkStatus | null;
-    let newOnlineStatus: OnlineStatus;
+    let newWorkStatus: WorkStatus | null = null;
+    let newOnlineStatus: OnlineStatus = "unpublished";
 
     if (newComplianceStatus === "compliant") {
       newWorkStatus = "to_process";
@@ -211,6 +228,9 @@ export async function toggleWorkflowStatus(
       newWorkStatus = null;
       newOnlineStatus = "archived";
     }
+
+    // DB Updates are handled by the workflow for consistency.
+    // We proceed to return optimistic values for UI update.
 
     revalidatePath("/documents/[id]", "page");
 

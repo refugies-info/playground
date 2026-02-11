@@ -43,8 +43,7 @@ export async function saveDocumentStep(
         id, 
         editorial_record_id, 
         ingestion_record_id, 
-        work_status,
-        editorial_records (metadata),
+        editorial_records (metadata, work_status),
         ingestion_records (metadata)
       `,
       )
@@ -60,9 +59,15 @@ export async function saveDocumentStep(
     const title = await extractTitleFromMarkdown(markdown);
 
     // Supabase join can return array or object
-    const existingEditorialMetadata = Array.isArray(workflow.editorial_records)
-      ? workflow.editorial_records[0]?.metadata
-      : (workflow.editorial_records as Record<string, unknown>)?.metadata;
+    // For editorial_records, it's a single relation (usually)
+    const editorialRecord = Array.isArray(workflow.editorial_records)
+      ? workflow.editorial_records[0]
+      : (workflow.editorial_records as {
+          metadata: Record<string, unknown>;
+          work_status: string;
+        } | null);
+
+    const existingEditorialMetadata = editorialRecord?.metadata;
 
     const ingestionMetadata = Array.isArray(workflow.ingestion_records)
       ? workflow.ingestion_records[0]?.metadata
@@ -79,17 +84,29 @@ export async function saveDocumentStep(
 
     let editorialRecordId: string;
     let isNew = false;
+    let progressUpdated = false;
 
     if (workflow.editorial_record_id) {
       // Update existing editorial_record
+      // Also ensure work_status is set to 'draft' if not already
+      const currentWorkStatus = editorialRecord?.work_status;
+      const shouldUpdateStatus = currentWorkStatus !== "draft";
+
+      const updatePayload: Record<string, unknown> = {
+        markdown,
+        metadata: updatedMetadata,
+        author_id: userId,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (shouldUpdateStatus) {
+        updatePayload.work_status = "draft";
+        progressUpdated = true;
+      }
+
       const { error: updateError } = await supabase
         .from("editorial_records")
-        .update({
-          markdown,
-          metadata: updatedMetadata,
-          author_id: userId,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
         .eq("id", workflow.editorial_record_id);
 
       if (updateError) {
@@ -107,6 +124,7 @@ export async function saveDocumentStep(
         };
       }
 
+      // New record starts as draft
       const { data: newRecord, error: insertError } = await supabase
         .from("editorial_records")
         .insert({
@@ -114,6 +132,7 @@ export async function saveDocumentStep(
           markdown,
           metadata: updatedMetadata,
           author_id: userId,
+          work_status: "draft",
         })
         .select("id")
         .single();
@@ -125,24 +144,7 @@ export async function saveDocumentStep(
 
       editorialRecordId = newRecord.id;
       isNew = true;
-    }
-
-    // Ensure work_status is set to 'draft' after any save (doc-first)
-    let progressUpdated = false;
-    if (workflow.work_status !== "draft") {
-      const { error: progressError } = await supabase
-        .from("workflows")
-        .update({ work_status: "draft" })
-        .eq("id", workflowId);
-
-      if (progressError) {
-        logger.error(
-          progressError,
-          "Error updating workflow work_status to draft",
-        );
-      } else {
-        progressUpdated = true;
-      }
+      progressUpdated = true; // Implicitly established status
     }
 
     logger.info(

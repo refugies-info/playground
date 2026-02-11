@@ -105,15 +105,13 @@ export async function getTranslations(params: GetTranslationsParams) {
   }
 
   if (status) {
-    query = query.eq("status", status);
+    query = query.eq("work_status", status);
   }
 
   // Sorting
-  // Map frontend sort keys to DB columns if necessary
   let dbSortColumn = "updated_at";
   if (sortBy === "language") dbSortColumn = "language";
-  else if (sortBy === "status") dbSortColumn = "status";
-  // We default to updated_at for unknown keys or 'updatedAt'
+  else if (sortBy === "status") dbSortColumn = "work_status";
 
   // Note: Title sorting is not efficiently supported yet as it depends on metadata/markdown
 
@@ -182,7 +180,7 @@ export async function getTranslations(params: GetTranslationsParams) {
         id: row.id,
         title,
         wordCount,
-        status: row.status || "to_process",
+        status: row.work_status || "to_process",
         language: row.language,
         updatedAt: row.updated_at,
         publicationUrl,
@@ -233,7 +231,7 @@ export async function getTranslationById(id: string) {
   return {
     id: row.id,
     language: row.language,
-    status: row.status,
+    status: row.work_status,
     translationMarkdown: row.markdown,
     sourceMarkdown: row.editorial_records?.markdown || "",
   };

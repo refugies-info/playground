@@ -12,7 +12,6 @@ export async function saveTranslation(
   const supabase = createSupabaseServerClient(cookieStore);
 
   try {
-    // const { error } = await supabase.from("translation_records");
     const {
       data: { user },
       error: userError,
@@ -27,7 +26,7 @@ export async function saveTranslation(
       .from("translation_records")
       .update({
         markdown,
-        status: "draft",
+        work_status: "draft",
         author_id: user.id,
         updated_at: new Date().toISOString(),
       })
@@ -59,7 +58,11 @@ export async function publishTranslation(
   try {
     const { error } = await supabase
       .from("translation_records")
-      .update({ status: "published", updated_at: new Date().toISOString() })
+      .update({
+        online_status: "published",
+        work_status: null,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", id);
 
     if (error) {

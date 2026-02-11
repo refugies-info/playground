@@ -38,7 +38,8 @@
     "copy:schema": "tsx scripts/copy-schema.ts",
     "seed:ingestion": "tsx scripts/seed-ingestion.ts",
     "di:ingest": "tsx scripts/ingest-di.ts",
-    "di:extract": "tsx scripts/extract-random-records.ts"
+    "di:extract": "tsx scripts/extract-random-records.ts",
+    "seed:sync": "supabase db dump --local --data-only --file supabase/seed.sql"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.6",

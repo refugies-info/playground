@@ -35,28 +35,30 @@ export async function toggleStatusStep(
     const newComplianceStatus =
       currentStatus === "compliant" ? "non_compliant" : "compliant";
 
-    // Determine the new online_status and work_status based on compliance transition
-    let newOnlineStatus: string | null;
-    let newWorkStatus: string | null;
+    // Determine target statuses based on transition
+    let newOnlineStatus: string | null = null;
+    let newWorkStatus: string | null = null;
 
     if (newComplianceStatus === "compliant") {
-      // Becoming compliant: ready to process, not archived
-      newOnlineStatus = null;
+      // Becoming compliant: ready to process
+      // Rule: compliant docs default to unpublished and need processing
+      newOnlineStatus = "unpublished";
       newWorkStatus = "to_process";
     } else {
-      // Becoming non-compliant: archived, no work needed
+      // Becoming non-compliant: usually archived
       newOnlineStatus = "archived";
       newWorkStatus = null;
     }
 
-    const { error: updateError } = await supabase
+    // 1. Update workflow compliance status
+    const { data: workflow, error: updateError } = await supabase
       .from("workflows")
       .update({
         compliance_status: newComplianceStatus,
-        online_status: newOnlineStatus,
-        work_status: newWorkStatus,
       })
-      .eq("id", workflowId);
+      .eq("id", workflowId)
+      .select("editorial_record_id")
+      .single();
 
     if (updateError) {
       logger.error(
@@ -64,6 +66,31 @@ export async function toggleStatusStep(
         "Error updating workflow status",
       );
       return { success: false, error: "Failed to update workflow status" };
+    }
+
+    // 2. Update editorial record statuses if it exists
+    if (workflow?.editorial_record_id) {
+      const updatePayload = {
+        work_status: newWorkStatus,
+        online_status: newOnlineStatus,
+      };
+
+      const { error: edError } = await supabase
+        .from("editorial_records")
+        .update(updatePayload)
+        .eq("id", workflow.editorial_record_id);
+
+      if (edError) {
+        logger.error(
+          { error: edError, workflowId },
+          "Error updating editorial record status in toggle",
+        );
+        // We log but don't fail hard, as the main workflow status was updated
+        return {
+          success: false,
+          error: "Failed to update editorial record status",
+        };
+      }
     }
 
     logger.info(

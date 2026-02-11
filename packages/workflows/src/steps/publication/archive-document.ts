@@ -148,15 +148,35 @@ export async function archiveDocumentStep(
     }
 
     // Update workflow online_status to 'archived' and clear work_status
-    // This happens regardless of whether it was published before
-    const { error: updateError } = await supabase
+    // Need to fetch editorial linkage first
+    const { data: workflow, error: workflowFetchError } = await supabase
       .from("workflows")
-      .update({ online_status: "archived", work_status: null })
-      .eq("id", workflowId);
+      .select("editorial_record_id")
+      .eq("id", workflowId)
+      .maybeSingle();
 
-    if (updateError) {
-      logger.error(updateError, "Error updating workflow online_status");
-      return { success: false, error: "Failed to update workflow status" };
+    if (workflowFetchError) {
+      logger.error(
+        workflowFetchError,
+        "Error fetching workflow ID for archive status update",
+      );
+    }
+
+    if (workflow?.editorial_record_id) {
+      const { error: updateError } = await supabase
+        .from("editorial_records")
+        .update({ online_status: "archived", work_status: null })
+        .eq("id", workflow.editorial_record_id);
+
+      if (updateError) {
+        logger.error(
+          updateError,
+          "Error updating editorial_record online_status to archived",
+        );
+        return { success: false, error: "Failed to update workflow status" };
+      }
+    } else {
+      logger.warn({ workflowId }, "No editorial record found to archive");
     }
 
     logger.info({ workflowId, remoteId }, "Document archived successfully");
