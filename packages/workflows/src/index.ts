@@ -38,6 +38,10 @@ import {
   toggleStatusWorkflow,
 } from "./pipelines/toggle-status";
 export { toggleStatusWorkflow, type ToggleStatusResult };
+
+import { conformityAuditWorkflow } from "./pipelines/conformity-audit";
+export { conformityAuditWorkflow };
+
 export type { GetEditorialRecordIdResult } from "./steps/common/get-editorial-record-id";
 export { getEditorialRecordIdStep } from "./steps/common/get-editorial-record-id";
 
