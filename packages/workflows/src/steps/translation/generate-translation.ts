@@ -145,7 +145,7 @@ export async function generateTranslationStep(
     // Construct prompt/content for the agent
     const contentToTranslate = `${TRANSLATE_SLASH_COMMAND}\n${editorialRecord.markdown || ""}`;
 
-    if (!contentToTranslate) {
+    if (!editorialRecord.markdown) {
       logger.warn(
         { editorialRecordId },
         "Source markdown is empty, skipping AI translation",
