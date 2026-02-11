@@ -137,5 +137,10 @@
   },
   "hooksConfig": {
     "enabled": true
+  },
+  "mcpServers": {
+    "supabase": {
+      "url": "http://localhost:54321/mcp"
+    }
   }
 }
