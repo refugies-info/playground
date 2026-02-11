@@ -51,7 +51,6 @@ Thumbs.db
 supabase/functions/node_modules/
 supabase/snippets/
 .workflow-data/
-supabase/seed.sql
 
 # Agents
 .agent
@@ -59,3 +58,4 @@ supabase/seed.sql
 
 # Letta Code (user-specific settings and cache)
 .letta/
+
