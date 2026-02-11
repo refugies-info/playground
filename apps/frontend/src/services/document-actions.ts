@@ -223,47 +223,16 @@ export async function toggleWorkflowStatus(
     let newWorkStatus: WorkStatus | null = null;
     let newOnlineStatus: OnlineStatus = "unpublished";
 
-    // DB Updates
-    // 1. Update compliance on workflow
-    const { error: updateWorkflowError } = await supabase
-      .from("workflows")
-      .update({ compliance_status: newComplianceStatus })
-      .eq("id", workflowId);
-
-    if (updateWorkflowError) {
-      logger.error(updateWorkflowError, "Error updating workflow compliance");
-      throw updateWorkflowError;
+    if (newComplianceStatus === "compliant") {
+      newWorkStatus = "to_process";
+      newOnlineStatus = "unpublished";
+    } else {
+      newWorkStatus = null;
+      newOnlineStatus = "archived";
     }
 
-    // 2. Update editorial record if it exists
-    if (workflow.editorial_record_id) {
-      if (newComplianceStatus === "compliant") {
-        newWorkStatus = "to_process";
-        newOnlineStatus = "unpublished";
-
-        await supabase
-          .from("editorial_records")
-          .update({
-            work_status: "to_process",
-            // we don't necessarily change online_status here,
-            // but previous logic implied a reset or specific state.
-            // Let's stick to modifying what's necessary.
-          })
-          .eq("id", workflow.editorial_record_id);
-      } else {
-        // non_compliant
-        newWorkStatus = null; // or whatever previous state was?
-        // Usually non-compliant means we archive/hide it.
-        newOnlineStatus = "archived";
-
-        await supabase
-          .from("editorial_records")
-          .update({
-            online_status: "archived",
-          })
-          .eq("id", workflow.editorial_record_id);
-      }
-    }
+    // DB Updates are handled by the workflow for consistency.
+    // We proceed to return optimistic values for UI update.
 
     revalidatePath("/documents/[id]", "page");
 

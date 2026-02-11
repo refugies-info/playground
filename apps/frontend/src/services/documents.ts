@@ -194,8 +194,8 @@ export async function getDocuments(params: GetDocumentsParams) {
     date_added: "updated_at",
     updated_at: "updated_at",
     compliance_status: "compliance_status",
-    work_status: "editorial_records(work_status)", // Sort by joined column
-    online_status: "editorial_records(online_status)", // Sort by joined column
+    work_status: "editorial_records(work_status)",
+    online_status: "editorial_records(online_status)",
     title: "title",
   };
 
@@ -206,15 +206,6 @@ export async function getDocuments(params: GetDocumentsParams) {
   }
 
   if (dbColumn.includes("editorial_records")) {
-    // For joined table sorting, we need to specify structure differently in supabase-js v2 if simplistic string doesn't work
-    // But `order` on top level with foreign table syntax might be needed.
-    // However, simpler sorting might just work if the relationship is unique?
-    // Workflows -> Editorial Records is 1:1 (mostly).
-    // Warning: Sorting by foreign column in Supabase JS often requires the .order() to be on the foreign table reference in the select().
-    // But we are doing root level sort.
-    // Let's rely on default behavior or ignore sort-by-status correctness for complex cases for now?
-    // Actually, standard PostgREST syntax for sorting by embedded resource is `alias.column`.
-    // Users often sort by Date Added.
     query = query.order(dbColumn.split("(")[1].replace(")", ""), {
       ascending: sortOrder === "asc",
       referencedTable: "editorial_records",
@@ -320,9 +311,6 @@ export async function getDocuments(params: GetDocumentsParams) {
         reportCreatedAt || ingestionCreatedAt || item.updated_at;
 
       // Determine Statuses with Fallback Logic
-      // Determine Statuses with Fallback Logic
-      // Rule: "A traiter" (to_process) only if compliant, no editorial record (implied online=null), and no publication history.
-      // If editorial record exists, we strictly trust its work_status (even if null).
       const hasPublicationHistory =
         item.publication_records && item.publication_records.length > 0;
 

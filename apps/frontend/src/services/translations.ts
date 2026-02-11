@@ -105,16 +105,13 @@ export async function getTranslations(params: GetTranslationsParams) {
   }
 
   if (status) {
-    // Map frontend status 'to_process' etc to DB work_status
     query = query.eq("work_status", status);
   }
 
   // Sorting
-  // Map frontend sort keys to DB columns if necessary
   let dbSortColumn = "updated_at";
   if (sortBy === "language") dbSortColumn = "language";
-  else if (sortBy === "status") dbSortColumn = "work_status"; // Changed from status to work_status
-  // We default to updated_at for unknown keys or 'updatedAt'
+  else if (sortBy === "status") dbSortColumn = "work_status";
 
   // Note: Title sorting is not efficiently supported yet as it depends on metadata/markdown
 

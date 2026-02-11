@@ -12,7 +12,6 @@ export async function saveTranslation(
   const supabase = createSupabaseServerClient(cookieStore);
 
   try {
-    // const { error } = await supabase.from("translation_records");
     const {
       data: { user },
       error: userError,
@@ -61,6 +60,7 @@ export async function publishTranslation(
       .from("translation_records")
       .update({
         online_status: "published",
+        work_status: null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);
