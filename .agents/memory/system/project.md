@@ -40,7 +40,8 @@ description: Project architecture, patterns, and current status.
 
 ### Workflow & Lifecycle
 - **Status**: Defined at `workflow` level, not `editorial_records`.
-- **States**: `to_process` | `draft` | `draft_with_source_update` | `published` | `published_with_draft`.
+- **States**: `to_process` | `draft` | `published` | `archived` | `unpublished`.
+- **Planned States**: `draft_with_source_update` (draft in progress but new source available) | `published_with_draft` (published version + new draft version).
 - **Ingestion**: `ingestion_record` (no edito) -> `editorial_record` (on save) -> `publication_record` (on publish/archive).
 
 ### Versioning Architecture
