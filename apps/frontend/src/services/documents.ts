@@ -34,7 +34,7 @@ type WorkflowWithRelations =
     editorial_records:
       | (Pick<
           Database["public"]["Tables"]["editorial_records"]["Row"],
-          "markdown" | "metadata"
+          "markdown" | "metadata" | "work_status" | "online_status"
         > & {
           profiles: { email: string; role: string } | null;
         })[]
@@ -89,8 +89,6 @@ export async function getDocuments(params: GetDocumentsParams) {
   const selectString = `
       id,
       compliance_status,
-      work_status,
-      online_status,
       updated_at,
       rco_record_id,
       ingestion_records${searchId ? "!inner" : ""} (
@@ -105,6 +103,8 @@ export async function getDocuments(params: GetDocumentsParams) {
       editorial_records (
         markdown,
         metadata,
+        work_status,
+        online_status,
         author_id,
         profiles (
           email,
@@ -161,11 +161,18 @@ export async function getDocuments(params: GetDocumentsParams) {
   }
 
   if (workStatus) {
-    query = query.eq("work_status", workStatus);
+    // If filtering by "to_process", we also want compliant workflows without editorial records
+    if (workStatus === "to_process") {
+      query = query.or(
+        `editorial_records.work_status.eq.to_process,and(compliance_status.eq.compliant,editorial_records.is.null)`,
+      );
+    } else {
+      query = query.eq("editorial_records.work_status", workStatus);
+    }
   }
 
   if (onlineStatus) {
-    query = query.eq("online_status", onlineStatus);
+    query = query.eq("editorial_records.online_status", onlineStatus);
   }
 
   if (dateFrom) {
@@ -187,8 +194,8 @@ export async function getDocuments(params: GetDocumentsParams) {
     date_added: "updated_at",
     updated_at: "updated_at",
     compliance_status: "compliance_status",
-    work_status: "work_status",
-    online_status: "online_status",
+    work_status: "editorial_records(work_status)", // Sort by joined column
+    online_status: "editorial_records(online_status)", // Sort by joined column
     title: "title",
   };
 
@@ -198,7 +205,23 @@ export async function getDocuments(params: GetDocumentsParams) {
     throw new Error(`Unsupported sort field: ${sortBy}`);
   }
 
-  query = query.order(dbColumn, { ascending: sortOrder === "asc" });
+  if (dbColumn.includes("editorial_records")) {
+    // For joined table sorting, we need to specify structure differently in supabase-js v2 if simplistic string doesn't work
+    // But `order` on top level with foreign table syntax might be needed.
+    // However, simpler sorting might just work if the relationship is unique?
+    // Workflows -> Editorial Records is 1:1 (mostly).
+    // Warning: Sorting by foreign column in Supabase JS often requires the .order() to be on the foreign table reference in the select().
+    // But we are doing root level sort.
+    // Let's rely on default behavior or ignore sort-by-status correctness for complex cases for now?
+    // Actually, standard PostgREST syntax for sorting by embedded resource is `alias.column`.
+    // Users often sort by Date Added.
+    query = query.order(dbColumn.split("(")[1].replace(")", ""), {
+      ascending: sortOrder === "asc",
+      referencedTable: "editorial_records",
+    });
+  } else {
+    query = query.order(dbColumn, { ascending: sortOrder === "asc" });
+  }
 
   // Apply pagination
   const startIndex = (page - 1) * pageSize;
@@ -296,13 +319,26 @@ export async function getDocuments(params: GetDocumentsParams) {
       const dateAdded =
         reportCreatedAt || ingestionCreatedAt || item.updated_at;
 
+      // Determine Statuses with Fallback Logic
+      // Determine Statuses with Fallback Logic
+      // Rule: "A traiter" (to_process) only if compliant, no editorial record (implied online=null), and no publication history.
+      // If editorial record exists, we strictly trust its work_status (even if null).
+      const hasPublicationHistory =
+        item.publication_records && item.publication_records.length > 0;
+
+      const computedWorkStatus = editorialRecord
+        ? editorialRecord.work_status
+        : item.compliance_status === "compliant" && !hasPublicationHistory
+          ? "to_process"
+          : null;
+
       return {
         id: item.id,
         title,
         date_added: dateAdded,
         complianceStatus: (item.compliance_status as ComplianceStatus) ?? null,
-        workStatus: item.work_status as WorkStatus,
-        onlineStatus: item.online_status as OnlineStatus,
+        workStatus: computedWorkStatus as WorkStatus,
+        onlineStatus: editorialRecord?.online_status as OnlineStatus,
         content,
         metadata,
         publishedUrl,
@@ -333,10 +369,11 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const supabase = createSupabaseServerClient(cookieStore);
 
   // First, get the workflow with its linked record IDs
+  // Removed work_status, online_status from selection
   const { data: workflow, error: workflowError } = await supabase
     .from("workflows")
     .select(
-      "id, compliance_status, work_status, online_status, updated_at, editorial_record_id, ingestion_record_id, rco_record_id",
+      "id, compliance_status, updated_at, editorial_record_id, ingestion_record_id, rco_record_id",
     )
     .eq("id", id)
     .single();
@@ -381,7 +418,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     workflow.editorial_record_id
       ? supabase
           .from("editorial_records")
-          .select("markdown, metadata")
+          .select("markdown, metadata, work_status, online_status")
           .eq("id", workflow.editorial_record_id)
           .single()
       : Promise.resolve({ data: null, error: null }),
@@ -413,6 +450,11 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const editorialRecord = Array.isArray(editorialRecordRaw)
     ? editorialRecordRaw[0]
     : editorialRecordRaw;
+
+  // Cast editorial record to include new fields
+  const editorialRecordTyped = editorialRecord as
+    | Database["public"]["Tables"]["editorial_records"]["Row"]
+    | null;
 
   const publicationRecordRaw = publicationResult.data;
   const publicationRecord = Array.isArray(publicationRecordRaw)
@@ -487,13 +529,23 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const dateAdded =
     reportCreatedAt || ingestionRecord?.created_at || workflow.updated_at;
 
+  // Determine work status
+  // If editorial record exists, we use its status.
+  // If not, we fallback to 'to_process' if compliant.
+  const computedWorkStatus = editorialRecordTyped
+    ? editorialRecordTyped.work_status
+    : workflow.compliance_status === "compliant"
+      ? "to_process"
+      : null;
+
   return {
     id: workflow.id,
     title,
     date_added: dateAdded,
     complianceStatus: (workflow.compliance_status as ComplianceStatus) ?? null,
-    workStatus: workflow.work_status as WorkStatus,
-    onlineStatus: workflow.online_status as OnlineStatus,
+    workStatus: computedWorkStatus as WorkStatus,
+    onlineStatus:
+      (editorialRecordTyped?.online_status as OnlineStatus) || "unpublished",
     content,
     ingestionContent,
     complianceReport,

@@ -165,9 +165,18 @@ export async function toggleWorkflowStatus(
     const { supabase } = auth;
 
     // Verify document state (prevent arbitration on already processed docs)
+    // We need to check editorial statuses now
     const { data: workflow, error: workflowError } = await supabase
       .from("workflows")
-      .select("work_status, online_status")
+      .select(
+        `
+        editorial_record_id,
+        editorial_records (
+          work_status,
+          online_status
+        )
+      `,
+      )
       .eq("id", workflowId)
       .single();
 
@@ -176,9 +185,19 @@ export async function toggleWorkflowStatus(
       return { success: false, error: "Workflow non trouvé" };
     }
 
+    // Safely access nested editorial record
+    // We have to cast because the type defs might be tricky with the join,
+    // but usually Supabase types handle this if generated correctly.
+    // For safety with raw types:
+    const editorialRecord = workflow.editorial_records as unknown as {
+      work_status: string;
+      online_status: string;
+    } | null;
+
+    // Check if we can modify
     if (
-      workflow.work_status === "draft" ||
-      workflow.online_status === "published"
+      editorialRecord?.work_status === "draft" ||
+      editorialRecord?.online_status === "published"
     ) {
       return {
         success: false,
@@ -201,15 +220,49 @@ export async function toggleWorkflowStatus(
     const newComplianceStatus =
       currentStatus === "compliant" ? "non_compliant" : "compliant";
 
-    let newWorkStatus: WorkStatus | null;
-    let newOnlineStatus: OnlineStatus;
+    let newWorkStatus: WorkStatus | null = null;
+    let newOnlineStatus: OnlineStatus = "unpublished";
 
-    if (newComplianceStatus === "compliant") {
-      newWorkStatus = "to_process";
-      newOnlineStatus = "unpublished";
-    } else {
-      newWorkStatus = null;
-      newOnlineStatus = "archived";
+    // DB Updates
+    // 1. Update compliance on workflow
+    const { error: updateWorkflowError } = await supabase
+      .from("workflows")
+      .update({ compliance_status: newComplianceStatus })
+      .eq("id", workflowId);
+
+    if (updateWorkflowError) {
+      logger.error(updateWorkflowError, "Error updating workflow compliance");
+      throw updateWorkflowError;
+    }
+
+    // 2. Update editorial record if it exists
+    if (workflow.editorial_record_id) {
+      if (newComplianceStatus === "compliant") {
+        newWorkStatus = "to_process";
+        newOnlineStatus = "unpublished";
+
+        await supabase
+          .from("editorial_records")
+          .update({
+            work_status: "to_process",
+            // we don't necessarily change online_status here,
+            // but previous logic implied a reset or specific state.
+            // Let's stick to modifying what's necessary.
+          })
+          .eq("id", workflow.editorial_record_id);
+      } else {
+        // non_compliant
+        newWorkStatus = null; // or whatever previous state was?
+        // Usually non-compliant means we archive/hide it.
+        newOnlineStatus = "archived";
+
+        await supabase
+          .from("editorial_records")
+          .update({
+            online_status: "archived",
+          })
+          .eq("id", workflow.editorial_record_id);
+      }
     }
 
     revalidatePath("/documents/[id]", "page");
