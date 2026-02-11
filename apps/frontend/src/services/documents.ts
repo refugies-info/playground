@@ -519,10 +519,11 @@ export async function getDocumentById(id: string): Promise<Document | null> {
 
   // Determine work status
   // If editorial record exists, we use its status.
-  // If not, we fallback to 'to_process' if compliant.
+  // If not, we fallback to 'to_process' if compliant AND no publication history.
+  const hasPublicationHistory = publicationResult.data !== null;
   const computedWorkStatus = editorialRecordTyped
     ? editorialRecordTyped.work_status
-    : workflow.compliance_status === "compliant"
+    : workflow.compliance_status === "compliant" && !hasPublicationHistory
       ? "to_process"
       : null;
 
