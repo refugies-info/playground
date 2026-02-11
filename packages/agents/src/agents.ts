@@ -1,5 +1,6 @@
 import type { Letta } from "@letta-ai/letta-client";
 import type { AssistantMessage } from "@letta-ai/letta-client/resources/agents";
+import type { ConversationCreateParams } from "@letta-ai/letta-client/resources/conversations";
 
 export const listAgents = async (client: Letta) => {
   return client.agents.list();
@@ -109,13 +110,8 @@ export const findOrCreateConversation = async (
     return match.id;
   }
 
-  // 2. Create if not found
-  // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
-  const createParams: any = {
+  const createParams: ConversationCreateParams = {
     agent_id: agentId,
-    // Try all likely fields for "label"
-    name: name,
-    label: name,
     summary: name,
   };
 
