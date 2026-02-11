@@ -70,12 +70,10 @@ export async function toggleStatusStep(
 
     // 2. Update editorial record statuses if it exists
     if (workflow?.editorial_record_id) {
-      const updatePayload: Record<string, unknown> = {};
-
-      if (newWorkStatus !== undefined)
-        updatePayload.work_status = newWorkStatus;
-      if (newOnlineStatus !== undefined)
-        updatePayload.online_status = newOnlineStatus;
+      const updatePayload = {
+        work_status: newWorkStatus,
+        online_status: newOnlineStatus,
+      };
 
       const { error: edError } = await supabase
         .from("editorial_records")
