@@ -51,6 +51,7 @@ Thumbs.db
 supabase/functions/node_modules/
 supabase/snippets/
 .workflow-data/
+supabase/seed.sql
 
 # Agents
 .agent
