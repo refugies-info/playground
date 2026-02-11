@@ -186,13 +186,11 @@ export async function toggleWorkflowStatus(
     }
 
     // Safely access nested editorial record
-    // We have to cast because the type defs might be tricky with the join,
-    // but usually Supabase types handle this if generated correctly.
-    // For safety with raw types:
-    const editorialRecord = workflow.editorial_records as unknown as {
-      work_status: string;
-      online_status: string;
-    } | null;
+    // Supabase returns an array or single object depending on the relationship.
+    const editorialRecords = workflow.editorial_records;
+    const editorialRecord = Array.isArray(editorialRecords)
+      ? editorialRecords[0]
+      : editorialRecords;
 
     // Check if we can modify
     if (
