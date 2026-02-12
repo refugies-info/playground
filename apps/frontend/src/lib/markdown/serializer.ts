@@ -462,8 +462,10 @@ function inlineContentToMdast(
  */
 function inlineContentString(content: AnyInlineContent[] | undefined): string {
   if (!content) return "";
+  if (typeof content === "string") return content;
   return content
     .map((c) => {
+      if (typeof c === "string") return c; // Handle potential string elements too
       if (c.type === "text") return (c as AnyStyledText).text;
       // biome-ignore lint/suspicious/noExplicitAny: external type
       if (c.type === "link") return (c as any).href; // or content
