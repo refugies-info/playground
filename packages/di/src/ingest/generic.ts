@@ -85,15 +85,17 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
     } & Record<string, unknown>,
   ) => Promise<Page<T>>,
   itemType: string,
-  options: DiIngestionOptions = {},
+  options: DiIngestionOptions<T> = {},
 ): Promise<T[]> {
   const {
     pageSize = DEFAULT_PAGE_SIZE,
     limit,
     onProgress,
     extraQueryParams = {},
+    filter,
   } = options;
   const allItems: T[] = [];
+  const seenIds = new Set<string>();
   let currentPage = 1;
   let totalPages: number | null = null;
   let totalItems: number | null = null;
@@ -123,7 +125,32 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
         );
       }
 
-      allItems.push(...data.items);
+      // Filter and deduplicate items from this page
+      for (const item of data.items) {
+        if (seenIds.has(item.id)) {
+          logger.debug(
+            { id: item.id, type: itemType },
+            "Skipping duplicate item ID during fetch",
+          );
+          continue;
+        }
+
+        if (filter && !filter(item)) {
+          logger.debug(
+            { id: item.id, type: itemType },
+            "Item filtered out by custom filter",
+          );
+          continue;
+        }
+
+        allItems.push(item);
+        seenIds.add(item.id);
+
+        // Stop if we've reached the limit
+        if (limit && allItems.length >= limit) {
+          break;
+        }
+      }
 
       if (totalPages === null) {
         totalPages = data.pages;
@@ -170,8 +197,8 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
     }
   }
 
-  // Trim to exact limit if we fetched more
-  const result = limit ? allItems.slice(0, limit) : allItems;
+  // Result is already limited and filtered
+  const result = allItems;
 
   logger.info(
     { totalFetched: result.length, pagesProcessed: currentPage },

@@ -307,6 +307,16 @@ export interface Service {
   nombre_semaines?: number | null;
   horaires_accueil?: string | null;
   score_qualite: number;
+  extra?: {
+    action?: {
+      conventionnement?: string;
+      [key: string]: any;
+    };
+    formation?: {
+      [key: string]: any;
+    };
+    [key: string]: any;
+  } | null;
 }
 
 export interface ServiceDetail extends Service {
