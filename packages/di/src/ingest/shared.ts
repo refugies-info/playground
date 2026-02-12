@@ -20,7 +20,7 @@ export function computeContentHash(data: unknown): string {
   return createHash("sha1").update(stableString).digest("hex");
 }
 
-export interface DiIngestionOptions {
+export interface DiIngestionOptions<T = any> {
   /** Number of items per API page (default: 100) */
   pageSize?: number;
   /** Maximum number of structures to fetch (default: unlimited) */
@@ -29,6 +29,8 @@ export interface DiIngestionOptions {
   onProgress?: (current: number, total: number | null) => void;
   /** Additional query parameters to pass to the API */
   extraQueryParams?: Record<string, unknown>;
+  /** Optional filter function to apply to each item before ingestion */
+  filter?: (item: T) => boolean;
 }
 
 export { DEFAULT_BATCH_SIZE, DEFAULT_PAGE_SIZE, SOURCE_CARIF_OREF };
