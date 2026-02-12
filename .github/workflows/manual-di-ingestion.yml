@@ -1,0 +1,53 @@
+name: Manual DI Ingestion
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Limit the number of structures/services to fetch (optional)'
+        required: false
+        default: ''
+      type:
+        description: 'Type of ingestion'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - structures
+          - services
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    name: Run DI Ingestion Workflow
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.11.1"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Ingestion
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://${{ secrets.SUPABASE_PROJECT_ID }}.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DI_API_KEY: ${{ secrets.DI_API_KEY }}
+          PLAYGROUND_AGENT_ID: ${{ secrets.PLAYGROUND_AGENT_ID }}
+          LETTA_API_KEY: ${{ secrets.LETTA_API_KEY }}
+          # The workflow script also needs DI_BASE_URL if not using default
+        run: |
+          LIMIT_ARG=""
+          if [ -n "${{ github.event.inputs.limit }}" ]; then
+            LIMIT_ARG="--limit ${{ github.event.inputs.limit }}"
+          fi
+          pnpm tsx scripts/test-di-workflow.ts $LIMIT_ARG --type ${{ github.event.inputs.type }}
