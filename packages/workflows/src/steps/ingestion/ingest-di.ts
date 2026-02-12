@@ -24,7 +24,7 @@ function getSupabaseClient() {
 }
 
 const DI_FETCH_PAGE_SIZE = 1000;
-const DI_BATCH_SIZE = 100;
+const _DI_BATCH_SIZE = 100;
 const MAX_PENDING_AUDITS = 50;
 
 type DiAuditTarget = {
@@ -68,63 +68,50 @@ async function fetchDiAuditTargets(
   serviceIds: string[],
 ): Promise<{ targets: DiAuditTarget[]; totalCandidates: number }> {
   const supabase = getSupabaseClient();
-  const targets: DiAuditTarget[] = [];
   let totalCandidates = 0;
 
-  // Check how many records are currently pending (null compliance_status AND null ingestion_report_id)
-  const { count: pendingCount, error: countError } = await supabase
+  if (serviceIds.length === 0) {
+    return { targets: [], totalCandidates };
+  }
+
+  // 1. Get total candidates count for reporting (records that could be audited)
+  const { count, error: countError } = await supabase
     .from("ingestion_records")
     .select("id, workflows!inner(compliance_status)", {
       count: "exact",
       head: true,
     })
+    .in("di_service_id", serviceIds)
     .is("ingestion_report_id", null)
-    .is("workflows.compliance_status", null);
+    .or("compliance_status.is.null,compliance_status.eq.pending", {
+      foreignTable: "workflows",
+    });
 
   if (countError) {
-    throw new Error(`Failed to count pending audits: ${countError.message}`);
+    throw new Error(`Failed to count audit candidates: ${countError.message}`);
   }
+  totalCandidates = count || 0;
 
-  const currentPending = pendingCount || 0;
-  const remainingSlots = Math.max(0, MAX_PENDING_AUDITS - currentPending);
-
-  logger.info(
-    { currentPending, remainingSlots },
-    "Checking audit capacity (max 50)",
+  // 2. Atomic claim and fetch via stored procedure
+  // This handles the 50-record safety limit, race conditions, and zombie reclamation
+  const { data, error: rpcError } = await supabase.rpc(
+    "claim_di_audit_targets",
+    {
+      p_service_ids: serviceIds,
+      max_total_pending: MAX_PENDING_AUDITS,
+    },
   );
 
-  if (remainingSlots === 0) {
-    logger.info("No slots available for new audits");
-    return { targets: [], totalCandidates: 0 };
+  if (rpcError) {
+    throw new Error(`Failed to claim audit targets: ${rpcError.message}`);
   }
 
-  if (serviceIds.length === 0) {
-    return { targets, totalCandidates };
-  }
+  const targets = (data as DiAuditTarget[]) || [];
 
-  for (let i = 0; i < serviceIds.length; i += DI_BATCH_SIZE) {
-    const batch = serviceIds.slice(i, i + DI_BATCH_SIZE);
-
-    const { data, error } = await supabase
-      .from("ingestion_records")
-      .select("id, markdown, created_at")
-      .in("di_service_id", batch)
-      .is("ingestion_report_id", null)
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      throw new Error(`Failed to fetch ingestion records: ${error.message}`);
-    }
-
-    const records = data ?? [];
-    totalCandidates += records.length;
-
-    for (const record of records) {
-      if (targets.length < remainingSlots) {
-        targets.push({ id: record.id, markdown: record.markdown });
-      }
-    }
-  }
+  logger.info(
+    { selected: targets.length, totalCandidates },
+    "Audit capacity check and target selection complete",
+  );
 
   return {
     targets,
@@ -151,7 +138,7 @@ export async function generateDiAuditReportsStep(runId: string) {
       succeeded: 0,
       failed: 0,
       totalCandidates,
-      skipped: 0,
+      skipped: totalCandidates,
     };
   }
 

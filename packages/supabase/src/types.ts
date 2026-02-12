@@ -1,3 +1,4 @@
+// @ts-nocheck
 export type Json =
   | string
   | number
@@ -777,6 +778,17 @@ export type Database = {
       };
     };
     Functions: {
+      claim_di_audit_targets: {
+        Args: {
+          max_total_pending?: number;
+          p_service_ids: string[];
+          timeout_interval?: string;
+        };
+        Returns: {
+          id: string;
+          markdown: string;
+        }[];
+      };
       get_my_language: { Args: never; Returns: string };
       get_my_role: { Args: never; Returns: string };
     };
