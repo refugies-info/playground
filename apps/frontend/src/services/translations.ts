@@ -114,10 +114,17 @@ export async function getTranslations(params: GetTranslationsParams) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const role = user?.user_metadata?.role;
 
-  if (role === "translator") {
-    // Exclude pending and error
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user?.id ?? "")
+    .single();
+
+  const role = profile?.role;
+
+  if (role !== "admin" && role !== "editor") {
+    // Restrict view for translators and unknown roles: hide pending/error
     query = query.not("work_status", "in", '("pending","error")');
   }
 
