@@ -93,6 +93,8 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
     onProgress,
     extraQueryParams = {},
     filter,
+    deduplicateKey,
+    excludeAllDuplicates,
   } = options;
   const allItems: T[] = [];
   const seenIds = new Set<string>();
@@ -101,7 +103,12 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
   let totalItems: number | null = null;
 
   logger.info(
-    { source: SOURCE_CARIF_OREF, pageSize, limit: limit ?? "unlimited" },
+    {
+      source: SOURCE_CARIF_OREF,
+      pageSize,
+      limit: limit ?? "unlimited",
+      excludeAllDuplicates,
+    },
     `Starting DI API fetch for ${itemType}`,
   );
 
@@ -125,8 +132,9 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
         );
       }
 
-      // Filter and deduplicate items from this page
+      // Filter items from this page
       for (const item of data.items) {
+        // Always deduplicate by ID to avoid API artifacts
         if (seenIds.has(item.id)) {
           logger.debug(
             { id: item.id, type: itemType },
@@ -136,20 +144,11 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
         }
 
         if (filter && !filter(item)) {
-          logger.debug(
-            { id: item.id, type: itemType },
-            "Item filtered out by custom filter",
-          );
           continue;
         }
 
         allItems.push(item);
         seenIds.add(item.id);
-
-        // Stop if we've reached the limit
-        if (limit && allItems.length >= limit) {
-          break;
-        }
       }
 
       if (totalPages === null) {
@@ -174,8 +173,8 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
 
       onProgress?.(allItems.length, limit ?? data.total);
 
-      // Stop if we've reached the limit
-      if (limit && allItems.length >= limit) {
+      // If we are NOT excluding all duplicates, we can stop early if limit is reached
+      if (!excludeAllDuplicates && limit && allItems.length >= limit) {
         logger.info(
           { limit, fetched: allItems.length },
           `Limit reached, stopping ${itemType} fetch`,
@@ -197,8 +196,46 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
     }
   }
 
-  // Result is already limited and filtered
-  const result = allItems;
+  // Handle deduplication
+  let result = allItems;
+
+  if (deduplicateKey) {
+    if (excludeAllDuplicates) {
+      // Group by key and count
+      const counts = new Map<string, number>();
+      for (const item of result) {
+        const key = deduplicateKey(item);
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
+
+      // Keep only items that appeared exactly once
+      const originalCount = result.length;
+      result = result.filter((item) => counts.get(deduplicateKey(item)) === 1);
+
+      logger.info(
+        {
+          originalCount,
+          remainingCount: result.length,
+          dropped: originalCount - result.length,
+        },
+        "Excluded all duplicate records globally",
+      );
+    } else {
+      // Keep first occurrence
+      const seenKeys = new Set<string>();
+      result = result.filter((item) => {
+        const key = deduplicateKey(item);
+        if (seenKeys.has(key)) return false;
+        seenKeys.add(key);
+        return true;
+      });
+    }
+  }
+
+  // Apply limit if specified (since we might have fetched more to handle exclusion)
+  if (limit) {
+    result = result.slice(0, limit);
+  }
 
   logger.info(
     { totalFetched: result.length, pagesProcessed: currentPage },

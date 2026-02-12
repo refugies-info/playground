@@ -31,6 +31,10 @@ export interface DiIngestionOptions<T = any> {
   extraQueryParams?: Record<string, unknown>;
   /** Optional filter function to apply to each item before ingestion */
   filter?: (item: T) => boolean;
+  /** Optional function to generate a key for deduplication */
+  deduplicateKey?: (item: T) => string;
+  /** If true, excludes ALL occurrences of a duplicate key instead of keeping the first one */
+  excludeAllDuplicates?: boolean;
 }
 
 export { DEFAULT_BATCH_SIZE, DEFAULT_PAGE_SIZE, SOURCE_CARIF_OREF };
