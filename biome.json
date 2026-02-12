@@ -10,7 +10,10 @@
   },
   "overrides": [
     {
-      "includes": ["packages/di/src/hey-api/**"],
+      "includes": [
+        "packages/di/src/hey-api/**",
+        "packages/supabase/src/types.ts"
+      ],
       "linter": { "enabled": false },
       "formatter": { "enabled": false }
     }
