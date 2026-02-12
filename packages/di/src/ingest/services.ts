@@ -16,6 +16,25 @@ export interface DiServicesIngestionResult {
 }
 
 /**
+ * Filter for Carif-Oref services based on conventionnement and thematique.
+ */
+const servicePropertyFilter = (service: Service): boolean => {
+  const conventionnement = service.extra?.action?.conventionnement;
+  const hasThematique = service.thematiques?.includes(
+    "lecture-ecriture-calcul--maitriser-le-francais",
+  );
+
+  return conventionnement === "1" && !!hasThematique;
+};
+
+/**
+ * Generates a deduplication key for a service based on (nom, structure_id).
+ */
+const getServiceDeduplicateKey = (service: Service): string => {
+  return `${service.nom}|${service.structure_id}`;
+};
+
+/**
  * Ingest carif-oref services from Data Inclusion API into the di_services table
  *
  * @param supabase - Supabase client with admin privileges
@@ -31,10 +50,14 @@ export interface DiServicesIngestionResult {
  */
 export async function ingestCarifOrefServices(
   supabase: SupabaseClient<Database>,
-  options: DiIngestionOptions = {},
+  options: DiIngestionOptions<Service> = {},
 ): Promise<DiServicesIngestionResult> {
   // Merge extra=true into options to populate the extra field on services
-  const optionsWithExtra: DiIngestionOptions = {
+  // and set default filter and deduplication settings if none provided
+  const optionsWithExtra: DiIngestionOptions<Service> = {
+    filter: servicePropertyFilter,
+    deduplicateKey: getServiceDeduplicateKey,
+    excludeAllDuplicates: true,
     ...options,
     extraQueryParams: {
       ...options.extraQueryParams,
@@ -68,10 +91,14 @@ export async function ingestCarifOrefServices(
  * Fetch services from DI API without storing them (for inspection/testing)
  */
 export async function fetchCarifOrefServices(
-  options: DiIngestionOptions = {},
+  options: DiIngestionOptions<Service> = {},
 ): Promise<Service[]> {
   // Merge extra=true into options to populate the extra field on services
-  const optionsWithExtra: DiIngestionOptions = {
+  // and set default filter and deduplication settings if none provided
+  const optionsWithExtra: DiIngestionOptions<Service> = {
+    filter: servicePropertyFilter,
+    deduplicateKey: getServiceDeduplicateKey,
+    excludeAllDuplicates: true,
     ...options,
     extraQueryParams: {
       ...options.extraQueryParams,
