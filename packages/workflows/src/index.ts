@@ -50,6 +50,8 @@ export {
   type GenerateTranslationWorkflowResult,
 };
 
+export { LANGUAGE_WORKFLOWS } from "./pipelines/workflow-registry";
+
 export type { GetEditorialRecordIdResult } from "./steps/common/get-editorial-record-id";
 export { getEditorialRecordIdStep } from "./steps/common/get-editorial-record-id";
 
@@ -104,3 +106,4 @@ export type { CreateTranslationRecordsResult } from "./steps/translation/create-
 export { createTranslationRecordsStep } from "./steps/translation/create-translation-records";
 export { generateTranslationStep } from "./steps/translation/generate-translation";
 export { triggerTranslationWorkflowStep } from "./steps/translation/trigger-translation-workflow";
+export { updateTranslationStatusStep } from "./steps/translation/update-status";

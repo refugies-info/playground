@@ -2,26 +2,12 @@ import { logger } from "@playground/shared-types";
 import { start } from "workflow/api";
 import {
   generateTranslationWorkflow,
-  generateTranslationWorkflowAr,
-  generateTranslationWorkflowEn,
-  generateTranslationWorkflowFa,
-  generateTranslationWorkflowPashto,
-  generateTranslationWorkflowRu,
-  generateTranslationWorkflowUk,
-} from "../../pipelines/generate-translation";
+  LANGUAGE_WORKFLOWS,
+} from "../../pipelines/workflow-registry";
 import type { StepResult } from "../../types";
 
-const LANGUAGE_WORKFLOWS: Record<string, typeof generateTranslationWorkflow> = {
-  ar: generateTranslationWorkflowAr,
-  en: generateTranslationWorkflowEn,
-  fa: generateTranslationWorkflowFa,
-  ps: generateTranslationWorkflowPashto,
-  ru: generateTranslationWorkflowRu,
-  uk: generateTranslationWorkflowUk,
-};
-
 /**
- * Result of triggering the translation workflow..
+ * Result of triggering the translation workflow.
  */
 export interface TriggerTranslationWorkflowResult {
   triggered: boolean;
@@ -80,8 +66,6 @@ export async function triggerTranslationWorkflowStep(
       { error, parentWorkflowId, language },
       "Failed to trigger translation workflow",
     );
-    // We return success: false here so the parent workflow knows it failed to trigger
-    // It can decide whether to fail completely or just log it (Promise.allSettled usage suggestions otherwise)
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),

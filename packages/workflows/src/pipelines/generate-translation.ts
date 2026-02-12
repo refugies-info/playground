@@ -1,7 +1,37 @@
+/**
+ * FLOW DIAGRAM:
+ *
+ * ┌───────────────────────────────┐
+ * │  generateTranslationWorkflow  │
+ * └───────────────┬───────────────┘
+ *                 │
+ *     ┌───────────▼───────────┐
+ *     │ updateStatus(pending) │
+ *     └───────────┬───────────┘
+ *                 │
+ *         ┌───────▼───────┐
+ *         │      TRY      │
+ *         └───────┬───────┘
+ *                 │
+ *     ┌───────────▼───────────┐
+ *     │  generateTranslation  │
+ *     └───────────┬───────────┘
+ *                 │
+ *         ┌───────┴───────┐
+ *     SUCCESS           FAILURE
+ *         │               │
+ * ┌───────▼───────┐ ┌─────▼───────┐
+ * │ updateStatus  │ │ updateStatus│
+ * │ (to_process)  │ │   (error)   │
+ * └───────┬───────┘ └─────┬───────┘
+ *                 ▼       ▼
+ *                END    THROW
+ */
 import {
   type GenerateTranslationResult,
   generateTranslationStep,
 } from "../steps/translation/generate-translation";
+import { updateTranslationStatusStep } from "../steps/translation/update-status";
 
 /**
  * Input for the generate translation workflow.
@@ -26,17 +56,37 @@ export async function generateTranslationWorkflow(
 ): Promise<GenerateTranslationWorkflowResult> {
   "use workflow";
 
-  const result = await generateTranslationStep(
-    input.editorialRecordId,
-    input.language,
-    input.parentWorkflowId,
-  );
+  const { editorialRecordId, language, parentWorkflowId } = input;
 
-  if (!result.success || !result.data) {
-    throw new Error(result.error || "Translation generation failed");
+  // 1. Set status to pending via step
+  await updateTranslationStatusStep(editorialRecordId, language, "pending");
+
+  try {
+    const result = await generateTranslationStep(
+      editorialRecordId,
+      language,
+      parentWorkflowId,
+    );
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error || "Translation generation failed");
+    }
+
+    // 2. Set status to to_process on success via step
+    await updateTranslationStatusStep(
+      editorialRecordId,
+      language,
+      "to_process",
+    );
+
+    return result.data;
+  } catch (error) {
+    // 3. Set status to error on failure via step
+    await updateTranslationStatusStep(editorialRecordId, language, "error");
+
+    // Re-throw to ensure workflow fails
+    throw error;
   }
-
-  return result.data;
 }
 
 export async function generateTranslationWorkflowAr(

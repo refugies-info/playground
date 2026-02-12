@@ -6,10 +6,68 @@ import {
   DataTableColumnHeader,
 } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Loader2, RotateCw } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import { getLanguageFlag, getLanguageName } from "@/lib/document-labels";
+import { retryTranslationGeneration } from "@/services/translation-actions";
 import type { TranslationItem } from "@/services/translations";
+
+const StatusCell = ({ row }: { row: { original: TranslationItem } }) => {
+  const status = row.original.status;
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  const handleRetry = () => {
+    startTransition(async () => {
+      await retryTranslationGeneration(row.original.id);
+      router.refresh();
+    });
+  };
+
+  if (status === "pending") {
+    return (
+      <Badge variant="neutral" className="gap-1">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        Traduction IA en cours
+      </Badge>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="flex items-center gap-2">
+        <Badge variant="danger">Erreur de traduction IA</Badge>
+        <button
+          type="button"
+          onClick={handleRetry}
+          disabled={isPending}
+          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+          title="Relancer la génération"
+        >
+          <RotateCw
+            className={`h-4 w-4 text-gray-500 ${isPending ? "animate-spin" : ""}`}
+          />
+        </button>
+      </div>
+    );
+  }
+
+  if (status === "to_process") {
+    return <Badge variant="info">À traiter</Badge>;
+  }
+
+  if (status === "draft") {
+    return <Badge variant="neutral">Brouillon</Badge>;
+  }
+
+  if (status === "published") {
+    return <Badge variant="success">Publié</Badge>;
+  }
+
+  return <Badge variant="neutral">{status}</Badge>;
+};
 
 export const columns: ColumnDef<TranslationItem>[] = [
   {
@@ -49,6 +107,13 @@ export const columns: ColumnDef<TranslationItem>[] = [
         {row.getValue("title")}
       </Link>
     ),
+  },
+  {
+    accessorKey: "status",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Traitement" />
+    ),
+    cell: ({ row }) => <StatusCell row={row} />,
   },
   {
     accessorKey: "wordCount",

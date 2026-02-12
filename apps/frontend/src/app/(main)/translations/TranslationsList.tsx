@@ -2,8 +2,9 @@
 
 import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppPaginationControls } from "@/components/common/app-pagination";
+import { createClient } from "@/lib/supabase/client";
 import type { TranslationItem } from "@/services/translations";
 import { columns } from "./columns";
 
@@ -45,9 +46,36 @@ export function TranslationsList({
   pageSize,
   showLanguageFilter,
   initialSorting,
-}: TranslationsListProps) {
+  userRole,
+}: TranslationsListProps & { userRole?: string }) {
   const router = useRouter();
   const [filters, setFilters] = useState(initialFilters);
+
+  // Supabase Realtime: refresh when a translation_record is updated
+  const hasPending = initialTranslations.some((t) => t.status === "pending");
+  useEffect(() => {
+    if (!hasPending) return;
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel("translation-status-updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "translation_records",
+        },
+        () => {
+          router.refresh();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [hasPending, router]);
 
   const updateFilters = (newFilters: typeof filters) => {
     setFilters(newFilters);
@@ -79,6 +107,8 @@ export function TranslationsList({
     router.push("/translations");
   };
 
+  const isTranslator = userRole === "translator";
+
   return (
     <div className="w-full h-full p-8 bg-gray-50 min-h-screen">
       <div className="mb-8">
@@ -101,6 +131,12 @@ export function TranslationsList({
                   <option value="to_process">À traiter</option>
                   <option value="draft">Brouillon</option>
                   <option value="published">Publié</option>
+                  {!isTranslator && (
+                    <option value="pending">Traduction IA en cours</option>
+                  )}
+                  {!isTranslator && (
+                    <option value="error">Erreur de traduction IA</option>
+                  )}
                 </select>
               </div>
               {showLanguageFilter && (

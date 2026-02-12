@@ -109,6 +109,7 @@ export default async function TranslationsPage(props: PageProps) {
         sortOrder:
           sortOrder === "asc" || sortOrder === "desc" ? sortOrder : "desc",
       }}
+      userRole={role}
     />
   );
 }

@@ -108,12 +108,23 @@ export async function getTranslations(params: GetTranslationsParams) {
     query = query.eq("work_status", status);
   }
 
+  // Role-based filtering: Translators should NOT see 'pending' or 'error' translations
+  // We need to check the role. We can't easily get it here without passing it or fetching user again.
+  // BUT we already get the user to check `userLanguage`.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const role = user?.user_metadata?.role;
+
+  if (role === "translator") {
+    // Exclude pending and error
+    query = query.not("work_status", "in", '("pending","error")');
+  }
+
   // Sorting
   let dbSortColumn = "updated_at";
   if (sortBy === "language") dbSortColumn = "language";
   else if (sortBy === "status") dbSortColumn = "work_status";
-
-  // Note: Title sorting is not efficiently supported yet as it depends on metadata/markdown
 
   query = query.order(dbSortColumn, { ascending: sortOrder === "asc" });
 
