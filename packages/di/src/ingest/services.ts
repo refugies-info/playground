@@ -16,32 +16,22 @@ export interface DiServicesIngestionResult {
 }
 
 /**
- * Creates a filter for Carif-Oref services that handles both property filtering
- * and deduplication based on (nom, structure_id).
+ * Filter for Carif-Oref services based on conventionnement and thematique.
  */
-const createServiceFilter = (): ((service: Service) => boolean) => {
-  const seenKeys = new Set<string>();
+const servicePropertyFilter = (service: Service): boolean => {
+  const conventionnement = service.extra?.action?.conventionnement;
+  const hasThematique = service.thematiques?.includes(
+    "lecture-ecriture-calcul--maitriser-le-francais",
+  );
 
-  return (service: Service): boolean => {
-    // 1. Property filtering
-    const conventionnement = service.extra?.action?.conventionnement;
-    const hasThematique = service.thematiques?.includes(
-      "lecture-ecriture-calcul--maitriser-le-francais",
-    );
+  return conventionnement === "1" && !!hasThematique;
+};
 
-    if (conventionnement !== "1" || !hasThematique) {
-      return false;
-    }
-
-    // 2. Deduplication based on (nom, structure_id)
-    const key = `${service.nom}|${service.structure_id}`;
-    if (seenKeys.has(key)) {
-      return false;
-    }
-
-    seenKeys.add(key);
-    return true;
-  };
+/**
+ * Generates a deduplication key for a service based on (nom, structure_id).
+ */
+const getServiceDeduplicateKey = (service: Service): string => {
+  return `${service.nom}|${service.structure_id}`;
 };
 
 /**
@@ -63,9 +53,11 @@ export async function ingestCarifOrefServices(
   options: DiIngestionOptions<Service> = {},
 ): Promise<DiServicesIngestionResult> {
   // Merge extra=true into options to populate the extra field on services
-  // and set default filter if none provided
+  // and set default filter and deduplication settings if none provided
   const optionsWithExtra: DiIngestionOptions<Service> = {
-    filter: createServiceFilter(),
+    filter: servicePropertyFilter,
+    deduplicateKey: getServiceDeduplicateKey,
+    excludeAllDuplicates: true,
     ...options,
     extraQueryParams: {
       ...options.extraQueryParams,
@@ -102,9 +94,11 @@ export async function fetchCarifOrefServices(
   options: DiIngestionOptions<Service> = {},
 ): Promise<Service[]> {
   // Merge extra=true into options to populate the extra field on services
-  // and set default filter if none provided
+  // and set default filter and deduplication settings if none provided
   const optionsWithExtra: DiIngestionOptions<Service> = {
-    filter: createServiceFilter(),
+    filter: servicePropertyFilter,
+    deduplicateKey: getServiceDeduplicateKey,
+    excludeAllDuplicates: true,
     ...options,
     extraQueryParams: {
       ...options.extraQueryParams,
