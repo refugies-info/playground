@@ -92,6 +92,37 @@ async function fetchDiAuditTargets(
   const targets: DiAuditTarget[] = [];
   let totalCandidates = 0;
 
+  // Check how many records are currently pending (null compliance_status AND null ingestion_report_id)
+  const { count: pendingCount, error: countError } = await supabase
+    .from("ingestion_records")
+    .select("id, workflows!inner(compliance_status)", {
+      count: "exact",
+      head: true,
+    })
+    .is("ingestion_report_id", null)
+    .is("workflows.compliance_status", null);
+
+  if (countError) {
+    throw new Error(`Failed to count pending audits: ${countError.message}`);
+  }
+
+  const MAX_PENDING_AUDITS = 50;
+  const currentPending = pendingCount || 0;
+  const remainingSlots = Math.max(0, MAX_PENDING_AUDITS - currentPending);
+
+  logger.info(
+    { currentPending, remainingSlots },
+    "Checking audit capacity (max 50)",
+  );
+
+  if (remainingSlots === 0) {
+    logger.info("No slots available for new audits");
+    return { targets: [], totalCandidates: 0 };
+  }
+
+  const effectiveLimit =
+    limit === null ? remainingSlots : Math.min(limit, remainingSlots);
+
   if (serviceIds.length === 0) {
     return { targets, totalCandidates };
   }
@@ -114,14 +145,14 @@ async function fetchDiAuditTargets(
     totalCandidates += records.length;
 
     for (const record of records) {
-      if (limit === null || targets.length < limit) {
+      if (targets.length < effectiveLimit) {
         targets.push({ id: record.id, markdown: record.markdown });
       }
     }
   }
 
   return {
-    targets: limit === null ? targets : targets.slice(0, limit),
+    targets,
     totalCandidates,
   };
 }

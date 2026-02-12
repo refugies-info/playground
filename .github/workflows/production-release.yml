@@ -53,3 +53,13 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SEED_USER_PASSWORD: ${{ secrets.SEED_USER_PASSWORD }}
         run: pnpm seed:users
+
+      - name: Trigger DI Ingestion
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DI_INGESTION_CRON_SECRET: ${{ secrets.DI_INGESTION_CRON_SECRET }}
+        run: |
+          pnpm vercel curl "/api/cron/di-ingestion" \
+            --token $VERCEL_TOKEN \
+            -- --request GET \
+            -H "Authorization: Bearer $DI_INGESTION_CRON_SECRET"
