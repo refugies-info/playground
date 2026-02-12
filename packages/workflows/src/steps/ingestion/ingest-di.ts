@@ -23,34 +23,14 @@ function getSupabaseClient() {
   return getSupabaseAdmin(url, key);
 }
 
-const DI_AUDIT_LIMIT_ENV = "DI_INGESTION_AUDIT_LIMIT";
 const DI_FETCH_PAGE_SIZE = 1000;
 const DI_BATCH_SIZE = 100;
+const MAX_PENDING_AUDITS = 50;
 
 type DiAuditTarget = {
   id: string;
   markdown: string;
 };
-
-function getDiAuditLimit(): number | null {
-  const rawLimit = process.env[DI_AUDIT_LIMIT_ENV];
-
-  if (!rawLimit || !rawLimit.trim()) {
-    return null;
-  }
-
-  const parsed = Number(rawLimit);
-
-  if (!Number.isFinite(parsed) || parsed < 0) {
-    logger.warn(
-      { rawLimit },
-      `Invalid ${DI_AUDIT_LIMIT_ENV} value, defaulting to unlimited`,
-    );
-    return null;
-  }
-
-  return Math.floor(parsed);
-}
 
 async function fetchDiServiceIdsForRun(runId: string): Promise<string[]> {
   const supabase = getSupabaseClient();
@@ -86,7 +66,6 @@ async function fetchDiServiceIdsForRun(runId: string): Promise<string[]> {
 
 async function fetchDiAuditTargets(
   serviceIds: string[],
-  limit: number | null,
 ): Promise<{ targets: DiAuditTarget[]; totalCandidates: number }> {
   const supabase = getSupabaseClient();
   const targets: DiAuditTarget[] = [];
@@ -106,7 +85,6 @@ async function fetchDiAuditTargets(
     throw new Error(`Failed to count pending audits: ${countError.message}`);
   }
 
-  const MAX_PENDING_AUDITS = 50;
   const currentPending = pendingCount || 0;
   const remainingSlots = Math.max(0, MAX_PENDING_AUDITS - currentPending);
 
@@ -119,9 +97,6 @@ async function fetchDiAuditTargets(
     logger.info("No slots available for new audits");
     return { targets: [], totalCandidates: 0 };
   }
-
-  const effectiveLimit =
-    limit === null ? remainingSlots : Math.min(limit, remainingSlots);
 
   if (serviceIds.length === 0) {
     return { targets, totalCandidates };
@@ -145,7 +120,7 @@ async function fetchDiAuditTargets(
     totalCandidates += records.length;
 
     for (const record of records) {
-      if (targets.length < effectiveLimit) {
+      if (targets.length < remainingSlots) {
         targets.push({ id: record.id, markdown: record.markdown });
       }
     }
@@ -160,27 +135,14 @@ async function fetchDiAuditTargets(
 export async function generateDiAuditReportsStep(runId: string) {
   "use step";
 
-  const auditLimit = getDiAuditLimit();
-
-  if (auditLimit === 0) {
-    logger.info(
-      { runId, limit: auditLimit },
-      "DI audit limit set to 0, skipping Letta audit reports",
-    );
-    return { attempted: 0, succeeded: 0, failed: 0, limit: auditLimit };
-  }
-
   const serviceIds = await fetchDiServiceIdsForRun(runId);
 
   if (serviceIds.length === 0) {
     logger.info({ runId }, "No DI services found for audit reporting");
-    return { attempted: 0, succeeded: 0, failed: 0, limit: auditLimit };
+    return { attempted: 0, succeeded: 0, failed: 0 };
   }
 
-  const { targets, totalCandidates } = await fetchDiAuditTargets(
-    serviceIds,
-    auditLimit,
-  );
+  const { targets, totalCandidates } = await fetchDiAuditTargets(serviceIds);
 
   if (targets.length === 0) {
     logger.info({ runId }, "No ingestion records found for audit reporting");
@@ -188,7 +150,6 @@ export async function generateDiAuditReportsStep(runId: string) {
       attempted: 0,
       succeeded: 0,
       failed: 0,
-      limit: auditLimit,
       totalCandidates,
       skipped: 0,
     };
@@ -207,13 +168,11 @@ export async function generateDiAuditReportsStep(runId: string) {
   const conversationId = conversation.id;
   const supabase = getSupabaseClient();
 
-  const skipped =
-    auditLimit === null ? 0 : Math.max(0, totalCandidates - targets.length);
+  const skipped = Math.max(0, totalCandidates - targets.length);
 
   logger.info(
     {
       runId,
-      limit: auditLimit ?? "unlimited",
       totalCandidates,
       selected: targets.length,
       skipped,
@@ -302,7 +261,6 @@ export async function generateDiAuditReportsStep(runId: string) {
     attempted: targets.length,
     succeeded,
     failed,
-    limit: auditLimit,
     totalCandidates,
     skipped,
   };
