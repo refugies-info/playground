@@ -16,17 +16,32 @@ export interface DiServicesIngestionResult {
 }
 
 /**
- * Default filter for Carif-Oref services
- * - conventionnement: "1"
- * - thematique: "lecture-ecriture-calcul--maitriser-le-francais"
+ * Creates a filter for Carif-Oref services that handles both property filtering
+ * and deduplication based on (nom, structure_id).
  */
-const defaultServiceFilter = (service: Service): boolean => {
-  const conventionnement = service.extra?.action?.conventionnement;
-  const hasThematique = service.thematiques?.includes(
-    "lecture-ecriture-calcul--maitriser-le-francais",
-  );
+const createServiceFilter = (): ((service: Service) => boolean) => {
+  const seenKeys = new Set<string>();
 
-  return conventionnement === "1" && !!hasThematique;
+  return (service: Service): boolean => {
+    // 1. Property filtering
+    const conventionnement = service.extra?.action?.conventionnement;
+    const hasThematique = service.thematiques?.includes(
+      "lecture-ecriture-calcul--maitriser-le-francais",
+    );
+
+    if (conventionnement !== "1" || !hasThematique) {
+      return false;
+    }
+
+    // 2. Deduplication based on (nom, structure_id)
+    const key = `${service.nom}|${service.structure_id}`;
+    if (seenKeys.has(key)) {
+      return false;
+    }
+
+    seenKeys.add(key);
+    return true;
+  };
 };
 
 /**
@@ -50,7 +65,7 @@ export async function ingestCarifOrefServices(
   // Merge extra=true into options to populate the extra field on services
   // and set default filter if none provided
   const optionsWithExtra: DiIngestionOptions<Service> = {
-    filter: defaultServiceFilter,
+    filter: createServiceFilter(),
     ...options,
     extraQueryParams: {
       ...options.extraQueryParams,
@@ -89,7 +104,7 @@ export async function fetchCarifOrefServices(
   // Merge extra=true into options to populate the extra field on services
   // and set default filter if none provided
   const optionsWithExtra: DiIngestionOptions<Service> = {
-    filter: defaultServiceFilter,
+    filter: createServiceFilter(),
     ...options,
     extraQueryParams: {
       ...options.extraQueryParams,
