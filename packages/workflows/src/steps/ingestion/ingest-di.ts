@@ -24,7 +24,6 @@ function getSupabaseClient() {
 }
 
 const DI_FETCH_PAGE_SIZE = 1000;
-const _DI_BATCH_SIZE = 100;
 const MAX_PENDING_AUDITS = 50;
 
 type DiAuditTarget = {
