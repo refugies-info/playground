@@ -38,7 +38,13 @@ async function getAuthorizedTranslationSession() {
     };
   }
 
-  const role = user.user_metadata?.role;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const role = profile?.role;
   if (role !== "admin" && role !== "editor") {
     logger.warn(
       { userId: user.id },
