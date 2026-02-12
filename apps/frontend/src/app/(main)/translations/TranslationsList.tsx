@@ -56,6 +56,11 @@ export function TranslationsList({
   useEffect(() => {
     if (!hasPending) return;
 
+    // Collect pending IDs to scope the subscription
+    const pendingIds = initialTranslations
+      .filter((t) => t.status === "pending")
+      .map((t) => t.id);
+
     const supabase = createClient();
     const channel = supabase
       .channel("translation-status-updates")
@@ -65,6 +70,9 @@ export function TranslationsList({
           event: "UPDATE",
           schema: "public",
           table: "translation_records",
+          // Only listen to records currently visible as pending
+          filter:
+            pendingIds.length === 1 ? `id=eq.${pendingIds[0]}` : undefined,
         },
         () => {
           router.refresh();
@@ -75,7 +83,7 @@ export function TranslationsList({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [hasPending, router]);
+  }, [hasPending, router, initialTranslations]);
 
   const updateFilters = (newFilters: typeof filters) => {
     setFilters(newFilters);
