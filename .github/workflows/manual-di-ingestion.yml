@@ -3,10 +3,6 @@ name: Manual DI Ingestion
 on:
   workflow_dispatch:
     inputs:
-      limit:
-        description: 'Limit the number of structures/services to fetch (optional)'
-        required: false
-        default: ''
       type:
         description: 'Type of ingestion'
         required: true
@@ -44,10 +40,5 @@ jobs:
           DI_API_KEY: ${{ secrets.DI_API_KEY }}
           PLAYGROUND_AGENT_ID: ${{ secrets.PLAYGROUND_AGENT_ID }}
           LETTA_API_KEY: ${{ secrets.LETTA_API_KEY }}
-          # The workflow script also needs DI_BASE_URL if not using default
         run: |
-          LIMIT_ARG=""
-          if [ -n "${{ github.event.inputs.limit }}" ]; then
-            LIMIT_ARG="--limit ${{ github.event.inputs.limit }}"
-          fi
-          pnpm tsx scripts/test-di-workflow.ts $LIMIT_ARG --type ${{ github.event.inputs.type }}
+          pnpm tsx scripts/test-di-workflow.ts --type ${{ github.event.inputs.type }}
