@@ -1,5 +1,6 @@
 import type { Letta } from "@letta-ai/letta-client";
 import type { AssistantMessage } from "@letta-ai/letta-client/resources/agents";
+import type { ConversationCreateParams } from "@letta-ai/letta-client/resources/conversations";
 
 export const listAgents = async (client: Letta) => {
   return client.agents.list();
@@ -45,6 +46,78 @@ export const sendMessage = async (
     content: resultString,
     usage: response.usage as Record<string, unknown> | undefined,
   };
+};
+
+export const sendMessageToConversation = async (
+  client: Letta,
+  conversationId: string,
+  content: string,
+): Promise<{
+  content: string;
+  usage?: Record<string, unknown>;
+}> => {
+  const stream = await client.conversations.messages.create(conversationId, {
+    messages: [
+      {
+        role: "user",
+        content: content,
+      },
+    ],
+  });
+
+  let finalContent = "";
+  // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
+  for await (const chunk of stream as AsyncIterable<any>) {
+    if (chunk.message_type === "assistant_message") {
+      if (typeof chunk.content === "string") {
+        finalContent += chunk.content;
+      } else {
+        finalContent += JSON.stringify(chunk.content);
+      }
+    }
+  }
+
+  if (!finalContent) {
+    throw new Error("No message with content found in response");
+  }
+
+  return {
+    content: finalContent,
+    // Usage might not be easily available in stream chunks without aggregation
+    usage: undefined,
+  };
+};
+
+export const findOrCreateConversation = async (
+  client: Letta,
+  agentId: string,
+  name: string,
+): Promise<string> => {
+  // 1. List conversations
+  const existingConversations = await client.conversations.list({
+    agent_id: agentId,
+    limit: 100,
+  });
+
+  // check if name exists on the object. If typescript complains, we cast to any or check SDK.
+  // Assuming 'name' or 'label' or 'summary' is the property.
+  // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
+  const match = (existingConversations as any[]).find(
+    (c) => c.name === name || c.label === name || c.summary === name,
+  );
+
+  if (match) {
+    return match.id;
+  }
+
+  const createParams: ConversationCreateParams = {
+    agent_id: agentId,
+    summary: name,
+  };
+
+  const newConversation = await client.conversations.create(createParams);
+
+  return newConversation.id;
 };
 
 export const runAgentOneShot = async (

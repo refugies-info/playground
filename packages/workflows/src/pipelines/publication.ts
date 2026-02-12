@@ -4,6 +4,8 @@ import {
   publishDocumentStep,
 } from "../steps/publication/publish-document";
 import { createTranslationRecordsStep } from "../steps/translation/create-translation-records";
+import { getAvailableTranslationAgentsStep } from "../steps/translation/get-available-translation-agents";
+import { triggerTranslationWorkflowStep } from "../steps/translation/trigger-translation-workflow";
 
 /**
  * Result of the publication workflow.
@@ -60,13 +62,36 @@ export async function publicationWorkflow(
       editorialRecordResult.success &&
       editorialRecordResult.data?.editorialRecordId
     ) {
+      const editorialRecordId = editorialRecordResult.data.editorialRecordId;
+
       const translationResult = await createTranslationRecordsStep(
-        editorialRecordResult.data.editorialRecordId,
+        editorialRecordId,
         input.workflowId,
       );
 
       if (translationResult.success && translationResult.data) {
         result.translationsCreated = translationResult.data.created;
+      }
+
+      // 2.1 Trigger AI Translations for configured languages
+      const languagesResult = await getAvailableTranslationAgentsStep();
+      const languages =
+        languagesResult.success && languagesResult.data?.languages
+          ? languagesResult.data.languages
+          : [];
+
+      if (languages.length > 0) {
+        // Run translations in parallel (or sequential if preferred, but parallel is faster)
+        // We use allSettled to not fail the whole process if one translation fails
+        const translationPromises = languages.map((lang) =>
+          triggerTranslationWorkflowStep(
+            editorialRecordId,
+            lang,
+            input.workflowId,
+          ),
+        );
+
+        await Promise.allSettled(translationPromises);
       }
     }
   }

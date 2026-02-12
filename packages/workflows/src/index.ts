@@ -39,6 +39,19 @@ import {
 } from "./pipelines/toggle-status";
 export { toggleStatusWorkflow, type ToggleStatusResult };
 
+import {
+  type GenerateTranslationWorkflowInput,
+  type GenerateTranslationWorkflowResult,
+  generateTranslationWorkflow,
+} from "./pipelines/generate-translation";
+export {
+  generateTranslationWorkflow,
+  type GenerateTranslationWorkflowInput,
+  type GenerateTranslationWorkflowResult,
+};
+
+export { LANGUAGE_WORKFLOWS } from "./pipelines/workflow-registry";
+
 export type { GetEditorialRecordIdResult } from "./steps/common/get-editorial-record-id";
 export { getEditorialRecordIdStep } from "./steps/common/get-editorial-record-id";
 
@@ -91,3 +104,6 @@ export type { CreateTranslationRecordsResult } from "./steps/translation/create-
 // Steps - Translation
 // =============================================================================
 export { createTranslationRecordsStep } from "./steps/translation/create-translation-records";
+export { generateTranslationStep } from "./steps/translation/generate-translation";
+export { triggerTranslationWorkflowStep } from "./steps/translation/trigger-translation-workflow";
+export { updateTranslationStatusStep } from "./steps/translation/update-status";
