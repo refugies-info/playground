@@ -10,37 +10,90 @@ import type { PublisherAdapter, WebhookPayload } from "./types";
 export const refugiesInfoAdapter: PublisherAdapter = {
   platform: "refugies.info",
 
-  getWebhookUrl(): string {
+  getWebhookUrl(
+    action?: "create" | "update" | "translation" | "archive",
+  ): string {
     const baseUrl = process.env.RI_BASE_URL;
     if (!baseUrl) {
       throw new Error("RI_BASE_URL is not configured");
     }
     const cleanBaseUrl = baseUrl.replace(/\/$/, "");
+
+    if (action === "create")
+      return `${cleanBaseUrl}/api/webhook/dispositif/create`;
+    if (action === "update")
+      return `${cleanBaseUrl}/api/webhook/dispositif/update`;
+    if (action === "translation")
+      return `${cleanBaseUrl}/api/webhook/dispositif/translation`;
+    if (action === "archive")
+      return `${cleanBaseUrl}/api/webhook/dispositif/archive`;
+
+    // Fallback to legacy
     return `${cleanBaseUrl}/api/webhook/dispositif`;
   },
 
   async buildPayload(doc): Promise<WebhookPayload> {
-    const themeId =
-      (doc.metadata?.theme as string) || "63286a015d31b2c0cad99615";
-    const status = doc.status || "Actif";
+    const { title, markdown, metadata, userEmail, existingRemoteId } = doc;
 
-    // Strip the first H1 heading for the payload (it's passed in metadata)
-    const cleanedMarkdown = await stripFirstH1(doc.markdown);
+    // Strip the first H1 heading for the payload
+    const cleanedMarkdown = await stripFirstH1(markdown);
+
+    const commonDispositifData = {
+      themes: ["Apprendre le français"],
+      translations: {
+        fr: {
+          content: {
+            titreInformatif: title,
+            titreMarque: (metadata.titreMarque as string) || title,
+            abstract: (metadata.abstract as string) || "",
+            markdown: cleanedMarkdown,
+          },
+        },
+      },
+    };
+
+    if (existingRemoteId) {
+      // UPDATE payload: _id, themes, translations. NO origin, NO status.
+      return {
+        email: userEmail,
+        dispositif: {
+          _id: existingRemoteId,
+          ...commonDispositifData,
+        },
+      };
+    }
+
+    // CREATE payload: origin, themes, translations. NO _id, NO status.
+    return {
+      email: userEmail,
+      dispositif: {
+        origin: "RCO",
+        ...commonDispositifData,
+      },
+    };
+  },
+
+  buildPublishedUrl(remoteId: string): string {
+    const baseUrl = process.env.RI_BASE_URL || "https://refugies.info";
+    const cleanBaseUrl = baseUrl.replace(/\/$/, "");
+    return `${cleanBaseUrl}/dispositif/${remoteId}`;
+  },
+
+  async buildTranslationPayload(doc): Promise<WebhookPayload> {
+    const { language, title, markdown, existingRemoteId, userEmail } = doc;
+
+    // Strip the first H1 heading for the translation payload
+    const cleanedMarkdown = await stripFirstH1(markdown);
 
     return {
-      email: doc.userEmail,
+      email: userEmail,
       dispositif: {
-        typeContenu: "dispositif",
-        theme: themeId,
-        status: status,
-        titreInformatif: doc.title,
-        origin: "RCO",
-        ...(doc.existingRemoteId ? { _id: doc.existingRemoteId } : {}),
+        _id: existingRemoteId,
         translations: {
-          fr: {
+          [language]: {
             content: {
-              titreInformatif: doc.title,
-              titreMarque: doc.title,
+              titreInformatif: title,
+              titreMarque: "", // Usually fixed or copied from FR
               abstract: "",
               markdown: cleanedMarkdown,
             },
@@ -50,10 +103,13 @@ export const refugiesInfoAdapter: PublisherAdapter = {
     };
   },
 
-  buildPublishedUrl(remoteId: string): string {
-    const baseUrl = process.env.RI_BASE_URL || "https://refugies.info";
-    const cleanBaseUrl = baseUrl.replace(/\/$/, "");
-    return `${cleanBaseUrl}/dispositif/${remoteId}`;
+  async buildArchivePayload(doc): Promise<WebhookPayload> {
+    return {
+      email: doc.userEmail,
+      dispositif: {
+        _id: doc.existingRemoteId,
+      },
+    };
   },
 };
 

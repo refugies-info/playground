@@ -34,9 +34,12 @@ export interface PublisherAdapter {
 
   /**
    * Returns the webhook URL for this platform.
+   * @param action - Optional action to determine the specific endpoint (e.g., 'create', 'update', 'translation', 'archive')
    * @returns The webhook endpoint URL
    */
-  getWebhookUrl(): string;
+  getWebhookUrl(
+    action?: "create" | "update" | "translation" | "archive",
+  ): string;
 
   /**
    * Builds the platform-specific payload for the webhook.
@@ -58,4 +61,27 @@ export interface PublisherAdapter {
    * @returns Full public URL to the published content
    */
   buildPublishedUrl(remoteId: string): string;
+
+  /**
+   * Builds the platform-specific payload for a translation update.
+   * @param doc - The translation document details
+   * @returns Formatted webhook payload
+   */
+  buildTranslationPayload(doc: {
+    language: string;
+    title: string;
+    markdown: string;
+    existingRemoteId: string;
+    userEmail: string;
+  }): WebhookPayload | Promise<WebhookPayload>;
+
+  /**
+   * Builds the platform-specific payload for archiving a document.
+   * @param doc - The document details to archive
+   * @returns Formatted webhook payload
+   */
+  buildArchivePayload(doc: {
+    existingRemoteId: string;
+    userEmail: string;
+  }): WebhookPayload | Promise<WebhookPayload>;
 }

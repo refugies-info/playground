@@ -191,7 +191,13 @@ export async function getTranslations(params: GetTranslationsParams) {
         id: row.id,
         title,
         wordCount,
-        status: row.work_status || "to_process",
+        // If it's published, that's the primary status to show in list
+        status:
+          row.online_status === "published"
+            ? "published"
+            : row.work_status || "to_process",
+        onlineStatus: row.online_status,
+        workStatus: row.work_status,
         language: row.language,
         updatedAt: row.updated_at,
         publicationUrl,
@@ -242,7 +248,12 @@ export async function getTranslationById(id: string) {
   return {
     id: row.id,
     language: row.language,
-    status: row.work_status,
+    status:
+      row.online_status === "published"
+        ? "published"
+        : row.work_status || "to_process",
+    onlineStatus: row.online_status,
+    workStatus: row.work_status,
     translationMarkdown: row.markdown,
     sourceMarkdown: row.editorial_records?.markdown || "",
   };
