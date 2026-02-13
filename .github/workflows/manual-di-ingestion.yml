@@ -2,43 +2,29 @@ name: Manual DI Ingestion
 
 on:
   workflow_dispatch:
-    inputs:
-      type:
-        description: 'Type of ingestion'
-        required: true
-        default: 'both'
-        type: choice
-        options:
-          - both
-          - structures
-          - services
 
 jobs:
   ingest:
     runs-on: ubuntu-latest
-    name: Run DI Ingestion Workflow
+    name: Trigger DI Ingestion via Vercel
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v6
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Use Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "24.11.1"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run Ingestion
+      - name: Trigger DI Ingestion
         env:
-          NEXT_PUBLIC_SUPABASE_URL: https://${{ secrets.SUPABASE_PROJECT_ID }}.supabase.co
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          DI_API_KEY: ${{ secrets.DI_API_KEY }}
-          PLAYGROUND_AGENT_ID: ${{ secrets.PLAYGROUND_AGENT_ID }}
-          LETTA_API_KEY: ${{ secrets.LETTA_API_KEY }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          pnpm tsx scripts/test-di-workflow.ts --type ${{ github.event.inputs.type }}
+          PROD_URL=$(curl -sf \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v13/deployments?teamId=$VERCEL_ORG_ID&projectId=$VERCEL_PROJECT_ID&target=production&limit=1&state=READY" \
+            | jq -r '.deployments[0].url')
+
+          if [ -z "$PROD_URL" ] || [ "$PROD_URL" = "null" ]; then
+            echo "Error: Could not find production deployment URL"
+            exit 1
+          fi
+
+          echo "Triggering DI ingestion on: https://$PROD_URL"
+          curl -sf "https://$PROD_URL/api/cron/di-ingestion" \
+            -H "Authorization: Bearer $CRON_SECRET"

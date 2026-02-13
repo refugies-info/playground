@@ -54,22 +54,23 @@ jobs:
           SEED_USER_PASSWORD: ${{ secrets.SEED_USER_PASSWORD }}
         run: pnpm seed:users
 
-      - name: Install Vercel CLI
-        run: pnpm add -g vercel
-
-      - name: Link Vercel Project
+      - name: Trigger DI Ingestion
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: pnpm vercel link --yes --token $VERCEL_TOKEN
-
-      - name: Trigger DI Ingestion
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          DI_INGESTION_CRON_SECRET: ${{ secrets.DI_INGESTION_CRON_SECRET }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          pnpm vercel curl "/api/cron/di-ingestion" \
-            --token $VERCEL_TOKEN \
-            -- --request GET \
-            -H "Authorization: Bearer $DI_INGESTION_CRON_SECRET"
+          PROD_URL=$(curl -sf \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v13/deployments?teamId=$VERCEL_ORG_ID&projectId=$VERCEL_PROJECT_ID&target=production&limit=1&state=READY" \
+            | jq -r '.deployments[0].url')
+
+          if [ -z "$PROD_URL" ] || [ "$PROD_URL" = "null" ]; then
+            echo "Error: Could not find production deployment URL"
+            exit 1
+          fi
+
+          echo "Triggering DI ingestion on: https://$PROD_URL"
+          curl -sf "https://$PROD_URL/api/cron/di-ingestion" \
+            -H "Authorization: Bearer $CRON_SECRET"

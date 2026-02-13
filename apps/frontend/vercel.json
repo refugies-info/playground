@@ -1,0 +1,9 @@
+{
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/di-ingestion",
+      "schedule": "0 2 * * 0-4"
+    }
+  ]
+}

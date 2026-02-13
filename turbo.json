@@ -13,6 +13,16 @@
       "outputs": ["dist/**", ".next/**", "build/**"],
       "cache": true
     },
+    "@playground/shared-types#build": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "cache": true
+    },
+    "@playground/supabase#build": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "cache": true
+    },
     "dev": {
       "cache": false,
       "persistent": true
