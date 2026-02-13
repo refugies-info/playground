@@ -23,34 +23,13 @@ function getSupabaseClient() {
   return getSupabaseAdmin(url, key);
 }
 
-const DI_AUDIT_LIMIT_ENV = "DI_INGESTION_AUDIT_LIMIT";
 const DI_FETCH_PAGE_SIZE = 1000;
-const DI_BATCH_SIZE = 100;
+const MAX_PENDING_AUDITS = 50;
 
 type DiAuditTarget = {
   id: string;
   markdown: string;
 };
-
-function getDiAuditLimit(): number | null {
-  const rawLimit = process.env[DI_AUDIT_LIMIT_ENV];
-
-  if (!rawLimit || !rawLimit.trim()) {
-    return null;
-  }
-
-  const parsed = Number(rawLimit);
-
-  if (!Number.isFinite(parsed) || parsed < 0) {
-    logger.warn(
-      { rawLimit },
-      `Invalid ${DI_AUDIT_LIMIT_ENV} value, defaulting to unlimited`,
-    );
-    return null;
-  }
-
-  return Math.floor(parsed);
-}
 
 async function fetchDiServiceIdsForRun(runId: string): Promise<string[]> {
   const supabase = getSupabaseClient();
@@ -86,42 +65,55 @@ async function fetchDiServiceIdsForRun(runId: string): Promise<string[]> {
 
 async function fetchDiAuditTargets(
   serviceIds: string[],
-  limit: number | null,
 ): Promise<{ targets: DiAuditTarget[]; totalCandidates: number }> {
   const supabase = getSupabaseClient();
-  const targets: DiAuditTarget[] = [];
   let totalCandidates = 0;
 
   if (serviceIds.length === 0) {
-    return { targets, totalCandidates };
+    return { targets: [], totalCandidates };
   }
 
-  for (let i = 0; i < serviceIds.length; i += DI_BATCH_SIZE) {
-    const batch = serviceIds.slice(i, i + DI_BATCH_SIZE);
+  // 1. Get total candidates count for reporting (records that could be audited)
+  const { count, error: countError } = await supabase
+    .from("ingestion_records")
+    .select("id, workflows!inner(compliance_status)", {
+      count: "exact",
+      head: true,
+    })
+    .in("di_service_id", serviceIds)
+    .is("ingestion_report_id", null)
+    .or("compliance_status.is.null,compliance_status.eq.pending", {
+      foreignTable: "workflows",
+    });
 
-    const { data, error } = await supabase
-      .from("ingestion_records")
-      .select("id, markdown, created_at")
-      .in("di_service_id", batch)
-      .is("ingestion_report_id", null)
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      throw new Error(`Failed to fetch ingestion records: ${error.message}`);
-    }
-
-    const records = data ?? [];
-    totalCandidates += records.length;
-
-    for (const record of records) {
-      if (limit === null || targets.length < limit) {
-        targets.push({ id: record.id, markdown: record.markdown });
-      }
-    }
+  if (countError) {
+    throw new Error(`Failed to count audit candidates: ${countError.message}`);
   }
+  totalCandidates = count || 0;
+
+  // 2. Atomic claim and fetch via stored procedure
+  // This handles the 50-record safety limit, race conditions, and zombie reclamation
+  const { data, error: rpcError } = await supabase.rpc(
+    "claim_di_audit_targets",
+    {
+      p_service_ids: serviceIds,
+      max_total_pending: MAX_PENDING_AUDITS,
+    },
+  );
+
+  if (rpcError) {
+    throw new Error(`Failed to claim audit targets: ${rpcError.message}`);
+  }
+
+  const targets = (data as DiAuditTarget[]) || [];
+
+  logger.info(
+    { selected: targets.length, totalCandidates },
+    "Audit capacity check and target selection complete",
+  );
 
   return {
-    targets: limit === null ? targets : targets.slice(0, limit),
+    targets,
     totalCandidates,
   };
 }
@@ -129,27 +121,14 @@ async function fetchDiAuditTargets(
 export async function generateDiAuditReportsStep(runId: string) {
   "use step";
 
-  const auditLimit = getDiAuditLimit();
-
-  if (auditLimit === 0) {
-    logger.info(
-      { runId, limit: auditLimit },
-      "DI audit limit set to 0, skipping Letta audit reports",
-    );
-    return { attempted: 0, succeeded: 0, failed: 0, limit: auditLimit };
-  }
-
   const serviceIds = await fetchDiServiceIdsForRun(runId);
 
   if (serviceIds.length === 0) {
     logger.info({ runId }, "No DI services found for audit reporting");
-    return { attempted: 0, succeeded: 0, failed: 0, limit: auditLimit };
+    return { attempted: 0, succeeded: 0, failed: 0 };
   }
 
-  const { targets, totalCandidates } = await fetchDiAuditTargets(
-    serviceIds,
-    auditLimit,
-  );
+  const { targets, totalCandidates } = await fetchDiAuditTargets(serviceIds);
 
   if (targets.length === 0) {
     logger.info({ runId }, "No ingestion records found for audit reporting");
@@ -157,9 +136,8 @@ export async function generateDiAuditReportsStep(runId: string) {
       attempted: 0,
       succeeded: 0,
       failed: 0,
-      limit: auditLimit,
       totalCandidates,
-      skipped: 0,
+      skipped: totalCandidates,
     };
   }
 
@@ -176,13 +154,11 @@ export async function generateDiAuditReportsStep(runId: string) {
   const conversationId = conversation.id;
   const supabase = getSupabaseClient();
 
-  const skipped =
-    auditLimit === null ? 0 : Math.max(0, totalCandidates - targets.length);
+  const skipped = Math.max(0, totalCandidates - targets.length);
 
   logger.info(
     {
       runId,
-      limit: auditLimit ?? "unlimited",
       totalCandidates,
       selected: targets.length,
       skipped,
@@ -271,7 +247,6 @@ export async function generateDiAuditReportsStep(runId: string) {
     attempted: targets.length,
     succeeded,
     failed,
-    limit: auditLimit,
     totalCandidates,
     skipped,
   };
