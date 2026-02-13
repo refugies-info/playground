@@ -8,10 +8,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function isAuthorized(request: Request): boolean {
-  const secret = process.env.DI_INGESTION_CRON_SECRET;
+  const secret = process.env.CRON_SECRET;
 
   if (!secret) {
-    logger.error("DI_INGESTION_CRON_SECRET is not set, cron cannot run.");
+    logger.error("CRON_SECRET is not set, cron cannot run.");
     return false;
   }
 

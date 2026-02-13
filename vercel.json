@@ -2,10 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/di-ingestion",
-      "schedule": "0 2 * * 0-4",
-      "headers": {
-        "Authorization": "Bearer ${DI_INGESTION_CRON_SECRET}"
-      }
+      "schedule": "0 2 * * 0-4"
     }
   ]
 }
