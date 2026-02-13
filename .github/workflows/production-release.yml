@@ -54,6 +54,9 @@ jobs:
           SEED_USER_PASSWORD: ${{ secrets.SEED_USER_PASSWORD }}
         run: pnpm seed:users
 
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel
+
       - name: Trigger DI Ingestion
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
