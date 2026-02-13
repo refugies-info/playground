@@ -1,4 +1,5 @@
 {
+  "outputDirectory": "apps/frontend/.next",
   "crons": [
     {
       "path": "/api/cron/di-ingestion",
