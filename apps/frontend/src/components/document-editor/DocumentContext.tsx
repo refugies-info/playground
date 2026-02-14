@@ -191,6 +191,12 @@ export function DocumentProvider({
     setCanPublish(false);
   };
 
+  const ensureSaved = async (): Promise<DocumentData | null> => {
+    const saveResult = await saveDocument();
+    if (!saveResult.success) return null;
+    return saveResult.updatedDocument || document;
+  };
+
   const saveDocument = async (): Promise<{
     success: boolean;
     error?: string;
@@ -249,18 +255,8 @@ export function DocumentProvider({
     if (!document) return;
 
     try {
-      let documentToPreview = document;
-
-      // Always save or ensure we have the latest version before previewing
-      const saveResult = await saveDocument();
-      if (!saveResult.success) {
-        // If save failed because of validation (missing H1), don't proceed with preview
-        return;
-      }
-
-      if (saveResult.updatedDocument) {
-        documentToPreview = saveResult.updatedDocument;
-      }
+      const documentToPreview = await ensureSaved();
+      if (!documentToPreview) return;
 
       // Use the utility function to handle the secure form submission
       // documentToPreview is now guaranteed to be the latest saved version
@@ -289,20 +285,12 @@ export function DocumentProvider({
 
     setIsPublishing(true);
     try {
-      let documentToPublish = document;
-
-      // Always save or ensure we have the latest version before publishing
-      const saveResult = await saveDocument();
-      if (!saveResult.success) {
+      const documentToPublish = await ensureSaved();
+      if (!documentToPublish) {
         return {
           success: false,
-          error:
-            saveResult.error || "Échec de l'enregistrement avant publication",
+          error: "Échec de l'enregistrement avant publication",
         };
-      }
-
-      if (saveResult.updatedDocument) {
-        documentToPublish = saveResult.updatedDocument;
       }
 
       const result = await publishDocument(
@@ -344,20 +332,12 @@ export function DocumentProvider({
 
     setIsArchiving(true);
     try {
-      let documentToArchive = document;
-
-      // Always save or ensure we have the latest version before archiving
-      const saveResult = await saveDocument();
-      if (!saveResult.success) {
+      const documentToArchive = await ensureSaved();
+      if (!documentToArchive) {
         return {
           success: false,
-          error:
-            saveResult.error || "Échec de l'enregistrement avant archivage",
+          error: "Échec de l'enregistrement avant archivage",
         };
-      }
-
-      if (saveResult.updatedDocument) {
-        documentToArchive = saveResult.updatedDocument;
       }
 
       const result = await archiveDocument(

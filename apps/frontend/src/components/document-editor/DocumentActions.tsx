@@ -230,7 +230,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
 
   // Workflow:
   // - Save: enabled when document is modified (isDirty) AND compliant
-  // - Publish: enabled when document is saved (not dirty) AND compliant AND in draft
+  // - Publish: enabled when document is compliant. Unsaved changes are saved automatically.
   const canSave = isDirty && isCompliant;
   const canPublishNow = isCompliant;
 
