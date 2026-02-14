@@ -54,16 +54,3 @@ jobs:
           SEED_USER_PASSWORD: ${{ secrets.SEED_USER_PASSWORD }}
         run: pnpm seed:users
 
-      - name: Trigger DI Ingestion
-        env:
-          VERCEL_PROD_URL: ${{ vars.VERCEL_PROD_URL }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-        run: |
-          if [ -z "$VERCEL_PROD_URL" ]; then
-            echo "Error: VERCEL_PROD_URL variable is not set. Configure it in GitHub repo settings under Settings > Variables."
-            exit 1
-          fi
-
-          echo "Triggering DI ingestion on: $VERCEL_PROD_URL"
-          curl -sf "$VERCEL_PROD_URL/api/cron/di-ingestion" \
-            -H "Authorization: Bearer $CRON_SECRET"
