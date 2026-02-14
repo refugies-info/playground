@@ -18,6 +18,15 @@ import {
 } from "./pipelines/publication";
 export { publicationWorkflow, type PublicationWorkflowResult };
 
+import {
+  type TranslationPublicationWorkflowResult,
+  translationPublicationWorkflow,
+} from "./pipelines/translation-publication";
+export {
+  translationPublicationWorkflow,
+  type TranslationPublicationWorkflowResult,
+};
+
 import { type SaveWorkflowResult, saveWorkflow } from "./pipelines/save";
 export { saveWorkflow, type SaveWorkflowResult };
 
@@ -99,6 +108,11 @@ export type {
 // Steps - Publication
 // =============================================================================
 export { publishDocumentStep } from "./steps/publication/publish-document";
+export type {
+  PublishTranslationInput,
+  PublishTranslationResult,
+} from "./steps/publication/publish-translation";
+export { publishTranslationStep } from "./steps/publication/publish-translation";
 export type { CreateTranslationRecordsResult } from "./steps/translation/create-translation-records";
 // =============================================================================
 // Steps - Translation

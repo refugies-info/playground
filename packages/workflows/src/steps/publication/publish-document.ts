@@ -58,7 +58,6 @@ export async function publishDocumentStep(
     const adapter = getPublisherAdapter(platform);
 
     // Get webhook configuration
-    const webhookUrl = adapter.getWebhookUrl();
     const webhookSecret = process.env.RI_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
@@ -90,9 +89,12 @@ export async function publishDocumentStep(
       existingRemoteId: existingRemoteId || undefined,
     });
 
-    // Call the webhook
+    // Call the appropriate specialized endpoint
+    const action = existingRemoteId ? "update" : "create";
+    const webhookUrlWithAction = adapter.getWebhookUrl(action);
 
-    const response = await fetch(webhookUrl, {
+    // Call the webhook
+    const response = await fetch(webhookUrlWithAction, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

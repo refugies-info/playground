@@ -44,22 +44,13 @@ export async function archiveDocumentStep(
 ): Promise<StepResult<ArchiveDocumentResult>> {
   "use step";
 
-  const {
-    workflowId,
-    title,
-    markdown,
-    metadata,
-    userId,
-    userEmail,
-    platform = "refugies.info",
-  } = input;
+  const { workflowId, userId, userEmail, platform = "refugies.info" } = input;
 
   try {
     const supabase = getSupabaseClient();
     const adapter = getPublisherAdapter(platform);
 
     // Get webhook configuration
-    const webhookUrl = adapter.getWebhookUrl();
     const webhookSecret = process.env.RI_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
@@ -86,18 +77,16 @@ export async function archiveDocumentStep(
     if (existingPublication?.remote_id) {
       remoteId = existingPublication.remote_id;
 
-      // Use adapter to build payload
-      const webhookPayload = await adapter.buildPayload({
-        title,
-        markdown,
-        metadata: metadata || {},
+      // Use adapter to build specialized archive payload
+      const webhookPayload = await adapter.buildArchivePayload({
+        existingRemoteId: remoteId as string,
         userEmail,
-        status: "Archivé",
-        existingRemoteId: remoteId,
       });
 
+      const webhookUrlArchive = adapter.getWebhookUrl("archive");
+
       // Call the webhook
-      const response = await fetch(webhookUrl, {
+      const response = await fetch(webhookUrlArchive, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

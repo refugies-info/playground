@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@playground/supabase";
 import {
   generateTranslationWorkflow,
   LANGUAGE_WORKFLOWS,
+  translationPublicationWorkflow,
 } from "@playground/workflows";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
@@ -113,32 +114,36 @@ export async function publishTranslation(
   _markdown: string,
 ): Promise<{
   success: boolean;
-  publishedUrl?: string;
+  workflowRunId?: string;
   error?: string;
 }> {
   try {
     const auth = await getAuthorizedTranslationSession();
     if (auth.errorResponse) return auth.errorResponse;
-    const { supabase } = auth;
+    const { user } = auth;
 
-    const { error } = await supabase
-      .from("translation_records")
-      .update({
-        online_status: "published",
-        work_status: null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id);
-
-    if (error) {
-      logger.error(error, "Error publishing translation");
-      return {
-        success: false,
-        error: "Erreur lors de la publication de la traduction",
-      };
+    if (!translationPublicationWorkflow) {
+      logger.error("translationPublicationWorkflow is undefined");
+      return { success: false, error: "Workflow non configuré" };
     }
 
-    return { success: true };
+    const result = await start(translationPublicationWorkflow, [
+      {
+        translationId: id,
+        userId: user.id,
+        userEmail: user.email ?? "",
+        platform: "refugies.info",
+      },
+    ]);
+
+    logger.info(
+      { workflowRunId: result.runId, translationId: id },
+      "Translation publication workflow started",
+    );
+
+    revalidatePath("/translations");
+
+    return { success: true, workflowRunId: result.runId };
   } catch (error) {
     logger.error(error, "Unexpected error publishing translation");
     return {
