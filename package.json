@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Editorial workflow platform for Refugies.info content management",
   "private": true,
-  "packageManager": "pnpm@10.28.0",
+  "packageManager": "pnpm@10.29.3",
   "pnpm": {
     "overrides": {
       "undici-types": "6.18.2",
