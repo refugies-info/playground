@@ -4,6 +4,7 @@ import { BlockNoteEditor } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import { isRtlLanguage } from "@playground/shared-types";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { getLanguageFlag } from "@/lib/document-labels";
@@ -121,7 +122,10 @@ export function TranslationEditorPane() {
         </span>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 tablet:p-8">
+      <div
+        className="flex-1 overflow-y-auto p-4 tablet:p-8"
+        dir={isRtlLanguage(translation?.language) ? "rtl" : "ltr"}
+      >
         <div className="max-w-3xl mx-auto">
           <BlockNoteView
             editor={editor}
