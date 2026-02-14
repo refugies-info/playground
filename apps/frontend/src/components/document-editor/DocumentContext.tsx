@@ -289,10 +289,26 @@ export function DocumentProvider({
 
     setIsPublishing(true);
     try {
+      let documentToPublish = document;
+
+      // Always save or ensure we have the latest version before publishing
+      const saveResult = await saveDocument();
+      if (!saveResult.success) {
+        return {
+          success: false,
+          error:
+            saveResult.error || "Échec de l'enregistrement avant publication",
+        };
+      }
+
+      if (saveResult.updatedDocument) {
+        documentToPublish = saveResult.updatedDocument;
+      }
+
       const result = await publishDocument(
-        document.id,
-        document.title,
-        document.editorialContent,
+        documentToPublish.id,
+        documentToPublish.title,
+        documentToPublish.editorialContent,
         undefined, // metadata
         triggerTranslations,
       );
@@ -301,7 +317,7 @@ export function DocumentProvider({
         // Update local state to reflect published status
         // Note: publishedUrl will be available after workflow completes
         setDocument({
-          ...document,
+          ...documentToPublish,
           onlineStatus: "published",
           workStatus: null, // Clear Draft status on publish
         });
@@ -328,16 +344,32 @@ export function DocumentProvider({
 
     setIsArchiving(true);
     try {
+      let documentToArchive = document;
+
+      // Always save or ensure we have the latest version before archiving
+      const saveResult = await saveDocument();
+      if (!saveResult.success) {
+        return {
+          success: false,
+          error:
+            saveResult.error || "Échec de l'enregistrement avant archivage",
+        };
+      }
+
+      if (saveResult.updatedDocument) {
+        documentToArchive = saveResult.updatedDocument;
+      }
+
       const result = await archiveDocument(
-        document.id,
-        document.title,
-        document.editorialContent,
+        documentToArchive.id,
+        documentToArchive.title,
+        documentToArchive.editorialContent,
       );
 
       if (result.success) {
         // Update local state to reflect archived status
         setDocument({
-          ...document,
+          ...documentToArchive,
           onlineStatus: "archived",
           workStatus: null, // Clear Draft status on archive
         });
