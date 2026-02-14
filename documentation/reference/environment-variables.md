@@ -107,6 +107,14 @@ Environment variables are configuration values that change between environments 
 - **Description**: Number of structures to fetch per API page (pagination)
 - **Usage**: Adjust based on network conditions and API rate limits
 
+### `MAX_PENDING_AUDITS`
+
+- **Type**: Number
+- **Required**: No
+- **Default**: `50`
+- **Description**: Maximum number of pending unaudited items to process in a single run
+- **Usage**: Controls the batch size for audit generation to prevent overloading the system
+
 ---
 
 ## Application Configuration

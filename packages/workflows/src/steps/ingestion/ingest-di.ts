@@ -24,7 +24,8 @@ function getSupabaseClient() {
 }
 
 const DI_FETCH_PAGE_SIZE = 1000;
-const MAX_PENDING_AUDITS = 50;
+const envVal = Number(process.env.MAX_PENDING_AUDITS);
+const MAX_PENDING_AUDITS = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
 
 type DiAuditTarget = {
   id: string;
