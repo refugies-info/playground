@@ -1,13 +1,66 @@
 export const LANGUAGES = [
-  { code: "fr", name: "French", label: "Français", country: "fr" },
-  { code: "en", name: "English", label: "Anglais", country: "gb" },
-  { code: "ar", name: "Arabic", label: "Arabe", country: "ae" },
-  { code: "ps", name: "Pashto", label: "Pachto", country: "af" },
-  { code: "fa", name: "Persian/Dari", label: "Persan/Dari", country: "ir" },
-  { code: "ru", name: "Russian", label: "Russe", country: "ru" },
-  { code: "ti", name: "Tigrinya", label: "Tigrinya", country: "er" },
-  { code: "uk", name: "Ukrainian", label: "Ukrainien", country: "ua" },
+  {
+    code: "fr",
+    name: "French",
+    label: "Français",
+    country: "fr",
+    isRtl: false,
+  },
+  {
+    code: "en",
+    name: "English",
+    label: "Anglais",
+    country: "gb",
+    isRtl: false,
+  },
+  {
+    code: "ar",
+    name: "Arabic",
+    label: "Arabe",
+    country: "ae",
+    isRtl: true,
+  },
+  {
+    code: "ps",
+    name: "Pashto",
+    label: "Pachto",
+    country: "af",
+    isRtl: true,
+  },
+  {
+    code: "fa",
+    name: "Persian/Dari",
+    label: "Persan/Dari",
+    country: "ir",
+    isRtl: true,
+  },
+  {
+    code: "ru",
+    name: "Russian",
+    label: "Russe",
+    country: "ru",
+    isRtl: false,
+  },
+  {
+    code: "ti",
+    name: "Tigrinya",
+    label: "Tigrinya",
+    country: "er",
+    isRtl: false,
+  },
+  {
+    code: "uk",
+    name: "Ukrainian",
+    label: "Ukrainien",
+    country: "ua",
+    isRtl: false,
+  },
 ] as const;
+
+export function isRtlLanguage(lang: string | undefined): boolean {
+  if (!lang) return false;
+  return LANGUAGES.find((l) => l.code === lang)?.isRtl ?? false;
+}
 
 export type LanguageCode = (typeof LANGUAGES)[number]["code"];
 
