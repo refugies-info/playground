@@ -191,6 +191,12 @@ export function DocumentProvider({
     setCanPublish(false);
   };
 
+  const ensureSaved = async (): Promise<DocumentData | null> => {
+    const saveResult = await saveDocument();
+    if (!saveResult.success) return null;
+    return saveResult.updatedDocument || document;
+  };
+
   const saveDocument = async (): Promise<{
     success: boolean;
     error?: string;
@@ -249,18 +255,8 @@ export function DocumentProvider({
     if (!document) return;
 
     try {
-      let documentToPreview = document;
-
-      // Always save or ensure we have the latest version before previewing
-      const saveResult = await saveDocument();
-      if (!saveResult.success) {
-        // If save failed because of validation (missing H1), don't proceed with preview
-        return;
-      }
-
-      if (saveResult.updatedDocument) {
-        documentToPreview = saveResult.updatedDocument;
-      }
+      const documentToPreview = await ensureSaved();
+      if (!documentToPreview) return;
 
       // Use the utility function to handle the secure form submission
       // documentToPreview is now guaranteed to be the latest saved version
@@ -289,10 +285,18 @@ export function DocumentProvider({
 
     setIsPublishing(true);
     try {
+      const documentToPublish = await ensureSaved();
+      if (!documentToPublish) {
+        return {
+          success: false,
+          error: "Échec de l'enregistrement avant publication",
+        };
+      }
+
       const result = await publishDocument(
-        document.id,
-        document.title,
-        document.editorialContent,
+        documentToPublish.id,
+        documentToPublish.title,
+        documentToPublish.editorialContent,
         undefined, // metadata
         triggerTranslations,
       );
@@ -301,7 +305,7 @@ export function DocumentProvider({
         // Update local state to reflect published status
         // Note: publishedUrl will be available after workflow completes
         setDocument({
-          ...document,
+          ...documentToPublish,
           onlineStatus: "published",
           workStatus: null, // Clear Draft status on publish
         });
@@ -328,16 +332,24 @@ export function DocumentProvider({
 
     setIsArchiving(true);
     try {
+      const documentToArchive = await ensureSaved();
+      if (!documentToArchive) {
+        return {
+          success: false,
+          error: "Échec de l'enregistrement avant archivage",
+        };
+      }
+
       const result = await archiveDocument(
-        document.id,
-        document.title,
-        document.editorialContent,
+        documentToArchive.id,
+        documentToArchive.title,
+        documentToArchive.editorialContent,
       );
 
       if (result.success) {
         // Update local state to reflect archived status
         setDocument({
-          ...document,
+          ...documentToArchive,
           onlineStatus: "archived",
           workStatus: null, // Clear Draft status on archive
         });
