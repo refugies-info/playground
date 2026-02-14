@@ -1,5 +1,7 @@
 {
   "framework": "nextjs",
+  "installCommand": "source ../../vercel-setup.sh && pnpm install --frozen-lockfile",
+  "buildCommand": "source ../../vercel-setup.sh && next build",
   "crons": [
     {
       "path": "/api/cron/di-ingestion",

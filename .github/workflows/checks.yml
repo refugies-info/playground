@@ -20,14 +20,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v6
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Use Node.js
-        uses: actions/setup-node@v6
+      - name: Setup toolchain
+        uses: moonrepo/setup-toolchain@v0
         with:
-          node-version: "24.11.1"
-          cache: "pnpm"
+          auto-install: true
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
