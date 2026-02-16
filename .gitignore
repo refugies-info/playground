@@ -63,3 +63,6 @@ supabase/snippets/
 .claude/
 !.claude/settings.json
 .vercel
+
+# Turborepo
+.turbo
