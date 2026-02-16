@@ -314,10 +314,22 @@ export async function getDocuments(params: GetDocumentsParams) {
       const hasPublicationHistory =
         item.publication_records && item.publication_records.length > 0;
 
+      // Work status: Use editorial_record.work_status if available,
+      // otherwise default to 'to_process' for compliant documents without publication history.
+      // This handles the case where editorial_record doesn't exist yet (e.g., after compliance check).
       const computedWorkStatus = editorialRecord
         ? editorialRecord.work_status
         : item.compliance_status === "compliant" && !hasPublicationHistory
           ? "to_process"
+          : null;
+
+      // Online status: Use editorial_record.online_status if available,
+      // otherwise default to 'archived' for non_compliant documents.
+      // This ensures non_compliant workflows without editorial records are shown as archived.
+      const computedOnlineStatus = editorialRecord
+        ? editorialRecord.online_status
+        : item.compliance_status === "non_compliant"
+          ? "archived"
           : null;
 
       return {
@@ -326,7 +338,7 @@ export async function getDocuments(params: GetDocumentsParams) {
         date_added: dateAdded,
         complianceStatus: (item.compliance_status as ComplianceStatus) ?? null,
         workStatus: computedWorkStatus as WorkStatus,
-        onlineStatus: editorialRecord?.online_status as OnlineStatus,
+        onlineStatus: computedOnlineStatus as OnlineStatus,
         content,
         metadata,
         publishedUrl,
@@ -520,11 +532,22 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   // Determine work status
   // If editorial record exists, we use its status.
   // If not, we fallback to 'to_process' if compliant AND no publication history.
+  // This handles the case where editorial_record doesn't exist yet (e.g., after compliance check).
   const hasPublicationHistory = publicationResult.data !== null;
   const computedWorkStatus = editorialRecordTyped
     ? editorialRecordTyped.work_status
     : workflow.compliance_status === "compliant" && !hasPublicationHistory
       ? "to_process"
+      : null;
+
+  // Determine online status
+  // If editorial record exists, we use its status.
+  // If not, we fallback to 'archived' if non_compliant, else null.
+  // This ensures non_compliant workflows without editorial records are shown as archived.
+  const computedOnlineStatus = editorialRecordTyped
+    ? editorialRecordTyped.online_status
+    : workflow.compliance_status === "non_compliant"
+      ? "archived"
       : null;
 
   return {
@@ -533,8 +556,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     date_added: dateAdded,
     complianceStatus: (workflow.compliance_status as ComplianceStatus) ?? null,
     workStatus: computedWorkStatus as WorkStatus,
-    onlineStatus:
-      (editorialRecordTyped?.online_status as OnlineStatus) || "unpublished",
+    onlineStatus: computedOnlineStatus as OnlineStatus,
     content,
     ingestionContent,
     complianceReport,
