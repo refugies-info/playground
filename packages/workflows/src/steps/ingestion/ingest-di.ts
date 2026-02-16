@@ -30,9 +30,10 @@ const MAX_PENDING_AUDITS = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
 type DiAuditTarget = {
   id: string;
   markdown: string;
+  workflow_id: string;
 };
 
-async function fetchDiServiceIdsForRun(runId: string): Promise<string[]> {
+async function fetchAllDiServiceIds(): Promise<string[]> {
   const supabase = getSupabaseClient();
   const serviceIds: string[] = [];
   let page = 0;
@@ -42,7 +43,6 @@ async function fetchDiServiceIdsForRun(runId: string): Promise<string[]> {
     const { data, error } = await supabase
       .from("di_services")
       .select("id")
-      .eq("ingestion_run_id", runId)
       .range(page * DI_FETCH_PAGE_SIZE, (page + 1) * DI_FETCH_PAGE_SIZE - 1);
 
     if (error) {
@@ -75,22 +75,18 @@ async function fetchDiAuditTargets(
   }
 
   // 1. Get total candidates count for reporting (records that could be audited)
-  const { count, error: countError } = await supabase
-    .from("ingestion_records")
-    .select("id, workflows!inner(compliance_status)", {
-      count: "exact",
-      head: true,
-    })
-    .in("di_service_id", serviceIds)
-    .is("ingestion_report_id", null)
-    .or("compliance_status.is.null,compliance_status.eq.pending", {
-      foreignTable: "workflows",
-    });
+  // Uses an RPC to avoid PostgREST URL length limits with large service ID arrays
+  const { data: candidateCount, error: countError } = await supabase.rpc(
+    "count_di_audit_candidates",
+    { p_service_ids: serviceIds },
+  );
 
   if (countError) {
-    throw new Error(`Failed to count audit candidates: ${countError.message}`);
+    throw new Error(
+      `Failed to count audit candidates: ${JSON.stringify(countError)}`,
+    );
   }
-  totalCandidates = count || 0;
+  totalCandidates = candidateCount ?? 0;
 
   // 2. Atomic claim and fetch via stored procedure
   // This handles the 50-record safety limit, race conditions, and zombie reclamation
@@ -122,7 +118,10 @@ async function fetchDiAuditTargets(
 export async function generateDiAuditReportsStep(runId: string) {
   "use step";
 
-  const serviceIds = await fetchDiServiceIdsForRun(runId);
+  // Fetch ALL DI service IDs, not just from the current run.
+  // Unchanged services keep their original ingestion_run_id, so filtering
+  // by the current runId would miss unaudited records from previous runs.
+  const serviceIds = await fetchAllDiServiceIds();
 
   if (serviceIds.length === 0) {
     logger.info({ runId }, "No DI services found for audit reporting");
@@ -204,7 +203,7 @@ export async function generateDiAuditReportsStep(runId: string) {
           metadata: parsed.metadata as Json,
           status: parsed.status,
           raw_response: parsed.rawResponse ?? null,
-          workflow_id: runId,
+          workflow_id: target.workflow_id,
         })
         .select("id")
         .single();
@@ -237,7 +236,11 @@ export async function generateDiAuditReportsStep(runId: string) {
         );
       } else {
         logger.error(
-          { error, ingestionRecordId: target.id },
+          {
+            err: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            ingestionRecordId: target.id,
+          },
           "Error generating DI ingestion report",
         );
       }
