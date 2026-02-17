@@ -137,18 +137,33 @@ export function TranslationProvider({
   const activePublishTranslation = async () => {
     if (!translation) return { success: false, error: "No translation" };
 
-    if (isDirty) {
-      const confirmSave = confirm(
-        "Vous avez des modifications non enregistrées. Voulez-vous les enregistrer et publier ?",
+    // Toujours sauvegarder avant de publier (comme pour les documents)
+    setIsSaving(true);
+    try {
+      const saveResult = await saveTranslation(
+        translation.id,
+        translation.translationMarkdown,
       );
-      if (confirmSave) {
-        const saveResult = await activeSaveTranslation();
-        if (!saveResult.success) return saveResult;
-      } else {
-        return { success: false, error: "Publication annulée" };
+      if (!saveResult.success) {
+        return {
+          success: false,
+          error: "Échec de l'enregistrement avant publication",
+        };
       }
+      setIsDirty(false);
+      setTranslation({
+        ...translation,
+        status: "draft",
+      });
+    } catch (e) {
+      // biome-ignore lint/suspicious/noConsole: Error logging
+      console.error(e);
+      return { success: false, error: "Erreur lors de la sauvegarde" };
+    } finally {
+      setIsSaving(false);
     }
 
+    // Maintenant publier
     setIsPublishing(true);
     try {
       const result = await publishTranslation(

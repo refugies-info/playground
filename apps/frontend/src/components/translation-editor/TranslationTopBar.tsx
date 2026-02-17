@@ -18,10 +18,8 @@ export function TranslationTopBar() {
   } = useTranslation();
 
   const isPublished = translation?.status === "published";
-  const _canPublish = !isDirty && !isPublished; // Can publish if saved and not already published (simplification)
-  // Or maybe we allow republishing updates?
-  // Let's allow republishing updates if saved.
-  const canPublishUpdate = !isDirty;
+  // Le bouton est actif si pas déjà publié (la sauvegarde se fait automatiquement avant publication)
+  const canPublish = !isPublished;
 
   return (
     <div className="h-14 border-b bg-white flex items-center justify-between px-4 shrink-0 z-30 relative">
@@ -84,7 +82,7 @@ export function TranslationTopBar() {
           variant="success"
           size="sm"
           onClick={() => publishTranslation()}
-          disabled={isPublishing || !canPublishUpdate}
+          disabled={isPublishing || !canPublish}
           className="gap-2"
         >
           <Send className="w-4 h-4" />
