@@ -191,6 +191,9 @@ export async function publishDocumentStep(
     // Update workflow online_status to 'published' and clear work_status
     // Now targeting editorial_records
     if (workflow.editorial_record_id) {
+      // TODO: move to state machine logic
+      // This status transition logic should be moved to a centralized state machine
+      // when implementing the state machine refactoring with Luis.
       const { error: updateError } = await supabase
         .from("editorial_records")
         .update({ online_status: "published", work_status: null })
@@ -200,6 +203,76 @@ export async function publishDocumentStep(
         logger.error(
           updateError,
           "Error updating editorial_record online_status",
+        );
+      }
+
+      // Restore translation_records online_status based on their publication_records
+      // TODO: move to state machine logic
+      // This status restoration logic should be moved to a centralized state machine
+      // when implementing the state machine refactoring with Luis.
+      // Fetch all translation_records for this editorial_record
+      const { data: translationRecords, error: trError } = await supabase
+        .from("translation_records")
+        .select("id")
+        .eq("editorial_record_id", workflow.editorial_record_id);
+
+      if (trError) {
+        logger.error(
+          trError,
+          "Error fetching translation_records for status restoration",
+        );
+      } else if (translationRecords && translationRecords.length > 0) {
+        // For each translation_record, check its publication_records
+        for (const tr of translationRecords) {
+          // Get the latest publication_record for this translation
+          const { data: latestPub, error: pubError } = await supabase
+            .from("publication_records")
+            .select("status")
+            .eq("translation_record_id", tr.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (pubError) {
+            logger.error(
+              pubError,
+              `Error fetching publication_records for translation ${tr.id}`,
+            );
+            continue;
+          }
+
+          // Determine the online_status based on the latest publication_record
+          let translationOnlineStatus: string | null;
+          if (latestPub?.status === "published") {
+            translationOnlineStatus = "published";
+          } else if (latestPub?.status === "archived") {
+            translationOnlineStatus = "archived";
+          } else {
+            // No publication_record means the translation was never published independently
+            // Reset to NULL (it may have been archived when the editorial_record was archived)
+            translationOnlineStatus = null;
+          }
+
+          // Update the translation_record
+          const { error: updateTrError } = await supabase
+            .from("translation_records")
+            .update({ online_status: translationOnlineStatus })
+            .eq("id", tr.id);
+
+          if (updateTrError) {
+            logger.error(
+              updateTrError,
+              `Error updating translation_record ${tr.id} online_status to ${translationOnlineStatus}`,
+            );
+          }
+        }
+
+        logger.info(
+          {
+            editorialRecordId: workflow.editorial_record_id,
+            count: translationRecords.length,
+          },
+          "Translation records status restored based on publication_records",
         );
       }
     } else {

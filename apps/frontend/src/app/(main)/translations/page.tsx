@@ -19,7 +19,9 @@ export const metadata: Metadata = {
 
 export default async function TranslationsPage(props: PageProps) {
   const searchParams = await props.searchParams;
-  const status = searchParams.status;
+  const workStatus = searchParams.workStatus;
+  const onlineStatus = searchParams.onlineStatus;
+  const status = searchParams.status; // Deprecated: for backward compatibility
   const language = searchParams.language;
   const sortBy = searchParams.sortBy;
   const sortOrder = searchParams.sortOrder;
@@ -72,7 +74,9 @@ export default async function TranslationsPage(props: PageProps) {
   const serviceParams: GetTranslationsParams = {
     page,
     pageSize,
-    status: typeof status === "string" ? status : undefined,
+    workStatus: typeof workStatus === "string" ? workStatus : undefined,
+    onlineStatus: typeof onlineStatus === "string" ? onlineStatus : undefined,
+    status: typeof status === "string" ? status : undefined, // Deprecated: backward compatibility
     language: effectiveLanguage,
     sortBy: typeof sortBy === "string" ? sortBy : undefined,
     sortOrder:
@@ -86,7 +90,8 @@ export default async function TranslationsPage(props: PageProps) {
   } = await getTranslations(serviceParams);
 
   const initialFilters = {
-    status: typeof status === "string" ? status : "",
+    workStatus: typeof workStatus === "string" ? workStatus : "",
+    onlineStatus: typeof onlineStatus === "string" ? onlineStatus : "",
     language: typeof language === "string" ? language : "",
   };
 

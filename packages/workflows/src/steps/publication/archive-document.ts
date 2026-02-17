@@ -152,6 +152,8 @@ export async function archiveDocumentStep(
     }
 
     if (workflow?.editorial_record_id) {
+      // TODO: move to state machine logic
+      // This status transition logic should be moved to a centralized state machine
       const { error: updateError } = await supabase
         .from("editorial_records")
         .update({ online_status: "archived", work_status: null })
@@ -163,6 +165,27 @@ export async function archiveDocumentStep(
           "Error updating editorial_record online_status to archived",
         );
         return { success: false, error: "Failed to update workflow status" };
+      }
+
+      // Archive all associated translation_records
+      // TODO: move to state machine logic
+      // This cascade archive logic should be moved to a centralized state machine
+      const { error: translationUpdateError } = await supabase
+        .from("translation_records")
+        .update({ online_status: "archived" })
+        .eq("editorial_record_id", workflow.editorial_record_id);
+
+      if (translationUpdateError) {
+        logger.error(
+          translationUpdateError,
+          "Error updating translation_records online_status to archived",
+        );
+        // Don't fail the whole operation, just log the error
+      } else {
+        logger.info(
+          { editorialRecordId: workflow.editorial_record_id },
+          "Associated translation_records archived successfully",
+        );
       }
     } else {
       logger.warn({ workflowId }, "No editorial record found to archive");

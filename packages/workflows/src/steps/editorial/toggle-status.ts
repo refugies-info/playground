@@ -36,6 +36,9 @@ export async function toggleStatusStep(
       currentStatus === "compliant" ? "non_compliant" : "compliant";
 
     // Determine target statuses based on transition
+    // TODO: move to state machine logic
+    // This status transition logic should be moved to a centralized state machine
+    // when implementing the state machine refactoring with Luis.
     let newOnlineStatus: string | null = null;
     let newWorkStatus: string | null = null;
 
@@ -70,6 +73,9 @@ export async function toggleStatusStep(
 
     // 2. Update editorial record statuses if it exists
     if (workflow?.editorial_record_id) {
+      // TODO: move to state machine logic
+      // This status transition logic should be moved to a centralized state machine
+      // when implementing the state machine refactoring with Luis.
       const updatePayload = {
         work_status: newWorkStatus,
         online_status: newOnlineStatus,
@@ -90,6 +96,30 @@ export async function toggleStatusStep(
           success: false,
           error: "Failed to update editorial record status",
         };
+      }
+
+      // If archiving (non_compliant), also archive all associated translation_records
+      if (newOnlineStatus === "archived") {
+        // TODO: move to state machine logic
+        // This cascade archive logic should be moved to a centralized state machine
+        // when implementing the state machine refactoring with Luis.
+        const { error: translationUpdateError } = await supabase
+          .from("translation_records")
+          .update({ online_status: "archived" })
+          .eq("editorial_record_id", workflow.editorial_record_id);
+
+        if (translationUpdateError) {
+          logger.error(
+            translationUpdateError,
+            "Error updating translation_records online_status to archived",
+          );
+          // Don't fail the whole operation, just log the error
+        } else {
+          logger.info(
+            { editorialRecordId: workflow.editorial_record_id },
+            "Associated translation_records archived successfully",
+          );
+        }
       }
     }
 

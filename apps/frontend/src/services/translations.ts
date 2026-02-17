@@ -16,7 +16,9 @@ export interface TranslationItem {
   id: string;
   title: string;
   wordCount: number;
-  status: string;
+  status: string; // Computed for backward compatibility
+  onlineStatus?: string | null; // 'published' | 'archived' | null
+  workStatus?: string | null; // 'to_process' | 'draft' | 'pending' | 'error' | null
   language: string;
   updatedAt: string;
   publicationUrl?: string;
@@ -47,7 +49,9 @@ export interface GetTranslationsParams {
   page?: number;
   pageSize?: number;
   language?: string; // Filter by specific language
-  status?: string;
+  workStatus?: string; // Filter by work_status
+  onlineStatus?: string; // Filter by online_status
+  status?: string; // Deprecated: for backward compatibility
   sortBy?: string;
   sortOrder?: "asc" | "desc";
 }
@@ -67,7 +71,9 @@ export async function getTranslations(params: GetTranslationsParams) {
     page = 1,
     pageSize = 20,
     language,
-    status,
+    workStatus,
+    onlineStatus,
+    status, // Deprecated: for backward compatibility
     sortBy = "updated_at",
     sortOrder = "desc",
   } = params;
@@ -104,8 +110,20 @@ export async function getTranslations(params: GetTranslationsParams) {
     query = query.eq("language", language);
   }
 
-  if (status) {
+  // Filter by work_status (new param takes precedence over deprecated status param)
+  if (workStatus) {
+    query = query.eq("work_status", workStatus);
+  } else if (status) {
+    // Backward compatibility: map old 'status' param to work_status
     query = query.eq("work_status", status);
+  }
+
+  // Filter by online_status
+  // Special case: "unpublished" means online_status IS NULL
+  if (onlineStatus === "unpublished") {
+    query = query.is("online_status", null);
+  } else if (onlineStatus) {
+    query = query.eq("online_status", onlineStatus);
   }
 
   // Role-based filtering: Translators should NOT see 'pending' or 'error' translations
@@ -131,7 +149,9 @@ export async function getTranslations(params: GetTranslationsParams) {
   // Sorting
   let dbSortColumn = "updated_at";
   if (sortBy === "language") dbSortColumn = "language";
-  else if (sortBy === "status") dbSortColumn = "work_status";
+  else if (sortBy === "workStatus" || sortBy === "status")
+    dbSortColumn = "work_status";
+  else if (sortBy === "onlineStatus") dbSortColumn = "online_status";
 
   query = query.order(dbSortColumn, { ascending: sortOrder === "asc" });
 
