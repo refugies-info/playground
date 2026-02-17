@@ -21,7 +21,8 @@ const LANGUAGES = [
 interface TranslationsListProps {
   initialTranslations: TranslationItem[];
   initialFilters: {
-    status: string;
+    workStatus: string;
+    onlineStatus: string;
     language: string;
   };
   title: string;
@@ -52,13 +53,15 @@ export function TranslationsList({
   const [filters, setFilters] = useState(initialFilters);
 
   // Supabase Realtime: refresh when a translation_record is updated
-  const hasPending = initialTranslations.some((t) => t.status === "pending");
+  const hasPending = initialTranslations.some(
+    (t) => t.workStatus === "pending",
+  );
   useEffect(() => {
     if (!hasPending) return;
 
     // Collect pending IDs to scope the subscription
     const pendingIds = initialTranslations
-      .filter((t) => t.status === "pending")
+      .filter((t) => t.workStatus === "pending")
       .map((t) => t.id);
 
     const supabase = createClient();
@@ -91,8 +94,12 @@ export function TranslationsList({
     // Reset to page 1 on filter change
     params.set("page", "1");
 
-    if (newFilters.status) params.set("status", newFilters.status);
-    else params.delete("status");
+    if (newFilters.workStatus) params.set("workStatus", newFilters.workStatus);
+    else params.delete("workStatus");
+
+    if (newFilters.onlineStatus)
+      params.set("onlineStatus", newFilters.onlineStatus);
+    else params.delete("onlineStatus");
 
     if (newFilters.language && showLanguageFilter) {
       params.set("language", newFilters.language);
@@ -111,7 +118,7 @@ export function TranslationsList({
   };
 
   const clearFilters = () => {
-    setFilters({ status: "", language: "" });
+    setFilters({ workStatus: "", onlineStatus: "", language: "" });
     router.push("/translations");
   };
 
@@ -129,16 +136,29 @@ export function TranslationsList({
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <select
-                  value={filters.status}
+                  value={filters.onlineStatus}
                   onChange={(e) =>
-                    updateFilters({ ...filters, status: e.target.value })
+                    updateFilters({ ...filters, onlineStatus: e.target.value })
                   }
                   className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
                 >
-                  <option value="">Statut</option>
+                  <option value="">Visibilité</option>
+                  <option value="published">Publié</option>
+                  <option value="unpublished">Non publié</option>
+                  {!isTranslator && <option value="archived">Archivé</option>}
+                </select>
+              </div>
+              <div>
+                <select
+                  value={filters.workStatus}
+                  onChange={(e) =>
+                    updateFilters({ ...filters, workStatus: e.target.value })
+                  }
+                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
+                >
+                  <option value="">Traitement</option>
                   <option value="to_process">À traiter</option>
                   <option value="draft">Brouillon</option>
-                  <option value="published">Publié</option>
                   {!isTranslator && (
                     <option value="pending">Traduction IA en cours</option>
                   )}
@@ -166,7 +186,9 @@ export function TranslationsList({
                 </div>
               )}
             </div>
-            {(filters.status || (showLanguageFilter && filters.language)) && (
+            {(filters.workStatus ||
+              filters.onlineStatus ||
+              (showLanguageFilter && filters.language)) && (
               <button
                 type="button"
                 onClick={clearFilters}

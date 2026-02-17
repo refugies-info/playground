@@ -10,12 +10,20 @@ import { ExternalLink, Loader2, RotateCw } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { getLanguageFlag, getLanguageName } from "@/lib/document-labels";
+import {
+  getLanguageFlag,
+  getLanguageName,
+  getOnlineStatusLabel,
+  getOnlineStatusVariant,
+  getWorkStatusLabel,
+  getWorkStatusVariant,
+} from "@/lib/document-labels";
 import { retryTranslationGeneration } from "@/services/translation-actions";
 import type { TranslationItem } from "@/services/translations";
 
-const StatusCell = ({ row }: { row: { original: TranslationItem } }) => {
-  const status = row.original.status;
+// Work status cell with pending/error handling
+const WorkStatusCell = ({ row }: { row: { original: TranslationItem } }) => {
+  const status = row.original.workStatus;
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -54,19 +62,13 @@ const StatusCell = ({ row }: { row: { original: TranslationItem } }) => {
     );
   }
 
-  if (status === "to_process") {
-    return <Badge variant="info">À traiter</Badge>;
-  }
+  if (!status) return <div className="text-gray-400">—</div>;
 
-  if (status === "draft") {
-    return <Badge variant="neutral">Brouillon</Badge>;
-  }
-
-  if (status === "published") {
-    return <Badge variant="success">Publié</Badge>;
-  }
-
-  return <Badge variant="neutral">{status}</Badge>;
+  return (
+    <Badge variant={getWorkStatusVariant(status as "to_process" | "draft")}>
+      {getWorkStatusLabel(status as "to_process" | "draft")}
+    </Badge>
+  );
 };
 
 export const columns: ColumnDef<TranslationItem>[] = [
@@ -109,11 +111,50 @@ export const columns: ColumnDef<TranslationItem>[] = [
     ),
   },
   {
-    accessorKey: "status",
+    accessorKey: "onlineStatus",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Visibilité" />
+    ),
+    cell: ({ row }) => {
+      const status = row.original.onlineStatus;
+      const url = row.original.publicationUrl;
+
+      if (!status) return <div className="text-gray-400">—</div>;
+
+      const typedStatus = status as "published" | "unpublished" | "archived";
+      const statusBadge = (
+        <Badge variant={getOnlineStatusVariant(typedStatus)}>
+          {getOnlineStatusLabel(typedStatus)}
+        </Badge>
+      );
+
+      // Show link if published
+      if (status === "published" && url) {
+        return (
+          <div className="flex items-center gap-2">
+            {statusBadge}
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-blue-600 transition-colors"
+              title="Voir la fiche publiée"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+        );
+      }
+
+      return statusBadge;
+    },
+  },
+  {
+    accessorKey: "workStatus",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Traitement" />
     ),
-    cell: ({ row }) => <StatusCell row={row} />,
+    cell: ({ row }) => <WorkStatusCell row={row} />,
   },
   {
     accessorKey: "wordCount",
@@ -121,26 +162,6 @@ export const columns: ColumnDef<TranslationItem>[] = [
       <DataTableColumnHeader column={column} title="Mots" />
     ),
     cell: ({ row }) => <div>{row.getValue("wordCount")}</div>,
-  },
-  {
-    accessorKey: "publicationUrl",
-    header: "Lien",
-    cell: ({ row }) => {
-      const url = row.original.publicationUrl;
-      if (!url) return null;
-      return (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-400 hover:text-blue-600 transition-colors flex items-center gap-2"
-          title="Voir la fiche publiée"
-        >
-          <ExternalLink className="w-4 h-4" />
-          <span className="text-xs underline">Voir</span>
-        </a>
-      );
-    },
   },
   {
     accessorKey: "author",
