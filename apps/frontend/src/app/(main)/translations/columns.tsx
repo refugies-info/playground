@@ -121,19 +121,18 @@ export const columns: ColumnDef<TranslationItem>[] = [
 
       if (!status) return <div className="text-gray-400">—</div>;
 
+      const typedStatus = status as "published" | "unpublished" | "archived";
+      const statusBadge = (
+        <Badge variant={getOnlineStatusVariant(typedStatus)}>
+          {getOnlineStatusLabel(typedStatus)}
+        </Badge>
+      );
+
       // Show link if published
       if (status === "published" && url) {
         return (
           <div className="flex items-center gap-2">
-            <Badge
-              variant={getOnlineStatusVariant(
-                status as "published" | "unpublished" | "archived",
-              )}
-            >
-              {getOnlineStatusLabel(
-                status as "published" | "unpublished" | "archived",
-              )}
-            </Badge>
+            {statusBadge}
             <a
               href={url}
               target="_blank"
@@ -147,17 +146,7 @@ export const columns: ColumnDef<TranslationItem>[] = [
         );
       }
 
-      return (
-        <Badge
-          variant={getOnlineStatusVariant(
-            status as "published" | "unpublished" | "archived",
-          )}
-        >
-          {getOnlineStatusLabel(
-            status as "published" | "unpublished" | "archived",
-          )}
-        </Badge>
-      );
+      return statusBadge;
     },
   },
   {
