@@ -81,6 +81,7 @@ export default async function TranslationsPage(props: PageProps) {
     sortBy: typeof sortBy === "string" ? sortBy : undefined,
     sortOrder:
       sortOrder === "asc" || sortOrder === "desc" ? sortOrder : undefined,
+    userRole: role,
   };
 
   const {

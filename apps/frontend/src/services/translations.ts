@@ -54,6 +54,7 @@ export interface GetTranslationsParams {
   status?: string; // Deprecated: for backward compatibility
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+  userRole?: string; // User role for permission-based filtering
 }
 
 /**
@@ -76,6 +77,7 @@ export async function getTranslations(params: GetTranslationsParams) {
     status, // Deprecated: for backward compatibility
     sortBy = "updated_at",
     sortOrder = "desc",
+    userRole,
   } = params;
 
   const cookieStore = await cookies();
@@ -126,24 +128,16 @@ export async function getTranslations(params: GetTranslationsParams) {
     query = query.eq("online_status", onlineStatus);
   }
 
-  // Role-based filtering: Translators should NOT see 'pending' or 'error' translations
-  // We need to check the role. We can't easily get it here without passing it or fetching user again.
-  // BUT we already get the user to check `userLanguage`.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user?.id ?? "")
-    .single();
-
-  const role = profile?.role;
+  // Role-based filtering: Translators should NOT see 'pending', 'error', or 'archived' translations
+  // Use userRole from params (passed from page.tsx) for consistency
+  const role = userRole;
 
   if (role !== "admin" && role !== "editor") {
-    // Restrict view for translators and unknown roles: hide pending/error
+    // Restrict view for translators and unknown roles: hide pending/error work_status
     query = query.not("work_status", "in", '("pending","error")');
+    // Hide archived online_status (but include NULL/unpublished)
+    // Note: .not("eq", "archived") doesn't include NULLs in SQL, so we use .or()
+    query = query.or("online_status.neq.archived,online_status.is.null");
   }
 
   // Sorting

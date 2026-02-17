@@ -145,7 +145,7 @@ export function TranslationsList({
                   <option value="">Visibilité</option>
                   <option value="published">Publié</option>
                   <option value="unpublished">Non publié</option>
-                  <option value="archived">Archivé</option>
+                  {!isTranslator && <option value="archived">Archivé</option>}
                 </select>
               </div>
               <div>
