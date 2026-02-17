@@ -223,7 +223,7 @@ export async function publishDocumentStep(
         );
       } else if (translationRecords && translationRecords.length > 0) {
         // For each translation_record, check its publication_records
-        for (const tr of translationRecords) {
+        const updatePromises = translationRecords.map(async (tr) => {
           // Get the latest publication_record for this translation
           const { data: latestPub, error: pubError } = await supabase
             .from("publication_records")
@@ -238,7 +238,7 @@ export async function publishDocumentStep(
               pubError,
               `Error fetching publication_records for translation ${tr.id}`,
             );
-            continue;
+            return;
           }
 
           // Determine the online_status based on the latest publication_record
@@ -265,7 +265,8 @@ export async function publishDocumentStep(
               `Error updating translation_record ${tr.id} online_status to ${translationOnlineStatus}`,
             );
           }
-        }
+        });
+        await Promise.all(updatePromises);
 
         logger.info(
           {
