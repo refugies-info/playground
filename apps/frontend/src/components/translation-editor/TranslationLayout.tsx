@@ -3,6 +3,7 @@
 import { SourcePane } from "./SourcePane";
 import { TranslationProvider } from "./TranslationContext";
 import { TranslationEditorPane } from "./TranslationEditorPane";
+import { TranslationSidebar } from "./TranslationSidebar";
 import { TranslationTopBar } from "./TranslationTopBar";
 
 // import { Toaster } from "sonner";
@@ -19,7 +20,9 @@ export function TranslationLayout({ initialData }: TranslationLayoutProps) {
         <TranslationTopBar />
 
         <div className="flex flex-1 overflow-hidden">
-          {/* Left Pane: Source */}
+          {/* Left Sidebar: Actions */}
+          <TranslationSidebar />
+          {/* Center Pane: Source */}
           <SourcePane />
           {/* Right Pane: Translation */}
           <div className="w-px bg-gray-200" /> {/* Divider */}

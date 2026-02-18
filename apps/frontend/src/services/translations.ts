@@ -249,6 +249,14 @@ export async function getTranslationById(id: string) {
       *,
       editorial_records (
         markdown
+      ),
+      workflows (
+        id,
+        publication_records (
+          remote_id,
+          target,
+          payload
+        )
       )
     `,
     )
@@ -264,7 +272,39 @@ export async function getTranslationById(id: string) {
   const row =
     data as unknown as Database["public"]["Tables"]["translation_records"]["Row"] & {
       editorial_records: { markdown: string };
+      workflows: {
+        id: string;
+        publication_records: Array<{
+          remote_id: string;
+          target: string;
+          payload: unknown;
+        }>;
+      } | null;
     };
+
+  // Get publication URL
+  let publicationUrl: string | undefined;
+  const cleanBaseUrl = (process.env.RI_BASE_URL || "").replace(/\/$/, "");
+
+  // Find the publication record for this translation
+  const pubRecord = row.workflows?.publication_records?.find((record) => {
+    const payload = record.payload as unknown as {
+      dispositif?: { translations?: Record<string, unknown> };
+    };
+    const translations = payload?.dispositif?.translations;
+    return translations && Object.keys(translations).includes(row.language);
+  });
+
+  if (pubRecord?.remote_id && cleanBaseUrl) {
+    // For translations: use language-specific URL pattern (/{language}/program/{id})
+    // For French: falls back to /dispositif/{id}
+    const languageCode = row.language === "fr" ? "" : row.language;
+    if (languageCode) {
+      publicationUrl = `${cleanBaseUrl}/${languageCode}/program/${pubRecord.remote_id}`;
+    } else {
+      publicationUrl = `${cleanBaseUrl}/dispositif/${pubRecord.remote_id}`;
+    }
+  }
 
   return {
     id: row.id,
@@ -277,5 +317,6 @@ export async function getTranslationById(id: string) {
     workStatus: row.work_status,
     translationMarkdown: row.markdown,
     sourceMarkdown: row.editorial_records?.markdown || "",
+    publicationUrl,
   };
 }

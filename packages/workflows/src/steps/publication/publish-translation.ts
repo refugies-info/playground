@@ -1,7 +1,41 @@
 import { extractTitleFromMarkdown, logger } from "@playground/shared-types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { StepResult } from "../../types";
 import { getSupabaseClient } from "../common/supabase";
 import { getPublisherAdapter } from "./adapters/refugies-info";
+
+/**
+ * Helper to create a failed publication record and log the error to the UI.
+ * This ensures errors from the workflow are visible to users via Realtime.
+ */
+async function createFailedPublicationRecord(
+  supabase: SupabaseClient,
+  params: {
+    workflowId: string;
+    translationId: string;
+    remoteId?: string;
+    errorMessage: string;
+    userId: string;
+  },
+) {
+  const targetUrl = process.env.RI_BASE_URL || "refugies.info";
+
+  try {
+    await supabase.from("publication_records").insert({
+      workflow_id: params.workflowId,
+      translation_record_id: params.translationId,
+      target: targetUrl,
+      remote_id: params.remoteId || "unknown",
+      status: "failed",
+      mode: "translation",
+      error_message: params.errorMessage,
+      published_by: params.userId,
+      author_id: params.userId,
+    });
+  } catch (error) {
+    logger.error(error, "Failed to create error publication record");
+  }
+}
 
 /**
  * Result of publishing a translation.
@@ -48,6 +82,8 @@ export async function publishTranslationStep(
     platform = "refugies.info",
   } = input;
 
+  let translationWorkflowId: string | undefined;
+
   try {
     const supabase = getSupabaseClient();
     const adapter = getPublisherAdapter(platform);
@@ -64,11 +100,27 @@ export async function publishTranslationStep(
         { translationId, error: translationError },
         "Translation record not found",
       );
-      return { success: false, error: "Traduction non trouvée" };
+      const error = "Traduction non trouvée";
+      // Cannot create failed record if we don't have the translation record
+      // This is a critical error that should not happen in normal operation
+      return { success: false, error };
     }
 
+    // Store workflow_id for error handling
+    translationWorkflowId = translation.workflow_id;
+
     if (!translation.markdown) {
-      return { success: false, error: "La traduction n'a pas de contenu" };
+      const error = "La traduction n'a pas de contenu";
+      // Create failed record (Realtime will notify frontend via publication_records INSERT)
+      if (translationWorkflowId) {
+        await createFailedPublicationRecord(supabase, {
+          workflowId: translationWorkflowId,
+          translationId,
+          errorMessage: error,
+          userId,
+        });
+      }
+      return { success: false, error };
     }
 
     // 2. Fetch the latest publication record for the editorial record
@@ -86,10 +138,20 @@ export async function publishTranslationStep(
         { editorialRecordId: translation.editorial_record_id },
         "Source publication not found",
       );
+      const error =
+        "La fiche source doit être publiée avant de pouvoir publier une traduction";
+      // Create failed record (Realtime will notify frontend via publication_records INSERT)
+      if (translationWorkflowId) {
+        await createFailedPublicationRecord(supabase, {
+          workflowId: translationWorkflowId,
+          translationId,
+          errorMessage: error,
+          userId,
+        });
+      }
       return {
         success: false,
-        error:
-          "La fiche source doit être publiée avant de pouvoir publier une traduction",
+        error,
       };
     }
 
@@ -104,7 +166,17 @@ export async function publishTranslationStep(
     const webhookSecret = process.env.RI_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
-      return { success: false, error: "Missing webhook secret configuration" };
+      const error = "Missing webhook secret configuration";
+      // Create failed record (Realtime will notify frontend via publication_records INSERT)
+      if (translationWorkflowId) {
+        await createFailedPublicationRecord(supabase, {
+          workflowId: translationWorkflowId,
+          translationId,
+          errorMessage: error,
+          userId,
+        });
+      }
+      return { success: false, error };
     }
 
     const webhookPayload = await adapter.buildTranslationPayload({
@@ -132,11 +204,22 @@ export async function publishTranslationStep(
         { status: response.status, error: errorData },
         "Translation publication webhook failed",
       );
+      const error =
+        (errorData as { message?: string }).message ||
+        `Webhook error ${response.status}`;
+      // Create failed record (Realtime will notify frontend via publication_records INSERT)
+      if (translationWorkflowId) {
+        await createFailedPublicationRecord(supabase, {
+          workflowId: translationWorkflowId,
+          translationId,
+          remoteId,
+          errorMessage: error,
+          userId,
+        });
+      }
       return {
         success: false,
-        error:
-          (errorData as { message?: string }).message ||
-          `Webhook error ${response.status}`,
+        error,
       };
     }
 
@@ -159,7 +242,11 @@ export async function publishTranslationStep(
 
     if (insertError || !newRecord) {
       logger.error(insertError, "Error storing translation publication record");
-      return { success: false, error: "Failed to store publication record" };
+      const error = "Failed to store publication record";
+      // This is a weird edge case - the webhook succeeded but we can't store the record
+      // We can't create another failed record since the insert just failed
+      // Just return the error
+      return { success: false, error };
     }
 
     // 6. Update translation record status
@@ -193,9 +280,23 @@ export async function publishTranslationStep(
     };
   } catch (error) {
     logger.error(error, "Unexpected error in publishTranslationStep");
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    // Try to create a failed publication record so the error appears in the UI
+    // Realtime will notify frontend via publication_records INSERT
+    if (translationWorkflowId && translationId) {
+      const supabase = getSupabaseClient();
+      await createFailedPublicationRecord(supabase, {
+        workflowId: translationWorkflowId,
+        translationId,
+        errorMessage,
+        userId,
+      });
+    }
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMessage,
     };
   }
 }
