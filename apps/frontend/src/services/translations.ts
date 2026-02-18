@@ -9,6 +9,7 @@ import {
   type Database,
 } from "@playground/supabase";
 import { cookies } from "next/headers";
+import { buildPublicationUrl } from "@/lib/url-builder";
 import { extractAuthorProfile } from "./helpers";
 
 // Define the shape of a translation item for the frontend
@@ -284,7 +285,7 @@ export async function getTranslationById(id: string) {
 
   // Get publication URL
   let publicationUrl: string | undefined;
-  const cleanBaseUrl = (process.env.RI_BASE_URL || "").replace(/\/$/, "");
+  const baseUrl = process.env.RI_BASE_URL;
 
   // Find the publication record for this translation
   const pubRecord = row.workflows?.publication_records?.find((record) => {
@@ -295,14 +296,11 @@ export async function getTranslationById(id: string) {
     return translations && Object.keys(translations).includes(row.language);
   });
 
-  if (pubRecord?.remote_id && cleanBaseUrl) {
-    // For translations: use language-specific URL pattern (/{language}/program/{id})
-    // For French: falls back to /dispositif/{id}
-    const languageCode = row.language === "fr" ? "" : row.language;
-    if (languageCode) {
-      publicationUrl = `${cleanBaseUrl}/${languageCode}/program/${pubRecord.remote_id}`;
-    } else {
-      publicationUrl = `${cleanBaseUrl}/dispositif/${pubRecord.remote_id}`;
+  if (pubRecord?.remote_id && baseUrl) {
+    // Build URL using secure utility function
+    const url = buildPublicationUrl(baseUrl, row.language, pubRecord.remote_id);
+    if (url) {
+      publicationUrl = url;
     }
   }
 

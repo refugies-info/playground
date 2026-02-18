@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { buildPublicationUrl } from "@/lib/url-builder";
 import {
   publishTranslation,
   saveTranslation,
@@ -116,21 +117,23 @@ export function TranslationProvider({
             pubRecord.remote_id &&
             pubRecord.target
           ) {
-            // Success - build the URL using target from the record
+            // Success - build the URL using secure utility
             setPublicationUrlError(null);
-            const cleanBaseUrl = pubRecord.target.replace(/\/$/, "");
-            const languageCode =
-              initialData.language === "fr" ? "" : initialData.language;
-            let url: string;
-            if (languageCode) {
-              url = `${cleanBaseUrl}/${languageCode}/program/${pubRecord.remote_id}`;
+            const url = buildPublicationUrl(
+              pubRecord.target,
+              initialData.language,
+              pubRecord.remote_id,
+            );
+            if (url) {
+              setTranslation((prev) => {
+                if (!prev) return prev;
+                return { ...prev, publicationUrl: url };
+              });
             } else {
-              url = `${cleanBaseUrl}/dispositif/${pubRecord.remote_id}`;
+              setPublicationUrlError(
+                "Configuration invalide pour la publication. Contactez l'équipe technique.",
+              );
             }
-            setTranslation((prev) => {
-              if (!prev) return prev;
-              return { ...prev, publicationUrl: url };
-            });
           } else {
             // Unexpected status or missing data
             setPublicationUrlError(
