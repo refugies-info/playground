@@ -6,6 +6,9 @@
 import { stripFirstH1 } from "@playground/shared-types";
 import { normalizeMarkdown } from "./markdown/normalizeMarkdown";
 
+// Default theme ID for dispositif preview/payload ("Apprendre le français")
+const DEFAULT_THEME_ID = "63286a015d31b2c0cad99615";
+
 export interface DocumentPayloadInput {
   title: string;
   editorialContent: string;
@@ -50,7 +53,7 @@ export async function buildDispositifPayload(
   doc: DocumentPayloadInput,
   status = "Actif",
 ): Promise<DispositifPayload> {
-  const themeId = (doc.metadata?.theme as string) || "63286a015d31b2c0cad99615";
+  const themeId = (doc.metadata?.theme as string) || DEFAULT_THEME_ID;
 
   // Normalize markdown to ensure unambiguous directive nesting
   // This prevents parsing issues in the Main App when it receives nested directives
@@ -186,9 +189,7 @@ export async function buildTranslationPreviewPayload(
         (input.sourceMetadata.secondaryThemes as unknown[]) || [],
       needs: (input.sourceMetadata.needs as unknown[]) || [],
       metadatas:
-        (input.sourceMetadata.metadatas as Record<string, unknown>) ||
-        input.sourceMetadata ||
-        {},
+        (input.sourceMetadata.metadatas as Record<string, unknown>) || {},
 
       // Translations: both FR (source) and target language
       translations: {
