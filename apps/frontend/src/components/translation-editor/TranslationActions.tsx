@@ -41,6 +41,8 @@ export function TranslationActions({
     setShowPublishSuccessOverlay(true);
     const result = await publishTranslation();
 
+    if (!isMounted.current) return;
+
     if (!result.success) {
       // If publishTranslation itself fails (before workflow starts), close overlay
       setShowPublishSuccessOverlay(false);
@@ -57,7 +59,11 @@ export function TranslationActions({
     if (publicationUrl) {
       navigator.clipboard.writeText(publicationUrl);
       setHasCopied(true);
-      setTimeout(() => setHasCopied(false), 2000);
+      setTimeout(() => {
+        if (isMounted.current) {
+          setHasCopied(false);
+        }
+      }, 2000);
     }
   };
 

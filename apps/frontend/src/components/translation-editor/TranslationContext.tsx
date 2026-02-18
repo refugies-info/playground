@@ -1,6 +1,7 @@
 "use client";
 
 import type { OnlineStatus, WorkStatus } from "@playground/shared-types";
+import { logger } from "@playground/shared-types";
 import {
   createContext,
   type ReactNode,
@@ -107,6 +108,7 @@ export function TranslationProvider({
         async (payload) => {
           // A publication_record was created (success or failure)
           const pubRecord = payload.new;
+          logger.info({ pubRecord }, "📡 Realtime INSERT: publication_records");
           setIsPublishing(false);
 
           if (pubRecord.status === "failed" && pubRecord.error_message) {
