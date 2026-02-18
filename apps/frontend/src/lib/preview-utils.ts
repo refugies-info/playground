@@ -103,7 +103,8 @@ export const submitTranslationPreview = async (
   });
 
   // Get base URL from client-side env vars
-  const baseUrl = process.env.RI_BASE_URL || "http://localhost:3000";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_RI_BASE_URL || "http://localhost:3000";
 
   // Build locale-specific preview URL: /{locale}/dispositif/preview
   const previewUrl = `${baseUrl.replace(/\/$/, "")}/${document.language}/dispositif/preview`;
