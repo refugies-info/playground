@@ -249,7 +249,8 @@ export async function getTranslationById(id: string) {
       `
       *,
       editorial_records (
-        markdown
+        markdown,
+        metadata
       ),
       workflows (
         id,
@@ -272,7 +273,7 @@ export async function getTranslationById(id: string) {
   // Cast to correct type since we know the relation exists
   const row =
     data as unknown as Database["public"]["Tables"]["translation_records"]["Row"] & {
-      editorial_records: { markdown: string };
+      editorial_records: { markdown: string; metadata: unknown };
       workflows: {
         id: string;
         publication_records: Array<{
@@ -283,24 +284,24 @@ export async function getTranslationById(id: string) {
       } | null;
     };
 
-  // Get publication URL
-  let publicationUrl: string | undefined;
   const baseUrl = process.env.RI_BASE_URL;
 
-  // Find the publication record for this translation
-  const pubRecord = row.workflows?.publication_records?.find((record) => {
+  // Check if source document (FR) is published - needed for preview
+  // Look for a publication record with FR translation
+  const sourcePubRecord = row.workflows?.publication_records?.find((record) => {
     const payload = record.payload as unknown as {
       dispositif?: { translations?: Record<string, unknown> };
     };
     const translations = payload?.dispositif?.translations;
-    return translations && Object.keys(translations).includes(row.language);
+    return translations && Object.keys(translations).includes("fr");
   });
 
-  if (pubRecord?.remote_id && baseUrl) {
-    // Build URL using secure utility function
-    const url = buildPublicationUrl(baseUrl, row.language, pubRecord.remote_id);
+  // Build source publication URL if FR is published
+  let sourcePublicationUrl: string | undefined;
+  if (sourcePubRecord?.remote_id && baseUrl) {
+    const url = buildPublicationUrl(baseUrl, "fr", sourcePubRecord.remote_id);
     if (url) {
-      publicationUrl = url;
+      sourcePublicationUrl = url;
     }
   }
 
@@ -315,6 +316,8 @@ export async function getTranslationById(id: string) {
     workStatus: row.work_status,
     translationMarkdown: row.markdown,
     sourceMarkdown: row.editorial_records?.markdown || "",
-    publicationUrl,
+    sourceMetadata:
+      (row.editorial_records?.metadata as Record<string, unknown>) || {},
+    publicationUrl: sourcePublicationUrl, // Use source URL for canPreview check
   };
 }

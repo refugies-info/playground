@@ -1,7 +1,7 @@
 "use client";
 
 import type { OnlineStatus, WorkStatus } from "@playground/shared-types";
-import { logger } from "@playground/shared-types";
+import { extractTitleFromMarkdown, logger } from "@playground/shared-types";
 import {
   createContext,
   type ReactNode,
@@ -9,6 +9,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { submitTranslationPreview } from "@/lib/preview-utils";
 import { createClient } from "@/lib/supabase/client";
 import { buildPublicationUrl } from "@/lib/url-builder";
 import {
@@ -24,6 +25,7 @@ interface TranslationData {
   workStatus?: WorkStatus | null;
   translationMarkdown: string;
   sourceMarkdown: string;
+  sourceMetadata?: Record<string, unknown>; // Metadata from source FR document
   publicationUrl?: string;
 }
 
@@ -36,7 +38,8 @@ export interface TranslationContextType {
   isDirty: boolean;
   isSaving: boolean;
   isPublishing: boolean;
-  previewTranslation: () => void;
+  previewTranslation: () => Promise<void>;
+  canPreview: boolean; // Whether preview is available (source must be published)
   publicationUrl?: string;
   publicationUrlError?: string | null;
 }
@@ -246,15 +249,46 @@ export function TranslationProvider({
     }
   };
 
-  const previewTranslation = () => {
-    // TODO: Implement preview logic if needed, maybe similar to document preview
-    // toast.info("Prévisualisation non implémentée pour l'instant");
-    alert("Prévisualisation non implémentée pour l'instant");
+  const previewTranslation = async () => {
+    if (!translation) return;
+
+    try {
+      // Auto-save before preview (like documents)
+      const saveResult = await activeSaveTranslation();
+      if (!saveResult.success) {
+        logger.error("Failed to save translation before preview");
+        return;
+      }
+
+      // Extract title from translation markdown
+      const title =
+        (await extractTitleFromMarkdown(translation.translationMarkdown)) ||
+        "Sans titre";
+
+      // Submit preview with both translation and source data
+      await submitTranslationPreview({
+        language: translation.language,
+        title,
+        translationMarkdown: translation.translationMarkdown,
+        sourceMarkdown: translation.sourceMarkdown,
+        sourceMetadata: translation.sourceMetadata || {},
+      });
+    } catch (error) {
+      logger.error(error, "Error previewing translation");
+      alert(
+        `Erreur lors de la prévisualisation: ${
+          error instanceof Error ? error.message : error
+        }`,
+      );
+    }
   };
 
   const handleSetTranslation: typeof setTranslation = (value) => {
     setTranslation(value);
   };
+
+  // Preview is only available if the source document is published (has publicationUrl)
+  const canPreview = Boolean(translation?.publicationUrl);
 
   return (
     <TranslationContext.Provider
@@ -268,6 +302,7 @@ export function TranslationProvider({
         isSaving,
         isPublishing,
         previewTranslation,
+        canPreview,
         publicationUrl: translation?.publicationUrl,
         publicationUrlError,
       }}
