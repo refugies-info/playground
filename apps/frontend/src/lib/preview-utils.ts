@@ -105,9 +105,18 @@ export const submitTranslationPreview = async (
   // Get base URL from client-side env vars
   const baseUrl =
     process.env.NEXT_PUBLIC_RI_BASE_URL || "http://localhost:3000";
+  // Validate language to prevent path traversal attacks
+  // Language must be a valid locale code (2-3 lowercase letters)
+  const validLanguage = /^[a-z]{2,3}$/.test(document.language)
+    ? document.language
+    : null;
+
+  if (!validLanguage) {
+    throw new Error("Langue invalide pour la prévisualisation");
+  }
 
   // Build locale-specific preview URL: /{locale}/dispositif/preview
-  const previewUrl = `${baseUrl.replace(/\/$/, "")}/${document.language}/dispositif/preview`;
+  const previewUrl = `${baseUrl.replace(/\/$/, "")}/${validLanguage}/dispositif/preview`;
 
   // Fetch secret via Server Action
   const secretResult = await getPreviewSecret();
