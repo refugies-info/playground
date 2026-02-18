@@ -162,6 +162,18 @@ export async function buildTranslationPreviewPayload(
     (input.sourceMetadata.title as string) ||
     "Sans titre";
 
+  // Validate language to prevent prototype pollution
+  // Only allow valid locale codes (2-3 lowercase letters)
+  if (!/^[a-z]{2,3}$/.test(input.language)) {
+    throw new Error("Langue invalide pour le payload");
+  }
+
+  // Prevent prototype pollution by rejecting dangerous keys
+  const dangerousKeys = ["__proto__", "constructor", "prototype"];
+  if (dangerousKeys.includes(input.language)) {
+    throw new Error("Langue non autorisée");
+  }
+
   return {
     dispositif: {
       // Fallback FR metadata (always present)
