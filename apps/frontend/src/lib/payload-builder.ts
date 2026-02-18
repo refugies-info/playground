@@ -17,14 +17,16 @@ export interface DispositifPayload {
     typeContenu: string;
     theme: string;
     titreInformatif: string;
+    titreMarque: string;
+    abstract: string;
     origin: string;
     status?: string;
     translations: {
       fr: {
         content: {
-          titreInformatif?: string;
-          titreMarque?: string;
-          abstract?: string;
+          titreInformatif: string;
+          titreMarque: string;
+          abstract: string;
           markdown: string;
         };
       };
@@ -61,9 +63,10 @@ export async function buildDispositifPayload(
       typeContenu: "dispositif",
       theme: themeId,
       status: status,
-      // titreInformatif at root is kept for legacy/compatibility if needed,
-      // but important part is in translations based on user example
+      // Root fields for legacy/compatibility
       titreInformatif: doc.title,
+      titreMarque: doc.title,
+      abstract: "",
       origin: "RCO",
       translations: {
         fr: {
@@ -95,5 +98,106 @@ export async function buildPublishPayload(
   return {
     ...basePayload,
     email,
+  };
+}
+
+/**
+ * Input for building a translation preview payload
+ */
+export interface TranslationPreviewInput {
+  language: string; // Target language code (e.g., "ar", "en")
+  title: string; // Title in target language
+  markdown: string; // Markdown content in target language
+  sourceMarkdown: string; // Original FR markdown for fallback
+  sourceMetadata: Record<string, unknown>; // Metadata from source FR document
+}
+
+/**
+ * Payload for translation preview (multi-language)
+ */
+export interface TranslationPreviewPayload {
+  dispositif: {
+    titreInformatif: string;
+    titreMarque: string;
+    abstract: string;
+    origin: string;
+    theme: string;
+    secondaryThemes: unknown[];
+    needs: unknown[];
+    metadatas: Record<string, unknown>;
+    translations: Record<
+      string,
+      {
+        content: {
+          titreInformatif: string;
+          titreMarque: string;
+          abstract: string;
+          markdown: string;
+        };
+      }
+    >;
+  };
+}
+
+/**
+ * Build a translation preview payload for the preview endpoint
+ * Follows the contract defined with Karfur: includes locale, FR fallback, and target translation
+ *
+ * @param input - Translation preview input data
+ * @returns Structured payload for translation preview
+ */
+export async function buildTranslationPreviewPayload(
+  input: TranslationPreviewInput,
+): Promise<TranslationPreviewPayload> {
+  const themeId =
+    (input.sourceMetadata.theme as string) || "63286a015d31b2c0cad99615";
+
+  // Clean and normalize the translation markdown
+  const cleanedMarkdown = await stripFirstH1(input.markdown);
+  const normalizedMarkdown = normalizeMarkdown(cleanedMarkdown);
+
+  // Source title for FR fallback
+  const sourceTitle =
+    (input.sourceMetadata.titreInformatif as string) ||
+    (input.sourceMetadata.title as string) ||
+    "Sans titre";
+
+  return {
+    dispositif: {
+      // Fallback FR metadata (always present)
+      titreInformatif: sourceTitle,
+      titreMarque: (input.sourceMetadata.titreMarque as string) || sourceTitle,
+      abstract: (input.sourceMetadata.abstract as string) || "",
+      origin: "RCO",
+      theme: themeId,
+      secondaryThemes:
+        (input.sourceMetadata.secondaryThemes as unknown[]) || [],
+      needs: (input.sourceMetadata.needs as unknown[]) || [],
+      metadatas:
+        (input.sourceMetadata.metadatas as Record<string, unknown>) ||
+        input.sourceMetadata ||
+        {},
+
+      // Translations: both FR (source) and target language
+      translations: {
+        fr: {
+          content: {
+            titreInformatif: sourceTitle,
+            titreMarque:
+              (input.sourceMetadata.titreMarque as string) || sourceTitle,
+            abstract: (input.sourceMetadata.abstract as string) || "",
+            markdown: input.sourceMarkdown,
+          },
+        },
+        [input.language]: {
+          content: {
+            titreInformatif: input.title,
+            titreMarque: "", // Usually empty for translations
+            abstract: "",
+            markdown: normalizedMarkdown,
+          },
+        },
+      },
+    },
   };
 }

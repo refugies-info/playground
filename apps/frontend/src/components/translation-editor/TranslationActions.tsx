@@ -20,7 +20,7 @@ export function TranslationActions({
     isSaving,
     isPublishing,
     isDirty,
-    translation,
+    canPreview,
     publicationUrl,
     publicationUrlError,
   } = useTranslation();
@@ -79,12 +79,18 @@ export function TranslationActions({
         </div>
       )}
 
-      {/* Preview Button */}
+      {/* Preview Button - disabled if source not published */}
       <Button
         variant="outline"
         size="sm"
         className={cn("gap-2", isCollapsed && "justify-center px-0")}
         onClick={previewTranslation}
+        disabled={!canPreview}
+        title={
+          canPreview
+            ? "Prévisualiser la traduction"
+            : "La fiche source doit être publiée avant de pouvoir prévisualiser"
+        }
       >
         <Eye className="w-4 h-4" />
         {!isCollapsed && "Prévisualiser"}
