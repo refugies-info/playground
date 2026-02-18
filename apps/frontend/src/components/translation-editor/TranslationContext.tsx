@@ -1,5 +1,7 @@
 "use client";
 
+import type { OnlineStatus, WorkStatus } from "@playground/shared-types";
+import { logger } from "@playground/shared-types";
 import {
   createContext,
   type ReactNode,
@@ -8,6 +10,7 @@ import {
   useState,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { buildPublicationUrl } from "@/lib/url-builder";
 import {
   publishTranslation,
   saveTranslation,
@@ -17,10 +20,11 @@ interface TranslationData {
   id: string;
   language: string;
   status: string;
-  onlineStatus?: string;
-  workStatus?: string;
+  onlineStatus?: OnlineStatus | null;
+  workStatus?: WorkStatus | null;
   translationMarkdown: string;
   sourceMarkdown: string;
+  publicationUrl?: string;
 }
 
 export interface TranslationContextType {
@@ -33,6 +37,8 @@ export interface TranslationContextType {
   isSaving: boolean;
   isPublishing: boolean;
   previewTranslation: () => void;
+  publicationUrl?: string;
+  publicationUrlError?: string | null;
 }
 
 const TranslationContext = createContext<TranslationContextType | undefined>(
@@ -52,6 +58,9 @@ export function TranslationProvider({
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [publicationUrlError, setPublicationUrlError] = useState<string | null>(
+    null,
+  );
 
   // Set up Realtime subscription to sync status changes from workflow
   useEffect(() => {
@@ -59,7 +68,7 @@ export function TranslationProvider({
 
     const supabase = createClient();
     const channel = supabase
-      .channel(`translation-status-${initialData.id}`)
+      .channel(`translation-${initialData.id}`)
       .on(
         "postgres_changes",
         {
@@ -82,9 +91,56 @@ export function TranslationProvider({
               workStatus: updatedRecord.work_status,
             };
           });
-          // If it just became published, we stop the local "isPublishing" state
+          // Stop publishing spinner when status is updated
           if (updatedRecord.online_status === "published") {
             setIsPublishing(false);
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "publication_records",
+          filter: `translation_record_id=eq.${initialData.id}`,
+        },
+        async (payload) => {
+          // A publication_record was created (success or failure)
+          const pubRecord = payload.new;
+          logger.info({ pubRecord }, "📡 Realtime INSERT: publication_records");
+          setIsPublishing(false);
+
+          if (pubRecord.status === "failed" && pubRecord.error_message) {
+            // Workflow failed - show the error
+            setPublicationUrlError(pubRecord.error_message);
+          } else if (
+            pubRecord.status === "published" &&
+            pubRecord.remote_id &&
+            pubRecord.target
+          ) {
+            // Success - build the URL using secure utility
+            setPublicationUrlError(null);
+            const url = buildPublicationUrl(
+              pubRecord.target,
+              initialData.language,
+              pubRecord.remote_id,
+            );
+            if (url) {
+              setTranslation((prev) => {
+                if (!prev) return prev;
+                return { ...prev, publicationUrl: url };
+              });
+            } else {
+              setPublicationUrlError(
+                "Configuration invalide pour la publication. Contactez l'équipe technique.",
+              );
+            }
+          } else {
+            // Unexpected status or missing data
+            setPublicationUrlError(
+              "État de publication inattendu. Rechargez la page.",
+            );
           }
         },
       )
@@ -93,7 +149,7 @@ export function TranslationProvider({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [initialData.id]);
+  }, [initialData.id, initialData.language]);
 
   const updateContent = (content: string) => {
     if (!translation) return;
@@ -165,23 +221,28 @@ export function TranslationProvider({
 
     // Maintenant publier
     setIsPublishing(true);
+    setPublicationUrlError(null); // Clear any previous errors
     try {
       const result = await publishTranslation(
         translation.id,
         translation.translationMarkdown,
       );
       if (!result.success) {
+        // Immediate failure (before workflow starts) - stop spinner
+        setIsPublishing(false);
         // biome-ignore lint/suspicious/noConsole: Error logging
         console.error(result.error);
+        return result;
       }
-      // Status update is handled by Realtime subscription
+      // Success - workflow started. Keep spinner running until Realtime receives result.
+      // setIsPublishing(false) will be called by Realtime subscription when publication_records INSERT fires
       return result;
     } catch (e) {
+      // Immediate failure
+      setIsPublishing(false);
       // biome-ignore lint/suspicious/noConsole: Error logging
       console.error(e);
       return { success: false, error: "Erreur inconnue" };
-    } finally {
-      setIsPublishing(false);
     }
   };
 
@@ -191,11 +252,15 @@ export function TranslationProvider({
     alert("Prévisualisation non implémentée pour l'instant");
   };
 
+  const handleSetTranslation: typeof setTranslation = (value) => {
+    setTranslation(value);
+  };
+
   return (
     <TranslationContext.Provider
       value={{
         translation,
-        setTranslation,
+        setTranslation: handleSetTranslation,
         updateContent,
         saveTranslation: activeSaveTranslation,
         publishTranslation: activePublishTranslation,
@@ -203,6 +268,8 @@ export function TranslationProvider({
         isSaving,
         isPublishing,
         previewTranslation,
+        publicationUrl: translation?.publicationUrl,
+        publicationUrlError,
       }}
     >
       {children}

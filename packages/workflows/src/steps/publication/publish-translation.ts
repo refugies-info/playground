@@ -1,7 +1,41 @@
 import { extractTitleFromMarkdown, logger } from "@playground/shared-types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { StepResult } from "../../types";
 import { getSupabaseClient } from "../common/supabase";
 import { getPublisherAdapter } from "./adapters/refugies-info";
+
+/**
+ * Helper to create a failed publication record and log the error to the UI.
+ * This ensures errors from the workflow are visible to users via Realtime.
+ */
+async function createFailedPublicationRecord(
+  supabase: SupabaseClient,
+  params: {
+    workflowId: string;
+    translationId: string;
+    remoteId?: string;
+    errorMessage: string;
+    userId: string;
+  },
+) {
+  const targetUrl = process.env.RI_BASE_URL || "refugies.info";
+
+  try {
+    await supabase.from("publication_records").insert({
+      workflow_id: params.workflowId,
+      translation_record_id: params.translationId,
+      target: targetUrl,
+      remote_id: params.remoteId || "unknown",
+      status: "failed",
+      mode: "translation",
+      error_message: params.errorMessage,
+      published_by: params.userId,
+      author_id: params.userId,
+    });
+  } catch (error) {
+    logger.error(error, "Failed to create error publication record");
+  }
+}
 
 /**
  * Result of publishing a translation.
@@ -48,6 +82,30 @@ export async function publishTranslationStep(
     platform = "refugies.info",
   } = input;
 
+  let translationWorkflowId: string | undefined;
+
+  /**
+   * Helper to fail with error record creation
+   * Creates a failed publication_records entry and returns error result
+   * Accessible in both try and catch blocks
+   */
+  const failStep = async (
+    supabase: ReturnType<typeof getSupabaseClient>,
+    errorMessage: string,
+    remoteId?: string,
+  ): Promise<StepResult<PublishTranslationResult>> => {
+    if (translationWorkflowId) {
+      await createFailedPublicationRecord(supabase, {
+        workflowId: translationWorkflowId,
+        translationId,
+        errorMessage,
+        userId,
+        remoteId,
+      });
+    }
+    return { success: false, error: errorMessage };
+  };
+
   try {
     const supabase = getSupabaseClient();
     const adapter = getPublisherAdapter(platform);
@@ -64,11 +122,17 @@ export async function publishTranslationStep(
         { translationId, error: translationError },
         "Translation record not found",
       );
-      return { success: false, error: "Traduction non trouvée" };
+      const error = "Traduction non trouvée";
+      // Cannot create failed record if we don't have the translation record
+      // This is a critical error that should not happen in normal operation
+      return { success: false, error };
     }
 
+    // Store workflow_id for error handling
+    translationWorkflowId = translation.workflow_id;
+
     if (!translation.markdown) {
-      return { success: false, error: "La traduction n'a pas de contenu" };
+      return failStep(supabase, "La traduction n'a pas de contenu");
     }
 
     // 2. Fetch the latest publication record for the editorial record
@@ -86,11 +150,10 @@ export async function publishTranslationStep(
         { editorialRecordId: translation.editorial_record_id },
         "Source publication not found",
       );
-      return {
-        success: false,
-        error:
-          "La fiche source doit être publiée avant de pouvoir publier une traduction",
-      };
+      return failStep(
+        supabase,
+        "La fiche source doit être publiée avant de pouvoir publier une traduction",
+      );
     }
 
     const remoteId = sourcePublication.remote_id;
@@ -104,7 +167,7 @@ export async function publishTranslationStep(
     const webhookSecret = process.env.RI_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
-      return { success: false, error: "Missing webhook secret configuration" };
+      return failStep(supabase, "Missing webhook secret configuration");
     }
 
     const webhookPayload = await adapter.buildTranslationPayload({
@@ -132,12 +195,10 @@ export async function publishTranslationStep(
         { status: response.status, error: errorData },
         "Translation publication webhook failed",
       );
-      return {
-        success: false,
-        error:
-          (errorData as { message?: string }).message ||
-          `Webhook error ${response.status}`,
-      };
+      const error =
+        (errorData as { message?: string }).message ||
+        `Webhook error ${response.status}`;
+      return failStep(supabase, error, remoteId);
     }
 
     // 5. Create publication record
@@ -159,6 +220,9 @@ export async function publishTranslationStep(
 
     if (insertError || !newRecord) {
       logger.error(insertError, "Error storing translation publication record");
+      // This is a weird edge case - the webhook succeeded but we can't store the record
+      // We can't create another failed record since the insert just failed
+      // Just return the error
       return { success: false, error: "Failed to store publication record" };
     }
 
@@ -193,9 +257,11 @@ export async function publishTranslationStep(
     };
   } catch (error) {
     logger.error(error, "Unexpected error in publishTranslationStep");
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    // Try to create a failed publication record so the error appears in the UI
+    // Realtime will notify frontend via publication_records INSERT
+    const supabase = getSupabaseClient();
+    return failStep(supabase, errorMessage);
   }
 }

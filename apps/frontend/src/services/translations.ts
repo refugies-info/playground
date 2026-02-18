@@ -9,6 +9,7 @@ import {
   type Database,
 } from "@playground/supabase";
 import { cookies } from "next/headers";
+import { buildPublicationUrl } from "@/lib/url-builder";
 import { extractAuthorProfile } from "./helpers";
 
 // Define the shape of a translation item for the frontend
@@ -249,6 +250,14 @@ export async function getTranslationById(id: string) {
       *,
       editorial_records (
         markdown
+      ),
+      workflows (
+        id,
+        publication_records (
+          remote_id,
+          target,
+          payload
+        )
       )
     `,
     )
@@ -264,7 +273,36 @@ export async function getTranslationById(id: string) {
   const row =
     data as unknown as Database["public"]["Tables"]["translation_records"]["Row"] & {
       editorial_records: { markdown: string };
+      workflows: {
+        id: string;
+        publication_records: Array<{
+          remote_id: string;
+          target: string;
+          payload: unknown;
+        }>;
+      } | null;
     };
+
+  // Get publication URL
+  let publicationUrl: string | undefined;
+  const baseUrl = process.env.RI_BASE_URL;
+
+  // Find the publication record for this translation
+  const pubRecord = row.workflows?.publication_records?.find((record) => {
+    const payload = record.payload as unknown as {
+      dispositif?: { translations?: Record<string, unknown> };
+    };
+    const translations = payload?.dispositif?.translations;
+    return translations && Object.keys(translations).includes(row.language);
+  });
+
+  if (pubRecord?.remote_id && baseUrl) {
+    // Build URL using secure utility function
+    const url = buildPublicationUrl(baseUrl, row.language, pubRecord.remote_id);
+    if (url) {
+      publicationUrl = url;
+    }
+  }
 
   return {
     id: row.id,
@@ -277,5 +315,6 @@ export async function getTranslationById(id: string) {
     workStatus: row.work_status,
     translationMarkdown: row.markdown,
     sourceMarkdown: row.editorial_records?.markdown || "",
+    publicationUrl,
   };
 }
