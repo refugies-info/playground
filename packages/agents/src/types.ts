@@ -28,15 +28,17 @@ export interface LettaApiErrorInfo {
 /**
  * Result of any Letta agent report generation.
  * - `complete`: Valid frontmatter was parsed and validated successfully
- * - `incomplete`: Parsing failed or metadata didn't match schema, raw response preserved
+ * - `error`: AI output was malformed (no frontmatter, failed schema validation, or parse crash).
+ *   The raw response and validation errors are preserved for debugging.
+ * - `incomplete`: Reserved for partial processing (e.g. streaming not finished)
  */
 export interface LettaReportResult {
-  status: "complete" | "incomplete";
-  /** Processed markdown with enhanced frontmatter (if complete), or empty string (if incomplete) */
+  status: "complete" | "error" | "incomplete";
+  /** Processed markdown with enhanced frontmatter (if complete), or empty string (if error) */
   content: string;
-  /** Original agent response (only populated when status is incomplete) */
+  /** Original agent response, always populated for debugging */
   rawResponse?: string;
-  /** Parsed and validated metadata from frontmatter (if complete), or minimal letta metadata (if incomplete) */
+  /** Parsed and validated metadata from frontmatter (if complete), or error details (if error) */
   metadata: Record<string, unknown>;
 }
 

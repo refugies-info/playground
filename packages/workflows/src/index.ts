@@ -77,11 +77,13 @@ export type { SaveDocumentResult } from "./steps/editorial/save-document";
 // Steps - Editorial
 // =============================================================================
 export { saveDocumentStep } from "./steps/editorial/save-document";
+export * from "./steps/ingestion/audit-di-step";
 export { forceArbitrationWorkflow } from "./steps/ingestion/force-arbitration";
 // =============================================================================
 // Steps - Ingestion
 // =============================================================================
 export * from "./steps/ingestion/ingest-di";
+export * from "./steps/ingestion/metadata-di-step";
 
 // =============================================================================
 // Adapters - Platform implementations

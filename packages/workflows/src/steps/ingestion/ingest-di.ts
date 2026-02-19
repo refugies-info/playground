@@ -1,281 +1,92 @@
-import { APIError } from "@letta-ai/letta-client/error";
-import {
-  createLettaClient,
-  generateIngestionReport,
-  parseIngestionResponse,
-} from "@playground/agents";
+/**
+ * @file ingest-di.ts
+ *
+ * Workflow: DI (Data Inclusion) Ingestion Pipeline
+ *
+ * Orchestrates the full ingestion of Data Inclusion records from the
+ * CARIF-OREF API, followed by parallel audit and metadata generation.
+ *
+ * Flow:
+ *
+ *   diIngestionWorkflow
+ *         │
+ *         ├── [1] ingestStructuresStep
+ *         │         └── Fetches structures from CARIF-OREF → di_structures
+ *         │
+ *         ├── [2] ingestServicesStep
+ *         │         └── Fetches services from CARIF-OREF → di_services
+ *         │             Returns a runId for downstream steps
+ *         │
+ *         ├── [3] processRecordsStep  (only if runId exists)
+ *         │         └── Creates/updates ingestion_records + workflows
+ *         │             from new/changed di_services
+ *         │
+ *         └── [4] Parallel:
+ *               ├── [4a] generateDiAuditReportsStep    → audit-di-step.ts
+ *               │         └── Letta agent audit → letta_reports (type: 'ingestion')
+ *               │
+ *               └── [4b] generateDiMetadataReportsStep → metadata-di-step.ts
+ *                         └── Letta agent metadata → letta_reports (type: 'metadata')
+ *
+ * Key decisions:
+ * - Steps 1 & 2 always run (they are idempotent, content_hash dedup)
+ * - Steps 3 & 4 only run if step 2 produced a runId (new data ingested)
+ * - Audit and metadata generation run in parallel (independent Letta agents)
+ */
+
 import { logger } from "@playground/shared-types";
-import { getSupabaseAdmin, type Json } from "@playground/supabase";
 import {
   ingestCarifOrefServices,
   ingestCarifOrefStructures,
   processIngestionRecords,
 } from "@refugies-info/di";
+import { generateDiAuditReportsStep } from "./audit-di-step";
+import { generateDiMetadataReportsStep } from "./metadata-di-step";
+import { getSupabaseClient } from "./utils";
 
-function getSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!key) {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not defined");
-  }
-
-  return getSupabaseAdmin(url, key);
-}
-
-const DI_FETCH_PAGE_SIZE = 1000;
-const envVal = Number(process.env.MAX_PENDING_AUDITS);
-const MAX_PENDING_AUDITS = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
-
-type DiAuditTarget = {
-  id: string;
-  markdown: string;
-  workflow_id: string;
-};
-
-async function fetchAllDiServiceIds(): Promise<string[]> {
-  const supabase = getSupabaseClient();
-  const serviceIds: string[] = [];
-  let page = 0;
-  let hasMore = true;
-
-  while (hasMore) {
-    const { data, error } = await supabase
-      .from("di_services")
-      .select("id")
-      .range(page * DI_FETCH_PAGE_SIZE, (page + 1) * DI_FETCH_PAGE_SIZE - 1);
-
-    if (error) {
-      throw new Error(`Failed to fetch DI services: ${error.message}`);
-    }
-
-    if (!data || data.length === 0) {
-      break;
-    }
-
-    for (const service of data) {
-      serviceIds.push(String(service.id));
-    }
-
-    hasMore = data.length === DI_FETCH_PAGE_SIZE;
-    page += 1;
-  }
-
-  return serviceIds;
-}
-
-async function fetchDiAuditTargets(
-  serviceIds: string[],
-): Promise<{ targets: DiAuditTarget[]; totalCandidates: number }> {
-  const supabase = getSupabaseClient();
-  let totalCandidates = 0;
-
-  if (serviceIds.length === 0) {
-    return { targets: [], totalCandidates };
-  }
-
-  // 1. Get total candidates count for reporting (records that could be audited)
-  // Uses an RPC to avoid PostgREST URL length limits with large service ID arrays
-  const { data: candidateCount, error: countError } = await supabase.rpc(
-    "count_di_audit_candidates",
-    { p_service_ids: serviceIds },
-  );
-
-  if (countError) {
-    throw new Error(
-      `Failed to count audit candidates: ${JSON.stringify(countError)}`,
-    );
-  }
-  totalCandidates = candidateCount ?? 0;
-
-  // 2. Atomic claim and fetch via stored procedure
-  // This handles the 50-record safety limit, race conditions, and zombie reclamation
-  const { data, error: rpcError } = await supabase.rpc(
-    "claim_di_audit_targets",
-    {
-      p_service_ids: serviceIds,
-      max_total_pending: MAX_PENDING_AUDITS,
-    },
-  );
-
-  if (rpcError) {
-    throw new Error(`Failed to claim audit targets: ${rpcError.message}`);
-  }
-
-  const targets = (data as DiAuditTarget[]) || [];
-
-  logger.info(
-    { selected: targets.length, totalCandidates },
-    "Audit capacity check and target selection complete",
-  );
-
-  return {
-    targets,
-    totalCandidates,
-  };
-}
-
-export async function generateDiAuditReportsStep(runId: string) {
-  "use step";
-
-  // Fetch ALL DI service IDs, not just from the current run.
-  // Unchanged services keep their original ingestion_run_id, so filtering
-  // by the current runId would miss unaudited records from previous runs.
-  const serviceIds = await fetchAllDiServiceIds();
-
-  if (serviceIds.length === 0) {
-    logger.info({ runId }, "No DI services found for audit reporting");
-    return { attempted: 0, succeeded: 0, failed: 0 };
-  }
-
-  const { targets, totalCandidates } = await fetchDiAuditTargets(serviceIds);
-
-  if (targets.length === 0) {
-    logger.info({ runId }, "No ingestion records found for audit reporting");
-    return {
-      attempted: 0,
-      succeeded: 0,
-      failed: 0,
-      totalCandidates,
-      skipped: totalCandidates,
-    };
-  }
-
-  const agentId = process.env.PLAYGROUND_AGENT_ID;
-
-  if (!agentId) {
-    throw new Error("PLAYGROUND_AGENT_ID is not defined");
-  }
-
-  const lettaClient = createLettaClient();
-  const conversation = await lettaClient.conversations.create({
-    agent_id: agentId,
-  });
-  const conversationId = conversation.id;
-  const supabase = getSupabaseClient();
-
-  const skipped = Math.max(0, totalCandidates - targets.length);
-
-  logger.info(
-    {
-      runId,
-      totalCandidates,
-      selected: targets.length,
-      skipped,
-    },
-    "DI audit report selection",
-  );
-
-  let succeeded = 0;
-  let failed = 0;
-
-  for (const target of targets) {
-    let finalContent = "";
-
-    try {
-      for await (const chunk of generateIngestionReport(
-        lettaClient,
-        target.markdown,
-        conversationId,
-      )) {
-        if (chunk.message_type === "assistant_message") {
-          if (typeof chunk.content !== "string") {
-            throw new Error(
-              `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
-            );
-          }
-          finalContent += chunk.content;
-        }
-      }
-
-      if (!finalContent) {
-        throw new Error("No assistant response received for ingestion report");
-      }
-
-      const parsed = parseIngestionResponse(finalContent, agentId);
-
-      const { data: report, error: reportError } = await supabase
-        .from("letta_reports")
-        .insert({
-          agent_id: agentId,
-          report_type: "ingestion",
-          markdown: parsed.content,
-          metadata: parsed.metadata as Json,
-          status: parsed.status,
-          raw_response: parsed.rawResponse ?? null,
-          workflow_id: target.workflow_id,
-        })
-        .select("id")
-        .single();
-
-      if (reportError || !report) {
-        throw new Error(
-          `Failed to insert letta_report: ${reportError?.message ?? "unknown error"}`,
-        );
-      }
-
-      const { error: updateError } = await supabase
-        .from("ingestion_records")
-        .update({ ingestion_report_id: report.id })
-        .eq("id", target.id);
-
-      if (updateError) {
-        throw new Error(
-          `Failed to link ingestion_report to ingestion_record: ${updateError.message}`,
-        );
-      }
-
-      succeeded += 1;
-    } catch (error) {
-      failed += 1;
-
-      if (error instanceof APIError) {
-        logger.error(
-          { status: error.status, body: error.error },
-          "Letta API error generating DI ingestion report",
-        );
-      } else {
-        logger.error(
-          {
-            err: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined,
-            ingestionRecordId: target.id,
-          },
-          "Error generating DI ingestion report",
-        );
-      }
-    }
-  }
-
-  return {
-    attempted: targets.length,
-    succeeded,
-    failed,
-    totalCandidates,
-    skipped,
-  };
-}
-
+/**
+ * Step 1: Ingest structures from the CARIF-OREF API.
+ *
+ * Fetches all structures and upserts them into `di_structures`.
+ * Idempotent via content_hash deduplication.
+ *
+ * @returns Ingestion result with counts (fetched, inserted, updated, unchanged).
+ */
 export async function ingestStructuresStep() {
   "use step";
   const supabase = getSupabaseClient();
-  logger.info("Starting DI Structures Ingestion Step...");
   logger.info("Starting DI Structures Ingestion Step...");
   const result = await ingestCarifOrefStructures(supabase);
   logger.info({ result }, "DI Structures Ingestion Step Completed");
   return result;
 }
 
+/**
+ * Step 2: Ingest services from the CARIF-OREF API.
+ *
+ * Fetches all services and upserts them into `di_services`.
+ * Returns a `runId` that downstream steps use to scope their processing.
+ * Idempotent via content_hash deduplication.
+ *
+ * @returns Ingestion result with counts and a `runId` for downstream steps.
+ */
 export async function ingestServicesStep() {
   "use step";
   const supabase = getSupabaseClient();
-  logger.info("Starting DI Services Ingestion Step...");
   logger.info("Starting DI Services Ingestion Step...");
   const result = await ingestCarifOrefServices(supabase);
   logger.info({ result }, "DI Services Ingestion Step Completed");
   return result;
 }
 
+/**
+ * Step 3: Process ingested services into ingestion records.
+ *
+ * Creates or updates `ingestion_records` and their associated `workflows`
+ * entries from the services ingested during the given run.
+ *
+ * @param runId - The ingestion run ID from {@link ingestServicesStep}.
+ */
 export async function processRecordsStep(runId: string) {
   "use step";
   if (!runId) {
@@ -288,6 +99,14 @@ export async function processRecordsStep(runId: string) {
   logger.info("Ingestion Records Processing Step Completed");
 }
 
+/**
+ * Main DI ingestion workflow.
+ *
+ * Orchestrates the full pipeline: structure ingestion → service ingestion →
+ * record processing → parallel audit + metadata report generation.
+ *
+ * @returns Summary of all step results.
+ */
 export async function diIngestionWorkflow() {
   "use workflow";
 
@@ -301,14 +120,24 @@ export async function diIngestionWorkflow() {
   let auditResult:
     | Awaited<ReturnType<typeof generateDiAuditReportsStep>>
     | undefined;
+  let metadataResult:
+    | Awaited<ReturnType<typeof generateDiMetadataReportsStep>>
+    | undefined;
+
   if (servicesResult.runId) {
     await processRecordsStep(servicesResult.runId);
-    auditResult = await generateDiAuditReportsStep(servicesResult.runId);
+
+    // 4. Run audit and metadata generation in parallel
+    [auditResult, metadataResult] = await Promise.all([
+      generateDiAuditReportsStep(servicesResult.runId),
+      generateDiMetadataReportsStep(servicesResult.runId),
+    ]);
   }
 
   return {
     structures: structuresResult,
     services: servicesResult,
     audit: auditResult,
+    metadata: metadataResult,
   };
 }

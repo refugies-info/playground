@@ -76,7 +76,7 @@ export function parseAgentResponse(
   if (!hasFrontmatter) {
     if (requireFrontmatter) {
       return {
-        status: "incomplete",
+        status: "error",
         content: "",
         rawResponse: agentResponse,
         metadata: { letta: lettaMetadata },
@@ -86,6 +86,7 @@ export function parseAgentResponse(
     return {
       status: "complete",
       content: agentResponse,
+      rawResponse: agentResponse,
       metadata: { letta: lettaMetadata },
     };
   }
@@ -100,7 +101,7 @@ export function parseAgentResponse(
       const validation = schema.safeParse(parsed.data);
       if (!validation.success) {
         return {
-          status: "incomplete",
+          status: "error",
           content: "",
           rawResponse: agentResponse,
           metadata: {
@@ -120,12 +121,13 @@ export function parseAgentResponse(
     return {
       status: "complete",
       content: matter.stringify(parsed.content, enhancedData),
+      rawResponse: agentResponse,
       metadata: enhancedData,
     };
   } catch (error) {
     // Fallback if parsing itself crashes
     return {
-      status: "incomplete",
+      status: "error",
       content: "",
       rawResponse: agentResponse,
       metadata: {
