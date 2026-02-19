@@ -1,21 +1,18 @@
 import { logger } from "@playground/shared-types";
-
-const AIRTABLE_API_URL = "https://api.airtable.com/v0";
+import Airtable, { type FieldSet } from "airtable";
 
 /**
- * Creates a record in an Airtable table.
+ * Configures and returns an Airtable table handle.
  *
- * Uses the Airtable REST API directly with fetch (no npm dependency needed).
+ * Mirrors karfur's connector pattern:
+ * apps/server/src/connectors/airtable/airtable.ts
+ *
  * Requires AIRTABLE_TOKEN and AIRTABLE_BASE_TRAD env vars.
  *
  * @param tableName - The Airtable table name (e.g., "SUIVI TRAD")
- * @param fields - The record fields to create
- * @returns true if successful, false otherwise
+ * @returns Airtable table instance, or null if env vars are missing
  */
-export async function createAirtableRecord(
-  tableName: string,
-  fields: Record<string, unknown>,
-): Promise<boolean> {
+function getAirtableTranslationTable(tableName: string) {
   const token = process.env.AIRTABLE_TOKEN;
   const baseId = process.env.AIRTABLE_BASE_TRAD;
 
@@ -23,40 +20,53 @@ export async function createAirtableRecord(
     logger.warn(
       "Missing AIRTABLE_TOKEN or AIRTABLE_BASE_TRAD env vars, skipping Airtable tracking",
     );
+    return null;
+  }
+
+  Airtable.configure({
+    endpointUrl: "https://api.airtable.com",
+    apiKey: token,
+  });
+
+  return Airtable.base(baseId).table(tableName);
+}
+
+/**
+ * Creates a record in an Airtable table.
+ *
+ * Uses the official Airtable npm package (same as karfur).
+ * Non-blocking: logs errors but never throws.
+ *
+ * @param tableName - The Airtable table name (e.g., "SUIVI TRAD")
+ * @param fields - The record fields to create
+ * @returns true if successful, false otherwise
+ */
+export async function createAirtableRecord(
+  tableName: string,
+  fields: Partial<FieldSet>,
+): Promise<boolean> {
+  const table = getAirtableTranslationTable(tableName);
+
+  if (!table) {
     return false;
   }
 
-  const url = `${AIRTABLE_API_URL}/${baseId}/${encodeURIComponent(tableName)}`;
-
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+  return new Promise((resolve) => {
+    table.create(
+      [{ fields }],
+      { typecast: true },
+      (error: Error | undefined) => {
+        if (error) {
+          logger.error(
+            { error, tableName },
+            "[Airtable] Failed to create record",
+          );
+          resolve(false);
+          return;
+        }
+        logger.info({ tableName }, "[Airtable] Record created successfully");
+        resolve(true);
       },
-      body: JSON.stringify({
-        records: [{ fields }],
-        typecast: true,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      logger.error(
-        { status: response.status, error: errorData, tableName },
-        "[Airtable] Failed to create record",
-      );
-      return false;
-    }
-
-    logger.info({ tableName }, "[Airtable] Record created successfully");
-    return true;
-  } catch (error) {
-    logger.error(
-      { error, tableName },
-      "[Airtable] Unexpected error creating record",
     );
-    return false;
-  }
+  });
 }
