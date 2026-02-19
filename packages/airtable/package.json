@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@playground/shared-types": "workspace:*",
+    "airtable": "^0.12.2",
     "gray-matter": "^4.0.3"
   },
   "devDependencies": {
