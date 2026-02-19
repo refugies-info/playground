@@ -224,6 +224,25 @@ importers:
         specifier: ^2.1.9
         version: 2.1.9(@types/node@24.10.1)(jsdom@27.4.0)(lightningcss@1.30.2)(terser@5.44.1)
 
+  packages/airtable:
+    dependencies:
+      '@playground/shared-types':
+        specifier: workspace:*
+        version: link:../shared
+      gray-matter:
+        specifier: ^4.0.3
+        version: 4.0.3
+    devDependencies:
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.10.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.9
+        version: 2.1.9(@types/node@24.10.1)(jsdom@27.4.0)(lightningcss@1.30.2)(terser@5.44.1)
+
   packages/di:
     dependencies:
       '@playground/shared-types':
@@ -442,6 +461,9 @@ importers:
       '@playground/agents':
         specifier: workspace:*
         version: link:../agents
+      '@playground/airtable':
+        specifier: workspace:*
+        version: link:../airtable
       '@playground/rco':
         specifier: workspace:*
         version: link:../rco
@@ -464,6 +486,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      vitest:
+        specifier: ^2.1.9
+        version: 2.1.9(@types/node@24.10.1)(jsdom@27.4.0)(lightningcss@1.30.2)(terser@5.44.1)
 
 packages:
 
