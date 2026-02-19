@@ -115,10 +115,12 @@ export type {
   PublishTranslationResult,
 } from "./steps/publication/publish-translation";
 export { publishTranslationStep } from "./steps/publication/publish-translation";
-export type { CreateTranslationRecordsResult } from "./steps/translation/create-translation-records";
 // =============================================================================
 // Steps - Translation
 // =============================================================================
+export type { AddTradToAirtableResult } from "./steps/translation/add-trad-to-airtable";
+export { addTradToAirtableStep } from "./steps/translation/add-trad-to-airtable";
+export type { CreateTranslationRecordsResult } from "./steps/translation/create-translation-records";
 export { createTranslationRecordsStep } from "./steps/translation/create-translation-records";
 export { generateTranslationStep } from "./steps/translation/generate-translation";
 export { triggerTranslationWorkflowStep } from "./steps/translation/trigger-translation-workflow";

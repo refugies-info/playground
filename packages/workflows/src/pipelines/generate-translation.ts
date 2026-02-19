@@ -24,9 +24,17 @@
  * │ updateStatus  │ │ updateStatus│
  * │ (to_process)  │ │   (error)   │
  * └───────┬───────┘ └─────┬───────┘
- *                 ▼       ▼
- *                END    THROW
+ *         │               │
+ * ┌───────▼───────┐       │
+ * │ addTrad       │       │
+ * │ ToAirtable    │       │
+ * │ (non-blocking)│       │
+ * └───────┬───────┘       │
+ *         ▼               ▼
+ *        END            THROW
  */
+
+import { addTradToAirtableStep } from "../steps/translation/add-trad-to-airtable";
 import {
   type GenerateTranslationResult,
   generateTranslationStep,
@@ -78,6 +86,9 @@ export async function generateTranslationWorkflow(
       language,
       "to_process",
     );
+
+    // 3. Track translation in Airtable for billing (non-blocking)
+    await addTradToAirtableStep(editorialRecordId, language, "kim.delaunay");
 
     return result.data;
   } catch (error) {
