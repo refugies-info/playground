@@ -13,11 +13,17 @@
  *         │         │
  *         │         └── ingestion_records created
  *         │
- *         └── [4a] generateDiMetadataReportsStep  ◄── THIS FILE
+ *         ├── [4] generateDiAuditReportsStep → audit-di-step.ts
+ *         │         (runs FIRST — sets ingestion_report_id)
+ *         │
+ *         └── [5] generateDiMetadataReportsStep  ◄── THIS FILE
  *                   │
  *                   ├── fetchDiMetadataTargets()
- *                   │         └── RPC: fetch_di_metadata_candidates
- *                   │             (no service IDs needed — scoped to DI via JOIN)
+ *                   │         └── Supabase query on ingestion_records
+ *                   │             + !inner join on di_services (DI scoping)
+ *                   │             + !inner join on workflows (get workflow_id)
+ *                   │             + only records with ingestion_report_id (audited)
+ *                   │             + exclude records with existing metadata report
  *                   │
  *                   └── For each target:
  *                             ├── generateMetadataReport()  [Letta agent]
@@ -25,8 +31,10 @@
  *                             └── Insert into letta_reports (type: 'metadata')
  *
  * Key decisions:
+ * - Runs AFTER audit step to guarantee same workflow alignment
+ * - Only targets records with ingestion_report_id (already audited)
  * - Does NOT create editorial_records (unlike persistMetadataReportStep)
- * - Idempotent: records already having a metadata report are filtered out by the RPC
+ * - Idempotent: records already having a metadata report are filtered out
  * - Uses METADATA_AGENT_ID env var, falls back to PLAYGROUND_AGENT_ID
  */
 
@@ -92,21 +100,31 @@ type DiMetadataTarget = {
  * Fetches ingestion records that are eligible for metadata generation.
  *
  * Eligibility: the record has no existing `letta_report` of type 'metadata'
- * linked to its workflow. DI scoping is handled server-side via a JOIN on
- * `di_services` — no need to pass service IDs.
+ * linked to its workflow. Scoped to DI records via an `!inner` join on
+ * `di_services` (same pool as the audit step).
  *
  * @returns An object containing the list of eligible targets.
- * @throws If the RPC call fails.
  */
 async function fetchDiMetadataTargets(): Promise<{
   targets: DiMetadataTarget[];
 }> {
   const supabase = getSupabaseClient();
 
-  // @ts-expect-error: RPC not yet in generated types (added in migration 20260220090000)
-  const { data, error } = await supabase.rpc("fetch_di_metadata_candidates", {
-    p_limit: MAX_PENDING_AUDITS,
-  });
+  // Fetch ingestion records scoped to DI via !inner join on di_services,
+  // with their linked workflow ID.
+  const { data: records, error } = await supabase
+    .from("ingestion_records")
+    .select(
+      `
+      id,
+      markdown,
+      di_services!inner ( id ),
+      workflows!inner ( id )
+    `,
+    )
+    .not("ingestion_report_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(MAX_PENDING_AUDITS);
 
   if (error) {
     throw new Error(
@@ -114,9 +132,43 @@ async function fetchDiMetadataTargets(): Promise<{
     );
   }
 
-  return {
-    targets: (data as DiMetadataTarget[]) || [],
-  };
+  if (!records || records.length === 0) {
+    return { targets: [] };
+  }
+
+  // Extract workflow IDs from the joined data
+  const candidateWorkflowIds = records
+    .map((r) => {
+      const w = Array.isArray(r.workflows) ? r.workflows[0] : r.workflows;
+      return w?.id;
+    })
+    .filter(Boolean) as string[];
+
+  // Exclude candidates that already have a metadata report
+  const { data: existingReports } = await supabase
+    .from("letta_reports")
+    .select("workflow_id")
+    .in("workflow_id", candidateWorkflowIds)
+    .eq("report_type", "metadata");
+
+  const existingWorkflowIds = new Set(
+    existingReports?.map((r) => r.workflow_id) ?? [],
+  );
+
+  const targets: DiMetadataTarget[] = records
+    .map((r) => {
+      const w = Array.isArray(r.workflows) ? r.workflows[0] : r.workflows;
+      const workflowId = w?.id;
+      if (!workflowId || existingWorkflowIds.has(workflowId)) return null;
+      return {
+        id: r.id as string,
+        markdown: r.markdown as string,
+        workflow_id: workflowId as string,
+      };
+    })
+    .filter(Boolean) as DiMetadataTarget[];
+
+  return { targets };
 }
 
 // =============================================================================
@@ -127,7 +179,7 @@ async function fetchDiMetadataTargets(): Promise<{
  * Workflow step that generates metadata reports for DI ingestion records.
  *
  * This step is idempotent: records that already have a `letta_report` of type
- * 'metadata' are skipped automatically by the `fetch_di_metadata_candidates`
+ * 'metadata' are skipped automatically by `fetchDiMetadataTargets`.
  * RPC.
  *
  * **Does NOT** create or update `editorial_records`. Report creation only.
