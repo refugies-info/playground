@@ -21,12 +21,13 @@
  *         │         └── Creates/updates ingestion_records + workflows
  *         │             from new/changed di_services
  *         │
- *         └── [4] Parallel:
- *               ├── [4a] generateDiAuditReportsStep    → audit-di-step.ts
- *               │         └── Letta agent audit → letta_reports (type: 'ingestion')
- *               │
- *               └── [4b] generateDiMetadataReportsStep → metadata-di-step.ts
- *                         └── Letta agent metadata → letta_reports (type: 'metadata')
+ *         ├── [4] generateDiAuditReportsStep    → audit-di-step.ts
+ *         │         └── Letta agent audit → letta_reports (type: 'ingestion')
+ *         │             Sets ingestion_report_id on processed records
+ *         │
+ *         └── [5] generateDiMetadataReportsStep → metadata-di-step.ts
+ *                   └── Letta agent metadata → letta_reports (type: 'metadata')
+ *                       Only processes records with ingestion_report_id (audited)
  *
  * Key decisions:
  * - Steps 1 & 2 always run (they are idempotent, content_hash dedup)
@@ -103,7 +104,10 @@ export async function processRecordsStep(runId: string) {
  * Main DI ingestion workflow.
  *
  * Orchestrates the full pipeline: structure ingestion → service ingestion →
- * record processing → parallel audit + metadata report generation.
+ * record processing → audit → metadata report generation (sequential).
+ *
+ * Audit runs before metadata to ensure metadata only processes records
+ * that have already been audited (both reports target the same workflows).
  *
  * @returns Summary of all step results.
  */
@@ -127,11 +131,11 @@ export async function diIngestionWorkflow() {
   if (servicesResult.runId) {
     await processRecordsStep(servicesResult.runId);
 
-    // 4. Run audit and metadata generation in parallel
-    [auditResult, metadataResult] = await Promise.all([
-      generateDiAuditReportsStep(servicesResult.runId),
-      generateDiMetadataReportsStep(servicesResult.runId),
-    ]);
+    // 4. Audit first — sets ingestion_report_id on processed records
+    auditResult = await generateDiAuditReportsStep(servicesResult.runId);
+
+    // 5. Metadata — only targets records that have been audited (ingestion_report_id IS NOT NULL)
+    metadataResult = await generateDiMetadataReportsStep(servicesResult.runId);
   }
 
   return {

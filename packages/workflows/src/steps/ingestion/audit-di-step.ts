@@ -13,22 +13,25 @@
  *         │         │
  *         │         └── ingestion_records created
  *         │
- *         └── [4b] generateDiAuditReportsStep  ◄── THIS FILE
- *                   │
- *                   ├── fetchAllDiServiceIds()
- *                   │         └── Paginate di_services table
- *                   │
- *                   └── fetchDiAuditTargets()
- *                             ├── RPC: count_di_audit_candidates (for reporting)
- *                             ├── RPC: claim_di_audit_targets (atomic lock)
- *                             │     └── compliance_status = 'pending'
- *                             │         + zombie reclamation
- *                             │         + MAX_PENDING_AUDITS cap
- *                             └── For each target:
- *                                       ├── generateIngestionReport()  [Letta agent]
- *                                       ├── parseIngestionResponse()
- *                                       ├── Insert into letta_reports (type: 'ingestion')
- *                                       └── Update ingestion_records.ingestion_report_id
+ *         ├── [4] generateDiAuditReportsStep  ◄── THIS FILE
+ *         │         │
+ *         │         ├── fetchAllDiServiceIds()
+ *         │         │         └── Paginate di_services table
+ *         │         │
+ *         │         └── fetchDiAuditTargets()
+ *         │                   ├── RPC: count_di_audit_candidates (for reporting)
+ *         │                   ├── RPC: claim_di_audit_targets (atomic lock)
+ *         │                   │     └── compliance_status = 'pending'
+ *         │                   │         + zombie reclamation
+ *         │                   │         + MAX_PENDING_AUDITS cap
+ *         │                   └── For each target:
+ *         │                             ├── generateIngestionReport()  [Letta agent]
+ *         │                             ├── parseIngestionResponse()
+ *         │                             ├── Insert into letta_reports (type: 'ingestion')
+ *         │                             └── Update ingestion_records.ingestion_report_id
+ *         │
+ *         └── [5] generateDiMetadataReportsStep → metadata-di-step.ts
+ *                   (runs AFTER audit — only targets audited records)
  *
  * Key decisions:
  * - Uses an atomic RPC claim (FOR UPDATE SKIP LOCKED) to prevent duplicate processing

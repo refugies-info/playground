@@ -793,17 +793,6 @@ export type Database = {
         Args: { p_service_ids: string[] };
         Returns: number;
       };
-      fetch_di_metadata_candidates: {
-        Args: {
-          p_service_ids: string[];
-          p_limit?: number;
-        };
-        Returns: {
-          id: string;
-          markdown: string;
-          workflow_id: string;
-        }[];
-      };
       get_my_language: { Args: never; Returns: string };
       get_my_role: { Args: never; Returns: string };
     };

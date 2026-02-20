@@ -26,6 +26,17 @@ export interface Document {
   ingestionContent?: string; // Immutable original content from ingestion_records
   complianceReport?: string; // Markdown content of the compliance report
   metadata: Record<string, unknown>;
+  /** AI-generated metadata from letta_reports (type: metadata, status: complete) */
+  metadataReport?: {
+    metadata_ri: Record<string, unknown>;
+    provenance?: Array<{
+      key: string;
+      label: string;
+      value: string;
+      status: string;
+      source: string[];
+    }>;
+  } | null;
   publishedUrl?: string;
   publicationStatus?: string;
   publicationRemoteId?: string;
@@ -36,6 +47,10 @@ export interface Document {
   updated_at: string;
   authorEmail?: string;
   authorRole?: string;
+}
+
+export interface RiMetadata {
+  public: "family" | "women" | "youths" | "senior" | "gender";
 }
 
 export interface ContentItem {
