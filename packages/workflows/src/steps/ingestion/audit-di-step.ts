@@ -316,3 +316,179 @@ export async function generateDiAuditReportsStep(runId: string) {
     skipped,
   };
 }
+
+/**
+ * Workflow step that forces generation of an audit report for a specific workflow,
+ * bypassing normal batch collection. Used primarily for manual arbitration/retry.
+ *
+ * @param workflowId - The ID of the workflow to force audit for.
+ */
+export async function forceAuditReportStep(workflowId: string) {
+  "use step";
+
+  const supabase = getSupabaseClient();
+
+  // 1. Fetch workflow to get ingestion_record_id
+  const { data: workflow, error: workflowError } = await supabase
+    .from("workflows")
+    .select("ingestion_record_id")
+    .eq("id", workflowId)
+    .single();
+
+  // Set compliance status to pending immediately
+  await supabase
+    .from("workflows")
+    .update({ compliance_status: "pending" })
+    .eq("id", workflowId);
+
+  if (workflowError || !workflow?.ingestion_record_id) {
+    logger.error(
+      { workflowId, error: workflowError },
+      "Workflow or Ingestion Record not found for forced audit",
+    );
+    throw new Error("Workflow or Ingestion Record not found");
+  }
+
+  const ingestionRecordId = workflow.ingestion_record_id;
+
+  // 2. Fetch Ingestion Record
+  const { data: record, error: recordError } = await supabase
+    .from("ingestion_records")
+    .select("id, markdown")
+    .eq("id", ingestionRecordId)
+    .single();
+
+  if (recordError || !record) {
+    throw new Error(`Ingestion Record not found: ${recordError?.message}`);
+  }
+
+  const agentId = process.env.PLAYGROUND_AGENT_ID;
+  if (!agentId) {
+    throw new Error("PLAYGROUND_AGENT_ID is not defined");
+  }
+
+  const lettaClient = createLettaClient();
+  const conversation = await lettaClient.conversations.create({
+    agent_id: agentId,
+  });
+  const conversationId = conversation.id;
+
+  logger.info(
+    { workflowId, ingestionRecordId },
+    "Starting forced arbitration audit",
+  );
+
+  let finalContent = "";
+
+  try {
+    for await (const chunk of generateIngestionReport(
+      lettaClient,
+      record.markdown,
+      conversationId,
+    )) {
+      if (chunk.message_type === "assistant_message") {
+        if (typeof chunk.content !== "string") {
+          throw new Error(
+            `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
+          );
+        }
+        finalContent += chunk.content;
+      }
+    }
+
+    if (!finalContent) {
+      throw new Error("No assistant response received for ingestion report");
+    }
+
+    const parsed = parseIngestionResponse(finalContent, agentId);
+
+    // Insert Report
+    const { data: report, error: reportError } = await supabase
+      .from("letta_reports")
+      .insert({
+        agent_id: agentId,
+        report_type: "ingestion",
+        markdown: parsed.content,
+        metadata: parsed.metadata as Json,
+        status: parsed.status,
+        raw_response: parsed.rawResponse ?? null,
+        workflow_id: workflowId,
+      })
+      .select("id")
+      .single();
+
+    if (reportError || !report) {
+      throw new Error(
+        `Failed to insert letta_report: ${reportError?.message ?? "unknown error"}`,
+      );
+    }
+
+    // Link Report to Ingestion Record
+    const { error: updateError } = await supabase
+      .from("ingestion_records")
+      .update({ ingestion_report_id: report.id })
+      .eq("id", ingestionRecordId);
+
+    if (updateError) {
+      throw new Error(
+        `Failed to link ingestion_report to ingestion_record: ${updateError.message}`,
+      );
+    }
+
+    // Update workflow with final status from report
+    // If status is 'incomplete', we force 'error' in DB to avoid stuck 'pending'
+    // Otherwise, we use the business status from metadata
+    const finalComplianceStatus =
+      parsed.status === "incomplete"
+        ? "error"
+        : parsed.metadata.compliant
+          ? "compliant"
+          : "non_compliant";
+
+    const { error: finalStatusError } = await supabase
+      .from("workflows")
+      .update({ compliance_status: finalComplianceStatus })
+      .eq("id", workflowId);
+
+    if (finalStatusError) {
+      logger.error(
+        { error: finalStatusError, workflowId },
+        "Failed to update workflow final status",
+      );
+    }
+
+    logger.info(
+      { workflowId, reportId: report.id },
+      "Forced arbitration audit completed successfully",
+    );
+
+    return { success: true, reportId: report.id };
+  } catch (error) {
+    if (error instanceof APIError) {
+      logger.error(
+        { status: error.status, body: error.error },
+        "Letta API error generating forced ingestion report",
+      );
+    } else {
+      logger.error(
+        { error, ingestionRecordId },
+        "Error generating forced ingestion report",
+      );
+    }
+
+    // FINAL SECURITY: Ensure workflow is no longer 'pending' if we hit an error
+    try {
+      await supabase
+        .from("workflows")
+        .update({ compliance_status: "error" })
+        .eq("id", workflowId);
+    } catch (dbError) {
+      logger.error(
+        { dbError, workflowId },
+        "Failed to force error status on catch",
+      );
+    }
+
+    throw error;
+  }
+}
