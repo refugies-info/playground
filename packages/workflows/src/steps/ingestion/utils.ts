@@ -43,3 +43,41 @@ export async function fetchAllDiServiceIds(): Promise<string[]> {
 
   return serviceIds;
 }
+
+// =============================================================================
+// Concurrency helper
+// =============================================================================
+
+/**
+ * Exécute un tableau de tâches async avec une limite de concurrence.
+ * Fonctionne comme `Promise.allSettled` mais max `concurrency` tâches en parallèle.
+ *
+ * @param tasks      - Tableau de fonctions retournant une Promise
+ * @param concurrency - Nombre max de tâches simultanées (défaut: 5)
+ * @returns Tableau de résultats (fulfilled/rejected) dans le même ordre que `tasks`
+ */
+export async function runWithConcurrency<T>(
+  tasks: (() => Promise<T>)[],
+  concurrency = 5,
+): Promise<PromiseSettledResult<T>[]> {
+  const results: PromiseSettledResult<T>[] = new Array(tasks.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < tasks.length) {
+      const idx = nextIndex++;
+      try {
+        const value = await tasks[idx]();
+        results[idx] = { status: "fulfilled", value };
+      } catch (reason) {
+        results[idx] = { status: "rejected", reason };
+      }
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, tasks.length) }, () => worker()),
+  );
+
+  return results;
+}
