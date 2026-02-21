@@ -10,12 +10,15 @@ import {
   DrawerTrigger,
 } from "@playground/ui/overlays";
 import { Bug, Loader2 } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useDocument } from "@/components/document-editor/DocumentContext";
 import { getEditorialContent } from "@/services/document-actions";
 
 export function DebugPanel() {
   const { document, showDebug, setShowDebug, debugBlocks } = useDocument();
+  const pathname = usePathname();
+  const isMetadataView = pathname?.endsWith("/metadata");
 
   const [serverContent, setServerContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -106,78 +109,121 @@ export function DebugPanel() {
 
         {/* Content */}
         <div className="flex-1 flex overflow-hidden font-mono text-sm">
-          {/* Server Side */}
-          <div className="flex-1 flex flex-col border-r relative group">
-            <div className="px-4 py-2 bg-gray-100 border-b font-semibold text-xs uppercase tracking-wider text-gray-500 flex justify-between items-center">
-              <span>Server (Supabase)</span>
-              <span className="bg-gray-200 px-2 py-0.5 rounded text-[10px] text-gray-600">
-                {serverContent.length} chars
-              </span>
-            </div>
-            <div className="flex-1 relative bg-gray-50/50">
-              {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10">
-                  <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+          {isMetadataView ? (
+            <>
+              {/* DB Metadata */}
+              <div className="flex-1 flex flex-col border-r relative group">
+                <div className="px-4 py-2 bg-gray-100 border-b font-semibold text-xs tracking-wider text-pink-500 uppercase flex justify-between items-center">
+                  <span>ingestion_record metadata</span>
+                  <span className="bg-gray-200 px-2 py-0.5 rounded text-[10px] text-gray-600">
+                    {JSON.stringify(document?.metadata || {}).length} chars
+                  </span>
                 </div>
-              )}
-              <textarea
-                className="w-full h-full p-4 resize-none focus:outline-none bg-transparent"
-                value={serverContent}
-                readOnly
-              />
-            </div>
-          </div>
-
-          {/* Client Side */}
-          <div className="flex-1 flex flex-col">
-            <div className="px-4 py-2 bg-blue-50/50 border-b font-semibold text-xs uppercase tracking-wider text-blue-600 flex justify-between items-center">
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => setLocalTab("json")}
-                  className={cn(
-                    "hover:text-blue-800 transition-colors",
-                    localTab === "json"
-                      ? "text-blue-800 font-bold border-b-2 border-blue-600"
-                      : "text-blue-400",
-                  )}
-                >
-                  JSON (BlockNote)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLocalTab("markdown")}
-                  className={cn(
-                    "hover:text-blue-800 transition-colors",
-                    localTab === "markdown"
-                      ? "text-blue-800 font-bold border-b-2 border-blue-600"
-                      : "text-blue-400",
-                  )}
-                >
-                  Markdown
-                </button>
+                <div className="flex-1 relative bg-gray-50/50">
+                  <textarea
+                    className="w-full h-full p-4 resize-none focus:outline-none bg-transparent text-pink-900"
+                    value={JSON.stringify(document?.metadata || {}, null, 2)}
+                    readOnly
+                  />
+                </div>
               </div>
-              <span className="bg-blue-100 px-2 py-0.5 rounded text-[10px] text-blue-700">
-                {localTab === "json"
-                  ? `${debugBlocks?.length || 0} blocks`
-                  : `${document?.editorialContent?.length || 0} chars`}
-              </span>
-            </div>
 
-            {localTab === "json" ? (
-              <textarea
-                className="w-full h-full p-4 resize-none focus:outline-none bg-blue-50/10 text-blue-900"
-                value={JSON.stringify(debugBlocks, null, 2)}
-                readOnly
-              />
-            ) : (
-              <textarea
-                className="w-full h-full p-4 resize-none focus:outline-none bg-blue-50/10 text-blue-900"
-                value={document?.editorialContent || ""}
-                readOnly
-              />
-            )}
-          </div>
+              {/* LLM Metadata */}
+              <div className="flex-1 flex flex-col">
+                <div className="px-4 py-2 bg-pink-50/50 border-b font-semibold text-xs tracking-wider uppercase text-pink-600 flex justify-between items-center">
+                  <span>letta_report metadata</span>
+                  <span className="bg-pink-100 px-2 py-0.5 rounded text-[10px] text-pink-700">
+                    {JSON.stringify(document?.metadataReport || {}).length}{" "}
+                    chars
+                  </span>
+                </div>
+                <textarea
+                  className="w-full h-full p-4 resize-none focus:outline-none bg-pink-50/10 text-pink-900"
+                  value={JSON.stringify(
+                    document?.metadataReport || {},
+                    null,
+                    2,
+                  )}
+                  readOnly
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Server Side */}
+              <div className="flex-1 flex flex-col border-r relative group">
+                <div className="px-4 py-2 bg-gray-100 border-b font-semibold text-xs uppercase tracking-wider text-gray-500 flex justify-between items-center">
+                  <span>Server (Supabase)</span>
+                  <span className="bg-gray-200 px-2 py-0.5 rounded text-[10px] text-gray-600">
+                    {serverContent.length} chars
+                  </span>
+                </div>
+                <div className="flex-1 relative bg-gray-50/50">
+                  {isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10">
+                      <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                    </div>
+                  )}
+                  <textarea
+                    className="w-full h-full p-4 resize-none focus:outline-none bg-transparent"
+                    value={serverContent}
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              {/* Client Side */}
+              <div className="flex-1 flex flex-col">
+                <div className="px-4 py-2 bg-blue-50/50 border-b font-semibold text-xs uppercase tracking-wider text-blue-600 flex justify-between items-center">
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setLocalTab("json")}
+                      className={cn(
+                        "hover:text-blue-800 transition-colors",
+                        localTab === "json"
+                          ? "text-blue-800 font-bold border-b-2 border-blue-600"
+                          : "text-blue-400",
+                      )}
+                    >
+                      JSON (BlockNote)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLocalTab("markdown")}
+                      className={cn(
+                        "hover:text-blue-800 transition-colors",
+                        localTab === "markdown"
+                          ? "text-blue-800 font-bold border-b-2 border-blue-600"
+                          : "text-blue-400",
+                      )}
+                    >
+                      Markdown
+                    </button>
+                  </div>
+                  <span className="bg-blue-100 px-2 py-0.5 rounded text-[10px] text-blue-700">
+                    {localTab === "json"
+                      ? `${debugBlocks?.length || 0} blocks`
+                      : `${document?.editorialContent?.length || 0} chars`}
+                  </span>
+                </div>
+
+                {localTab === "json" ? (
+                  <textarea
+                    className="w-full h-full p-4 resize-none focus:outline-none bg-blue-50/10 text-blue-900"
+                    value={JSON.stringify(debugBlocks, null, 2)}
+                    readOnly
+                  />
+                ) : (
+                  <textarea
+                    className="w-full h-full p-4 resize-none focus:outline-none bg-blue-50/10 text-blue-900"
+                    value={document?.editorialContent || ""}
+                    readOnly
+                  />
+                )}
+              </div>
+            </>
+          )}
         </div>
       </DrawerContent>
     </Drawer>

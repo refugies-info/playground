@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { DocumentLayout } from "@/components/document-editor/DocumentLayout";
 import { getDocumentById } from "@/services/documents";
+import { fetchRiReferenceData } from "@/services/ri-reference-data";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -16,8 +17,11 @@ export default async function Layout(props: DocumentLayoutProps) {
   const params = await props.params;
   const { id } = params;
 
-  // Fetch the document
-  const document = await getDocumentById(id);
+  // Fetch the document and reference data in parallel
+  const [document, referenceData] = await Promise.all([
+    getDocumentById(id),
+    fetchRiReferenceData(),
+  ]);
 
   // If document not found, show 404
   if (!document) {
@@ -36,6 +40,7 @@ export default async function Layout(props: DocumentLayoutProps) {
     complianceReport: document.complianceReport,
     metadata: document.metadata, // Include metadata from ingestion_records
     metadataReport: document.metadataReport, // AI-generated metadata report
+    referenceData, // Themes & needs ID→name lookups from RI
     publishedUrl: document.publishedUrl,
   };
 

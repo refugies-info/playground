@@ -561,20 +561,6 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       : null;
 
   // Extract metadata report if available and complete
-  // Debug: log the raw result to diagnose fetch issues
-  // biome-ignore lint/suspicious/noConsole: temporary debug logging
-  console.log("[getDocumentById] metadata report result:", {
-    data: metadataReportResult.data,
-    error: metadataReportResult.error,
-    workflowId: workflow.id,
-  });
-  if (metadataReportResult.error) {
-    // biome-ignore lint/suspicious/noConsole: temporary debug logging
-    console.warn(
-      "[getDocumentById] metadata report query error:",
-      metadataReportResult.error,
-    );
-  }
 
   // Supabase may return metadata as a parsed object or a JSON string
   let metadataReportRaw = metadataReportResult.data as {
