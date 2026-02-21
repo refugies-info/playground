@@ -44,13 +44,18 @@
 import { APIError } from "@letta-ai/letta-client/error";
 import {
   createLettaClient,
+  findOrCreateConversation,
   generateIngestionReport,
   parseIngestionResponse,
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
 import { z } from "zod";
-import { fetchAllDiServiceIds, getSupabaseClient } from "./utils";
+import {
+  fetchAllDiServiceIds,
+  getSupabaseClient,
+  runWithConcurrency,
+} from "./utils";
 
 // =============================================================================
 // Config
@@ -63,6 +68,12 @@ const envVal = Number(process.env.MAX_PENDING_AUDITS);
  * Controlled via MAX_PENDING_AUDITS env var. Defaults to 50.
  */
 const MAX_PENDING_AUDITS = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
+
+/**
+ * Maximum number of audit LLM calls running in parallel.
+ * Each concurrent call uses its own Letta conversation to avoid context mixing.
+ */
+const AUDIT_CONCURRENCY = 5;
 
 // =============================================================================
 // Schema
@@ -214,10 +225,6 @@ export async function generateDiAuditReportsStep(runId: string) {
   }
 
   const lettaClient = createLettaClient();
-  const conversation = await lettaClient.conversations.create({
-    agent_id: agentId,
-  });
-  const conversationId = conversation.id;
   const supabase = getSupabaseClient();
 
   const skipped = Math.max(0, totalCandidates - targets.length);
@@ -227,13 +234,18 @@ export async function generateDiAuditReportsStep(runId: string) {
     "DI audit report selection",
   );
 
-  let succeeded = 0;
-  let failed = 0;
+  // Process targets in parallel (each gets its own conversation to avoid
+  // context mixing). runWithConcurrency limits simultaneous LLM calls.
+  const results = await runWithConcurrency(
+    targets.map((target) => async () => {
+      const conversationId = await findOrCreateConversation(
+        lettaClient,
+        agentId,
+        `compliance-${target.workflow_id}`,
+      );
 
-  for (const target of targets) {
-    let finalContent = "";
+      let finalContent = "";
 
-    try {
       for await (const chunk of generateIngestionReport(
         lettaClient,
         target.markdown,
@@ -285,10 +297,21 @@ export async function generateDiAuditReportsStep(runId: string) {
           `Failed to link ingestion_report to ingestion_record: ${updateError.message}`,
         );
       }
+    }),
+    AUDIT_CONCURRENCY,
+  );
 
+  let succeeded = 0;
+  let failed = 0;
+
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    if (result.status === "fulfilled") {
       succeeded += 1;
-    } catch (error) {
+    } else {
       failed += 1;
+      const target = targets[i];
+      const error = result.reason;
 
       if (error instanceof APIError) {
         logger.error(
@@ -368,10 +391,11 @@ export async function forceAuditReportStep(workflowId: string) {
   }
 
   const lettaClient = createLettaClient();
-  const conversation = await lettaClient.conversations.create({
-    agent_id: agentId,
-  });
-  const conversationId = conversation.id;
+  const conversationId = await findOrCreateConversation(
+    lettaClient,
+    agentId,
+    `compliance-${workflowId}`,
+  );
 
   logger.info(
     { workflowId, ingestionRecordId },

@@ -41,6 +41,7 @@
 import { APIError } from "@letta-ai/letta-client/error";
 import {
   createLettaClient,
+  findOrCreateConversation,
   generateMetadataReport,
   MetadataMetadataSchema,
   parseAgentResponse,
@@ -48,7 +49,7 @@ import {
 import { logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
 import { z } from "zod";
-import { getSupabaseClient } from "./utils";
+import { getSupabaseClient, runWithConcurrency } from "./utils";
 
 // =============================================================================
 // Config
@@ -61,6 +62,12 @@ const envVal = Number(process.env.MAX_PENDING_AUDITS);
  * Shared with the audit step via MAX_PENDING_AUDITS env var. Defaults to 50.
  */
 const MAX_PENDING_AUDITS = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
+
+/**
+ * Maximum number of metadata LLM calls running in parallel.
+ * Each concurrent call uses its own Letta conversation to avoid context mixing.
+ */
+const METADATA_CONCURRENCY = 5;
 
 // =============================================================================
 // Schema
@@ -211,10 +218,6 @@ export async function generateDiMetadataReportsStep(runId: string) {
   }
 
   const lettaClient = createLettaClient();
-  const conversation = await lettaClient.conversations.create({
-    agent_id: agentId,
-  });
-  const conversationId = conversation.id;
   const supabase = getSupabaseClient();
 
   logger.info(
@@ -222,13 +225,18 @@ export async function generateDiMetadataReportsStep(runId: string) {
     "DI metadata report selection",
   );
 
-  let succeeded = 0;
-  let failed = 0;
+  // Process targets in parallel (each gets its own conversation to avoid
+  // context mixing). runWithConcurrency limits simultaneous LLM calls.
+  const results = await runWithConcurrency(
+    targets.map((target) => async () => {
+      const conversationId = await findOrCreateConversation(
+        lettaClient,
+        agentId,
+        `metadata-${target.workflow_id}`,
+      );
 
-  for (const target of targets) {
-    let finalContent = "";
+      let finalContent = "";
 
-    try {
       for await (const chunk of generateMetadataReport(
         lettaClient,
         target.markdown,
@@ -271,10 +279,21 @@ export async function generateDiMetadataReportsStep(runId: string) {
           `Failed to insert letta_report: ${reportError.message}`,
         );
       }
+    }),
+    METADATA_CONCURRENCY,
+  );
 
+  let succeeded = 0;
+  let failed = 0;
+
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    if (result.status === "fulfilled") {
       succeeded += 1;
-    } catch (error) {
+    } else {
       failed += 1;
+      const target = targets[i];
+      const error = result.reason;
 
       if (error instanceof APIError) {
         logger.error(
@@ -348,10 +367,11 @@ export async function forceMetadataReportStep(workflowId: string) {
   }
 
   const lettaClient = createLettaClient();
-  const conversation = await lettaClient.conversations.create({
-    agent_id: agentId,
-  });
-  const conversationId = conversation.id;
+  const conversationId = await findOrCreateConversation(
+    lettaClient,
+    agentId,
+    `metadata-${workflowId}`,
+  );
 
   logger.info(
     { workflowId, ingestionRecordId },
