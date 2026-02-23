@@ -160,19 +160,30 @@ export async function getDocuments(params: GetDocumentsParams) {
     query = query.not("compliance_status", "is", null);
   }
 
+  // WorkStatus filtering with simplified logic
+  // PostgREST cannot mix table columns and relation columns in OR clauses,
+  // so we use appropriate filtering strategies per status
   if (workStatus) {
-    // If filtering by "to_process", we also want compliant workflows without editorial records
     if (workStatus === "to_process") {
-      query = query.or(
-        `editorial_records.work_status.eq.to_process,and(compliance_status.eq.compliant,editorial_records.is.null)`,
-      );
+      // For to_process: get compliant workflows
+      // Client-side filtering handles the distinction between
+      // (no editorial_record) vs (editorial_record with work_status=to_process)
+      query = query.eq("compliance_status", "compliant");
     } else {
+      // For other statuses (draft): ensure editorial_record exists then filter
+      // not.is.null on editorial_record_id acts as an INNER JOIN hint
+      query = query.not("editorial_record_id", "is", null);
       query = query.eq("editorial_records.work_status", workStatus);
     }
   }
 
   if (onlineStatus) {
-    query = query.eq("editorial_records.online_status", onlineStatus);
+    // Special case: "unpublished" means online_status IS NULL
+    if (onlineStatus === "unpublished") {
+      query = query.is("editorial_records.online_status", null);
+    } else {
+      query = query.eq("editorial_records.online_status", onlineStatus);
+    }
   }
 
   if (dateFrom) {

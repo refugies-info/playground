@@ -16,7 +16,7 @@ interface DocumentsListProps {
   sortBy: DocumentSortField;
   sortOrder: "asc" | "desc";
   initialFilters: {
-    status?: string; // compliance status
+    complianceStatus?: string;
     workStatus?: string;
     onlineStatus?: string;
     dateFrom: string;
@@ -41,19 +41,24 @@ export function DocumentsList({
 
   const updateFilters = (newFilters: typeof filters) => {
     setFilters(newFilters);
-    const params = new URLSearchParams();
+    // Preserve existing URL params (sortBy, sortOrder) while updating filters
+    const params = new URLSearchParams(window.location.search);
     // Reset to page 1 when filters change
     params.set("page", "1");
 
     Object.entries(newFilters).forEach(([key, value]) => {
-      if (value) params.set(key, value);
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
     });
     router.push(`/documents?${params.toString()}`);
   };
 
   const clearFilters = () => {
     const emptyFilters = {
-      status: "",
+      complianceStatus: "",
       workStatus: "",
       onlineStatus: "",
       dateFrom: "",
@@ -75,9 +80,12 @@ export function DocumentsList({
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div>
                 <select
-                  value={filters.status || ""}
+                  value={filters.complianceStatus || ""}
                   onChange={(e) =>
-                    updateFilters({ ...filters, status: e.target.value })
+                    updateFilters({
+                      ...filters,
+                      complianceStatus: e.target.value,
+                    })
                   }
                   className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
                 >
@@ -144,7 +152,7 @@ export function DocumentsList({
                 />
               </div>
             </div>
-            {(filters.status ||
+            {(filters.complianceStatus ||
               filters.workStatus ||
               filters.onlineStatus ||
               filters.dateFrom ||
