@@ -19,8 +19,10 @@
  * voisines et aux lookups de référence themes/needs).
  */
 
-import { Badge } from "@playground/ui/primitives";
-import { Zap } from "lucide-react";
+import { Badge, Button } from "@playground/ui/primitives";
+import { Loader2, Zap } from "lucide-react";
+import { useState } from "react";
+import { triggerForceArbitration } from "@/services/document-actions";
 import type { RiReferenceData } from "@/services/ri-reference-data";
 import { useDocument } from "./DocumentContext";
 
@@ -612,10 +614,29 @@ function formatSourceValue(value: unknown): string {
  */
 export function MetadataView() {
   const { document } = useDocument();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!document) return null;
 
   const report = document.metadataReport;
+
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    setError(null);
+    try {
+      const result = await triggerForceArbitration(document.id);
+      if (!result.success) {
+        setError(result.error ?? "Erreur lors du démarrage de la génération");
+      }
+      // On success, the workflow is started. The UI will need to poll or refresh
+      // to see the new metadata report when the workflow completes.
+    } catch (e) {
+      setError("Erreur inattendue");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // No metadata report → show re-generate prompt
   if (!report) {
@@ -631,6 +652,21 @@ export function MetadataView() {
             rencontré une erreur. Relancez la génération pour pré-remplir les
             métadonnées.
           </p>
+          <Button
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            className="w-full"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Génération en cours...
+              </>
+            ) : (
+              "Générer les métadonnées"
+            )}
+          </Button>
+          {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
         </div>
       </div>
     );

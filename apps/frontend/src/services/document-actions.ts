@@ -9,6 +9,7 @@ import {
 import { createSupabaseServerClient } from "@playground/supabase";
 import {
   archiveWorkflow,
+  forceArbitrationWorkflow,
   publicationWorkflow,
   saveWorkflow,
   toggleStatusWorkflow,
@@ -495,5 +496,67 @@ export async function getPublicationStatus(workflowId: string): Promise<{
   } catch (error) {
     logger.error(error, "Unexpected error fetching publication status");
     return { success: false, error: "Unexpected error" };
+  }
+}
+
+/**
+ * Triggers forced arbitration (audit + metadata) for a workflow.
+ *
+ * Used when a workflow lacks a metadata report (e.g., legacy content from prod).
+ * Runs both audit and metadata generation sequentially.
+ *
+ * @param workflowId - The ID of the workflow to process.
+ * @returns Object indicating success/failure and the workflow run ID.
+ */
+export async function triggerForceArbitration(workflowId: string): Promise<{
+  success: boolean;
+  workflowRunId?: string;
+  error?: string;
+}> {
+  // Verify user is authenticated
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user || !user.email) {
+    logger.error(userError, "Error getting user for force arbitration");
+    return {
+      success: false,
+      error: "Utilisateur non authentifié",
+    };
+  }
+
+  try {
+    if (!forceArbitrationWorkflow) {
+      logger.error("forceArbitrationWorkflow is undefined - cannot start");
+      return {
+        success: false,
+        error: "Workflow non disponible",
+      };
+    }
+
+    const result = await start(forceArbitrationWorkflow, [workflowId]);
+
+    logger.info(
+      { workflowRunId: result.runId, workflowId },
+      "Force arbitration workflow started",
+    );
+
+    revalidatePath("/documents/[id]", "page");
+
+    return {
+      success: true,
+      workflowRunId: result.runId,
+    };
+  } catch (error) {
+    logger.error(error, "Unexpected error starting force arbitration workflow");
+    return {
+      success: false,
+      error: "Erreur inattendue lors du démarrage de l'arbitrage forcé",
+    };
   }
 }
