@@ -402,6 +402,7 @@ export type Database = {
           last_sign_in_at: string | null;
           role: string | null;
           updated_at: string | null;
+          username: string | null;
         };
         Insert: {
           avatar_url?: string | null;
@@ -414,6 +415,7 @@ export type Database = {
           last_sign_in_at?: string | null;
           role?: string | null;
           updated_at?: string | null;
+          username?: string | null;
         };
         Update: {
           avatar_url?: string | null;
@@ -426,6 +428,7 @@ export type Database = {
           last_sign_in_at?: string | null;
           role?: string | null;
           updated_at?: string | null;
+          username?: string | null;
         };
         Relationships: [];
       };
