@@ -3,8 +3,9 @@
 import type { Document, DocumentSortField } from "@playground/shared-types";
 import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppPaginationControls } from "@/components/common/app-pagination";
+import { createClient } from "@/lib/supabase/client";
 import { columns } from "./columns";
 
 interface DocumentsListProps {
@@ -39,6 +40,53 @@ export function DocumentsList({
   // but mostly we rely on URL params.
   const [filters, setFilters] = useState(initialFilters);
 
+  // Track documents locally to detect changes for animation
+  const [documents, setDocuments] = useState(initialDocuments);
+  const [highlightedIds, setHighlightedIds] = useState<Set<string>>(new Set());
+  const prevDocumentsRef = useRef<Document[]>(initialDocuments);
+
+  // Detect document changes and trigger animations
+  useEffect(() => {
+    const prevDocs = prevDocumentsRef.current;
+    const newDocs = initialDocuments;
+
+    // Find IDs that changed or are new
+    const changedIds = new Set<string>();
+
+    // Check for new or modified documents
+    for (const doc of newDocs) {
+      const prevDoc = prevDocs.find((d) => d.id === doc.id);
+      if (!prevDoc) {
+        // New document
+        changedIds.add(doc.id);
+      } else if (
+        prevDoc.workStatus !== doc.workStatus ||
+        prevDoc.onlineStatus !== doc.onlineStatus ||
+        prevDoc.complianceStatus !== doc.complianceStatus ||
+        prevDoc.title !== doc.title
+      ) {
+        // Modified document
+        changedIds.add(doc.id);
+      }
+    }
+
+    if (changedIds.size > 0) {
+      setHighlightedIds(changedIds);
+      setDocuments(newDocs);
+      prevDocumentsRef.current = newDocs;
+
+      // Clear highlight after animation completes (1s = animation duration)
+      const timer = setTimeout(() => {
+        setHighlightedIds(new Set());
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    } else {
+      setDocuments(newDocs);
+      prevDocumentsRef.current = newDocs;
+    }
+  }, [initialDocuments]);
+
   const updateFilters = (newFilters: typeof filters) => {
     setFilters(newFilters);
     // Preserve existing URL params (sortBy, sortOrder) while updating filters
@@ -67,6 +115,31 @@ export function DocumentsList({
     setFilters(emptyFilters);
     router.push("/documents");
   };
+
+  // Supabase Realtime: refresh when workflows change
+  useEffect(() => {
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel("workflows-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*", // INSERT, UPDATE, DELETE
+          schema: "public",
+          table: "workflows",
+        },
+        () => {
+          // Refresh server data when workflows change
+          router.refresh();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [router]);
 
   return (
     <div className="w-full h-full p-8 bg-gray-50 min-h-screen">
@@ -169,7 +242,7 @@ export function DocumentsList({
         </div>
         <DataTable
           columns={columns}
-          data={initialDocuments}
+          data={documents}
           pageSize={pageSize}
           onRowClick={(row) => router.push(`/documents/${row.id}`)}
           manualPagination
@@ -184,6 +257,11 @@ export function DocumentsList({
             params.set("page", "1");
             router.push(`/documents?${params.toString()}`);
           }}
+          getRowClassName={(row) =>
+            highlightedIds.has(row.id)
+              ? "animate-highlight bg-yellow-50 transition-colors duration-1000"
+              : undefined
+          }
         />
 
         {/* Custom server-side pagination controls */}

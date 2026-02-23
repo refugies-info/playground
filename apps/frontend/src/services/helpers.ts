@@ -1,11 +1,13 @@
 /**
  * Extracts author information from a potentially array or object user_profile relation.
  * Supabase joins can return arrays or single objects depending on relationship definition.
+ * Also handles JSONB profile data from views where fields may be optional.
  */
 export function extractAuthorProfile(
   userProfile:
     | { email: string; role: string }
     | { email: string; role: string }[]
+    | { email?: string; role?: string }
     | null
     | undefined,
 ): { email: string; role: string } {

@@ -378,13 +378,6 @@ export type Database = {
             foreignKeyName: "letta_reports_workflow_id_fkey"
             columns: ["workflow_id"]
             isOneToOne: false
-            referencedRelation: "workflow_ingestion_metadata"
-            referencedColumns: ["workflow_id"]
-          },
-          {
-            foreignKeyName: "letta_reports_workflow_id_fkey"
-            columns: ["workflow_id"]
-            isOneToOne: false
             referencedRelation: "workflows"
             referencedColumns: ["id"]
           },
@@ -503,13 +496,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "translation_records"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "publication_records_workflow_id_fkey"
-            columns: ["workflow_id"]
-            isOneToOne: false
-            referencedRelation: "workflow_ingestion_metadata"
-            referencedColumns: ["workflow_id"]
           },
           {
             foreignKeyName: "publication_records_workflow_id_fkey"
@@ -635,13 +621,6 @@ export type Database = {
             foreignKeyName: "translation_records_workflow_id_fkey"
             columns: ["workflow_id"]
             isOneToOne: false
-            referencedRelation: "workflow_ingestion_metadata"
-            referencedColumns: ["workflow_id"]
-          },
-          {
-            foreignKeyName: "translation_records_workflow_id_fkey"
-            columns: ["workflow_id"]
-            isOneToOne: false
             referencedRelation: "workflows"
             referencedColumns: ["id"]
           },
@@ -755,19 +734,46 @@ export type Database = {
           },
         ]
       }
-      workflow_ingestion_metadata: {
+      workflows_enriched: {
         Row: {
-          external_id: string | null
+          id: string
+          compliance_status: string | null
+          updated_at: string
+          rco_record_id: string | null
+          editorial_record_id: string | null
           ingestion_record_id: string | null
-          quality_score: number | null
+          created_at: string
+          computed_work_status: string | null
+          computed_online_status: string | null
+          raw_work_status: string | null
+          raw_online_status: string | null
+          editorial_markdown: string | null
+          editorial_metadata: Json | null
+          editorial_author_id: string | null
+          ingestion_markdown: string | null
+          ingestion_metadata: Json | null
+          ingestion_created_at: string | null
+          ingestion_report_id: string | null
+          report_created_at: string | null
+          has_publication_history: boolean | null
+          latest_publication: Json | null
+          author_profile: Json | null
           session_start_date: string | null
-          structure_name: string | null
           title: string | null
-          workflow_id: string | null
+          structure_name: string | null
+          quality_score: number | null
+          external_id: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "status_ingestion_record_id_fkey"
+            foreignKeyName: "workflows_editorial_record_id_fkey"
+            columns: ["editorial_record_id"]
+            isOneToOne: false
+            referencedRelation: "editorial_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflows_ingestion_record_id_fkey"
             columns: ["ingestion_record_id"]
             isOneToOne: false
             referencedRelation: "ingestion_records"
