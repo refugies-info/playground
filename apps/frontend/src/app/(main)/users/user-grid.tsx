@@ -28,6 +28,7 @@ export function UserGrid({ initialUsers }: UserGridProps) {
     try {
       const res = await createUser({
         email: data.email,
+        username: data.username,
         role: data.role,
         language: data.language,
       });
@@ -57,6 +58,7 @@ export function UserGrid({ initialUsers }: UserGridProps) {
     try {
       await updateUser({
         id: data.id,
+        username: data.username,
         role: data.role,
         language: data.language,
       });
@@ -64,7 +66,12 @@ export function UserGrid({ initialUsers }: UserGridProps) {
       setUsers((prev) =>
         prev.map((u) =>
           u.id === data.id
-            ? { ...u, role: data.role, language: data.language }
+            ? {
+                ...u,
+                username: data.username,
+                role: data.role,
+                language: data.language,
+              }
             : u,
         ),
       );

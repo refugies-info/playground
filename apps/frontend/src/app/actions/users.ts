@@ -36,12 +36,14 @@ async function assertAdmin() {
 // User Schemas
 const createUserSchema = z.object({
   email: z.string().email(),
+  username: z.string().min(2).max(50).optional(),
   role: z.enum(["admin", "editor", "translator"]),
   language: z.string().optional(),
 });
 
 const updateUserSchema = z.object({
   id: z.string().uuid(),
+  username: z.string().min(2).max(50).optional(),
   role: z.enum(["admin", "editor", "translator"]),
   language: z.string().optional(),
 });
@@ -54,6 +56,7 @@ export type CreateUserState = {
 // Create User
 export async function createUser(data: {
   email: string;
+  username?: string;
   role: string;
   language?: string;
 }) {
@@ -66,7 +69,7 @@ export async function createUser(data: {
     throw new Error("Données invalides. Vérifiez les champs.");
   }
 
-  const { email, role, language } = validatedFields.data;
+  const { email, username, role, language } = validatedFields.data;
 
   // Validate translator language requirement
   if (role === "translator" && !language) {
@@ -82,6 +85,7 @@ export async function createUser(data: {
       password,
       email_confirm: true,
       user_metadata: {
+        username,
         role,
         language,
       },
@@ -106,6 +110,7 @@ export async function createUser(data: {
 // Update User
 export async function updateUser(data: {
   id: string;
+  username?: string;
   role: string;
   language?: string;
 }) {
@@ -118,7 +123,7 @@ export async function updateUser(data: {
     throw new Error("Données invalides.");
   }
 
-  const { id, role, language } = validatedFields.data;
+  const { id, username, role, language } = validatedFields.data;
 
   // Validate translator language
   if (role === "translator" && !language) {
@@ -127,7 +132,7 @@ export async function updateUser(data: {
 
   try {
     const { error } = await adminClient.auth.admin.updateUserById(id, {
-      user_metadata: { role, language },
+      user_metadata: { username, role, language },
     });
 
     if (error) {

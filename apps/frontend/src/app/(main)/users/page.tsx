@@ -48,6 +48,7 @@ export default async function UsersPage() {
   const formattedUsers: UserData[] = sortedUsers.map((u) => ({
     id: u.id,
     email: u.email || "",
+    username: u.user_metadata?.username,
     role: u.user_metadata?.role || "editor", // default fallback
     language: u.user_metadata?.language,
     created_at: u.created_at,
