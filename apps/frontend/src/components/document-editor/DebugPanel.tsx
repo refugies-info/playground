@@ -63,8 +63,12 @@ export function DebugPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showDebug, document?.id, fetchServerContent]);
 
-  // 1. Environment Check: Hide completely in production (after hooks)
-  if (process.env.NODE_ENV !== "development") {
+  // 1. Environment Check: Hide unless explicitly enabled via env var or in development
+  const isDebugEnabled =
+    process.env.NODE_ENV === "development" ||
+    process.env.NEXT_PUBLIC_DEBUG_PANEL === "true";
+
+  if (!isDebugEnabled) {
     return null;
   }
 
