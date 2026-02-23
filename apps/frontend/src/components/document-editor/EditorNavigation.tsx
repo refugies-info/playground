@@ -2,13 +2,22 @@
 
 import { cn } from "@playground/ui";
 import { Button } from "@playground/ui/primitives";
-import { ChevronLeft, ChevronRight, File, Gavel } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  File,
+  Gavel,
+  LayoutList,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DocumentActions } from "./DocumentActions";
 import { useDocument } from "./DocumentContext";
 
 export function EditorNavigation() {
-  const { isComparisonMode, activeView, setActiveView } = useDocument();
+  const { isComparisonMode, document } = useDocument();
+  const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Auto-collapse when comparison mode is active
@@ -17,6 +26,13 @@ export function EditorNavigation() {
       setIsCollapsed(true);
     }
   }, [isComparisonMode]);
+
+  if (!document) return null;
+
+  const baseUrl = `/documents/${document.id}`;
+  const isFicheActive = pathname === baseUrl;
+  const isComplianceActive = pathname === `${baseUrl}/compliance`;
+  const isMetadataActive = pathname === `${baseUrl}/metadata`;
 
   return (
     <div
@@ -47,29 +63,44 @@ export function EditorNavigation() {
       {/* Navigation Buttons */}
       <div className="flex-1 flex flex-col p-4 gap-4">
         <div className="flex flex-col gap-2">
-          <Button
-            variant={activeView === "edit" ? "secondary" : "ghost"}
-            className={cn(
-              "justify-start flex gap-2",
-              isCollapsed && "justify-center px-0",
-            )}
-            onClick={() => setActiveView("edit")}
-          >
-            <File className="w-4 h-4" />
-            {!isCollapsed && "Fiche "}
-          </Button>
+          <Link href={baseUrl}>
+            <Button
+              variant={isFicheActive ? "secondary" : "ghost"}
+              className={cn(
+                "justify-start flex gap-2 w-full",
+                isCollapsed && "justify-center px-0",
+              )}
+            >
+              <File className="w-4 h-4" />
+              {!isCollapsed && "Fiche "}
+            </Button>
+          </Link>
 
-          <Button
-            variant={activeView === "compliance" ? "secondary" : "ghost"}
-            className={cn(
-              "justify-start flex gap-2",
-              isCollapsed && "justify-center px-0",
-            )}
-            onClick={() => setActiveView("compliance")}
-          >
-            <Gavel className="w-4 h-4" />
-            {!isCollapsed && "Arbitrage"}
-          </Button>
+          <Link href={`${baseUrl}/metadata`}>
+            <Button
+              variant={isMetadataActive ? "secondary" : "ghost"}
+              className={cn(
+                "justify-start flex gap-2 w-full",
+                isCollapsed && "justify-center px-0",
+              )}
+            >
+              <LayoutList className="w-4 h-4" />
+              {!isCollapsed && "Metadonnées"}
+            </Button>
+          </Link>
+
+          <Link href={`${baseUrl}/compliance`}>
+            <Button
+              variant={isComplianceActive ? "secondary" : "ghost"}
+              className={cn(
+                "justify-start flex gap-2 w-full",
+                isCollapsed && "justify-center px-0",
+              )}
+            >
+              <Gavel className="w-4 h-4" />
+              {!isCollapsed && "Arbitrage"}
+            </Button>
+          </Link>
         </div>
       </div>
 

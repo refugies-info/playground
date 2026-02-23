@@ -37,6 +37,10 @@ interface DocumentData
   workStatus: WorkStatus | null;
   onlineStatus: OnlineStatus;
   metadata?: Record<string, unknown>;
+  referenceData?: {
+    themes: Record<string, string>;
+    needs: Record<string, string>;
+  };
 }
 
 interface DocumentContextType {
@@ -62,8 +66,6 @@ interface DocumentContextType {
   isSaving: boolean;
   isDirty: boolean;
   canPublish: boolean;
-  activeView: "edit" | "compliance";
-  setActiveView: (view: "edit" | "compliance") => void;
   previewDocument: () => void;
   publishDocument: (triggerTranslations?: boolean) => Promise<{
     success: boolean;
@@ -91,7 +93,6 @@ export function DocumentProvider({
     initialData || null,
   );
   const [showDebug, setShowDebug] = useState(false);
-  const [activeView, setActiveView] = useState<"edit" | "compliance">("edit");
   const [isLoading] = useState(false);
   const [isComparisonMode, setIsComparisonMode] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -388,8 +389,6 @@ export function DocumentProvider({
         isSaving,
         isDirty,
         canPublish,
-        activeView,
-        setActiveView,
         previewDocument,
         publishDocument: publishDocumentAction,
         isPublishing,

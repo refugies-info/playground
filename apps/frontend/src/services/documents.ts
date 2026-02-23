@@ -395,6 +395,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     editorialResult,
     publicationResult,
     ingestionMetadataResult,
+    metadataReportResult,
   ] = await Promise.all([
     workflow.ingestion_record_id
       ? supabase
@@ -437,6 +438,15 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       )
       .eq("workflow_id", workflow.id)
       .single(),
+    // Fetch the AI-generated metadata report (letta_reports type: metadata)
+    supabase
+      .from("letta_reports")
+      .select("metadata, status")
+      .eq("workflow_id", workflow.id)
+      .eq("report_type", "metadata")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const ingestionRecordRaw = ingestionResult.data;
@@ -550,6 +560,50 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       ? "archived"
       : null;
 
+  // Extract metadata report if available and complete
+
+  // Supabase may return metadata as a parsed object or a JSON string
+  let metadataReportRaw = metadataReportResult.data as {
+    metadata: Record<string, unknown> | string;
+    status: string;
+  } | null;
+
+  // Parse metadata if it came back as a string
+  if (metadataReportRaw && typeof metadataReportRaw.metadata === "string") {
+    try {
+      metadataReportRaw = {
+        ...metadataReportRaw,
+        metadata: JSON.parse(metadataReportRaw.metadata),
+      };
+    } catch {
+      metadataReportRaw = null;
+    }
+  }
+
+  const metadataReportData = metadataReportRaw as {
+    metadata: Record<string, unknown>;
+    status: string;
+  } | null;
+
+  const metadataReport =
+    metadataReportData?.status === "complete" && metadataReportData?.metadata
+      ? {
+          metadata_ri:
+            (metadataReportData.metadata.metadata_ri as Record<
+              string,
+              unknown
+            >) || {},
+          provenance:
+            (metadataReportData.metadata.provenance as Array<{
+              key: string;
+              label: string;
+              value: string;
+              status: string;
+              source: string[];
+            }>) || undefined,
+        }
+      : null;
+
   return {
     id: workflow.id,
     title,
@@ -561,6 +615,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     ingestionContent,
     complianceReport,
     metadata,
+    metadataReport,
     publishedUrl,
     publicationStatus: publicationRecord?.status,
     publicationRemoteId: publicationRecord?.remote_id,

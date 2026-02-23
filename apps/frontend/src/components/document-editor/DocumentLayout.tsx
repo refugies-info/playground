@@ -1,10 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ArbitrationView } from "./ArbitrationView";
 import { AssistantPanel } from "./AssistantPanel";
-import { DocumentProvider, useDocument } from "./DocumentContext";
-import { EditionView } from "./EditionView";
+import { DocumentProvider } from "./DocumentContext";
 import { EditorNavigation } from "./EditorNavigation";
 import { TopBar } from "./TopBar";
 
@@ -20,20 +18,11 @@ interface DocumentLayoutProps {
   documentId: string;
   // biome-ignore lint/suspicious/noExplicitAny: Generic initial data
   initialData?: any; // Replace with proper type
-}
-
-function EditorContent() {
-  const { activeView } = useDocument();
-
-  if (activeView === "compliance") {
-    return <ArbitrationView />;
-  }
-
-  return <EditionView />;
+  children: React.ReactNode;
 }
 
 export function DocumentLayout(props: DocumentLayoutProps) {
-  const { initialData } = props;
+  const { initialData, children } = props;
   return (
     <DocumentProvider initialData={initialData}>
       <DebugPanel />
@@ -46,8 +35,8 @@ export function DocumentLayout(props: DocumentLayoutProps) {
           {/* Left Sidebar */}
           <EditorNavigation />
 
-          {/* Center Editor */}
-          <EditorContent />
+          {/* Center Editor / Content */}
+          {children}
 
           {/* Right Chat */}
           <AssistantPanel />
