@@ -175,7 +175,7 @@ const renderThemes = (v: unknown, { metadata_ri, ref }: RenderContext) => {
       {primaryNames.map((name) => (
         <Badge key={name} size="sm" className="flex gap-1" variant="info">
           {name}{" "}
-          <span className="bg-white text-black inline-block px-1 rounded-sm text-xxs">
+          <span className="bg-white text-black inline-block px-1 rounded-sm text-[10px]">
             thème principal
           </span>
         </Badge>
