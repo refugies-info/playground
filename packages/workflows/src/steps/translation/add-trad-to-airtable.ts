@@ -29,10 +29,14 @@ const AIRTABLE_TABLE_NAME = "SUIVI TRAD";
  * Sends translation tracking data to Airtable for billing purposes.
  *
  * This step:
- * 1. Fetches the FR editorial record content
- * 2. Extracts the title and counts words from the FR markdown
- * 3. Looks up the published URL (if available)
- * 4. Creates a record in the Airtable "SUIVI TRAD" table
+ * 1. Checks if this translation was already published (via publication_records) — skips if so
+ * 2. Fetches the FR editorial record content
+ * 3. Extracts the title and counts words from the FR markdown
+ * 4. Looks up the published URL (if available)
+ * 5. Creates a record in the Airtable "SUIVI TRAD" table
+ *
+ * Only creates an Airtable entry on the **first** translation generation
+ * (i.e., before the translation has ever been published to the site).
  *
  * This step is **non-blocking**: it never fails the parent workflow.
  * If Airtable is unreachable or env vars are missing, it logs a warning and returns success.
@@ -70,7 +74,35 @@ export async function addTradToAirtableStep(
       }
     }
 
-    // 1. Fetch FR content from editorial record
+    // 1. Check if this translation was already published — if so, skip
+    // We look for a published publication_record linked to the translation_record
+    // for this (editorial_record_id, language) pair.
+    const { data: translationRecord } = await supabase
+      .from("translation_records")
+      .select("id")
+      .eq("editorial_record_id", editorialRecordId)
+      .eq("language", language)
+      .maybeSingle();
+
+    if (translationRecord) {
+      const { data: existingPublication } = await supabase
+        .from("publication_records")
+        .select("id")
+        .eq("translation_record_id", translationRecord.id)
+        .eq("status", "published")
+        .limit(1)
+        .maybeSingle();
+
+      if (existingPublication) {
+        logger.info(
+          { editorialRecordId, language },
+          "[addTradToAirtable] Translation already published, skipping duplicate Airtable entry",
+        );
+        return { success: true, data: { sent: false } };
+      }
+    }
+
+    // 2. Fetch FR content from editorial record
     const { data: editorialRecord, error: fetchError } = await supabase
       .from("editorial_records")
       .select("id, markdown")
@@ -85,13 +117,13 @@ export async function addTradToAirtableStep(
       return { success: true, data: { sent: false } };
     }
 
-    // 2. Extract title and count words from FR content
+    // 3. Extract title and count words from FR content
     const title =
       (await extractTitleFromMarkdown(editorialRecord.markdown)) ||
       "Sans titre";
     const wordCount = countMarkdownWords(editorialRecord.markdown);
 
-    // 3. Build the link to the fiche
+    // 4. Build the link to the fiche
     // Try to find the published remote_id to construct the URL
     let lien = "";
     const baseUrl = process.env.RI_BASE_URL || "https://refugies.info";
@@ -110,7 +142,7 @@ export async function addTradToAirtableStep(
       lien = `${cleanBaseUrl}/fr/dispositif/${publication.remote_id}`;
     }
 
-    // 4. Create Airtable record
+    // 5. Create Airtable record
     const fields: AirtableTradFields = {
       "Quel traducteur ?": translatorName,
       Dispositif: title,
