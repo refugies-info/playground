@@ -11,7 +11,7 @@ import { cn } from "../../utils/cn";
 
 // CVA configurations
 const cardVariants = cva(
-  "group relative flex flex-col h-64 p-6 rounded-xl border transition-all shadow-sm hover:shadow-md",
+  "group relative flex flex-col h-80 p-6 rounded-xl border transition-all shadow-sm hover:shadow-md",
   {
     variants: {
       intent: {
@@ -47,6 +47,7 @@ export type UserRole = "admin" | "editor" | "translator";
 export interface UserData {
   id?: string;
   email: string;
+  username?: string;
   role: UserRole;
   language?: string;
   created_at?: string;
@@ -91,6 +92,7 @@ export function UserCard({
   const [formData, setFormData] = useState<UserData>({
     id: user?.id,
     email: user?.email || "",
+    username: user?.username || "",
     role: user?.role || "editor",
     language: user?.language || "",
   });
@@ -188,6 +190,25 @@ export function UserCard({
                 disabled={!isNew}
                 className={`w-full text-sm font-medium text-gray-900 border-b-2 border-gray-200 focus:border-blue-500 outline-none py-1 bg-transparent ${!isNew ? "opacity-60 cursor-not-allowed" : ""}`}
                 placeholder="email@refugies.info"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor={`username-${user?.id || "new"}`}
+                className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1"
+              >
+                Nom d'utilisateur
+              </label>
+              <input
+                id={`username-${user?.id || "new"}`}
+                type="text"
+                value={formData.username}
+                onChange={(e) =>
+                  setFormData({ ...formData, username: e.target.value })
+                }
+                className="w-full text-sm font-medium text-gray-900 border-b-2 border-gray-200 focus:border-blue-500 outline-none py-1 bg-transparent"
+                placeholder="john_doe"
               />
             </div>
 
@@ -314,7 +335,7 @@ export function UserCard({
           <div className="flex-1 flex flex-col justify-center items-center text-center space-y-4">
             <div className="relative">
               <div className={cn(avatarVariants({ role: formData.role }))}>
-                {formData.email[0].toUpperCase()}
+                {(formData.username?.[0] || formData.email[0]).toUpperCase()}
               </div>
               <div className="absolute -bottom-1 -right-1 bg-white p-1 rounded-full shadow-sm">
                 {formData.role === "admin" && (
@@ -351,10 +372,18 @@ export function UserCard({
 
                 <h3
                   className="text-sm font-semibold text-gray-900 truncate max-w-[200px]"
-                  title={formData.email}
+                  title={formData.username || formData.email}
                 >
-                  {formData.email}
+                  {formData.username || formData.email}
                 </h3>
+                {formData.username && (
+                  <p
+                    className="text-xs text-gray-500 truncate max-w-[200px]"
+                    title={formData.email}
+                  >
+                    {formData.email}
+                  </p>
+                )}
               </div>
 
               {formData.role === "translator" && (
