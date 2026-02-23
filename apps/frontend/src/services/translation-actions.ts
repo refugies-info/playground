@@ -210,6 +210,7 @@ export async function retryTranslationGeneration(translationId: string) {
         editorialRecordId: translationRecord.editorial_record_id,
         language: translationRecord.language,
         parentWorkflowId: translationRecord.workflow_id || "manual-retry",
+        userId: user.id,
       },
     ]);
 

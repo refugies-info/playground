@@ -41,18 +41,34 @@ const AIRTABLE_TABLE_NAME = "SUIVI TRAD";
  *
  * @param editorialRecordId - The source editorial record ID (for FR content)
  * @param language - The target language code (e.g., "en", "ar")
- * @param translatorName - The translator identifier (e.g., "kim.delaunay" for AI)
+ * @param userId - The user ID of the person who triggered the translation (resolved to username)
  * @returns Result indicating if the record was sent
  */
 export async function addTradToAirtableStep(
   editorialRecordId: string,
   language: string,
-  translatorName: string,
+  userId?: string,
 ): Promise<StepResult<AddTradToAirtableResult>> {
   "use step";
 
   try {
     const supabase = getSupabaseClient();
+
+    // 0. Resolve translator name from user profile
+    let translatorName = "IA";
+    if (userId) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username, email")
+        .eq("id", userId)
+        .single();
+
+      if (profile?.username) {
+        translatorName = profile.username;
+      } else if (profile?.email) {
+        translatorName = profile.email;
+      }
+    }
 
     // 1. Fetch FR content from editorial record
     const { data: editorialRecord, error: fetchError } = await supabase
