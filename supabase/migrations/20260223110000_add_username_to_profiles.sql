@@ -2,7 +2,7 @@
 alter table public.profiles add column if not exists username text;
 
 -- Create unique index for username (optional, if you want unique usernames)
--- create unique index if not exists idx_profiles_username on public.profiles(username);
+create unique index if not exists idx_profiles_username on public.profiles(username);
 
 -- Update the trigger function to sync username from auth.users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
