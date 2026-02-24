@@ -10,9 +10,8 @@ const textAreaVariants = cva("w-full outline-none resize-y", {
   variants: {
     variant: {
       default:
-        "rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500",
-      inline:
-        "bg-transparent px-1 py-0.5 text-inherit focus:bg-white focus:ring-1 focus:ring-blue-300",
+        "bg-white px-3 py-2 text-sm disabled:bg-gray-50 disabled:text-gray-500",
+      inline: "bg-transparent px-1 py-0.5 text-inherit focus:bg-white",
     },
     hasError: {
       true: "border-red-500 focus:border-red-500 focus:ring-red-500",

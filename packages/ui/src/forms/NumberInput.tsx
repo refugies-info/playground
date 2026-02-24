@@ -109,7 +109,7 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
 
         const numValue = parseFloat(rawValue);
 
-        if (isNaN(numValue)) {
+        if (Number.isNaN(numValue)) {
           return;
         }
 

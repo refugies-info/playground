@@ -11,8 +11,8 @@ const editableFieldVariants = cva(
   {
     variants: {
       mode: {
-        read: "cursor-pointer text-left hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
-        edit: "relative border border-blue-300 bg-white",
+        read: "cursor-pointer text-left hover:bg-gray-100 ",
+        edit: "relative  bg-white",
       },
       isDisabled: {
         true: "cursor-not-allowed opacity-50",

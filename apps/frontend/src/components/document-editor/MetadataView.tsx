@@ -25,6 +25,12 @@ import { useState } from "react";
 import { triggerForceArbitration } from "@/services/document-actions";
 import type { RiReferenceData } from "@/services/ri-reference-data";
 import { useDocument } from "./DocumentContext";
+import {
+  MetadataProvider,
+  TextareaField,
+  TextField,
+  useMetadata,
+} from "./metadata";
 
 // =============================================================================
 // Types
@@ -629,9 +635,7 @@ export function MetadataView() {
       if (!result.success) {
         setError(result.error ?? "Erreur lors du démarrage de la génération");
       }
-      // On success, the workflow is started. The UI will need to poll or refresh
-      // to see the new metadata report when the workflow completes.
-    } catch (e) {
+    } catch {
       setError("Erreur inattendue");
     } finally {
       setIsGenerating(false);
@@ -672,9 +676,37 @@ export function MetadataView() {
     );
   }
 
+  // Wrap in MetadataProvider for editing functionality
+  return (
+    <MetadataProvider>
+      <MetadataTable
+        report={report}
+        diMetadata={(document.metadata ?? {}) as Record<string, unknown>}
+        ref={document.referenceData ?? { themes: {}, needs: {} }}
+      />
+    </MetadataProvider>
+  );
+}
+
+/**
+ * Internal table component that uses MetadataContext.
+ */
+function MetadataTable({
+  report,
+  diMetadata,
+  ref,
+}: {
+  report: NonNullable<
+    ReturnType<typeof useDocument>["document"]
+  >["metadataReport"];
+  diMetadata: Record<string, unknown>;
+  ref: RiReferenceData;
+}) {
+  const { getFieldStatus } = useMetadata();
+
+  if (!report) return null;
+
   const { metadata_ri, provenance } = report;
-  const diMetadata = (document.metadata ?? {}) as Record<string, unknown>;
-  const ref = document.referenceData ?? { themes: {}, needs: {} };
 
   // Render context shared by all field renderers
   const ctx: RenderContext = { metadata_ri, ref };
@@ -711,10 +743,36 @@ export function MetadataView() {
           {METADATA_FIELDS.map((field) => {
             const rawValue = metadata_ri[field.riKey];
             const prov = provenanceByKey.get(field.riKey);
+            const fieldStatus = getFieldStatus(field.riKey);
 
-            // Compute display value: custom render (with ctx) > default
+            // Determine if this is an editable text field
+            const isTextField =
+              field.riKey === "titreMarque" ||
+              field.riKey === "mainSponsor" ||
+              field.riKey === "logo";
+            const isTextareaField = field.riKey === "abstract";
+
+            // Compute display value: editable field > custom render > default
             let displayValue: React.ReactNode = null;
-            if (field.render) {
+
+            if (isTextField) {
+              displayValue = (
+                <TextField
+                  fieldKey={field.riKey}
+                  label={field.label}
+                  placeholder="Cliquer pour modifier"
+                />
+              );
+            } else if (isTextareaField) {
+              displayValue = (
+                <TextareaField
+                  fieldKey={field.riKey}
+                  label={field.label}
+                  placeholder="Cliquer pour modifier"
+                  rows={2}
+                />
+              );
+            } else if (field.render) {
               displayValue = field.render(rawValue, ctx);
             } else if (Array.isArray(rawValue)) {
               displayValue = rawValue.join(", ");
@@ -723,7 +781,7 @@ export function MetadataView() {
             }
 
             if (!displayValue) {
-              displayValue = <span>—</span>;
+              displayValue = <span className="text-gray-400">—</span>;
             }
 
             // Resolve source values from DI metadata
@@ -746,8 +804,24 @@ export function MetadataView() {
                 })}
               </div>
             ) : (
-              <span>—</span>
+              <span className="text-gray-400">—</span>
             );
+
+            // Badge based on field status
+            const badge =
+              rawValue === undefined || rawValue === null ? (
+                <Badge size="sm" variant="danger">
+                  <Zap className="h-3 w-3 mr-1" /> Donnée introuvable
+                </Badge>
+              ) : fieldStatus === "modified" ? (
+                <Badge size="sm" variant="info">
+                  <Zap className="h-3 w-3 mr-1" /> Modifié
+                </Badge>
+              ) : (
+                <Badge size="sm" variant="warning">
+                  <Zap className="h-3 w-3 mr-1" /> Pré-rempli par l&apos;IA
+                </Badge>
+              );
 
             return (
               <tr key={field.label} className="hover:bg-gray-50 text-sm">
@@ -758,15 +832,7 @@ export function MetadataView() {
                   >
                     {field.label}
                   </label>
-                  {rawValue === undefined || rawValue === null ? (
-                    <Badge size="sm" variant="danger">
-                      <Zap className="h-3 w-3 mr-1" /> Donnée introuvable
-                    </Badge>
-                  ) : (
-                    <Badge size="sm" variant="warning">
-                      <Zap className="h-3 w-3 mr-1" /> Pré-rempli par l&apos;IA
-                    </Badge>
-                  )}
+                  {badge}
                 </td>
                 <td className="px-6 py-4">{displayValue}</td>
                 <td className="px-6 py-4">{sourceDisplay}</td>
