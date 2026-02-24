@@ -155,69 +155,77 @@ export async function getDocuments(params: GetDocumentsParams) {
   const cleanBaseUrl = (process.env.RI_BASE_URL || "").replace(/\/$/, "");
 
   // Map directly from enriched view - no N+1 query needed
-  const documents: Document[] = rows.map((item) => {
-    // Merge metadata from ingestion and editorial
-    const ingestionMetadata = (item.ingestion_metadata as Metadata) || {};
-    const editorialMetadata = (item.editorial_metadata as Metadata) || {};
-    const metadata: Metadata = {
-      ...ingestionMetadata,
-      ...editorialMetadata,
-    };
+  const documents = rows
+    .map((item): Document | null => {
+      // Skip items without ID
+      if (!item.id) {
+        logger.warn("Workflow without ID found, skipping");
+        return null;
+      }
 
-    // Preserve critical identifiers
-    if (ingestionMetadata.id) metadata.id = ingestionMetadata.id;
-    if (ingestionMetadata.structure_id)
-      metadata.structure_id = ingestionMetadata.structure_id;
+      // Merge metadata from ingestion and editorial
+      const ingestionMetadata = (item.ingestion_metadata as Metadata) || {};
+      const editorialMetadata = (item.editorial_metadata as Metadata) || {};
+      const metadata: Metadata = {
+        ...ingestionMetadata,
+        ...editorialMetadata,
+      };
 
-    // Content priority: editorial > ingestion
-    const content = item.editorial_markdown || item.ingestion_markdown || "";
+      // Preserve critical identifiers
+      if (ingestionMetadata.id) metadata.id = ingestionMetadata.id;
+      if (ingestionMetadata.structure_id)
+        metadata.structure_id = ingestionMetadata.structure_id;
 
-    // Parse publication info from JSONB
-    const latestPublication = item.latest_publication as {
-      remote_id?: string;
-      status?: string;
-      updated_at?: string;
-      created_at?: string;
-    } | null;
+      // Content priority: editorial > ingestion
+      const content = item.editorial_markdown || item.ingestion_markdown || "";
 
-    const publishedUrl =
-      latestPublication?.remote_id && cleanBaseUrl
-        ? `${cleanBaseUrl}/dispositif/${latestPublication.remote_id}`
-        : undefined;
+      // Parse publication info from JSONB
+      const latestPublication = item.latest_publication as {
+        remote_id?: string;
+        status?: string;
+        updated_at?: string;
+        created_at?: string;
+      } | null;
 
-    // Date added: report_created_at > ingestion_created_at > updated_at
-    const dateAdded =
-      item.report_created_at || item.ingestion_created_at || item.updated_at;
+      const publishedUrl =
+        latestPublication?.remote_id && cleanBaseUrl
+          ? `${cleanBaseUrl}/dispositif/${latestPublication.remote_id}`
+          : undefined;
 
-    // Parse author profile from JSONB
-    const authorProfile = item.author_profile as {
-      email?: string;
-      role?: string;
-    } | null;
-    const { email: authorEmail, role: authorRole } =
-      extractAuthorProfile(authorProfile);
+      // Date added: report_created_at > ingestion_created_at > updated_at
+      const dateAdded =
+        item.report_created_at || item.ingestion_created_at || item.updated_at;
 
-    return {
-      id: item.id,
-      title: item.title || "Untitled",
-      date_added: dateAdded,
-      complianceStatus: (item.compliance_status as ComplianceStatus) ?? null,
-      workStatus: (item.computed_work_status as WorkStatus) ?? null,
-      onlineStatus: (item.computed_online_status as OnlineStatus) ?? null,
-      content,
-      metadata,
-      publishedUrl,
-      publicationStatus: latestPublication?.status,
-      publicationRemoteId: latestPublication?.remote_id,
-      structureName: item.structure_name ?? undefined,
-      sessionStartDate: item.session_start_date ?? undefined,
-      qualityScore: item.quality_score ?? undefined,
-      sourceSystem: item.rco_record_id ? "RCO" : "DI",
-      updated_at: item.updated_at,
-      authorEmail,
-      authorRole,
-    };
-  });
+      // Parse author profile from JSONB
+      const authorProfile = item.author_profile as {
+        email?: string;
+        role?: string;
+      } | null;
+      const { email: authorEmail, role: authorRole } =
+        extractAuthorProfile(authorProfile);
+
+      return {
+        id: item.id,
+        title: item.title || "Untitled",
+        date_added: dateAdded ?? "",
+        complianceStatus: (item.compliance_status as ComplianceStatus) ?? null,
+        workStatus: (item.computed_work_status as WorkStatus) ?? null,
+        onlineStatus: (item.computed_online_status as OnlineStatus) ?? null,
+        content,
+        metadata,
+        publishedUrl,
+        publicationStatus: latestPublication?.status,
+        publicationRemoteId: latestPublication?.remote_id,
+        structureName: item.structure_name ?? undefined,
+        sessionStartDate: item.session_start_date ?? undefined,
+        qualityScore: item.quality_score ?? undefined,
+        sourceSystem: item.rco_record_id ? "RCO" : "DI",
+        updated_at: item.updated_at || "",
+        authorEmail,
+        authorRole,
+      };
+    })
+    .filter((doc): doc is Document => doc !== null);
 
   return {
     data: documents,
@@ -265,25 +273,38 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   };
   let ingestionRecord: IngestionWithReports | null = null;
 
-  if (item.ingestion_record_id) {
-    const result = await supabase
-      .from("ingestion_records")
-      .select(
-        `
-        markdown,
-        metadata,
-        created_at,
-        letta_reports (
-          markdown,
-          created_at
-        )
-      `,
-      )
-      .eq("id", item.ingestion_record_id)
-      .single();
-    if (result.data) {
-      ingestionRecord = result.data as unknown as IngestionWithReports;
-    }
+  // Fetch ingestion record and metadata report in parallel
+  const [ingestionResult, metadataReportResult] = await Promise.all([
+    item.ingestion_record_id
+      ? supabase
+          .from("ingestion_records")
+          .select(
+            `
+            markdown,
+            metadata,
+            created_at,
+            letta_reports (
+              markdown,
+              created_at
+            )
+          `,
+          )
+          .eq("id", item.ingestion_record_id)
+          .single()
+      : Promise.resolve({ data: null, error: null }),
+    // Fetch the AI-generated metadata report (letta_reports type: metadata)
+    supabase
+      .from("letta_reports")
+      .select("metadata, status")
+      .eq("workflow_id", id)
+      .eq("report_type", "metadata")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  if (ingestionResult.data) {
+    ingestionRecord = ingestionResult.data as unknown as IngestionWithReports;
   }
 
   // Merge metadata
@@ -346,10 +367,16 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const { email: authorEmail, role: authorRole } =
     extractAuthorProfile(authorProfile);
 
+  // ID is required - should never be null after the data check above
+  if (!item.id) {
+    logger.error({ workflowId: id }, "Workflow found but ID is null");
+    return null;
+  }
+
   return {
     id: item.id,
     title: item.title || "Untitled",
-    date_added: dateAdded,
+    date_added: dateAdded ?? "",
     complianceStatus: (item.compliance_status as ComplianceStatus) ?? null,
     workStatus: (item.computed_work_status as WorkStatus) ?? null,
     onlineStatus: (item.computed_online_status as OnlineStatus) ?? null,
@@ -364,6 +391,37 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     sessionStartDate: item.session_start_date ?? undefined,
     qualityScore: item.quality_score ?? undefined,
     sourceSystem: item.rco_record_id ? "RCO" : "DI",
-    updated_at: item.updated_at,
+    updated_at: item.updated_at ?? "",
+    // Parse metadata report from letta_reports (type: metadata)
+    metadataReport: (() => {
+      const report = metadataReportResult.data as {
+        metadata: Record<string, unknown> | string;
+        status: string;
+      } | null;
+      if (!report || report.status !== "complete") return null;
+      let metadata = report.metadata;
+      if (typeof metadata === "string") {
+        try {
+          metadata = JSON.parse(metadata);
+        } catch {
+          return null;
+        }
+      }
+      const metadataObj = metadata as Record<string, unknown>;
+      return {
+        metadata_ri: (metadataObj.metadata_ri as Record<string, unknown>) ?? {},
+        provenance: metadataObj.provenance as
+          | {
+              key: string;
+              label: string;
+              value: string;
+              status: string;
+              source: string[];
+            }[]
+          | undefined,
+      };
+    })(),
+    authorEmail,
+    authorRole,
   };
 }
