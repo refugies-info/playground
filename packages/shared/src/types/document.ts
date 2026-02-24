@@ -14,7 +14,10 @@ export type DocumentSortField =
   | "compliance_status"
   | "work_status"
   | "online_status"
-  | "id";
+  | "id"
+  | "qualityScore"
+  | "structureName"
+  | "sessionStartDate";
 
 export interface Document {
   id: string;

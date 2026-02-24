@@ -29,7 +29,7 @@ const QualityScoreCell = ({ score }: { score: number | undefined | null }) => {
 
 export const columns: ColumnDef<Document>[] = [
   {
-    accessorKey: "complianceStatus",
+    accessorKey: "compliance_status",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Conformité" />
     ),
@@ -47,9 +47,7 @@ export const columns: ColumnDef<Document>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Score de qualité" />
     ),
-    cell: ({ row }) => (
-      <QualityScoreCell score={row.getValue("qualityScore") as number} />
-    ),
+    cell: ({ row }) => <QualityScoreCell score={row.original.qualityScore} />,
   },
   {
     accessorKey: "title",
@@ -66,7 +64,7 @@ export const columns: ColumnDef<Document>[] = [
       <DataTableColumnHeader column={column} title="Structure" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("structureName") as string | undefined;
+      const value = row.original.structureName;
       return <div className="text-sm text-gray-700">{value || "—"}</div>;
     },
   },
@@ -76,14 +74,14 @@ export const columns: ColumnDef<Document>[] = [
       <DataTableColumnHeader column={column} title="Date de début" />
     ),
     cell: ({ row }) => {
-      const dateStr = row.getValue("sessionStartDate") as string | undefined;
+      const dateStr = row.original.sessionStartDate;
       if (!dateStr) return <div className="text-gray-400">—</div>;
       const date = new Date(dateStr);
       return <div>{date.toLocaleDateString("fr-FR")}</div>;
     },
   },
   {
-    accessorKey: "onlineStatus",
+    accessorKey: "online_status",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Visibilité" />
     ),
@@ -118,7 +116,7 @@ export const columns: ColumnDef<Document>[] = [
     },
   },
   {
-    accessorKey: "workStatus",
+    accessorKey: "work_status",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Traitement" />
     ),
@@ -144,6 +142,7 @@ export const columns: ColumnDef<Document>[] = [
   },
   {
     accessorKey: "author",
+    enableSorting: false, // Author is a complex object (email + role), cannot be sorted directly
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Auteur" />
     ),
@@ -185,7 +184,7 @@ export const inProgressColumns: ColumnDef<Document>[] = [
     },
   },
   {
-    accessorKey: "complianceStatus",
+    accessorKey: "compliance_status",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Conformité" />
     ),
@@ -203,9 +202,7 @@ export const inProgressColumns: ColumnDef<Document>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Score de qualité" />
     ),
-    cell: ({ row }) => (
-      <QualityScoreCell score={row.getValue("qualityScore") as number} />
-    ),
+    cell: ({ row }) => <QualityScoreCell score={row.original.qualityScore} />,
   },
   {
     accessorKey: "title",
@@ -222,7 +219,7 @@ export const inProgressColumns: ColumnDef<Document>[] = [
       <DataTableColumnHeader column={column} title="Structure" />
     ),
     cell: ({ row }) => {
-      const value = row.getValue("structureName") as string | undefined;
+      const value = row.original.structureName;
       return <div className="text-sm text-gray-700">{value || "—"}</div>;
     },
   },
@@ -233,7 +230,7 @@ export const inProgressColumns: ColumnDef<Document>[] = [
       <DataTableColumnHeader column={column} title="Date d'import" />
     ),
     cell: ({ row }) => {
-      const date = new Date(row.getValue("date_added") as string);
+      const date = new Date(row.original.date_added);
       return <div>{date.toLocaleDateString("fr-FR")}</div>;
     },
   },

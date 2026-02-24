@@ -130,6 +130,9 @@ export async function getDocuments(params: GetDocumentsParams) {
     online_status: "computed_online_status",
     title: "title",
     id: "id",
+    qualityScore: "quality_score",
+    structureName: "structure_name",
+    sessionStartDate: "session_start_date",
   };
 
   const dbColumn = sortFieldMap[sortBy];

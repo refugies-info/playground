@@ -32,10 +32,15 @@ export default async function DocumentsPage(props: PageProps) {
     typeof searchParams.sortBy === "string" ? searchParams.sortBy : undefined;
   const validSortFields: DocumentSortField[] = [
     "title",
+    "date_added",
     "updated_at",
     "compliance_status",
     "work_status",
     "online_status",
+    "id",
+    "qualityScore",
+    "structureName",
+    "sessionStartDate",
   ];
   const sortBy =
     sortByParam && validSortFields.includes(sortByParam as DocumentSortField)
