@@ -27,10 +27,18 @@ import type { RiReferenceData } from "@/services/ri-reference-data";
 import { useDocument } from "./DocumentContext";
 import {
   MetadataProvider,
+  MultiEnumField,
   TextareaField,
   TextField,
   useMetadata,
 } from "./metadata";
+import {
+  CONDITION_OPTIONS,
+  FRENCH_LEVEL_OPTIONS,
+  PUBLIC_STATUS_OPTIONS,
+  PUBLIC_TYPE_OPTIONS,
+  TIME_SLOT_OPTIONS,
+} from "./metadata/config/metadata-config";
 
 // =============================================================================
 // Types
@@ -752,6 +760,19 @@ function MetadataTable({
               field.riKey === "logo";
             const isTextareaField = field.riKey === "abstract";
 
+            // Multi-enum fields with their options
+            const multiEnumConfigs: Record<
+              string,
+              readonly { value: string; label: string }[]
+            > = {
+              publicStatus: PUBLIC_STATUS_OPTIONS,
+              public: PUBLIC_TYPE_OPTIONS,
+              frenchLevel: FRENCH_LEVEL_OPTIONS,
+              timeSlots: TIME_SLOT_OPTIONS,
+              conditions: CONDITION_OPTIONS,
+            };
+            const isMultiEnumField = field.riKey in multiEnumConfigs;
+
             // Compute display value: editable field > custom render > default
             let displayValue: React.ReactNode = null;
 
@@ -772,6 +793,18 @@ function MetadataTable({
                   rows={2}
                 />
               );
+            } else if (isMultiEnumField) {
+              const options = multiEnumConfigs[field.riKey];
+              if (options) {
+                displayValue = (
+                  <MultiEnumField
+                    fieldKey={field.riKey}
+                    label={field.label}
+                    options={options}
+                    placeholder=""
+                  />
+                );
+              }
             } else if (field.render) {
               displayValue = field.render(rawValue, ctx);
             } else if (Array.isArray(rawValue)) {
