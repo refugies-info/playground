@@ -3,11 +3,15 @@
 import { type Document, logger } from "@playground/shared-types";
 import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { triggerDiIngestionAction } from "@/app/actions/di";
 import { AppPaginationControls } from "@/components/common/app-pagination";
+import { createClient } from "@/lib/supabase/client";
 import { inProgressColumns } from "../documents/columns";
 import { DocumentPreviewDrawer } from "./document-preview-drawer";
+
+// Duration must match the Tailwind animation duration used in getRowClassName (duration-1000)
+const HIGHLIGHT_ANIMATION_DURATION_MS = 1000;
 
 interface WorkflowClientProps {
   inProgressDocuments: Document[];
@@ -44,6 +48,82 @@ export function WorkflowClient(props: WorkflowClientProps) {
 
   // Search state
   const [searchId, setSearchId] = useState(initialSearchId || "");
+
+  // Track documents locally to detect changes for animation
+  const [documents, setDocuments] = useState(inProgressDocuments);
+  const [highlightedIds, setHighlightedIds] = useState<Set<string>>(new Set());
+  const prevDocumentsRef = useRef<Document[]>(inProgressDocuments);
+
+  // Detect document changes and trigger animations
+  useEffect(() => {
+    const prevDocs = prevDocumentsRef.current;
+    const newDocs = inProgressDocuments;
+
+    // Find IDs that changed or are new
+    const changedIds = new Set<string>();
+    const prevDocsMap = new Map(prevDocs.map((doc) => [doc.id, doc]));
+
+    for (const doc of newDocs) {
+      const prevDoc = prevDocsMap.get(doc.id);
+      if (!prevDoc) {
+        // New document
+        changedIds.add(doc.id);
+      } else if (
+        prevDoc.complianceStatus !== doc.complianceStatus ||
+        prevDoc.title !== doc.title
+      ) {
+        // Modified document
+        changedIds.add(doc.id);
+      }
+    }
+
+    if (changedIds.size > 0) {
+      setHighlightedIds(changedIds);
+      setDocuments(newDocs);
+      prevDocumentsRef.current = newDocs;
+
+      // Clear highlight after animation completes
+      const timer = setTimeout(() => {
+        setHighlightedIds(new Set());
+      }, HIGHLIGHT_ANIMATION_DURATION_MS);
+
+      return () => clearTimeout(timer);
+    } else {
+      setDocuments(newDocs);
+      prevDocumentsRef.current = newDocs;
+    }
+  }, [inProgressDocuments]);
+
+  // Supabase Realtime: refresh when workflows change
+  useEffect(() => {
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel("workflow-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "workflows",
+        },
+        () => router.refresh(),
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "workflows",
+        },
+        () => router.refresh(),
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [router]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,6 +242,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
       const result = await forceArbitrationAction(id);
 
       if (result.success) {
+        setArbitrationLoading(null);
         router.refresh();
       } else {
         setArbitrationLoading(null);
@@ -441,14 +522,19 @@ export function WorkflowClient(props: WorkflowClientProps) {
             </div>
           )}
         </div>
-        {inProgressDocuments.length > 0 ? (
+        {documents.length > 0 ? (
           <>
             <DataTable
               columns={columns}
-              data={inProgressDocuments}
+              data={documents}
               pageSize={pageSize}
               onRowClick={(row) => router.push(`/documents/${row.id}`)}
               manualPagination
+              getRowClassName={(row) =>
+                highlightedIds.has(row.id)
+                  ? "animate-highlight bg-yellow-50 transition-colors duration-1000"
+                  : undefined
+              }
             />
 
             {totalPages > 1 && (

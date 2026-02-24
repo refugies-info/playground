@@ -38,6 +38,10 @@ export async function GET(
     "compliance_status",
     "work_status",
     "online_status",
+    "id",
+    "qualityScore",
+    "structureName",
+    "sessionStartDate",
   ];
   if (!validSortFields.includes(sortByParam as DocumentSortField)) {
     return NextResponse.json(
@@ -91,10 +95,14 @@ export async function GET(
   const sortMapping: Record<DocumentSortField, keyof Document> = {
     title: "title",
     date_added: "date_added",
-    updated_at: "date_added", // Fallback or incorrect mapping? Document uses date_added. 'updated_at' is in SortField but not in Document?
+    updated_at: "updated_at",
     compliance_status: "complianceStatus",
     work_status: "workStatus",
     online_status: "onlineStatus",
+    id: "id",
+    qualityScore: "qualityScore",
+    structureName: "structureName",
+    sessionStartDate: "sessionStartDate",
   };
 
   // Apply sorting

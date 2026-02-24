@@ -34,6 +34,7 @@ interface DataTableProps<TData, TValue> {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   onSortChange?: (sortBy: string, sortOrder: "asc" | "desc") => void;
+  getRowClassName?: (row: TData) => string | undefined;
 }
 
 export function DataTable<TData, TValue>({
@@ -46,6 +47,7 @@ export function DataTable<TData, TValue>({
   sortBy,
   sortOrder,
   onSortChange,
+  getRowClassName,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>(
     sortBy && sortOrder ? [{ id: sortBy, desc: sortOrder === "desc" }] : [],
@@ -140,9 +142,12 @@ export function DataTable<TData, TValue>({
                 }
                 role={onRowClick ? "button" : undefined}
                 tabIndex={onRowClick ? 0 : undefined}
-                className={
-                  onRowClick ? "cursor-pointer hover:bg-gray-50" : undefined
-                }
+                className={[
+                  onRowClick ? "cursor-pointer hover:bg-gray-50" : undefined,
+                  getRowClassName ? getRowClassName(row.original) : undefined,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell

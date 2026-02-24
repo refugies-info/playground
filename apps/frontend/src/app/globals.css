@@ -123,6 +123,23 @@
   }
 }
 
+/* Animation for Realtime updated rows */
+@keyframes highlight-pulse {
+  0% {
+    background-color: rgb(254 249 195); /* yellow-100 */
+  }
+  50% {
+    background-color: rgb(254 240 138); /* yellow-200 */
+  }
+  100% {
+    background-color: rgb(254 249 195); /* yellow-100 */
+  }
+}
+
+.animate-highlight {
+  animation: highlight-pulse 1s ease-in-out;
+}
+
 .bn-container {
   a {
     @apply underline text-blue-800;

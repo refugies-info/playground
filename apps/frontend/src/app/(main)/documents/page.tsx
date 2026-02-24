@@ -32,10 +32,15 @@ export default async function DocumentsPage(props: PageProps) {
     typeof searchParams.sortBy === "string" ? searchParams.sortBy : undefined;
   const validSortFields: DocumentSortField[] = [
     "title",
+    "date_added",
     "updated_at",
     "compliance_status",
     "work_status",
     "online_status",
+    "id",
+    "qualityScore",
+    "structureName",
+    "sessionStartDate",
   ];
   const sortBy =
     sortByParam && validSortFields.includes(sortByParam as DocumentSortField)
@@ -56,10 +61,12 @@ export default async function DocumentsPage(props: PageProps) {
     pageSize,
     sortBy,
     sortOrder,
-    // Map 'status' query param to complianceStatus for backward compatibility or ease of use
-    complianceStatus: searchParams.status
-      ? (searchParams.status as string).split(",")
-      : undefined,
+    // Support both 'complianceStatus' (new) and 'status' (legacy) query params
+    complianceStatus: searchParams.complianceStatus
+      ? (searchParams.complianceStatus as string).split(",")
+      : searchParams.status
+        ? (searchParams.status as string).split(",")
+        : undefined,
     workStatus: searchParams.workStatus as string | undefined,
     onlineStatus: searchParams.onlineStatus as string | undefined,
     dateFrom:
@@ -74,7 +81,11 @@ export default async function DocumentsPage(props: PageProps) {
 
   const initialFilters = {
     complianceStatus:
-      typeof searchParams.status === "string" ? searchParams.status : "",
+      typeof searchParams.complianceStatus === "string"
+        ? searchParams.complianceStatus
+        : typeof searchParams.status === "string"
+          ? searchParams.status
+          : "",
     workStatus:
       typeof searchParams.workStatus === "string"
         ? searchParams.workStatus

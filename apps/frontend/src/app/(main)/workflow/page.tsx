@@ -37,7 +37,7 @@ export default async function WorkflowPage(props: PageProps) {
     page,
     pageSize,
     complianceStatus: ["pending", "error", null], // Include pending, error, and NULL (unevaluated)
-    sortBy: "updated_at",
+    sortBy: "id",
     sortOrder: "desc",
     searchId,
   });

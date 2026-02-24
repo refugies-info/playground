@@ -3,9 +3,13 @@
 import type { Document, DocumentSortField } from "@playground/shared-types";
 import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppPaginationControls } from "@/components/common/app-pagination";
+import { createClient } from "@/lib/supabase/client";
 import { columns } from "./columns";
+
+// Duration must match the Tailwind animation duration used in getRowClassName (duration-1000)
+const HIGHLIGHT_ANIMATION_DURATION_MS = 1000;
 
 interface DocumentsListProps {
   initialDocuments: Document[];
@@ -16,7 +20,7 @@ interface DocumentsListProps {
   sortBy: DocumentSortField;
   sortOrder: "asc" | "desc";
   initialFilters: {
-    status?: string; // compliance status
+    complianceStatus?: string;
     workStatus?: string;
     onlineStatus?: string;
     dateFrom: string;
@@ -39,21 +43,76 @@ export function DocumentsList({
   // but mostly we rely on URL params.
   const [filters, setFilters] = useState(initialFilters);
 
+  // Track documents locally to detect changes for animation
+  const [documents, setDocuments] = useState(initialDocuments);
+  const [highlightedIds, setHighlightedIds] = useState<Set<string>>(new Set());
+  const prevDocumentsRef = useRef<Document[]>(initialDocuments);
+
+  // Detect document changes and trigger animations
+  useEffect(() => {
+    const prevDocs = prevDocumentsRef.current;
+    const newDocs = initialDocuments;
+
+    // Find IDs that changed or are new
+    const changedIds = new Set<string>();
+
+    // Use Map for O(1) lookup instead of O(n) find in loop
+    const prevDocsMap = new Map(prevDocs.map((doc) => [doc.id, doc]));
+
+    // Check for new or modified documents
+    for (const doc of newDocs) {
+      const prevDoc = prevDocsMap.get(doc.id);
+      if (!prevDoc) {
+        // New document
+        changedIds.add(doc.id);
+      } else if (
+        prevDoc.workStatus !== doc.workStatus ||
+        prevDoc.onlineStatus !== doc.onlineStatus ||
+        prevDoc.complianceStatus !== doc.complianceStatus ||
+        prevDoc.title !== doc.title
+      ) {
+        // Modified document
+        changedIds.add(doc.id);
+      }
+    }
+
+    if (changedIds.size > 0) {
+      setHighlightedIds(changedIds);
+      setDocuments(newDocs);
+      prevDocumentsRef.current = newDocs;
+
+      // Clear highlight after animation completes
+      const timer = setTimeout(() => {
+        setHighlightedIds(new Set());
+      }, HIGHLIGHT_ANIMATION_DURATION_MS);
+
+      return () => clearTimeout(timer);
+    } else {
+      setDocuments(newDocs);
+      prevDocumentsRef.current = newDocs;
+    }
+  }, [initialDocuments]);
+
   const updateFilters = (newFilters: typeof filters) => {
     setFilters(newFilters);
-    const params = new URLSearchParams();
+    // Preserve existing URL params (sortBy, sortOrder) while updating filters
+    const params = new URLSearchParams(window.location.search);
     // Reset to page 1 when filters change
     params.set("page", "1");
 
     Object.entries(newFilters).forEach(([key, value]) => {
-      if (value) params.set(key, value);
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
     });
     router.push(`/documents?${params.toString()}`);
   };
 
   const clearFilters = () => {
     const emptyFilters = {
-      status: "",
+      complianceStatus: "",
       workStatus: "",
       onlineStatus: "",
       dateFrom: "",
@@ -62,6 +121,31 @@ export function DocumentsList({
     setFilters(emptyFilters);
     router.push("/documents");
   };
+
+  // Supabase Realtime: refresh when workflows change
+  useEffect(() => {
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel("workflows-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*", // INSERT, UPDATE, DELETE
+          schema: "public",
+          table: "workflows",
+        },
+        () => {
+          // Refresh server data when workflows change
+          router.refresh();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [router]);
 
   return (
     <div className="w-full h-full p-8 bg-gray-50 min-h-screen">
@@ -75,9 +159,12 @@ export function DocumentsList({
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div>
                 <select
-                  value={filters.status || ""}
+                  value={filters.complianceStatus || ""}
                   onChange={(e) =>
-                    updateFilters({ ...filters, status: e.target.value })
+                    updateFilters({
+                      ...filters,
+                      complianceStatus: e.target.value,
+                    })
                   }
                   className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
                 >
@@ -144,7 +231,7 @@ export function DocumentsList({
                 />
               </div>
             </div>
-            {(filters.status ||
+            {(filters.complianceStatus ||
               filters.workStatus ||
               filters.onlineStatus ||
               filters.dateFrom ||
@@ -161,7 +248,7 @@ export function DocumentsList({
         </div>
         <DataTable
           columns={columns}
-          data={initialDocuments}
+          data={documents}
           pageSize={pageSize}
           onRowClick={(row) => router.push(`/documents/${row.id}`)}
           manualPagination
@@ -176,6 +263,11 @@ export function DocumentsList({
             params.set("page", "1");
             router.push(`/documents?${params.toString()}`);
           }}
+          getRowClassName={(row) =>
+            highlightedIds.has(row.id)
+              ? "animate-highlight bg-yellow-50 transition-colors duration-1000"
+              : undefined
+          }
         />
 
         {/* Custom server-side pagination controls */}
