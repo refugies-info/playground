@@ -10,6 +10,9 @@ import { createClient } from "@/lib/supabase/client";
 import { inProgressColumns } from "../documents/columns";
 import { DocumentPreviewDrawer } from "./document-preview-drawer";
 
+// Duration must match the Tailwind animation duration used in getRowClassName (duration-1000)
+const HIGHLIGHT_ANIMATION_DURATION_MS = 1000;
+
 interface WorkflowClientProps {
   inProgressDocuments: Document[];
   totalCount: number;
@@ -79,10 +82,10 @@ export function WorkflowClient(props: WorkflowClientProps) {
       setDocuments(newDocs);
       prevDocumentsRef.current = newDocs;
 
-      // Clear highlight after animation completes (1s = animation duration)
+      // Clear highlight after animation completes
       const timer = setTimeout(() => {
         setHighlightedIds(new Set());
-      }, 1000);
+      }, HIGHLIGHT_ANIMATION_DURATION_MS);
 
       return () => clearTimeout(timer);
     } else {
