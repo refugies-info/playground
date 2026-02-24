@@ -8,13 +8,15 @@ export const revalidate = 0;
 
 interface DocumentLayoutProps {
   children: React.ReactNode;
-  params: Promise<{
+  params: {
     id: string;
-  }>;
+  };
 }
 
-export default async function Layout(props: DocumentLayoutProps) {
-  const params = await props.params;
+export default async function Layout({
+  children,
+  params,
+}: DocumentLayoutProps) {
   const { id } = params;
 
   // Fetch the document and reference data in parallel
@@ -46,7 +48,7 @@ export default async function Layout(props: DocumentLayoutProps) {
 
   return (
     <DocumentLayout documentId={id} initialData={initialData}>
-      {props.children}
+      {children}
     </DocumentLayout>
   );
 }
