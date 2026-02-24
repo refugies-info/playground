@@ -373,42 +373,28 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     return null;
   }
 
-  return {
-    id: item.id,
-    title: item.title || "Untitled",
-    date_added: dateAdded ?? "",
-    complianceStatus: (item.compliance_status as ComplianceStatus) ?? null,
-    workStatus: (item.computed_work_status as WorkStatus) ?? null,
-    onlineStatus: (item.computed_online_status as OnlineStatus) ?? null,
-    content,
-    ingestionContent,
-    complianceReport,
-    metadata,
-    publishedUrl,
-    publicationStatus: latestPublication?.status,
-    publicationRemoteId: latestPublication?.remote_id,
-    structureName: item.structure_name ?? undefined,
-    sessionStartDate: item.session_start_date ?? undefined,
-    qualityScore: item.quality_score ?? undefined,
-    sourceSystem: item.rco_record_id ? "RCO" : "DI",
-    updated_at: item.updated_at ?? "",
-    // Parse metadata report from letta_reports (type: metadata)
-    metadataReport: (() => {
-      const report = metadataReportResult.data as {
-        metadata: Record<string, unknown> | string;
-        status: string;
-      } | null;
-      if (!report || report.status !== "complete") return null;
-      let metadata = report.metadata;
-      if (typeof metadata === "string") {
-        try {
-          metadata = JSON.parse(metadata);
-        } catch {
-          return null;
-        }
+  // Extract metadata report if available and complete
+  const report = metadataReportResult.data as {
+    metadata: Record<string, unknown> | string;
+    status: string;
+  } | null;
+
+  let metadataReportValue: Document["metadataReport"] = null;
+  if (report && report.status === "complete") {
+    let metadata: Record<string, unknown> | null = report.metadata as Record<
+      string,
+      unknown
+    >;
+    if (typeof report.metadata === "string") {
+      try {
+        metadata = JSON.parse(report.metadata);
+      } catch {
+        metadata = null;
       }
+    }
+    if (metadata) {
       const metadataObj = metadata as Record<string, unknown>;
-      return {
+      metadataReportValue = {
         metadata_ri: (metadataObj.metadata_ri as Record<string, unknown>) ?? {},
         provenance: metadataObj.provenance as
           | {
@@ -420,7 +406,29 @@ export async function getDocumentById(id: string): Promise<Document | null> {
             }[]
           | undefined,
       };
-    })(),
+    }
+  }
+
+  return {
+    id: item.id,
+    title: item.title || "Untitled",
+    date_added: dateAdded ?? "",
+    complianceStatus: (item.compliance_status as ComplianceStatus) ?? null,
+    workStatus: (item.computed_work_status as WorkStatus) ?? null,
+    onlineStatus: (item.computed_online_status as OnlineStatus) ?? null,
+    content,
+    ingestionContent,
+    complianceReport,
+    metadata,
+    metadataReport: metadataReportValue,
+    publishedUrl,
+    publicationStatus: latestPublication?.status,
+    publicationRemoteId: latestPublication?.remote_id,
+    structureName: item.structure_name ?? undefined,
+    sessionStartDate: item.session_start_date ?? undefined,
+    qualityScore: item.quality_score ?? undefined,
+    sourceSystem: item.rco_record_id ? "RCO" : "DI",
+    updated_at: item.updated_at ?? "",
     authorEmail,
     authorRole,
   };
