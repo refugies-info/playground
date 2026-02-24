@@ -95,6 +95,7 @@ export async function GET(
     compliance_status: "complianceStatus",
     work_status: "workStatus",
     online_status: "onlineStatus",
+    id: "id",
   };
 
   // Apply sorting

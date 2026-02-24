@@ -13,7 +13,8 @@ export type DocumentSortField =
   | "updated_at"
   | "compliance_status"
   | "work_status"
-  | "online_status";
+  | "online_status"
+  | "id";
 
 export interface Document {
   id: string;
