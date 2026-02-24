@@ -23,12 +23,7 @@ function getAirtableTranslationTable(tableName: string) {
     return null;
   }
 
-  Airtable.configure({
-    endpointUrl: "https://api.airtable.com",
-    apiKey: token,
-  });
-
-  return Airtable.base(baseId).table(tableName);
+  return new Airtable({ apiKey: token }).base(baseId).table(tableName);
 }
 
 /**
@@ -51,22 +46,12 @@ export async function createAirtableRecord(
     return false;
   }
 
-  return new Promise((resolve) => {
-    table.create(
-      [{ fields }],
-      { typecast: true },
-      (error: Error | undefined) => {
-        if (error) {
-          logger.error(
-            { error, tableName },
-            "[Airtable] Failed to create record",
-          );
-          resolve(false);
-          return;
-        }
-        logger.info({ tableName }, "[Airtable] Record created successfully");
-        resolve(true);
-      },
-    );
-  });
+  try {
+    await table.create([{ fields }], { typecast: true });
+    logger.info({ tableName }, "[Airtable] Record created successfully");
+    return true;
+  } catch (error) {
+    logger.error({ error, tableName }, "[Airtable] Failed to create record");
+    return false;
+  }
 }
