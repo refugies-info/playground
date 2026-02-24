@@ -31,7 +31,9 @@ import {
   FrequencyField,
   MetadataProvider,
   MultiEnumField,
+  PoiField,
   PriceField,
+  SessionField,
   TextareaField,
   TextField,
   useMetadata,
@@ -340,30 +342,6 @@ const renderCommitment = (v: unknown): string | null => {
 };
 
 /**
- * Formate les périodes de session.
- * Les dates sont au format MongoDB Extended JSON (`{ $date: "ISO string" }`).
- *
- * @example [{ debut: { $date: "2026-03-01" }, fin: { $date: "2026-08-31" } }]
- *          → "Du 01/03/2026 au 31/08/2026"
- */
-const renderPeriode = (v: unknown): React.ReactNode => {
-  if (!Array.isArray(v)) return null;
-  return v.map(
-    (session: { debut?: { $date?: string }; fin?: { $date?: string } }) => {
-      const debut = session?.debut?.$date
-        ? new Date(session.debut.$date).toLocaleDateString("fr-FR")
-        : "?";
-      const fin = session?.fin?.$date
-        ? new Date(session.fin.$date).toLocaleDateString("fr-FR")
-        : "?";
-      return (
-        <div key={`${debut}-${fin}`}>
-          Du {debut} au {fin}
-        </div>
-      );
-    },
-  );
-};
 
 /**
  * Formate la tranche d'âge.
@@ -399,66 +377,6 @@ const renderAge = (v: unknown): string | null => {
     .filter(Boolean)
     .join(", ");
 };
-
-/**
- * Affiche les points d'intérêt (adresses physiques du dispositif).
- * Chaque POI affiche : titre, adresse, coordonnées GPS, et contact (email/phone en Badges).
- */
-const renderMap = (v: unknown): React.ReactNode => {
-  if (!Array.isArray(v)) return null;
-  return v.map((poi: Record<string, unknown>, idx: number) => {
-    const address = String(poi.address || "");
-    const city = String(poi.city || "");
-    const fullAddress = [address, city].filter(Boolean).join(", ");
-
-    const title = poi.title ? String(poi.title) : "";
-    const lat = poi.lat ? String(poi.lat) : "";
-    const lng = poi.lng ? String(poi.lng) : "";
-    const email = poi.email ? String(poi.email) : "";
-    const phone = poi.phone ? String(poi.phone) : "";
-
-    const poiKey =
-      [title, address, city, lat, lng].filter(Boolean).join("-") ||
-      `fallback-poi-${idx}`;
-
-    const element = (
-      <div
-        key={poiKey}
-        className="flex flex-col gap-2 mb-4 last:mb-0"
-        style={{ wordBreak: "break-word" }}
-      >
-        {title ? <strong className="text-gray-900">{title}</strong> : null}
-        {fullAddress ? (
-          <div className="text-gray-800">{fullAddress}</div>
-        ) : null}
-
-        {lat || lng ? (
-          <div className="text-gray-800">
-            {lat ? <div>lat : {lat}</div> : null}
-            {lng ? <div>lng : {lng}</div> : null}
-          </div>
-        ) : null}
-
-        {email || phone ? (
-          <div className="flex flex-wrap gap-2 mt-1">
-            {email ? (
-              <Badge size="sm" variant="info">
-                {email}
-              </Badge>
-            ) : null}
-            {phone ? (
-              <Badge size="sm" variant="info">
-                {phone}
-              </Badge>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-    );
-    return element;
-  });
-};
-
 // =============================================================================
 // Field definitions
 // =============================================================================
@@ -493,7 +411,7 @@ const METADATA_FIELDS: MetadataFieldDef[] = [
   // ── Modalités ─────────────────────────────────────────────────────────────
   { label: "Prix", riKey: "price", render: renderPrice },
   { label: "Durée totale", riKey: "commitment", render: renderCommitment },
-  { label: "Session", riKey: "periode", render: renderPeriode },
+  { label: "Session", riKey: "periode" },
   {
     label: "Jours de présence",
     riKey: "timeSlots",
@@ -505,7 +423,7 @@ const METADATA_FIELDS: MetadataFieldDef[] = [
     label: "Conditions",
     riKey: "conditions",
   },
-  { label: "Zone d'actions", riKey: "map", render: renderMap },
+  { label: "Zone d'actions", riKey: "map" },
 ];
 
 // =============================================================================
@@ -718,6 +636,8 @@ function MetadataTable({
             const isAgeField = field.riKey === "age";
             const isCommitmentField = field.riKey === "commitment";
             const isFrequencyField = field.riKey === "frequency";
+            const isSessionField = field.riKey === "periode";
+            const isPoiField = field.riKey === "map";
 
             // Compute display value: editable field > custom render > default
             let displayValue: React.ReactNode = null;
@@ -766,6 +686,14 @@ function MetadataTable({
             } else if (isFrequencyField) {
               displayValue = (
                 <FrequencyField fieldKey={field.riKey} label={field.label} />
+              );
+            } else if (isSessionField) {
+              displayValue = (
+                <SessionField fieldKey={field.riKey} label={field.label} />
+              );
+            } else if (isPoiField) {
+              displayValue = (
+                <PoiField fieldKey={field.riKey} label={field.label} />
               );
             } else if (field.render) {
               displayValue = field.render(rawValue, ctx);

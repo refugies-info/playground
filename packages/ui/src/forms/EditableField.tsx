@@ -96,6 +96,27 @@ export const EditableField = React.forwardRef<
     },
     ref,
   ) => {
+    const containerRef = React.useRef<HTMLDivElement>(null);
+
+    // Handle click outside to exit edit mode
+    React.useEffect(() => {
+      if (!isEditing) return;
+
+      const handleClickOutside = (e: MouseEvent) => {
+        if (
+          containerRef.current &&
+          !containerRef.current.contains(e.target as Node)
+        ) {
+          onExit?.();
+        }
+      };
+
+      // Use mousedown to catch clicks before they reach other elements
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }, [isEditing, onExit]);
+
     const handleBlur = React.useCallback(() => {
       onExit?.();
     }, [onExit]);
@@ -124,7 +145,7 @@ export const EditableField = React.forwardRef<
     if (isEditing) {
       return (
         <div
-          ref={ref}
+          ref={containerRef}
           className={cn(
             editableFieldVariants({ mode: "edit", isDisabled: disabled }),
             className,
@@ -138,6 +159,7 @@ export const EditableField = React.forwardRef<
     // Read mode
     return (
       <button
+        ref={ref as React.Ref<HTMLButtonElement>}
         type="button"
         onClick={handleClick}
         disabled={disabled}
