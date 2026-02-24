@@ -8,16 +8,16 @@ export const revalidate = 0;
 
 interface DocumentLayoutProps {
   children: React.ReactNode;
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function Layout({
   children,
   params,
 }: DocumentLayoutProps) {
-  const { id } = params;
+  const { id } = await params;
 
   // Fetch the document and reference data in parallel
   const [document, referenceData] = await Promise.all([
