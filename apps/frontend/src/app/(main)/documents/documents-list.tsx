@@ -53,9 +53,12 @@ export function DocumentsList({
     // Find IDs that changed or are new
     const changedIds = new Set<string>();
 
+    // Use Map for O(1) lookup instead of O(n) find in loop
+    const prevDocsMap = new Map(prevDocs.map((doc) => [doc.id, doc]));
+
     // Check for new or modified documents
     for (const doc of newDocs) {
-      const prevDoc = prevDocs.find((d) => d.id === doc.id);
+      const prevDoc = prevDocsMap.get(doc.id);
       if (!prevDoc) {
         // New document
         changedIds.add(doc.id);
