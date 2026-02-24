@@ -44,7 +44,7 @@ export function countMarkdownWords(markdown?: string): number {
   // Order matters: code blocks before inline code, images before links
   const plainText = content
     // Remove code blocks (fenced) — must come before inline code
-    .replace(/```[\s\S]*?```/g, "")
+    .replace(/(?:```|~~~)[\s\S]*?(?:```|~~~)/g, "")
     // Remove inline code
     .replace(/`([^`]*)`/g, "$1")
     // Remove images ![alt](url)

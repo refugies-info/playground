@@ -96,6 +96,17 @@ Some text after`;
     expect(countMarkdownWords(md)).toBe(6);
   });
 
+  it("should strip tilde code blocks", () => {
+    const md = `Some text before
+
+~~~python
+x = 1
+~~~
+
+Some text after`;
+    expect(countMarkdownWords(md)).toBe(6);
+  });
+
   it("should strip blockquotes", () => {
     expect(countMarkdownWords("> This is a quote")).toBe(4);
   });
