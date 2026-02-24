@@ -26,8 +26,12 @@ import { triggerForceArbitration } from "@/services/document-actions";
 import type { RiReferenceData } from "@/services/ri-reference-data";
 import { useDocument } from "./DocumentContext";
 import {
+  AgeField,
+  CommitmentField,
+  FrequencyField,
   MetadataProvider,
   MultiEnumField,
+  PriceField,
   TextareaField,
   TextField,
   useMetadata,
@@ -117,28 +121,6 @@ const truncate =
     if (typeof v !== "string") return null;
     return v.length > max ? `${v.substring(0, max)}…` : v;
   };
-
-/**
- * Factory : crée un renderer qui affiche un tableau de codes en Badges
- * avec traduction via un dictionnaire clé → label.
- * Si un code n'est pas trouvé dans le dictionnaire, il est affiché tel quel.
- *
- * @example
- * withBadgeLabels({ refugie: "Réfugiés statutaires" })(["refugie"])
- * // → <Badge>Réfugiés statutaires</Badge>
- */
-const withBadgeLabels = (labels: Record<string, string>) => (v: unknown) => {
-  if (!Array.isArray(v)) return null;
-  return (
-    <div className="flex flex-wrap gap-1">
-      {v.map((code: string) => (
-        <Badge key={code} size="sm" variant="info">
-          {labels[code] ?? code}
-        </Badge>
-      ))}
-    </div>
-  );
-};
 
 /**
  * Résout un ID unique ou un tableau d'IDs en noms lisibles via un dictionnaire.
@@ -496,39 +478,15 @@ const METADATA_FIELDS: MetadataFieldDef[] = [
   {
     label: "Public visé",
     riKey: "publicStatus",
-    render: withBadgeLabels({
-      refugie: "Réfugiés statutaires",
-      asile: "Demandeurs d'asile",
-      subsidiaire: "Protection subsidiaire",
-      temporaire: "Protection temporaire",
-      apatride: "Apatrides",
-      french: "Citoyens français",
-    }),
   },
   {
     label: "Public",
     riKey: "public",
-    render: withBadgeLabels({
-      family: "Familles et enfants",
-      women: "Femmes",
-      youths: "Jeune",
-      senior: "Séniors",
-      gender: "Minorités de genre",
-    }),
   },
   { label: "Fréquence", riKey: "frequency", render: renderFrequency },
   {
     label: "Niveau de français",
     riKey: "frenchLevel",
-    render: withBadgeLabels({
-      alpha: "Alphabétisation",
-      a1: "A1",
-      a2: "A2",
-      b1: "B1",
-      b2: "B2",
-      c1: "C1",
-      c2: "C2",
-    }),
   },
   { label: "Âge", riKey: "age", render: renderAge },
 
@@ -539,15 +497,6 @@ const METADATA_FIELDS: MetadataFieldDef[] = [
   {
     label: "Jours de présence",
     riKey: "timeSlots",
-    render: withBadgeLabels({
-      monday: "Lundi",
-      tuesday: "Mardi",
-      wednesday: "Mercredi",
-      thursday: "Jeudi",
-      friday: "Vendredi",
-      saturday: "Samedi",
-      sunday: "Dimanche",
-    }),
   },
 
   // ── Géographie ────────────────────────────────────────────────────────────
@@ -555,15 +504,6 @@ const METADATA_FIELDS: MetadataFieldDef[] = [
   {
     label: "Conditions",
     riKey: "conditions",
-    render: withBadgeLabels({
-      "acte naissance": "Avoir l'acte de naissance donné par l'OFPRA",
-      "titre sejour": "Avoir son titre de séjour ou son récépissé",
-      cir: "Avoir signé le CIR et terminé les cours OFII",
-      "bank account": "Avoir un compte bancaire",
-      "pole emploi": "Être inscrit à Pôle emploi",
-      "driver license": "Avoir son permis B",
-      school: "Avoir le niveau de fin de lycée",
-    }),
   },
   { label: "Zone d'actions", riKey: "map", render: renderMap },
 ];
@@ -773,6 +713,12 @@ function MetadataTable({
             };
             const isMultiEnumField = field.riKey in multiEnumConfigs;
 
+            // Complex fields
+            const isPriceField = field.riKey === "price";
+            const isAgeField = field.riKey === "age";
+            const isCommitmentField = field.riKey === "commitment";
+            const isFrequencyField = field.riKey === "frequency";
+
             // Compute display value: editable field > custom render > default
             let displayValue: React.ReactNode = null;
 
@@ -805,6 +751,22 @@ function MetadataTable({
                   />
                 );
               }
+            } else if (isPriceField) {
+              displayValue = (
+                <PriceField fieldKey={field.riKey} label={field.label} />
+              );
+            } else if (isAgeField) {
+              displayValue = (
+                <AgeField fieldKey={field.riKey} label={field.label} />
+              );
+            } else if (isCommitmentField) {
+              displayValue = (
+                <CommitmentField fieldKey={field.riKey} label={field.label} />
+              );
+            } else if (isFrequencyField) {
+              displayValue = (
+                <FrequencyField fieldKey={field.riKey} label={field.label} />
+              );
             } else if (field.render) {
               displayValue = field.render(rawValue, ctx);
             } else if (Array.isArray(rawValue)) {

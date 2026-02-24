@@ -1,4 +1,5 @@
 export { ComboboxInput, type ComboboxInputProps } from "./ComboboxInput";
+export { DatePicker, type DatePickerProps } from "./DatePicker";
 export * from "./date-range-picker";
 export { EditableField, type EditableFieldProps } from "./EditableField";
 export { NumberInput, type NumberInputProps } from "./NumberInput";

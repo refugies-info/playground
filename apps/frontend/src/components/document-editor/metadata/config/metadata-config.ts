@@ -114,13 +114,13 @@ export const CONDITION_OPTIONS: readonly {
   value: RiConditionType;
   label: string;
 }[] = [
-  { value: "acte naissance", label: "Acte de naissance (OFPRA)" },
-  { value: "titre sejour", label: "Titre de séjour ou récépissé" },
-  { value: "cir", label: "CIR signé (cours OFII terminés)" },
+  { value: "acte naissance", label: "Acte de naissance OFPRA" },
+  { value: "titre sejour", label: "Titre de séjour" },
+  { value: "cir", label: "CIR" },
   { value: "bank account", label: "Compte bancaire" },
-  { value: "pole emploi", label: "Inscription Pôle emploi" },
+  { value: "pole emploi", label: "France Travail" },
   { value: "driver license", label: "Permis B" },
-  { value: "school", label: "Niveau fin de lycée" },
+  { value: "school", label: "Niveau d’études" },
 ];
 
 /** Time slot options */
