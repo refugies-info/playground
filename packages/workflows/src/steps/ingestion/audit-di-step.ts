@@ -389,9 +389,13 @@ export async function forceAuditReportStep(workflowId: string) {
   const ingestionRecordId = workflow.ingestion_record_id;
 
   // Set compliance status to pending on ingestion_records (RI-1093)
+  // Include updated_at to ensure zombie reclamation works correctly
   await supabase
     .from("ingestion_records")
-    .update({ compliance_status: "pending" })
+    .update({
+      compliance_status: "pending",
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", ingestionRecordId);
 
   // 2. Fetch Ingestion Record
