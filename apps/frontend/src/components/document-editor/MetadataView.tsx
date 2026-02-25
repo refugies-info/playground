@@ -32,11 +32,13 @@ import {
   FrequencyField,
   MetadataProvider,
   MultiEnumField,
+  NeedSelectField,
   PoiField,
   PriceField,
   SessionField,
   TextareaField,
   TextField,
+  ThemeSelectField,
   useMetadata,
 } from "./metadata";
 import {
@@ -115,25 +117,6 @@ const truncate =
   };
 
 /**
- * Résout un ID unique ou un tableau d'IDs en noms lisibles via un dictionnaire.
- * Utilisé par renderThemes et renderNeeds pour convertir les ObjectIds MongoDB.
- * Fallback : retourne l'ID brut si absent du dictionnaire.
- *
- * @param val   - Un ID (string) ou un tableau d'IDs (string[])
- * @param lookup - Dictionnaire ID → nom humain
- * @returns Tableau de noms résolus
- */
-const resolveToNames = (
-  val: unknown,
-  lookup: Record<string, string>,
-): string[] => {
-  if (typeof val === "string") return [lookup[val] ?? val];
-  if (Array.isArray(val)) {
-    return val
-      .map((id) => (typeof id === "string" ? (lookup[id] ?? id) : null))
-      .filter((x): x is string => x !== null);
-  }
-  return [];
 };
 
 /**
@@ -145,58 +128,6 @@ const translateUnit = (raw: string, fallback = "heures"): string =>
   TIME_UNIT_LABELS[raw.toLowerCase()] || raw || fallback;
 
 // ── Complex renderers ───────────────────────────────────────────────────────
-
-/**
- * Fusionne le thème principal (riKey "theme") et les thèmes secondaires
- * (riKey "secondaryThemes") en une seule ligne de Badges.
- * Le thème principal porte une étiquette "thème principal" dans le badge.
- */
-const renderThemes = (v: unknown, { metadata_ri, ref }: RenderContext) => {
-  const primaryNames = resolveToNames(v, ref.themes);
-  const secondaryNames = resolveToNames(
-    metadata_ri.secondaryThemes,
-    ref.themes,
-  );
-
-  if (primaryNames.length === 0 && secondaryNames.length === 0) return null;
-
-  return (
-    <div className="flex flex-wrap gap-1">
-      {primaryNames.map((name) => (
-        <Badge key={name} size="sm" className="flex gap-1" variant="info">
-          {name}{" "}
-          <span className="bg-white text-black inline-block px-1 rounded-sm text-[10px]">
-            thème principal
-          </span>
-        </Badge>
-      ))}
-      {secondaryNames.map((name) => (
-        <Badge key={name} size="sm" variant="info">
-          {name}
-        </Badge>
-      ))}
-    </div>
-  );
-};
-
-/**
- * Résout les IDs MongoDB de besoins en noms lisibles et les affiche en Badges.
- * Les noms proviennent du lookup `ref.needs` (fetché depuis l'API RI).
- */
-const renderNeeds = (v: unknown, { ref }: RenderContext) => {
-  const names = resolveToNames(v, ref.needs);
-  if (names.length === 0) return null;
-
-  return (
-    <div className="flex flex-wrap gap-1">
-      {names.map((name) => (
-        <Badge key={name} size="sm" variant="info">
-          {name}
-        </Badge>
-      ))}
-    </div>
-  );
-};
 
 /**
  * Formate le prix à partir de la structure de l'agent IA.
@@ -379,8 +310,8 @@ const METADATA_FIELDS: MetadataFieldDef[] = [
   { label: "En bref", riKey: "abstract", render: truncate(50) },
 
   // ── Classification ────────────────────────────────────────────────────────
-  { label: "Thèmes", riKey: "theme", render: renderThemes },
-  { label: "Besoins", riKey: "needs", render: renderNeeds },
+  { label: "Thèmes", riKey: "theme" },
+  { label: "Besoins", riKey: "needs" },
 
   // ── Public ────────────────────────────────────────────────────────────────
   {
@@ -558,7 +489,8 @@ function MetadataTable({
   diMetadata: Record<string, unknown>;
   ref: RiReferenceData;
 }) {
-  const { getFieldStatus } = useMetadata();
+  const { getFieldStatus, getFieldValue } = useMetadata();
+  const [showDebug, setShowDebug] = useState(false);
 
   if (!report) return null;
 
@@ -629,6 +561,8 @@ function MetadataTable({
             const isSessionField = field.riKey === "periode";
             const isPoiField = field.riKey === "map";
             const isDepartmentField = field.riKey === "location";
+            const isThemeField = field.riKey === "theme";
+            const isNeedField = field.riKey === "needs";
 
             // Compute display value: editable field > custom render > default
             let displayValue: React.ReactNode = null;
@@ -690,6 +624,10 @@ function MetadataTable({
               displayValue = (
                 <DepartmentField fieldKey={field.riKey} label={field.label} />
               );
+            } else if (isThemeField) {
+              displayValue = <ThemeSelectField fieldKey={field.riKey} />;
+            } else if (isNeedField) {
+              displayValue = <NeedSelectField fieldKey={field.riKey} />;
             } else if (field.render) {
               displayValue = field.render(rawValue, ctx);
             } else if (Array.isArray(rawValue)) {

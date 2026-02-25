@@ -1,7 +1,7 @@
 "use client";
 
 import { EditableField, NumberInput, SelectInput } from "@playground/ui";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 
 /**
@@ -45,11 +45,12 @@ export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
     | { amountDetails?: string; hours?: number[]; timeUnit?: string }
     | undefined;
 
+  // Memoize values to avoid infinite loops
   const amountDetails = value?.amountDetails;
-  const hours = value?.hours ?? [];
+  const hours = useMemo(() => value?.hours ?? [], [value?.hours]);
   const timeUnit = value?.timeUnit;
 
-  // Local state for editing
+  // Local state for editing - initialized on first render
   const [localAmountDetails, setLocalAmountDetails] = useState(
     amountDetails ?? "exactly",
   );
@@ -58,14 +59,13 @@ export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
   );
   const [localTimeUnit, setLocalTimeUnit] = useState(timeUnit ?? "hours");
 
-  // Sync local state when original values change (but not while editing)
-  useEffect(() => {
-    if (!isEditing) {
-      setLocalAmountDetails(amountDetails ?? "exactly");
-      setLocalHours(hours.length > 0 ? hours : [0]);
-      setLocalTimeUnit(timeUnit ?? "hours");
-    }
-  }, [amountDetails, hours, timeUnit, isEditing]);
+  // Sync local state when entering edit mode
+  const handleEdit = useCallback(() => {
+    setLocalAmountDetails(amountDetails ?? "exactly");
+    setLocalHours(hours.length > 0 ? hours : [0]);
+    setLocalTimeUnit(timeUnit ?? "hours");
+    setIsEditing(true);
+  }, [amountDetails, hours, timeUnit]);
 
   // Format display value
   const detailsLabel =
@@ -83,28 +83,30 @@ export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
   // Handle local hours change
   const handleHoursChange = useCallback(
     (index: number, newHours: number | null) => {
-      const newHoursArr = [...localHours];
-      newHoursArr[index] = newHours ?? 0;
-      if (localAmountDetails === "between" && newHoursArr.length < 2) {
-        newHoursArr.push(0);
-      }
-      setLocalHours(newHoursArr);
+      setLocalHours((prev) => {
+        const newHoursArr = [...prev];
+        newHoursArr[index] = newHours ?? 0;
+        if (localAmountDetails === "between" && newHoursArr.length < 2) {
+          newHoursArr.push(0);
+        }
+        return newHoursArr;
+      });
     },
-    [localHours, localAmountDetails],
+    [localAmountDetails],
   );
 
   // Handle type change
-  const handleDetailsChange = useCallback(
-    (newDetails: string) => {
-      setLocalAmountDetails(newDetails);
-      if (newDetails === "between" && localHours.length < 2) {
-        setLocalHours([...localHours, 0]);
-      } else if (newDetails !== "between" && localHours.length > 1) {
-        setLocalHours([localHours[0] ?? 0]);
+  const handleDetailsChange = useCallback((newDetails: string) => {
+    setLocalAmountDetails(newDetails);
+    setLocalHours((prev) => {
+      if (newDetails === "between" && prev.length < 2) {
+        return [...prev, 0];
+      } else if (newDetails !== "between" && prev.length > 1) {
+        return [prev[0] ?? 0];
       }
-    },
-    [localHours],
-  );
+      return prev;
+    });
+  }, []);
 
   // Save on exit
   const handleExit = useCallback(() => {
@@ -121,7 +123,7 @@ export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
   return (
     <EditableField
       isEditing={isEditing}
-      onEdit={() => setIsEditing(true)}
+      onEdit={handleEdit}
       onExit={handleExit}
       placeholder="Cliquer pour modifier"
       renderEdit={() => (

@@ -3,11 +3,13 @@ export { CommitmentField } from "./fields/CommitmentField";
 export { DepartmentField } from "./fields/DepartmentField";
 export { FrequencyField } from "./fields/FrequencyField";
 export { MultiEnumField } from "./fields/MultiEnumField";
+export { NeedSelectField } from "./fields/NeedSelectField";
 export { PoiField } from "./fields/PoiField";
 export { PriceField } from "./fields/PriceField";
 export { SessionField } from "./fields/SessionField";
 export { TextareaField } from "./fields/TextareaField";
 export { TextField } from "./fields/TextField";
+export { ThemeSelectField } from "./fields/ThemeSelectField";
 export {
   type MetadataFieldStatus,
   MetadataProvider,

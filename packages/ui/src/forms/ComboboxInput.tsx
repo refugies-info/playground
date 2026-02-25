@@ -47,6 +47,9 @@ export interface ComboboxInputProps
   /** Whether the field is disabled */
   disabled?: boolean;
 
+  /** Label to display on the first badge (e.g., "thème principal") */
+  firstBadgeLabel?: string;
+
   /** Additional class names */
   className?: string;
 }
@@ -84,6 +87,7 @@ export function ComboboxInput({
   error,
   disabled = false,
   variant = "default",
+  firstBadgeLabel,
   className,
 }: ComboboxInputProps) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -159,7 +163,7 @@ export function ComboboxInput({
           variant === "default" && "rounded-md",
         )}
       >
-        {value.map((val) => (
+        {value.map((val, index) => (
           <Badge
             key={val}
             variant="info"
@@ -167,6 +171,11 @@ export function ComboboxInput({
             className="gap-1 items-center"
           >
             {getLabel(val)}
+            {firstBadgeLabel && index === 0 && (
+              <span className="bg-white text-black inline-block px-1 rounded-sm text-[10px]">
+                {firstBadgeLabel}
+              </span>
+            )}
             <button
               type="button"
               onClick={(e) => {
