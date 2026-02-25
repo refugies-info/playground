@@ -205,6 +205,7 @@ export type Database = {
       }
       ingestion_records: {
         Row: {
+          compliance_status: string | null
           created_at: string
           di_service_id: string | null
           di_structure_id: string | null
@@ -218,6 +219,7 @@ export type Database = {
           version: number | null
         }
         Insert: {
+          compliance_status?: string | null
           created_at?: string
           di_service_id?: string | null
           di_structure_id?: string | null
@@ -231,6 +233,7 @@ export type Database = {
           version?: number | null
         }
         Update: {
+          compliance_status?: string | null
           created_at?: string
           di_service_id?: string | null
           di_structure_id?: string | null
@@ -655,7 +658,6 @@ export type Database = {
       }
       workflows: {
         Row: {
-          compliance_status: string | null
           conversation_id: string | null
           created_at: string
           editorial_record_id: string | null
@@ -667,7 +669,6 @@ export type Database = {
           vercel_workflow_id: string | null
         }
         Insert: {
-          compliance_status?: string | null
           conversation_id?: string | null
           created_at?: string
           editorial_record_id?: string | null
@@ -679,7 +680,6 @@ export type Database = {
           vercel_workflow_id?: string | null
         }
         Update: {
-          compliance_status?: string | null
           conversation_id?: string | null
           created_at?: string
           editorial_record_id?: string | null
