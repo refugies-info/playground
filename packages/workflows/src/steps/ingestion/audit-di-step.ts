@@ -461,11 +461,11 @@ export async function forceAuditReportStep(workflowId: string) {
 
     // Update workflow with final status from report
     // If status is 'incomplete', we force 'error' in DB to avoid stuck 'pending'
-    // Otherwise, we use the business status from metadata
+    // Otherwise, compliant iff compliant=true AND duplicate=false (RI-1117)
     const finalComplianceStatus =
       parsed.status === "incomplete"
         ? "error"
-        : parsed.metadata.compliant
+        : parsed.metadata.compliant && !parsed.metadata.duplicate
           ? "compliant"
           : "non_compliant";
 
