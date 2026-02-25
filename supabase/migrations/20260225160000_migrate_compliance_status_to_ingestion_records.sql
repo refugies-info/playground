@@ -199,5 +199,20 @@ COMMENT ON VIEW workflows_enriched IS
     'Enriched view of workflows combining computed statuses, presentation metadata, and publication info.
      Designed for list views and filtering operations.';
 
--- Step 6: Drop compliance_status from workflows table
+-- Step 6: Update handle_new_ingestion_record trigger to remove compliance_status reference
+CREATE OR REPLACE FUNCTION public.handle_new_ingestion_record()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  -- Create a workflow entry for the new ingestion record
+  INSERT INTO public.workflows (ingestion_record_id)
+  VALUES (NEW.id);
+  RETURN NEW;
+END;
+$$;
+
+-- Step 7: Drop compliance_status from workflows table
 ALTER TABLE public.workflows DROP COLUMN compliance_status;
