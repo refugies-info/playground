@@ -4,6 +4,7 @@ import { logger, validateField } from "@playground/shared-types";
 import { createSupabaseServerClient, type Json } from "@playground/supabase";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { verifyWorkflowPermission } from "./permission-helper";
 
 /**
  * Save a single metadata field to the editorial_records table.
@@ -44,7 +45,26 @@ export async function saveMetadataFieldAction(
     return { success: false, error: "Utilisateur non authentifié" };
   }
 
-  // 4. Get editorial_record_id from workflows
+  // 4. Verify permission
+  const hasPermission = await verifyWorkflowPermission(
+    supabase,
+    workflowId,
+    user.id,
+    user.user_metadata?.role,
+  );
+
+  if (!hasPermission) {
+    logger.warn(
+      { userId: user.id, workflowId },
+      "Unauthorized attempt to modify metadata",
+    );
+    return {
+      success: false,
+      error: "Vous n'avez pas la permission de modifier ce document",
+    };
+  }
+
+  // 5. Get editorial_record_id from workflows
   const { data: workflow, error: workflowError } = await supabase
     .from("workflows")
     .select("editorial_record_id, ingestion_record_id")
@@ -161,7 +181,26 @@ export async function saveMetadataFieldsAction(
     return { success: false, error: "Utilisateur non authentifié" };
   }
 
-  // 4. Get editorial_record_id from workflows
+  // 4. Verify permission
+  const hasPermission = await verifyWorkflowPermission(
+    supabase,
+    workflowId,
+    user.id,
+    user.user_metadata?.role,
+  );
+
+  if (!hasPermission) {
+    logger.warn(
+      { userId: user.id, workflowId },
+      "Unauthorized attempt to modify metadata",
+    );
+    return {
+      success: false,
+      error: "Vous n'avez pas la permission de modifier ce document",
+    };
+  }
+
+  // 5. Get editorial_record_id from workflows
   const { data: workflow, error: workflowError } = await supabase
     .from("workflows")
     .select("editorial_record_id, ingestion_record_id")
