@@ -314,6 +314,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   // Merge metadata
   const ingestionMetadata = (item.ingestion_metadata as Metadata) || {};
   const editorialMetadata = (item.editorial_metadata as Metadata) || {};
+
   const metadata: Metadata = {
     ...ingestionMetadata,
     ...editorialMetadata,

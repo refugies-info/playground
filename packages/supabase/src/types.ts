@@ -849,6 +849,15 @@ export type Database = {
       }
       get_my_language: { Args: never; Returns: string }
       get_my_role: { Args: never; Returns: string }
+      update_metadata_field: {
+        Args: {
+          delete_key?: boolean
+          field_key: string
+          field_value: Json
+          record_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

@@ -40,7 +40,8 @@ export default async function Layout({
     editorialContent: document.content, // Current working version (editorial or ingestion)
     ingestionContent: document.ingestionContent, // Immutable original from ingestion_records
     complianceReport: document.complianceReport,
-    metadata: document.metadata, // Include metadata from ingestion_records
+    metadata: document.metadata, // Merged metadata (ingestion + editorial)
+    editorialMetadata: document.editorialMetadata, // Editorial overrides only
     metadataReport: document.metadataReport, // AI-generated metadata report
     referenceData, // Themes & needs ID→name lookups from RI
     publishedUrl: document.publishedUrl,

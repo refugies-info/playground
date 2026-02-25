@@ -24,10 +24,17 @@ export function MetadataRow({
   provenanceByKey,
   diMetadata,
 }: MetadataRowProps) {
-  const { getFieldStatus, getFieldError, dirtyFields, resetField, clearField } =
-    useMetadata();
+  const {
+    mergedMetadata,
+    getFieldStatus,
+    getFieldError,
+    dirtyFields,
+    resetField,
+    clearField,
+  } = useMetadata();
 
-  const rawValue = metadata_ri[field.riKey];
+  const rawValue = metadata_ri[field.riKey]; // Original value from letta_report
+  const mergedValue = mergedMetadata[field.riKey]; // Merged value (with overrides)
   const prov = provenanceByKey.get(field.riKey);
   const fieldStatus = getFieldStatus(field.riKey);
   const fieldError = getFieldError(field.riKey);
@@ -73,7 +80,7 @@ export function MetadataRow({
           </div>
         )}
       </td>
-      <td className="px-6 py-4">{getDisplayComponent(field, rawValue)}</td>
+      <td className="px-6 py-4">{getDisplayComponent(field, mergedValue)}</td>
       <td className="px-6 py-4">
         <SourceDisplay source={prov?.source} diMetadata={diMetadata} />
       </td>

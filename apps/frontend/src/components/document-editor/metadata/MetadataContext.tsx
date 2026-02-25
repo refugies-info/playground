@@ -47,7 +47,8 @@ type MetadataAction =
   | { type: "SET_ERROR"; key: string; error: string }
   | { type: "CLEAR_ERROR"; key: string }
   | { type: "REVERT_FIELD"; key: string }
-  | { type: "CLEAR_FIELD"; key: string };
+  | { type: "CLEAR_FIELD"; key: string }
+  | { type: "SET_OVERRIDES"; overrides: Record<string, unknown> };
 
 const initialState: MetadataState = {
   overrides: {},
@@ -109,6 +110,15 @@ function metadataReducer(
       const newOverrides = { ...state.overrides };
       newOverrides[action.key] = null;
       return { ...state, overrides: newOverrides };
+    }
+
+    case "SET_OVERRIDES": {
+      // Replace all overrides (used when document loads)
+      return {
+        ...state,
+        overrides: action.overrides,
+        fieldErrors: new Map(), // Clear errors on reset
+      };
     }
 
     default:
@@ -180,10 +190,10 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     [document?.metadataReport?.metadata_ri],
   );
 
-  // Get existing editorial overrides from document.metadata (memoized)
+  // Get existing editorial overrides from document.editorialMetadata (memoized)
   const existingOverrides = useMemo(
-    () => (document?.metadata as Record<string, unknown>) ?? {},
-    [document?.metadata],
+    () => (document?.editorialMetadata as Record<string, unknown>) ?? {},
+    [document?.editorialMetadata],
   );
 
   // Initialize state with existing overrides
@@ -191,6 +201,20 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     ...initialState,
     overrides: existingOverrides,
   });
+
+  // Sync state when document editorialMetadata changes (e.g., after async load)
+  useEffect(() => {
+    if (
+      document?.editorialMetadata &&
+      Object.keys(document.editorialMetadata).length > 0
+    ) {
+      // Reset state with new overrides
+      dispatch({
+        type: "SET_OVERRIDES",
+        overrides: document.editorialMetadata as Record<string, unknown>,
+      });
+    }
+  }, [document?.editorialMetadata]);
 
   // Compute merged metadata
   const mergedMetadata = useMemo(
