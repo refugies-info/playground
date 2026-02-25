@@ -297,6 +297,26 @@ export async function generateDiAuditReportsStep(runId: string) {
           `Failed to link ingestion_report to ingestion_record: ${updateError.message}`,
         );
       }
+
+      // Set compliance_status directly — compliant iff complete + not duplicate (RI-1117)
+      const complianceStatus =
+        parsed.status !== "complete"
+          ? "error"
+          : parsed.metadata.compliant && !parsed.metadata.duplicate
+            ? "compliant"
+            : "non_compliant";
+
+      const { error: complianceError } = await supabase
+        .from("workflows")
+        .update({ compliance_status: complianceStatus })
+        .eq("id", target.workflow_id);
+
+      if (complianceError) {
+        logger.error(
+          { error: complianceError, workflowId: target.workflow_id },
+          "Failed to update workflow compliance status",
+        );
+      }
     }),
     AUDIT_CONCURRENCY,
   );
@@ -459,13 +479,11 @@ export async function forceAuditReportStep(workflowId: string) {
       );
     }
 
-    // Update workflow with final status from report
-    // If status is 'incomplete', we force 'error' in DB to avoid stuck 'pending'
-    // Otherwise, we use the business status from metadata
+    // Set compliance_status — compliant iff complete + not duplicate (RI-1117)
     const finalComplianceStatus =
-      parsed.status === "incomplete"
+      parsed.status !== "complete"
         ? "error"
-        : parsed.metadata.compliant
+        : parsed.metadata.compliant && !parsed.metadata.duplicate
           ? "compliant"
           : "non_compliant";
 
