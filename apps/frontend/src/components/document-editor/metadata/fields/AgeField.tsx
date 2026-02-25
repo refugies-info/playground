@@ -24,10 +24,6 @@ const AGE_TYPE_OPTIONS = [
 
 /**
  * AgeField — An editable age range field for metadata.
- *
- * @description
- * Displays age with type selector and one or two age inputs.
- * Read mode shows formatted text, click to edit.
  */
 export function AgeField({ fieldKey, label }: AgeFieldProps) {
   const { getFieldValue, updateField } = useMetadata();
@@ -37,51 +33,77 @@ export function AgeField({ fieldKey, label }: AgeFieldProps) {
     | { type?: string; ages?: number[] }
     | undefined;
 
-  const type = value?.type ?? "between";
-  const ages = value?.ages ?? [18, 65];
+  const type = value?.type;
+  const ages = value?.ages ?? [];
 
-  const handleTypeChange = useCallback(
-    (newType: string) => {
-      let newAges = ages;
-      if (newType === "between" && ages.length < 2) {
-        newAges = [ages[0] ?? 18, 65];
-      } else if (newType !== "between" && ages.length > 1) {
-        newAges = [ages[0] ?? 18];
-      }
-      updateField(fieldKey, { type: newType, ages: newAges });
-    },
-    [fieldKey, ages, updateField],
+  // Local state for editing
+  const [localType, setLocalType] = useState(type ?? "between");
+  const [localAges, setLocalAges] = useState<number[]>(
+    ages.length > 0 ? ages : [0],
   );
 
-  const handleAgeChange = useCallback(
-    (index: number, newAge: number | null) => {
-      const newAges = [...ages];
-      newAges[index] = newAge ?? 0;
-      updateField(fieldKey, { type, ages: newAges });
-    },
-    [fieldKey, type, ages, updateField],
-  );
+  // Sync local state when entering edit mode
+  const handleEdit = useCallback(() => {
+    setLocalType(type ?? "between");
+    setLocalAges(ages.length > 0 ? ages : [0]);
+    setIsEditing(true);
+  }, [type, ages]);
+
+  const handleExit = useCallback(() => {
+    setIsEditing(false);
+    if (localAges.length > 0 && localAges[0] !== undefined) {
+      updateField(fieldKey, { type: localType, ages: localAges });
+    }
+  }, [fieldKey, updateField, localType, localAges]);
 
   // Format display value
   const typeLabel =
     AGE_TYPE_OPTIONS.find((o) => o.value === type)?.label ?? type;
   const displayValue =
-    type === "between"
-      ? `${typeLabel} ${ages[0] ?? 18} et ${ages[1] ?? 65} ans`
-      : `${typeLabel} ${ages[0] ?? 18} ans`;
+    ages.length === 0
+      ? null
+      : type === "between" && ages.length >= 2
+        ? `${typeLabel} ${ages[0]} et ${ages[1]} ans`
+        : `${typeLabel} ${ages[0]} ans`;
+
+  // Handle local age change
+  const handleAgeChange = useCallback(
+    (index: number, newAge: number | null) => {
+      const newAges = [...localAges];
+      newAges[index] = newAge ?? 0;
+      if (localType === "between" && newAges.length < 2) {
+        newAges.push(0);
+      }
+      setLocalAges(newAges);
+    },
+    [localAges, localType],
+  );
+
+  // Handle type change
+  const handleTypeChange = useCallback(
+    (newType: string) => {
+      setLocalType(newType);
+      if (newType === "between" && localAges.length < 2) {
+        setLocalAges([localAges[0] ?? 0, 0]);
+      } else if (newType !== "between" && localAges.length > 1) {
+        setLocalAges([localAges[0] ?? 0]);
+      }
+    },
+    [localAges],
+  );
 
   return (
     <EditableField
       isEditing={isEditing}
-      onEdit={() => setIsEditing(true)}
-      onExit={() => setIsEditing(false)}
+      onEdit={handleEdit}
+      onExit={handleExit}
       placeholder="Cliquer pour modifier"
       renderEdit={() => (
         <div className="flex flex-wrap items-center gap-2 p-1">
           <SelectInput
             variant="inline"
             options={AGE_TYPE_OPTIONS}
-            value={type}
+            value={localType}
             onChange={handleTypeChange}
             className="w-24"
             aria-label={`${label} - type`}
@@ -89,7 +111,7 @@ export function AgeField({ fieldKey, label }: AgeFieldProps) {
 
           <NumberInput
             variant="inline"
-            value={ages[0] ?? 18}
+            value={localAges[0] ?? null}
             onChange={(val) => handleAgeChange(0, val)}
             min={0}
             max={150}
@@ -97,12 +119,12 @@ export function AgeField({ fieldKey, label }: AgeFieldProps) {
             aria-label={`${label} - âge`}
           />
 
-          {type === "between" && (
+          {localType === "between" && (
             <>
               <span className="text-xs text-gray-500">et</span>
               <NumberInput
                 variant="inline"
-                value={ages[1] ?? 65}
+                value={localAges[1] ?? null}
                 onChange={(val) => handleAgeChange(1, val)}
                 min={0}
                 max={150}

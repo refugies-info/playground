@@ -1,7 +1,7 @@
 "use client";
 
 import { EditableField, NumberInput, SelectInput } from "@playground/ui";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PRICE_DETAILS_OPTIONS } from "../config/metadata-config";
 import { useMetadata } from "../MetadataContext";
 
@@ -24,14 +24,6 @@ interface PriceFieldProps {
 
 /**
  * PriceField — An editable price field for metadata.
- *
- * @description
- * Displays price with:
- * - Free/Paid selector
- * - Amount input (when paid)
- * - Period selector (per month, per year, etc.)
- *
- * Read mode shows formatted text, click to edit.
  */
 export function PriceField({ fieldKey, label }: PriceFieldProps) {
   const { getFieldValue, updateField } = useMetadata();
@@ -42,78 +34,75 @@ export function PriceField({ fieldKey, label }: PriceFieldProps) {
     | undefined;
 
   const isFree = !value?.values?.[0] || value.values[0] === 0;
-  const amount = value?.values?.[0] ?? 0;
-  const period = value?.details ?? "month";
+  const amount = value?.values?.[0];
+  const period = value?.details;
 
-  const handleTypeChange = useCallback(
-    (newType: string) => {
-      if (newType === "free") {
-        updateField(fieldKey, { values: [0] });
-      } else {
-        updateField(fieldKey, { values: [50], details: "month" });
-      }
-    },
-    [fieldKey, updateField],
-  );
+  // Local state for editing
+  const [localIsFree, setLocalIsFree] = useState(isFree);
+  const [localAmount, setLocalAmount] = useState<number | null>(amount ?? null);
+  const [localPeriod, setLocalPeriod] = useState(period ?? "month");
 
-  const handleAmountChange = useCallback(
-    (newAmount: number | null) => {
-      updateField(fieldKey, {
-        ...value,
-        values: [newAmount ?? 0],
-      });
-    },
-    [fieldKey, value, updateField],
-  );
-
-  const handlePeriodChange = useCallback(
-    (newPeriod: string) => {
-      updateField(fieldKey, {
-        ...value,
-        details: newPeriod,
-      });
-    },
-    [fieldKey, value, updateField],
-  );
+  // Sync local state when original values change (but not while editing)
+  useEffect(() => {
+    if (!isEditing) {
+      setLocalIsFree(isFree);
+      setLocalAmount(amount ?? null);
+      setLocalPeriod(period ?? "month");
+    }
+  }, [isFree, amount, period, isEditing]);
 
   // Format display value
-  const displayValue = isFree
-    ? "Gratuit"
-    : `${amount} € par ${PRICE_DETAILS_OPTIONS.find((o) => o.value === period)?.label ?? period}`;
+  const displayValue = !value
+    ? null
+    : isFree
+      ? "Gratuit"
+      : amount !== undefined
+        ? `${amount} € par ${PRICE_DETAILS_OPTIONS.find((o) => o.value === period)?.label ?? period}`
+        : null;
+
+  // Save on exit
+  const handleExit = useCallback(() => {
+    setIsEditing(false);
+    if (localIsFree) {
+      updateField(fieldKey, { values: [0] });
+    } else if (localAmount !== null) {
+      updateField(fieldKey, { values: [localAmount], details: localPeriod });
+    }
+  }, [fieldKey, updateField, localIsFree, localAmount, localPeriod]);
 
   return (
     <EditableField
       isEditing={isEditing}
       onEdit={() => setIsEditing(true)}
-      onExit={() => setIsEditing(false)}
+      onExit={handleExit}
       placeholder="Cliquer pour modifier"
       renderEdit={() => (
         <div className="flex flex-wrap items-center gap-2 p-1">
           <SelectInput
             variant="inline"
             options={PRICE_TYPE_OPTIONS}
-            value={isFree ? "free" : "paid"}
-            onChange={handleTypeChange}
+            value={localIsFree ? "free" : "paid"}
+            onChange={(val) => setLocalIsFree(val === "free")}
             className="w-24"
             aria-label={`${label} - type`}
           />
 
-          {!isFree && (
+          {!localIsFree && (
             <>
               <NumberInput
                 variant="inline"
-                value={amount}
-                onChange={handleAmountChange}
+                value={localAmount}
+                onChange={setLocalAmount}
                 min={0}
                 className="w-16"
                 aria-label={`${label} - montant`}
               />
-              <span className="text-xs text-gray-500">€ </span>
+              <span className="text-xs text-gray-500">€ par</span>
               <SelectInput
                 variant="inline"
                 options={PRICE_DETAILS_OPTIONS}
-                value={period}
-                onChange={handlePeriodChange}
+                value={localPeriod}
+                onChange={setLocalPeriod}
                 className="w-24"
                 aria-label={`${label} - période`}
               />

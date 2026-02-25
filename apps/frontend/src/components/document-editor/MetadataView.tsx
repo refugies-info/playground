@@ -28,6 +28,7 @@ import { useDocument } from "./DocumentContext";
 import {
   AgeField,
   CommitmentField,
+  DepartmentField,
   FrequencyField,
   MetadataProvider,
   MultiEnumField,
@@ -101,17 +102,6 @@ const TIME_UNIT_LABELS: Record<string, string> = {
 // =============================================================================
 // Reusable renderers
 // =============================================================================
-
-/**
- * Affiche un tableau ou une chaîne en texte brut séparé par des virgules.
- * @example joinArrayOrString(["a", "b"]) → "a, b"
- * @example joinArrayOrString("hello") → "hello"
- */
-const joinArrayOrString = (v: unknown): string | null => {
-  if (Array.isArray(v)) return v.join(", ");
-  if (typeof v === "string") return v;
-  return null;
-};
 
 /**
  * Factory : crée un renderer qui tronque une chaîne à `max` caractères.
@@ -418,7 +408,7 @@ const METADATA_FIELDS: MetadataFieldDef[] = [
   },
 
   // ── Géographie ────────────────────────────────────────────────────────────
-  { label: "Départements", riKey: "location", render: joinArrayOrString },
+  { label: "Départements", riKey: "location" },
   {
     label: "Conditions",
     riKey: "conditions",
@@ -638,6 +628,7 @@ function MetadataTable({
             const isFrequencyField = field.riKey === "frequency";
             const isSessionField = field.riKey === "periode";
             const isPoiField = field.riKey === "map";
+            const isDepartmentField = field.riKey === "location";
 
             // Compute display value: editable field > custom render > default
             let displayValue: React.ReactNode = null;
@@ -694,6 +685,10 @@ function MetadataTable({
             } else if (isPoiField) {
               displayValue = (
                 <PoiField fieldKey={field.riKey} label={field.label} />
+              );
+            } else if (isDepartmentField) {
+              displayValue = (
+                <DepartmentField fieldKey={field.riKey} label={field.label} />
               );
             } else if (field.render) {
               displayValue = field.render(rawValue, ctx);

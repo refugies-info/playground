@@ -1,7 +1,7 @@
 "use client";
 
 import { EditableField, NumberInput, SelectInput } from "@playground/ui";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 
 /**
@@ -43,76 +43,61 @@ const FREQUENCY_UNIT_OPTIONS = [
 
 /**
  * FrequencyField — An editable frequency field for metadata.
- *
- * @description
- * Displays frequency with details type, hours amount, time unit, and frequency unit.
- * Read mode shows formatted text, click to edit.
  */
 export function FrequencyField({ fieldKey, label }: FrequencyFieldProps) {
   const { getFieldValue, updateField } = useMetadata();
   const [isEditing, setIsEditing] = useState(false);
 
-  const value = getFieldValue(fieldKey) as
-    | {
-        amountDetails?: string;
-        hours?: number;
-        timeUnit?: string;
-        frequencyUnit?: string;
-      }
-    | undefined;
+  const rawValue = getFieldValue(fieldKey);
 
-  const amountDetails = value?.amountDetails ?? "exactly";
-  const hours = value?.hours ?? 12;
-  const timeUnit = value?.timeUnit ?? "hours";
-  const frequencyUnit = value?.frequencyUnit ?? "week";
+  // Data can be an array or a single object
+  const value = Array.isArray(rawValue) ? rawValue[0] : rawValue;
 
-  const handleDetailsChange = useCallback(
-    (newDetails: string) => {
-      updateField(fieldKey, {
-        amountDetails: newDetails,
-        hours,
-        timeUnit,
-        frequencyUnit,
-      });
-    },
-    [fieldKey, hours, timeUnit, frequencyUnit, updateField],
+  const amountDetails = value?.amountDetails;
+  const hoursArray = Array.isArray(value?.hours) ? value.hours : [];
+  const hours = hoursArray[0];
+  const timeUnit = value?.timeUnit;
+  const frequencyUnit = value?.frequencyUnit;
+
+  // Local state for editing
+  const [localAmountDetails, setLocalAmountDetails] = useState(
+    amountDetails ?? "exactly",
+  );
+  const [localHours, setLocalHours] = useState<number | null>(hours ?? null);
+  const [localTimeUnit, setLocalTimeUnit] = useState(timeUnit ?? "hours");
+  const [localFrequencyUnit, setLocalFrequencyUnit] = useState(
+    frequencyUnit ?? "week",
   );
 
-  const handleHoursChange = useCallback(
-    (newHours: number | null) => {
-      updateField(fieldKey, {
-        amountDetails,
-        hours: newHours ?? 0,
-        timeUnit,
-        frequencyUnit,
-      });
-    },
-    [fieldKey, amountDetails, timeUnit, frequencyUnit, updateField],
-  );
+  // Sync local state when original values change (but not while editing)
+  useEffect(() => {
+    if (!isEditing) {
+      setLocalAmountDetails(amountDetails ?? "exactly");
+      setLocalHours(hours ?? null);
+      setLocalTimeUnit(timeUnit ?? "hours");
+      setLocalFrequencyUnit(frequencyUnit ?? "week");
+    }
+  }, [amountDetails, hours, timeUnit, frequencyUnit, isEditing]);
 
-  const handleTimeUnitChange = useCallback(
-    (newUnit: string) => {
+  // Save on exit
+  const handleExit = useCallback(() => {
+    setIsEditing(false);
+    if (localHours !== null) {
       updateField(fieldKey, {
-        amountDetails,
-        hours,
-        timeUnit: newUnit,
-        frequencyUnit,
+        amountDetails: localAmountDetails,
+        hours: localHours,
+        timeUnit: localTimeUnit,
+        frequencyUnit: localFrequencyUnit,
       });
-    },
-    [fieldKey, amountDetails, hours, frequencyUnit, updateField],
-  );
-
-  const handleFrequencyUnitChange = useCallback(
-    (newUnit: string) => {
-      updateField(fieldKey, {
-        amountDetails,
-        hours,
-        timeUnit,
-        frequencyUnit: newUnit,
-      });
-    },
-    [fieldKey, amountDetails, hours, timeUnit, updateField],
-  );
+    }
+  }, [
+    fieldKey,
+    updateField,
+    localAmountDetails,
+    localHours,
+    localTimeUnit,
+    localFrequencyUnit,
+  ]);
 
   // Format display value
   const detailsLabel =
@@ -123,29 +108,32 @@ export function FrequencyField({ fieldKey, label }: FrequencyFieldProps) {
   const freqLabel =
     FREQUENCY_UNIT_OPTIONS.find((o) => o.value === frequencyUnit)?.label ??
     frequencyUnit;
-  const displayValue = `${detailsLabel} ${hours} ${unitLabel} par ${freqLabel}`;
+  const displayValue =
+    hours !== undefined
+      ? `${detailsLabel} ${hours} ${unitLabel} par ${freqLabel}`
+      : null;
 
   return (
     <EditableField
       isEditing={isEditing}
       onEdit={() => setIsEditing(true)}
-      onExit={() => setIsEditing(false)}
+      onExit={handleExit}
       placeholder="Cliquer pour modifier"
       renderEdit={() => (
         <div className="flex flex-wrap items-center gap-2 p-1">
           <SelectInput
             variant="inline"
             options={FREQUENCY_DETAILS_OPTIONS}
-            value={amountDetails}
-            onChange={handleDetailsChange}
+            value={localAmountDetails}
+            onChange={setLocalAmountDetails}
             className="w-24"
             aria-label={`${label} - type`}
           />
 
           <NumberInput
             variant="inline"
-            value={hours}
-            onChange={handleHoursChange}
+            value={localHours}
+            onChange={setLocalHours}
             min={0}
             className="w-14"
             aria-label={`${label} - quantité`}
@@ -154,8 +142,8 @@ export function FrequencyField({ fieldKey, label }: FrequencyFieldProps) {
           <SelectInput
             variant="inline"
             options={TIME_UNIT_OPTIONS}
-            value={timeUnit}
-            onChange={handleTimeUnitChange}
+            value={localTimeUnit}
+            onChange={setLocalTimeUnit}
             className="w-24"
             aria-label={`${label} - unité de temps`}
           />
@@ -165,8 +153,8 @@ export function FrequencyField({ fieldKey, label }: FrequencyFieldProps) {
           <SelectInput
             variant="inline"
             options={FREQUENCY_UNIT_OPTIONS}
-            value={frequencyUnit}
-            onChange={handleFrequencyUnitChange}
+            value={localFrequencyUnit}
+            onChange={setLocalFrequencyUnit}
             className="w-24"
             aria-label={`${label} - fréquence`}
           />

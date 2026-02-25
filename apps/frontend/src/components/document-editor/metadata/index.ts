@@ -1,5 +1,6 @@
 export { AgeField } from "./fields/AgeField";
 export { CommitmentField } from "./fields/CommitmentField";
+export { DepartmentField } from "./fields/DepartmentField";
 export { FrequencyField } from "./fields/FrequencyField";
 export { MultiEnumField } from "./fields/MultiEnumField";
 export { PoiField } from "./fields/PoiField";

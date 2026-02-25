@@ -1,7 +1,7 @@
 "use client";
 
 import { EditableField, NumberInput, SelectInput } from "@playground/ui";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 
 /**
@@ -36,10 +36,6 @@ const TIME_UNIT_OPTIONS = [
 
 /**
  * CommitmentField — An editable commitment/duration field for metadata.
- *
- * @description
- * Displays commitment with details type, hours amount(s), and time unit.
- * Read mode shows formatted text, click to edit.
  */
 export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
   const { getFieldValue, updateField } = useMetadata();
@@ -49,50 +45,27 @@ export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
     | { amountDetails?: string; hours?: number[]; timeUnit?: string }
     | undefined;
 
-  const amountDetails = value?.amountDetails ?? "exactly";
-  const hours = value?.hours ?? [80];
-  const timeUnit = value?.timeUnit ?? "hours";
+  const amountDetails = value?.amountDetails;
+  const hours = value?.hours ?? [];
+  const timeUnit = value?.timeUnit;
 
-  const handleDetailsChange = useCallback(
-    (newDetails: string) => {
-      let newHours = hours;
-      if (newDetails === "between" && hours.length < 2) {
-        newHours = [hours[0] ?? 80, 120];
-      } else if (newDetails !== "between" && hours.length > 1) {
-        newHours = [hours[0] ?? 80];
-      }
-      updateField(fieldKey, {
-        amountDetails: newDetails,
-        hours: newHours,
-        timeUnit,
-      });
-    },
-    [fieldKey, hours, timeUnit, updateField],
+  // Local state for editing
+  const [localAmountDetails, setLocalAmountDetails] = useState(
+    amountDetails ?? "exactly",
   );
+  const [localHours, setLocalHours] = useState<number[]>(
+    hours.length > 0 ? hours : [0],
+  );
+  const [localTimeUnit, setLocalTimeUnit] = useState(timeUnit ?? "hours");
 
-  const handleHoursChange = useCallback(
-    (index: number, newHours: number | null) => {
-      const newHoursArr = [...hours];
-      newHoursArr[index] = newHours ?? 0;
-      updateField(fieldKey, {
-        amountDetails,
-        hours: newHoursArr,
-        timeUnit,
-      });
-    },
-    [fieldKey, amountDetails, hours, timeUnit, updateField],
-  );
-
-  const handleTimeUnitChange = useCallback(
-    (newUnit: string) => {
-      updateField(fieldKey, {
-        amountDetails,
-        hours,
-        timeUnit: newUnit,
-      });
-    },
-    [fieldKey, amountDetails, hours, updateField],
-  );
+  // Sync local state when original values change (but not while editing)
+  useEffect(() => {
+    if (!isEditing) {
+      setLocalAmountDetails(amountDetails ?? "exactly");
+      setLocalHours(hours.length > 0 ? hours : [0]);
+      setLocalTimeUnit(timeUnit ?? "hours");
+    }
+  }, [amountDetails, hours, timeUnit, isEditing]);
 
   // Format display value
   const detailsLabel =
@@ -101,22 +74,62 @@ export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
   const unitLabel =
     TIME_UNIT_OPTIONS.find((o) => o.value === timeUnit)?.label ?? timeUnit;
   const displayValue =
-    amountDetails === "between"
-      ? `${detailsLabel} ${hours[0] ?? 80} et ${hours[1] ?? 120} ${unitLabel}`
-      : `${detailsLabel} ${hours[0] ?? 80} ${unitLabel}`;
+    hours.length === 0
+      ? null
+      : amountDetails === "between" && hours.length >= 2
+        ? `${detailsLabel} ${hours[0]} et ${hours[1]} ${unitLabel}`
+        : `${detailsLabel} ${hours[0]} ${unitLabel}`;
+
+  // Handle local hours change
+  const handleHoursChange = useCallback(
+    (index: number, newHours: number | null) => {
+      const newHoursArr = [...localHours];
+      newHoursArr[index] = newHours ?? 0;
+      if (localAmountDetails === "between" && newHoursArr.length < 2) {
+        newHoursArr.push(0);
+      }
+      setLocalHours(newHoursArr);
+    },
+    [localHours, localAmountDetails],
+  );
+
+  // Handle type change
+  const handleDetailsChange = useCallback(
+    (newDetails: string) => {
+      setLocalAmountDetails(newDetails);
+      if (newDetails === "between" && localHours.length < 2) {
+        setLocalHours([...localHours, 0]);
+      } else if (newDetails !== "between" && localHours.length > 1) {
+        setLocalHours([localHours[0] ?? 0]);
+      }
+    },
+    [localHours],
+  );
+
+  // Save on exit
+  const handleExit = useCallback(() => {
+    setIsEditing(false);
+    if (localHours.length > 0 && localHours[0] !== undefined) {
+      updateField(fieldKey, {
+        amountDetails: localAmountDetails,
+        hours: localHours,
+        timeUnit: localTimeUnit,
+      });
+    }
+  }, [fieldKey, updateField, localAmountDetails, localHours, localTimeUnit]);
 
   return (
     <EditableField
       isEditing={isEditing}
       onEdit={() => setIsEditing(true)}
-      onExit={() => setIsEditing(false)}
+      onExit={handleExit}
       placeholder="Cliquer pour modifier"
       renderEdit={() => (
         <div className="flex flex-wrap items-center gap-2 p-1">
           <SelectInput
             variant="inline"
             options={COMMITMENT_DETAILS_OPTIONS}
-            value={amountDetails}
+            value={localAmountDetails}
             onChange={handleDetailsChange}
             className="w-24"
             aria-label={`${label} - type`}
@@ -124,19 +137,19 @@ export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
 
           <NumberInput
             variant="inline"
-            value={hours[0] ?? 80}
+            value={localHours[0] ?? null}
             onChange={(val) => handleHoursChange(0, val)}
             min={0}
             className="w-14"
             aria-label={`${label} - quantité`}
           />
 
-          {amountDetails === "between" && (
+          {localAmountDetails === "between" && (
             <>
               <span className="text-xs text-gray-500">et</span>
               <NumberInput
                 variant="inline"
-                value={hours[1] ?? 120}
+                value={localHours[1] ?? null}
                 onChange={(val) => handleHoursChange(1, val)}
                 min={0}
                 className="w-14"
@@ -148,8 +161,8 @@ export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
           <SelectInput
             variant="inline"
             options={TIME_UNIT_OPTIONS}
-            value={timeUnit}
-            onChange={handleTimeUnitChange}
+            value={localTimeUnit}
+            onChange={setLocalTimeUnit}
             className="w-24"
             aria-label={`${label} - unité`}
           />
