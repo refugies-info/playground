@@ -73,7 +73,7 @@ BEGIN
   SELECT ir.id, ir.markdown, w.id AS workflow_id
   FROM public.ingestion_records ir
   INNER JOIN claimed cl ON cl.ingestion_record_id = ir.id
-  LEFT JOIN public.workflows w ON w.ingestion_record_id = ir.id;
+  INNER JOIN public.workflows w ON w.ingestion_record_id = ir.id;
 END;
 $$;
 
