@@ -10,18 +10,51 @@ export async function processIngestionRecords(
   supabase: SupabaseClient<Database>,
   runId: string,
 ) {
-  // Fetch all services with pagination to handle >1000 records
+  logger.info({ runId }, "Finding services without ingestion records");
+
+  // 1. Get all di_service_ids that already have ingestion_records
+  const existingServiceIds = new Set<string>();
+  let irPage = 0;
+  let irHasMore = true;
+
+  while (irHasMore) {
+    const { data: existing, error: existingError } = await supabase
+      .from("ingestion_records")
+      .select("di_service_id")
+      .not("di_service_id", "is", null)
+      .range(irPage * FETCH_PAGE_SIZE, (irPage + 1) * FETCH_PAGE_SIZE - 1);
+
+    if (existingError) throw new Error(existingError.message);
+
+    if (!existing || existing.length === 0) {
+      irHasMore = false;
+      break;
+    }
+
+    for (const record of existing) {
+      if (record.di_service_id) {
+        existingServiceIds.add(record.di_service_id);
+      }
+    }
+
+    irHasMore = existing.length === FETCH_PAGE_SIZE;
+    irPage++;
+  }
+
+  logger.info(
+    { existingCount: existingServiceIds.size },
+    "Found existing ingestion records",
+  );
+
+  // 2. Fetch all services and filter out those that already have ingestion_records
   let allServices: Database["public"]["Tables"]["di_services"]["Row"][] = [];
   let page = 0;
   let hasMore = true;
-
-  logger.info({ runId }, "Fetching services from ingestion run");
 
   while (hasMore) {
     const { data: services, error: servicesError } = await supabase
       .from("di_services")
       .select("*")
-      .eq("ingestion_run_id", runId)
       .range(page * FETCH_PAGE_SIZE, (page + 1) * FETCH_PAGE_SIZE - 1);
 
     if (servicesError) throw new Error(servicesError.message);
@@ -31,9 +64,17 @@ export async function processIngestionRecords(
       break;
     }
 
-    allServices = allServices.concat(services);
+    // Filter out services that already have ingestion_records
+    const newServices = services.filter((s) => !existingServiceIds.has(s.id));
+    allServices = allServices.concat(newServices);
+
     logger.debug(
-      { page: page + 1, fetched: services.length, total: allServices.length },
+      {
+        page: page + 1,
+        fetched: services.length,
+        new: newServices.length,
+        total: allServices.length,
+      },
       "Fetched services page",
     );
 
@@ -42,8 +83,8 @@ export async function processIngestionRecords(
   }
 
   if (allServices.length === 0) {
-    logger.info("No services found for this run");
-    return;
+    logger.info("No new services found needing ingestion records");
+    return 0;
   }
 
   logger.info(
@@ -157,4 +198,5 @@ export async function processIngestionRecords(
   }
 
   logger.info({ totalInserted }, "Ingestion records created successfully");
+  return totalInserted;
 }
