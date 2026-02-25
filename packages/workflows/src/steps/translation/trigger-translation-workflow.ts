@@ -24,12 +24,14 @@ export interface TriggerTranslationWorkflowResult {
  * @param editorialRecordId - The source editorial record ID
  * @param language - The target language code
  * @param parentWorkflowId - The ID of the parent workflow (for tracking)
+ * @param userId - The user ID of the person who triggered the translation
  * @returns Result indicating if the workflow was triggered
  */
 export async function triggerTranslationWorkflowStep(
   editorialRecordId: string,
   language: string,
   parentWorkflowId: string,
+  userId?: string,
 ): Promise<StepResult<TriggerTranslationWorkflowResult>> {
   "use step";
 
@@ -41,6 +43,7 @@ export async function triggerTranslationWorkflowStep(
         editorialRecordId,
         language,
         parentWorkflowId,
+        userId,
       },
     ]);
 

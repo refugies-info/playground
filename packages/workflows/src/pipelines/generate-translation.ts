@@ -24,9 +24,17 @@
  * │ updateStatus  │ │ updateStatus│
  * │ (to_process)  │ │   (error)   │
  * └───────┬───────┘ └─────┬───────┘
- *                 ▼       ▼
- *                END    THROW
+ *         │               │
+ * ┌───────▼───────┐       │
+ * │ addTrad       │       │
+ * │ ToAirtable    │       │
+ * │ (non-blocking)│       │
+ * └───────┬───────┘       │
+ *         ▼               ▼
+ *        END            THROW
  */
+
+import { addTradToAirtableStep } from "../steps/translation/add-trad-to-airtable";
 import {
   type GenerateTranslationResult,
   generateTranslationStep,
@@ -40,6 +48,8 @@ export interface GenerateTranslationWorkflowInput {
   editorialRecordId: string;
   language: string;
   parentWorkflowId: string;
+  /** User ID of the person who triggered the translation (used for Airtable billing). */
+  userId?: string;
 }
 
 export type GenerateTranslationWorkflowResult = GenerateTranslationResult;
@@ -56,7 +66,7 @@ export async function generateTranslationWorkflow(
 ): Promise<GenerateTranslationWorkflowResult> {
   "use workflow";
 
-  const { editorialRecordId, language, parentWorkflowId } = input;
+  const { editorialRecordId, language, parentWorkflowId, userId } = input;
 
   // 1. Set status to pending via step
   await updateTranslationStatusStep(editorialRecordId, language, "pending");
@@ -78,6 +88,9 @@ export async function generateTranslationWorkflow(
       language,
       "to_process",
     );
+
+    // 3. Track translation in Airtable for billing (non-blocking)
+    await addTradToAirtableStep(editorialRecordId, language, userId);
 
     return result.data;
   } catch (error) {

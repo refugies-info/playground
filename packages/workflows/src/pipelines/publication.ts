@@ -88,6 +88,7 @@ export async function publicationWorkflow(
             editorialRecordId,
             lang,
             input.workflowId,
+            input.userId,
           ),
         );
 
