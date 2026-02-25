@@ -5,61 +5,43 @@ import { useCallback, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 
 /**
- * Props for the TextField component.
- */
-interface TextFieldProps {
-  /** Metadata field key */
-  fieldKey: string;
-
-  /** Display label */
-  label: string;
-
-  /** Placeholder text when empty */
-  placeholder?: string;
-
-  /** Whether the field is disabled */
-  disabled?: boolean;
-}
-
-/**
  * TextField — An editable text field for metadata.
- *
- * @description
- * Displays a text value that can be edited inline.
- * Uses EditableField for the read/edit toggle and TextInput for editing.
- *
- * @example
- * ```tsx
- * <TextField fieldKey="titreMarque" label="Titre marque" />
- * ```
  */
 export function TextField({
   fieldKey,
   label,
   placeholder = "Cliquer pour modifier",
   disabled = false,
-}: TextFieldProps) {
-  const { getFieldValue, updateField, saveChanges } = useMetadata();
+}: {
+  fieldKey: string;
+  label: string;
+  placeholder?: string;
+  disabled?: boolean;
+}) {
+  const { getFieldValue, updateField } = useMetadata();
   const [isEditing, setIsEditing] = useState(false);
+  const [localValue, setLocalValue] = useState<string>("");
 
   const value = getFieldValue(fieldKey) as string | undefined;
 
+  // Sync local value when entering edit mode
   const handleEdit = useCallback(() => {
+    setLocalValue(value ?? "");
     setIsEditing(true);
-  }, []);
+  }, [value]);
 
+  // Save on exit
   const handleExit = useCallback(async () => {
     setIsEditing(false);
-    // Auto-save on blur
-    await saveChanges();
-  }, [saveChanges]);
+    if (localValue !== value) {
+      await updateField(fieldKey, localValue || undefined);
+    }
+  }, [fieldKey, localValue, value, updateField]);
 
-  const handleChange = useCallback(
-    (newValue: string) => {
-      updateField(fieldKey, newValue);
-    },
-    [fieldKey, updateField],
-  );
+  // Local change (no save yet)
+  const handleChange = useCallback((newValue: string) => {
+    setLocalValue(newValue);
+  }, []);
 
   return (
     <EditableField
@@ -71,7 +53,7 @@ export function TextField({
       renderEdit={({ onBlur, onKeyDown }) => (
         <TextInput
           variant="inline"
-          value={value ?? ""}
+          value={localValue}
           onChange={handleChange}
           onBlur={onBlur}
           onKeyDown={onKeyDown}

@@ -2,8 +2,8 @@
 
 import { EditableField, NumberInput, SelectInput } from "@playground/ui";
 import { useCallback, useState } from "react";
-import { PRICE_DETAILS_OPTIONS } from "../config/metadata-config";
 import { useMetadata } from "../MetadataContext";
+import { PRICE_DETAILS_OPTIONS } from "../publication-targets/refugies-info";
 
 /** Price type options */
 const PRICE_TYPE_OPTIONS = [

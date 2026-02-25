@@ -134,7 +134,6 @@ export async function persistEditorialReportStep(
         .insert({
           ingestion_record_id: workflow.ingestion_record_id,
           markdown: ingestionRecord.markdown,
-          metadata: ingestionRecord.metadata,
         })
         .select("id")
         .single();

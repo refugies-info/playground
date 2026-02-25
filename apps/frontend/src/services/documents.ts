@@ -424,6 +424,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     ingestionContent,
     complianceReport,
     metadata,
+    editorialMetadata,
     metadataReport: metadataReportValue,
     publishedUrl,
     publicationStatus: latestPublication?.status,

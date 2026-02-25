@@ -7,4 +7,5 @@ export * from "./constants/languages";
 export * from "./lib/markdown";
 export * from "./lib/metadata";
 export * from "./logger";
+export * from "./schemas/metadata-ri";
 export * from "./types/index";

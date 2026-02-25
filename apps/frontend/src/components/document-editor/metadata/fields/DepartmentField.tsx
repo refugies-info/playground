@@ -2,8 +2,8 @@
 
 import { ComboboxInput, EditableField } from "@playground/ui";
 import { useCallback, useState } from "react";
-import { DEPARTMENT_OPTIONS } from "../config/departments";
 import { useMetadata } from "../MetadataContext";
+import { DEPARTMENT_OPTIONS } from "../publication-targets/refugies-info";
 
 /**
  * Props for the DepartmentField component.

@@ -30,6 +30,8 @@ export interface Document {
   ingestionContent?: string; // Immutable original content from ingestion_records
   complianceReport?: string; // Markdown content of the compliance report
   metadata: Record<string, unknown>;
+  /** Metadata from editorial_records only (user edits) */
+  editorialMetadata?: Record<string, unknown>;
   /** AI-generated metadata from letta_reports (type: metadata, status: complete) */
   metadataReport?: {
     metadata_ri: Record<string, unknown>;

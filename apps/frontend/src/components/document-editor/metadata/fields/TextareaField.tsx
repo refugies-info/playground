@@ -1,73 +1,47 @@
 "use client";
 
-import { EditableField, TextArea } from "@playground/ui";
+import { EditableField, TextInput } from "@playground/ui";
 import { useCallback, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 
 /**
- * Props for the TextareaField component.
- */
-interface TextareaFieldProps {
-  /** Metadata field key */
-  fieldKey: string;
-
-  /** Display label */
-  label: string;
-
-  /** Placeholder text when empty */
-  placeholder?: string;
-
-  /** Whether the field is disabled */
-  disabled?: boolean;
-
-  /** Number of rows for the textarea */
-  rows?: number;
-}
-
-/**
- * TextareaField — An editable textarea for metadata.
- *
- * @description
- * Displays a multi-line text value that can be edited inline.
- * Uses EditableField for the read/edit toggle and TextArea for editing.
- *
- * @example
- * ```tsx
- * <TextareaField fieldKey="abstract" label="En bref" rows={3} />
- * ```
+ * TextareaField — An editable textarea field for metadata.
  */
 export function TextareaField({
   fieldKey,
   label,
   placeholder = "Cliquer pour modifier",
   disabled = false,
-  rows = 3,
-}: TextareaFieldProps) {
-  const { getFieldValue, updateField, saveChanges } = useMetadata();
+}: {
+  fieldKey: string;
+  label: string;
+  placeholder?: string;
+  disabled?: boolean;
+}) {
+  const { getFieldValue, updateField } = useMetadata();
   const [isEditing, setIsEditing] = useState(false);
+  const [localValue, setLocalValue] = useState<string>("");
 
   const value = getFieldValue(fieldKey) as string | undefined;
 
+  // Sync local value when entering edit mode
   const handleEdit = useCallback(() => {
+    setLocalValue(value ?? "");
     setIsEditing(true);
-  }, []);
+  }, [value]);
 
+  // Save on exit
   const handleExit = useCallback(async () => {
     setIsEditing(false);
-    // Auto-save on blur
-    await saveChanges();
-  }, [saveChanges]);
+    if (localValue !== value) {
+      await updateField(fieldKey, localValue || undefined);
+    }
+  }, [fieldKey, localValue, value, updateField]);
 
-  const handleChange = useCallback(
-    (newValue: string) => {
-      updateField(fieldKey, newValue);
-    },
-    [fieldKey, updateField],
-  );
-
-  // Display truncated text in read mode
-  const displayValue =
-    value && value.length > 100 ? `${value.substring(0, 100)}…` : value;
+  // Local change (no save yet)
+  const handleChange = useCallback((newValue: string) => {
+    setLocalValue(newValue);
+  }, []);
 
   return (
     <EditableField
@@ -77,19 +51,18 @@ export function TextareaField({
       disabled={disabled}
       placeholder={placeholder}
       renderEdit={({ onBlur, onKeyDown }) => (
-        <TextArea
+        <TextInput
           variant="inline"
-          value={value ?? ""}
+          value={localValue}
           onChange={handleChange}
           onBlur={onBlur}
           onKeyDown={onKeyDown}
-          rows={rows}
           autoFocus
           aria-label={label}
         />
       )}
     >
-      {displayValue}
+      {value}
     </EditableField>
   );
 }

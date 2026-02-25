@@ -131,13 +131,12 @@ export async function persistMetadataReportStep(
         };
       }
 
-      // Create new editorial_record
+      // Create new editorial_record (metadata left to default)
       const { data: newRecord, error: insertError } = await supabase
         .from("editorial_records")
         .insert({
           ingestion_record_id: workflow.ingestion_record_id,
           markdown: ingestionRecord.markdown,
-          metadata: ingestionRecord.metadata,
         })
         .select("id")
         .single();

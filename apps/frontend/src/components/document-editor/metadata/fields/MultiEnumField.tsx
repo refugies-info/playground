@@ -5,40 +5,8 @@ import { useCallback } from "react";
 import { useMetadata } from "../MetadataContext";
 
 /**
- * Props for the MultiEnumField component.
- */
-interface MultiEnumFieldProps {
-  /** Metadata field key */
-  fieldKey: string;
-
-  /** Display label (for aria-label) */
-  label: string;
-
-  /** Available options */
-  options: readonly { value: string; label: string }[];
-
-  /** Placeholder text */
-  placeholder?: string;
-
-  /** Whether the field is disabled */
-  disabled?: boolean;
-}
-
-/**
  * MultiEnumField — A multi-select field for metadata.
- *
- * @description
- * Displays a searchable multi-select with selected values shown as tags.
- * No wrapper EditableField — the ComboboxInput is always interactive.
- *
- * @example
- * ```tsx
- * <MultiEnumField
- *   fieldKey="frenchLevel"
- *   label="Niveau de français"
- *   options={FRENCH_LEVEL_OPTIONS}
- * />
- * ```
+ * Direct save on change (no EditableField wrapper).
  */
 export function MultiEnumField({
   fieldKey,
@@ -46,18 +14,23 @@ export function MultiEnumField({
   options,
   placeholder = "",
   disabled = false,
-}: MultiEnumFieldProps) {
-  const { getFieldValue, updateField, saveChanges } = useMetadata();
+}: {
+  fieldKey: string;
+  label: string;
+  options: readonly { value: string; label: string }[];
+  placeholder?: string;
+  disabled?: boolean;
+}) {
+  const { getFieldValue, updateField } = useMetadata();
 
   const value = (getFieldValue(fieldKey) as string[] | undefined) ?? [];
 
+  // Direct save on change (updateField handles save automatically)
   const handleChange = useCallback(
     (newValue: string[]) => {
       updateField(fieldKey, newValue.length > 0 ? newValue : undefined);
-      // Auto-save on change
-      saveChanges();
     },
-    [fieldKey, updateField, saveChanges],
+    [fieldKey, updateField],
   );
 
   return (

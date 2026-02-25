@@ -5,40 +5,7 @@ import { useCallback, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 
 /**
- * Props for the EnumField component.
- */
-interface EnumFieldProps {
-  /** Metadata field key */
-  fieldKey: string;
-
-  /** Display label */
-  label: string;
-
-  /** Available options */
-  options: readonly { value: string; label: string }[];
-
-  /** Placeholder text */
-  placeholder?: string;
-
-  /** Whether the field is disabled */
-  disabled?: boolean;
-}
-
-/**
  * EnumField — An editable single-select field for metadata.
- *
- * @description
- * Displays a selected value that can be edited inline with a dropdown.
- * Uses EditableField for the read/edit toggle and SelectInput for editing.
- *
- * @example
- * ```tsx
- * <EnumField
- *   fieldKey="publicStatus"
- *   label="Public visé"
- *   options={PUBLIC_STATUS_OPTIONS}
- * />
- * ```
  */
 export function EnumField({
   fieldKey,
@@ -46,27 +13,37 @@ export function EnumField({
   options,
   placeholder = "Sélectionner...",
   disabled = false,
-}: EnumFieldProps) {
-  const { getFieldValue, updateField, saveChanges } = useMetadata();
+}: {
+  fieldKey: string;
+  label: string;
+  options: readonly { value: string; label: string }[];
+  placeholder?: string;
+  disabled?: boolean;
+}) {
+  const { getFieldValue, updateField } = useMetadata();
   const [isEditing, setIsEditing] = useState(false);
+  const [localValue, setLocalValue] = useState<string>("");
 
   const value = getFieldValue(fieldKey) as string | undefined;
 
+  // Sync local value when entering edit mode
   const handleEdit = useCallback(() => {
+    setLocalValue(value ?? "");
     setIsEditing(true);
-  }, []);
+  }, [value]);
 
+  // Save on exit
   const handleExit = useCallback(async () => {
     setIsEditing(false);
-    await saveChanges();
-  }, [saveChanges]);
+    if (localValue !== value) {
+      await updateField(fieldKey, localValue || undefined);
+    }
+  }, [fieldKey, localValue, value, updateField]);
 
-  const handleChange = useCallback(
-    (newValue: string) => {
-      updateField(fieldKey, newValue);
-    },
-    [fieldKey, updateField],
-  );
+  // Local change (no save yet)
+  const handleChange = useCallback((newValue: string) => {
+    setLocalValue(newValue);
+  }, []);
 
   // Get display label for current value
   const displayLabel =
@@ -83,7 +60,7 @@ export function EnumField({
         <SelectInput
           variant="inline"
           options={options}
-          value={value ?? ""}
+          value={localValue}
           onChange={handleChange}
           onBlur={onBlur}
           placeholder={placeholder}

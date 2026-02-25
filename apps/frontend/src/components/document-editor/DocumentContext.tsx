@@ -37,6 +37,8 @@ interface DocumentData
   workStatus: WorkStatus | null;
   onlineStatus: OnlineStatus;
   metadata?: Record<string, unknown>;
+  /** Metadata from editorial_records only (user edits) */
+  editorialMetadata?: Record<string, unknown>;
   referenceData?: {
     themes: Record<string, string>;
     needs: Record<string, string>;
