@@ -53,25 +53,36 @@ export async function toggleStatusStep(
       newWorkStatus = null;
     }
 
-    // 1. Update workflow compliance status
-    const { data: workflow, error: updateError } = await supabase
+    // 1. Fetch workflow to get ingestion_record_id and editorial_record_id
+    const { data: workflow, error: fetchError } = await supabase
       .from("workflows")
-      .update({
-        compliance_status: newComplianceStatus,
-      })
+      .select("ingestion_record_id, editorial_record_id")
       .eq("id", workflowId)
-      .select("editorial_record_id")
       .single();
+
+    if (fetchError || !workflow?.ingestion_record_id) {
+      logger.error(
+        { error: fetchError, workflowId },
+        "Error fetching workflow for status toggle",
+      );
+      return { success: false, error: "Failed to fetch workflow" };
+    }
+
+    // 2. Update compliance status on ingestion_records (RI-1093)
+    const { error: updateError } = await supabase
+      .from("ingestion_records")
+      .update({ compliance_status: newComplianceStatus })
+      .eq("id", workflow.ingestion_record_id);
 
     if (updateError) {
       logger.error(
-        { error: updateError, workflowId },
-        "Error updating workflow status",
+        { error: updateError, ingestionRecordId: workflow.ingestion_record_id },
+        "Error updating ingestion_record compliance status",
       );
-      return { success: false, error: "Failed to update workflow status" };
+      return { success: false, error: "Failed to update compliance status" };
     }
 
-    // 2. Update editorial record statuses if it exists
+    // 3. Update editorial record statuses if it exists
     if (workflow?.editorial_record_id) {
       // TODO: move to state machine logic
       // This status transition logic should be moved to a centralized state machine
