@@ -489,8 +489,7 @@ function MetadataTable({
   diMetadata: Record<string, unknown>;
   ref: RiReferenceData;
 }) {
-  const { getFieldStatus, getFieldValue } = useMetadata();
-  const [showDebug, setShowDebug] = useState(false);
+  const { getFieldStatus } = useMetadata();
 
   if (!report) return null;
 
@@ -613,13 +612,9 @@ function MetadataTable({
                 <FrequencyField fieldKey={field.riKey} label={field.label} />
               );
             } else if (isSessionField) {
-              displayValue = (
-                <SessionField fieldKey={field.riKey} label={field.label} />
-              );
+              displayValue = <SessionField fieldKey={field.riKey} />;
             } else if (isPoiField) {
-              displayValue = (
-                <PoiField fieldKey={field.riKey} label={field.label} />
-              );
+              displayValue = <PoiField fieldKey={field.riKey} />;
             } else if (isDepartmentField) {
               displayValue = (
                 <DepartmentField fieldKey={field.riKey} label={field.label} />

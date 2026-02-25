@@ -1,19 +1,8 @@
 "use client";
 
 import { EditableField, NumberInput, SelectInput } from "@playground/ui";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useMetadata } from "../MetadataContext";
-
-/**
- * Props for the FrequencyField component.
- */
-interface FrequencyFieldProps {
-  /** Metadata field key */
-  fieldKey: string;
-
-  /** Display label */
-  label: string;
-}
 
 /** Frequency details options */
 const FREQUENCY_DETAILS_OPTIONS = [
@@ -44,13 +33,17 @@ const FREQUENCY_UNIT_OPTIONS = [
 /**
  * FrequencyField — An editable frequency field for metadata.
  */
-export function FrequencyField({ fieldKey, label }: FrequencyFieldProps) {
+export function FrequencyField({
+  fieldKey,
+  label,
+}: {
+  fieldKey: string;
+  label: string;
+}) {
   const { getFieldValue, updateField } = useMetadata();
   const [isEditing, setIsEditing] = useState(false);
 
   const rawValue = getFieldValue(fieldKey);
-
-  // Data can be an array or a single object
   const value = Array.isArray(rawValue) ? rawValue[0] : rawValue;
 
   const amountDetails = value?.amountDetails;
@@ -69,15 +62,14 @@ export function FrequencyField({ fieldKey, label }: FrequencyFieldProps) {
     frequencyUnit ?? "week",
   );
 
-  // Sync local state when original values change (but not while editing)
-  useEffect(() => {
-    if (!isEditing) {
-      setLocalAmountDetails(amountDetails ?? "exactly");
-      setLocalHours(hours ?? null);
-      setLocalTimeUnit(timeUnit ?? "hours");
-      setLocalFrequencyUnit(frequencyUnit ?? "week");
-    }
-  }, [amountDetails, hours, timeUnit, frequencyUnit, isEditing]);
+  // Sync local state when entering edit mode
+  const handleEdit = useCallback(() => {
+    setLocalAmountDetails(amountDetails ?? "exactly");
+    setLocalHours(hours ?? null);
+    setLocalTimeUnit(timeUnit ?? "hours");
+    setLocalFrequencyUnit(frequencyUnit ?? "week");
+    setIsEditing(true);
+  }, [amountDetails, hours, timeUnit, frequencyUnit]);
 
   // Save on exit
   const handleExit = useCallback(() => {
@@ -116,7 +108,7 @@ export function FrequencyField({ fieldKey, label }: FrequencyFieldProps) {
   return (
     <EditableField
       isEditing={isEditing}
-      onEdit={() => setIsEditing(true)}
+      onEdit={handleEdit}
       onExit={handleExit}
       placeholder="Cliquer pour modifier"
       renderEdit={() => (

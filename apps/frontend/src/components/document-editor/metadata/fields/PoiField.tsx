@@ -4,128 +4,111 @@ import type { RiPoi } from "@playground/shared-types";
 import { EditableField, TextInput } from "@playground/ui";
 import { Badge } from "@playground/ui/primitives";
 import { Plus, Trash2 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 
 /**
- * Props for the PoiField component.
- */
-interface PoiFieldProps {
-  /** Metadata field key */
-  fieldKey: string;
-
-  /** Display label */
-  label: string;
-}
-
-/**
- * Render POIs in read mode (same as original renderMap).
- */
-function renderPoiList(pois: RiPoi[]): React.ReactNode {
-  if (pois.length === 0) return null;
-
-  return pois.map((poi, idx) => {
-    const address = poi.address ?? "";
-    const city = poi.city ?? "";
-    const fullAddress = [address, city].filter(Boolean).join(", ");
-
-    const title = poi.title ?? "";
-    const lat = poi.lat ?? "";
-    const lng = poi.lng ?? "";
-    const email = poi.email ?? "";
-    const phone = poi.phone ?? "";
-
-    const poiKey =
-      [title, address, city, lat, lng].filter(Boolean).join("-") ||
-      `poi-${idx}`;
-
-    return (
-      <div
-        key={poiKey}
-        className="flex flex-col gap-2 mb-2 last:mb-0"
-        style={{ wordBreak: "break-word" }}
-      >
-        {title && <strong className="text-gray-900">{title}</strong>}
-        {fullAddress && <div className="text-gray-800">{fullAddress}</div>}
-
-        {(lat || lng) && (
-          <div className="text-gray-800 text-xs">
-            {lat && <div>lat : {lat}</div>}
-            {lng && <div>lng : {lng}</div>}
-          </div>
-        )}
-
-        {(email || phone) && (
-          <div className="flex flex-wrap gap-1 mt-1">
-            {email && (
-              <Badge size="sm" variant="info">
-                {email}
-              </Badge>
-            )}
-            {phone && (
-              <Badge size="sm" variant="info">
-                {phone}
-              </Badge>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  });
-}
-
-/**
  * PoiField — An editable points of interest field for metadata.
- *
- * @description
- * Displays a list of POIs (address, city, etc.) with CRUD operations.
- * Read mode shows formatted list (same as original renderMap), click to edit.
  */
-export function PoiField({ fieldKey }: PoiFieldProps) {
+export function PoiField({ fieldKey }: { fieldKey: string }) {
   const { getFieldValue, updateField } = useMetadata();
   const [isEditing, setIsEditing] = useState(false);
 
   const pois = (getFieldValue(fieldKey) as RiPoi[]) ?? [];
 
+  // Local state for editing
+  const [localPois, setLocalPois] = useState<RiPoi[]>(pois);
+
+  // Sync local state when entering edit mode
+  const handleEdit = useCallback(() => {
+    setLocalPois(pois);
+    setIsEditing(true);
+  }, [pois]);
+
+  // Save on exit
+  const handleExit = useCallback(() => {
+    setIsEditing(false);
+    if (localPois.length > 0) {
+      updateField(fieldKey, localPois);
+    }
+  }, [fieldKey, updateField, localPois]);
+
+  // Local handlers
   const handleAdd = useCallback(() => {
-    const newPoi: RiPoi = {
-      title: "",
-      address: "",
-      city: "",
-    };
-    updateField(fieldKey, [...pois, newPoi]);
-  }, [fieldKey, updateField, pois]);
+    const newPoi: RiPoi = { title: "", address: "", city: "" };
+    setLocalPois((prev) => [...prev, newPoi]);
+  }, []);
 
   const handleUpdate = useCallback(
     (index: number, field: keyof RiPoi, value: string) => {
-      const newPois = [...pois];
-      newPois[index] = {
-        ...newPois[index],
-        [field]: value,
-      };
-      updateField(fieldKey, newPois);
+      setLocalPois((prev) => {
+        const newPois = [...prev];
+        newPois[index] = { ...newPois[index], [field]: value };
+        return newPois;
+      });
     },
-    [fieldKey, updateField, pois],
+    [],
   );
 
-  const handleRemove = useCallback(
-    (index: number) => {
-      const newPois = pois.filter((_, i) => i !== index);
-      updateField(fieldKey, newPois.length > 0 ? newPois : undefined);
-    },
-    [fieldKey, updateField, pois],
-  );
+  const handleRemove = useCallback((index: number) => {
+    setLocalPois((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  // Render POIs in read mode
+  const renderPoiList = useMemo(() => {
+    if (pois.length === 0) return null;
+
+    return pois.map((poi, idx) => {
+      const address = poi.address ?? "";
+      const city = poi.city ?? "";
+      const fullAddress = [address, city].filter(Boolean).join(", ");
+      const title = poi.title ?? "";
+      const lat = poi.lat ?? "";
+      const lng = poi.lng ?? "";
+      const email = poi.email ?? "";
+      const phone = poi.phone ?? "";
+
+      return (
+        <div
+          key={`poi-${title || idx}`}
+          className="flex flex-col gap-2 mb-2 last:mb-0"
+        >
+          {title && <strong className="text-gray-900">{title}</strong>}
+          {fullAddress && <div className="text-gray-800">{fullAddress}</div>}
+          {(lat || lng) && (
+            <div className="text-gray-800 text-xs">
+              {lat && <div>lat : {lat}</div>}
+              {lng && <div>lng : {lng}</div>}
+            </div>
+          )}
+          {(email || phone) && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {email && (
+                <Badge size="sm" variant="info">
+                  {email}
+                </Badge>
+              )}
+              {phone && (
+                <Badge size="sm" variant="info">
+                  {phone}
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    });
+  }, [pois]);
 
   return (
     <EditableField
       isEditing={isEditing}
-      onEdit={() => setIsEditing(true)}
-      onExit={() => setIsEditing(false)}
+      onEdit={handleEdit}
+      onExit={handleExit}
       placeholder="Aucun point d'intérêt"
       renderEdit={() => (
         <div className="space-y-3 p-1">
-          {/* POI list */}
-          {pois.map((poi, index) => (
+          {localPois.map((poi, index) => (
             <div
               key={`poi-edit-${poi.title || index}`}
               className="flex items-start gap-2 p-2 bg-gray-50 rounded-md"
@@ -172,7 +155,6 @@ export function PoiField({ fieldKey }: PoiFieldProps) {
             </div>
           ))}
 
-          {/* Add button */}
           <button
             type="button"
             onClick={handleAdd}
@@ -184,7 +166,7 @@ export function PoiField({ fieldKey }: PoiFieldProps) {
         </div>
       )}
     >
-      {renderPoiList(pois)}
+      {renderPoiList}
     </EditableField>
   );
 }

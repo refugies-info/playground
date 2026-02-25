@@ -1,7 +1,7 @@
 "use client";
 
 import { EditableField, NumberInput, SelectInput } from "@playground/ui";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { PRICE_DETAILS_OPTIONS } from "../config/metadata-config";
 import { useMetadata } from "../MetadataContext";
 
@@ -12,20 +12,15 @@ const PRICE_TYPE_OPTIONS = [
 ];
 
 /**
- * Props for the PriceField component.
- */
-interface PriceFieldProps {
-  /** Metadata field key */
-  fieldKey: string;
-
-  /** Display label */
-  label: string;
-}
-
-/**
  * PriceField — An editable price field for metadata.
  */
-export function PriceField({ fieldKey, label }: PriceFieldProps) {
+export function PriceField({
+  fieldKey,
+  label,
+}: {
+  fieldKey: string;
+  label: string;
+}) {
   const { getFieldValue, updateField } = useMetadata();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -42,23 +37,13 @@ export function PriceField({ fieldKey, label }: PriceFieldProps) {
   const [localAmount, setLocalAmount] = useState<number | null>(amount ?? null);
   const [localPeriod, setLocalPeriod] = useState(period ?? "month");
 
-  // Sync local state when original values change (but not while editing)
-  useEffect(() => {
-    if (!isEditing) {
-      setLocalIsFree(isFree);
-      setLocalAmount(amount ?? null);
-      setLocalPeriod(period ?? "month");
-    }
-  }, [isFree, amount, period, isEditing]);
-
-  // Format display value
-  const displayValue = !value
-    ? null
-    : isFree
-      ? "Gratuit"
-      : amount !== undefined
-        ? `${amount} € par ${PRICE_DETAILS_OPTIONS.find((o) => o.value === period)?.label ?? period}`
-        : null;
+  // Sync local state when entering edit mode
+  const handleEdit = useCallback(() => {
+    setLocalIsFree(isFree);
+    setLocalAmount(amount ?? null);
+    setLocalPeriod(period ?? "month");
+    setIsEditing(true);
+  }, [isFree, amount, period]);
 
   // Save on exit
   const handleExit = useCallback(() => {
@@ -70,10 +55,19 @@ export function PriceField({ fieldKey, label }: PriceFieldProps) {
     }
   }, [fieldKey, updateField, localIsFree, localAmount, localPeriod]);
 
+  // Format display value
+  const displayValue = !value
+    ? null
+    : isFree
+      ? "Gratuit"
+      : amount !== undefined
+        ? `${amount} € par ${PRICE_DETAILS_OPTIONS.find((o) => o.value === period)?.label ?? period}`
+        : null;
+
   return (
     <EditableField
       isEditing={isEditing}
-      onEdit={() => setIsEditing(true)}
+      onEdit={handleEdit}
       onExit={handleExit}
       placeholder="Cliquer pour modifier"
       renderEdit={() => (

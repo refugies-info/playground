@@ -5,17 +5,6 @@ import { Plus, Trash2 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 
-/**
- * Props for the SessionField component.
- */
-interface SessionFieldProps {
-  /** Metadata field key */
-  fieldKey: string;
-
-  /** Display label */
-  label: string;
-}
-
 interface Session {
   startDate?: string;
   endDate?: string;
@@ -23,18 +12,14 @@ interface Session {
 
 /**
  * SessionField — An editable sessions field for metadata.
- *
- * @description
- * Displays a list of sessions (start/end dates) with CRUD operations.
- * Read mode shows formatted text, click to edit.
  */
-export function SessionField({ fieldKey }: SessionFieldProps) {
+export function SessionField({ fieldKey }: { fieldKey: string }) {
   const { getFieldValue, updateField } = useMetadata();
   const [isEditing, setIsEditing] = useState(false);
 
   const rawValue = getFieldValue(fieldKey);
 
-  // Memoize sessions parsing
+  // Parse sessions from raw value
   const sessions = useMemo<Session[]>(() => {
     if (!Array.isArray(rawValue)) return [];
 
@@ -50,34 +35,22 @@ export function SessionField({ fieldKey }: SessionFieldProps) {
     return rawValue as Session[];
   }, [rawValue]);
 
-  const handleAdd = useCallback(() => {
-    const now = new Date().toISOString();
-    const newSession: Session = {
-      startDate: now,
-      endDate: now,
-    };
-    updateField(fieldKey, [...sessions, newSession]);
-  }, [fieldKey, updateField, sessions]);
+  // Local state for editing
+  const [localSessions, setLocalSessions] = useState<Session[]>(sessions);
 
-  const handleUpdate = useCallback(
-    (index: number, field: "startDate" | "endDate", date: Date | undefined) => {
-      const newSessions = [...sessions];
-      newSessions[index] = {
-        ...newSessions[index],
-        [field]: date?.toISOString(),
-      };
-      updateField(fieldKey, newSessions);
-    },
-    [fieldKey, updateField, sessions],
-  );
+  // Sync local state when entering edit mode
+  const handleEdit = useCallback(() => {
+    setLocalSessions(sessions);
+    setIsEditing(true);
+  }, [sessions]);
 
-  const handleRemove = useCallback(
-    (index: number) => {
-      const newSessions = sessions.filter((_, i) => i !== index);
-      updateField(fieldKey, newSessions.length > 0 ? newSessions : undefined);
-    },
-    [fieldKey, updateField, sessions],
-  );
+  // Save on exit
+  const handleExit = useCallback(() => {
+    setIsEditing(false);
+    if (localSessions.length > 0) {
+      updateField(fieldKey, localSessions);
+    }
+  }, [fieldKey, updateField, localSessions]);
 
   // Format date for display
   const formatDate = (dateStr?: string) => {
@@ -92,21 +65,44 @@ export function SessionField({ fieldKey }: SessionFieldProps) {
   // Format display value
   const displayValue =
     sessions.length === 0
-      ? "Aucune session"
+      ? null
       : sessions.length === 1
         ? `Du ${formatDate(sessions[0]?.startDate)} au ${formatDate(sessions[0]?.endDate)}`
         : `${sessions.length} sessions`;
 
+  // Local handlers
+  const handleAdd = useCallback(() => {
+    const now = new Date().toISOString();
+    setLocalSessions((prev) => [...prev, { startDate: now, endDate: now }]);
+  }, []);
+
+  const handleUpdate = useCallback(
+    (index: number, field: "startDate" | "endDate", date: Date | undefined) => {
+      setLocalSessions((prev) => {
+        const newSessions = [...prev];
+        newSessions[index] = {
+          ...newSessions[index],
+          [field]: date?.toISOString(),
+        };
+        return newSessions;
+      });
+    },
+    [],
+  );
+
+  const handleRemove = useCallback((index: number) => {
+    setLocalSessions((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
   return (
     <EditableField
       isEditing={isEditing}
-      onEdit={() => setIsEditing(true)}
-      onExit={() => setIsEditing(false)}
-      placeholder="Cliquer pour modifier"
+      onEdit={handleEdit}
+      onExit={handleExit}
+      placeholder="Aucune session"
       renderEdit={() => (
         <div className="space-y-2 p-1">
-          {/* Session list */}
-          {sessions.map((session, index) => (
+          {localSessions.map((session, index) => (
             <div
               key={`session-${session.startDate || index}`}
               className="flex items-center gap-2"
@@ -138,7 +134,6 @@ export function SessionField({ fieldKey }: SessionFieldProps) {
             </div>
           ))}
 
-          {/* Add button */}
           <button
             type="button"
             onClick={handleAdd}
