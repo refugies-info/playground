@@ -283,9 +283,14 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "START_SAVING", key });
 
       // 4. Optimistic update
-      if (value === undefined || value === null) {
+      if (value === undefined) {
+        // undefined = delete override (revert to AI value)
         dispatch({ type: "DELETE_FIELD", key });
+      } else if (value === null) {
+        // null = explicitly clear field (override with null)
+        dispatch({ type: "CLEAR_FIELD", key });
       } else {
+        // other value = set override
         dispatch({ type: "SET_FIELD", key, value });
       }
 
