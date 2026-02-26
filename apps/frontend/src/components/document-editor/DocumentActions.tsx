@@ -16,6 +16,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { getPublicationStatus } from "@/services/document-actions";
+import { useDocumentActions } from "./DocumentActionsContext";
 import { useDocument } from "./DocumentContext";
 
 interface DocumentActionsProps {
@@ -24,18 +25,17 @@ interface DocumentActionsProps {
 
 export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
   const router = useRouter();
+  const { document, setDocument, isDirty } = useDocument();
   const {
-    document,
-    setDocument,
+    previewDocument,
+    isPreviewing,
     saveDocument,
     isSaving,
-    isDirty,
-    previewDocument,
     publishDocument,
     isPublishing,
     archiveDocument,
     isArchiving,
-  } = useDocument();
+  } = useDocumentActions();
 
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);

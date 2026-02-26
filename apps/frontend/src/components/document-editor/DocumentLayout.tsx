@@ -2,8 +2,10 @@
 
 import dynamic from "next/dynamic";
 import { AssistantPanel } from "./AssistantPanel";
+import { DocumentActionsProvider } from "./DocumentActionsContext";
 import { DocumentProvider } from "./DocumentContext";
 import { EditorNavigation } from "./EditorNavigation";
+import { MetadataProvider } from "./metadata/MetadataContext";
 import { TopBar } from "./TopBar";
 
 // Disable SSR for DebugPanel to avoid hydration mismatch from Radix UI random IDs
@@ -25,23 +27,27 @@ export function DocumentLayout(props: DocumentLayoutProps) {
   const { initialData, children } = props;
   return (
     <DocumentProvider initialData={initialData}>
-      <DebugPanel />
-      <div className="flex flex-col h-screen w-full overflow-hidden bg-gray-100">
-        {/* Top Toolbar */}
-        <TopBar />
+      <MetadataProvider>
+        <DocumentActionsProvider>
+          <DebugPanel />
+          <div className="flex flex-col h-screen w-full overflow-hidden bg-gray-100">
+            {/* Top Toolbar */}
+            <TopBar />
 
-        {/* Main Content Area */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Left Sidebar */}
-          <EditorNavigation />
+            {/* Main Content Area */}
+            <div className="flex flex-1 overflow-hidden">
+              {/* Left Sidebar */}
+              <EditorNavigation />
 
-          {/* Center Editor / Content */}
-          {children}
+              {/* Center Editor / Content */}
+              {children}
 
-          {/* Right Chat */}
-          <AssistantPanel />
-        </div>
-      </div>
+              {/* Right Chat */}
+              <AssistantPanel />
+            </div>
+          </div>
+        </DocumentActionsProvider>
+      </MetadataProvider>
     </DocumentProvider>
   );
 }

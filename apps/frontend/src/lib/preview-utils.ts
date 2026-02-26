@@ -2,6 +2,7 @@ import { getPreviewSecret } from "@/services/document-actions";
 import {
   buildDispositifPayload,
   buildTranslationPreviewPayload,
+  type DispositifPayload,
 } from "./payload-builder";
 
 interface PreviewDocument {
@@ -9,6 +10,10 @@ interface PreviewDocument {
   title: string;
   editorialContent: string;
   metadata?: Record<string, unknown>;
+  /** Merged metadata (AI + editorial overrides) for preview */
+  mergedMetadata?: Record<string, unknown>;
+  /** Optional pre-built payload (avoids rebuilding) */
+  payload?: DispositifPayload;
 }
 
 /**
@@ -18,12 +23,15 @@ interface PreviewDocument {
  * 3. Creates and submits a hidden form to the Main App
  */
 export const submitPreview = async (document: PreviewDocument) => {
-  // Build the preview payload using shared builder
-  const payload = await buildDispositifPayload({
-    title: document.title,
-    editorialContent: document.editorialContent,
-    metadata: document.metadata,
-  });
+  // Use provided payload or build a new one
+  const payload =
+    document.payload ??
+    (await buildDispositifPayload({
+      title: document.title,
+      editorialContent: document.editorialContent,
+      metadata: document.metadata,
+      mergedMetadata: document.mergedMetadata,
+    }));
 
   // Get preview URL from client-side env vars
   const previewUrl =

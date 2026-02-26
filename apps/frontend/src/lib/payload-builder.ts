@@ -13,17 +13,18 @@ export interface DocumentPayloadInput {
   title: string;
   editorialContent: string;
   metadata?: Record<string, unknown>;
+  /** Merged metadata (AI + editorial overrides) for preview/publication */
+  mergedMetadata?: Record<string, unknown>;
 }
 
 export interface DispositifPayload {
   dispositif: {
-    typeContenu: string;
+    origin: "RCO";
     theme: string;
-    titreInformatif: string;
-    titreMarque: string;
-    abstract: string;
-    origin: string;
-    status?: string;
+    secondaryThemes: unknown[];
+    needs: unknown[];
+    sponsors: Array<{ name: string; logo?: string; link?: string }>;
+    metadatas: Record<string, unknown>;
     translations: {
       fr: {
         content: {
@@ -46,6 +47,7 @@ export interface PublishPayload extends DispositifPayload {
 
 /**
  * Build a dispositif payload for preview or publication
+ * Follows the exact contract defined by Réfugiés.info
  * @param doc - Document data from the editor
  * @returns Structured payload matching Main App webhook expectations
  */
@@ -53,36 +55,132 @@ export async function buildDispositifPayload(
   doc: DocumentPayloadInput,
   status = "Actif",
 ): Promise<DispositifPayload> {
-  const themeId = (doc.metadata?.theme as string) || DEFAULT_THEME_ID;
+  // Use merged metadata if available, otherwise fall back to basic metadata
+  const metadata = doc.mergedMetadata || doc.metadata || {};
 
-  // Normalize markdown to ensure unambiguous directive nesting
-  // This prevents parsing issues in the Main App when it receives nested directives
-  // We ALSO strip the first H1 heading for the payload (it's passed in metadata)
+  // Root level fields
+  const themeId = (metadata.theme as string) || DEFAULT_THEME_ID;
+  const secondaryThemes = (metadata.secondaryThemes as unknown[]) || [];
+  const needs = (metadata.needs as unknown[]) || [];
+  const titreMarque = (metadata.titreMarque as string) || doc.title;
+  const abstract = (metadata.abstract as string) || "";
+
+  // Build metadatas object (structured metadata for RI)
+  const metadatas: Record<string, unknown> = {};
+
+  // Only include defined fields (avoid sending undefined/null)
+  if (metadata.location !== undefined) metadatas.location = metadata.location;
+  if (metadata.frenchLevel !== undefined)
+    metadatas.frenchLevel = metadata.frenchLevel;
+  if (metadata.age !== undefined) metadatas.age = metadata.age;
+  if (metadata.price !== undefined) metadatas.price = metadata.price;
+  if (metadata.publicStatus !== undefined)
+    metadatas.publicStatus = metadata.publicStatus;
+  if (metadata.public !== undefined) metadatas.public = metadata.public;
+  if (metadata.conditions !== undefined)
+    metadatas.conditions = metadata.conditions;
+  if (metadata.commitment !== undefined)
+    metadatas.commitment = metadata.commitment;
+  if (metadata.frequency !== undefined)
+    metadatas.frequency = metadata.frequency;
+  if (metadata.timeSlots !== undefined)
+    metadatas.timeSlots = metadata.timeSlots;
+  // Map periode (MongoDB format) → sessions (RI format)
+  if (Array.isArray(metadata.periode) && metadata.periode.length > 0) {
+    metadatas.sessions = metadata.periode.map((session: unknown) => {
+      // Convert MongoDB $date format to ISO string
+      const convertDate = (dateObj: unknown): string | undefined => {
+        if (!dateObj) return undefined;
+        if (typeof dateObj === "string") return dateObj;
+        if (typeof dateObj === "object" && dateObj !== null) {
+          return (dateObj as { $date?: string }).$date;
+        }
+        return undefined;
+      };
+
+      // Handle both formats:
+      // MongoDB: { debut: { $date: "..." }, fin: { $date: "..." } }
+      // Direct: { startDate: "...", endDate: "..." }
+      const s = session as {
+        debut?: { $date?: string } | string;
+        fin?: { $date?: string } | string;
+        startDate?: string;
+        endDate?: string;
+        inscription?: { debut?: { $date?: string }; fin?: { $date?: string } };
+        registrationStartDate?: { $date?: string } | string;
+        registrationEndDate?: { $date?: string } | string;
+        externalRef?: string;
+        url?: string;
+      };
+
+      const startDate =
+        convertDate(s.debut) || s.startDate || "1970-01-01T00:00:00.000Z";
+      const endDate =
+        convertDate(s.fin) || s.endDate || "1970-01-01T00:00:00.000Z";
+
+      const result: {
+        startDate: string;
+        endDate: string;
+        registrationStartDate?: string;
+        registrationEndDate?: string;
+        externalRef?: string;
+        url?: string;
+      } = { startDate, endDate };
+
+      // Optional registration dates
+      const regStart =
+        convertDate(s.registrationStartDate) ||
+        convertDate(s.inscription?.debut);
+      const regEnd =
+        convertDate(s.registrationEndDate) || convertDate(s.inscription?.fin);
+
+      if (regStart) result.registrationStartDate = regStart;
+      if (regEnd) result.registrationEndDate = regEnd;
+      if (s.externalRef) result.externalRef = s.externalRef;
+      if (s.url) result.url = s.url;
+
+      return result;
+    });
+  }
+
+  // Build sponsors array from mainSponsor (at root level, not in metadatas)
+  const sponsors: Array<{ name: string; logo?: string; link?: string }> = [];
+  if (metadata.mainSponsor !== undefined && metadata.mainSponsor !== "") {
+    sponsors.push({
+      name: metadata.mainSponsor as string,
+      // logo and link are optional and will be added later
+    });
+  }
+
+  // Normalize markdown
   const cleanedMarkdown = await stripFirstH1(doc.editorialContent);
   const normalizedMarkdown = normalizeMarkdown(cleanedMarkdown);
 
-  return {
+  const payload: DispositifPayload = {
     dispositif: {
-      typeContenu: "dispositif",
-      theme: themeId,
-      status: status,
-      // Root fields for legacy/compatibility
-      titreInformatif: doc.title,
-      titreMarque: doc.title,
-      abstract: "",
       origin: "RCO",
+      // Root level metadata fields
+      theme: themeId,
+      secondaryThemes,
+      needs,
+      sponsors,
+      // Structured metadatas object
+      metadatas,
+      // Translations contain titreMarque, titreInformatif, abstract
       translations: {
         fr: {
           content: {
             titreInformatif: doc.title,
-            titreMarque: doc.title, // Fallback to title
-            abstract: "", // Required field often
+            titreMarque,
+            abstract,
             markdown: normalizedMarkdown,
           },
         },
       },
     },
   };
+
+  return payload;
 }
 
 /**
