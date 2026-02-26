@@ -69,13 +69,8 @@ export async function saveDocumentStep(
 
     const existingEditorialMetadata = editorialRecord?.metadata;
 
-    const ingestionMetadata = Array.isArray(workflow.ingestion_records)
-      ? workflow.ingestion_records[0]?.metadata
-      : (workflow.ingestion_records as Record<string, unknown>)?.metadata;
-
-    const baseMetadata = (existingEditorialMetadata ||
-      ingestionMetadata ||
-      {}) as Record<string, unknown>;
+    // Don't copy ingestion metadata - start fresh
+    const baseMetadata = existingEditorialMetadata || {};
     const updatedMetadata = {
       ...baseMetadata,
       title,
@@ -124,13 +119,12 @@ export async function saveDocumentStep(
         };
       }
 
-      // New record starts as draft
+      // New record starts as draft (metadata left to default)
       const { data: newRecord, error: insertError } = await supabase
         .from("editorial_records")
         .insert({
           ingestion_record_id: workflow.ingestion_record_id,
           markdown,
-          metadata: updatedMetadata,
           author_id: userId,
           work_status: "draft",
         })

@@ -5,5 +5,5 @@
 
 export * from "./content";
 export * from "./document";
-
+export * from "./metadata-ri";
 export * from "./user";

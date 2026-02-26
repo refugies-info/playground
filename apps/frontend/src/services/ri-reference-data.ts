@@ -88,11 +88,6 @@ export async function fetchRiReferenceData(): Promise<RiReferenceData> {
       needsMap[n.id] = n.name;
     }
 
-    logger.info(
-      { themes: themes.length, needs: needs.length },
-      "RI reference data loaded",
-    );
-
     return { themes: themesMap, needs: needsMap };
   } catch (error) {
     logger.error(error, "Failed to fetch RI reference data");

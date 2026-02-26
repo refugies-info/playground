@@ -133,7 +133,7 @@ export function DebugPanel() {
               </div>
 
               {/* LLM Metadata */}
-              <div className="flex-1 flex flex-col">
+              <div className="flex-1 flex flex-col border-r relative group">
                 <div className="px-4 py-2 bg-pink-50/50 border-b font-semibold text-xs tracking-wider uppercase text-pink-600 flex justify-between items-center">
                   <span>letta_report metadata</span>
                   <span className="bg-pink-100 px-2 py-0.5 rounded text-[10px] text-pink-700">
@@ -150,6 +150,28 @@ export function DebugPanel() {
                   )}
                   readOnly
                 />
+              </div>
+
+              {/* Editorial Record Metadata */}
+              <div className="flex-1 flex flex-col">
+                <div className="px-4 py-2 bg-blue-50 border-b font-semibold text-xs tracking-wider text-blue-600 uppercase flex justify-between items-center">
+                  <span>editorial_record metadata</span>
+                  <span className="bg-blue-100 px-2 py-0.5 rounded text-[10px] text-blue-700">
+                    {JSON.stringify(document?.editorialMetadata || {}).length}{" "}
+                    chars
+                  </span>
+                </div>
+                <div className="flex-1 relative bg-blue-50/30">
+                  <textarea
+                    className="w-full h-full p-4 resize-none focus:outline-none bg-transparent text-blue-900"
+                    value={JSON.stringify(
+                      document?.editorialMetadata || {},
+                      null,
+                      2,
+                    )}
+                    readOnly
+                  />
+                </div>
               </div>
             </>
           ) : (
