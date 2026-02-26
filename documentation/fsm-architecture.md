@@ -251,6 +251,377 @@ pnpm add @xstate/react --filter @playground/frontend  # Pour React hooks
 
 ---
 
+## 🤔 Comparaison des Approches
+
+### 4 Options Analysées
+
+#### 1. **XState v5** (Librairie complète)
+
+**Approche** : Librairie mature avec support complet des statecharts.
+
+```typescript
+import { setup, assign } from 'xstate';
+
+export const documentMachine = setup({
+  types: {
+    context: {} as DocumentContext,
+    events: {} as DocumentEvent,
+  },
+  guards: {
+    canPublish: ({ context }) => {
+      return context.complianceStatus === 'compliant' &&
+             context.workStatus === 'draft';
+    },
+  },
+  actions: {
+    publishDocument: assign({
+      onlineStatus: () => 'published',
+      workStatus: () => null,
+    }),
+  },
+}).createMachine({
+  id: 'document',
+  initial: 'pending',
+  states: {
+    pending: {
+      on: {
+        AUDIT_COMPLETE: {
+          target: 'classified',
+          actions: ['setComplianceStatus'],
+        },
+      },
+    },
+    editing: {
+      on: {
+        PUBLISH: {
+          guard: 'canPublish',
+          target: 'published',
+          actions: ['publishDocument'],
+        },
+      },
+    },
+    published: {
+      on: {
+        ARCHIVE: 'archived',
+      },
+    },
+  },
+});
+```
+
+**Avantages** :
+- ✅ Visualisation graphique (Stately)
+- ✅ Type-safe complet
+- ✅ Devtools avancés
+- ✅ Support statecharts (nested, parallel states)
+
+**Inconvénients** :
+- ❌ Verbeux (~100 lignes pour une machine simple)
+- ❌ Courbe d'apprentissage élevée
+- ❌ Concepts abstraits (setup, assign, guards)
+
+---
+
+#### 2. **MobX** (Réactivité automatique)
+
+**Approche** : State management réactif avec classes observables.
+
+```typescript
+import { makeAutoObservable, computed, action } from 'mobx';
+
+export class DocumentStore {
+  // State
+  state: 'pending' | 'classified' | 'editing' | 'published' | 'archived' = 'pending';
+
+  context = {
+    complianceStatus: null as 'compliant' | 'non_compliant' | null,
+    workStatus: null as 'to_process' | 'draft' | null,
+    onlineStatus: null as 'published' | 'archived' | null,
+  };
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  // Guards (computed)
+  @computed
+  get canPublish(): boolean {
+    return (
+      this.context.complianceStatus === 'compliant' &&
+      this.context.workStatus === 'draft'
+    );
+  }
+
+  // Transitions (actions)
+  @action
+  publish() {
+    if (!this.canPublish) {
+      throw new Error('Cannot publish: conditions not met');
+    }
+
+    this.state = 'published';
+    this.context.onlineStatus = 'published';
+    this.context.workStatus = null;  // Cascade automatique
+  }
+}
+```
+
+**Usage Frontend** :
+```typescript
+import { observer } from 'mobx-react-lite';
+
+export const PublishButton = observer(() => {
+  const store = useDocument();
+
+  return (
+    <Button
+      disabled={!store.canPublish}
+      onClick={() => store.publish()}
+    >
+      Publier
+    </Button>
+  );
+});
+```
+
+**Persistence automatique** :
+```typescript
+import { reaction } from 'mobx';
+
+// Auto-persist en DB
+reaction(
+  () => this.context.onlineStatus,
+  async (status) => {
+    await supabase
+      .from('editorial_records')
+      .update({ online_status: status })
+      .eq('workflow_id', this.context.workflowId);
+  }
+);
+```
+
+**Avantages** :
+- ✅ Réactivité automatique (UI se met à jour seule)
+- ✅ Code lisible et pragmatique
+- ✅ Persistence DB triviale avec `reaction()`
+- ✅ Devtools excellents
+- ✅ Communauté large
+
+**Inconvénients** :
+- ❌ Pas une vraie FSM (pas de validation stricte)
+- ❌ Nécessite discipline pour respecter les règles
+
+---
+
+#### 3. **Robot3** (Minimaliste)
+
+**Approche** : Librairie ultra-légère, API fonctionnelle.
+
+```typescript
+import { createMachine, state, transition, guard, reduce } from 'robot3';
+
+const documentMachine = createMachine({
+  pending: state(
+    transition('AUDIT_COMPLETE', 'classified',
+      reduce((ctx, ev) => ({ ...ctx, complianceStatus: ev.compliance }))
+    )
+  ),
+  editing: state(
+    transition('PUBLISH', 'published',
+      guard((ctx) => ctx.complianceStatus === 'compliant' && ctx.workStatus === 'draft'),
+      reduce((ctx) => ({ ...ctx, onlineStatus: 'published', workStatus: null }))
+    )
+  ),
+  published: state(),
+});
+```
+
+**Avantages** :
+- ✅ Ultra concis (~30 lignes)
+- ✅ API fonctionnelle intuitive
+- ✅ < 1KB gzipped
+- ✅ Zero boilerplate
+
+**Inconvénients** :
+- ❌ Pas d'outils de visualisation
+- ❌ Communauté petite
+- ❌ Moins de features avancées
+
+---
+
+#### 4. **Custom FSM** (Sans librairie)
+
+**Approche** : Implémenter soi-même avec objets et fonctions.
+
+> **Source** : David Khourshid, créateur de XState, explique dans son article ["You don't need a library for state machines"](https://dev.to/davidkpiano/you-don-t-need-a-library-for-state-machines-k7h) qu'on peut implémenter une FSM simple avec juste des objets et une fonction de transition.
+
+**Implémentation basée sur l'article** :
+
+```typescript
+// packages/fsm/src/machines/document-machine.ts
+
+// 1. Définir la machine (configuration objet)
+const documentMachine = {
+  initial: 'pending',
+  states: {
+    pending: {
+      on: {
+        AUDIT_COMPLETE: {
+          target: 'classified',
+          actions: [{ type: 'setComplianceStatus' }],
+        },
+      },
+    },
+    editing: {
+      on: {
+        PUBLISH: {
+          target: 'published',
+          guard: 'canPublish',
+          actions: [
+            { type: 'setOnlineStatus', value: 'published' },
+            { type: 'clearWorkStatus' },
+          ],
+        },
+      },
+    },
+    published: {
+      on: {
+        ARCHIVE: 'archived',
+      },
+    },
+  },
+};
+
+// 2. Fonction de transition (reducer)
+function transition(state, event, machine = documentMachine) {
+  const currentStateNode = machine.states[state.value];
+
+  // Chercher la transition pour cet événement
+  const nextStateNode = currentStateNode.on?.[event.type];
+
+  if (!nextStateNode) {
+    // Événement non géré → rester dans l'état actuel
+    return state;
+  }
+
+  // Vérifier le guard si présent
+  if (nextStateNode.guard) {
+    const guardFn = guards[nextStateNode.guard];
+    if (!guardFn(state.context, event)) {
+      return state;  // Guard échoue → pas de transition
+    }
+  }
+
+  // Exécuter les actions
+  const newContext = { ...state.context };
+  nextStateNode.actions?.forEach(action => {
+    if (action.type === 'setOnlineStatus') {
+      newContext.onlineStatus = action.value;
+    }
+    if (action.type === 'clearWorkStatus') {
+      newContext.workStatus = null;
+    }
+  });
+
+  return {
+    value: nextStateNode.target || state.value,
+    context: newContext,
+  };
+}
+
+// 3. Définir les guards
+const guards = {
+  canPublish: (ctx) => {
+    return ctx.complianceStatus === 'compliant' && ctx.workStatus === 'draft';
+  },
+};
+
+// 4. Usage
+let state = {
+  value: 'editing',
+  context: {
+    complianceStatus: 'compliant',
+    workStatus: 'draft',
+    onlineStatus: null,
+  },
+};
+
+state = transition(state, { type: 'PUBLISH' });
+// → { value: 'published', context: { onlineStatus: 'published', workStatus: null } }
+```
+
+**Avantages** :
+- ✅ Zero dépendance
+- ✅ Complètement transparent
+- ✅ Facile à déboguer
+- ✅ 100% TypeScript
+
+**Inconvénients** :
+- ❌ Pas d'outils externes
+- ❌ À maintenir soi-même
+- ❌ Pas de visualisation
+
+---
+
+### 📊 Tableau Synthétique
+
+| Critère | XState | MobX | Robot3 | Custom |
+|---------|--------|------|--------|--------|
+| **Lignes de code** | ~100 | ~50 | ~30 | ~50 |
+| **Courbe apprentissage** | Élevée | Faible | Faible | Très faible |
+| **Réactivité UI** | Manuelle | Automatique | Manuelle | Manuelle |
+| **Persistence DB** | Complexe | Triviale (`reaction()`) | Complexe | Complexe |
+| **TypeScript** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **Devtools** | Excellent | Excellent | Aucun | Aucun |
+| **Visualisation** | Stately | Aucune | Aucune | Aucune |
+| **Communauté** | Moyenne | Large | Petite | Aucune |
+| **Zero dépendance** | ❌ | ❌ | ❌ | ✅ |
+| **Statecharts** | ✅ | ❌ | ❌ | ❌ |
+
+---
+
+### 🎯 Recommandation pour Content Playground
+
+**MobX** est la meilleure option car :
+
+1. **Pragmatique** : Persistence DB triviale avec `reaction()`
+2. **Réactif** : UI se met à jour automatiquement
+3. **Lisible** : Code clair, pas de concepts abstraits
+4. **Type-safe** : Excellent support TypeScript
+5. **Débuggable** : Devtools excellents
+
+**Pourquoi pas les autres ?**
+- **XState** : Overkill pour ce projet, trop verbeux
+- **Robot3** : Manque d'outils et de communauté
+- **Custom** : Bien pour apprendre, mais maintenance supplémentaire
+
+**Architecture recommandée** :
+
+```
+packages/
+├── fsm/
+│   ├── src/
+│   │   ├── stores/
+│   │   │   ├── document-store.ts    # MobX store
+│   │   │   └── translation-store.ts
+│   │   ├── guards/
+│   │   │   └── rules.ts             # Règles partagées
+│   │   └── index.ts
+│   └── package.json
+│
+├── workflows/                        # Backend utilise les guards
+│   └── src/steps/
+│       └── editorial/
+│           └── toggle-status.ts
+│
+└── frontend/                         # Frontend utilise les stores
+    └── src/components/
+        └── document-editor/
+            └── DocumentContext.tsx
+```
+
+---
+
 ## 🔧 Plan de Refactoring
 
 ### Phase 1 : Création du Package FSM
