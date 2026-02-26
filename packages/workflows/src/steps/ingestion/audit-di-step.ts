@@ -38,7 +38,7 @@
  *   across concurrent workflow runs
  * - MAX_PENDING_AUDITS cap (env: MAX_PENDING_AUDITS, default: 50) prevents runaway costs
  * - Requires service IDs to scope to DI origin (vs. RCO etc.)
- * - compliance_status on `workflows` is updated by a DB trigger on ingestion_records update
+ * - compliance_status lives on `ingestion_records` (RI-1093), updated directly after audit
  */
 
 import { APIError } from "@letta-ai/letta-client/error";
@@ -298,7 +298,7 @@ export async function generateDiAuditReportsStep(runId: string) {
         );
       }
 
-      // Set compliance_status directly — compliant iff complete + not duplicate (RI-1117)
+      // Set compliance_status on ingestion_records — compliant iff complete + not duplicate (RI-1117, RI-1093)
       const complianceStatus =
         parsed.status !== "complete"
           ? "error"
@@ -307,14 +307,14 @@ export async function generateDiAuditReportsStep(runId: string) {
             : "non_compliant";
 
       const { error: complianceError } = await supabase
-        .from("workflows")
+        .from("ingestion_records")
         .update({ compliance_status: complianceStatus })
-        .eq("id", target.workflow_id);
+        .eq("id", target.id);
 
       if (complianceError) {
         logger.error(
-          { error: complianceError, workflowId: target.workflow_id },
-          "Failed to update workflow compliance status",
+          { error: complianceError, ingestionRecordId: target.id },
+          "Failed to update ingestion_record compliance status",
         );
       }
     }),
@@ -378,12 +378,6 @@ export async function forceAuditReportStep(workflowId: string) {
     .eq("id", workflowId)
     .single();
 
-  // Set compliance status to pending immediately
-  await supabase
-    .from("workflows")
-    .update({ compliance_status: "pending" })
-    .eq("id", workflowId);
-
   if (workflowError || !workflow?.ingestion_record_id) {
     logger.error(
       { workflowId, error: workflowError },
@@ -393,6 +387,16 @@ export async function forceAuditReportStep(workflowId: string) {
   }
 
   const ingestionRecordId = workflow.ingestion_record_id;
+
+  // Set compliance status to pending on ingestion_records (RI-1093)
+  // Include updated_at to ensure zombie reclamation works correctly
+  await supabase
+    .from("ingestion_records")
+    .update({
+      compliance_status: "pending",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", ingestionRecordId);
 
   // 2. Fetch Ingestion Record
   const { data: record, error: recordError } = await supabase
@@ -479,7 +483,7 @@ export async function forceAuditReportStep(workflowId: string) {
       );
     }
 
-    // Set compliance_status — compliant iff complete + not duplicate (RI-1117)
+    // Set compliance_status on ingestion_records — compliant iff complete + not duplicate (RI-1117, RI-1093)
     const finalComplianceStatus =
       parsed.status !== "complete"
         ? "error"
@@ -488,14 +492,14 @@ export async function forceAuditReportStep(workflowId: string) {
           : "non_compliant";
 
     const { error: finalStatusError } = await supabase
-      .from("workflows")
+      .from("ingestion_records")
       .update({ compliance_status: finalComplianceStatus })
-      .eq("id", workflowId);
+      .eq("id", ingestionRecordId);
 
     if (finalStatusError) {
       logger.error(
-        { error: finalStatusError, workflowId },
-        "Failed to update workflow final status",
+        { error: finalStatusError, ingestionRecordId },
+        "Failed to update ingestion_record final status",
       );
     }
 
@@ -518,15 +522,15 @@ export async function forceAuditReportStep(workflowId: string) {
       );
     }
 
-    // FINAL SECURITY: Ensure workflow is no longer 'pending' if we hit an error
+    // FINAL SECURITY: Ensure ingestion_record is no longer 'pending' if we hit an error (RI-1093)
     try {
       await supabase
-        .from("workflows")
+        .from("ingestion_records")
         .update({ compliance_status: "error" })
-        .eq("id", workflowId);
+        .eq("id", ingestionRecordId);
     } catch (dbError) {
       logger.error(
-        { dbError, workflowId },
+        { dbError, ingestionRecordId },
         "Failed to force error status on catch",
       );
     }
