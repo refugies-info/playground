@@ -594,6 +594,282 @@ export const persistToDb = (supabase: SupabaseClient) => ({
 
 ---
 
+## 🔄 Gestion des Transitions Atomiques
+
+### Le Problème
+
+Certaines transitions déclenchent automatiquement d'autres changements d'état :
+- **PUBLISH** → `online_status = 'published'` ET `work_status = null`
+- **ARCHIVE** → `online_status = 'archived'` ET `work_status = null`
+- **TOGGLE non_compliant** → `compliance_status = 'non_compliant'` ET `online_status = 'archived'`
+
+### Solution 1 : Actions Atomiques (Recommandée)
+
+XState permet de définir **plusieurs actions dans une seule transition** :
+
+```typescript
+// packages/fsm/src/machines/document-machine.ts
+export const documentMachine = setup({
+  actions: {
+    // Action 1 : Changer online_status
+    setOnlineStatusToPublished: assign({
+      onlineStatus: () => 'published',
+    }),
+
+    // Action 2 : Reset work_status
+    clearWorkStatus: assign({
+      workStatus: () => null,
+    }),
+
+    // Action 3 : Changer online_status + work_status (atomique)
+    publishDocument: assign({
+      onlineStatus: () => 'published',
+      workStatus: () => null,  // ← Automatique !
+    }),
+
+    archiveDocument: assign({
+      onlineStatus: () => 'archived',
+      workStatus: () => null,  // ← Automatique !
+    }),
+  },
+}).createMachine({
+  states: {
+    editing: {
+      on: {
+        PUBLISH: {
+          guard: 'canPublish',
+          target: 'published',
+          actions: ['publishDocument'],  // ← Une seule action qui fait tout
+        },
+      },
+    },
+    published: {
+      on: {
+        ARCHIVE: {
+          guard: 'canArchive',
+          target: 'archived',
+          actions: ['archiveDocument'],  // ← Une seule action qui fait tout
+        },
+      },
+    },
+  },
+});
+```
+
+**Avantages** :
+- ✅ Atomique : les deux changements se font ensemble
+- ✅ Impossible d'avoir un état incohérent
+- ✅ Testable unitairement
+- ✅ Lisible : une action = une intention métier
+
+---
+
+### Solution 2 : Actions Composées
+
+Pour des transitions plus complexes, on peut composer plusieurs actions :
+
+```typescript
+export const documentMachine = setup({
+  actions: {
+    setOnlineStatusToPublished: assign({
+      onlineStatus: () => 'published',
+    }),
+    clearWorkStatus: assign({
+      workStatus: () => null,
+    }),
+  },
+}).createMachine({
+  states: {
+    editing: {
+      on: {
+        PUBLISH: {
+          guard: 'canPublish',
+          target: 'published',
+          actions: [
+            'setOnlineStatusToPublished',  // Action 1
+            'clearWorkStatus',             // Action 2
+            // Action 3, 4, 5... si besoin
+          ],
+        },
+      },
+    },
+  },
+});
+```
+
+**Avantages** :
+- ✅ Actions réutilisables individuellement
+- ✅ Ordre d'exécution garanti
+- ✅ Debug plus facile (chaque action est loggée)
+
+---
+
+### Solution 3 : Transitions en Cascade (Cas Avancés)
+
+Pour des workflows complexes avec plusieurs étapes :
+
+```typescript
+export const documentMachine = setup({
+  actions: {
+    archiveTranslations: async ({ context }) => {
+      // Cascade : archiver toutes les traductions
+      await supabase
+        .from('translation_records')
+        .update({ online_status: 'archived' })
+        .eq('workflow_id', context.workflowId);
+    },
+  },
+}).createMachine({
+  states: {
+    published: {
+      on: {
+        ARCHIVE: {
+          target: 'archiving',  // ← État intermédiaire
+          actions: ['archiveDocument'],
+        },
+      },
+    },
+    archiving: {
+      // État transitoire pour les opérations async
+      invoke: {
+        src: 'archiveTranslations',
+        onDone: 'archived',
+        onError: 'error',
+      },
+    },
+    archived: {
+      // État final
+    },
+  },
+});
+```
+
+**Quand utiliser** :
+- Opérations asynchrones (API calls, DB updates)
+- Workflows multi-étapes
+- Rollback possible si erreur
+
+---
+
+### Exemple Complet : Toggle Compliance
+
+```typescript
+// packages/fsm/src/machines/document-machine.ts
+export const documentMachine = setup({
+  actions: {
+    toggleComplianceStatus: assign({
+      complianceStatus: ({ context }) =>
+        context.complianceStatus === 'compliant' ? 'non_compliant' : 'compliant',
+    }),
+
+    // Si on passe à non_compliant → auto-archive
+    autoArchiveIfNonCompliant: assign({
+      onlineStatus: ({ context }) => {
+        if (context.complianceStatus === 'non_compliant') {
+          return 'archived';  // ← Automatique !
+        }
+        return context.onlineStatus;  // Sinon, on ne change pas
+      },
+    }),
+  },
+}).createMachine({
+  states: {
+    classified: {
+      on: {
+        TOGGLE_COMPLIANCE: {
+          guard: 'canToggle',
+          actions: [
+            'toggleComplianceStatus',
+            'autoArchiveIfNonCompliant',  // ← Cascade automatique
+          ],
+          // Reste dans le même état (transition interne)
+        },
+      },
+    },
+  },
+});
+```
+
+**Résultat** :
+- `compliant → non_compliant` → `online_status` passe à `'archived'`
+- `non_compliant → compliant` → `online_status` inchangé
+
+---
+
+### Règles de Gestion Centralisées
+
+Toutes les règles de cascade sont définies **une seule fois** dans la machine :
+
+| Transition | Effet en Cascade | Règle |
+|------------|------------------|-------|
+| `PUBLISH` | `work_status → null` | Toujours |
+| `ARCHIVE` | `work_status → null` | Toujours |
+| `TOGGLE → non_compliant` | `online_status → archived` | Si non_compliant |
+| `ARCHIVE document` | `translation_records → archived` | Cascade DB |
+| `RE-PUBLISH` | `work_status → null` | Toujours |
+
+**Code centralisé** :
+
+```typescript
+// packages/fsm/src/rules/cascade-rules.ts
+export const cascadeRules = {
+  onPublish: {
+    workStatus: null,  // Toujours
+  },
+  onArchive: {
+    workStatus: null,  // Toujours
+  },
+  onNonCompliant: {
+    onlineStatus: 'archived',  // Automatique
+  },
+} as const;
+```
+
+---
+
+### Tests des Transitions Atomiques
+
+```typescript
+// packages/fsm/src/machines/document-machine.test.ts
+import { createActor } from 'xstate';
+import { documentMachine } from './document-machine';
+
+describe('Document Machine - Cascade Transitions', () => {
+  it('should clear work_status when publishing', () => {
+    const actor = createActor(documentMachine, {
+      input: {
+        workStatus: 'draft',
+        onlineStatus: null,
+        complianceStatus: 'compliant',
+      },
+    });
+
+    actor.start();
+    actor.send({ type: 'PUBLISH' });
+
+    expect(actor.getSnapshot().context.workStatus).toBe(null);
+    expect(actor.getSnapshot().context.onlineStatus).toBe('published');
+  });
+
+  it('should auto-archive when toggling to non_compliant', () => {
+    const actor = createActor(documentMachine, {
+      input: {
+        complianceStatus: 'compliant',
+        onlineStatus: 'published',
+      },
+    });
+
+    actor.start();
+    actor.send({ type: 'TOGGLE_COMPLIANCE' });
+
+    expect(actor.getSnapshot().context.complianceStatus).toBe('non_compliant');
+    expect(actor.getSnapshot().context.onlineStatus).toBe('archived');
+  });
+});
+```
+
+---
+
 ## 📋 Checklist de Migration
 
 ### Backend
