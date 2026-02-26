@@ -39,7 +39,8 @@
     "seed:ingestion": "tsx scripts/seed-ingestion.ts",
     "di:ingest": "tsx scripts/ingest-di.ts",
     "di:extract": "tsx scripts/extract-random-records.ts",
-    "seed:sync": "supabase db dump --local --data-only --file supabase/seed.sql"
+    "seed:sync": "supabase db dump --local --data-only --file supabase/seed.sql",
+    "worktree": "bash scripts/create-worktree.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.6",
