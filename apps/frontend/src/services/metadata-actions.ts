@@ -120,15 +120,12 @@ export async function saveMetadataFieldAction(
   const shouldDeleteKey = value === undefined;
   const jsonValue = value === undefined ? null : (value as Json);
 
-  const { error: rpcError } = await (supabase as any).rpc(
-    "update_metadata_field",
-    {
-      record_id: editorialRecordId,
-      field_key: key,
-      field_value: jsonValue,
-      delete_key: shouldDeleteKey,
-    },
-  );
+  const { error: rpcError } = await supabase.rpc("update_metadata_field", {
+    record_id: editorialRecordId,
+    field_key: key,
+    field_value: jsonValue,
+    delete_key: shouldDeleteKey,
+  });
 
   if (rpcError) {
     logger.error(rpcError, "Error saving metadata via RPC");
@@ -253,14 +250,11 @@ export async function saveMetadataFieldsAction(
     const jsonValue =
       value === undefined || value === null ? null : (value as Json);
 
-    const { error: rpcError } = await (supabase as any).rpc(
-      "update_metadata_field",
-      {
-        record_id: editorialRecordId,
-        field_key: key,
-        field_value: jsonValue,
-      },
-    );
+    const { error: rpcError } = await supabase.rpc("update_metadata_field", {
+      record_id: editorialRecordId,
+      field_key: key,
+      field_value: jsonValue,
+    });
 
     if (rpcError) {
       logger.error(rpcError, "Error saving metadata via RPC");

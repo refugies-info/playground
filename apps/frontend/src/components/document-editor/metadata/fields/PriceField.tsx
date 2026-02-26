@@ -73,7 +73,6 @@ export function PriceField({
       renderEdit={() => (
         <div className="flex flex-wrap items-center gap-2 p-1">
           <SelectInput
-            variant="inline"
             options={PRICE_TYPE_OPTIONS}
             value={localIsFree ? "free" : "paid"}
             onChange={(val) => setLocalIsFree(val === "free")}
@@ -84,20 +83,18 @@ export function PriceField({
           {!localIsFree && (
             <>
               <NumberInput
-                variant="inline"
                 value={localAmount}
                 onChange={setLocalAmount}
                 min={0}
                 className="w-16"
                 aria-label={`${label} - montant`}
               />
-              <span className="text-xs text-gray-500">€ par</span>
+              <span className="text-xs text-gray-500">€ </span>
               <SelectInput
-                variant="inline"
                 options={PRICE_DETAILS_OPTIONS}
                 value={localPeriod}
                 onChange={setLocalPeriod}
-                className="w-24"
+                className="w-34"
                 aria-label={`${label} - période`}
               />
             </>

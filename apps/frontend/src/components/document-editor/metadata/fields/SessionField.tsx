@@ -64,11 +64,19 @@ export function SessionField({ fieldKey }: { fieldKey: string }) {
 
   // Format display value
   const displayValue =
-    sessions.length === 0
-      ? null
-      : sessions.length === 1
-        ? `Du ${formatDate(sessions[0]?.startDate)} au ${formatDate(sessions[0]?.endDate)}`
-        : `${sessions.length} sessions`;
+    sessions.length === 0 ? null : (
+      <div className="space-y-1">
+        {sessions.map((session, index) => (
+          <div
+            key={`session-${session?.startDate || index}-${session?.endDate || index}`}
+            className="text-sm"
+          >
+            Du {formatDate(session?.startDate)} au{" "}
+            {formatDate(session?.endDate)}
+          </div>
+        ))}
+      </div>
+    );
 
   // Local handlers
   const handleAdd = useCallback(() => {

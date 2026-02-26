@@ -3,8 +3,15 @@
  * Renders a single row in the metadata table
  */
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@playground/ui";
 import type { LucideIcon } from "lucide-react";
-import { RotateCcw, Trash2 } from "lucide-react";
+import { HelpCircle, RotateCcw, Trash2 } from "lucide-react";
+import { useCallback } from "react";
 import { FieldBadge } from "./FieldBadge";
 import { useMetadata } from "./MetadataContext";
 import { getDisplayComponent } from "./publication-targets/refugies-info";
@@ -44,6 +51,24 @@ export function MetadataRow({
     dirtyFields.has(key),
   );
 
+  // Reset field and all related fields
+  const handleReset = useCallback(() => {
+    resetField(field.riKey);
+    // Also reset related keys (e.g., secondaryThemes for themes)
+    for (const relatedKey of field.relatedKeys ?? []) {
+      resetField(relatedKey);
+    }
+  }, [field.riKey, field.relatedKeys, resetField]);
+
+  // Clear field and all related fields
+  const handleClear = useCallback(() => {
+    clearField(field.riKey);
+    // Also clear related keys
+    for (const relatedKey of field.relatedKeys ?? []) {
+      clearField(relatedKey);
+    }
+  }, [field.riKey, field.relatedKeys, clearField]);
+
   return (
     <tr className="hover:bg-gray-50 text-sm">
       <td className="px-6 py-4">
@@ -57,28 +82,55 @@ export function MetadataRow({
             isModified={isModified}
             hasOriginalValue={hasOriginalValue}
           />
-          {isModified && (
-            <ActionButton
-              icon={RotateCcw}
-              onClick={() => resetField(field.riKey)}
-              title="Réinitialiser (revenir à la version IA)"
-              hoverColor="blue"
-            />
-          )}
-          {hasOriginalValue && (
-            <ActionButton
-              icon={Trash2}
-              onClick={() => clearField(field.riKey)}
-              title="Supprimer (vider la donnée)"
-              hoverColor="red"
-            />
+
+          {fieldStatus === "error" && fieldError ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle
+                    className="h-4 w-4 text-gray-500 cursor-pointer"
+                    onClick={() =>
+                      navigator.clipboard.writeText(
+                        `${field.riKey}: ${fieldError} | Valeur: ${JSON.stringify(rawValue)}`,
+                      )
+                    }
+                  />
+                </TooltipTrigger>
+                <TooltipContent className="flex flex-col gap-2">
+                  <p className="font-bold">
+                    <b>Clé du champ :</b> {field.riKey}
+                  </p>
+                  <b>Erreur :</b>
+                  <p className="max-w-xs">{fieldError}</p>
+                  <b>Valeur :</b>
+                  <code className="font-mono">{JSON.stringify(rawValue)}</code>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Cliquez pour copier
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <>
+              {isModified && (
+                <ActionButton
+                  icon={RotateCcw}
+                  onClick={handleReset}
+                  title="Réinitialiser (revenir à la version IA)"
+                  hoverColor="blue"
+                />
+              )}
+              {!isModified && hasOriginalValue && (
+                <ActionButton
+                  icon={Trash2}
+                  onClick={handleClear}
+                  title="Supprimer (vider la donnée)"
+                  hoverColor="red"
+                />
+              )}
+            </>
           )}
         </div>
-        {fieldStatus === "error" && fieldError && (
-          <div className="mt-1 text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
-            {fieldError}
-          </div>
-        )}
       </td>
       <td className="px-6 py-4">{getDisplayComponent(field, mergedValue)}</td>
       <td className="px-6 py-4">
@@ -112,7 +164,7 @@ function ActionButton({
     <button
       type="button"
       onClick={onClick}
-      className={`p-1 text-gray-400 ${hoverClasses} rounded`}
+      className={`cursor-pointer rounded p-1 text-gray-400 ${hoverClasses}`}
       title={title}
     >
       <Icon className="h-4 w-4" />

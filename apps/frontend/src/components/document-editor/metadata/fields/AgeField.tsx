@@ -101,16 +101,14 @@ export function AgeField({ fieldKey, label }: AgeFieldProps) {
       renderEdit={() => (
         <div className="flex flex-wrap items-center gap-2 p-1">
           <SelectInput
-            variant="inline"
             options={AGE_TYPE_OPTIONS}
             value={localType}
             onChange={handleTypeChange}
-            className="w-24"
+            className="w-28"
             aria-label={`${label} - type`}
           />
 
           <NumberInput
-            variant="inline"
             value={localAges[0] ?? null}
             onChange={(val) => handleAgeChange(0, val)}
             min={0}
@@ -123,7 +121,6 @@ export function AgeField({ fieldKey, label }: AgeFieldProps) {
             <>
               <span className="text-xs text-gray-500">et</span>
               <NumberInput
-                variant="inline"
                 value={localAges[1] ?? null}
                 onChange={(val) => handleAgeChange(1, val)}
                 min={0}

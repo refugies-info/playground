@@ -115,28 +115,24 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
             >
               <div className="flex-1 space-y-2">
                 <TextInput
-                  variant="inline"
                   value={poi.title ?? ""}
                   onChange={(val) => handleUpdate(index, "title", val)}
                   placeholder="Nom du lieu"
                   className="font-medium"
                 />
                 <TextInput
-                  variant="inline"
                   value={poi.address ?? ""}
                   onChange={(val) => handleUpdate(index, "address", val)}
                   placeholder="Adresse"
                 />
                 <div className="flex gap-2">
                   <TextInput
-                    variant="inline"
                     value={poi.city ?? ""}
                     onChange={(val) => handleUpdate(index, "city", val)}
                     placeholder="Ville"
                     className="flex-1"
                   />
                   <TextInput
-                    variant="inline"
                     value={poi.phone ?? ""}
                     onChange={(val) => handleUpdate(index, "phone", val)}
                     placeholder="Téléphone"

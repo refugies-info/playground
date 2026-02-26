@@ -129,16 +129,14 @@ export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
       renderEdit={() => (
         <div className="flex flex-wrap items-center gap-2 p-1">
           <SelectInput
-            variant="inline"
             options={COMMITMENT_DETAILS_OPTIONS}
             value={localAmountDetails}
             onChange={handleDetailsChange}
-            className="w-24"
+            className="w-32"
             aria-label={`${label} - type`}
           />
 
           <NumberInput
-            variant="inline"
             value={localHours[0] ?? null}
             onChange={(val) => handleHoursChange(0, val)}
             min={0}
@@ -150,7 +148,6 @@ export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
             <>
               <span className="text-xs text-gray-500">et</span>
               <NumberInput
-                variant="inline"
                 value={localHours[1] ?? null}
                 onChange={(val) => handleHoursChange(1, val)}
                 min={0}
@@ -161,7 +158,6 @@ export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
           )}
 
           <SelectInput
-            variant="inline"
             options={TIME_UNIT_OPTIONS}
             value={localTimeUnit}
             onChange={setLocalTimeUnit}

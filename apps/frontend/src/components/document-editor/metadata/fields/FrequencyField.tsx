@@ -47,8 +47,12 @@ export function FrequencyField({
   const value = Array.isArray(rawValue) ? rawValue[0] : rawValue;
 
   const amountDetails = value?.amountDetails;
-  const hoursArray = Array.isArray(value?.hours) ? value.hours : [];
-  const hours = hoursArray[0];
+  // Handle both array and single number for hours
+  const hours = Array.isArray(value?.hours)
+    ? value.hours[0]
+    : typeof value?.hours === "number"
+      ? value.hours
+      : undefined;
   const timeUnit = value?.timeUnit;
   const frequencyUnit = value?.frequencyUnit;
 
@@ -112,45 +116,44 @@ export function FrequencyField({
       onExit={handleExit}
       placeholder="Cliquer pour modifier"
       renderEdit={() => (
-        <div className="flex flex-wrap items-center gap-2 p-1">
-          <SelectInput
-            variant="inline"
-            options={FREQUENCY_DETAILS_OPTIONS}
-            value={localAmountDetails}
-            onChange={setLocalAmountDetails}
-            className="w-24"
-            aria-label={`${label} - type`}
-          />
+        <>
+          <div className="flex flex-wrap items-center gap-2 p-1">
+            <SelectInput
+              options={FREQUENCY_DETAILS_OPTIONS}
+              value={localAmountDetails}
+              onChange={setLocalAmountDetails}
+              className="w-32"
+              aria-label={`${label} - type`}
+            />
 
-          <NumberInput
-            variant="inline"
-            value={localHours}
-            onChange={setLocalHours}
-            min={0}
-            className="w-14"
-            aria-label={`${label} - quantité`}
-          />
+            <NumberInput
+              value={localHours}
+              onChange={setLocalHours}
+              min={0}
+              className="w-14"
+              aria-label={`${label} - quantité`}
+            />
 
-          <SelectInput
-            variant="inline"
-            options={TIME_UNIT_OPTIONS}
-            value={localTimeUnit}
-            onChange={setLocalTimeUnit}
-            className="w-24"
-            aria-label={`${label} - unité de temps`}
-          />
+            <SelectInput
+              options={TIME_UNIT_OPTIONS}
+              value={localTimeUnit}
+              onChange={setLocalTimeUnit}
+              className="w-24"
+              aria-label={`${label} - unité de temps`}
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2 p-1">
+            <span className="text-xs text-gray-500">par</span>
 
-          <span className="text-xs text-gray-500">par</span>
-
-          <SelectInput
-            variant="inline"
-            options={FREQUENCY_UNIT_OPTIONS}
-            value={localFrequencyUnit}
-            onChange={setLocalFrequencyUnit}
-            className="w-24"
-            aria-label={`${label} - fréquence`}
-          />
-        </div>
+            <SelectInput
+              options={FREQUENCY_UNIT_OPTIONS}
+              value={localFrequencyUnit}
+              onChange={setLocalFrequencyUnit}
+              className="w-32"
+              aria-label={`${label} - fréquence`}
+            />
+          </div>
+        </>
       )}
     >
       {displayValue}

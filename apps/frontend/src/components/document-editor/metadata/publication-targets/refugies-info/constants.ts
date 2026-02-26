@@ -48,13 +48,13 @@ export const FRENCH_LEVEL_OPTIONS: readonly {
   value: RiFrenchLevelType;
   label: string;
 }[] = [
-  { value: "alpha", label: "Alphabétisation" },
-  { value: "A1", label: "A1 - Débutant" },
-  { value: "A2", label: "A2 - Élémentaire" },
-  { value: "B1", label: "B1 - Intermédiaire" },
-  { value: "B2", label: "B2 - Intermédiaire supérieur" },
-  { value: "C1", label: "C1 - Avancé" },
-  { value: "C2", label: "C2 - Maîtrise" },
+  { value: "alpha", label: "Alphabétisation : en cours d’alphabétisation " },
+  { value: "A1", label: "A1.1 et A1 : découverte du français" },
+  { value: "A2", label: "A2 : communication de manière simple" },
+  { value: "B1", label: "B1 : communication en français intermédiaire" },
+  { value: "B2", label: "B2 : communication avec aisance" },
+  { value: "C1", label: "C1 : communication avec grande aisance" },
+  { value: "C2", label: "C2 : communication en français courant" },
 ];
 
 /** Public status options */
@@ -64,8 +64,8 @@ export const PUBLIC_STATUS_OPTIONS: readonly {
 }[] = [
   { value: "asile", label: "Demandeurs d'asile" },
   { value: "refugie", label: "Réfugiés statutaires" },
-  { value: "subsidiaire", label: "Protection subsidiaire" },
-  { value: "temporaire", label: "Protection temporaire" },
+  { value: "subsidiaire", label: "Bénéficiaires de la protection subsidiaire" },
+  { value: "temporaire", label: "Bénéficiaires de la protection temporaire" },
   { value: "apatride", label: "Apatrides" },
   { value: "french", label: "Citoyens français" },
 ];

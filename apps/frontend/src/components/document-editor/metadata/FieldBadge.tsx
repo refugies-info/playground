@@ -4,7 +4,7 @@
  */
 
 import { Badge } from "@playground/ui/primitives";
-import { Zap } from "lucide-react";
+import { CircleX, FileQuestionMark, Pencil, Zap } from "lucide-react";
 import type { MetadataFieldStatus } from "./types";
 
 interface FieldBadgeProps {
@@ -31,7 +31,7 @@ export function FieldBadge({
   if (status === "error") {
     return (
       <Badge size="sm" variant="danger" title={error}>
-        <Zap className="h-3 w-3 mr-1" /> Erreur
+        <CircleX className="h-3 w-3 mr-1" /> Erreur
       </Badge>
     );
   }
@@ -39,7 +39,7 @@ export function FieldBadge({
   if (status === "modified" || isModified) {
     return (
       <Badge size="sm" variant="info">
-        <Zap className="h-3 w-3 mr-1" /> Modifié
+        <Pencil className="h-3 w-3 mr-1" /> Modifié
       </Badge>
     );
   }
@@ -47,7 +47,7 @@ export function FieldBadge({
   if (!hasOriginalValue) {
     return (
       <Badge size="sm" variant="danger">
-        <Zap className="h-3 w-3 mr-1" /> Donnée introuvable
+        <FileQuestionMark className="h-3 w-3 mr-1" /> Donnée introuvable
       </Badge>
     );
   }

@@ -383,9 +383,15 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
 
     // Save each dirty field
     const results = await Promise.all(
-      Array.from(dirtyFields).map((key) =>
-        saveMetadataFieldAction(document.id!, key, mergedMetadata[key]),
-      ),
+      Array.from(dirtyFields).map((key) => {
+        if (!document?.id) {
+          return Promise.resolve({
+            success: false,
+            error: "Document ID manquant",
+          });
+        }
+        return saveMetadataFieldAction(document.id, key, mergedMetadata[key]);
+      }),
     );
 
     const errors = results.filter((r) => !r.success);
