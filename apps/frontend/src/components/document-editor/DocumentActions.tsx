@@ -28,7 +28,6 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
   const { document, setDocument, isDirty } = useDocument();
   const {
     previewDocument,
-    isPreviewing,
     saveDocument,
     isSaving,
     publishDocument,

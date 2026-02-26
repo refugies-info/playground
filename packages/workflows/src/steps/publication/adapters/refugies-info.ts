@@ -1,4 +1,7 @@
-import { stripFirstH1 } from "@playground/shared-types";
+import {
+  buildRefugiesInfoPayload,
+  stripFirstH1,
+} from "@playground/shared-types";
 import type { PublisherAdapter, WebhookPayload } from "./types";
 
 /**
@@ -35,41 +38,28 @@ export const refugiesInfoAdapter: PublisherAdapter = {
   async buildPayload(doc): Promise<WebhookPayload> {
     const { title, markdown, metadata, userEmail, existingRemoteId } = doc;
 
-    // Strip the first H1 heading for the payload
-    const cleanedMarkdown = await stripFirstH1(markdown);
-
-    const commonDispositifData = {
-      themes: ["Apprendre le français"],
-      translations: {
-        fr: {
-          content: {
-            titreInformatif: title,
-            titreMarque: (metadata.titreMarque as string) || title,
-            abstract: (metadata.abstract as string) || "",
-            markdown: cleanedMarkdown,
-          },
-        },
-      },
-    };
+    const { dispositif } = await buildRefugiesInfoPayload({
+      title,
+      markdown,
+      metadata,
+      origin: existingRemoteId ? undefined : "RCO",
+    });
 
     if (existingRemoteId) {
-      // UPDATE payload: _id, themes, translations. NO origin, NO status.
+      // UPDATE payload: _id + dispositif data (no origin)
       return {
         email: userEmail,
         dispositif: {
           _id: existingRemoteId,
-          ...commonDispositifData,
+          ...dispositif,
         },
       };
     }
 
-    // CREATE payload: origin, themes, translations. NO _id, NO status.
+    // CREATE payload: origin + full data. NO _id.
     return {
       email: userEmail,
-      dispositif: {
-        origin: "RCO",
-        ...commonDispositifData,
-      },
+      dispositif,
     };
   },
 
