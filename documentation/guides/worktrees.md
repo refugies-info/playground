@@ -40,12 +40,6 @@ Install [worktrunk](https://worktrunk.dev) — a CLI that makes worktrees as eas
 brew install worktrunk && wt config shell install
 
 # Linux / Windows / other — see https://worktrunk.dev for installation options
-=======
-Install [worktrunk](https://worktrunk.dev) — a CLI that makes worktrees as easy as branches:
-
-```bash
-brew install worktrunk && wt config shell install
->>>>>>> 2836189 (docs: add worktrees guide for contributors)
 ```
 
 Shell integration is required for `wt switch` to change directories automatically.
@@ -101,28 +95,29 @@ cp apps/frontend/.env.example apps/frontend/.env
 # 1. Create the workspace directory
 mkdir ~/projects/playground && cd ~/projects/playground
 
-# 2. Bare clone
+# 2. Bare clone — --single-branch avoids creating local tracking branches for
+#    every remote branch (this repo has many stale remote branches)
 git clone --bare --single-branch git@github.com:refugies-info/playground.git .bare
 
 # 3. Create the .git pointer file
 echo "gitdir: ./.bare" > .git
 
-# 4. Configure fetch for all remote branches
+# 4. Configure fetch so remote branches are visible (needed after --single-branch)
 git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
 
 # 5. Portable paths (workspace can be moved without breaking)
 git config worktree.useRelativePaths true
 
-# 6. Fetch all remote branches
+# 6. Fetch all remote branches as remotes (not local branches)
 git fetch --all
 
 # 7. Create the main worktree
 git worktree add main main
 git -C main branch --set-upstream-to=origin/main main
 
-# 8. Copy your .env files into main/ (source of truth)
-cp /path/to/.env main/.env
-cp /path/to/apps/frontend/.env main/apps/frontend/.env  # monorepo
+# 8. Set up .env files from examples, then fill in real values
+cp main/.env.example main/.env
+cp main/apps/frontend/.env.example main/apps/frontend/.env
 
 # 9. Install dependencies
 cd main && pnpm install
@@ -192,11 +187,8 @@ cd ~/projects/playground/main && git pull
 
 When a new worktree is created, `wt step copy-ignored` (configured as a post-start hook in `.config/wt.toml`) copies all gitignored files from `main/` using copy-on-write (reflink) — fast even for large `node_modules/`.
 
-<<<<<<< HEAD
 `.config/wt.toml` is a **project-level** config committed to the repo, distinct from your personal `~/.config/worktrunk/config.toml`. Run `wt hook show` to inspect active hooks.
 
-=======
->>>>>>> 2836189 (docs: add worktrees guide for contributors)
 The `.worktreeinclude` file in the repo root controls what gets copied:
 
 ```
