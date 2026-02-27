@@ -8,11 +8,20 @@ This repository uses a **bare repo + worktree** setup to support parallel develo
 
 ```
 playground/
+<<<<<<< HEAD
 ├── .git/           # Bare git data (cloned directly here)
 ├── .worktrees/     # Feature worktrees (hidden, managed by worktrunk)
 │   ├── feat-my-feature/
 │   └── fix-some-bug/
 └── main/           # Main branch — source of truth for shared files
+=======
+├── .bare/              # Git data (bare clone — not a working directory)
+├── .git                # Pointer file → .bare (makes standard git tools work)
+├── .worktrees/         # Feature worktrees (hidden, managed by worktrunk)
+│   ├── feat-my-feature/
+│   └── fix-some-bug/
+└── main/               # Main branch — source of truth for shared files
+>>>>>>> 2836189 (docs: add worktrees guide for contributors)
 ```
 
 `main/` is a regular checkout of the `main` branch. **Never commit work directly to it** — it's a stable reference point. Create a worktree for every piece of work.
@@ -21,6 +30,7 @@ playground/
 
 ## Prerequisites
 
+<<<<<<< HEAD
 ### 1. Worktrunk
 
 Install [worktrunk](https://worktrunk.dev) — a CLI that makes worktrees as easy as branches:
@@ -30,10 +40,17 @@ Install [worktrunk](https://worktrunk.dev) — a CLI that makes worktrees as eas
 brew install worktrunk && wt config shell install
 
 # Linux / Windows / other — see https://worktrunk.dev for installation options
+=======
+Install [worktrunk](https://worktrunk.dev) — a CLI that makes worktrees as easy as branches:
+
+```bash
+brew install worktrunk && wt config shell install
+>>>>>>> 2836189 (docs: add worktrees guide for contributors)
 ```
 
 Shell integration is required for `wt switch` to change directories automatically.
 
+<<<<<<< HEAD
 > **Warning (Linux/Homebrew)**: On Linux, `wt config shell install` can incorrectly append the brew shellenv line to `~/.config/worktrunk/config.toml`, corrupting it. If you see a TOML parse error mentioning `shellenv`, fix it with:
 > ```bash
 > sed -i '/shellenv/d' ~/.config/worktrunk/config.toml
@@ -53,11 +70,14 @@ The conditional ensures `main` lands as a top-level directory (not buried inside
 
 Create the file if it doesn't exist: `wt config create` then add the `[projects]` section above.
 
+=======
+>>>>>>> 2836189 (docs: add worktrees guide for contributors)
 ---
 
 ## Initial Clone
 
 ```bash
+<<<<<<< HEAD
 # 1. Create the workspace directory and bare clone into it
 git clone --bare --single-branch git@github.com:refugies-info/playground.git playground/.git
 cd playground
@@ -77,6 +97,44 @@ Then set up your `.env` files:
 cp .env.example .env
 cp apps/frontend/.env.example apps/frontend/.env
 # Fill in real values
+=======
+# 1. Create the workspace directory
+mkdir ~/projects/playground && cd ~/projects/playground
+
+# 2. Bare clone
+git clone --bare --single-branch git@github.com:refugies-info/playground.git .bare
+
+# 3. Create the .git pointer file
+echo "gitdir: ./.bare" > .git
+
+# 4. Configure fetch for all remote branches
+git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+
+# 5. Portable paths (workspace can be moved without breaking)
+git config worktree.useRelativePaths true
+
+# 6. Fetch all remote branches
+git fetch --all
+
+# 7. Create the main worktree
+git worktree add main main
+git -C main branch --set-upstream-to=origin/main main
+
+# 8. Copy your .env files into main/ (source of truth)
+cp /path/to/.env main/.env
+cp /path/to/apps/frontend/.env main/apps/frontend/.env  # monorepo
+
+# 9. Install dependencies
+cd main && pnpm install
+```
+
+Then configure worktrunk to place new worktrees in `.worktrees/`:
+
+```toml
+# ~/.config/worktrunk/config.toml
+[projects."github.com/refugies-info/playground"]
+worktree-path = "../.worktrees/{{ branch | sanitize }}"
+>>>>>>> 2836189 (docs: add worktrees guide for contributors)
 ```
 
 ---
@@ -121,7 +179,11 @@ wt step prune                   # remove all merged worktrees at once
 ### Update main
 
 ```bash
+<<<<<<< HEAD
 wt switch ^ && git pull
+=======
+cd ~/projects/playground/main && git pull
+>>>>>>> 2836189 (docs: add worktrees guide for contributors)
 ```
 
 ---
@@ -130,8 +192,11 @@ wt switch ^ && git pull
 
 When a new worktree is created, `wt step copy-ignored` (configured as a post-start hook in `.config/wt.toml`) copies all gitignored files from `main/` using copy-on-write (reflink) — fast even for large `node_modules/`.
 
+<<<<<<< HEAD
 `.config/wt.toml` is a **project-level** config committed to the repo, distinct from your personal `~/.config/worktrunk/config.toml`. Run `wt hook show` to inspect active hooks.
 
+=======
+>>>>>>> 2836189 (docs: add worktrees guide for contributors)
 The `.worktreeinclude` file in the repo root controls what gets copied:
 
 ```
