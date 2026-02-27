@@ -57,8 +57,8 @@ Create the file if it doesn't exist: `wt config create` then add the `[projects]
 git clone --bare --single-branch git@github.com:refugies-info/playground.git playground/.git
 cd playground
 
-# 2. Create the main worktree
-wt switch --create main
+# 2. Create the main worktree (branch already exists after bare clone)
+wt switch main
 
 # 3. Install dependencies
 cd main && pnpm install
