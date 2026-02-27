@@ -8,11 +8,12 @@ This repository uses a **bare repo + worktree** setup to support parallel develo
 
 ```
 playground/
-├── .git/           # Bare git data (cloned directly here)
-├── .worktrees/     # Feature worktrees (hidden, managed by worktrunk)
+├── .bare/              # Git data (bare clone — not a working directory)
+├── .git                # Pointer file → .bare (makes standard git tools work)
+├── .worktrees/         # Feature worktrees (hidden, managed by worktrunk)
 │   ├── feat-my-feature/
 │   └── fix-some-bug/
-└── main/           # Main branch — source of truth for shared files
+└── main/               # Main branch — source of truth for shared files
 ```
 
 `main/` is a regular checkout of the `main` branch. **Never commit work directly to it** — it's a stable reference point. Create a worktree for every piece of work.
