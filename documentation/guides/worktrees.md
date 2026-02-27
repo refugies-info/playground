@@ -121,7 +121,7 @@ wt step prune                   # remove all merged worktrees at once
 ### Update main
 
 ```bash
-cd ~/projects/playground/main && git pull
+wt switch ^ && git pull
 ```
 
 ---
