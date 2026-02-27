@@ -1,0 +1,11 @@
+# Worktrunk project config — shared with team
+# https://worktrunk.dev
+
+[post-create]
+# Install dependencies before post-start hooks run
+deps = "pnpm install"
+
+[post-start]
+# Copy gitignored files from main (node_modules, .env, .next, .turbo, etc.)
+# Uses copy-on-write (reflink) for fast, space-efficient copies
+copy = "wt step copy-ignored"

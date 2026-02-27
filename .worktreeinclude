@@ -1,0 +1,7 @@
+# Files copied by `wt step copy-ignored` to new worktrees
+# Must also be gitignored to be copied
+node_modules/
+.next/
+.turbo/
+.env*
+.envrc
