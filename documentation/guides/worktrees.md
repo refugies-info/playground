@@ -34,6 +34,11 @@ brew install worktrunk && wt config shell install
 
 Shell integration is required for `wt switch` to change directories automatically.
 
+> **Warning (Linux/Homebrew)**: On Linux, `wt config shell install` can incorrectly append the brew shellenv line to `~/.config/worktrunk/config.toml`, corrupting it. If you see a TOML parse error mentioning `shellenv`, fix it with:
+> ```bash
+> sed -i '/shellenv/d' ~/.config/worktrunk/config.toml
+> ```
+
 ### 2. Worktrunk user config
 
 Configure worktrunk to place the `main` branch directly at `../main` and all other worktrees in the hidden `.worktrees/` directory:
