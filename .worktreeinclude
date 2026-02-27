@@ -3,6 +3,5 @@
 node_modules/
 .next/
 .turbo/
-.env
-.env.local
+.env*
 .envrc
