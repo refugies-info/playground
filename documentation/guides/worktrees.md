@@ -35,15 +35,22 @@ brew install worktrunk && wt config shell install
 
 Shell integration is required for `wt switch` to change directories automatically.
 
+> **Warning (Linux/Homebrew)**: On Linux, `wt config shell install` can incorrectly append the brew shellenv line to `~/.config/worktrunk/config.toml`, corrupting it. If you see a TOML parse error mentioning `shellenv`, fix it with:
+> ```bash
+> sed -i '/shellenv/d' ~/.config/worktrunk/config.toml
+> ```
+
 ### 2. Worktrunk user config
 
-Configure worktrunk to place new worktrees in the hidden `.worktrees/` directory:
+Configure worktrunk to place the `main` branch directly at `../main` and all other worktrees in the hidden `.worktrees/` directory:
 
 ```toml
 # ~/.config/worktrunk/config.toml
 [projects."github.com/refugies-info/playground"]
-worktree-path = "../.worktrees/{{ branch | sanitize }}"
+worktree-path = "{% if branch == 'main' %}../main{% else %}../.worktrees/{{ branch | sanitize }}{% endif %}"
 ```
+
+The conditional ensures `main` lands as a top-level directory (not buried inside `.worktrees/main/`).
 
 Create the file if it doesn't exist: `wt config create` then add the `[projects]` section above.
 
@@ -52,43 +59,25 @@ Create the file if it doesn't exist: `wt config create` then add the `[projects]
 ## Initial Clone
 
 ```bash
-# 1. Create the workspace directory
-mkdir ~/projects/playground && cd ~/projects/playground
+# 1. Create the workspace directory and bare clone into it
+git clone --bare --single-branch git@github.com:refugies-info/playground.git playground/.git
+cd playground
 
-# 2. Bare clone — --single-branch avoids creating local tracking branches for
-#    every remote branch (this repo has many stale remote branches)
-git clone --bare --single-branch git@github.com:refugies-info/playground.git .bare
+# 2. Create the main worktree (branch already exists after bare clone)
+wt switch main
 
-# 3. Create the .git pointer file
-echo "gitdir: ./.bare" > .git
-
-# 4. Configure fetch so remote branches are visible (needed after --single-branch)
-git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-
-# 5. Portable paths (workspace can be moved without breaking)
-git config worktree.useRelativePaths true
-
-# 6. Fetch all remote branches as remotes (not local branches)
-git fetch --all
-
-# 7. Create the main worktree
-git worktree add main main
-git -C main branch --set-upstream-to=origin/main main
-
-# 8. Set up .env files from examples, then fill in real values
-cp main/.env.example main/.env
-cp main/apps/frontend/.env.example main/apps/frontend/.env
-
-# 9. Install dependencies
+# 3. Install dependencies
 cd main && pnpm install
 ```
 
-Then configure worktrunk to place new worktrees in `.worktrees/`:
+`--single-branch` avoids creating local tracking branches for every remote branch (this repo has many stale remote branches). Remote branches remain fully accessible via `git fetch`.
 
-```toml
-# ~/.config/worktrunk/config.toml
-[projects."github.com/refugies-info/playground"]
-worktree-path = "../.worktrees/{{ branch | sanitize }}"
+Then set up your `.env` files:
+
+```bash
+cp .env.example .env
+cp apps/frontend/.env.example apps/frontend/.env
+# Fill in real values
 ```
 
 ---
@@ -133,7 +122,7 @@ wt step prune                   # remove all merged worktrees at once
 ### Update main
 
 ```bash
-cd ~/projects/playground/main && git pull
+wt switch ^ && git pull
 ```
 
 ---
