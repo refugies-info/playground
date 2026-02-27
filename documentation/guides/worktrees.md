@@ -22,6 +22,8 @@ playground/
 
 ## Prerequisites
 
+### 1. Worktrunk
+
 Install [worktrunk](https://worktrunk.dev) — a CLI that makes worktrees as easy as branches:
 
 ```bash
@@ -29,6 +31,18 @@ brew install worktrunk && wt config shell install
 ```
 
 Shell integration is required for `wt switch` to change directories automatically.
+
+### 2. Worktrunk user config
+
+Configure worktrunk to place new worktrees in the hidden `.worktrees/` directory:
+
+```toml
+# ~/.config/worktrunk/config.toml
+[projects."github.com/refugies-info/playground"]
+worktree-path = "../.worktrees/{{ branch | sanitize }}"
+```
+
+Create the file if it doesn't exist: `wt config create` then add the `[projects]` section above.
 
 ---
 
