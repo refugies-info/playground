@@ -1,11 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { AssistantPanel } from "./AssistantPanel";
-import { DocumentActionsProvider } from "./DocumentActionsContext";
-import { DocumentProvider } from "./DocumentContext";
+import { DocumentActionsProvider } from "../actions";
+import { AssistantPanel } from "../assistant/AssistantPanel";
+import { DocumentProvider } from "../DocumentContext";
+import { MetadataProvider } from "../metadata/MetadataContext";
 import { EditorNavigation } from "./EditorNavigation";
-import { MetadataProvider } from "./metadata/MetadataContext";
 import { TopBar } from "./TopBar";
 
 // Disable SSR for DebugPanel to avoid hydration mismatch from Radix UI random IDs

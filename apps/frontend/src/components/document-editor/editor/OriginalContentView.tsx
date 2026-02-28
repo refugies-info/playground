@@ -1,7 +1,7 @@
 import { Button } from "@playground/ui/primitives";
 import { Undo2 } from "lucide-react";
-import { useDocument } from "./DocumentContext";
-import { MarkdownViewer } from "./MarkdownViewer";
+import { useDocument } from "../DocumentContext";
+import { MarkdownViewer } from "../shared/MarkdownViewer";
 
 export function OriginalContentView() {
   const { document, rollbackToOriginal, isRawMarkdownMode } = useDocument();

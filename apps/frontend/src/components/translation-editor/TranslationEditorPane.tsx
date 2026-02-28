@@ -12,7 +12,7 @@ import { blocksToDirectiveMarkdown, markdownToBlocks } from "@/lib/markdown";
 import {
   type CustomEditor,
   customSchema,
-} from "../document-editor/blocks/custom-schema";
+} from "../document-editor/editor/blocks/custom-schema";
 import { useTranslation } from "./TranslationContext";
 
 export function TranslationEditorPane() {

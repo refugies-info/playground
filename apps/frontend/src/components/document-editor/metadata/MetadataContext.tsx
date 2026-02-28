@@ -23,6 +23,13 @@ import { useDocument } from "../DocumentContext";
 
 /**
  * Status of a metadata field.
+ *
+ * - pristine: untouched AI value (no override)
+ * - modified: local override exists
+ * - saving: save in progress
+ * - saved: save completed (rarely used in UI)
+ * - error: validation/server error
+ * - fixed: auto-fix applied
  */
 export type MetadataFieldStatus =
   | "pristine"
@@ -36,6 +43,13 @@ export type MetadataFieldStatus =
 // Reducer State & Actions
 // =============================================================================
 
+/**
+ * Internal context state.
+ * - overrides: local editorial overrides
+ * - savingFields: fields currently saving
+ * - fieldErrors: validation errors
+ * - fixedFields: auto-fix info (before/after)
+ */
 interface MetadataState {
   overrides: Record<string, unknown>;
   savingFields: Set<string>;
@@ -80,6 +94,10 @@ const initialState: MetadataState = {
   fixedFields: new Map(),
 };
 
+/**
+ * Metadata reducer.
+ * Centralizes optimistic updates, errors, and statuses.
+ */
 function metadataReducer(
   state: MetadataState,
   action: MetadataAction,
@@ -180,6 +198,16 @@ function metadataReducer(
 // Context
 // =============================================================================
 
+/**
+ * MetadataContext
+ *
+ * Role:
+ * - Provide merged metadata (AI + overrides)
+ * - Manage local overrides (optimistic UI)
+ * - Validate fields via Zod
+ * - Apply auto-fixes
+ * - Expose per-field statuses (error/fixed/modified)
+ */
 interface MetadataContextValue {
   /** Merged metadata (letta_report + editorial overrides) */
   mergedMetadata: Record<string, unknown>;
@@ -238,35 +266,44 @@ const MetadataContext = createContext<MetadataContextValue | undefined>(
 /**
  * MetadataProvider — Provides metadata editing state and actions.
  */
+/**
+ * Main metadata provider.
+ *
+ * Flow:
+ * 1) Base metadata = metadata_ri (AI)
+ * 2) Auto-fix base metadata (e.g., array -> object, free price -> 0)
+ * 3) Merged metadata = fixed base + overrides
+ * 4) Zod validation + per-field errors
+ */
 export function MetadataProvider({ children }: { children: ReactNode }) {
   const { document } = useDocument();
 
-  // Get base metadata from letta_report (memoized)
+  /** Base metadata from letta_report (AI), memoized */
   const baseMetadata = useMemo(
     () => document?.metadataReport?.metadata_ri ?? {},
     [document?.metadataReport?.metadata_ri],
   );
 
-  // Auto-fix common metadata format issues on load
+  /** Auto-fix AI formats (applied on load) */
   const autoFixResult = useMemo(
     () => autoFixAllMetadata(baseMetadata),
     [baseMetadata],
   );
   const fixedBaseMetadata = autoFixResult.fixedMetadata;
 
-  // Get existing editorial overrides from document.editorialMetadata (memoized)
+  /** Existing overrides (editorial_metadata), memoized */
   const existingOverrides = useMemo(
     () => (document?.editorialMetadata as Record<string, unknown>) ?? {},
     [document?.editorialMetadata],
   );
 
-  // Initialize state with existing overrides
+  /** Init state with existing overrides */
   const [state, dispatch] = useReducer(metadataReducer, {
     ...initialState,
     overrides: existingOverrides,
   });
 
-  // Sync state when document editorialMetadata changes (e.g., after async load)
+  /** Sync state when editorialMetadata changes (async load, refresh) */
   useEffect(() => {
     if (
       document?.editorialMetadata &&
@@ -280,13 +317,13 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     }
   }, [document?.editorialMetadata]);
 
-  // Compute merged metadata (use fixed base metadata)
+  /** Merged metadata = fixed base + overrides */
   const mergedMetadata = useMemo(
     () => mergeMetadata(fixedBaseMetadata, state.overrides),
     [fixedBaseMetadata, state.overrides],
   );
 
-  // Compute dirty fields
+  /** Dirty fields (diff fixed base vs merged) */
   const dirtyFields = useMemo(() => {
     const fields = new Set<string>();
     const diff = extractDiff(fixedBaseMetadata, mergedMetadata);
@@ -304,7 +341,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
 
   const isDirty = dirtyFields.size > 0;
 
-  // Apply auto-fix status on load
+  /** "fixed" status for auto-corrected fields */
   useEffect(() => {
     const fixes = autoFixResult.fixes;
     const fixedFieldsMap = new Map<
@@ -321,7 +358,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "SET_FIXED_FIELDS", fixedFields: fixedFieldsMap });
   }, [autoFixResult.fixes]);
 
-  // Validate all fields on initial load (detect AI errors)
+  /** Global Zod validation on load */
   useEffect(() => {
     if (Object.keys(fixedBaseMetadata).length === 0) return;
 
@@ -339,7 +376,11 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   }, [fixedBaseMetadata]);
 
   /**
-   * Update and save a field value.
+   * Update and save a field.
+   * - Optional auto-fix
+   * - Zod validation
+   * - Optimistic update
+   * - Save via server action
    */
   const updateField = useCallback(
     async (key: string, value: unknown) => {

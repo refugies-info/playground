@@ -1,7 +1,9 @@
+"use client";
+
 import { AlertCircle } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
-import { useDocument } from "./DocumentContext";
+import { useDocument } from "../DocumentContext";
 
 interface RawMarkdownViewProps {
   markdownContent: string;

@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useDocument } from "./DocumentContext";
+import { useDocument } from "../DocumentContext";
 import { DocumentStatus } from "./DocumentStatus";
 
 export function TopBar() {

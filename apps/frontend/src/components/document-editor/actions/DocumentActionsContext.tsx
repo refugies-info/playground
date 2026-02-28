@@ -1,6 +1,9 @@
 /**
  * DocumentActionsContext
- * Handles preview and publication actions with access to both Document and Metadata contexts.
+ *
+ * Centralizes document actions (preview/save/publish/archive) and exposes
+ * status flags to the UI. It stitches together DocumentContext (content)
+ * and MetadataContext (merged metadata) so actions always use up-to-date data.
  */
 
 "use client";
@@ -21,8 +24,8 @@ import {
   publishDocument as publishDocumentAction,
   saveDocument as saveDocumentAction,
 } from "@/services/document-actions";
-import { useDocument } from "./DocumentContext";
-import { useMetadata } from "./metadata/MetadataContext";
+import { useDocument } from "../DocumentContext";
+import { useMetadata } from "../metadata/MetadataContext";
 
 // =============================================================================
 // Types
@@ -79,6 +82,7 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
 
   // =============================================================================
   // Preview
+  // Uses merged metadata (AI + overrides) to build a full payload for preview.
   // =============================================================================
 
   const previewDocument = useCallback(async () => {
@@ -116,6 +120,7 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
 
   // =============================================================================
   // Save
+  // Saves editorial markdown only (metadata overrides handled separately).
   // =============================================================================
 
   const saveDocument = useCallback(async () => {
@@ -146,6 +151,8 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
 
   // =============================================================================
   // Publish
+  // Publishes current content + merged metadata. Save-before-publish is intentional
+  // to ensure the latest markdown is persisted.
   // =============================================================================
 
   const publishDocument = useCallback(
