@@ -228,17 +228,19 @@ export function DocumentProvider({
         setCanPublish(true); // Now can publish
 
         // Optimistically update local title and metadata from content
-        const newTitle = await extractTitleFromMarkdown(
+        const newTitleFromMarkdown = await extractTitleFromMarkdown(
           document.editorialContent,
         );
+        const effectiveTitle =
+          newTitleFromMarkdown || document.title || "Sans titre";
         const updatedDoc = {
           ...document,
-          title: newTitle,
+          title: effectiveTitle,
           workStatus: "draft" as WorkStatus, // Explicitly set to draft on save
           metadata: {
             ...document.metadata,
-            title: newTitle,
-            "intitule-formation": newTitle,
+            title: effectiveTitle,
+            "intitule-formation": effectiveTitle,
           },
         };
 

@@ -20,12 +20,7 @@ export async function extractTitleFromMarkdown(
 
   try {
     // Parse YAML frontmatter
-    const { data, content } = matter(markdown);
-
-    // Check for title in frontmatter
-    if (data.title && typeof data.title === "string") {
-      return data.title.trim();
-    }
+    const { content } = matter(markdown);
 
     // Use remark to parse markdown and find first H1 heading
     const tree = unified().use(remarkParse).parse(content) as Root;
@@ -50,7 +45,7 @@ export async function extractTitleFromMarkdown(
     logger.error(error, "Failed to parse markdown for title extraction");
   }
 
-  return "Untitled";
+  return "";
 }
 
 /**

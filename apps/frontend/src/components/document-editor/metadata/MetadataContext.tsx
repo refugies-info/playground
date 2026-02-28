@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  autoFixAllMetadata,
+  autoFixMetadataValue,
   extractDiff,
   logger,
   mergeMetadata,
@@ -27,7 +29,8 @@ export type MetadataFieldStatus =
   | "modified"
   | "saving"
   | "saved"
-  | "error";
+  | "error"
+  | "fixed"; // Auto-fix applied
 
 // =============================================================================
 // Reducer State & Actions
@@ -37,6 +40,10 @@ interface MetadataState {
   overrides: Record<string, unknown>;
   savingFields: Set<string>;
   fieldErrors: Map<string, string>;
+  fixedFields: Map<
+    string,
+    { description: string; originalValue: unknown; fixedValue: unknown }
+  >; // key -> fix details
 }
 
 type MetadataAction =
@@ -48,12 +55,29 @@ type MetadataAction =
   | { type: "CLEAR_ERROR"; key: string }
   | { type: "REVERT_FIELD"; key: string }
   | { type: "CLEAR_FIELD"; key: string }
-  | { type: "SET_OVERRIDES"; overrides: Record<string, unknown> };
+  | { type: "SET_OVERRIDES"; overrides: Record<string, unknown> }
+  | {
+      type: "SET_FIXED";
+      key: string;
+      description: string;
+      originalValue: unknown;
+      fixedValue: unknown;
+    }
+  | { type: "CLEAR_FIXED"; key: string }
+  | {
+      type: "SET_FIXED_FIELDS";
+      fixedFields: Map<
+        string,
+        { description: string; originalValue: unknown; fixedValue: unknown }
+      >;
+    }
+  | { type: "SET_ERRORS"; errors: Map<string, string> };
 
 const initialState: MetadataState = {
   overrides: {},
   savingFields: new Set(),
   fieldErrors: new Map(),
+  fixedFields: new Map(),
 };
 
 function metadataReducer(
@@ -97,6 +121,10 @@ function metadataReducer(
       return { ...state, fieldErrors: newFieldErrors };
     }
 
+    case "SET_ERRORS": {
+      return { ...state, fieldErrors: new Map(action.errors) };
+    }
+
     case "REVERT_FIELD": {
       const newOverrides = { ...state.overrides };
       delete newOverrides[action.key];
@@ -118,7 +146,29 @@ function metadataReducer(
         ...state,
         overrides: action.overrides,
         fieldErrors: new Map(), // Clear errors on reset
+        fixedFields: new Map(), // Clear fixed status on reset
       };
+    }
+
+    case "SET_FIXED": {
+      const newFixedFields = new Map(state.fixedFields);
+      newFixedFields.set(action.key, {
+        description: action.description,
+        originalValue: action.originalValue,
+        fixedValue: action.fixedValue,
+      });
+      return { ...state, fixedFields: newFixedFields };
+    }
+
+    case "CLEAR_FIXED": {
+      if (!state.fixedFields.has(action.key)) return state;
+      const newFixedFields = new Map(state.fixedFields);
+      newFixedFields.delete(action.key);
+      return { ...state, fixedFields: newFixedFields };
+    }
+
+    case "SET_FIXED_FIELDS": {
+      return { ...state, fixedFields: new Map(action.fixedFields) };
     }
 
     default:
@@ -172,6 +222,13 @@ interface MetadataContextValue {
 
   /** Clear the error for a field */
   clearFieldError: (key: string) => void;
+
+  /** Get auto-fix info for a field (undefined if not fixed) */
+  getFieldFixInfo: (
+    key: string,
+  ) =>
+    | { description: string; originalValue: unknown; fixedValue: unknown }
+    | undefined;
 }
 
 const MetadataContext = createContext<MetadataContextValue | undefined>(
@@ -189,6 +246,13 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     () => document?.metadataReport?.metadata_ri ?? {},
     [document?.metadataReport?.metadata_ri],
   );
+
+  // Auto-fix common metadata format issues on load
+  const autoFixResult = useMemo(
+    () => autoFixAllMetadata(baseMetadata),
+    [baseMetadata],
+  );
+  const fixedBaseMetadata = autoFixResult.fixedMetadata;
 
   // Get existing editorial overrides from document.editorialMetadata (memoized)
   const existingOverrides = useMemo(
@@ -216,16 +280,16 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     }
   }, [document?.editorialMetadata]);
 
-  // Compute merged metadata
+  // Compute merged metadata (use fixed base metadata)
   const mergedMetadata = useMemo(
-    () => mergeMetadata(baseMetadata, state.overrides),
-    [baseMetadata, state.overrides],
+    () => mergeMetadata(fixedBaseMetadata, state.overrides),
+    [fixedBaseMetadata, state.overrides],
   );
 
   // Compute dirty fields
   const dirtyFields = useMemo(() => {
     const fields = new Set<string>();
-    const diff = extractDiff(baseMetadata, mergedMetadata);
+    const diff = extractDiff(fixedBaseMetadata, mergedMetadata);
     for (const key of Object.keys(diff)) {
       fields.add(key);
     }
@@ -236,20 +300,35 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       }
     }
     return fields;
-  }, [baseMetadata, mergedMetadata, state.overrides]);
+  }, [fixedBaseMetadata, mergedMetadata, state.overrides]);
 
   const isDirty = dirtyFields.size > 0;
 
+  // Apply auto-fix status on load
+  useEffect(() => {
+    const fixes = autoFixResult.fixes;
+    const fixedFieldsMap = new Map<
+      string,
+      { description: string; originalValue: unknown; fixedValue: unknown }
+    >();
+    for (const fix of fixes) {
+      fixedFieldsMap.set(fix.key, {
+        description: fix.description,
+        originalValue: fix.originalValue,
+        fixedValue: fix.fixedValue,
+      });
+    }
+    dispatch({ type: "SET_FIXED_FIELDS", fixedFields: fixedFieldsMap });
+  }, [autoFixResult.fixes]);
+
   // Validate all fields on initial load (detect AI errors)
   useEffect(() => {
-    if (Object.keys(baseMetadata).length === 0) return;
+    if (Object.keys(fixedBaseMetadata).length === 0) return;
 
-    const validationErrors = validateAllFields(baseMetadata);
+    const validationErrors = validateAllFields(fixedBaseMetadata);
 
-    // Dispatch errors for invalid fields
-    for (const [key, error] of validationErrors) {
-      dispatch({ type: "SET_ERROR", key, error });
-    }
+    // Replace field errors with the latest validation results
+    dispatch({ type: "SET_ERRORS", errors: validationErrors });
 
     if (validationErrors.size > 0) {
       logger.info(
@@ -257,7 +336,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
         "Validation errors found at load time",
       );
     }
-  }, [baseMetadata]);
+  }, [fixedBaseMetadata]);
 
   /**
    * Update and save a field value.
@@ -269,29 +348,52 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // 1. Validate with Zod
-      const validation = validateField(key, value);
+      // 1. Auto-fix common format issues (e.g., array instead of object)
+      const fixResult = autoFixMetadataValue(value, key);
+      const fixedValue = fixResult.value;
+
+      // If auto-fix was applied, log and notify
+      if (fixResult.wasFixed) {
+        logger.info(
+          { field: key, original: value, fixed: fixedValue },
+          `Auto-fixed metadata field: ${key}`,
+        );
+        // Store the fix description to show in UI
+        dispatch({
+          type: "SET_FIXED",
+          key,
+          description:
+            fixResult.fixDescription ?? "Format corrigé automatiquement",
+          originalValue: fixResult.originalValue,
+          fixedValue: fixedValue,
+        });
+      } else {
+        dispatch({ type: "CLEAR_FIXED", key });
+      }
+
+      // 2. Validate with Zod (after auto-fix)
+      const validation = validateField(key, fixedValue);
       if (!validation.success) {
         dispatch({ type: "SET_ERROR", key, error: validation.error });
         return;
       }
 
-      // 2. Clear any previous error
+      // 3. Clear any previous error
       dispatch({ type: "CLEAR_ERROR", key });
 
-      // 3. Mark as saving
+      // 4. Mark as saving
       dispatch({ type: "START_SAVING", key });
 
-      // 4. Optimistic update
-      if (value === undefined) {
+      // 5. Optimistic update (with fixed value)
+      if (fixedValue === undefined) {
         // undefined = delete override (revert to AI value)
         dispatch({ type: "DELETE_FIELD", key });
-      } else if (value === null) {
+      } else if (fixedValue === null) {
         // null = explicitly clear field (override with null)
         dispatch({ type: "CLEAR_FIELD", key });
       } else {
         // other value = set override
-        dispatch({ type: "SET_FIELD", key, value });
+        dispatch({ type: "SET_FIELD", key, value: fixedValue });
       }
 
       // 5. Save to server
@@ -409,10 +511,11 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     (key: string): MetadataFieldStatus => {
       if (state.savingFields.has(key)) return "saving";
       if (state.fieldErrors.has(key)) return "error";
+      if (state.fixedFields.has(key)) return "fixed";
       if (dirtyFields.has(key)) return "modified";
       return "pristine";
     },
-    [state.savingFields, state.fieldErrors, dirtyFields],
+    [state.savingFields, state.fieldErrors, state.fixedFields, dirtyFields],
   );
 
   /**
@@ -452,6 +555,21 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "CLEAR_ERROR", key });
   }, []);
 
+  /**
+   * Get auto-fix info for a field (undefined if not fixed).
+   */
+  const getFieldFixInfo = useCallback(
+    (
+      key: string,
+    ):
+      | { description: string; originalValue: unknown; fixedValue: unknown }
+      | undefined => {
+      const info = state.fixedFields.get(key);
+      return info ?? undefined;
+    },
+    [state.fixedFields],
+  );
+
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo(
     () => ({
@@ -469,6 +587,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       getFieldValue,
       getFieldError,
       clearFieldError,
+      getFieldFixInfo,
     }),
     [
       mergedMetadata,
@@ -485,6 +604,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       getFieldValue,
       getFieldError,
       clearFieldError,
+      getFieldFixInfo,
     ],
   );
 

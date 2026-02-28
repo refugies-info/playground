@@ -180,7 +180,12 @@ export const MetadataRiSchema = z.object({
   commitment: CommitmentSchema.nullish(),
   frequency: FrequencySchema.nullish(),
   periode: z
-    .array(SessionSchema, { message: "Les sessions doivent être une liste" })
+    .union([
+      z.array(SessionSchema, {
+        message: "Les sessions doivent être une liste",
+      }),
+      SessionSchema,
+    ])
     .nullish(),
   timeSlots: z
     .array(
@@ -215,9 +220,12 @@ export const MetadataRiSchema = z.object({
     )
     .nullish(),
   map: z
-    .array(PoiSchema, {
-      message: "Les points d'intérêt doivent être une liste",
-    })
+    .union([
+      z.array(PoiSchema, {
+        message: "Les points d'intérêt doivent être une liste",
+      }),
+      PoiSchema,
+    ])
     .nullish(),
 });
 

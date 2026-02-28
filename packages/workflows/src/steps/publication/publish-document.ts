@@ -1,4 +1,4 @@
-import { logger } from "@playground/shared-types";
+import { extractTitleFromMarkdown, logger } from "@playground/shared-types";
 import type { StepResult } from "../../types";
 import { getSupabaseClient } from "../common/supabase";
 import { getPublisherAdapter } from "./adapters/refugies-info";
@@ -79,9 +79,13 @@ export async function publishDocumentStep(
 
     const existingRemoteId = existingPublication?.remote_id;
 
+    // Recompute title from markdown to ensure H1 changes are reflected
+    const markdownTitle = await extractTitleFromMarkdown(markdown);
+    const effectiveTitle = markdownTitle || title;
+
     // Use adapter to build payload
     const webhookPayload = await adapter.buildPayload({
-      title,
+      title: effectiveTitle,
       markdown,
       metadata: metadata || {},
       userEmail,
