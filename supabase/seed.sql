@@ -1,5 +1,7 @@
--- Seed data for local Supabase development
--- This file is run automatically by `supabase db reset`
-
--- NOTE: Users are now seeded via `npm run seed:users` (scripts/seed-users.ts)
--- This allows setting known passwords and is more maintainable.
+-- Supabase Seed Data
+-- This file is kept for backward compatibility.
+-- Seed files are now in supabase/seed/ and loaded via config.toml:
+--   sql_paths = ["./seed/*.sql"]
+--
+-- Files are executed in lexicographic order (00_, 02_, 04_, etc.)
+-- Run `supabase db reset` to apply migrations + seeds.
