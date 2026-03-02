@@ -143,7 +143,17 @@ export async function generateTranslationStep(
     }
 
     // Construct prompt/content for the agent
-    const contentToTranslate = `${TRANSLATE_SLASH_COMMAND}\n${editorialRecord.markdown || ""}`;
+    // Secure against prompt injection by strictly isolating untrusted markdown
+    // content using XML-like delimiters.
+    const sanitizedContent = (editorialRecord.markdown || "").replace(
+      /<\/?document>/gi,
+      "",
+    );
+    const contentToTranslate = `${TRANSLATE_SLASH_COMMAND}
+
+<document>
+${sanitizedContent}
+</document>`;
 
     if (!editorialRecord.markdown) {
       logger.warn(

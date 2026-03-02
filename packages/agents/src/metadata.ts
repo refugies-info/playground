@@ -22,9 +22,15 @@ export const generateMetadataReport = async function* (
   conversationId: string,
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK stream yields various message types
 ): AsyncGenerator<any> {
-  // Build the message with the slash command followed by the markdown content
-  // The markdown should contain frontmatter with metadata from previous phases
-  const messageContent = `${METADATA_SLASH_COMMAND} ${markdownContent}`;
+  // Secure the prompt against injection by strictly isolating untrusted markdown content
+  // using XML-like delimiters. This prevents the LLM from confusing document content
+  // with system instructions. We also strip any existing <document> tags from the input.
+  const sanitizedContent = markdownContent.replace(/<\/?document>/gi, "");
+  const messageContent = `${METADATA_SLASH_COMMAND}
+
+<document>
+${sanitizedContent}
+</document>`;
 
   const stream = await client.conversations.messages.create(conversationId, {
     messages: [
