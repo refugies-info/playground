@@ -47,6 +47,16 @@ type DiAuditTarget = {
 // Step: Single Audit
 // =============================================================================
 
+/**
+ * Workflow step that generates an audit (compliance) report for a single DI record.
+ *
+ * Each record is processed independently within its own workflow, allowing for
+ * granular retry and parallel execution.
+ *
+ * @param ingestionRecordId - The ID of the ingestion record to audit.
+ * @param workflowId - The ID of the associated workflow.
+ * @param markdown - The markdown content to audit.
+ */
 export async function diSingleAuditStep(
   ingestionRecordId: string,
   workflowId: string,
@@ -187,6 +197,15 @@ diSingleAuditStep.maxRetries = 3;
 // Step: Single Metadata
 // =============================================================================
 
+/**
+ * Workflow step that generates a metadata report for a single DI record.
+ *
+ * Similar to audit, each metadata generation is isolated for better resilience.
+ *
+ * @param ingestionRecordId - The ID of the ingestion record.
+ * @param workflowId - The ID of the associated workflow.
+ * @param markdown - The markdown content to process.
+ */
 export async function diSingleMetadataStep(
   ingestionRecordId: string,
   workflowId: string,
@@ -298,6 +317,14 @@ diSingleMetadataStep.maxRetries = 3;
 // Step: Fan-Out Claim
 // =============================================================================
 
+/**
+ * Atomically claims records for audit and prepares them for fan-out.
+ *
+ * Uses RPC `claim_di_audit_targets` to lock records and prevent double processing.
+ *
+ * @param runId - The ingestion run ID.
+ * @returns Array of claimed targets and total candidate count.
+ */
 export async function claimDiAuditTargetsStep(runId: string) {
   "use step";
 
@@ -358,6 +385,16 @@ export async function claimDiAuditTargetsStep(runId: string) {
 // Step: Fan-Out (claim + spawn child workflows)
 // =============================================================================
 
+/**
+ * Orchestrates the fan-out by claiming records and spawning child workflows.
+ *
+ * This step:
+ * 1. Claims record targets using {@link claimDiAuditTargetsStep}.
+ * 2. Spawns a `diSingleRecordWorkflow` for each claimed record.
+ *
+ * @param runId - The ingestion run ID.
+ * @returns Summary counts of total candidates and spawned workflows.
+ */
 export async function fanOutDiRecordsStep(runId: string) {
   "use step";
 

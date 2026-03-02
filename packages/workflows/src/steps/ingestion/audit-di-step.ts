@@ -115,10 +115,10 @@ type DiAuditTarget = {
  * Uses two RPCs:
  * - `count_di_audit_candidates`: counts total eligible records (for logging).
  * - `claim_di_audit_targets`: atomically locks up to `MAX_PENDING_AUDITS` records
- *   by setting `compliance_status = 'pending'` (with `FOR UPDATE SKIP LOCKED`).
- *   Also reclaims zombie records stuck in pending beyond the timeout.
+ *   by setting their `compliance_status` to 'pending' if it was NULL.
+ *   This prevents multiple parallel workflow runs from auditing the same record.
  *
- * @param serviceIds - List of DI service UUIDs to scope the query to.
+ * @param serviceIds - List of service IDs to scope the query (DI services only).
  * @returns Claimed targets and the total candidate count.
  * @throws If either RPC call fails.
  */
@@ -183,10 +183,11 @@ async function fetchDiAuditTargets(
  * `compliance_status` is NULL. Records are atomically claimed to prevent
  * duplicate processing across concurrent runs.
  *
- * After success:
- * - A `letta_report` of type 'ingestion' is created and linked to the record.
- * - The DB trigger `update_workflow_status_from_ingestion_record` updates
- *   `compliance_status` on the `workflows` table accordingly.
+ * For each record:
+ * 1. Calls Letta agent with /audit command.
+ * 2. Parses the compliance report.
+ * 3. Stores the report in `letta_reports`.
+ * 4. Links it back to `ingestion_records`.
  *
  * @param runId - The ID of the current ingestion run. Used for logging context.
  * @returns A summary object with `attempted`, `succeeded`, `failed`,
