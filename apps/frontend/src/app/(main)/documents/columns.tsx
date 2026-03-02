@@ -137,7 +137,17 @@ export const columns: ColumnDef<Document>[] = [
     ),
     cell: ({ row }) => {
       const date = new Date(row.getValue("date_added") as string);
-      return <div>{date.toLocaleDateString("fr-FR")}</div>;
+      return (
+        <div>
+          <div>{date.toLocaleDateString("fr-FR")}</div>
+          <div className="text-xs text-gray-400">
+            {date.toLocaleTimeString("fr-FR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </div>
+        </div>
+      );
     },
   },
   {
@@ -231,7 +241,17 @@ export const inProgressColumns: ColumnDef<Document>[] = [
     ),
     cell: ({ row }) => {
       const date = new Date(row.original.date_added);
-      return <div>{date.toLocaleDateString("fr-FR")}</div>;
+      return (
+        <div>
+          <div>{date.toLocaleDateString("fr-FR")}</div>
+          <div className="text-xs text-gray-400">
+            {date.toLocaleTimeString("fr-FR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </div>
+        </div>
+      );
     },
   },
 ];

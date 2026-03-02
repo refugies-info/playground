@@ -1,13 +1,13 @@
-import { forceAuditReportStep } from "./audit-di-step";
-import { forceMetadataReportStep } from "./metadata-di-step";
-
 /**
- * Main forced arbitration workflow.
+ * @file pipelines/ingestion/force-arbitration.ts
  *
- * Orchestrates forced audit generation and then metadata generation
- * for a specific workflow (used for manual retry/arbitration).
- * Behaves similarly to diIngestionWorkflow but for a single record.
+ * Workflow for manual retry/arbitration of a single DI record.
+ * Runs audit then metadata for a specific workflowId.
  */
+
+import { forceAuditReportStep } from "../../steps/ingestion/audit-di-step";
+import { forceMetadataReportStep } from "../../steps/ingestion/metadata-di-step";
+
 export async function forceArbitrationWorkflow(workflowId: string) {
   "use workflow";
 

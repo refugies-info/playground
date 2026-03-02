@@ -50,6 +50,7 @@ import {
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
+import { FatalError, getStepMetadata } from "workflow";
 import { z } from "zod";
 import {
   fetchAllDiServiceIds,
@@ -114,10 +115,10 @@ type DiAuditTarget = {
  * Uses two RPCs:
  * - `count_di_audit_candidates`: counts total eligible records (for logging).
  * - `claim_di_audit_targets`: atomically locks up to `MAX_PENDING_AUDITS` records
- *   by setting `compliance_status = 'pending'` (with `FOR UPDATE SKIP LOCKED`).
- *   Also reclaims zombie records stuck in pending beyond the timeout.
+ *   by setting their `compliance_status` to 'pending' if it was NULL.
+ *   This prevents multiple parallel workflow runs from auditing the same record.
  *
- * @param serviceIds - List of DI service UUIDs to scope the query to.
+ * @param serviceIds - List of service IDs to scope the query (DI services only).
  * @returns Claimed targets and the total candidate count.
  * @throws If either RPC call fails.
  */
@@ -182,10 +183,11 @@ async function fetchDiAuditTargets(
  * `compliance_status` is NULL. Records are atomically claimed to prevent
  * duplicate processing across concurrent runs.
  *
- * After success:
- * - A `letta_report` of type 'ingestion' is created and linked to the record.
- * - The DB trigger `update_workflow_status_from_ingestion_record` updates
- *   `compliance_status` on the `workflows` table accordingly.
+ * For each record:
+ * 1. Calls Letta agent with /audit command.
+ * 2. Parses the compliance report.
+ * 3. Stores the report in `letta_reports`.
+ * 4. Links it back to `ingestion_records`.
  *
  * @param runId - The ID of the current ingestion run. Used for logging context.
  * @returns A summary object with `attempted`, `succeeded`, `failed`,
@@ -194,6 +196,14 @@ async function fetchDiAuditTargets(
  */
 export async function generateDiAuditReportsStep(runId: string) {
   "use step";
+
+  const stepMeta = getStepMetadata();
+  if (stepMeta.attempt > 1) {
+    logger.info(
+      { runId, attempt: stepMeta.attempt },
+      `↻ Audit step retry attempt ${stepMeta.attempt}`,
+    );
+  }
 
   // Fetch ALL DI service IDs, not just from the current run.
   // Unchanged services keep their original ingestion_run_id, so filtering
@@ -221,7 +231,7 @@ export async function generateDiAuditReportsStep(runId: string) {
   const agentId = process.env.PLAYGROUND_AGENT_ID;
 
   if (!agentId) {
-    throw new Error("PLAYGROUND_AGENT_ID is not defined");
+    throw new FatalError("PLAYGROUND_AGENT_ID is not defined");
   }
 
   const lettaClient = createLettaClient();
@@ -360,6 +370,9 @@ export async function generateDiAuditReportsStep(runId: string) {
   };
 }
 
+// 3 retries by default (same as workflow default, made explicit for documentation)
+generateDiAuditReportsStep.maxRetries = 3;
+
 /**
  * Workflow step that forces generation of an audit report for a specific workflow,
  * bypassing normal batch collection. Used primarily for manual arbitration/retry.
@@ -411,7 +424,7 @@ export async function forceAuditReportStep(workflowId: string) {
 
   const agentId = process.env.PLAYGROUND_AGENT_ID;
   if (!agentId) {
-    throw new Error("PLAYGROUND_AGENT_ID is not defined");
+    throw new FatalError("PLAYGROUND_AGENT_ID is not defined");
   }
 
   const lettaClient = createLettaClient();

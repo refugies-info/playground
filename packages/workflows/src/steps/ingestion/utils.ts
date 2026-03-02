@@ -1,5 +1,11 @@
 import { getSupabaseAdmin } from "@playground/supabase";
 
+/**
+ * Step 1: Ingest services from the CARIF-OREF API.
+ *
+ * @returns A Supabase client configured with service role key.
+ * @throws If SUPABASE_SERVICE_ROLE_KEY is missing.
+ */
 export function getSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -13,6 +19,14 @@ export function getSupabaseClient() {
 
 const DI_FETCH_PAGE_SIZE = 1000;
 
+/**
+ * Fetches all service IDs from the `di_services` table.
+ *
+ * Uses pagination to retrieve all IDs as strings.
+ *
+ * @returns An array of all DI service IDs.
+ * @throws If the query fails.
+ */
 export async function fetchAllDiServiceIds(): Promise<string[]> {
   const supabase = getSupabaseClient();
   const serviceIds: string[] = [];

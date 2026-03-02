@@ -20,7 +20,9 @@ Create workflow documentation when:
 
 - **[Editorial Workflow](./editorial-workflow.md)** — Content editing process
 - **[Quality Gating](./quality-gating.md)** — AI quality assessment
-- **[Metadata Mapping](./metadata-mapping.md)** — Metadata mapping & validation flow
+- **[Metadata Mapping](./metadata-mapping.md)** — Metadata validation
+- **[DI Ingestion Workflow](./di-ingestion.md)** — Architecture fan-out pour l'ingestion Data Inclusion
+- **[Translation Publication](./translation-publication.md)** — Publication des traductions
 
 ## Examples of Workflow Documentation
 

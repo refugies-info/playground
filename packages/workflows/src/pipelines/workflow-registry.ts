@@ -13,7 +13,7 @@ import {
   generateTranslationWorkflowPashto,
   generateTranslationWorkflowRu,
   generateTranslationWorkflowUk,
-} from "./generate-translation";
+} from "./translation/generate-translation";
 
 export const LANGUAGE_WORKFLOWS: Record<
   string,

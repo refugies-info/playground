@@ -48,6 +48,7 @@ import {
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
+import { FatalError, getStepMetadata } from "workflow";
 import { z } from "zod";
 import { getSupabaseClient, runWithConcurrency } from "./utils";
 
@@ -151,12 +152,14 @@ async function fetchDiMetadataTargets(): Promise<{
     })
     .filter(Boolean) as string[];
 
-  // Exclude candidates that already have a metadata report
+  // Exclude candidates that already have a successful metadata report.
+  // Records with status='error' are NOT excluded so they can be retried.
   const { data: existingReports } = await supabase
     .from("letta_reports")
     .select("workflow_id")
     .in("workflow_id", candidateWorkflowIds)
-    .eq("report_type", "metadata");
+    .eq("report_type", "metadata")
+    .eq("status", "success");
 
   const existingWorkflowIds = new Set(
     existingReports?.map((r) => r.workflow_id) ?? [],
@@ -198,6 +201,15 @@ async function fetchDiMetadataTargets(): Promise<{
 export async function generateDiMetadataReportsStep(runId: string) {
   "use step";
 
+  const stepMeta = getStepMetadata();
+
+  if (stepMeta.attempt > 1) {
+    logger.info(
+      { runId, attempt: stepMeta.attempt },
+      `↻ Metadata step retry attempt ${stepMeta.attempt}`,
+    );
+  }
+
   const { targets } = await fetchDiMetadataTargets();
 
   if (targets.length === 0) {
@@ -214,21 +226,29 @@ export async function generateDiMetadataReportsStep(runId: string) {
     process.env.METADATA_AGENT_ID || process.env.PLAYGROUND_AGENT_ID;
 
   if (!agentId) {
-    throw new Error("METADATA_AGENT_ID or PLAYGROUND_AGENT_ID is not defined");
+    // FatalError: no point retrying without a valid agent ID
+    throw new FatalError(
+      "METADATA_AGENT_ID or PLAYGROUND_AGENT_ID is not defined",
+    );
   }
 
   const lettaClient = createLettaClient();
   const supabase = getSupabaseClient();
 
   logger.info(
-    { runId, selected: targets.length },
-    "DI metadata report selection",
+    { runId, total: targets.length, agentId },
+    `▶ Metadata step — processing ${targets.length} record(s) with concurrency ${METADATA_CONCURRENCY}`,
   );
 
   // Process targets in parallel (each gets its own conversation to avoid
   // context mixing). runWithConcurrency limits simultaneous LLM calls.
   const results = await runWithConcurrency(
     targets.map((target) => async () => {
+      logger.info(
+        { workflowId: target.workflow_id, ingestionRecordId: target.id },
+        "▶ Starting metadata generation for record",
+      );
+
       const conversationId = await findOrCreateConversation(
         lettaClient,
         agentId,
@@ -279,6 +299,15 @@ export async function generateDiMetadataReportsStep(runId: string) {
           `Failed to insert letta_report: ${reportError.message}`,
         );
       }
+
+      logger.info(
+        {
+          workflowId: target.workflow_id,
+          ingestionRecordId: target.id,
+          reportStatus: parsed.status,
+        },
+        `✔ Metadata report stored (status: ${parsed.status})`,
+      );
     }),
     METADATA_CONCURRENCY,
   );
@@ -290,6 +319,13 @@ export async function generateDiMetadataReportsStep(runId: string) {
     const result = results[i];
     if (result.status === "fulfilled") {
       succeeded += 1;
+      logger.info(
+        {
+          workflowId: targets[i].workflow_id,
+          progress: `${succeeded + failed}/${targets.length}`,
+        },
+        `✔ [${succeeded + failed}/${targets.length}] Metadata succeeded`,
+      );
     } else {
       failed += 1;
       const target = targets[i];
@@ -310,6 +346,26 @@ export async function generateDiMetadataReportsStep(runId: string) {
           "Error generating DI metadata report",
         );
       }
+
+      // Insert an error letta_report so the failure is visible in the UI
+      // and the workflow can be manually retried. The idempotency filter
+      // skips only 'success' reports so this record will be retried next run.
+      try {
+        await supabase.from("letta_reports").insert({
+          agent_id: agentId,
+          report_type: "metadata",
+          markdown: "",
+          metadata: {} as Json,
+          status: "error",
+          raw_response: error instanceof Error ? error.message : String(error),
+          workflow_id: target.workflow_id,
+        });
+      } catch (dbError) {
+        logger.error(
+          { dbError, workflowId: target.workflow_id },
+          "Failed to insert error letta_report for metadata",
+        );
+      }
     }
   }
 
@@ -319,6 +375,9 @@ export async function generateDiMetadataReportsStep(runId: string) {
     failed,
   };
 }
+
+// 3 retries by default (same as workflow default, made explicit for documentation)
+generateDiMetadataReportsStep.maxRetries = 3;
 
 /**
  * Workflow step that forces generation of a metadata report for a specific workflow,

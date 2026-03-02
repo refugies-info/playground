@@ -27,9 +27,15 @@ export const simplifyContent = async function* (
     throw new Error("Conversation ID is required");
   }
 
-  // Build the message with the slash command followed by the markdown content
-  // The markdown should already contain frontmatter with metadata from the ingestion phase
-  const messageContent = `${REDACTION_SLASH_COMMAND} ${markdownContent}`;
+  // Secure the prompt against injection by strictly isolating untrusted markdown content
+  // using XML-like delimiters. This prevents the LLM from confusing document content
+  // with system instructions. We also strip any existing <document> tags from the input.
+  const sanitizedContent = markdownContent.replace(/<\/?document>/gi, "");
+  const messageContent = `${REDACTION_SLASH_COMMAND}
+
+<document>
+${sanitizedContent}
+</document>`;
 
   const stream = await client.conversations.messages.create(conversationId, {
     messages: [

@@ -21,9 +21,8 @@
  *         │         └── Creates/updates ingestion_records + workflows
  *         │             from new/changed di_services
  *         │
- *         ├── [4] generateDiAuditReportsStep    → audit-di-step.ts
- *         │         └── Letta agent audit → letta_reports (type: 'ingestion')
- *         │             Sets ingestion_report_id on processed records
+ *         ├── [4] fanOutDiRecordsStep (fan-out)
+ *         │         └── Spawns diSingleRecordWorkflow for each record
  *         │
  *         └── [5] generateDiMetadataReportsStep → metadata-di-step.ts
  *                   └── Letta agent metadata → letta_reports (type: 'metadata')
@@ -31,8 +30,8 @@
  *
  * Key decisions:
  * - Steps 1 & 2 always run (they are idempotent, content_hash dedup)
- * - Steps 3 & 4 only run if step 2 produced a runId (new data ingested)
- * - Audit and metadata generation run in parallel (independent Letta agents)
+ * - Step 3 only runs if step 2 produced a runId (new data ingested)
+ * - Step 4 spawns parallel workflows for audit/metadata generation (fan-out)
  */
 
 import { logger } from "@playground/shared-types";
@@ -41,8 +40,6 @@ import {
   ingestCarifOrefStructures,
   processIngestionRecords,
 } from "@refugies-info/di";
-import { generateDiAuditReportsStep } from "./audit-di-step";
-import { generateDiMetadataReportsStep } from "./metadata-di-step";
 import { getSupabaseClient } from "./utils";
 
 /**
@@ -56,9 +53,19 @@ import { getSupabaseClient } from "./utils";
 export async function ingestStructuresStep() {
   "use step";
   const supabase = getSupabaseClient();
-  logger.info("Starting DI Structures Ingestion Step...");
+  logger.info("▶ [1/4] Ingesting DI structures from CARIF-OREF...");
   const result = await ingestCarifOrefStructures(supabase);
-  logger.info({ result }, "DI Structures Ingestion Step Completed");
+  logger.info(
+    {
+      runId: result.runId,
+      fetched: result.totalFetched,
+      inserted: result.totalInserted,
+      updated: result.totalUpdated,
+      unchanged: result.totalUnchanged,
+      errors: result.errors.length,
+    },
+    `✔ [1/4] Structures ingested — ${result.totalInserted} new, ${result.totalUpdated} updated, ${result.totalUnchanged} unchanged`,
+  );
   return result;
 }
 
@@ -74,9 +81,19 @@ export async function ingestStructuresStep() {
 export async function ingestServicesStep() {
   "use step";
   const supabase = getSupabaseClient();
-  logger.info("Starting DI Services Ingestion Step...");
+  logger.info("▶ [2/4] Ingesting DI services from CARIF-OREF...");
   const result = await ingestCarifOrefServices(supabase);
-  logger.info({ result }, "DI Services Ingestion Step Completed");
+  logger.info(
+    {
+      runId: result.runId,
+      fetched: result.totalFetched,
+      inserted: result.totalInserted,
+      updated: result.totalUpdated,
+      unchanged: result.totalUnchanged,
+      errors: result.errors.length,
+    },
+    `✔ [2/4] Services ingested — ${result.totalInserted} new, ${result.totalUpdated} updated, ${result.totalUnchanged} unchanged${result.runId ? ` (runId: ${result.runId})` : " — no new data"}`,
+  );
   return result;
 }
 
@@ -95,53 +112,7 @@ export async function processRecordsStep(runId: string) {
     return;
   }
   const supabase = getSupabaseClient();
-  logger.info({ runId }, "Starting Ingestion Records Processing Step...");
+  logger.info({ runId }, "▶ [3/4] Processing ingestion records...");
   await processIngestionRecords(supabase, runId);
-  logger.info("Ingestion Records Processing Step Completed");
-}
-
-/**
- * Main DI ingestion workflow.
- *
- * Orchestrates the full pipeline: structure ingestion → service ingestion →
- * record processing → audit → metadata report generation (sequential).
- *
- * Audit runs before metadata to ensure metadata only processes records
- * that have already been audited (both reports target the same workflows).
- *
- * @returns Summary of all step results.
- */
-export async function diIngestionWorkflow() {
-  "use workflow";
-
-  // 1. Ingest Structures
-  const structuresResult = await ingestStructuresStep();
-
-  // 2. Ingest Services
-  const servicesResult = await ingestServicesStep();
-
-  // 3. Process new/updated services to create ingestion records
-  let auditResult:
-    | Awaited<ReturnType<typeof generateDiAuditReportsStep>>
-    | undefined;
-  let metadataResult:
-    | Awaited<ReturnType<typeof generateDiMetadataReportsStep>>
-    | undefined;
-
-  if (servicesResult.runId) {
-    await processRecordsStep(servicesResult.runId);
-
-    // 4. Audit first — sets ingestion_report_id on processed records
-    auditResult = await generateDiAuditReportsStep(servicesResult.runId);
-
-    // 5. Metadata — only targets records that have been audited (ingestion_report_id IS NOT NULL)
-    metadataResult = await generateDiMetadataReportsStep(servicesResult.runId);
-  }
-
-  return {
-    structures: structuresResult,
-    services: servicesResult,
-    audit: auditResult,
-    metadata: metadataResult,
-  };
+  logger.info({ runId }, "✔ [3/4] Ingestion records processed");
 }
