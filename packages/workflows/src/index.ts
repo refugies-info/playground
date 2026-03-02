@@ -1,69 +1,49 @@
 // =============================================================================
 // Types
 // =============================================================================
-export * from "./types";
 
+export type { PersistEditorialWorkflowResult } from "./pipelines/editorial/persist-editorial";
+export { persistEditorialWorkflow } from "./pipelines/editorial/persist-editorial";
+export type { PersistMetadataWorkflowResult } from "./pipelines/editorial/persist-metadata";
+export { persistMetadataWorkflow } from "./pipelines/editorial/persist-metadata";
+export type { SaveWorkflowResult } from "./pipelines/editorial/save";
+export { saveWorkflow } from "./pipelines/editorial/save";
+export type { ToggleStatusResult } from "./pipelines/editorial/toggle-status";
+export { toggleStatusWorkflow } from "./pipelines/editorial/toggle-status";
 // =============================================================================
-// Pipelines (Orchestrators - "use workflow")
+// Pipelines - Ingestion
 // =============================================================================
-import {
-  type ArchiveWorkflowResult,
-  archiveWorkflow,
-} from "./pipelines/archive";
-export { archiveWorkflow, type ArchiveWorkflowResult };
-
-import {
-  type PublicationWorkflowResult,
-  publicationWorkflow,
-} from "./pipelines/publication";
-export { publicationWorkflow, type PublicationWorkflowResult };
-
-import {
-  type TranslationPublicationWorkflowResult,
-  translationPublicationWorkflow,
-} from "./pipelines/translation-publication";
-export {
-  translationPublicationWorkflow,
-  type TranslationPublicationWorkflowResult,
-};
-
-import { type SaveWorkflowResult, saveWorkflow } from "./pipelines/save";
-export { saveWorkflow, type SaveWorkflowResult };
-
-import {
-  type PersistEditorialWorkflowResult,
-  persistEditorialWorkflow,
-} from "./pipelines/persist-editorial";
-export { persistEditorialWorkflow, type PersistEditorialWorkflowResult };
-
-import {
-  type PersistMetadataWorkflowResult,
-  persistMetadataWorkflow,
-} from "./pipelines/persist-metadata";
-export { persistMetadataWorkflow, type PersistMetadataWorkflowResult };
-
-import {
-  type ToggleStatusResult,
-  toggleStatusWorkflow,
-} from "./pipelines/toggle-status";
-export { toggleStatusWorkflow, type ToggleStatusResult };
-
-import {
-  type GenerateTranslationWorkflowInput,
-  type GenerateTranslationWorkflowResult,
-  generateTranslationWorkflow,
-} from "./pipelines/generate-translation";
+export { diIngestionWorkflow } from "./pipelines/ingestion/di-ingestion";
+export { diSingleRecordWorkflow } from "./pipelines/ingestion/di-single-record";
+export { forceArbitrationWorkflow } from "./pipelines/ingestion/force-arbitration";
+// =============================================================================
+// Pipelines - Editorial
+// =============================================================================
+export type { ArchiveWorkflowResult } from "./pipelines/publication/archive";
+export { archiveWorkflow } from "./pipelines/publication/archive";
+export type { PublicationWorkflowResult } from "./pipelines/publication/publication";
+export { publicationWorkflow } from "./pipelines/publication/publication";
+export type { TranslationPublicationWorkflowResult } from "./pipelines/publication/translation-publication";
+export { translationPublicationWorkflow } from "./pipelines/publication/translation-publication";
+// =============================================================================
+// Pipelines - Translation
+// =============================================================================
+export type {
+  GenerateTranslationWorkflowInput,
+  GenerateTranslationWorkflowResult,
+} from "./pipelines/translation/generate-translation";
 export {
   generateTranslationWorkflow,
-  type GenerateTranslationWorkflowInput,
-  type GenerateTranslationWorkflowResult,
-};
-
+  generateTranslationWorkflowAr,
+  generateTranslationWorkflowEn,
+  generateTranslationWorkflowFa,
+  generateTranslationWorkflowPashto,
+  generateTranslationWorkflowRu,
+  generateTranslationWorkflowUk,
+} from "./pipelines/translation/generate-translation";
 export { LANGUAGE_WORKFLOWS } from "./pipelines/workflow-registry";
-
 export type { GetEditorialRecordIdResult } from "./steps/common/get-editorial-record-id";
 export { getEditorialRecordIdStep } from "./steps/common/get-editorial-record-id";
-
 // =============================================================================
 // Common Utilities
 // =============================================================================
@@ -77,14 +57,18 @@ export type { SaveDocumentResult } from "./steps/editorial/save-document";
 // Steps - Editorial
 // =============================================================================
 export { saveDocumentStep } from "./steps/editorial/save-document";
-export * from "./steps/ingestion/audit-di-step";
-export { forceArbitrationWorkflow } from "./steps/ingestion/force-arbitration";
 // =============================================================================
 // Steps - Ingestion
 // =============================================================================
+export * from "./steps/ingestion/audit-di-step";
+export {
+  claimDiAuditTargetsStep,
+  diSingleAuditStep,
+  diSingleMetadataStep,
+  fanOutDiRecordsStep,
+} from "./steps/ingestion/di-single-record-steps";
 export * from "./steps/ingestion/ingest-di";
 export * from "./steps/ingestion/metadata-di-step";
-
 // =============================================================================
 // Adapters - Platform implementations
 // =============================================================================
@@ -125,3 +109,4 @@ export { createTranslationRecordsStep } from "./steps/translation/create-transla
 export { generateTranslationStep } from "./steps/translation/generate-translation";
 export { triggerTranslationWorkflowStep } from "./steps/translation/trigger-translation-workflow";
 export { updateTranslationStatusStep } from "./steps/translation/update-status";
+export * from "./types";

@@ -50,6 +50,7 @@ import {
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
+import { FatalError, getStepMetadata } from "workflow";
 import { z } from "zod";
 import {
   fetchAllDiServiceIds,
@@ -195,6 +196,14 @@ async function fetchDiAuditTargets(
 export async function generateDiAuditReportsStep(runId: string) {
   "use step";
 
+  const stepMeta = getStepMetadata();
+  if (stepMeta.attempt > 1) {
+    logger.info(
+      { runId, attempt: stepMeta.attempt },
+      `↻ Audit step retry attempt ${stepMeta.attempt}`,
+    );
+  }
+
   // Fetch ALL DI service IDs, not just from the current run.
   // Unchanged services keep their original ingestion_run_id, so filtering
   // by the current runId would miss unaudited records from previous runs.
@@ -221,7 +230,7 @@ export async function generateDiAuditReportsStep(runId: string) {
   const agentId = process.env.PLAYGROUND_AGENT_ID;
 
   if (!agentId) {
-    throw new Error("PLAYGROUND_AGENT_ID is not defined");
+    throw new FatalError("PLAYGROUND_AGENT_ID is not defined");
   }
 
   const lettaClient = createLettaClient();
@@ -360,6 +369,9 @@ export async function generateDiAuditReportsStep(runId: string) {
   };
 }
 
+// 3 retries by default (same as workflow default, made explicit for documentation)
+generateDiAuditReportsStep.maxRetries = 3;
+
 /**
  * Workflow step that forces generation of an audit report for a specific workflow,
  * bypassing normal batch collection. Used primarily for manual arbitration/retry.
@@ -411,7 +423,7 @@ export async function forceAuditReportStep(workflowId: string) {
 
   const agentId = process.env.PLAYGROUND_AGENT_ID;
   if (!agentId) {
-    throw new Error("PLAYGROUND_AGENT_ID is not defined");
+    throw new FatalError("PLAYGROUND_AGENT_ID is not defined");
   }
 
   const lettaClient = createLettaClient();

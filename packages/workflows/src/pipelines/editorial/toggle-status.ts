@@ -1,15 +1,10 @@
 import {
   type ToggleStatusResult,
   toggleStatusStep,
-} from "../steps/editorial/toggle-status";
+} from "../../steps/editorial/toggle-status";
 
 export type { ToggleStatusResult };
 
-/**
- * Workflow to toggle the compliance status of a document.
- *
- * Use this workflow to switch between compliant and non-compliant states.
- */
 export async function toggleStatusWorkflow(
   workflowId: string,
   currentStatus: string,

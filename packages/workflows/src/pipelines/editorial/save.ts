@@ -1,8 +1,5 @@
-import { saveDocumentStep } from "../steps/editorial/save-document";
+import { saveDocumentStep } from "../../steps/editorial/save-document";
 
-/**
- * Result of the save workflow.
- */
 export interface SaveWorkflowResult {
   editorialRecordId: string;
   isNew: boolean;
@@ -10,18 +7,6 @@ export interface SaveWorkflowResult {
   metadata: Record<string, unknown>;
 }
 
-/**
- * Save pipeline that orchestrates document saving.
- *
- * This workflow:
- * 1. Saves or updates the editorial record
- * 2. Updates workflow progress if needed
- *
- * NOTE: No Node.js modules can be used directly here - all in steps.
- *
- * @param workflowId - The workflow ID
- * @param markdown - The markdown content to save
- */
 export async function saveWorkflow(
   workflowId: string,
   markdown: string,

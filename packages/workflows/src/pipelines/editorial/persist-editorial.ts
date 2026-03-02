@@ -1,19 +1,10 @@
-import { persistEditorialReportStep } from "../steps/editorial/persist-editorial-report";
+import { persistEditorialReportStep } from "../../steps/editorial/persist-editorial-report";
 
-/**
- * Result of the persist editorial workflow.
- */
 export interface PersistEditorialWorkflowResult {
   reportId: string;
   editorialRecordId: string;
 }
 
-/**
- * Workflow to persist an editorial agent report.
- *
- * This triggers after the editorial agent stream completes.
- * It persists the generated content and links it to the editorial record.
- */
 export async function persistEditorialWorkflow(
   workflowId: string,
   agentId: string,

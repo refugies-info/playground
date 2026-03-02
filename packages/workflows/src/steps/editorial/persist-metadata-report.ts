@@ -81,11 +81,8 @@ export async function persistMetadataReportStep(
       .eq("id", flowId)
       .single();
 
-    if (workflowError || !workflow?.editorial_record_id) {
-      const msg = workflowError
-        ? `Workflow lookup failed: ${workflowError.message}`
-        : "Workflow has no editorial_record_id";
-
+    if (workflowError) {
+      const msg = `Workflow lookup failed: ${workflowError.message}`;
       logger.warn({ flowId, reportId: report.id, error: workflowError }, msg);
       return {
         success: false,
