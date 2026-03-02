@@ -9,7 +9,7 @@ Le processus de publication suit les étapes suivantes :
 1.  **Validation** : Le document doit être au statut `compliant` (validé par l'IA ou l'humain).
 2.  **Authentification** : L'email de l'utilisateur connecté est récupéré côté serveur (sécurisé).
 3.  **Submission** : Une Server Action `publishDocument` est appelée.
-4.  **Webhook** : Le Playground appelle le webhook de l'application cible avec un payload JSON.
+4.  **Webhook** : Le Playground appelle le webhook de l'application cible avec un payload JSON (create/update).
 5.  **Enregistrement** : 
     - L'ID distant retourné par le webhook est stocké dans la table `publication_records`.
     - Le workflow passe au statut `published`.
@@ -32,7 +32,8 @@ RI_WEBHOOK_SECRET=votre_secret_partage
 
 Les routes sont construites automatiquement :
 - **Preview** : `${RI_BASE_URL}/dispositif/preview`
-- **Publication** : `${RI_BASE_URL}/api/webhook/dispositif`
+- **Publication (create)** : `${RI_BASE_URL}/api/webhook/dispositif/create`
+- **Publication (update)** : `${RI_BASE_URL}/api/webhook/dispositif/update`
 
 ## Base de données
 
@@ -66,13 +67,31 @@ Le webhook reçoit un POST request avec :
 {
   "email": "user@example.com",
   "dispositif": {
-    "typeContenu": "dispositif",
-    "theme": "...",
-    "titreInformatif": "Titre du document",
     "origin": "RCO",
+    "theme": "63286a015d31b2c0cad99615",
+    "secondaryThemes": ["63286a025d31b2c0cad99616"],
+    "needs": [],
+    "sponsors": [
+      { "name": "Alliance Française" }
+    ],
+    "metadatas": {
+      "sessions": [
+        {
+          "startDate": "2025-11-24T00:00:00Z",
+          "endDate": "2026-01-16T00:00:00Z",
+          "registrationStartDate": "2025-10-01T00:00:00Z",
+          "registrationEndDate": "2025-11-20T23:59:59Z",
+          "externalRef": "585188",
+          "url": "https://example.com"
+        }
+      ]
+    },
     "translations": {
       "fr": {
         "content": {
+          "titreInformatif": "Titre du document",
+          "titreMarque": "Titre du document",
+          "abstract": "Résumé",
           "markdown": "Contenu markdown..."
         }
       }
@@ -80,3 +99,9 @@ Le webhook reçoit un POST request avec :
   }
 }
 ```
+
+### Notes importantes
+- **Create vs update** : si un `remote_id` existe, le payload inclut `_id` et n’inclut pas `origin`.
+- **Métadonnées** : le payload utilise **merged metadata** (IA + overrides).
+- **Sessions** : les champs `periode` sont convertis en `metadatas.sessions` avec des dates ISO.
+- **H1** : le H1 est retiré du markdown envoyé (le titre est porté par `titreInformatif`/`titreMarque`).

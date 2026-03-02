@@ -4,7 +4,13 @@
  */
 
 import { Badge } from "@playground/ui/primitives";
-import { CircleX, FileQuestionMark, Pencil, Zap } from "lucide-react";
+import {
+  AlertTriangle,
+  CircleX,
+  FileQuestionMark,
+  Pencil,
+  Zap,
+} from "lucide-react";
 import type { MetadataFieldStatus } from "./types";
 
 interface FieldBadgeProps {
@@ -32,6 +38,14 @@ export function FieldBadge({
     return (
       <Badge size="sm" variant="danger" title={error}>
         <CircleX className="h-3 w-3 mr-1" /> Erreur
+      </Badge>
+    );
+  }
+
+  if (status === "fixed") {
+    return (
+      <Badge size="sm" variant="warning">
+        <AlertTriangle className="h-3 w-3 mr-1" /> Erreur fixée
       </Badge>
     );
   }

@@ -14,7 +14,8 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
   const { getFieldValue, updateField } = useMetadata();
   const [isEditing, setIsEditing] = useState(false);
 
-  const pois = (getFieldValue(fieldKey) as RiPoi[]) ?? [];
+  const rawPois = getFieldValue(fieldKey) as RiPoi[] | RiPoi | undefined;
+  const pois = Array.isArray(rawPois) ? rawPois : rawPois ? [rawPois] : [];
 
   // Local state for editing
   const [localPois, setLocalPois] = useState<RiPoi[]>(pois);

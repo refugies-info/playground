@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Sparkles, X } from "lucide-react";
-import { useDocument } from "./DocumentContext";
+import { useDocument } from "../DocumentContext";
 
 export function AiSuggestionBanner() {
   const { document, acceptAiSuggestion, rejectAiSuggestion } = useDocument();

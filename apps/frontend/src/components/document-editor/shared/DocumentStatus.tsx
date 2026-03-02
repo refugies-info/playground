@@ -10,7 +10,7 @@ import {
   getWorkStatusLabel,
   getWorkStatusVariant,
 } from "@/lib/document-labels";
-import { useDocument } from "./DocumentContext";
+import { useDocument } from "../DocumentContext";
 
 export function DocumentStatus() {
   const { document } = useDocument();

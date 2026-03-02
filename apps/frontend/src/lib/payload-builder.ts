@@ -3,39 +3,22 @@
  * Centralized construction of dispositif payloads for external APIs
  */
 
-import { stripFirstH1 } from "@playground/shared-types";
+import {
+  buildRefugiesInfoPayload,
+  type RefugiesInfoPayload,
+  stripFirstH1,
+} from "@playground/shared-types";
 import { normalizeMarkdown } from "./markdown/normalizeMarkdown";
-
-// Default theme ID for dispositif preview/payload ("Apprendre le français")
-const DEFAULT_THEME_ID = "63286a015d31b2c0cad99615";
 
 export interface DocumentPayloadInput {
   title: string;
   editorialContent: string;
   metadata?: Record<string, unknown>;
+  /** Merged metadata (AI + editorial overrides) for preview/publication */
+  mergedMetadata?: Record<string, unknown>;
 }
 
-export interface DispositifPayload {
-  dispositif: {
-    typeContenu: string;
-    theme: string;
-    titreInformatif: string;
-    titreMarque: string;
-    abstract: string;
-    origin: string;
-    status?: string;
-    translations: {
-      fr: {
-        content: {
-          titreInformatif: string;
-          titreMarque: string;
-          abstract: string;
-          markdown: string;
-        };
-      };
-    };
-  };
-}
+export type DispositifPayload = RefugiesInfoPayload;
 
 /**
  * Payload for publishing to refugies.info (includes email)
@@ -46,43 +29,24 @@ export interface PublishPayload extends DispositifPayload {
 
 /**
  * Build a dispositif payload for preview or publication
+ * Follows the exact contract defined by Réfugiés.info
  * @param doc - Document data from the editor
  * @returns Structured payload matching Main App webhook expectations
  */
 export async function buildDispositifPayload(
   doc: DocumentPayloadInput,
-  status = "Actif",
+  _status = "Actif",
 ): Promise<DispositifPayload> {
-  const themeId = (doc.metadata?.theme as string) || DEFAULT_THEME_ID;
+  // Use merged metadata if available, otherwise fall back to basic metadata
+  const metadata = doc.mergedMetadata || doc.metadata || {};
 
-  // Normalize markdown to ensure unambiguous directive nesting
-  // This prevents parsing issues in the Main App when it receives nested directives
-  // We ALSO strip the first H1 heading for the payload (it's passed in metadata)
-  const cleanedMarkdown = await stripFirstH1(doc.editorialContent);
-  const normalizedMarkdown = normalizeMarkdown(cleanedMarkdown);
-
-  return {
-    dispositif: {
-      typeContenu: "dispositif",
-      theme: themeId,
-      status: status,
-      // Root fields for legacy/compatibility
-      titreInformatif: doc.title,
-      titreMarque: doc.title,
-      abstract: "",
-      origin: "RCO",
-      translations: {
-        fr: {
-          content: {
-            titreInformatif: doc.title,
-            titreMarque: doc.title, // Fallback to title
-            abstract: "", // Required field often
-            markdown: normalizedMarkdown,
-          },
-        },
-      },
-    },
-  };
+  return buildRefugiesInfoPayload({
+    title: doc.title,
+    markdown: doc.editorialContent,
+    metadata,
+    origin: "RCO",
+    normalizeMarkdown,
+  });
 }
 
 /**

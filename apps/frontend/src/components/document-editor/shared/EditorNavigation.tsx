@@ -12,8 +12,8 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DocumentActions } from "./DocumentActions";
-import { useDocument } from "./DocumentContext";
+import { DocumentActions } from "../actions";
+import { useDocument } from "../DocumentContext";
 
 export function EditorNavigation() {
   const { isComparisonMode, document } = useDocument();

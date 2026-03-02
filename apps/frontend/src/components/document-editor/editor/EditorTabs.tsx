@@ -1,5 +1,5 @@
 import { Eye, FileText, GitCompare } from "lucide-react";
-import { useDocument } from "./DocumentContext";
+import { useDocument } from "../DocumentContext";
 
 /**
  * Reusable tab bar for the editor with Visual/Raw mode toggle

@@ -14,8 +14,8 @@ import {
   getComplianceStatusVariant,
 } from "@/lib/document-labels";
 import { toggleWorkflowStatus } from "@/services/document-actions";
-import { useDocument } from "./DocumentContext";
-import { MarkdownViewer } from "./MarkdownViewer";
+import { useDocument } from "../DocumentContext";
+import { MarkdownViewer } from "../shared/MarkdownViewer";
 
 export function ArbitrationView() {
   const router = useRouter();

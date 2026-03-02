@@ -1,42 +1,44 @@
 "use client";
 
-import { logger } from "@playground/shared-types";
 import { cn } from "@playground/ui";
-import { Button, Spinner } from "@playground/ui/primitives";
-import {
-  Archive,
-  Check,
-  Copy,
-  ExternalLink,
-  Eye,
-  Save,
-  Send,
-  X,
-} from "lucide-react";
+import { Button } from "@playground/ui/primitives";
+import { Archive, Eye, Save, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { getPublicationStatus } from "@/services/document-actions";
-import { useDocument } from "./DocumentContext";
+import { useDocument } from "../../DocumentContext";
+import { useDocumentActions } from "../DocumentActionsContext";
+import { usePublicationPolling } from "../hooks/usePublicationPolling";
+import { PublishConfirmationDialog } from "./PublishConfirmationDialog";
+import { PublishSuccessDialog } from "./PublishSuccessDialog";
 
 interface DocumentActionsProps {
   isCollapsed?: boolean;
 }
 
+/**
+ * UI for document actions (preview/save/publish/archive).
+ *
+ * Responsibilities:
+ * - Drive user interactions and feedback
+ * - Show success/error banners
+ * - Orchestrate publish confirmation + success overlays
+ * - Trigger publication polling when the URL isn't immediately available
+ */
+
 export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
   const router = useRouter();
+  const { document, setDocument, isDirty } = useDocument();
   const {
-    document,
-    setDocument,
+    previewDocument,
     saveDocument,
     isSaving,
-    isDirty,
-    previewDocument,
     publishDocument,
     isPublishing,
     archiveDocument,
     isArchiving,
-  } = useDocument();
+  } = useDocumentActions();
 
+  // --- Status banners
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
@@ -45,12 +47,10 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
   const [hasCopied, setHasCopied] = useState(false);
   const [archiveError, setArchiveError] = useState<string | null>(null);
   const [archiveSuccess, setArchiveSuccess] = useState(false);
+
+  // --- Overlays
   const [showPublishSuccessOverlay, setShowPublishSuccessOverlay] =
     useState(false);
-  const [publishOverlayError, setPublishOverlayError] = useState<string | null>(
-    null,
-  );
-  const [isWaitingForLink, setIsWaitingForLink] = useState(false);
 
   // Track mounted state to avoid updates on unmounted component
   const isMounted = useRef(true);
@@ -62,63 +62,35 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
     };
   }, []);
 
-  const startPollingForLink = async (workflowId: string) => {
-    let attempts = 0;
-    const maxAttempts = 30; // 1 minute total
-
-    if (!isMounted.current) return;
-    setIsWaitingForLink(true);
-    setPublishOverlayError(null);
-
-    while (attempts < maxAttempts) {
+  const {
+    isWaiting: isWaitingForLink,
+    error: publishOverlayError,
+    setError: setPublishOverlayError,
+    setIsWaiting: setIsWaitingForLink,
+    startPolling,
+  } = usePublicationPolling({
+    workflowId: document?.id,
+    onSuccess: (url) => {
+      setPublishedUrl(url);
+      // Update global context so TopBar sees the new link immediately
+      setDocument((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          onlineStatus: "published",
+          workStatus: null, // Clear Draft on success
+          publishedUrl: url,
+        };
+      });
+      router.refresh();
+    },
+    onError: (message) => {
       if (!isMounted.current) return;
+      setPublishOverlayError(message);
+    },
+  });
 
-      attempts++;
-      try {
-        const result = await getPublicationStatus(workflowId);
-
-        if (!isMounted.current) return;
-
-        if (result.success && result.publishedUrl) {
-          setPublishedUrl(result.publishedUrl);
-          setIsWaitingForLink(false);
-          // Update global context so TopBar sees the new link immediately
-          setDocument((prev) => {
-            if (!prev) return prev;
-            return {
-              ...prev,
-              onlineStatus: "published",
-              workStatus: null, // Clear Draft on success
-              publishedUrl: result.publishedUrl,
-            };
-          });
-          router.refresh(); // Refresh TopBar and other server components
-          return;
-        }
-
-        if (attempts >= maxAttempts) {
-          setPublishOverlayError(
-            "Le lien n’est pas encore disponible. Réessaie dans quelques instants.",
-          );
-          setIsWaitingForLink(false);
-          return;
-        }
-
-        // Wait 2 seconds before next attempt
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-      } catch (error) {
-        if (!isMounted.current) return;
-        logger.error(error, "Error polling publication status");
-        setPublishOverlayError(
-          "Impossible de récupérer le lien de publication.",
-        );
-        setIsWaitingForLink(false);
-        return;
-      }
-    }
-  };
-
-  // Publication Overlay State
+  // Publication confirmation overlay
   const [showPublishOverlay, setShowPublishOverlay] = useState(false);
   const [triggerTranslations, setTriggerTranslations] = useState(true);
 
@@ -177,14 +149,15 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
       setIsWaitingForLink(!result.publishedUrl);
 
       // Start polling if we don't have the URL yet
-      if (!result.publishedUrl && document?.id) {
-        startPollingForLink(document.id);
+      if (!result.publishedUrl) {
+        startPolling();
       }
 
       setTimeout(() => isMounted.current && setPublishSuccess(false), 3000);
     } else {
-      setPublishError(result.error || "Échec de la publication");
-      setPublishOverlayError(result.error || "Échec de la publication");
+      const errorMessage = result.error || "Échec de la publication";
+      setPublishError(errorMessage);
+      setPublishOverlayError(errorMessage);
       setShowPublishSuccessOverlay(true);
       setIsWaitingForLink(false);
     }
@@ -310,114 +283,25 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
         </Button>
       )}
 
-      {/* Local Overlay */}
-      {showPublishSuccessOverlay && (
-        <div className="absolute inset-0 z-10 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-4 animate-in fade-in duration-200">
-          <button
-            type="button"
-            onClick={() => setShowPublishSuccessOverlay(false)}
-            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-          {!isWaitingForLink && (
-            <div className="text-sm font-medium text-green-600 text-center">
-              Document publié !
-            </div>
-          )}
-          {publishOverlayError ? (
-            <div className="flex flex-col items-center gap-2">
-              <div className="text-xs text-red-600 text-center">
-                {publishOverlayError}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => document?.id && startPollingForLink(document.id)}
-                className="h-7 text-[10px] px-2"
-              >
-                Réessayer
-              </Button>
-            </div>
-          ) : publishedUrl ? (
-            <>
-              <div className="flex items-center gap-2 w-full">
-                <div className="flex-1 bg-gray-50 rounded border px-2 py-1.5 text-xs text-gray-600 truncate">
-                  {publishedUrl}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  className="p-1.5 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-700 transition-colors border"
-                  title="Copier le lien"
-                >
-                  {hasCopied ? (
-                    <Check className="w-3.5 h-3.5 text-green-600" />
-                  ) : (
-                    <Copy className="w-3.5 h-3.5" />
-                  )}
-                </button>
-              </div>
-              <Button
-                onClick={() => window.open(publishedUrl, "_blank")}
-                variant="outline"
-                size="sm"
-                className="w-full gap-2 h-8 text-xs"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                Voir la fiche
-              </Button>
-            </>
-          ) : (
-            <div className="text-xs text-gray-500 text-center flex items-center gap-2">
-              {isWaitingForLink && <Spinner size="xl" />}
-              <span>En cours de publication.</span>
-            </div>
-          )}
-        </div>
-      )}
+      <PublishSuccessDialog
+        isOpen={showPublishSuccessOverlay}
+        isWaiting={isWaitingForLink}
+        publishedUrl={publishedUrl}
+        error={publishOverlayError}
+        hasCopied={hasCopied}
+        onClose={() => setShowPublishSuccessOverlay(false)}
+        onCopy={handleCopy}
+        onRetry={startPolling}
+        onOpenLink={() => publishedUrl && window.open(publishedUrl, "_blank")}
+      />
 
-      {/* Confirmation Overlay */}
-      {showPublishOverlay && (
-        <div className="absolute inset-0 z-20 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-4 p-4 animate-in fade-in duration-200">
-          <button
-            type="button"
-            onClick={() => setShowPublishOverlay(false)}
-            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-          <div className="text-sm font-medium text-gray-900 text-center">
-            Confirmer la publication
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="triggerTranslations"
-              checked={triggerTranslations}
-              onChange={(e) => setTriggerTranslations(e.target.checked)}
-              className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
-            />
-            <label
-              htmlFor="triggerTranslations"
-              className="text-xs text-gray-600 select-none cursor-pointer"
-            >
-              Déclencher les traductions
-            </label>
-          </div>
-
-          <Button
-            onClick={handleConfirmPublish}
-            variant="success"
-            size="sm"
-            className="w-full gap-2 h-8 text-xs"
-          >
-            <Send className="w-3.5 h-3.5" />
-            Publier
-          </Button>
-        </div>
-      )}
+      <PublishConfirmationDialog
+        isOpen={showPublishOverlay}
+        triggerTranslations={triggerTranslations}
+        onToggleTranslations={setTriggerTranslations}
+        onConfirm={handleConfirmPublish}
+        onClose={() => setShowPublishOverlay(false)}
+      />
     </div>
   );
 }

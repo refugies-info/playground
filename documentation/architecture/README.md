@@ -23,6 +23,7 @@ Create architecture documentation when:
 - **[Content Pipeline](./content-pipeline.md)** — Markdown transformation & storage flow
 - **[Database Schema](./database-schema.md)** — Data model and migrations (coming soon)
 - **[Authentication](./authentication.md)** — Auth flow and security (coming soon)
+- **[Document Editor Contexts](./document-editor-contexts.md)** — Providers & route architecture
 
 ## Examples of Architecture Documentation
 
