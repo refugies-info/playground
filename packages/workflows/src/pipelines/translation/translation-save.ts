@@ -1,19 +1,9 @@
-import { saveTranslationStep } from "../steps/translation/save-translation";
+import { saveTranslationStep } from "../../steps/translation/save-translation";
 
-/**
- * Result of the save translation workflow.
- */
 export interface SaveTranslationWorkflowResult {
   translationRecordId: string;
 }
 
-/**
- * Save translation pipeline.
- *
- * @param translationId - The translation record ID
- * @param markdown - The markdown content
- * @param userId - The user ID
- */
 export async function saveTranslationWorkflow(
   translationId: string,
   markdown: string,

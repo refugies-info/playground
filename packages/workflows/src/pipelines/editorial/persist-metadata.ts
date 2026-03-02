@@ -1,19 +1,10 @@
-import { persistMetadataReportStep } from "../steps/editorial/persist-metadata-report";
+import { persistMetadataReportStep } from "../../steps/editorial/persist-metadata-report";
 
-/**
- * Result of the persist metadata workflow.
- */
 export interface PersistMetadataWorkflowResult {
   reportId: string;
   editorialRecordId: string;
 }
 
-/**
- * Workflow to persist a metadata agent report.
- *
- * This triggers after the metadata agent stream completes.
- * It persists the generated metadata and links it to the editorial record.
- */
 export async function persistMetadataWorkflow(
   workflowId: string,
   agentId: string,
