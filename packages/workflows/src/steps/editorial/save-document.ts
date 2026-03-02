@@ -56,7 +56,7 @@ export async function saveDocumentStep(
     }
 
     // 2. Extract title and prepare metadata
-    const title = await extractTitleFromMarkdown(markdown);
+    const markdownTitle = await extractTitleFromMarkdown(markdown);
 
     // Supabase join can return array or object
     // For editorial_records, it's a single relation (usually)
@@ -68,6 +68,25 @@ export async function saveDocumentStep(
         } | null);
 
     const existingEditorialMetadata = editorialRecord?.metadata;
+
+    // Ingestion record metadata (fallback title)
+    const ingestionRecord = Array.isArray(workflow.ingestion_records)
+      ? workflow.ingestion_records[0]
+      : (workflow.ingestion_records as {
+          metadata: Record<string, unknown>;
+        } | null);
+    const ingestionMetadata = ingestionRecord?.metadata;
+
+    const fallbackTitle =
+      (existingEditorialMetadata?.title as string | undefined) ||
+      (existingEditorialMetadata?.["intitule-formation"] as
+        | string
+        | undefined) ||
+      (ingestionMetadata?.title as string | undefined) ||
+      (ingestionMetadata?.["intitule-formation"] as string | undefined) ||
+      "Sans titre";
+
+    const title = markdownTitle || fallbackTitle;
 
     // Don't copy ingestion metadata - start fresh
     const baseMetadata = existingEditorialMetadata || {};

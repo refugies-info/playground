@@ -10,9 +10,9 @@ import "@blocknote/mantine/style.css";
 import { logger } from "@playground/shared-types";
 import { Loader2 } from "lucide-react";
 import { blocksToDirectiveMarkdown, markdownToBlocks } from "@/lib/markdown";
+import { useDocument } from "../DocumentContext";
 import { AiSuggestionBanner } from "./AiSuggestionBanner"; // Keeping existing import
 import { type CustomEditor, customSchema } from "./blocks/custom-schema";
-import { useDocument } from "./DocumentContext";
 import { EditorTabs } from "./EditorTabs";
 import { OriginalContentView } from "./OriginalContentView";
 import { RawMarkdownView } from "./RawMarkdownView";

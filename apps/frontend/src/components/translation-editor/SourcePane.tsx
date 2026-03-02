@@ -6,7 +6,7 @@ import { useTranslation } from "./TranslationContext";
 
 const MarkdownViewer = dynamic(
   () =>
-    import("../document-editor/MarkdownViewer").then(
+    import("../document-editor/shared/MarkdownViewer").then(
       (mod) => mod.MarkdownViewer,
     ),
   { ssr: false },

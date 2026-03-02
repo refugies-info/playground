@@ -13,7 +13,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useDocument } from "./DocumentContext";
+import { useDocument } from "../DocumentContext";
 
 export function AssistantPanel() {
   const {

@@ -12,7 +12,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { triggerForceArbitration } from "@/services/document-actions";
 import { useDocument } from "../DocumentContext";
-import { MetadataProvider } from "./MetadataContext";
 import { MetadataTable } from "./MetadataTable";
 import { METADATA_FIELDS_RI } from "./publication-targets/refugies-info";
 
@@ -115,13 +114,11 @@ export function MetadataView() {
   }
 
   return (
-    <MetadataProvider>
-      <MetadataTable
-        report={document.metadataReport}
-        diMetadata={document.metadata ?? {}}
-        ref={document.referenceData ?? { themes: {}, needs: {} }}
-        fields={METADATA_FIELDS_RI}
-      />
-    </MetadataProvider>
+    <MetadataTable
+      report={document.metadataReport}
+      diMetadata={document.metadata ?? {}}
+      ref={document.referenceData ?? { themes: {}, needs: {} }}
+      fields={METADATA_FIELDS_RI}
+    />
   );
 }

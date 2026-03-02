@@ -23,4 +23,5 @@ export type MetadataFieldStatus =
   | "modified"
   | "saving"
   | "saved"
-  | "error";
+  | "error"
+  | "fixed"; // Auto-fix applied

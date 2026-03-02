@@ -35,6 +35,7 @@ export function MetadataRow({
     mergedMetadata,
     getFieldStatus,
     getFieldError,
+    getFieldFixInfo,
     dirtyFields,
     resetField,
     clearField,
@@ -45,6 +46,7 @@ export function MetadataRow({
   const prov = provenanceByKey.get(field.riKey);
   const fieldStatus = getFieldStatus(field.riKey);
   const fieldError = getFieldError(field.riKey);
+  const fieldFixInfo = getFieldFixInfo(field.riKey);
 
   const hasOriginalValue = rawValue !== undefined && rawValue !== null;
   const isModified = [field.riKey, ...(field.relatedKeys ?? [])].some((key) =>
@@ -82,6 +84,40 @@ export function MetadataRow({
             isModified={isModified}
             hasOriginalValue={hasOriginalValue}
           />
+
+          {fieldStatus === "fixed" && fieldFixInfo ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle
+                    className="h-4 w-4 text-gray-500 cursor-pointer"
+                    onClick={() =>
+                      navigator.clipboard.writeText(
+                        `${field.riKey}: ${fieldFixInfo.description} | Avant: ${JSON.stringify(
+                          fieldFixInfo.originalValue,
+                        )} | Après: ${JSON.stringify(fieldFixInfo.fixedValue)}`,
+                      )
+                    }
+                  />
+                </TooltipTrigger>
+                <TooltipContent className="flex flex-col gap-1">
+                  <p className="font-bold">Erreur fixée</p>
+                  <p className="text-sm text-gray-600">
+                    {fieldFixInfo.description}
+                  </p>
+                  <div className="text-xs text-gray-600">
+                    <strong>Avant :</strong>{" "}
+                    {JSON.stringify(fieldFixInfo.originalValue)}
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    <strong>Après :</strong>{" "}
+                    {JSON.stringify(fieldFixInfo.fixedValue)}
+                  </div>
+                  <p className="text-xs text-gray-400">Cliquez pour copier</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : null}
 
           {fieldStatus === "error" && fieldError ? (
             <TooltipProvider>
