@@ -552,8 +552,8 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     (key: string): MetadataFieldStatus => {
       if (state.savingFields.has(key)) return "saving";
       if (state.fieldErrors.has(key)) return "error";
-      if (state.fixedFields.has(key)) return "fixed";
       if (dirtyFields.has(key)) return "modified";
+      if (state.fixedFields.has(key)) return "fixed";
       return "pristine";
     },
     [state.savingFields, state.fieldErrors, state.fixedFields, dirtyFields],

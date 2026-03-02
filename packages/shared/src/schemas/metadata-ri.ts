@@ -14,6 +14,7 @@ export const PriceSchema = z.object({
   ),
   details: z
     .string({ message: "Le détail doit être une chaîne de caractères" })
+    .min(1, { message: "Le détail ne peut pas être vide" })
     .optional(),
 });
 

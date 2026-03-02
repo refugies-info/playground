@@ -59,11 +59,18 @@ const autoFixRules: Array<{
     },
     fix: (value) => {
       const obj = Array.isArray(value) ? value[0] : value;
-      const base = (obj ?? {}) as {
+      const {
+        details: _details,
+        values: _values,
+        ...rest
+      } = (obj ?? {}) as {
         values?: unknown[];
+        details?: unknown;
         [key: string]: unknown;
       };
-      return { ...base, values: [0] };
+      void _details;
+      void _values;
+      return { ...rest, values: [0] };
     },
   },
   {
@@ -93,6 +100,27 @@ const autoFixRules: Array<{
       const rawValues = Array.isArray(base.values) ? base.values : [];
       const numericValues = rawValues.map((v) => Number(v));
       return { ...base, values: numericValues };
+    },
+  },
+  {
+    name: "fix_price_empty_details",
+    description: 'Le champ "détail" vide a été supprimé du prix.',
+    detect: (value) => {
+      const obj = Array.isArray(value) ? value[0] : value;
+      if (!obj || typeof obj !== "object") return false;
+      return (
+        "details" in (obj as object) &&
+        (obj as { details?: unknown }).details === ""
+      );
+    },
+    fix: (value) => {
+      const obj = Array.isArray(value) ? value[0] : value;
+      const { details: _details, ...rest } = (obj ?? {}) as {
+        details?: unknown;
+        [key: string]: unknown;
+      };
+      void _details;
+      return rest;
     },
   },
   {
