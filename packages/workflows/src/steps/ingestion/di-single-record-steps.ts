@@ -315,7 +315,7 @@ export async function claimDiAuditTargetsStep(runId: string) {
   );
 
   if (countError) {
-    throw new Error(
+    throw new RetryableError(
       `Failed to count audit candidates: ${JSON.stringify(countError)}`,
     );
   }
@@ -331,7 +331,9 @@ export async function claimDiAuditTargetsStep(runId: string) {
   );
 
   if (rpcError) {
-    throw new Error(`Failed to claim audit targets: ${rpcError.message}`);
+    throw new RetryableError(
+      `Failed to claim audit targets: ${rpcError.message}`,
+    );
   }
 
   const targets = (data as DiAuditTarget[]) || [];
