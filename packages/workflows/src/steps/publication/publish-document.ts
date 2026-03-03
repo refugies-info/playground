@@ -18,22 +18,36 @@ async function createFailedPublicationRecord(
     userId: string;
   },
 ) {
-  const targetUrl = process.env.RI_BASE_URL || "refugies.info";
+  const targetUrl = process.env.RI_BASE_URL?.replace(/\/$/, "") || "";
 
   try {
-    await supabase.from("publication_records").insert({
-      workflow_id: params.workflowId,
-      editorial_record_id: params.editorialRecordId || null,
-      target: targetUrl,
-      remote_id: params.remoteId || "",
-      status: "failed",
-      mode: "publish",
-      error_message: params.errorMessage,
-      published_by: params.userId,
-      author_id: null,
-    });
+    const { error: insertError } = await supabase
+      .from("publication_records")
+      .insert({
+        workflow_id: params.workflowId,
+        editorial_record_id: params.editorialRecordId || null,
+        target: targetUrl,
+        remote_id: params.remoteId || "",
+        status: "failed",
+        mode: "publish",
+        error_message: params.errorMessage,
+        published_by: params.userId,
+        author_id: null,
+      });
+
+    if (insertError) {
+      logger.error(
+        { insertError, params },
+        "Failed to insert failed publication record — Realtime feedback will not fire",
+      );
+    } else {
+      logger.info(
+        { workflowId: params.workflowId },
+        "Failed publication record created — Realtime should notify frontend",
+      );
+    }
   } catch (error) {
-    logger.error(error, "Failed to create error publication record");
+    logger.error(error, "Unexpected error creating failed publication record");
   }
 }
 
