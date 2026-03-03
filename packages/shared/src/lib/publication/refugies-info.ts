@@ -148,8 +148,21 @@ export async function buildRefugiesInfoPayload(
     setIfDefined(metadatas, key, metadata[key]);
   }
 
-  if (Array.isArray(metadata.periode) && metadata.periode.length > 0) {
-    metadatas.sessions = mapPeriodeToSessions(metadata.periode);
+  // Handle sessions in new canonical format: { modalitesEntreesSorties, items }
+  if (
+    metadata.periode &&
+    typeof metadata.periode === "object" &&
+    !Array.isArray(metadata.periode)
+  ) {
+    const p = metadata.periode as {
+      modalitesEntreesSorties?: 0 | 1 | null;
+      items?: unknown[] | null;
+    };
+    const hasItems = Array.isArray(p.items) && p.items.length > 0;
+    setIfDefined(metadatas, "sessions", {
+      modalitesEntreesSorties: p.modalitesEntreesSorties ?? null,
+      items: hasItems && p.items ? mapPeriodeToSessions(p.items) : null,
+    });
   }
 
   // Clean + normalize markdown

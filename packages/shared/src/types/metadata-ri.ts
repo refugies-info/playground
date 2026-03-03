@@ -122,6 +122,20 @@ export interface RiSession {
   url?: string;
 }
 
+/**
+ * Sessions field structure (Karfur webhook v2).
+ *
+ * - `modalitesEntreesSorties`: `0` = dates fixes, `1` = entrées permanentes, `null` = non défini
+ * - `items`: list of sessions (same structure as before)
+ *
+ * The two fields are independent: `modalitesEntreesSorties` can be set without `items`
+ * (e.g., "entrées permanentes" with no fixed dates).
+ */
+export interface RiSessionsField {
+  modalitesEntreesSorties?: 0 | 1 | null;
+  items?: RiSession[] | null;
+}
+
 /** Age range definition */
 export interface RiAge {
   type: RiAgeType;
@@ -233,11 +247,8 @@ export interface RiMetadataExtended extends RiMetadatas {
   /** Need IDs (MongoDB ObjectId[]) */
   needs?: string[];
 
-  /** Sessions (legacy format from RCO) */
-  periode?: Array<{
-    debut?: { $date?: string };
-    fin?: { $date?: string };
-  }>;
+  /** Sessions (canonical format v2 — legacy arrays are normalized via autofix) */
+  periode?: RiSessionsField | null;
 
   /** Points of interest (map) */
   map?: RiPoi[];

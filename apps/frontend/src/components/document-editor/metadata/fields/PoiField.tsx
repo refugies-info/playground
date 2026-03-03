@@ -2,41 +2,63 @@
 
 import type { RiPoi } from "@playground/shared-types";
 import { EditableField, TextInput } from "@playground/ui";
-import { Badge } from "@playground/ui/primitives";
+import { Badge, Button } from "@playground/ui/primitives";
 import { Plus, Trash2 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 
 /**
+ * Internal type for POI items with stable ID for React keys.
+ * The _poiId is used as a stable key and removed before saving.
+ */
+type PoiWithId = RiPoi & { _poiId: number };
+
+/**
  * PoiField — An editable points of interest field for metadata.
+ * Uses stable IDs instead of array indices for reliable React key management.
  */
 export function PoiField({ fieldKey }: { fieldKey: string }) {
   const { getFieldValue, updateField } = useMetadata();
   const [isEditing, setIsEditing] = useState(false);
+  const nextPoiId = useRef(0);
 
   const rawPois = getFieldValue(fieldKey) as RiPoi[] | RiPoi | undefined;
   const pois = Array.isArray(rawPois) ? rawPois : rawPois ? [rawPois] : [];
 
+  // Convert pois to internal format with stable IDs
+  const poiWithIds = useMemo<PoiWithId[]>(() => {
+    return pois.map((poi) => ({
+      ...poi,
+      _poiId: nextPoiId.current++,
+    }));
+  }, [pois]);
+
   // Local state for editing
-  const [localPois, setLocalPois] = useState<RiPoi[]>(pois);
+  const [localPois, setLocalPois] = useState<PoiWithId[]>(poiWithIds);
 
   // Sync local state when entering edit mode
   const handleEdit = useCallback(() => {
-    setLocalPois(pois);
+    setLocalPois(poiWithIds);
     setIsEditing(true);
-  }, [pois]);
+  }, [poiWithIds]);
 
-  // Save on exit
+  // Save on exit (remove internal _poiId before saving)
   const handleExit = useCallback(() => {
     setIsEditing(false);
     if (localPois.length > 0) {
-      updateField(fieldKey, localPois);
+      const poisToSave = localPois.map(({ _poiId, ...poi }) => poi);
+      updateField(fieldKey, poisToSave);
     }
   }, [fieldKey, updateField, localPois]);
 
   // Local handlers
   const handleAdd = useCallback(() => {
-    const newPoi: RiPoi = { title: "", address: "", city: "" };
+    const newPoi: PoiWithId = {
+      title: "",
+      address: "",
+      city: "",
+      _poiId: nextPoiId.current++,
+    };
     setLocalPois((prev) => [...prev, newPoi]);
   }, []);
 
@@ -57,9 +79,9 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
 
   // Render POIs in read mode
   const renderPoiList = useMemo(() => {
-    if (pois.length === 0) return null;
+    if (poiWithIds.length === 0) return null;
 
-    return pois.map((poi, idx) => {
+    return poiWithIds.map((poi) => {
       const address = poi.address ?? "";
       const city = poi.city ?? "";
       const fullAddress = [address, city].filter(Boolean).join(", ");
@@ -71,7 +93,7 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
 
       return (
         <div
-          key={`poi-${title || idx}`}
+          key={`poi-${poi._poiId}`}
           className="flex flex-col gap-2 mb-2 last:mb-0"
         >
           {title && <strong className="text-gray-900">{title}</strong>}
@@ -99,7 +121,7 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
         </div>
       );
     });
-  }, [pois]);
+  }, [poiWithIds]);
 
   return (
     <EditableField
@@ -111,20 +133,24 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
         <div className="space-y-3 p-1">
           {localPois.map((poi, index) => (
             <div
-              key={`poi-edit-${poi.title || index}`}
-              className="flex items-start gap-2 p-2 bg-gray-50 rounded-md"
+              key={`poi-edit-${poi._poiId}`}
+              className="flex items-start gap-2"
             >
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-2 p-2 last-of-type:border-b-0 border-b border-gray-200">
                 <TextInput
                   value={poi.title ?? ""}
                   onChange={(val) => handleUpdate(index, "title", val)}
                   placeholder="Nom du lieu"
                   className="font-medium"
+                  label="Nom du lieu"
+                  id={`poi-title-${index}`}
                 />
                 <TextInput
                   value={poi.address ?? ""}
                   onChange={(val) => handleUpdate(index, "address", val)}
                   placeholder="Adresse"
+                  label="Adresse"
+                  id={`poi-address-${index}`}
                 />
                 <div className="flex gap-2">
                   <TextInput
@@ -132,12 +158,42 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
                     onChange={(val) => handleUpdate(index, "city", val)}
                     placeholder="Ville"
                     className="flex-1"
+                    label="Ville"
+                    id={`poi-city-${index}`}
                   />
                   <TextInput
                     value={poi.phone ?? ""}
                     onChange={(val) => handleUpdate(index, "phone", val)}
                     placeholder="Téléphone"
+                    label="Téléphone"
+                    id={`poi-phone-${index}`}
                     className="w-32"
+                  />
+                </div>
+                <TextInput
+                  value={poi.email ?? ""}
+                  onChange={(val) => handleUpdate(index, "email", val)}
+                  placeholder="Email"
+                  label="Email"
+                  id={`poi-email-${index}`}
+                  className="w-full"
+                />
+                <div className="flex gap-2">
+                  <TextInput
+                    value={poi.lat ?? ""}
+                    onChange={(val) => handleUpdate(index, "lat", val)}
+                    placeholder="Latitude"
+                    label="Latitude"
+                    id={`poi-lat-${index}`}
+                    className="flex-1"
+                  />
+                  <TextInput
+                    value={poi.lng ?? ""}
+                    onChange={(val) => handleUpdate(index, "lng", val)}
+                    placeholder="Longitude"
+                    label="Longitude"
+                    id={`poi-lng-${index}`}
+                    className="flex-1"
                   />
                 </div>
               </div>
@@ -152,14 +208,10 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
             </div>
           ))}
 
-          <button
-            type="button"
-            onClick={handleAdd}
-            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
-          >
+          <Button type="button" onClick={handleAdd} size="sm">
             <Plus className="h-4 w-4" />
             Ajouter un point d'intérêt
-          </button>
+          </Button>
         </div>
       )}
     >
