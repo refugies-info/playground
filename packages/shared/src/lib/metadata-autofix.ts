@@ -235,21 +235,53 @@ const autoFixRules: Array<{
   {
     name: "fix_frequency_format",
     description: "Le format de la fréquence a été corrigé automatiquement.",
-    detect: (value) => {
-      if (!Array.isArray(value) || value.length !== 1) return false;
-      const item = value[0];
-      return (
-        typeof item === "object" &&
-        item !== null &&
-        ("frequencyUnit" in item || "hours" in item)
-      );
+    detect: (value, fieldKey) => {
+      // Only applies to the "frequency" field — commitment.hours is number[]
+      if (fieldKey !== "frequency") return false;
+
+      // Case 1: frequency wrapped in a single-element array [{ hours, ... }]
+      if (Array.isArray(value) && value.length === 1) {
+        const item = value[0];
+        return (
+          typeof item === "object" &&
+          item !== null &&
+          ("frequencyUnit" in item || "hours" in item)
+        );
+      }
+      // Case 2: frequency object with hours as array instead of number
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value) &&
+        "hours" in value &&
+        Array.isArray((value as { hours: unknown }).hours)
+      ) {
+        return true;
+      }
+      return false;
     },
-    fix: (value) => (value as unknown[])[0],
+    fix: (value) => {
+      // Unwrap outer array if needed
+      const obj = (Array.isArray(value) ? value[0] : value) as Record<
+        string,
+        unknown
+      >;
+      // Normalize hours: [number] → number
+      if (Array.isArray(obj.hours) && obj.hours.length > 0) {
+        return { ...obj, hours: obj.hours[0] };
+      }
+      return obj;
+    },
   },
 ];
 
 /**
- * Attempts to auto-fix a metadata value
+ * Attempts to auto-fix a metadata value.
+ *
+ * Runs multiple passes so that rules can compose: e.g. a generic
+ * `unwrap_single_element_array` can strip the outer `[{…}]`, then a
+ * field-specific rule (like `fix_frequency_format`) can normalise the
+ * inner properties on the next pass.
  *
  * @param value - The original value from Letta/API
  * @param fieldKey - The field key (for logging)
@@ -268,33 +300,51 @@ export function autoFixMetadataValue(
     return { value, wasFixed: false };
   }
 
-  // Try each fix rule
-  for (const rule of autoFixRules) {
-    try {
-      if (rule.detect(value, fieldKey)) {
-        const fixedValue = rule.fix(value);
-        logger.info(
-          {
-            field: fieldKey,
-            rule: rule.name,
-            original: value,
-            fixed: fixedValue,
-          },
-          `Auto-fixed metadata field: ${fieldKey}`,
+  const MAX_PASSES = 5;
+  let currentValue: unknown = value;
+  let wasFixed = false;
+  let lastDescription: string | undefined;
+
+  for (let pass = 0; pass < MAX_PASSES; pass++) {
+    let fixedThisPass = false;
+
+    for (const rule of autoFixRules) {
+      try {
+        if (rule.detect(currentValue, fieldKey)) {
+          const fixedValue = rule.fix(currentValue);
+          logger.info(
+            {
+              field: fieldKey,
+              rule: rule.name,
+              original: currentValue,
+              fixed: fixedValue,
+            },
+            `Auto-fixed metadata field: ${fieldKey}`,
+          );
+          currentValue = fixedValue;
+          wasFixed = true;
+          lastDescription = rule.description;
+          fixedThisPass = true;
+          break; // Restart from first rule with the new value
+        }
+      } catch (error) {
+        logger.warn(
+          { field: fieldKey, rule: rule.name, error },
+          `Auto-fix rule failed for ${fieldKey}`,
         );
-        return {
-          value: fixedValue,
-          wasFixed: true,
-          fixDescription: rule.description,
-          originalValue: value,
-        };
       }
-    } catch (error) {
-      logger.warn(
-        { field: fieldKey, rule: rule.name, error },
-        `Auto-fix rule failed for ${fieldKey}`,
-      );
     }
+
+    if (!fixedThisPass) break; // No more fixes needed
+  }
+
+  if (wasFixed) {
+    return {
+      value: currentValue,
+      wasFixed: true,
+      fixDescription: lastDescription,
+      originalValue: value,
+    };
   }
 
   // No fix needed
