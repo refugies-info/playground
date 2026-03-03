@@ -9,7 +9,8 @@ import { cn } from "../utils";
 const textInputVariants = cva("w-full outline-none", {
   variants: {
     variant: {
-      default: "px-3 py-2 text-sm disabled:bg-gray-50 disabled:text-gray-500",
+      default:
+        "rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500",
       inline: "bg-transparent  text-inherit",
     },
     hasError: {
@@ -44,6 +45,9 @@ export interface TextInputProps
 
   /** Error message to display (also sets hasError variant) */
   error?: string;
+
+  /** Label to display above the input */
+  label?: string;
 }
 
 /**
@@ -73,6 +77,7 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
       error,
       variant = "default",
       type = "text",
+      label,
       ...props
     },
     ref,
@@ -85,20 +90,28 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
     );
 
     return (
-      <input
-        ref={ref}
-        type={type}
-        value={value}
-        defaultValue={defaultValue}
-        onChange={handleChange}
-        className={cn(
-          textInputVariants({ variant, hasError: !!error }),
-          className,
+      <div className="space-y-1">
+        {label && (
+          <label className="text-sm font-medium" htmlFor={props.id}>
+            {label}
+          </label>
         )}
-        aria-invalid={!!error}
-        aria-describedby={error ? `${props.id}-error` : undefined}
-        {...props}
-      />
+        <input
+          id={props.id}
+          ref={ref}
+          type={type}
+          value={value}
+          defaultValue={defaultValue}
+          onChange={handleChange}
+          className={cn(
+            textInputVariants({ variant, hasError: !!error }),
+            className,
+          )}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${props.id}-error` : undefined}
+          {...props}
+        />
+      </div>
     );
   },
 );
