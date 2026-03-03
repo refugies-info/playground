@@ -31,43 +31,70 @@ interface PublishSuccessDialogProps {
  */
 function getUserFriendlyError(error: string): string {
   const lower = error.toLowerCase();
+  const errorMappings = [
+    {
+      keys: ["fetch failed", "network"],
+      message:
+        "Le serveur de publication est injoignable. Vérifiez votre connexion ou réessayez dans quelques instants.",
+    },
+    {
+      keys: ["webhook secret", "missing webhook"],
+      message:
+        "La configuration du serveur est incomplète. Contactez l'équipe technique.",
+    },
+    {
+      keys: ["timeout", "timed out"],
+      message:
+        "Le serveur a mis trop de temps à répondre. Réessayez dans quelques instants.",
+    },
+    {
+      keys: ["401", "unauthorized"],
+      message:
+        "Authentification refusée par le serveur distant. Contactez l'équipe technique.",
+    },
+    {
+      keys: ["403", "forbidden"],
+      message:
+        "Accès refusé par le serveur de publication. Contactez l'équipe technique.",
+    },
+    {
+      keys: ["404", "not found"],
+      message:
+        "Le point d'accès de publication est introuvable. Contactez l'équipe technique.",
+    },
+    {
+      keys: ["invalid payload"],
+      message:
+        "Les données envoyées au serveur sont invalides. Vérifiez les métadonnées du document.",
+    },
+    {
+      keys: ["500", "internal server"],
+      message:
+        "Erreur interne du serveur de publication. Réessayez ou contactez l'équipe technique.",
+    },
+    {
+      keys: ["workflow not found"],
+      message:
+        "Le document n'a pas été trouvé. Rechargez la page et réessayez.",
+    },
+    {
+      keys: ["publication id not received"],
+      message:
+        "La publication a été envoyée mais aucun identifiant n'a été retourné. Contactez l'équipe technique.",
+    },
+  ];
 
-  if (lower.includes("fetch failed") || lower.includes("network"))
-    return "Le serveur de publication est injoignable. Vérifiez votre connexion ou réessayez dans quelques instants.";
-
-  if (lower.includes("webhook secret") || lower.includes("missing webhook"))
-    return "La configuration du serveur est incomplète. Contactez l'équipe technique.";
-
-  if (lower.includes("timeout") || lower.includes("timed out"))
-    return "Le serveur a mis trop de temps à répondre. Réessayez dans quelques instants.";
-
-  if (lower.includes("401") || lower.includes("unauthorized"))
-    return "Authentification refusée par le serveur distant. Contactez l'équipe technique.";
-
-  if (lower.includes("403") || lower.includes("forbidden"))
-    return "Accès refusé par le serveur de publication. Contactez l'équipe technique.";
-
-  if (lower.includes("404") || lower.includes("not found"))
-    return "Le point d'accès de publication est introuvable. Contactez l'équipe technique.";
-
-  if (lower.includes("invalid payload"))
-    return "Les données envoyées au serveur sont invalides. Vérifiez les métadonnées du document.";
-
-  if (lower.includes("500") || lower.includes("internal server"))
-    return "Erreur interne du serveur de publication. Réessayez ou contactez l'équipe technique.";
-
-  if (lower.includes("workflow not found"))
-    return "Le document n'a pas été trouvé. Rechargez la page et réessayez.";
-
-  if (lower.includes("publication id not received"))
-    return "La publication a été envoyée mais aucun identifiant n'a été retourné. Contactez l'équipe technique.";
-
-  return "Une erreur inattendue est survenue. Réessayez ou contactez l'équipe technique.";
+  const mapping = errorMappings.find((entry) =>
+    entry.keys.some((key) => lower.includes(key)),
+  );
+  return (
+    mapping?.message ||
+    "Une erreur inattendue est survenue. Réessayez ou contactez l'équipe technique."
+  );
 }
 
 export function PublishSuccessDialog({
   isOpen,
-  isWaiting,
   publishedUrl,
   error,
   hasCopied,
