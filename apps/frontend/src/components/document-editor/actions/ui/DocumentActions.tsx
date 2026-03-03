@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDocument } from "../../DocumentContext";
 import { useDocumentActions } from "../DocumentActionsContext";
-import { usePublicationPolling } from "../hooks/usePublicationPolling";
+import { usePublicationRealtime } from "../hooks/usePublicationRealtime";
 import { PublishConfirmationDialog } from "./PublishConfirmationDialog";
 import { PublishSuccessDialog } from "./PublishSuccessDialog";
 
@@ -22,7 +22,7 @@ interface DocumentActionsProps {
  * - Drive user interactions and feedback
  * - Show success/error banners
  * - Orchestrate publish confirmation + success overlays
- * - Trigger publication polling when the URL isn't immediately available
+ * - Listen for publication results via Supabase Realtime
  */
 
 export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
@@ -67,8 +67,8 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
     error: publishOverlayError,
     setError: setPublishOverlayError,
     setIsWaiting: setIsWaitingForLink,
-    startPolling,
-  } = usePublicationPolling({
+    startListening,
+  } = usePublicationRealtime({
     workflowId: document?.id,
     onSuccess: (url) => {
       setPublishedUrl(url);
@@ -148,9 +148,9 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
       setShowPublishSuccessOverlay(true);
       setIsWaitingForLink(!result.publishedUrl);
 
-      // Start polling if we don't have the URL yet
+      // Start listening for Realtime publication result if URL not immediately available
       if (!result.publishedUrl) {
-        startPolling();
+        startListening();
       }
 
       setTimeout(() => isMounted.current && setPublishSuccess(false), 3000);
@@ -291,7 +291,11 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
         hasCopied={hasCopied}
         onClose={() => setShowPublishSuccessOverlay(false)}
         onCopy={handleCopy}
-        onRetry={startPolling}
+        onRetry={() => {
+          // Close the error dialog and re-trigger the full publish flow
+          setShowPublishSuccessOverlay(false);
+          handleConfirmPublish();
+        }}
         onOpenLink={() => publishedUrl && window.open(publishedUrl, "_blank")}
       />
 
