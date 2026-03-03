@@ -30,7 +30,7 @@ async function createFailedPublicationRecord(
       mode: "publish",
       error_message: params.errorMessage,
       published_by: params.userId,
-      author_id: params.userId,
+      author_id: null,
     });
   } catch (error) {
     logger.error(error, "Failed to create error publication record");
