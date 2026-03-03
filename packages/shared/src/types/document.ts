@@ -43,6 +43,7 @@ export interface Document {
       source: string[];
     }>;
   } | null;
+  editorialRecordId?: string;
   publishedUrl?: string;
   publicationStatus?: string;
   publicationRemoteId?: string;

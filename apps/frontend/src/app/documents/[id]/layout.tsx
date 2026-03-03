@@ -42,6 +42,7 @@ export default async function Layout({
     complianceReport: document.complianceReport,
     metadata: document.metadata, // Merged metadata (ingestion + editorial)
     editorialMetadata: document.editorialMetadata, // Editorial overrides only
+    editorialRecordId: document.editorialRecordId, // For Realtime status subscription
     metadataReport: document.metadataReport, // AI-generated metadata report
     referenceData, // Themes & needs ID→name lookups from RI
     publishedUrl: document.publishedUrl,

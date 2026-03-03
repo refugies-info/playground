@@ -196,9 +196,13 @@ export async function publishDocumentStep(
       return failStep(supabase, "Publication ID not received");
     }
 
+    // Re-create Supabase client after the (potentially long) webhook call
+    // to avoid stale/timed-out connections from the connection pool.
+    const db = getSupabaseClient();
+
     // 3. fetch the workflow to get linked record IDs
 
-    const { data: workflow, error: workflowError } = await supabase
+    const { data: workflow, error: workflowError } = await db
       .from("workflows")
       .select("editorial_record_id")
       .eq("id", workflowId)
@@ -213,13 +217,13 @@ export async function publishDocumentStep(
 
     if (!workflow) {
       logger.error({ workflowId }, "Workflow not found in publishDocumentStep");
-      return failStep(supabase, "Workflow not found");
+      return failStep(db, "Workflow not found");
     }
 
     // 4. Fetch the author_id from the editorial record
     let author_id: string | null = null;
     if (workflow.editorial_record_id) {
-      const { data: edRecord, error: edError } = await supabase
+      const { data: edRecord, error: edError } = await db
         .from("editorial_records")
         .select("author_id")
         .eq("id", workflow.editorial_record_id)
@@ -234,7 +238,7 @@ export async function publishDocumentStep(
 
     // Store or update publication record
 
-    const { data: newRecord, error: insertError } = await supabase
+    const { data: newRecord, error: insertError } = await db
       .from("publication_records")
       .insert({
         workflow_id: workflowId,
@@ -265,7 +269,7 @@ export async function publishDocumentStep(
       // TODO: move to state machine logic
       // This status transition logic should be moved to a centralized state machine
       // when implementing the state machine refactoring with Luis.
-      const { error: updateError } = await supabase
+      const { error: updateError } = await db
         .from("editorial_records")
         .update({ online_status: "published", work_status: null })
         .eq("id", workflow.editorial_record_id);
@@ -282,7 +286,7 @@ export async function publishDocumentStep(
       // This status restoration logic should be moved to a centralized state machine
       // when implementing the state machine refactoring with Luis.
       // Fetch all translation_records for this editorial_record
-      const { data: translationRecords, error: trError } = await supabase
+      const { data: translationRecords, error: trError } = await db
         .from("translation_records")
         .select("id")
         .eq("editorial_record_id", workflow.editorial_record_id);
@@ -296,7 +300,7 @@ export async function publishDocumentStep(
         // For each translation_record, check its publication_records
         const updatePromises = translationRecords.map(async (tr) => {
           // Get the latest publication_record for this translation
-          const { data: latestPub, error: pubError } = await supabase
+          const { data: latestPub, error: pubError } = await db
             .from("publication_records")
             .select("status")
             .eq("translation_record_id", tr.id)
@@ -325,7 +329,7 @@ export async function publishDocumentStep(
           }
 
           // Update the translation_record
-          const { error: updateTrError } = await supabase
+          const { error: updateTrError } = await db
             .from("translation_records")
             .update({ online_status: translationOnlineStatus })
             .eq("id", tr.id);

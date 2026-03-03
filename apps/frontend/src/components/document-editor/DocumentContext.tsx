@@ -30,6 +30,8 @@ interface DocumentData
   metadata?: Record<string, unknown>;
   /** Metadata from editorial_records only (user edits) */
   editorialMetadata?: Record<string, unknown>;
+  /** ID of the editorial_record — used for Realtime status subscription */
+  editorialRecordId?: string;
   referenceData?: {
     themes: Record<string, string>;
     needs: Record<string, string>;
