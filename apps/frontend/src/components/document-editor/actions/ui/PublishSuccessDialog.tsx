@@ -13,6 +13,7 @@ import {
   HelpCircle,
   X,
 } from "lucide-react";
+import { getUserFriendlyPublicationError } from "@/lib/publication-errors";
 
 interface PublishSuccessDialogProps {
   isOpen: boolean;
@@ -24,73 +25,6 @@ interface PublishSuccessDialogProps {
   onCopy: () => void;
   onRetry: () => void;
   onOpenLink: () => void;
-}
-
-/**
- * Translates a raw system error into a user-friendly French message.
- */
-function getUserFriendlyError(error: string): string {
-  const lower = error.toLowerCase();
-  const errorMappings = [
-    {
-      keys: ["fetch failed", "network"],
-      message:
-        "Le serveur de publication est injoignable. Vérifiez votre connexion ou réessayez dans quelques instants.",
-    },
-    {
-      keys: ["webhook secret", "missing webhook"],
-      message:
-        "La configuration du serveur est incomplète. Contactez l'équipe technique.",
-    },
-    {
-      keys: ["timeout", "timed out"],
-      message:
-        "Le serveur a mis trop de temps à répondre. Réessayez dans quelques instants.",
-    },
-    {
-      keys: ["401", "unauthorized"],
-      message:
-        "Authentification refusée par le serveur distant. Contactez l'équipe technique.",
-    },
-    {
-      keys: ["403", "forbidden"],
-      message:
-        "Accès refusé par le serveur de publication. Contactez l'équipe technique.",
-    },
-    {
-      keys: ["404", "not found"],
-      message:
-        "Le point d'accès de publication est introuvable. Contactez l'équipe technique.",
-    },
-    {
-      keys: ["invalid payload"],
-      message:
-        "Les données envoyées au serveur sont invalides. Vérifiez les métadonnées du document.",
-    },
-    {
-      keys: ["500", "internal server"],
-      message:
-        "Erreur interne du serveur de publication. Réessayez ou contactez l'équipe technique.",
-    },
-    {
-      keys: ["workflow not found"],
-      message:
-        "Le document n'a pas été trouvé. Rechargez la page et réessayez.",
-    },
-    {
-      keys: ["publication id not received"],
-      message:
-        "La publication a été envoyée mais aucun identifiant n'a été retourné. Contactez l'équipe technique.",
-    },
-  ];
-
-  const mapping = errorMappings.find((entry) =>
-    entry.keys.some((key) => lower.includes(key)),
-  );
-  return (
-    mapping?.message ||
-    "Une erreur inattendue est survenue. Réessayez ou contactez l'équipe technique."
-  );
 }
 
 export function PublishSuccessDialog({
@@ -124,7 +58,7 @@ export function PublishSuccessDialog({
           </div>
           <div className="flex items-center gap-1.5 justify-center">
             <div className="text-xs text-red-500 text-center max-w-[200px]">
-              {getUserFriendlyError(error)}
+              {getUserFriendlyPublicationError(error)}
             </div>
             <TooltipProvider>
               <Tooltip>

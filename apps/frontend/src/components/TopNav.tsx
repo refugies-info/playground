@@ -45,16 +45,18 @@ export function TopNav({ role }: TopNavProps) {
           <div className="flex items-center gap-8">
             {!isTranslator && (
               <>
-                <Link
-                  href="/workflow"
-                  className={`border-b-2 pb-1 text-sm font-medium transition-colors ${
-                    isWorkflowActive
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900"
-                  }`}
-                >
-                  Importer
-                </Link>
+                {role === "admin" && (
+                  <Link
+                    href="/workflow"
+                    className={`border-b-2 pb-1 text-sm font-medium transition-colors ${
+                      isWorkflowActive
+                        ? "border-blue-600 text-blue-600"
+                        : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900"
+                    }`}
+                  >
+                    Importer
+                  </Link>
+                )}
                 <Link
                   href="/documents"
                   className={`border-b-2 pb-1 text-sm font-medium transition-colors ${

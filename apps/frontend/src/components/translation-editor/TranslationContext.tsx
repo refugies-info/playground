@@ -5,20 +5,22 @@ import { extractTitleFromMarkdown, logger } from "@playground/shared-types";
 import {
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useState,
 } from "react";
 import { submitTranslationPreview } from "@/lib/preview-utils";
 import { createClient } from "@/lib/supabase/client";
-import { buildPublicationUrl } from "@/lib/url-builder";
 import {
   publishTranslation,
   saveTranslation,
 } from "@/services/translation-actions";
+import { useTranslationPublicationRealtime } from "./hooks/useTranslationPublicationRealtime";
 
 interface TranslationData {
   id: string;
+  workflowId?: string;
   language: string;
   status: string;
   onlineStatus?: OnlineStatus | null;
@@ -61,17 +63,42 @@ export function TranslationProvider({
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
-  const [publicationUrlError, setPublicationUrlError] = useState<string | null>(
-    null,
-  );
 
-  // Set up Realtime subscription to sync status changes from workflow
+  // ── Realtime: publication result (success or failure via publication_records INSERT)
+  const handlePublicationSuccess = useCallback((publishedUrl: string) => {
+    setIsPublishing(false);
+    setTranslation((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        publicationUrl: publishedUrl,
+        // Optimistic update — Realtime UPDATE on translation_records will confirm
+        onlineStatus: "published" as OnlineStatus,
+        workStatus: null,
+        status: "published",
+      };
+    });
+  }, []);
+
+  const handlePublicationError = useCallback(() => {
+    setIsPublishing(false);
+    // error is already stored in publicationRealtime.error
+  }, []);
+
+  const publicationRealtime = useTranslationPublicationRealtime({
+    translationId: initialData.id,
+    language: initialData.language,
+    onSuccess: handlePublicationSuccess,
+    onError: handlePublicationError,
+  });
+
+  // ── Realtime: live status sync from translation_records UPDATE
   useEffect(() => {
     if (!initialData?.id) return;
 
     const supabase = createClient();
     const channel = supabase
-      .channel(`translation-${initialData.id}`)
+      .channel(`translation-status-${initialData.id}`)
       .on(
         "postgres_changes",
         {
@@ -94,57 +121,9 @@ export function TranslationProvider({
               workStatus: updatedRecord.work_status,
             };
           });
-          // Stop publishing spinner when status is updated
-          if (updatedRecord.online_status === "published") {
-            setIsPublishing(false);
-          }
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "publication_records",
-          filter: `translation_record_id=eq.${initialData.id}`,
-        },
-        async (payload) => {
-          // A publication_record was created (success or failure)
-          const pubRecord = payload.new;
-          logger.info({ pubRecord }, "📡 Realtime INSERT: publication_records");
-          setIsPublishing(false);
-
-          if (pubRecord.status === "failed" && pubRecord.error_message) {
-            // Workflow failed - show the error
-            setPublicationUrlError(pubRecord.error_message);
-          } else if (
-            pubRecord.status === "published" &&
-            pubRecord.remote_id &&
-            pubRecord.target
-          ) {
-            // Success - build the URL using secure utility
-            setPublicationUrlError(null);
-            const url = buildPublicationUrl(
-              pubRecord.target,
-              initialData.language,
-              pubRecord.remote_id,
-            );
-            if (url) {
-              setTranslation((prev) => {
-                if (!prev) return prev;
-                return { ...prev, publicationUrl: url };
-              });
-            } else {
-              setPublicationUrlError(
-                "Configuration invalide pour la publication. Contactez l'équipe technique.",
-              );
-            }
-          } else {
-            // Unexpected status or missing data
-            setPublicationUrlError(
-              "État de publication inattendu. Rechargez la page.",
-            );
-          }
+          // The publication_records Realtime hook handles setIsPublishing(false)
+          // for both success and error cases. The UPDATE on translation_records
+          // is kept for live status badge updates only.
         },
       )
       .subscribe();
@@ -152,7 +131,7 @@ export function TranslationProvider({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [initialData.id, initialData.language]);
+  }, [initialData.id]);
 
   const updateContent = (content: string) => {
     if (!translation) return;
@@ -178,6 +157,8 @@ export function TranslationProvider({
         setTranslation({
           ...translation,
           status: "draft",
+          // Optimistic update — topbar reflects new state immediately
+          workStatus: "draft" as WorkStatus,
         });
       } else {
         // biome-ignore lint/suspicious/noConsole: Error logging
@@ -224,24 +205,24 @@ export function TranslationProvider({
 
     // Maintenant publier
     setIsPublishing(true);
-    setPublicationUrlError(null); // Clear any previous errors
+    publicationRealtime.setError(null); // Clear any previous errors
     try {
       const result = await publishTranslation(
         translation.id,
         translation.translationMarkdown,
       );
       if (!result.success) {
-        // Immediate failure (before workflow starts) - stop spinner
+        // Immediate failure (before workflow starts) — stop spinner, no Realtime needed
         setIsPublishing(false);
         // biome-ignore lint/suspicious/noConsole: Error logging
         console.error(result.error);
         return result;
       }
-      // Success - workflow started. Keep spinner running until Realtime receives result.
-      // setIsPublishing(false) will be called by Realtime subscription when publication_records INSERT fires
+      // Workflow started — activate Realtime listener and keep spinner
+      // until publication_records INSERT fires (success or failure)
+      publicationRealtime.startListening();
       return result;
     } catch (e) {
-      // Immediate failure
       setIsPublishing(false);
       // biome-ignore lint/suspicious/noConsole: Error logging
       console.error(e);
@@ -287,8 +268,9 @@ export function TranslationProvider({
     setTranslation(value);
   };
 
-  // Preview is only available if the source document is published (has publicationUrl)
-  const canPreview = Boolean(translation?.publicationUrl);
+  // Preview is always available — the preview endpoint doesn't require the source
+  // document to be published; it renders the translation payload directly.
+  const canPreview = true;
 
   return (
     <TranslationContext.Provider
@@ -304,7 +286,7 @@ export function TranslationProvider({
         previewTranslation,
         canPreview,
         publicationUrl: translation?.publicationUrl,
-        publicationUrlError,
+        publicationUrlError: publicationRealtime.error,
       }}
     >
       {children}

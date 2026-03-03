@@ -15,11 +15,22 @@ import { start } from "workflow/api";
 
 /**
  * Verifies user authentication and role for translation actions.
- * Only admins and editors can perform translation operations.
+ * Admins/editors can access all translations. Translators are limited
+ * to translations matching their assigned language.
  *
  * @returns The user session and Supabase client, or an error response.
  */
-async function getAuthorizedTranslationSession() {
+type TranslationAction = "save" | "publish" | "retry";
+
+async function getAuthorizedTranslationSession({
+  action,
+  translationId,
+  allowTranslator,
+}: {
+  action: TranslationAction;
+  translationId?: string;
+  allowTranslator: boolean;
+}) {
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
@@ -44,21 +55,103 @@ async function getAuthorizedTranslationSession() {
     .eq("id", user.id)
     .single();
 
-  const role = profile?.role;
-  if (role !== "admin" && role !== "editor") {
-    logger.warn(
-      { userId: user.id },
-      "Unauthorized attempt to perform translation action",
-    );
-    return {
-      errorResponse: {
-        success: false as const,
-        error: "Permissions insuffisantes pour cette action",
-      },
-    };
+  const role = profile?.role ?? user.user_metadata?.role;
+
+  if (role === "admin" || role === "editor") {
+    return { user, supabase };
   }
 
-  return { user, supabase };
+  if (role === "translator") {
+    if (!allowTranslator) {
+      logger.warn(
+        { userId: user.id, action, translationId },
+        "Unauthorized attempt to perform translation action",
+      );
+      return {
+        errorResponse: {
+          success: false as const,
+          error: "Permissions insuffisantes pour cette action",
+        },
+      };
+    }
+
+    if (!translationId) {
+      logger.error(
+        { userId: user.id, action },
+        "Missing translationId for translation action",
+      );
+      return {
+        errorResponse: {
+          success: false as const,
+          error: "Paramètre manquant : traduction",
+        },
+      };
+    }
+
+    const { data: translation, error: translationError } = await supabase
+      .from("translation_records")
+      .select("language")
+      .eq("id", translationId)
+      .single();
+
+    if (translationError || !translation) {
+      logger.error(
+        translationError,
+        "Translation not found for permission check",
+      );
+      return {
+        errorResponse: {
+          success: false as const,
+          error: "Traduction introuvable",
+        },
+      };
+    }
+
+    const userLanguage = user.user_metadata?.language;
+    if (!userLanguage) {
+      logger.warn(
+        { userId: user.id, translationId },
+        "Translator has no language configured",
+      );
+      return {
+        errorResponse: {
+          success: false as const,
+          error: "Aucune langue assignée à ce compte traducteur",
+        },
+      };
+    }
+
+    if (translation.language !== userLanguage) {
+      logger.warn(
+        {
+          userId: user.id,
+          translationId,
+          translationLanguage: translation.language,
+          userLanguage,
+        },
+        "Unauthorized attempt to perform translation action (language mismatch)",
+      );
+      return {
+        errorResponse: {
+          success: false as const,
+          error: "Vous n'avez pas la permission d'accéder à cette traduction",
+        },
+      };
+    }
+
+    return { user, supabase };
+  }
+
+  logger.warn(
+    { userId: user.id, role, action, translationId },
+    "Unauthorized attempt to perform translation action",
+  );
+  return {
+    errorResponse: {
+      success: false as const,
+      error: "Permissions insuffisantes pour cette action",
+    },
+  };
 }
 
 // ─── Actions ────────────────────────────────────────────────────────────────
@@ -74,7 +167,11 @@ export async function saveTranslation(
   markdown: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const auth = await getAuthorizedTranslationSession();
+    const auth = await getAuthorizedTranslationSession({
+      action: "save",
+      translationId: id,
+      allowTranslator: true,
+    });
     if (auth.errorResponse) return auth.errorResponse;
     const { user, supabase } = auth;
 
@@ -106,21 +203,52 @@ export async function saveTranslation(
 /**
  * Publishes a translation.
  *
+ * Before launching the publication workflow, this action always:
+ * 1. Saves the markdown content
+ * 2. Sets `author_id` to the current user (claim)
+ * 3. Sets `work_status` to 'draft'
+ *
+ * This ensures the record is in a clean state regardless of whether the
+ * client already called `saveTranslation` before.
+ *
  * @param id - The translation record ID.
- * @param _markdown - The markdown content (reserved for future webhook use).
+ * @param markdown - The current markdown content to save before publishing.
  */
 export async function publishTranslation(
   id: string,
-  _markdown: string,
+  markdown: string,
 ): Promise<{
   success: boolean;
   workflowRunId?: string;
   error?: string;
 }> {
   try {
-    const auth = await getAuthorizedTranslationSession();
+    const auth = await getAuthorizedTranslationSession({
+      action: "publish",
+      translationId: id,
+      allowTranslator: true,
+    });
     if (auth.errorResponse) return auth.errorResponse;
-    const { user } = auth;
+    const { user, supabase } = auth;
+
+    // Save content + claim authorship + mark as draft before launching workflow
+    const { error: saveError } = await supabase
+      .from("translation_records")
+      .update({
+        markdown,
+        work_status: "draft",
+        author_id: user.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (saveError) {
+      logger.error(saveError, "Error saving translation before publish");
+      return {
+        success: false,
+        error: "Erreur lors de la sauvegarde avant publication",
+      };
+    }
 
     if (!translationPublicationWorkflow) {
       logger.error("translationPublicationWorkflow is undefined");
@@ -164,7 +292,11 @@ export async function publishTranslation(
  */
 export async function retryTranslationGeneration(translationId: string) {
   try {
-    const auth = await getAuthorizedTranslationSession();
+    const auth = await getAuthorizedTranslationSession({
+      action: "retry",
+      translationId,
+      allowTranslator: false,
+    });
     if (auth.errorResponse) return auth.errorResponse;
     const { user, supabase } = auth;
 
