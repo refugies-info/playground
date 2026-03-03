@@ -27,9 +27,11 @@ export function DocumentStatus() {
           {getWorkStatusLabel(document.workStatus)}
         </Badge>
       )}
-      <Badge variant={getOnlineStatusVariant(document.onlineStatus)}>
-        {getOnlineStatusLabel(document.onlineStatus)}
-      </Badge>
+      {document.onlineStatus && (
+        <Badge variant={getOnlineStatusVariant(document.onlineStatus)}>
+          {getOnlineStatusLabel(document.onlineStatus)}
+        </Badge>
+      )}
       {document.publishedUrl && (
         <a
           href={document.publishedUrl}

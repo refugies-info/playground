@@ -8,7 +8,12 @@
 
 "use client";
 
-import { logger } from "@playground/shared-types";
+import {
+  extractTitleFromMarkdown,
+  hasH1,
+  logger,
+  type WorkStatus,
+} from "@playground/shared-types";
 import {
   createContext,
   type ReactNode,
@@ -67,7 +72,7 @@ const DocumentActionsContext = createContext<
 // =============================================================================
 
 export function DocumentActionsProvider({ children }: { children: ReactNode }) {
-  const { document } = useDocument();
+  const { document, setDocument, setIsDirty } = useDocument();
   const { mergedMetadata } = useMetadata();
 
   const [isPreviewing, setIsPreviewing] = useState(false);
@@ -121,11 +126,21 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
   // =============================================================================
   // Save
   // Saves editorial markdown only (metadata overrides handled separately).
+  // Validates H1 presence, resets dirty state, and optimistically updates title.
   // =============================================================================
 
   const saveDocument = useCallback(async () => {
     if (!document?.id) {
       return { success: false, error: "Document non trouvé" };
+    }
+
+    // Validate that the document has a main title (H1)
+    const h1Exists = await hasH1(document.editorialContent || "");
+    if (!h1Exists) {
+      alert(
+        "Votre document doit contenir un titre principal (ex: # Mon Titre).\nCelui-ci est nécessaire pour identifier la fiche.",
+      );
+      return { success: false, error: "Titre principal manquant" };
     }
 
     setIsSaving(true);
@@ -134,6 +149,31 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
         document.id,
         document.editorialContent || "",
       );
+
+      if (result.success) {
+        setIsDirty(false);
+
+        // Optimistically update local title and metadata from content
+        const newTitleFromMarkdown = await extractTitleFromMarkdown(
+          document.editorialContent || "",
+        );
+        const effectiveTitle =
+          newTitleFromMarkdown || document.title || "Sans titre";
+        setDocument((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            title: effectiveTitle,
+            workStatus: "draft" as WorkStatus,
+            metadata: {
+              ...prev.metadata,
+              title: effectiveTitle,
+              "intitule-formation": effectiveTitle,
+            },
+          };
+        });
+      }
+
       return result;
     } catch (error) {
       logger.error(error, "Error saving document");
@@ -147,7 +187,7 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsSaving(false);
     }
-  }, [document]);
+  }, [document, setDocument, setIsDirty]);
 
   // =============================================================================
   // Publish

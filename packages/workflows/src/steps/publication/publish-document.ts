@@ -1,7 +1,41 @@
 import { extractTitleFromMarkdown, logger } from "@playground/shared-types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { StepResult } from "../../types";
 import { getSupabaseClient } from "../common/supabase";
 import { getPublisherAdapter } from "./adapters/refugies-info";
+
+/**
+ * Helper to create a failed publication record and log the error to the UI.
+ * This ensures errors from the workflow are visible to users via Realtime.
+ */
+async function createFailedPublicationRecord(
+  supabase: SupabaseClient,
+  params: {
+    workflowId: string;
+    editorialRecordId?: string;
+    remoteId?: string;
+    errorMessage: string;
+    userId: string;
+  },
+) {
+  const targetUrl = process.env.RI_BASE_URL || "refugies.info";
+
+  try {
+    await supabase.from("publication_records").insert({
+      workflow_id: params.workflowId,
+      editorial_record_id: params.editorialRecordId || null,
+      target: targetUrl,
+      remote_id: params.remoteId || "",
+      status: "failed",
+      mode: "publish",
+      error_message: params.errorMessage,
+      published_by: params.userId,
+      author_id: null,
+    });
+  } catch (error) {
+    logger.error(error, "Failed to create error publication record");
+  }
+}
 
 /**
  * Result of publishing a document.
@@ -53,6 +87,26 @@ export async function publishDocumentStep(
     platform = "refugies.info",
   } = input;
 
+  /**
+   * Helper to fail with error record creation.
+   * Creates a failed publication_records entry so the error appears in the UI via Realtime.
+   */
+  const failStep = async (
+    supabase: ReturnType<typeof getSupabaseClient>,
+    errorMessage: string,
+    editorialRecordId?: string,
+    remoteId?: string,
+  ): Promise<StepResult<PublishDocumentResult>> => {
+    await createFailedPublicationRecord(supabase, {
+      workflowId,
+      editorialRecordId,
+      errorMessage,
+      userId,
+      remoteId,
+    });
+    return { success: false, error: errorMessage };
+  };
+
   try {
     const supabase = getSupabaseClient();
     const adapter = getPublisherAdapter(platform);
@@ -61,18 +115,20 @@ export async function publishDocumentStep(
     const webhookSecret = process.env.RI_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
-      return { success: false, error: "Missing webhook secret configuration" };
+      return failStep(supabase, "Missing webhook secret configuration");
     }
 
     // Get base URL for target matching
     const baseUrl = process.env.RI_BASE_URL?.replace(/\/$/, "") || "";
 
-    // Check for existing publication to reuse the remote_id if needed
+    // Check for existing *successful* publication to reuse the remote_id (MongoDB ObjectId)
+    // Only look at published records — failed records may have placeholder remote_ids
     const { data: existingPublication } = await supabase
       .from("publication_records")
       .select("remote_id")
       .eq("workflow_id", workflowId)
       .eq("target", baseUrl)
+      .eq("status", "published")
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -113,12 +169,23 @@ export async function publishDocumentStep(
         { status: response.status, error: errorData },
         "Publication webhook failed",
       );
-      return {
-        success: false,
-        error:
-          (errorData as { message?: string }).message ||
-          `Webhook error ${response.status}`,
+
+      // Build a detailed error message including validation details if available
+      // RI webhooks return: { message, errors: [{ key, message }] }
+      const typed = errorData as {
+        message?: string;
+        errors?: Array<{ key: string; message: string }>;
       };
+      let error = typed.message || `Webhook error ${response.status}`;
+
+      if (Array.isArray(typed.errors) && typed.errors.length > 0) {
+        const details = typed.errors
+          .map((e) => `${e.key}: ${e.message}`)
+          .join(" | ");
+        error = `${error} — ${details}`;
+      }
+
+      return failStep(supabase, error, undefined, existingRemoteId);
     }
 
     const result = (await response.json()) as { id?: string };
@@ -126,12 +193,16 @@ export async function publishDocumentStep(
 
     if (!remoteId) {
       logger.error(result, "Publication webhook did not return an ID");
-      return { success: false, error: "Publication ID not received" };
+      return failStep(supabase, "Publication ID not received");
     }
+
+    // Re-create Supabase client after the (potentially long) webhook call
+    // to avoid stale/timed-out connections from the connection pool.
+    const db = getSupabaseClient();
 
     // 3. fetch the workflow to get linked record IDs
 
-    const { data: workflow, error: workflowError } = await supabase
+    const { data: workflow, error: workflowError } = await db
       .from("workflows")
       .select("editorial_record_id")
       .eq("id", workflowId)
@@ -146,13 +217,13 @@ export async function publishDocumentStep(
 
     if (!workflow) {
       logger.error({ workflowId }, "Workflow not found in publishDocumentStep");
-      return { success: false, error: "Workflow not found" };
+      return failStep(db, "Workflow not found");
     }
 
     // 4. Fetch the author_id from the editorial record
     let author_id: string | null = null;
     if (workflow.editorial_record_id) {
-      const { data: edRecord, error: edError } = await supabase
+      const { data: edRecord, error: edError } = await db
         .from("editorial_records")
         .select("author_id")
         .eq("id", workflow.editorial_record_id)
@@ -167,7 +238,7 @@ export async function publishDocumentStep(
 
     // Store or update publication record
 
-    const { data: newRecord, error: insertError } = await supabase
+    const { data: newRecord, error: insertError } = await db
       .from("publication_records")
       .insert({
         workflow_id: workflowId,
@@ -198,7 +269,7 @@ export async function publishDocumentStep(
       // TODO: move to state machine logic
       // This status transition logic should be moved to a centralized state machine
       // when implementing the state machine refactoring with Luis.
-      const { error: updateError } = await supabase
+      const { error: updateError } = await db
         .from("editorial_records")
         .update({ online_status: "published", work_status: null })
         .eq("id", workflow.editorial_record_id);
@@ -215,7 +286,7 @@ export async function publishDocumentStep(
       // This status restoration logic should be moved to a centralized state machine
       // when implementing the state machine refactoring with Luis.
       // Fetch all translation_records for this editorial_record
-      const { data: translationRecords, error: trError } = await supabase
+      const { data: translationRecords, error: trError } = await db
         .from("translation_records")
         .select("id")
         .eq("editorial_record_id", workflow.editorial_record_id);
@@ -229,7 +300,7 @@ export async function publishDocumentStep(
         // For each translation_record, check its publication_records
         const updatePromises = translationRecords.map(async (tr) => {
           // Get the latest publication_record for this translation
-          const { data: latestPub, error: pubError } = await supabase
+          const { data: latestPub, error: pubError } = await db
             .from("publication_records")
             .select("status")
             .eq("translation_record_id", tr.id)
@@ -258,7 +329,7 @@ export async function publishDocumentStep(
           }
 
           // Update the translation_record
-          const { error: updateTrError } = await supabase
+          const { error: updateTrError } = await db
             .from("translation_records")
             .update({ online_status: translationOnlineStatus })
             .eq("id", tr.id);
@@ -307,9 +378,10 @@ export async function publishDocumentStep(
     const errorMsg = error instanceof Error ? error.message : String(error);
 
     logger.error(error, "Unexpected error in publishDocumentStep");
-    return {
-      success: false,
-      error: errorMsg,
-    };
+
+    // Try to create a failed publication record so the error appears in the UI
+    // Realtime will notify frontend via publication_records INSERT
+    const supabase = getSupabaseClient();
+    return failStep(supabase, errorMsg);
   }
 }

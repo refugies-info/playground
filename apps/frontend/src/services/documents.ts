@@ -426,6 +426,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     complianceReport,
     metadata,
     editorialMetadata,
+    editorialRecordId: item.editorial_record_id ?? undefined,
     metadataReport: metadataReportValue,
     publishedUrl,
     publicationStatus: latestPublication?.status,
