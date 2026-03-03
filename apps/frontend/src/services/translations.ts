@@ -134,8 +134,9 @@ export async function getTranslations(params: GetTranslationsParams) {
   const role = userRole;
 
   if (role !== "admin" && role !== "editor") {
-    // Restrict view for translators and unknown roles: hide pending/error work_status
-    query = query.not("work_status", "in", '("pending","error")');
+    // Hide pending/error work_status, but keep NULL (published translations have work_status=null)
+    // Note: .not("in", ...) excludes NULLs in SQL, so we use .or() — same pattern as online_status below
+    query = query.or("work_status.not.in.(pending,error),work_status.is.null");
     // Hide archived online_status (but include NULL/unpublished)
     // Note: .not("eq", "archived") doesn't include NULLs in SQL, so we use .or()
     query = query.or("online_status.neq.archived,online_status.is.null");
