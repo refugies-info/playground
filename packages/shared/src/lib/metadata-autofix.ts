@@ -22,6 +22,41 @@ export interface AutoFixResult {
 }
 
 /**
+ * Convert legacy MongoDB date format to ISO string
+ * @example { $date: "2025-11-24T00:00:00.000Z" } → "2025-11-24T00:00:00.000Z"
+ * @example "2025-11-24T00:00:00.000Z" → "2025-11-24T00:00:00.000Z"
+ */
+const convertMongoDate = (dateObj: unknown): string | undefined => {
+  if (!dateObj) return undefined;
+  if (typeof dateObj === "string") return dateObj;
+  if (typeof dateObj === "object" && dateObj !== null) {
+    return (dateObj as { $date?: string }).$date;
+  }
+  return undefined;
+};
+
+/**
+ * Convert legacy session item (with debut.$date format) to new format (startDate/endDate)
+ */
+const convertLegacySessionItem = (
+  item: unknown,
+): { startDate?: string; endDate?: string } => {
+  if (!item || typeof item !== "object") return {};
+
+  const session = item as {
+    debut?: { $date?: string } | string;
+    fin?: { $date?: string } | string;
+    startDate?: string;
+    endDate?: string;
+  };
+
+  return {
+    startDate: convertMongoDate(session.debut) || session.startDate,
+    endDate: convertMongoDate(session.fin) || session.endDate,
+  };
+};
+
+/**
  * Auto-fix rules for common metadata issues
  */
 const arrayFields = new Set([
@@ -30,7 +65,6 @@ const arrayFields = new Set([
   "publicStatus",
   "public",
   "frenchLevel",
-  "periode",
   "timeSlots",
   "location",
   "conditions",
@@ -43,6 +77,22 @@ const autoFixRules: Array<{
   detect: (value: unknown, fieldKey: string) => boolean;
   fix: (value: unknown) => unknown;
 }> = [
+  {
+    // Must come first — normalizes the legacy array format to the new canonical object
+    name: "fix_periode_array_to_sessions_object",
+    description:
+      "Les sessions ont été converties au nouveau format (objet avec items).",
+    detect: (value, fieldKey) => fieldKey === "periode" && Array.isArray(value),
+    fix: (value) => {
+      const items = Array.isArray(value)
+        ? value.map(convertLegacySessionItem)
+        : [];
+      return {
+        modalitesEntreesSorties: null,
+        items: items.length > 0 ? items : null,
+      };
+    },
+  },
   {
     name: "fix_price_gratuit",
     description: 'Le prix "gratuit" a été converti en 0 EUR.',

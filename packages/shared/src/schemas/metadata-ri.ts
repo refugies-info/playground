@@ -81,6 +81,21 @@ export const SessionSchema = z.object({
     .optional(),
 });
 
+/** Sessions field schema (v2 format with modalitesEntreesSorties) */
+export const SessionsFieldSchema = z.object({
+  modalitesEntreesSorties: z
+    .union([z.literal(0), z.literal(1)], {
+      message:
+        "modalitesEntreesSorties doit être 0 (dates fixes), 1 (entrées permanentes), ou null",
+    })
+    .nullish(),
+  items: z
+    .array(SessionSchema, {
+      message: "items doit être une liste de sessions",
+    })
+    .nullish(),
+});
+
 /** POI schema */
 export const PoiSchema = z.object({
   title: z
@@ -180,14 +195,7 @@ export const MetadataRiSchema = z.object({
   price: PriceSchema.nullish(),
   commitment: CommitmentSchema.nullish(),
   frequency: FrequencySchema.nullish(),
-  periode: z
-    .union([
-      z.array(SessionSchema, {
-        message: "Les sessions doivent être une liste",
-      }),
-      SessionSchema,
-    ])
-    .nullish(),
+  periode: SessionsFieldSchema.nullish(),
   timeSlots: z
     .array(
       z.string({
