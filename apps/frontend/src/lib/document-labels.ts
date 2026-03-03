@@ -78,8 +78,10 @@ export function getWorkStatusVariant(
 }
 
 // Online Status Helpers
-export function getOnlineStatusLabel(status: OnlineStatus | undefined): string {
-  if (!status) return "Hors ligne";
+export function getOnlineStatusLabel(
+  status: OnlineStatus | undefined,
+): string | undefined {
+  if (!status) return undefined;
   switch (status) {
     case "published":
       return "Publié";
