@@ -236,15 +236,39 @@ const autoFixRules: Array<{
     name: "fix_frequency_format",
     description: "Le format de la fréquence a été corrigé automatiquement.",
     detect: (value) => {
-      if (!Array.isArray(value) || value.length !== 1) return false;
-      const item = value[0];
-      return (
-        typeof item === "object" &&
-        item !== null &&
-        ("frequencyUnit" in item || "hours" in item)
-      );
+      // Case 1: frequency wrapped in a single-element array [{ hours, ... }]
+      if (Array.isArray(value) && value.length === 1) {
+        const item = value[0];
+        return (
+          typeof item === "object" &&
+          item !== null &&
+          ("frequencyUnit" in item || "hours" in item)
+        );
+      }
+      // Case 2: frequency object with hours as array instead of number
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value) &&
+        "hours" in value &&
+        Array.isArray((value as { hours: unknown }).hours)
+      ) {
+        return true;
+      }
+      return false;
     },
-    fix: (value) => (value as unknown[])[0],
+    fix: (value) => {
+      // Unwrap outer array if needed
+      const obj = (Array.isArray(value) ? value[0] : value) as Record<
+        string,
+        unknown
+      >;
+      // Normalize hours: [number] → number
+      if (Array.isArray(obj.hours) && obj.hours.length > 0) {
+        return { ...obj, hours: obj.hours[0] };
+      }
+      return obj;
+    },
   },
 ];
 
