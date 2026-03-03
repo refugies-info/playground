@@ -24,11 +24,15 @@ export function TranslationStatus() {
           {getWorkStatusLabel(translation.workStatus ?? undefined)}
         </Badge>
       )}
-      <Badge
-        variant={getOnlineStatusVariant(translation.onlineStatus ?? undefined)}
-      >
-        {getOnlineStatusLabel(translation.onlineStatus ?? undefined)}
-      </Badge>
+      {translation.onlineStatus && (
+        <Badge
+          variant={getOnlineStatusVariant(
+            translation.onlineStatus ?? undefined,
+          )}
+        >
+          {getOnlineStatusLabel(translation.onlineStatus ?? undefined)}
+        </Badge>
+      )}
       {translation.publicationUrl && (
         <a
           href={translation.publicationUrl}

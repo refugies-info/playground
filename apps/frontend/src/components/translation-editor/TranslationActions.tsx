@@ -1,9 +1,25 @@
 "use client";
 
-import { cn } from "@playground/ui";
+import {
+  cn,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@playground/ui";
 import { Button, Spinner } from "@playground/ui/primitives";
-import { Check, Copy, ExternalLink, Eye, Save, Send, X } from "lucide-react";
+import {
+  Check,
+  Copy,
+  ExternalLink,
+  Eye,
+  HelpCircle,
+  Save,
+  Send,
+  X,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { getUserFriendlyPublicationError } from "@/lib/publication-errors";
 import { useTranslation } from "./TranslationContext";
 
 interface TranslationActionsProps {
@@ -86,11 +102,7 @@ export function TranslationActions({
         className={cn("gap-2", isCollapsed && "justify-center px-0")}
         onClick={previewTranslation}
         disabled={!canPreview}
-        title={
-          canPreview
-            ? "Prévisualiser la traduction"
-            : "La fiche source doit être publiée avant de pouvoir prévisualiser"
-        }
+        title="Prévisualiser la traduction"
       >
         <Eye className="w-4 h-4" />
         {!isCollapsed && "Prévisualiser"}
@@ -148,8 +160,35 @@ export function TranslationActions({
               <div className="text-sm font-medium text-red-600 text-center">
                 Erreur lors de la publication
               </div>
-              <div className="text-xs text-red-500 text-center">
-                {publicationUrlError}
+              <div className="flex items-center gap-1.5 justify-center">
+                <div className="text-xs text-red-500 text-center max-w-[220px]">
+                  {getUserFriendlyPublicationError(publicationUrlError)}
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle
+                        className="h-3.5 w-3.5 text-gray-400 cursor-pointer shrink-0"
+                        onClick={() =>
+                          navigator.clipboard.writeText(publicationUrlError)
+                        }
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="bottom"
+                      align="center"
+                      className="flex flex-col gap-1 max-w-[220px]"
+                    >
+                      <p className="font-bold text-xs">Détails techniques</p>
+                      <code className="text-xs font-mono break-all">
+                        {publicationUrlError}
+                      </code>
+                      <p className="text-xs text-gray-400">
+                        Cliquez pour copier
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               <div className="flex gap-2 w-full">
                 <Button

@@ -307,6 +307,7 @@ export async function getTranslationById(id: string) {
 
   return {
     id: row.id,
+    workflowId: row.workflow_id ?? undefined,
     language: row.language,
     status:
       row.online_status === "published"
