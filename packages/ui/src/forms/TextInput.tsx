@@ -78,10 +78,15 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
       variant = "default",
       type = "text",
       label,
+      id: idProp,
       ...props
     },
     ref,
   ) => {
+    // Generate a unique ID if not provided, ensuring label-input association
+    const generatedId = React.useId();
+    const id = idProp ?? generatedId;
+
     const handleChange = React.useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         onChange?.(e.target.value);
@@ -92,12 +97,12 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
     return (
       <div className="space-y-1">
         {label && (
-          <label className="text-sm font-medium" htmlFor={props.id}>
+          <label className="text-sm font-medium" htmlFor={id}>
             {label}
           </label>
         )}
         <input
-          id={props.id}
+          id={id}
           ref={ref}
           type={type}
           value={value}
@@ -108,7 +113,7 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
             className,
           )}
           aria-invalid={!!error}
-          aria-describedby={error ? `${props.id}-error` : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
           {...props}
         />
       </div>
