@@ -22,6 +22,13 @@ import type { MetadataFieldDef } from "../../types";
 import { MULTI_ENUM_OPTIONS } from "./constants";
 
 // =============================================================================
+// Constants
+// =============================================================================
+
+/** Maximum characters for the "En bref" (abstract) field */
+const ABSTRACT_MAX_LENGTH = 200;
+
+// =============================================================================
 // Types
 // =============================================================================
 
@@ -35,6 +42,11 @@ export interface FieldProps {
 // Field Components Mapping
 // =============================================================================
 
+/** Abstract field with 200-char limit */
+function AbstractField(props: FieldProps) {
+  return <TextareaField {...props} maxLength={ABSTRACT_MAX_LENGTH} />;
+}
+
 /** Maps field keys to their components */
 export const FIELD_COMPONENTS: Record<string, ComponentType<FieldProps>> = {
   // Text fields
@@ -43,7 +55,7 @@ export const FIELD_COMPONENTS: Record<string, ComponentType<FieldProps>> = {
   logo: TextField,
 
   // Textarea fields
-  abstract: TextareaField,
+  abstract: AbstractField,
 
   // Price field
   price: PriceField,

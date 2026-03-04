@@ -1,6 +1,6 @@
 "use client";
 
-import { EditableField, NumberInput, SelectInput } from "@playground/ui";
+import { EditableField, NumberInput, RadioGroup } from "@playground/ui";
 import { useCallback, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 
@@ -100,12 +100,12 @@ export function AgeField({ fieldKey, label }: AgeFieldProps) {
       placeholder="Cliquer pour modifier"
       renderEdit={() => (
         <div className="flex flex-wrap items-center gap-2 p-1">
-          <SelectInput
+          <RadioGroup
+            name={`${fieldKey}-age-type`}
             options={AGE_TYPE_OPTIONS}
             value={localType}
-            onChange={handleTypeChange}
-            className="w-28"
-            aria-label={`${label} - type`}
+            onChange={(val) => val && handleTypeChange(val)}
+            direction="vertical"
           />
 
           <NumberInput

@@ -117,7 +117,9 @@ export function MetadataView() {
     <MetadataTable
       report={document.metadataReport}
       diMetadata={document.metadata ?? {}}
-      ref={document.referenceData ?? { themes: {}, needs: {} }}
+      ref={
+        document.referenceData ?? { themes: {}, needs: {}, needsByTheme: {} }
+      }
       fields={METADATA_FIELDS_RI}
     />
   );

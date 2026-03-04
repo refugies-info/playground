@@ -7,21 +7,49 @@ import { useMetadata } from "../MetadataContext";
 
 /**
  * NeedSelectField — An editable needs field with RI API lookup.
+ * Filters needs based on the currently selected themes (primary + secondary).
  */
 export function NeedSelectField({ fieldKey }: { fieldKey: string }) {
   const { document } = useDocument();
   const { getFieldValue, updateField } = useMetadata();
 
-  // Get needs lookup from document reference data
+  // Get reference data from document
   const needsLookup = document?.referenceData?.needs ?? {};
+  const needsByTheme = document?.referenceData?.needsByTheme ?? {};
 
-  // Convert lookup to options for ComboboxInput
+  // Get selected themes (primary + secondary)
+  const primaryTheme = getFieldValue("theme");
+  const secondaryThemes = getFieldValue("secondaryThemes");
+  const selectedThemeIds = useMemo(() => {
+    const ids: string[] = [];
+    if (typeof primaryTheme === "string" && primaryTheme)
+      ids.push(primaryTheme);
+    if (Array.isArray(secondaryThemes)) ids.push(...secondaryThemes);
+    return ids;
+  }, [primaryTheme, secondaryThemes]);
+
+  // Filter needs by selected themes — if no theme selected, show all needs
   const needOptions = useMemo(() => {
-    return Object.entries(needsLookup).map(([id, name]) => ({
-      value: id,
-      label: name,
-    }));
-  }, [needsLookup]);
+    if (selectedThemeIds.length === 0) {
+      return Object.entries(needsLookup).map(([id, name]) => ({
+        value: id,
+        label: name as string,
+      }));
+    }
+    // Collect need IDs allowed by selected themes
+    const allowedNeedIds = new Set<string>();
+    for (const themeId of selectedThemeIds) {
+      for (const needId of needsByTheme[themeId] ?? []) {
+        allowedNeedIds.add(needId);
+      }
+    }
+    return Object.entries(needsLookup)
+      .filter(([id]) => allowedNeedIds.has(id))
+      .map(([id, name]) => ({
+        value: id,
+        label: name as string,
+      }));
+  }, [needsLookup, needsByTheme, selectedThemeIds]);
 
   // Get current value (array of need IDs)
   const rawValue = getFieldValue(fieldKey);
