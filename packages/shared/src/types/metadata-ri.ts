@@ -168,8 +168,10 @@ export interface RiPoi {
   title?: string;
   address?: string;
   city?: string;
-  lat?: string;
-  lng?: string;
+  /** Latitude — stored as string in UI, coerced to number for RI payload */
+  lat?: number | string;
+  /** Longitude — stored as string in UI, coerced to number for RI payload */
+  lng?: number | string;
   email?: string;
   phone?: string;
 }
