@@ -209,12 +209,22 @@ export const MetadataRiSchema = z.object({
 
   // Geography
   location: z
-    .array(
-      z.string({
-        message: "Chaque département doit être une chaîne de caractères",
-      }),
+    .union(
+      [
+        z.literal("france"),
+        z.literal("online"),
+        z.array(
+          z.string({
+            message: "Chaque département doit être une chaîne de caractères",
+          }),
+          {
+            message: "Les départements doivent être une liste",
+          },
+        ),
+      ],
       {
-        message: "Les départements doivent être une liste",
+        message:
+          "La localisation doit être 'france', 'online' ou une liste de départements",
       },
     )
     .nullish(),
