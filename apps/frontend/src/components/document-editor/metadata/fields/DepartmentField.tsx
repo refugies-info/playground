@@ -13,8 +13,8 @@ type LocationMode = "france" | "online" | "departments";
 
 const LOCATION_MODE_OPTIONS = [
   { value: "france", label: "France entière" },
-  { value: "online", label: "En ligne" },
-  { value: "departments", label: "Départements spécifiques" },
+  { value: "online", label: "Ressources en ligne" },
+  { value: "departments", label: "Département" },
 ] as const;
 
 // =============================================================================
@@ -92,7 +92,7 @@ export function DepartmentField({
   // Display value (read mode)
   const displayValue = useMemo(() => {
     if (mode === "france") return "France entière";
-    if (mode === "online") return "En ligne";
+    if (mode === "online") return "Ressources en ligne";
     if (departments.length > 0) return departments.join(", ");
     return null;
   }, [mode, departments]);
