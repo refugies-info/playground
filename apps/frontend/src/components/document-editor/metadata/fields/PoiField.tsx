@@ -180,7 +180,7 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
                 />
                 <div className="flex gap-2">
                   <TextInput
-                    value={poi.lat ?? ""}
+                    value={String(poi.lat ?? "")}
                     onChange={(val) => handleUpdate(index, "lat", val)}
                     placeholder="Latitude"
                     label="Latitude"
@@ -188,7 +188,7 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
                     className="flex-1"
                   />
                   <TextInput
-                    value={poi.lng ?? ""}
+                    value={String(poi.lng ?? "")}
                     onChange={(val) => handleUpdate(index, "lng", val)}
                     placeholder="Longitude"
                     label="Longitude"

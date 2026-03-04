@@ -1,3 +1,4 @@
+import type { RiPoi } from "../../types/metadata-ri";
 import { stripFirstH1 } from "../markdown";
 
 // Default theme ID ("Apprendre le français") used as fallback
@@ -24,6 +25,7 @@ export type RefugiesInfoDispositif = {
   secondaryThemes: unknown[];
   needs: unknown[];
   sponsors: RefugiesInfoSponsor[];
+  map?: RiPoi[];
   metadatas: Record<string, unknown>;
   translations: {
     fr: {
@@ -129,6 +131,29 @@ export async function buildRefugiesInfoPayload(
     sponsors.push({ name: metadata.mainSponsor as string });
   }
 
+  // Map (POIs) at root level — RI expects dispositif.map, not dispositif.metadatas.map
+  // Coerce lat/lng to numbers for RI Typegoose.
+  const toNum = (v: string | number | undefined) =>
+    v !== undefined && v !== "" ? Number(v) : undefined;
+
+  const normalizePoi = ({ lat, lng, ...rest }: RiPoi): RiPoi => {
+    const nLat = toNum(lat);
+    const nLng = toNum(lng);
+    return {
+      ...rest,
+      ...(nLat != null && { lat: nLat }),
+      ...(nLng != null && { lng: nLng }),
+    };
+  };
+
+  const mapValue = metadata.map as RiPoi[] | RiPoi | undefined;
+  const rawMap = Array.isArray(mapValue)
+    ? mapValue
+    : mapValue
+      ? [mapValue]
+      : undefined;
+  const map = rawMap?.map(normalizePoi);
+
   // Structured metadatas
   const metadatas: Record<string, unknown> = {};
   const metadataKeys: Array<keyof typeof metadata> = [
@@ -191,6 +216,9 @@ export async function buildRefugiesInfoPayload(
 
   if (origin) {
     dispositif.origin = origin;
+  }
+  if (map && map.length > 0) {
+    dispositif.map = map;
   }
 
   return { dispositif };
