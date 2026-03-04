@@ -50,6 +50,9 @@ export interface ComboboxInputProps
   /** Label to display on the first badge (e.g., "thème principal") */
   firstBadgeLabel?: string;
 
+  /** Maximum number of items that can be selected */
+  maxItems?: number;
+
   /** Additional class names */
   className?: string;
 }
@@ -88,11 +91,14 @@ export function ComboboxInput({
   disabled = false,
   variant = "default",
   firstBadgeLabel,
+  maxItems,
   className,
 }: ComboboxInputProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const isAtMax = maxItems !== undefined && value.length >= maxItems;
 
   // Filter options based on search
   const filteredOptions = React.useMemo(() => {
@@ -126,10 +132,11 @@ export function ComboboxInput({
       if (value.includes(val)) {
         onChange(value.filter((v) => v !== val));
       } else {
+        if (isAtMax) return;
         onChange([...value, val]);
       }
     },
-    [value, onChange],
+    [value, onChange, isAtMax],
   );
 
   // Remove a value
@@ -191,9 +198,14 @@ export function ComboboxInput({
         ))}
         <button
           type="button"
-          onClick={() => !disabled && setIsOpen(!isOpen)}
-          disabled={disabled}
-          className="inline-flex cursor-pointer items-center justify-center w-6 h-6 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded text-lg font-bold"
+          onClick={() => !disabled && !isAtMax && setIsOpen(!isOpen)}
+          disabled={disabled || isAtMax}
+          className={cn(
+            "inline-flex cursor-pointer items-center justify-center w-6 h-6 rounded text-lg font-bold",
+            isAtMax
+              ? "text-gray-300 cursor-not-allowed"
+              : "text-gray-500 hover:text-blue-600 hover:bg-blue-50",
+          )}
           aria-label="Ajouter"
         >
           <Plus size={14} />
@@ -202,11 +214,14 @@ export function ComboboxInput({
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => !isAtMax && setIsOpen(true)}
           placeholder={value.length === 0 ? placeholder : ""}
-          disabled={disabled}
+          disabled={disabled || isAtMax}
           className="flex-1 min-w-[80px] outline-none bg-transparent text-sm py-1"
         />
+        {isAtMax && (
+          <span className="text-xs text-amber-500 pr-1">{maxItems} max</span>
+        )}
       </div>
 
       {/* Dropdown */}

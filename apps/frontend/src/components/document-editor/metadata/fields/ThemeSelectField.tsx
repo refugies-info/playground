@@ -75,6 +75,7 @@ export function ThemeSelectField({ fieldKey }: { fieldKey: string }) {
       onChange={handleChange}
       placeholder="Rechercher un thème..."
       firstBadgeLabel="thème principal"
+      maxItems={3}
     />
   );
 }
