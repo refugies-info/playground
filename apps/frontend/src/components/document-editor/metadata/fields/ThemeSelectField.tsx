@@ -43,9 +43,9 @@ export function ThemeSelectField({ fieldKey }: { fieldKey: string }) {
     return [];
   }, [rawSecondary]);
 
-  // All themes (primary + secondary)
+  // All themes (primary + secondary) — deduplicated to avoid React key conflicts
   const allThemes = useMemo(
-    () => [...primaryThemes, ...secondaryThemes],
+    () => [...new Set([...primaryThemes, ...secondaryThemes])],
     [primaryThemes, secondaryThemes],
   );
 

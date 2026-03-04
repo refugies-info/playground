@@ -35,6 +35,7 @@ interface DocumentData
   referenceData?: {
     themes: Record<string, string>;
     needs: Record<string, string>;
+    needsByTheme: Record<string, string[]>;
   };
 }
 

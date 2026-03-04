@@ -196,31 +196,29 @@ export function ComboboxInput({
             </button>
           </Badge>
         ))}
-        <button
-          type="button"
-          onClick={() => !disabled && !isAtMax && setIsOpen(!isOpen)}
-          disabled={disabled || isAtMax}
-          className={cn(
-            "inline-flex cursor-pointer items-center justify-center w-6 h-6 rounded text-lg font-bold",
-            isAtMax
-              ? "text-gray-300 cursor-not-allowed"
-              : "text-gray-500 hover:text-blue-600 hover:bg-blue-50",
-          )}
-          aria-label="Ajouter"
-        >
-          <Plus size={14} />
-        </button>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onFocus={() => !isAtMax && setIsOpen(true)}
-          placeholder={value.length === 0 ? placeholder : ""}
-          disabled={disabled || isAtMax}
-          className="flex-1 min-w-[80px] outline-none bg-transparent text-sm py-1"
-        />
-        {isAtMax && (
-          <span className="text-xs text-amber-500 pr-1">{maxItems} max</span>
+        {isAtMax ? (
+          <span className="text-xs text-amber-500 px-1">{maxItems} max</span>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => !disabled && setIsOpen(!isOpen)}
+              disabled={disabled}
+              className="inline-flex cursor-pointer items-center justify-center w-6 h-6 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded text-lg font-bold"
+              aria-label="Ajouter"
+            >
+              <Plus size={14} />
+            </button>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onFocus={() => setIsOpen(true)}
+              placeholder={value.length === 0 ? placeholder : ""}
+              disabled={disabled}
+              className="flex-1 min-w-[80px] outline-none bg-transparent text-sm py-1"
+            />
+          </>
         )}
       </div>
 

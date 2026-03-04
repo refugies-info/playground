@@ -20,6 +20,8 @@ export interface RiReferenceData {
   themes: Record<string, string>;
   /** Map of need ID → display name */
   needs: Record<string, string>;
+  /** Map of theme ID → array of need IDs (for filtering needs by selected themes) */
+  needsByTheme: Record<string, string[]>;
 }
 
 // ---------------------------------------------------------------------------
@@ -84,13 +86,18 @@ export async function fetchRiReferenceData(): Promise<RiReferenceData> {
     }
 
     const needsMap: Record<string, string> = {};
+    const needsByTheme: Record<string, string[]> = {};
     for (const n of needs) {
       needsMap[n.id] = n.name;
+      if (!needsByTheme[n.themeId]) {
+        needsByTheme[n.themeId] = [];
+      }
+      needsByTheme[n.themeId].push(n.id);
     }
 
-    return { themes: themesMap, needs: needsMap };
+    return { themes: themesMap, needs: needsMap, needsByTheme };
   } catch (error) {
     logger.error(error, "Failed to fetch RI reference data");
-    return { themes: {}, needs: {} };
+    return { themes: {}, needs: {}, needsByTheme: {} };
   }
 }
