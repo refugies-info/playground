@@ -132,12 +132,19 @@ export async function buildRefugiesInfoPayload(
   }
 
   // Map (POIs) at root level — RI expects dispositif.map, not dispositif.metadatas.map
-  // Coerce lat/lng to numbers: PoiField stores strings but RI Typegoose expects numbers
-  const normalizePoi = (poi: RiPoi): RiPoi => ({
-    ...poi,
-    ...(poi.lat !== undefined ? { lat: Number(poi.lat) } : {}),
-    ...(poi.lng !== undefined ? { lng: Number(poi.lng) } : {}),
-  });
+  // Coerce lat/lng to numbers for RI Typegoose.
+  const toNum = (v: string | number | undefined) =>
+    v !== undefined && v !== "" ? Number(v) : undefined;
+
+  const normalizePoi = ({ lat, lng, ...rest }: RiPoi): RiPoi => {
+    const nLat = toNum(lat);
+    const nLng = toNum(lng);
+    return {
+      ...rest,
+      ...(nLat != null && { lat: nLat }),
+      ...(nLng != null && { lng: nLng }),
+    };
+  };
 
   const mapValue = metadata.map as RiPoi[] | RiPoi | undefined;
   const rawMap = Array.isArray(mapValue)
