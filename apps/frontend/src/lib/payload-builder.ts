@@ -5,6 +5,7 @@
 
 import {
   buildRefugiesInfoPayload,
+  type RefugiesInfoDispositif,
   type RefugiesInfoPayload,
   stripFirstH1,
 } from "@playground/shared-types";
@@ -79,17 +80,27 @@ export interface TranslationPreviewInput {
   sourceMetadata: Record<string, unknown>; // Metadata from source FR document
 }
 
-/**
- * Payload for translation preview (multi-language).
- * Extends the standard RefugiesInfoPayload with root-level FR fallback fields
- * and multi-language translations for the RI preview endpoint.
- */
-export interface TranslationPreviewPayload {
-  dispositif: {
+/** Content block shared by all translations */
+type TranslationContent = {
+  content: {
     titreInformatif: string;
     titreMarque: string;
     abstract: string;
-    [key: string]: unknown;
+    markdown: string;
+  };
+};
+
+/**
+ * Payload for translation preview (multi-language).
+ * Extends RefugiesInfoDispositif with root-level FR fallback fields
+ * and multi-language translations for the RI preview endpoint.
+ */
+export interface TranslationPreviewPayload {
+  dispositif: Omit<RefugiesInfoDispositif, "translations"> & {
+    titreInformatif: string;
+    titreMarque: string;
+    abstract: string;
+    translations: Record<string, TranslationContent>;
   };
 }
 
