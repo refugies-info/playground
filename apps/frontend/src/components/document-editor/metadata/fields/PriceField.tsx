@@ -166,10 +166,12 @@ export function PriceField({
     } else if (localPaidType === "flexible") {
       updateField(fieldKey, { values: [] });
     } else if (localPaidType === "range") {
-      updateField(fieldKey, {
-        values: [localMin ?? 0, localMax ?? 0],
-        details: localPeriod,
-      });
+      if (localMin !== null && localMax !== null) {
+        updateField(fieldKey, {
+          values: [Math.min(localMin, localMax), Math.max(localMin, localMax)],
+          details: localPeriod,
+        });
+      }
     } else {
       // fixed
       if (localAmount !== null) {
