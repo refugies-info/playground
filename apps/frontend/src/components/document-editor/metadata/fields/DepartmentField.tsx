@@ -45,6 +45,7 @@ function deriveMode(value: unknown): {
  */
 export function DepartmentField({
   fieldKey,
+  label,
 }: {
   fieldKey: string;
   label: string;
@@ -110,6 +111,7 @@ export function DepartmentField({
             options={LOCATION_MODE_OPTIONS}
             value={localMode}
             onChange={handleModeChange}
+            aria-label={label}
           />
 
           {localMode === "departments" && (
