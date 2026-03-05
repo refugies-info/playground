@@ -6,6 +6,7 @@ import { Archive, Eye, Save, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDocument } from "../../DocumentContext";
+import { useMetadata } from "../../metadata/MetadataContext";
 import { useDocumentActions } from "../DocumentActionsContext";
 import { usePublicationRealtime } from "../hooks/usePublicationRealtime";
 import { PublishConfirmationDialog } from "./PublishConfirmationDialog";
@@ -28,6 +29,7 @@ interface DocumentActionsProps {
 export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
   const router = useRouter();
   const { document, setDocument, isDirty } = useDocument();
+  const { errorFieldKeys } = useMetadata();
   const {
     previewDocument,
     saveDocument,
@@ -93,7 +95,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
   // Publication confirmation overlay
   const [showPublishOverlay, setShowPublishOverlay] = useState(false);
   const [triggerTranslations, setTriggerTranslations] = useState(true);
-
+  const hasOverlay = showPublishOverlay || showPublishSuccessOverlay;
   const handleSave = async () => {
     setSaveError(null);
     setSaveSuccess(false);
@@ -126,7 +128,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
     setPublishedUrl(null);
     setPublishOverlayError(null);
 
-    const result = await publishDocument(triggerTranslations);
+    const result = await publishDocument(triggerTranslations, errorFieldKeys);
 
     if (!isMounted.current) return;
 
@@ -208,7 +210,12 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
   const canPublishNow = isCompliant;
 
   return (
-    <div className="flex flex-col gap-2 p-4 border-t bg-white relative">
+    <div
+      className={cn(
+        "flex flex-col gap-2 p-4 border-t bg-white relative",
+        hasOverlay && "min-h-[220px]",
+      )}
+    >
       {/* Status messages */}
       {(saveSuccess ||
         saveError ||
@@ -303,8 +310,11 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
         isOpen={showPublishOverlay}
         triggerTranslations={triggerTranslations}
         onToggleTranslations={setTriggerTranslations}
+        errorFieldKeys={errorFieldKeys}
         onConfirm={handleConfirmPublish}
-        onClose={() => setShowPublishOverlay(false)}
+        onClose={() => {
+          setShowPublishOverlay(false);
+        }}
       />
     </div>
   );

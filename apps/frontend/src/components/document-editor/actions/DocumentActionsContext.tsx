@@ -46,7 +46,10 @@ interface DocumentActionsContextValue {
   isSaving: boolean;
 
   // Publish
-  publishDocument: (triggerTranslations?: boolean) => Promise<{
+  publishDocument: (
+    triggerTranslations?: boolean,
+    overrideNullFields?: string[],
+  ) => Promise<{
     success: boolean;
     remoteId?: string;
     publishedUrl?: string;
@@ -196,7 +199,7 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
   // =============================================================================
 
   const publishDocument = useCallback(
-    async (triggerTranslations = false) => {
+    async (triggerTranslations = false, overrideNullFields: string[] = []) => {
       if (!document?.id) {
         return { success: false, error: "Document non trouvé" };
       }
@@ -206,11 +209,20 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
         // Save before publishing
         await saveDocumentAction(document.id, document.editorialContent || "");
 
+        // Build publication metadata, nulling out any error fields
+        // (avoids sending invalid values when user chose "Publier quand même")
+        const publicationMetadata: Record<string, unknown> = {
+          ...mergedMetadata,
+        };
+        for (const key of overrideNullFields) {
+          publicationMetadata[key] = null;
+        }
+
         const result = await publishDocumentAction(
           document.id,
           document.title || "Sans titre",
           document.editorialContent || "",
-          mergedMetadata,
+          publicationMetadata,
           triggerTranslations,
         );
         return result;

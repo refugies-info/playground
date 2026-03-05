@@ -251,6 +251,12 @@ interface MetadataContextValue {
   /** Clear the error for a field */
   clearFieldError: (key: string) => void;
 
+  /** Whether there are any metadata validation errors */
+  hasMetadataErrors: boolean;
+
+  /** Keys of fields with validation errors */
+  errorFieldKeys: string[];
+
   /** Get auto-fix info for a field (undefined if not fixed) */
   getFieldFixInfo: (
     key: string,
@@ -340,6 +346,13 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   }, [fixedBaseMetadata, mergedMetadata, state.overrides]);
 
   const isDirty = dirtyFields.size > 0;
+
+  /** Fields with validation errors */
+  const errorFieldKeys = useMemo(
+    () => Array.from(state.fieldErrors.keys()),
+    [state.fieldErrors],
+  );
+  const hasMetadataErrors = errorFieldKeys.length > 0;
 
   /** "fixed" status for auto-corrected fields */
   useEffect(() => {
@@ -629,6 +642,8 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       getFieldError,
       clearFieldError,
       getFieldFixInfo,
+      hasMetadataErrors,
+      errorFieldKeys,
     }),
     [
       mergedMetadata,
@@ -646,6 +661,8 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       getFieldError,
       clearFieldError,
       getFieldFixInfo,
+      hasMetadataErrors,
+      errorFieldKeys,
     ],
   );
 

@@ -3,6 +3,7 @@
 import { cn } from "@playground/ui";
 import { Button } from "@playground/ui/primitives";
 import {
+  AlertTriangle,
   ChevronLeft,
   ChevronRight,
   File,
@@ -14,9 +15,11 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DocumentActions } from "../actions";
 import { useDocument } from "../DocumentContext";
+import { useMetadata } from "../metadata/MetadataContext";
 
 export function EditorNavigation() {
   const { isComparisonMode, document } = useDocument();
+  const { hasMetadataErrors } = useMetadata();
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -80,12 +83,23 @@ export function EditorNavigation() {
             <Button
               variant={isMetadataActive ? "secondary" : "ghost"}
               className={cn(
-                "justify-start flex gap-2 w-full",
+                "justify-start flex gap-2 w-full relative",
                 isCollapsed && "justify-center px-0",
               )}
             >
-              <LayoutList className="w-4 h-4" />
-              {!isCollapsed && "Metadonnées"}
+              <LayoutList className="w-4 h-4 shrink-0" />
+              {!isCollapsed && (
+                <>
+                  <span className="flex-1 text-left">Metadonnées</span>
+                  {hasMetadataErrors && (
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  )}
+                </>
+              )}
+              {/* In collapsed mode: small dot indicator */}
+              {isCollapsed && hasMetadataErrors && (
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-500" />
+              )}
             </Button>
           </Link>
 
