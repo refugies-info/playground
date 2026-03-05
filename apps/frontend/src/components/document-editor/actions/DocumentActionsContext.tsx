@@ -215,6 +215,17 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
           ...mergedMetadata,
         };
         for (const key of overrideNullFields) {
+          if (
+            key === "__proto__" ||
+            key === "constructor" ||
+            key === "prototype"
+          ) {
+            logger.warn(
+              { key },
+              "Blocked unsafe metadata override key during publication",
+            );
+            continue;
+          }
           publicationMetadata[key] = null;
         }
 
