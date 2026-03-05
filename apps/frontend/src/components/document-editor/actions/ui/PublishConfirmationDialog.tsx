@@ -1,10 +1,18 @@
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@playground/ui";
 import { Button } from "@playground/ui/primitives";
-import { Send, X } from "lucide-react";
+import { Info, Send, X } from "lucide-react";
 
 interface PublishConfirmationDialogProps {
   isOpen: boolean;
   triggerTranslations: boolean;
   onToggleTranslations: (value: boolean) => void;
+  /** Metadata keys with validation errors */
+  errorFieldKeys: string[];
   onConfirm: () => void;
   onClose: () => void;
 }
@@ -13,10 +21,13 @@ export function PublishConfirmationDialog({
   isOpen,
   triggerTranslations,
   onToggleTranslations,
+  errorFieldKeys,
   onConfirm,
   onClose,
 }: PublishConfirmationDialogProps) {
   if (!isOpen) return null;
+
+  const hasErrors = errorFieldKeys.length > 0;
 
   return (
     <div className="absolute inset-0 z-20 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-4 p-4 animate-in fade-in duration-200">
@@ -46,6 +57,37 @@ export function PublishConfirmationDialog({
           Déclencher les traductions
         </label>
       </div>
+
+      {/* Metadata errors warning */}
+      {hasErrors && (
+        <div className="w-full rounded-md bg-amber-50 border border-amber-200 p-2.5 text-xs text-amber-800">
+          <div className="flex items-start gap-2">
+            <span>
+              Certaines métadonnées sont en erreur et seront ignorées lors de la
+              publication.
+            </span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="w-3.5 h-3.5 text-amber-600 cursor-pointer shrink-0" />
+                </TooltipTrigger>
+                <TooltipContent
+                  side="bottom"
+                  align="center"
+                  className="flex flex-col gap-1 max-w-[240px]"
+                >
+                  <p className="font-bold text-xs">Clés ignorées</p>
+                  <ul className="list-disc list-inside text-xs space-y-0.5">
+                    {errorFieldKeys.map((key) => (
+                      <li key={key}>{key}</li>
+                    ))}
+                  </ul>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
+      )}
 
       <Button
         onClick={onConfirm}
