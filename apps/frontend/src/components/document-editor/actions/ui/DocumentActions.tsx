@@ -312,9 +312,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
         onToggleTranslations={setTriggerTranslations}
         errorFieldKeys={errorFieldKeys}
         onConfirm={handleConfirmPublish}
-        onClose={() => {
-          setShowPublishOverlay(false);
-        }}
+        onClose={() => setShowPublishOverlay(false)}
       />
     </div>
   );
