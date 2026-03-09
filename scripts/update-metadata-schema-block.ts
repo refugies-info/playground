@@ -28,21 +28,18 @@ async function main() {
 
   const client = createLettaClient();
 
-  // Check if the block already exists on the agent
-  const existingBlocks = await client.agents.blocks.list(agentId);
-  const existing = existingBlocks.find((b) => b.label === BLOCK_LABEL);
-
-  if (existing) {
-    await client.agents.blocks.update(BLOCK_LABEL, {
+  // Try to update the block directly. If it doesn't exist yet, create it and attach it.
+  try {
+    const updated = await client.agents.blocks.update(BLOCK_LABEL, {
       agent_id: agentId,
       value: METADATA_SCHEMA_SPEC,
     });
     logger.info(
-      { blockId: existing.id, label: BLOCK_LABEL },
+      { blockId: updated.id, label: BLOCK_LABEL },
       "Updated existing memory block",
     );
-  } else {
-    // Create a new standalone block then attach it to the agent
+  } catch {
+    // Block not found — create it and attach it to the agent
     const block = await client.blocks.create({
       label: BLOCK_LABEL,
       value: METADATA_SCHEMA_SPEC,
