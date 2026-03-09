@@ -5,7 +5,7 @@
  * scripts/update-metadata-schema-block.ts. À synchroniser avec
  * MetadataRiSchema dans packages/shared/src/schemas/metadata-ri.ts.
  */
-export const METADATA_SCHEMA_SPEC = `
+export const METADATA_SCHEMA_SPEC = `<system-reminder>
 ## Schéma de sortie : metadata_ri
 
 Ta sortie DOIT inclure un bloc YAML frontmatter avec la clé \`metadata_ri\`.
@@ -137,4 +137,5 @@ metadata_ri:
   map: null
 ---
 \`\`\`
+</system-reminder>
 `;
