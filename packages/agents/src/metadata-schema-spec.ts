@@ -1,30 +1,28 @@
 /**
- * LLM-readable specification of the metadata_ri output schema.
+ * Spécification lisible par le LLM du schéma de sortie metadata_ri.
  *
- * Injected into the /metadata message so the agent always knows the
- * exact format it must produce. Derived from MetadataRiSchema in
- * packages/shared/src/schemas/metadata-ri.ts.
- *
- * Keep this in sync with that Zod schema when fields change.
+ * Poussée dans le bloc mémoire `metadata_schema` de l'agent via
+ * scripts/update-metadata-schema-block.ts. À synchroniser avec
+ * MetadataRiSchema dans packages/shared/src/schemas/metadata-ri.ts.
  */
 export const METADATA_SCHEMA_SPEC = `
-## Output Schema: metadata_ri
+## Schéma de sortie : metadata_ri
 
-Your output MUST include a YAML frontmatter block with a \`metadata_ri\` key.
-The \`metadata_ri\` object must conform to this schema exactly.
-After writing your output, call \`validate_metadata_ri\` to check it and fix any errors.
+Ta sortie DOIT inclure un bloc YAML frontmatter avec la clé \`metadata_ri\`.
+L'objet \`metadata_ri\` doit respecter ce schéma exactement.
+Après avoir rédigé ta sortie, appelle \`validate_metadata_ri\` pour la vérifier et corriger les erreurs.
 
-### TypeScript Type
+### Type TypeScript
 
 \`\`\`typescript
 type MetadataRi = {
-  // Identity
+  // Identité
   titreMarque?: string | null;
   mainSponsor?: string | null;
   logo?: string | null;
   abstract?: string | null;
 
-  // Themes & Needs (arrays of string IDs, or null)
+  // Thèmes & Besoins (tableaux d'identifiants, ou null)
   theme?: string | null;
   secondaryThemes?: string[] | null;
   needs?: string[] | null;
@@ -38,10 +36,10 @@ type MetadataRi = {
     ages?: number[];
   } | null;
 
-  // Modalities
+  // Modalités
   price?: {
-    values: number[];   // MUST be numbers, not strings
-    details?: string;   // omit if empty
+    values: number[];   // DOIT être des nombres, pas des chaînes
+    details?: string;   // omettre si vide
   } | null;
   commitment?: {
     amountDetails?: "minimum" | "maximum" | "approximately" | "exactly" | "between";
@@ -50,17 +48,17 @@ type MetadataRi = {
   } | null;
   frequency?: {
     amountDetails?: "minimum" | "maximum" | "approximately" | "exactly";
-    hours?: number;     // single number, NOT an array
+    hours?: number;     // nombre unique, PAS un tableau
     timeUnit?: string;
     frequencyUnit?: string;
   } | null;
   periode?: {
-    modalitesEntreesSorties: 0 | 1 | null;  // 0=fixed dates, 1=permanent, null=unknown
+    modalitesEntreesSorties: 0 | 1 | null;  // 0=dates fixes, 1=entrées permanentes, null=inconnu
     items: Array<{ startDate?: string; endDate?: string }> | null;
   } | null;
   timeSlots?: string[] | null;
 
-  // Geography
+  // Géographie
   location?: "france" | "online" | string[] | null;
   conditions?: string[] | null;
   map?: Array<{
@@ -71,40 +69,40 @@ type MetadataRi = {
 };
 \`\`\`
 
-### Critical Rules (most common mistakes)
+### Règles importantes (erreurs les plus fréquentes)
 
-**Rule 1 — Never wrap objects in arrays.**
-Fields like \`price\`, \`age\`, \`commitment\`, \`frequency\` are objects, NOT arrays.
+**Règle 1 — Ne jamais encapsuler des objets dans des tableaux.**
+Les champs \`price\`, \`age\`, \`commitment\`, \`frequency\` sont des objets, PAS des tableaux.
 ❌ \`price: [{ values: [0] }]\`
 ✅ \`price: { values: [0] }\`
 
-**Rule 2 — price.values must be numbers, not strings.**
+**Règle 2 — price.values doit contenir des nombres, pas des chaînes.**
 ❌ \`price: { values: ["50"] }\`
-❌ \`price: { values: ["gratuit"] }\`   # free = values: [0]
+❌ \`price: { values: ["gratuit"] }\`   # gratuit = values: [0]
 ✅ \`price: { values: [50] }\`
-✅ \`price: { values: [0] }\`           # free
+✅ \`price: { values: [0] }\`           # gratuit
 
-**Rule 3 — price.details must be omitted (not empty string) when absent.**
+**Règle 3 — price.details doit être omis (pas une chaîne vide) s'il est absent.**
 ❌ \`price: { values: [0], details: "" }\`
 ✅ \`price: { values: [0] }\`
 
-**Rule 4 — frequency.hours is a single number, not an array.**
+**Règle 4 — frequency.hours est un nombre unique, pas un tableau.**
 ❌ \`frequency: { hours: [4], frequencyUnit: "week" }\`
 ✅ \`frequency: { hours: 4, frequencyUnit: "week" }\`
 
-**Rule 5 — Use null, not [], for absent optional arrays.**
+**Règle 5 — Utiliser null, et non [], pour les tableaux optionnels absents.**
 ❌ \`secondaryThemes: []\`
 ✅ \`secondaryThemes: null\`
 
-**Rule 6 — periode is an OBJECT with modalitesEntreesSorties + items, NOT a plain array.**
+**Règle 6 — periode est un OBJET avec modalitesEntreesSorties + items, PAS un tableau simple.**
 ❌ \`periode: [{ startDate: "2025-01-01" }]\`
 ✅ \`periode: { modalitesEntreesSorties: null, items: [{ startDate: "2025-01-01" }] }\`
 
-**Rule 7 — amountDetails must be an exact enum value.**
+**Règle 7 — amountDetails doit être une valeur exacte de l'énumération.**
 commitment.amountDetails: "minimum" | "maximum" | "approximately" | "exactly" | "between"
 frequency.amountDetails:  "minimum" | "maximum" | "approximately" | "exactly"
 
-### Correct YAML Frontmatter Example
+### Exemple de frontmatter YAML correct
 
 \`\`\`yaml
 ---
