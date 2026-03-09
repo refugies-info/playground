@@ -46,8 +46,9 @@ import json
 import ast
 import os
 import yaml
+from typing import Union
 
-def validate_metadata_ri(metadata_ri: str) -> str:
+def validate_metadata_ri(metadata_ri: Union[str, dict]) -> str:
     """
     Validates a metadata_ri JSON object against the Réfugiés.info schema.
     If valid, returns the canonical YAML frontmatter to use verbatim in the output.
@@ -80,8 +81,11 @@ def validate_metadata_ri(metadata_ri: str) -> str:
         result = response.json()
 
         if result.get("valid"):
+            # Use the Zod-sanitized data returned by the API, not the raw input.
+            # This ensures unknown fields are stripped before YAML generation.
+            sanitized = result.get("data", data)
             frontmatter = "---\\n" + yaml.dump(
-                {"metadata_ri": data},
+                {"metadata_ri": sanitized},
                 allow_unicode=True,
                 default_flow_style=False,
                 sort_keys=False,

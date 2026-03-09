@@ -9,7 +9,8 @@ import { z } from "zod";
  * Called by the Letta agent's `validate_metadata_ri` tool before finalizing output.
  *
  * Request body: { metadata_ri: object }
- * Response: { valid: true } | { valid: false, errors: [{ field: string, message: string }] }
+ * Response (valid):   { valid: true, data: object } — Zod-sanitized data (unknown fields stripped)
+ * Response (invalid): { valid: false, errors: [{ field: string, message: string }] }
  */
 
 const requestSchema = z.object({
@@ -35,7 +36,9 @@ export async function POST(request: NextRequest) {
   const result = MetadataRiSchema.safeParse(parsed.data.metadata_ri);
 
   if (result.success) {
-    return Response.json({ valid: true });
+    // Return Zod-sanitized data so the tool uses validated output for YAML generation,
+    // not the raw input which may contain unknown fields.
+    return Response.json({ valid: true, data: result.data });
   }
 
   const errors = result.error.issues.map((issue) => ({
