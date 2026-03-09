@@ -32,6 +32,7 @@ async function main() {
   const sourceCode = `
 import requests
 import json
+import ast
 
 def validate_metadata_ri(metadata_ri: str) -> str:
     """
@@ -50,7 +51,14 @@ def validate_metadata_ri(metadata_ri: str) -> str:
     endpoint = ${JSON.stringify(endpoint)}
 
     try:
-        data = json.loads(metadata_ri) if isinstance(metadata_ri, str) else metadata_ri
+        if isinstance(metadata_ri, str):
+            try:
+                data = json.loads(metadata_ri)
+            except json.JSONDecodeError:
+                # Letta sometimes passes Python dict repr (single-quoted keys) instead of JSON
+                data = ast.literal_eval(metadata_ri)
+        else:
+            data = metadata_ri
         response = requests.post(endpoint, json={"metadata_ri": data}, timeout=15)
         response.raise_for_status()
         result = response.json()
