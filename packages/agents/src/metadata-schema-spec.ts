@@ -8,9 +8,11 @@
 export const METADATA_SCHEMA_SPEC = `<system-reminder>
 ## Schéma de sortie : metadata_ri
 
-Ta sortie DOIT inclure un bloc YAML frontmatter avec la clé \`metadata_ri\`.
-L'objet \`metadata_ri\` doit respecter ce schéma exactement.
-Après avoir rédigé ta sortie, appelle \`validate_metadata_ri\` pour la vérifier et corriger les erreurs.
+Procédure obligatoire :
+1. Produis l'objet \`metadata_ri\` en JSON (dans ton raisonnement interne).
+2. Appelle \`validate_metadata_ri\` avec cet objet JSON.
+3. Si des erreurs sont retournées, corrige-les et rappelle l'outil.
+4. Quand l'outil retourne VALID, **copie le frontmatter YAML fourni mot pour mot** dans ta réponse finale — ne le réécris pas.
 
 ### Type TypeScript
 
