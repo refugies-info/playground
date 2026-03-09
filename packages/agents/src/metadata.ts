@@ -1,4 +1,5 @@
 import type { Letta } from "@letta-ai/letta-client";
+import { METADATA_SCHEMA_SPEC } from "./metadata-schema-spec";
 import { METADATA_SLASH_COMMAND } from "./prompts";
 
 /**
@@ -27,6 +28,8 @@ export const generateMetadataReport = async function* (
   // with system instructions. We also strip any existing <document> tags from the input.
   const sanitizedContent = markdownContent.replace(/<\/?document>/gi, "");
   const messageContent = `${METADATA_SLASH_COMMAND}
+
+${METADATA_SCHEMA_SPEC}
 
 <document>
 ${sanitizedContent}
