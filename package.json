@@ -34,6 +34,7 @@
     "convert:dispositifs": "tsx scripts/convert-dispositifs.ts",
     "list:agents": "tsx scripts/list-agents.ts",
     "register:metadata-validator": "tsx scripts/register-metadata-validator-tool.ts",
+    "update:metadata-schema": "tsx scripts/update-metadata-schema-block.ts",
     "generate:json": "tsx scripts/generate-json.ts",
     "generate:md": "tsx scripts/generate-md.ts",
     "copy:schema": "tsx scripts/copy-schema.ts",
