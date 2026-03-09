@@ -78,9 +78,8 @@ def validate_metadata_ri(metadata_ri: str) -> str:
 
   const client = createLettaClient();
 
-  // Upsert the tool (create or update by name)
+  // Upsert the tool (name is derived from the Python function definition)
   const tool = await client.tools.upsert({
-    name: "validate_metadata_ri",
     description:
       "Validates metadata_ri JSON against the Réfugiés.info schema. " +
       "Call after writing your metadata_ri output and fix any reported errors before responding.",
