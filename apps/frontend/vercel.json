@@ -1,7 +1,7 @@
 {
   "framework": "nextjs",
   "installCommand": "source ../../vercel-setup.sh && pnpm install --frozen-lockfile",
-  "buildCommand": "source ../../vercel-setup.sh && if [ \"$VERCEL_ENV\" = \"preview\" ]; then (cd ../.. && pnpm seed:users); fi && next build",
+  "buildCommand": "source ../../vercel-setup.sh && if [ \"$VERCEL_ENV\" = \"preview\" ]; then if [ -z \"$SEED_USER_PASSWORD\" ]; then echo \"Error: SEED_USER_PASSWORD is not set for preview build.\" >&2 && exit 1; fi && (cd ../.. && pnpm seed:users); fi && next build",
   "crons": [
     {
       "path": "/api/cron/di-ingestion",
