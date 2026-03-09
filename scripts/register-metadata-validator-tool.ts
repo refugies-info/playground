@@ -45,20 +45,24 @@ import requests
 import json
 import ast
 import os
+import yaml
 
 def validate_metadata_ri(metadata_ri: str) -> str:
     """
     Validates a metadata_ri JSON object against the Réfugiés.info schema.
+    If valid, returns the canonical YAML frontmatter to use verbatim in the output.
+    If invalid, returns a list of errors to fix.
 
-    ALWAYS call this tool after writing your metadata_ri output.
-    If it returns errors, fix them and call it again before responding.
-    Only respond once it returns "VALID".
+    ALWAYS call this tool after producing your metadata_ri.
+    If it returns errors, fix them and call it again.
+    When it returns VALID, copy the returned frontmatter directly into your output.
 
     Args:
-        metadata_ri: JSON string of the metadata_ri object to validate
+        metadata_ri: JSON string (or dict) of the metadata_ri object to validate
 
     Returns:
-        "VALID: ..." if the object is correctly formatted, or a list of errors to fix.
+        On success: "VALID." followed by the canonical YAML frontmatter.
+        On failure: "INVALID." followed by the list of errors to fix.
     """
     endpoint = os.getenv("VALIDATE_METADATA_RI_URL")
 
@@ -76,7 +80,13 @@ def validate_metadata_ri(metadata_ri: str) -> str:
         result = response.json()
 
         if result.get("valid"):
-            return "VALID: metadata_ri is correctly formatted."
+            frontmatter = "---\\n" + yaml.dump(
+                {"metadata_ri": data},
+                allow_unicode=True,
+                default_flow_style=False,
+                sort_keys=False,
+            ) + "---"
+            return f"VALID. Use this exact YAML frontmatter in your output (copy verbatim, do not rewrite):\\n\\n{frontmatter}"
 
         errors = result.get("errors", [])
         if not errors:
@@ -103,7 +113,7 @@ def validate_metadata_ri(metadata_ri: str) -> str:
       "Call after writing your metadata_ri output and fix any reported errors before responding.",
     source_code: sourceCode,
     source_type: "python",
-    pip_requirements: [{ name: "requests" }],
+    pip_requirements: [{ name: "requests" }, { name: "pyyaml" }],
     tags: ["playground", "metadata", "validation"],
   });
 
