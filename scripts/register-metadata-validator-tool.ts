@@ -46,9 +46,10 @@ import json
 import ast
 import os
 import yaml
-from typing import Union
 
-def validate_metadata_ri(metadata_ri: Union[str, dict]) -> str:
+def validate_metadata_ri(metadata_ri: str) -> str:
+    # Note: Letta may pass a Python dict at runtime despite the str type hint.
+    # The str hint is required for Letta's JSON schema generation (dict is unsupported).
     """
     Validates a metadata_ri JSON object against the Réfugiés.info schema.
     If valid, returns the canonical YAML frontmatter to use verbatim in the output.
