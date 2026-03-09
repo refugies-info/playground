@@ -13,6 +13,8 @@
  *   LETTA_PROJECT_ID       — Letta Cloud project ID
  *   PLAYGROUND_AGENT_ID    — ID of the agent to attach the tool to
  *   NEXT_PUBLIC_APP_URL    — Base URL of the deployed app (e.g. https://your-app.vercel.app)
+ *                            Stored as VALIDATE_METADATA_RI_URL agent secret so the tool
+ *                            endpoint is not hardcoded in the Python source.
  */
 import "dotenv/config";
 import { logger } from "@playground/shared-types";
@@ -29,10 +31,20 @@ async function main() {
   const endpoint = `${appUrl}/api/tools/validate-metadata-ri`;
   logger.info({ endpoint, agentId }, "Registering validate_metadata_ri tool");
 
+  const client = createLettaClient();
+
+  // Store the endpoint as an agent secret so the Python tool can read it
+  // via os.getenv("VALIDATE_METADATA_RI_URL") without hardcoding the URL.
+  await client.agents.update(agentId, {
+    secrets: { VALIDATE_METADATA_RI_URL: endpoint },
+  });
+  logger.info({ agentId }, "Set VALIDATE_METADATA_RI_URL secret on agent");
+
   const sourceCode = `
 import requests
 import json
 import ast
+import os
 
 def validate_metadata_ri(metadata_ri: str) -> str:
     """
@@ -48,7 +60,7 @@ def validate_metadata_ri(metadata_ri: str) -> str:
     Returns:
         "VALID: ..." if the object is correctly formatted, or a list of errors to fix.
     """
-    endpoint = ${JSON.stringify(endpoint)}
+    endpoint = os.getenv("VALIDATE_METADATA_RI_URL")
 
     try:
         if isinstance(metadata_ri, str):
@@ -83,8 +95,6 @@ def validate_metadata_ri(metadata_ri: str) -> str:
     except Exception as e:
         return f"ERROR: Could not validate ({str(e)}). Review your output manually."
 `.trim();
-
-  const client = createLettaClient();
 
   // Upsert the tool (name is derived from the Python function definition)
   const tool = await client.tools.upsert({
