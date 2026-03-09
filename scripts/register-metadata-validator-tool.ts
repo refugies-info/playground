@@ -47,7 +47,7 @@ def validate_metadata_ri(metadata_ri: str) -> str:
     Returns:
         "VALID: ..." if the object is correctly formatted, or a list of errors to fix.
     """
-    endpoint = "${endpoint}"
+    endpoint = ${JSON.stringify(endpoint)}
 
     try:
         data = json.loads(metadata_ri) if isinstance(metadata_ri, str) else metadata_ri

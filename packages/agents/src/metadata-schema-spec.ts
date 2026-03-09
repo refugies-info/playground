@@ -15,6 +15,12 @@ Après avoir rédigé ta sortie, appelle \`validate_metadata_ri\` pour la vérif
 ### Type TypeScript
 
 \`\`\`typescript
+type Poi = {
+  title?: string; address?: string; city?: string;
+  lat?: number; lng?: number;
+  email?: string; phone?: string; description?: string;
+};
+
 type MetadataRi = {
   // Identité
   titreMarque?: string | null;
@@ -61,11 +67,7 @@ type MetadataRi = {
   // Géographie
   location?: "france" | "online" | string[] | null;
   conditions?: string[] | null;
-  map?: Array<{
-    title?: string; address?: string; city?: string;
-    lat?: number; lng?: number;
-    email?: string; phone?: string; description?: string;
-  }> | null;
+  map?: Poi | Poi[] | null;
 };
 \`\`\`
 
