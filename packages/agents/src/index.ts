@@ -2,6 +2,7 @@ export * from "./agents";
 export * from "./clients";
 export * from "./ingestion";
 export * from "./metadata";
+export * from "./metadata-schema-spec";
 export * from "./parser";
 export * from "./prompts";
 export * from "./schemas";
