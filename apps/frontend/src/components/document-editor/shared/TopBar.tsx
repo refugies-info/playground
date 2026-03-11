@@ -2,12 +2,18 @@
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useDocument } from "../DocumentContext";
 import { DocumentStatus } from "./DocumentStatus";
 import { useDocumentStatusRealtime } from "./hooks/useDocumentStatusRealtime";
 
 export function TopBar() {
   const { document } = useDocument();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
+  const backHref = from
+    ? `/documents${decodeURIComponent(from)}`
+    : "/documents";
 
   // Keep status badges in sync via Supabase Realtime
   useDocumentStatusRealtime();
@@ -15,7 +21,7 @@ export function TopBar() {
   return (
     <div className="relative flex items-center justify-between px-4 py-2 border-b bg-white">
       <Link
-        href="/documents"
+        href={backHref}
         className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
       >
         <ArrowLeft className="w-4 h-4" />

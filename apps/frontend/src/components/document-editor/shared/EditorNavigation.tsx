@@ -11,7 +11,7 @@ import {
   LayoutList,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DocumentActions } from "../actions";
 import { useDocument } from "../DocumentContext";
@@ -21,6 +21,9 @@ export function EditorNavigation() {
   const { isComparisonMode, document } = useDocument();
   const { hasMetadataErrors } = useMetadata();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
+  const fromSuffix = from ? `?from=${from}` : "";
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Auto-collapse when comparison mode is active
@@ -66,7 +69,7 @@ export function EditorNavigation() {
       {/* Navigation Buttons */}
       <div className="flex-1 flex flex-col p-4 gap-4">
         <div className="flex flex-col gap-2">
-          <Link href={baseUrl}>
+          <Link href={`${baseUrl}${fromSuffix}`}>
             <Button
               variant={isFicheActive ? "secondary" : "ghost"}
               className={cn(
@@ -79,7 +82,7 @@ export function EditorNavigation() {
             </Button>
           </Link>
 
-          <Link href={`${baseUrl}/metadata`}>
+          <Link href={`${baseUrl}/metadata${fromSuffix}`}>
             <Button
               variant={isMetadataActive ? "secondary" : "ghost"}
               className={cn(
@@ -103,7 +106,7 @@ export function EditorNavigation() {
             </Button>
           </Link>
 
-          <Link href={`${baseUrl}/compliance`}>
+          <Link href={`${baseUrl}/compliance${fromSuffix}`}>
             <Button
               variant={isComplianceActive ? "secondary" : "ghost"}
               className={cn(
