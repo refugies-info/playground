@@ -51,7 +51,11 @@ describe("computeWorkflowStatuses", () => {
   });
 
   it("editorial online_status takes priority over non_compliant fallback", () => {
-    const result = computeWorkflowStatuses("non_compliant", null, "unpublished");
+    const result = computeWorkflowStatuses(
+      "non_compliant",
+      null,
+      "unpublished",
+    );
     expect(result.computedOnlineStatus).toBe("unpublished");
   });
 
