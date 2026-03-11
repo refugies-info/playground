@@ -77,7 +77,7 @@ export default function PasswordResetPage() {
     // Signing out explicitly and forcing re-login confirms the new password works.
     await supabase.auth.signOut();
     router.push(
-      "/login?message=Mot+de+passe+mis+à+jour.+Veuillez+vous+reconnecter.",
+      `/login?message=${encodeURIComponent("Mot de passe mis à jour. Veuillez vous reconnecter.")}`,
     );
   };
 
