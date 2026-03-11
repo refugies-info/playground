@@ -1,12 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LoginForm } from "@/components/auth";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const message = searchParams.get("message");
   const supabase = createClient();
 
   const handleSignIn = async (email: string, password: string) => {
@@ -39,6 +41,11 @@ export default function LoginPage() {
             Content Playground
           </h1>
         </div>
+        {message ? (
+          <div className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700">
+            {message}
+          </div>
+        ) : null}
         <LoginForm onSubmit={handleSignIn} />
       </div>
     </div>

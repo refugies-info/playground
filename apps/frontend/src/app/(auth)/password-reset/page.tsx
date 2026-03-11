@@ -71,8 +71,12 @@ export default function PasswordResetPage() {
     if (error) {
       throw error;
     }
-    // Redirect to documents on success
-    router.push("/documents");
+
+    // Sign out the recovery session, then redirect to login.
+    // The recovery session is one-time-use and is invalidated after updateUser.
+    // Signing out explicitly and forcing re-login confirms the new password works.
+    await supabase.auth.signOut();
+    router.push("/login?message=Mot+de+passe+mis+à+jour.+Veuillez+vous+reconnecter.");
   };
 
   return (
