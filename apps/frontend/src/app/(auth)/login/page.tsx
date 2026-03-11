@@ -2,13 +2,23 @@
 
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { LoginForm } from "@/components/auth";
 import { createClient } from "@/lib/supabase/client";
 
-export default function LoginPage() {
-  const router = useRouter();
+function MessageBanner() {
   const searchParams = useSearchParams();
   const message = searchParams.get("message");
+  if (!message) return null;
+  return (
+    <div className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700">
+      {message}
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  const router = useRouter();
   const supabase = createClient();
 
   const handleSignIn = async (email: string, password: string) => {
@@ -41,11 +51,9 @@ export default function LoginPage() {
             Content Playground
           </h1>
         </div>
-        {message ? (
-          <div className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700">
-            {message}
-          </div>
-        ) : null}
+        <Suspense>
+          <MessageBanner />
+        </Suspense>
         <LoginForm onSubmit={handleSignIn} />
       </div>
     </div>
