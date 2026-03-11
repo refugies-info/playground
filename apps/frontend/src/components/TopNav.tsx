@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export interface TopNavProps {
@@ -12,6 +12,7 @@ export interface TopNavProps {
 export function TopNav({ role }: TopNavProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const handleLogout = async () => {
@@ -22,6 +23,16 @@ export function TopNav({ role }: TopNavProps) {
   const isWorkflowActive = pathname === "/workflow";
   const isDocumentsActive = pathname === "/documents";
   const isTranslationsActive = pathname === "/translations";
+  // Preserve filters when clicking a nav link while already on that page
+  const currentSearch = searchParams.toString();
+  const documentsHref =
+    isDocumentsActive && currentSearch
+      ? `/documents?${currentSearch}`
+      : "/documents";
+  const translationsHref =
+    isTranslationsActive && currentSearch
+      ? `/translations?${currentSearch}`
+      : "/translations";
 
   // Requirement: "pour les tranducteurs on affiche uniquement le bouton se deconnecter"
   const isTranslator = role === "translator";
@@ -58,7 +69,7 @@ export function TopNav({ role }: TopNavProps) {
                   </Link>
                 )}
                 <Link
-                  href="/documents"
+                  href={documentsHref}
                   className={`border-b-2 pb-1 text-sm font-medium transition-colors ${
                     isDocumentsActive
                       ? "border-blue-600 text-blue-600"
@@ -68,7 +79,7 @@ export function TopNav({ role }: TopNavProps) {
                   Documents
                 </Link>
                 <Link
-                  href="/translations"
+                  href={translationsHref}
                   className={`border-b-2 pb-1 text-sm font-medium transition-colors ${
                     isTranslationsActive
                       ? "border-blue-600 text-blue-600"

@@ -250,7 +250,11 @@ export function DocumentsList({
           columns={columns}
           data={documents}
           pageSize={pageSize}
-          onRowClick={(row) => router.push(`/documents/${row.id}`)}
+          onRowClick={(row) => {
+            const search = window.location.search.substring(1);
+            const query = search ? `?from=${encodeURIComponent(search)}` : "";
+            router.push(`/documents/${row.id}${query}`);
+          }}
           manualPagination
           manualSorting
           sortBy={sortBy}

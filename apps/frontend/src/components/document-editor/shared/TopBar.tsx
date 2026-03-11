@@ -6,8 +6,15 @@ import { useDocument } from "../DocumentContext";
 import { DocumentStatus } from "./DocumentStatus";
 import { useDocumentStatusRealtime } from "./hooks/useDocumentStatusRealtime";
 
-export function TopBar() {
+interface TopBarProps {
+  from?: string;
+}
+
+export function TopBar({ from }: TopBarProps) {
   const { document } = useDocument();
+  const backHref = from
+    ? `/documents?${decodeURIComponent(from)}`
+    : "/documents";
 
   // Keep status badges in sync via Supabase Realtime
   useDocumentStatusRealtime();
@@ -15,7 +22,7 @@ export function TopBar() {
   return (
     <div className="relative flex items-center justify-between px-4 py-2 border-b bg-white">
       <Link
-        href="/documents"
+        href={backHref}
         className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
       >
         <ArrowLeft className="w-4 h-4" />
