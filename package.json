@@ -30,7 +30,6 @@
     "lint": "biome check --write .",
     "validate:docs": "tsx scripts/validate-docs.ts",
     "validate": "pnpm validate:docs && pnpm knip",
-    "seed:users": "tsx scripts/seed-users.ts",
     "convert:dispositifs": "tsx scripts/convert-dispositifs.ts",
     "list:agents": "tsx scripts/list-agents.ts",
     "register:metadata-validator": "tsx scripts/register-metadata-validator-tool.ts",

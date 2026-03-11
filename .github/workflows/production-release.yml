@@ -27,34 +27,3 @@ jobs:
           supabase link --project-ref $SUPABASE_PROJECT_ID
           supabase db push
 
-  seed_data:
-    needs: deploy_migrations
-    runs-on: ubuntu-latest
-    name: Seed Production Data
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v6
-
-      - name: Setup toolchain
-        uses: moonrepo/setup-toolchain@v0
-        with:
-          auto-install: true
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/share/pnpm/store
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Seed Users
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: https://${{ secrets.SUPABASE_PROJECT_ID }}.supabase.co
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          SEED_USER_PASSWORD: ${{ secrets.SEED_USER_PASSWORD }}
-        run: pnpm seed:users
-
