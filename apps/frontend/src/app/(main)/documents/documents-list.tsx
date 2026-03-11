@@ -251,8 +251,8 @@ export function DocumentsList({
           data={documents}
           pageSize={pageSize}
           onRowClick={(row) => {
-            const from = window.location.search;
-            const query = from ? `?from=${encodeURIComponent(from)}` : "";
+            const search = window.location.search.substring(1);
+            const query = search ? `?from=${encodeURIComponent(search)}` : "";
             router.push(`/documents/${row.id}${query}`);
           }}
           manualPagination

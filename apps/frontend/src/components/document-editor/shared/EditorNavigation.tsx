@@ -11,18 +11,20 @@ import {
   LayoutList,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DocumentActions } from "../actions";
 import { useDocument } from "../DocumentContext";
 import { useMetadata } from "../metadata/MetadataContext";
 
-export function EditorNavigation() {
+interface EditorNavigationProps {
+  from?: string;
+}
+
+export function EditorNavigation({ from }: EditorNavigationProps) {
   const { isComparisonMode, document } = useDocument();
   const { hasMetadataErrors } = useMetadata();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const from = searchParams.get("from");
   const fromSuffix = from ? `?from=${encodeURIComponent(from)}` : "";
   const [isCollapsed, setIsCollapsed] = useState(false);
 

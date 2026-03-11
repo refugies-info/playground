@@ -2,17 +2,18 @@
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useDocument } from "../DocumentContext";
 import { DocumentStatus } from "./DocumentStatus";
 import { useDocumentStatusRealtime } from "./hooks/useDocumentStatusRealtime";
 
-export function TopBar() {
+interface TopBarProps {
+  from?: string;
+}
+
+export function TopBar({ from }: TopBarProps) {
   const { document } = useDocument();
-  const searchParams = useSearchParams();
-  const from = searchParams.get("from");
   const backHref = from
-    ? `/documents${decodeURIComponent(from)}`
+    ? `/documents?${decodeURIComponent(from)}`
     : "/documents";
 
   // Keep status badges in sync via Supabase Realtime
