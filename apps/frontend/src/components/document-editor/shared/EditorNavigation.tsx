@@ -23,7 +23,7 @@ export function EditorNavigation() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const from = searchParams.get("from");
-  const fromSuffix = from ? `?from=${from}` : "";
+  const fromSuffix = from ? `?from=${encodeURIComponent(from)}` : "";
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Auto-collapse when comparison mode is active
