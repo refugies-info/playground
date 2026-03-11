@@ -32,24 +32,19 @@ export function computeWorkflowStatuses(
   erWorkStatus: WorkStatus | null,
   erOnlineStatus: OnlineStatus | null,
 ): ComputedWorkflowStatuses {
-  // Computed work_status
-  let computedWorkStatus: WorkStatus | null = null;
-  if (erWorkStatus !== null) {
-    computedWorkStatus = erWorkStatus;
-  } else if (erOnlineStatus === "published" || erOnlineStatus === "archived") {
-    // Terminal state: published/archived documents have no pending work
-    computedWorkStatus = null;
-  } else if (complianceStatus === "compliant") {
-    computedWorkStatus = "to_process";
-  }
+  // Computed work_status: explicit value ?? terminal-state guard ?? compliance fallback
+  const computedWorkStatus: WorkStatus | null =
+    erWorkStatus ??
+    (erOnlineStatus === "published" || erOnlineStatus === "archived"
+      ? null // terminal state: published/archived docs have no pending work
+      : complianceStatus === "compliant"
+        ? "to_process"
+        : null);
 
-  // Computed online_status
-  let computedOnlineStatus: OnlineStatus | null = null;
-  if (erOnlineStatus !== null) {
-    computedOnlineStatus = erOnlineStatus;
-  } else if (complianceStatus === "non_compliant") {
-    computedOnlineStatus = "archived";
-  }
+  // Computed online_status: explicit value ?? compliance fallback
+  const computedOnlineStatus: OnlineStatus | null =
+    erOnlineStatus ??
+    (complianceStatus === "non_compliant" ? "archived" : null);
 
   return { computedWorkStatus, computedOnlineStatus };
 }
