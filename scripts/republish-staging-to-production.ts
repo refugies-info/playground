@@ -19,7 +19,7 @@
  *   RI_WEBHOOK_SECRET         = <prod webhook secret>
  *   NEXT_PUBLIC_SUPABASE_URL  = <prod supabase url>
  *   SUPABASE_SERVICE_ROLE_KEY = <prod service role key>
- *   STAGING_RI_URL            = https://staging.refugies.info (default)
+ *   STAGING_RI_URL            = https://staging.refugies.info (default, override if needed)
  *
  * Usage:
  *   pnpm republish:prod
@@ -167,6 +167,17 @@ async function main() {
     toPublish.map(({ workflowId, publishedBy }) => [workflowId, publishedBy]),
   );
 
+  // Batch-fetch emails for all publishers so the webhook payload is complete
+  const publisherIds = [...new Set(toPublish.map((w) => w.publishedBy))];
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, email")
+    .in("id", publisherIds);
+
+  const emailByUserId = new Map(
+    (profiles ?? []).map((p) => [p.id, p.email ?? ""]),
+  );
+
   // ── Publish each workflow ──────────────────────────────────────────────────
 
   let succeeded = 0;
@@ -178,7 +189,7 @@ async function main() {
       ? workflow.editorial_records[0]
       : workflow.editorial_records;
 
-    if (!editorialRecord?.markdown) {
+    if (!editorialRecord) {
       logger.warn(
         { workflowId: workflow.id },
         "No editorial record found — skipping",
@@ -188,14 +199,36 @@ async function main() {
       continue;
     }
 
+    if (editorialRecord.markdown === null || editorialRecord.markdown === undefined) {
+      logger.warn(
+        { workflowId: workflow.id },
+        "Editorial record has no markdown content — skipping",
+      );
+      failed++;
+      errors.push({ workflowId: workflow.id, error: "No markdown content" });
+      continue;
+    }
+
     const markdown = editorialRecord.markdown as string;
     const metadata =
       (editorialRecord.metadata as Record<string, unknown>) ?? {};
-    const userId = publisherByWorkflow.get(workflow.id) ?? "";
+    const userId = publisherByWorkflow.get(workflow.id);
 
     // Extract title from first H1 in markdown (fallback to empty string)
     const titleMatch = markdown.match(/^#\s+(.+)$/m);
     const title = titleMatch?.[1]?.trim() ?? "";
+
+    if (!userId) {
+      logger.warn(
+        { workflowId: workflow.id },
+        "Original publisher UUID (published_by) is missing — skipping",
+      );
+      failed++;
+      errors.push({ workflowId: workflow.id, error: "Missing published_by UUID" });
+      continue;
+    }
+
+    const userEmail = emailByUserId.get(userId) ?? "";
 
     logger.info(
       { workflowId: workflow.id, publishedBy: userId, title: title.slice(0, 60) },
@@ -213,7 +246,7 @@ async function main() {
       markdown,
       metadata,
       userId,
-      userEmail: "",
+      userEmail,
       platform: "refugies.info",
     });
 
