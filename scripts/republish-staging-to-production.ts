@@ -10,20 +10,22 @@
  * a CREATE (new dispositif), unless it already has a successful production
  * publication_record in which case it is skipped.
  *
+ * Attribution is preserved: the `published_by` UUID from each workflow's
+ * existing staging publication_record is reused in the new production record.
+ *
  * Required env vars:
  *   RI_BASE_URL               = https://refugies.info  (production target)
  *   NEXT_PUBLIC_RI_BASE_URL   = https://refugies.info
  *   RI_WEBHOOK_SECRET         = <prod webhook secret>
  *   NEXT_PUBLIC_SUPABASE_URL  = <prod supabase url>
  *   SUPABASE_SERVICE_ROLE_KEY = <prod service role key>
- *   REPUBLISH_USER_ID         = <your user uuid>
  *   STAGING_RI_URL            = https://staging.refugies.info (default)
  *
  * Usage:
- *   REPUBLISH_USER_ID=<uuid> pnpm republish:prod
+ *   pnpm republish:prod
  *
  * Dry-run (no webhook calls, no DB writes):
- *   DRY_RUN=true REPUBLISH_USER_ID=<uuid> pnpm republish:prod
+ *   DRY_RUN=true pnpm republish:prod
  */
 
 import { logger } from "@playground/shared-types";
@@ -37,12 +39,6 @@ const DRY_RUN = process.env.DRY_RUN === "true";
 
 async function main() {
   // ── Safety guards ──────────────────────────────────────────────────────────
-
-  const userId = process.env.REPUBLISH_USER_ID;
-  if (!userId) {
-    logger.error("REPUBLISH_USER_ID env var is required");
-    process.exit(1);
-  }
 
   if (!PRODUCTION_RI_URL) {
     logger.error("RI_BASE_URL env var is required");
@@ -67,13 +63,13 @@ async function main() {
     "Starting staging→production republication",
   );
 
-  // ── Query staging publications ─────────────────────────────────────────────
+  // ── Query staging publications (latest per workflow, with publisher info) ──
 
   const supabase = getSupabaseAdmin();
 
   const { data: stagingPubs, error: pubError } = await supabase
     .from("publication_records")
-    .select("workflow_id, created_at")
+    .select("workflow_id, published_by, created_at")
     .eq("target", STAGING_RI_URL)
     .eq("status", "published")
     .order("created_at", { ascending: false });
@@ -91,13 +87,17 @@ async function main() {
     return;
   }
 
-  // Deduplicate: keep only the latest publication per workflow
+  // Deduplicate: keep only the latest publication per workflow (preserving publisher)
   const seenWorkflows = new Set<string>();
-  const uniqueWorkflows: string[] = [];
+  const uniqueWorkflows: Array<{ workflowId: string; publishedBy: string }> =
+    [];
   for (const pub of stagingPubs) {
     if (!seenWorkflows.has(pub.workflow_id)) {
       seenWorkflows.add(pub.workflow_id);
-      uniqueWorkflows.push(pub.workflow_id);
+      uniqueWorkflows.push({
+        workflowId: pub.workflow_id,
+        publishedBy: pub.published_by,
+      });
     }
   }
 
@@ -108,18 +108,22 @@ async function main() {
 
   // ── Skip workflows already published to production ─────────────────────────
 
+  const workflowIds = uniqueWorkflows.map((w) => w.workflowId);
+
   const { data: existingProdPubs } = await supabase
     .from("publication_records")
     .select("workflow_id")
     .eq("target", PRODUCTION_RI_URL)
     .eq("status", "published")
-    .in("workflow_id", uniqueWorkflows);
+    .in("workflow_id", workflowIds);
 
   const alreadyPublished = new Set(
     (existingProdPubs ?? []).map((p) => p.workflow_id),
   );
 
-  const toPublish = uniqueWorkflows.filter((id) => !alreadyPublished.has(id));
+  const toPublish = uniqueWorkflows.filter(
+    ({ workflowId }) => !alreadyPublished.has(workflowId),
+  );
 
   logger.info(
     {
@@ -148,12 +152,20 @@ async function main() {
       )
     `,
     )
-    .in("id", toPublish);
+    .in(
+      "id",
+      toPublish.map((w) => w.workflowId),
+    );
 
   if (wfError) {
     logger.error(wfError, "Failed to fetch workflow data");
     process.exit(1);
   }
+
+  // Index publisher by workflowId for quick lookup in the loop
+  const publisherByWorkflow = new Map(
+    toPublish.map(({ workflowId, publishedBy }) => [workflowId, publishedBy]),
+  );
 
   // ── Publish each workflow ──────────────────────────────────────────────────
 
@@ -177,14 +189,16 @@ async function main() {
     }
 
     const markdown = editorialRecord.markdown as string;
-    const metadata = (editorialRecord.metadata as Record<string, unknown>) ?? {};
+    const metadata =
+      (editorialRecord.metadata as Record<string, unknown>) ?? {};
+    const userId = publisherByWorkflow.get(workflow.id) ?? "";
 
     // Extract title from first H1 in markdown (fallback to empty string)
     const titleMatch = markdown.match(/^#\s+(.+)$/m);
     const title = titleMatch?.[1]?.trim() ?? "";
 
     logger.info(
-      { workflowId: workflow.id, title: title.slice(0, 60) },
+      { workflowId: workflow.id, publishedBy: userId, title: title.slice(0, 60) },
       `Publishing${DRY_RUN ? " [DRY RUN]" : ""}…`,
     );
 
@@ -219,7 +233,10 @@ async function main() {
         "❌ Publication failed",
       );
       failed++;
-      errors.push({ workflowId: workflow.id, error: result.error ?? "unknown" });
+      errors.push({
+        workflowId: workflow.id,
+        error: result.error ?? "unknown",
+      });
     }
   }
 
