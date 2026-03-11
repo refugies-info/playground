@@ -199,7 +199,10 @@ async function main() {
       continue;
     }
 
-    if (editorialRecord.markdown === null || editorialRecord.markdown === undefined) {
+    if (
+      editorialRecord.markdown === null ||
+      editorialRecord.markdown === undefined
+    ) {
       logger.warn(
         { workflowId: workflow.id },
         "Editorial record has no markdown content — skipping",
@@ -224,14 +227,21 @@ async function main() {
         "Original publisher UUID (published_by) is missing — skipping",
       );
       failed++;
-      errors.push({ workflowId: workflow.id, error: "Missing published_by UUID" });
+      errors.push({
+        workflowId: workflow.id,
+        error: "Missing published_by UUID",
+      });
       continue;
     }
 
     const userEmail = emailByUserId.get(userId) ?? "";
 
     logger.info(
-      { workflowId: workflow.id, publishedBy: userId, title: title.slice(0, 60) },
+      {
+        workflowId: workflow.id,
+        publishedBy: userId,
+        title: title.slice(0, 60),
+      },
       `Publishing${DRY_RUN ? " [DRY RUN]" : ""}…`,
     );
 
@@ -283,9 +293,7 @@ async function main() {
       dryRun: DRY_RUN,
       errors: errors.length > 0 ? errors : undefined,
     },
-    DRY_RUN
-      ? "Dry-run complete — no changes made"
-      : "Republication complete",
+    DRY_RUN ? "Dry-run complete — no changes made" : "Republication complete",
   );
 
   if (failed > 0) {
