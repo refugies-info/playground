@@ -22,12 +22,17 @@ export function TopNav({ role }: TopNavProps) {
 
   const isWorkflowActive = pathname === "/workflow";
   const isDocumentsActive = pathname === "/documents";
-  // Preserve filters when clicking Documents while already on the documents list
-  const documentsHref =
-    isDocumentsActive && searchParams.toString()
-      ? `/documents?${searchParams.toString()}`
-      : "/documents";
   const isTranslationsActive = pathname === "/translations";
+  // Preserve filters when clicking a nav link while already on that page
+  const currentSearch = searchParams.toString();
+  const documentsHref =
+    isDocumentsActive && currentSearch
+      ? `/documents?${currentSearch}`
+      : "/documents";
+  const translationsHref =
+    isTranslationsActive && currentSearch
+      ? `/translations?${currentSearch}`
+      : "/translations";
 
   // Requirement: "pour les tranducteurs on affiche uniquement le bouton se deconnecter"
   const isTranslator = role === "translator";
@@ -74,7 +79,7 @@ export function TopNav({ role }: TopNavProps) {
                   Documents
                 </Link>
                 <Link
-                  href="/translations"
+                  href={translationsHref}
                   className={`border-b-2 pb-1 text-sm font-medium transition-colors ${
                     isTranslationsActive
                       ? "border-blue-600 text-blue-600"
