@@ -32,7 +32,7 @@ export function NeedSelectField({ fieldKey }: { fieldKey: string }) {
 
   const handleChange = useCallback(
     (newValue: string[]) => {
-      updateField(fieldKey, newValue.length > 0 ? newValue : undefined);
+      updateField(fieldKey, newValue.length > 0 ? newValue : null);
     },
     [fieldKey, updateField],
   );
