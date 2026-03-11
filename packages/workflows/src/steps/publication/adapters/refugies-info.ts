@@ -59,7 +59,10 @@ export const refugiesInfoAdapter: PublisherAdapter = {
     // CREATE payload: origin + full data. NO _id.
     return {
       email: userEmail,
-      dispositif,
+      dispositif: {
+        ...dispositif,
+        webOnly: false,
+      },
     };
   },
 
