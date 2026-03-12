@@ -89,6 +89,15 @@ Quick lookup materials:
 
 ---
 
+## 📜 Scripts
+
+One-off and utility scripts:
+
+- **[Scripts Overview](./scripts/README.md)** — Full index of all available scripts
+- **[Force Metadata Reports](./scripts/force-metadata-reports.md)** — Regenerate AI metadata reports
+
+---
+
 ## 🔒 Internal
 
 Internal guidelines and implementation notes:

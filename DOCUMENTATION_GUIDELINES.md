@@ -27,7 +27,7 @@ Is this documentation long-term valuable?
          ├─ "What can I call?" → reference/
          ├─ "What's the process?" → workflows/
          ├─ "What went wrong?" → troubleshooting/
-         ├─ "What's this called?" → reference/
+         ├─ "How do I run this script?" → scripts/
          ├─ "Frontend/component stuff?" → frontend/
          ├─ "Database/Supabase stuff?" → database/
          ├─ "AI/Letta stuff?" → ai/
@@ -46,6 +46,7 @@ documentation/
 ├── database/                  # Supabase, PostgreSQL, migrations, RLS
 ├── ai/                        # Letta Cloud, custom tools, agents
 ├── reference/                 # Quick lookup (commands, env vars, glossary)
+├── scripts/                   # One-off & utility scripts documentation
 ├── internal/                  # LLM guidelines, implementation notes
 ├── workflows/                 # Feature-specific processes
 ├── troubleshooting/           # Common issues & solutions
