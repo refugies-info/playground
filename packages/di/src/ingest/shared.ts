@@ -21,9 +21,9 @@ function sortArraysDeep(value: unknown): unknown {
       .map(sortArraysDeep)
       .sort((a, b) => {
         const sa =
-          a !== null && typeof a === "object" ? JSON.stringify(a) : String(a);
+          a !== null && typeof a === "object" ? stringify(a) : String(a);
         const sb =
-          b !== null && typeof b === "object" ? JSON.stringify(b) : String(b);
+          b !== null && typeof b === "object" ? stringify(b) : String(b);
         return sa < sb ? -1 : sa > sb ? 1 : 0;
       });
   }
