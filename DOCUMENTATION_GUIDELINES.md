@@ -28,6 +28,7 @@ Is this documentation long-term valuable?
          ├─ "What's the process?" → workflows/
          ├─ "What went wrong?" → troubleshooting/
          ├─ "How do I run this script?" → scripts/
+         ├─ "What's this called?" → reference/
          ├─ "Frontend/component stuff?" → frontend/
          ├─ "Database/Supabase stuff?" → database/
          ├─ "AI/Letta stuff?" → ai/

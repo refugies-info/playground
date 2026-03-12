@@ -42,7 +42,6 @@ import * as readline from "readline";
 const args = process.argv.slice(2);
 
 const IS_PROD = args.includes("--prod");
-const DRY_RUN = args.includes("--dry-run") || process.env.DRY_RUN === "true";
 
 // =============================================================================
 // Environment loading
@@ -54,6 +53,19 @@ const DRY_RUN = args.includes("--dry-run") || process.env.DRY_RUN === "true";
  */
 function loadEnvironment(): void {
   if (IS_PROD) {
+    // Clear critical vars to prevent silent fallback to local .env values
+    // (tsx/dotenv may auto-load .env before we get here)
+    for (const key of [
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "LETTA_API_KEY",
+      "LETTA_PROJECT_ID",
+      "PLAYGROUND_AGENT_ID",
+      "METADATA_AGENT_ID",
+    ]) {
+      delete process.env[key];
+    }
+
     const envPath = path.resolve(process.cwd(), ".env.production");
     const result = dotenv.config({ path: envPath, override: true });
     if (result.error) {
@@ -79,7 +91,9 @@ async function confirmProductionRun(): Promise<boolean> {
     output: process.stderr,
   });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "unknown";
+  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "unknown";
+  const supabaseUrl =
+    rawUrl.length > 47 ? `${rawUrl.substring(0, 44)}...` : rawUrl;
 
   console.error("");
   console.error("┌─────────────────────────────────────────────────────────┐");
@@ -102,14 +116,6 @@ async function confirmProductionRun(): Promise<boolean> {
 
 /** Unique timestamp per run to avoid Letta conversation conflicts on retry. */
 const RUN_TIMESTAMP = Date.now();
-
-/**
- * When true, only target workflows whose most recent metadata report
- * has status='error'. Useful to retry after network/timeout failures
- * without regenerating all reports.
- */
-const RETRY_FAILED =
-  args.includes("--retry-failed") || process.env.RETRY_FAILED === "true";
 
 /**
  * Maximum number of concurrent Letta agent calls.
@@ -173,6 +179,11 @@ async function main() {
   // ── Environment & confirmation ────────────────────────────────────────────
 
   loadEnvironment();
+
+  // Parse flags after loadEnvironment() so env var fallbacks read the right file
+  const DRY_RUN = args.includes("--dry-run") || process.env.DRY_RUN === "true";
+  const RETRY_FAILED =
+    args.includes("--retry-failed") || process.env.RETRY_FAILED === "true";
 
   if (IS_PROD && !DRY_RUN) {
     const confirmed = await confirmProductionRun();
@@ -273,7 +284,7 @@ async function main() {
     // Keep only the most recent report per workflow
     const latestByWorkflow = new Map<string, string>();
     for (const report of latestReports ?? []) {
-      if (!latestByWorkflow.has(report.workflow_id)) {
+      if (report.workflow_id && !latestByWorkflow.has(report.workflow_id)) {
         latestByWorkflow.set(report.workflow_id, report.status ?? "error");
       }
     }
