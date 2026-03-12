@@ -18,8 +18,10 @@ const SOURCE_CARIF_OREF = "carif-oref";
 function sortArraysDeep(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map(sortArraysDeep).sort((a, b) => {
-      const sa = a !== null && typeof a === "object" ? stringify(a) : String(a);
-      const sb = b !== null && typeof b === "object" ? stringify(b) : String(b);
+      const sa =
+        a !== null && typeof a === "object" ? (stringify(a) ?? "") : String(a);
+      const sb =
+        b !== null && typeof b === "object" ? (stringify(b) ?? "") : String(b);
       return sa < sb ? -1 : sa > sb ? 1 : 0;
     });
   }
