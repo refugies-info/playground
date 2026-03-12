@@ -54,8 +54,16 @@ describe("computeContentHash", () => {
   });
 
   it("should generate the same hash for nested arrays with values in different order", () => {
-    const obj1 = { a: 1, tags: ["z", "a", "m"], meta: { codes: ["21", "58", "70"] } };
-    const obj2 = { a: 1, tags: ["m", "z", "a"], meta: { codes: ["70", "21", "58"] } };
+    const obj1 = {
+      a: 1,
+      tags: ["z", "a", "m"],
+      meta: { codes: ["21", "58", "70"] },
+    };
+    const obj2 = {
+      a: 1,
+      tags: ["m", "z", "a"],
+      meta: { codes: ["70", "21", "58"] },
+    };
 
     const hash1 = computeContentHash(obj1);
     const hash2 = computeContentHash(obj2);
