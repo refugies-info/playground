@@ -16,6 +16,7 @@ output/
 .env
 .env.local
 .env.*.local
+.env.production
 .envrc
 
 # IDE
