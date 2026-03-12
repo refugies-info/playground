@@ -30,8 +30,11 @@ For **production**, copy `.env.production.example` to `.env.production` and fill
 ## Usage
 
 ```bash
-# Regenerate ALL metadata reports (e.g. after agent retraining)
+# Regenerate ALL metadata reports locally (default)
 pnpm force:metadata
+
+# Target production database (loads .env.production, asks for confirmation)
+pnpm force:metadata --prod
 
 # Dry run — see what would be processed, no Letta calls or DB writes
 pnpm force:metadata --dry-run
@@ -40,8 +43,18 @@ pnpm force:metadata --dry-run
 pnpm force:metadata --retry-failed
 
 # Combine flags
-pnpm force:metadata --retry-failed --dry-run
+pnpm force:metadata --prod --retry-failed --dry-run
 ```
+
+### `--prod` flag
+
+By default, the script loads `.env` and targets your **local** Supabase instance.
+
+When `--prod` is passed:
+1. Loads `.env.production` instead (must exist — see `.env.production.example`)
+2. Displays a warning box with the target Supabase URL
+3. Asks for interactive confirmation (`y/N`) before proceeding
+4. Dry-run mode (`--dry-run`) skips the confirmation prompt
 
 ## How It Works
 

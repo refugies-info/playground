@@ -1,30 +1,25 @@
 /**
  * Force re-generation of metadata reports
  *
- * This one-off script connects to the production database and triggers
- * metadata report generation for all ingestion records that already have
- * a compliance (audit) report completed.
+ * This one-off script triggers metadata report generation for all ingestion
+ * records that already have a compliance (audit) report completed.
+ *
+ * By default, it targets the **local** Supabase instance (env vars from `.env`).
+ * Use `--prod` to target the production database (env vars from `.env.production`).
  *
  * The frontend fetches metadata from `letta_reports` directly via
  * `workflow_id` + `report_type = 'metadata'` (most recent first), so
  * no editorial_record linking is necessary — new reports will appear
  * automatically.
  *
- * Required env vars:
- *   NEXT_PUBLIC_SUPABASE_URL  = <prod supabase url>
- *   SUPABASE_SERVICE_ROLE_KEY = <prod service role key>
- *   LETTA_API_KEY             = <letta cloud api key>
- *   LETTA_PROJECT_ID          = <letta cloud project id>
- *   METADATA_AGENT_ID         = <metadata agent id> (or PLAYGROUND_AGENT_ID)
- *
  * Usage:
- *   dotenv -e .env.production -- pnpm force:metadata
+ *   pnpm force:metadata              # local (default)
+ *   pnpm force:metadata --prod       # production (with confirmation prompt)
+ *   pnpm force:metadata --dry-run    # preview only, no writes
+ *   pnpm force:metadata --retry-failed  # retry only errored workflows
  *
- * Dry-run (no Letta calls, no DB writes):
- *   DRY_RUN=true dotenv -e .env.production -- pnpm force:metadata
- *
- * Retry only workflows whose latest metadata report is 'error':
- *   pnpm force:metadata --retry-failed
+ * Flags can be combined:
+ *   pnpm force:metadata --prod --retry-failed --dry-run
  */
 
 import {
@@ -36,6 +31,9 @@ import {
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin, type Json } from "@playground/supabase";
+import * as dotenv from "dotenv";
+import * as path from "path";
+import * as readline from "readline";
 
 // =============================================================================
 // Config
@@ -43,7 +41,64 @@ import { getSupabaseAdmin, type Json } from "@playground/supabase";
 
 const args = process.argv.slice(2);
 
+const IS_PROD = args.includes("--prod");
 const DRY_RUN = args.includes("--dry-run") || process.env.DRY_RUN === "true";
+
+// =============================================================================
+// Environment loading
+// =============================================================================
+
+/**
+ * Load the appropriate .env file based on --prod flag.
+ * Local (.env) is loaded by default; --prod loads .env.production instead.
+ */
+function loadEnvironment(): void {
+  if (IS_PROD) {
+    const envPath = path.resolve(process.cwd(), ".env.production");
+    const result = dotenv.config({ path: envPath, override: true });
+    if (result.error) {
+      logger.error(
+        { path: envPath },
+        "Failed to load .env.production — does the file exist? See .env.production.example",
+      );
+      process.exit(1);
+    }
+  } else {
+    // Default: load .env (local dev)
+    dotenv.config({ override: true });
+  }
+}
+
+/**
+ * Prompt the user for confirmation before running against production.
+ * Returns true if user confirms, false otherwise.
+ */
+async function confirmProductionRun(): Promise<boolean> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stderr,
+  });
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "unknown";
+
+  console.error("");
+  console.error("┌─────────────────────────────────────────────────────────┐");
+  console.error("│  ⚠️   PRODUCTION MODE                                   │");
+  console.error("│                                                         │");
+  console.error("│  This will write to the PRODUCTION database.            │");
+  console.error(`│  Target: ${supabaseUrl.padEnd(47)} │`);
+  console.error("│                                                         │");
+  console.error("│  Make sure you know what you're doing.                  │");
+  console.error("└─────────────────────────────────────────────────────────┘");
+  console.error("");
+
+  return new Promise((resolve) => {
+    rl.question("Continue? (y/N) ", (answer) => {
+      rl.close();
+      resolve(answer.trim().toLowerCase() === "y");
+    });
+  });
+}
 
 /** Unique timestamp per run to avoid Letta conversation conflicts on retry. */
 const RUN_TIMESTAMP = Date.now();
@@ -115,6 +170,18 @@ type MetadataTarget = {
 // =============================================================================
 
 async function main() {
+  // ── Environment & confirmation ────────────────────────────────────────────
+
+  loadEnvironment();
+
+  if (IS_PROD && !DRY_RUN) {
+    const confirmed = await confirmProductionRun();
+    if (!confirmed) {
+      logger.info("Aborted by user");
+      process.exit(0);
+    }
+  }
+
   // ── Safety guards ──────────────────────────────────────────────────────────
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -141,7 +208,7 @@ async function main() {
   }
 
   logger.info(
-    { supabaseUrl, agentId, DRY_RUN, RETRY_FAILED, CONCURRENCY },
+    { supabaseUrl, agentId, DRY_RUN, RETRY_FAILED, CONCURRENCY, IS_PROD },
     "Starting forced metadata report generation",
   );
 
