@@ -41,6 +41,28 @@ describe("computeContentHash", () => {
     expect(hash1).toBe(hash2);
   });
 
+  it("should generate the same hash for arrays with values in different order", () => {
+    // DI API may return the same array values in different order between runs
+    // e.g. modes_mobilisation: ["envoyer-un-courriel", "telephoner"] vs ["telephoner", "envoyer-un-courriel"]
+    const obj1 = { modes_mobilisation: ["envoyer-un-courriel", "telephoner"] };
+    const obj2 = { modes_mobilisation: ["telephoner", "envoyer-un-courriel"] };
+
+    const hash1 = computeContentHash(obj1);
+    const hash2 = computeContentHash(obj2);
+
+    expect(hash1).toBe(hash2);
+  });
+
+  it("should generate the same hash for nested arrays with values in different order", () => {
+    const obj1 = { a: 1, tags: ["z", "a", "m"], meta: { codes: ["21", "58", "70"] } };
+    const obj2 = { a: 1, tags: ["m", "z", "a"], meta: { codes: ["70", "21", "58"] } };
+
+    const hash1 = computeContentHash(obj1);
+    const hash2 = computeContentHash(obj2);
+
+    expect(hash1).toBe(hash2);
+  });
+
   it("should work with strings (legacy support)", () => {
     const str = '{"a":1}';
     const hash = computeContentHash(str);

@@ -6,17 +6,52 @@ const DEFAULT_BATCH_SIZE = 100;
 const SOURCE_CARIF_OREF = "carif-oref";
 
 /**
+ * Recursively sort all arrays in a value.
+ * Required because json-stable-stringify sorts object keys but NOT array values.
+ * The DI API may return the same array values in different order between runs
+ * (e.g. modes_mobilisation: ["envoyer-un-courriel", "telephoner"] vs
+ * ["telephoner", "envoyer-un-courriel"]), which would produce different hashes
+ * for semantically identical records.
+ *
+ * See: https://github.com/ljharb/json-stable-stringify/issues/12
+ */
+function sortArraysDeep(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value
+      .map(sortArraysDeep)
+      .sort((a, b) => {
+        const sa =
+          a !== null && typeof a === "object" ? JSON.stringify(a) : String(a);
+        const sb =
+          b !== null && typeof b === "object" ? JSON.stringify(b) : String(b);
+        return sa < sb ? -1 : sa > sb ? 1 : 0;
+      });
+  }
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([k, v]) => [
+        k,
+        sortArraysDeep(v),
+      ]),
+    );
+  }
+  return value;
+}
+
+/**
  * Compute SHA-1 hash of content (same algorithm as Git).
  * Used for detecting changes in DI records between ingestion runs.
  * Uses json-stable-stringify to ensure deterministic output
- * regardless of JSON key order.
+ * regardless of JSON key order, and sorts array values to handle
+ * cases where the DI API returns the same values in different order.
  *
  * @param data - The content to hash (can be object or string)
  * @returns 40-character hex string
  */
 export function computeContentHash(data: unknown): string {
+  const normalized = typeof data === "string" ? data : sortArraysDeep(data);
   const stableString =
-    (typeof data === "string" ? data : stringify(data)) || "";
+    (typeof normalized === "string" ? normalized : stringify(normalized)) || "";
   return createHash("sha1").update(stableString).digest("hex");
 }
 
