@@ -39,6 +39,19 @@ export function translateUnit(raw: string, fallback = "heures"): string {
   return TIME_UNIT_LABELS[raw.toLowerCase()] ?? fallback;
 }
 
+/** Time unit options for SelectInput (French labels) */
+export const TIME_UNIT_OPTIONS: readonly { value: string; label: string }[] = [
+  { value: "sessions", label: "séances" },
+  { value: "hours", label: "heures" },
+  { value: "half-days", label: "demi-journées" },
+  { value: "days", label: "jours" },
+  { value: "weeks", label: "semaines" },
+  { value: "months", label: "mois" },
+  { value: "trimesters", label: "trimestres" },
+  { value: "semesters", label: "semestres" },
+  { value: "years", label: "ans" },
+];
+
 // =============================================================================
 // Field Options
 // =============================================================================
