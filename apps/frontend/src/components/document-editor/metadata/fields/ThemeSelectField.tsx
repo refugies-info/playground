@@ -53,14 +53,16 @@ export function ThemeSelectField({ fieldKey }: { fieldKey: string }) {
   const handleChange = useCallback(
     (newValue: string[]) => {
       if (newValue.length === 0) {
-        updateField(fieldKey, undefined);
-        updateField("secondaryThemes", undefined);
+        // null = explicitly clear (vs undefined which would revert to AI value)
+        updateField(fieldKey, null);
+        updateField("secondaryThemes", null);
       } else {
         // First theme is primary, rest are secondary
         updateField(fieldKey, newValue[0]);
         updateField(
           "secondaryThemes",
-          newValue.length > 1 ? newValue.slice(1) : undefined,
+          // null (not undefined) to avoid AI secondary themes reappearing
+          newValue.length > 1 ? newValue.slice(1) : null,
         );
       }
     },

@@ -3,6 +3,7 @@
 import { EditableField, NumberInput, SelectInput } from "@playground/ui";
 import { useCallback, useState } from "react";
 import { useMetadata } from "../MetadataContext";
+import { TIME_UNIT_OPTIONS } from "../publication-targets/refugies-info";
 
 /** Frequency details options */
 const FREQUENCY_DETAILS_OPTIONS = [
@@ -12,22 +13,15 @@ const FREQUENCY_DETAILS_OPTIONS = [
   { value: "exactly", label: "Exactement" },
 ];
 
-/** Time unit options (French labels) */
-const TIME_UNIT_OPTIONS = [
-  { value: "hours", label: "heures" },
-  { value: "days", label: "jours" },
-  { value: "weeks", label: "semaines" },
-  { value: "months", label: "mois" },
-  { value: "sessions", label: "sessions" },
-];
-
 /** Frequency unit options (French labels) */
 const FREQUENCY_UNIT_OPTIONS = [
+  { value: "session", label: "séance" },
   { value: "day", label: "jour" },
   { value: "week", label: "semaine" },
   { value: "month", label: "mois" },
+  { value: "trimester", label: "trimestre" },
+  { value: "semester", label: "semestre" },
   { value: "year", label: "an" },
-  { value: "session", label: "session" },
 ];
 
 /**
