@@ -26,12 +26,15 @@ const COMMITMENT_DETAILS_OPTIONS = [
 
 /** Time unit options (French labels) */
 const TIME_UNIT_OPTIONS = [
+  { value: "sessions", label: "séances" },
   { value: "hours", label: "heures" },
+  { value: "half-days", label: "demi-journées" },
   { value: "days", label: "jours" },
   { value: "weeks", label: "semaines" },
   { value: "months", label: "mois" },
+  { value: "trimesters", label: "trimestres" },
+  { value: "semesters", label: "semestres" },
   { value: "years", label: "ans" },
-  { value: "sessions", label: "sessions" },
 ];
 
 /**

@@ -14,20 +14,26 @@ const FREQUENCY_DETAILS_OPTIONS = [
 
 /** Time unit options (French labels) */
 const TIME_UNIT_OPTIONS = [
+  { value: "sessions", label: "séances" },
   { value: "hours", label: "heures" },
+  { value: "half-days", label: "demi-journées" },
   { value: "days", label: "jours" },
   { value: "weeks", label: "semaines" },
   { value: "months", label: "mois" },
-  { value: "sessions", label: "sessions" },
+  { value: "trimesters", label: "trimestres" },
+  { value: "semesters", label: "semestres" },
+  { value: "years", label: "ans" },
 ];
 
 /** Frequency unit options (French labels) */
 const FREQUENCY_UNIT_OPTIONS = [
+  { value: "session", label: "séance" },
   { value: "day", label: "jour" },
   { value: "week", label: "semaine" },
   { value: "month", label: "mois" },
+  { value: "trimester", label: "trimestre" },
+  { value: "semester", label: "semestre" },
   { value: "year", label: "an" },
-  { value: "session", label: "session" },
 ];
 
 /**
