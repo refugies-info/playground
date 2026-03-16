@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "portless run --name app.playground next dev",
-    "dev:workflow": "portless run --name workflow.playground workflow inspect runs --web",
+    "dev:workflow": "workflow inspect runs --web",
     "build": "next build",
     "start": "next start",
     "check:types": "tsc --noEmit",

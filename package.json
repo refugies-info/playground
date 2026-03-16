@@ -24,7 +24,7 @@
     "test": "turbo test",
     "clean:branches": "pnpx git-removed-branches --prune --force",
     "dev": "turbo dev dev:workflow",
-    "dev:workflow": "portless run --name workflow.playground workflow inspect runs --web",
+    "dev:workflow": "workflow inspect runs --web",
     "format": "biome format --write .",
     "knip": "knip",
     "lint": "biome check --write .",
