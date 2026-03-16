@@ -410,7 +410,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
             <p className="mt-2 text-sm">
               Check the{" "}
               <a
-                href="http://workflow.localhost:1355"
+                href="http://workflow.playground.localhost:1355"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline font-semibold"

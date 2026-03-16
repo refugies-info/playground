@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "portless run --name playground next dev",
-    "dev:workflow": "portless run --name workflow workflow inspect runs --web",
+    "dev": "portless run --name app.playground next dev",
+    "dev:workflow": "portless run --name workflow.playground workflow inspect runs --web",
     "build": "next build",
     "start": "next start",
     "check:types": "tsc --noEmit",

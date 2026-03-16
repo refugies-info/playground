@@ -24,7 +24,7 @@
     "test": "turbo test",
     "clean:branches": "pnpx git-removed-branches --prune --force",
     "dev": "turbo dev dev:workflow",
-    "dev:workflow": "portless run --name workflow workflow inspect runs --web",
+    "dev:workflow": "portless run --name workflow.playground workflow inspect runs --web",
     "format": "biome format --write .",
     "knip": "knip",
     "lint": "biome check --write .",
@@ -41,7 +41,7 @@
     "seed:ingestion": "tsx scripts/seed-ingestion.ts",
     "di:ingest": "tsx scripts/ingest-di.ts",
     "di:extract": "tsx scripts/extract-random-records.ts",
-    "di:cron": "dotenv -e .env -- sh -c 'curl -s -X GET http://playground.localhost:1355/api/cron/di-ingestion -H \"Authorization: Bearer $CRON_SECRET\" | jq .'",
+    "di:cron": "dotenv -e .env -- sh -c 'curl -s -X GET http://app.playground.localhost:1355/api/cron/di-ingestion -H \"Authorization: Bearer $CRON_SECRET\" | jq .'",
     "seed:sync": "supabase db dump --local --data-only --file supabase/seed.sql"
   },
   "devDependencies": {
