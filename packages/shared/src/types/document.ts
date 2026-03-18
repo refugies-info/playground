@@ -32,6 +32,8 @@ export interface Document {
   metadata: Record<string, unknown>;
   /** Metadata from editorial_records only (user edits) */
   editorialMetadata?: Record<string, unknown>;
+  /** True if a metadata generation is currently in progress */
+  isMetadataGenerating?: boolean;
   /** AI-generated metadata from letta_reports (type: metadata, status: complete) */
   metadataReport?: {
     metadata_ri: Record<string, unknown>;

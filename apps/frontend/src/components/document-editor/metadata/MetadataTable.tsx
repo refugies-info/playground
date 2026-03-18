@@ -49,7 +49,7 @@ export function MetadataTable({
   const provenanceByKey = new Map(provenance?.map((p) => [p.key, p]) ?? []);
 
   return (
-    <div className="flex-1 bg-white overflow-y-auto">
+    <div className="bg-white">
       <table className="w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
