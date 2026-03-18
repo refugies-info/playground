@@ -10,6 +10,7 @@ import { createSupabaseServerClient } from "@playground/supabase";
 import {
   archiveWorkflow,
   forceArbitrationWorkflow,
+  forceMetadataOnlyWorkflow,
   publicationWorkflow,
   saveWorkflow,
   toggleStatusWorkflow,
@@ -512,6 +513,58 @@ export async function triggerForceArbitration(workflowId: string): Promise<{
     return {
       success: false,
       error: "Erreur inattendue lors du démarrage de l'arbitrage forcé",
+    };
+  }
+}
+
+/**
+ * Triggers a metadata-only re-generation for a single document.
+ *
+ * Unlike triggerForceArbitration, this skips the audit step entirely.
+ * Use after re-training the metadata AI agent (Agathe) to regenerate
+ * metadata on documents that already have a report.
+ *
+ * @param workflowId - The ID of the workflow to regenerate metadata for.
+ * @returns Object indicating success/failure and the workflow run ID.
+ */
+export async function triggerForceMetadataOnly(workflowId: string): Promise<{
+  success: boolean;
+  workflowRunId?: string;
+  error?: string;
+}> {
+  try {
+    const auth = await getAuthorizedSession(workflowId, "modify");
+    if (auth.errorResponse) return auth.errorResponse;
+
+    if (!forceMetadataOnlyWorkflow) {
+      logger.error("forceMetadataOnlyWorkflow is undefined - cannot start");
+      return {
+        success: false,
+        error: "Workflow non disponible",
+      };
+    }
+
+    const result = await start(forceMetadataOnlyWorkflow, [workflowId]);
+
+    logger.info(
+      { workflowRunId: result.runId, workflowId },
+      "Force metadata only workflow started",
+    );
+
+    revalidatePath("/documents/[id]", "page");
+
+    return {
+      success: true,
+      workflowRunId: result.runId,
+    };
+  } catch (error) {
+    logger.error(
+      error,
+      "Unexpected error starting force metadata only workflow",
+    );
+    return {
+      success: false,
+      error: "Erreur inattendue lors du démarrage de la régénération",
     };
   }
 }

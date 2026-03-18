@@ -16,6 +16,7 @@ export { toggleStatusWorkflow } from "./pipelines/editorial/toggle-status";
 export { diIngestionWorkflow } from "./pipelines/ingestion/di-ingestion";
 export { diSingleRecordWorkflow } from "./pipelines/ingestion/di-single-record";
 export { forceArbitrationWorkflow } from "./pipelines/ingestion/force-arbitration";
+export { forceMetadataOnlyWorkflow } from "./pipelines/ingestion/force-metadata-only";
 // =============================================================================
 // Pipelines - Editorial
 // =============================================================================

@@ -277,13 +277,14 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   };
   let ingestionRecord: IngestionWithReports | null = null;
 
-  // Fetch ingestion record and metadata report in parallel
-  const [ingestionResult, metadataReportResult] = await Promise.all([
-    item.ingestion_record_id
-      ? supabase
-          .from("ingestion_records")
-          .select(
-            `
+  // Fetch ingestion record, metadata report, and generating flag in parallel
+  const [ingestionResult, metadataReportResult, generatingReportResult] =
+    await Promise.all([
+      item.ingestion_record_id
+        ? supabase
+            .from("ingestion_records")
+            .select(
+              `
             markdown,
             metadata,
             created_at,
@@ -292,20 +293,32 @@ export async function getDocumentById(id: string): Promise<Document | null> {
               created_at
             )
           `,
-          )
-          .eq("id", item.ingestion_record_id)
-          .single()
-      : Promise.resolve({ data: null, error: null }),
-    // Fetch the AI-generated metadata report (letta_reports type: metadata)
-    supabase
-      .from("letta_reports")
-      .select("metadata, status")
-      .eq("workflow_id", id)
-      .eq("report_type", "metadata")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
+            )
+            .eq("id", item.ingestion_record_id)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
+      // Fetch the AI-generated metadata report (letta_reports type: metadata).
+      // Filter on status="complete" so that "generating" and "error" reports
+      // never shadow the last valid report.
+      supabase
+        .from("letta_reports")
+        .select("metadata, status")
+        .eq("workflow_id", id)
+        .eq("report_type", "metadata")
+        .eq("status", "complete")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      // Check if a metadata generation is currently in progress for this workflow.
+      // Used by the UI to restore the loading state after a page refresh.
+      supabase
+        .from("letta_reports")
+        .select("id")
+        .eq("workflow_id", id)
+        .eq("report_type", "metadata")
+        .eq("status", "generating")
+        .maybeSingle(),
+    ]);
 
   if (ingestionResult.data) {
     ingestionRecord = ingestionResult.data as unknown as IngestionWithReports;
@@ -427,6 +440,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     metadata,
     editorialMetadata,
     editorialRecordId: item.editorial_record_id ?? undefined,
+    isMetadataGenerating: !!generatingReportResult.data,
     metadataReport: metadataReportValue,
     publishedUrl,
     publicationStatus: latestPublication?.status,

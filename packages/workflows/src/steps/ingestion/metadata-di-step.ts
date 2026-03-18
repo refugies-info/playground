@@ -390,56 +390,107 @@ export async function forceMetadataReportStep(workflowId: string) {
 
   const supabase = getSupabaseClient();
 
-  // 1. Fetch workflow to get ingestion_record_id
-  const { data: workflow, error: workflowError } = await supabase
-    .from("workflows")
-    .select("ingestion_record_id")
-    .eq("id", workflowId)
-    .single();
-
-  if (workflowError || !workflow?.ingestion_record_id) {
-    logger.error(
-      { workflowId, error: workflowError },
-      "Workflow or Ingestion Record not found for forced metadata",
-    );
-    throw new Error("Workflow or Ingestion Record not found");
-  }
-
-  const ingestionRecordId = workflow.ingestion_record_id;
-
-  // 2. Fetch Ingestion Record
-  const { data: record, error: recordError } = await supabase
-    .from("ingestion_records")
-    .select("id, markdown")
-    .eq("id", ingestionRecordId)
-    .single();
-
-  if (recordError || !record) {
-    throw new Error(`Ingestion Record not found: ${recordError?.message}`);
-  }
-
+  // 0. Resolve agent ID early — needed for the "generating" sentinel insert.
   const agentId =
     process.env.METADATA_AGENT_ID || process.env.PLAYGROUND_AGENT_ID;
 
   if (!agentId) {
-    throw new Error("METADATA_AGENT_ID or PLAYGROUND_AGENT_ID is not defined");
+    throw new FatalError(
+      "METADATA_AGENT_ID or PLAYGROUND_AGENT_ID is not defined",
+    );
   }
 
-  const lettaClient = createLettaClient();
-  const conversationId = await findOrCreateConversation(
-    lettaClient,
-    agentId,
-    `metadata-${workflowId}`,
-  );
+  // 0.1 Guard: block concurrent generation for this workflow.
+  // If a "generating" report already exists, another request is in flight —
+  // abort immediately to avoid a 409 conflict from the Letta API.
+  const { data: existingGenerating } = await supabase
+    .from("letta_reports")
+    .select("id")
+    .eq("workflow_id", workflowId)
+    .eq("report_type", "metadata")
+    .eq("status", "generating")
+    .maybeSingle();
 
-  logger.info(
-    { workflowId, ingestionRecordId },
-    "Starting forced metadata generation",
-  );
+  if (existingGenerating) {
+    throw new FatalError(
+      `Metadata generation already in progress for workflow ${workflowId}`,
+    );
+  }
 
-  let finalContent = "";
+  // 0.2 Insert a "generating" sentinel report to track in-progress state.
+  // This allows the UI to restore the loading state after a page refresh,
+  // and prevents concurrent calls from racing into the Letta API.
+  // The report will be updated (not replaced) once generation completes.
+  const { data: generatingReport, error: generatingInsertError } =
+    await supabase
+      .from("letta_reports")
+      .insert({
+        agent_id: agentId,
+        report_type: "metadata",
+        status: "generating",
+        markdown: "",
+        metadata: {} as Json,
+        workflow_id: workflowId,
+      })
+      .select("id")
+      .single();
+
+  if (generatingInsertError || !generatingReport) {
+    throw new Error(
+      `Failed to insert generating report: ${generatingInsertError?.message ?? "unknown error"}`,
+    );
+  }
+
+  const generatingReportId = generatingReport.id;
+
+  // Everything below is wrapped in a single try/catch so that any failure
+  // (fetching data, calling Letta, parsing response) always updates the
+  // sentinel to "error" — preventing a stuck "generating" report.
+  let ingestionRecordId: string | undefined;
 
   try {
+    // 1. Fetch workflow to get ingestion_record_id
+    const { data: workflow, error: workflowError } = await supabase
+      .from("workflows")
+      .select("ingestion_record_id")
+      .eq("id", workflowId)
+      .single();
+
+    if (workflowError || !workflow?.ingestion_record_id) {
+      logger.error(
+        { workflowId, error: workflowError },
+        "Workflow or Ingestion Record not found for forced metadata",
+      );
+      throw new Error("Workflow or Ingestion Record not found");
+    }
+
+    ingestionRecordId = workflow.ingestion_record_id;
+
+    // 2. Fetch Ingestion Record
+    const { data: record, error: recordError } = await supabase
+      .from("ingestion_records")
+      .select("id, markdown")
+      .eq("id", ingestionRecordId)
+      .single();
+
+    if (recordError || !record) {
+      throw new Error(`Ingestion Record not found: ${recordError?.message}`);
+    }
+
+    const lettaClient = createLettaClient();
+    const conversationId = await findOrCreateConversation(
+      lettaClient,
+      agentId,
+      `metadata-${workflowId}`,
+    );
+
+    logger.info(
+      { workflowId, ingestionRecordId },
+      "Starting forced metadata generation",
+    );
+
+    let finalContent = "";
+
     for await (const chunk of generateMetadataReport(
       lettaClient,
       record.markdown,
@@ -465,23 +516,23 @@ export async function forceMetadataReportStep(workflowId: string) {
       MetadataMetadataSchema,
     );
 
+    // UPDATE the "generating" report with the final result.
+    // Triggers a Realtime UPDATE event on the UI to unblock the spinner.
     const { data: report, error: reportError } = await supabase
       .from("letta_reports")
-      .insert({
-        agent_id: agentId,
-        report_type: "metadata",
+      .update({
         markdown: parsed.content,
         metadata: parsed.metadata as Json,
         status: parsed.status,
         raw_response: parsed.rawResponse ?? null,
-        workflow_id: workflowId,
       })
+      .eq("id", generatingReportId)
       .select("id")
       .single();
 
     if (reportError || !report) {
       throw new Error(
-        `Failed to insert letta_report: ${reportError?.message ?? "unknown error"}`,
+        `Failed to update letta_report: ${reportError?.message ?? "unknown error"}`,
       );
     }
 
@@ -501,6 +552,23 @@ export async function forceMetadataReportStep(workflowId: string) {
       logger.error(
         { error, ingestionRecordId },
         "Error generating forced metadata report",
+      );
+    }
+
+    // UPDATE the "generating" report to "error" status.
+    // Triggers a Realtime UPDATE event on the UI to unblock the spinner.
+    try {
+      await supabase
+        .from("letta_reports")
+        .update({
+          status: "error",
+          raw_response: error instanceof Error ? error.message : String(error),
+        })
+        .eq("id", generatingReportId);
+    } catch (dbError) {
+      logger.error(
+        { dbError, workflowId },
+        "Failed to update error status for forced metadata report",
       );
     }
 
