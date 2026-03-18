@@ -41,7 +41,8 @@
     "di:ingest": "tsx scripts/ingest-di.ts",
     "di:extract": "tsx scripts/extract-random-records.ts",
     "di:cron": "dotenv -e .env -- sh -c 'curl -s -X GET http://localhost:3001/api/cron/di-ingestion -H \"Authorization: Bearer $CRON_SECRET\" | jq .'",
-    "seed:sync": "supabase db dump --local --data-only --file supabase/seed.sql"
+    "seed:sync": "supabase db dump --local --data-only --file supabase/seed.sql",
+    "force:metadata": "tsx scripts/force-metadata-reports.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.6",
