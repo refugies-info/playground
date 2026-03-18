@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from "@playground/supabase";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getAuthUser } from "@/lib/auth";
 import {
   type GetTranslationsParams,
   getTranslations,
@@ -39,9 +40,7 @@ export default async function TranslationsPage(props: PageProps) {
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser(supabase);
 
   if (!user) {
     redirect("/login");

@@ -19,9 +19,14 @@ function isConnectionError(error: Error): boolean {
 }
 
 /**
- * Error boundary for the /translations page.
+ * Root-level error boundary.
+ *
+ * Catches errors from layouts and pages that don't have their own error.tsx,
+ * including errors thrown by (main)/layout.tsx (e.g. Supabase unreachable).
+ *
+ * Note: errors from the root layout.tsx itself are caught by global-error.tsx.
  */
-export default function TranslationsError({
+export default function RootError({
   error,
   reset,
 }: {
@@ -30,13 +35,13 @@ export default function TranslationsError({
 }) {
   useEffect(() => {
     // biome-ignore lint/suspicious/noConsole: intentional — helps debugging in production
-    console.error("[TranslationsError]", error);
+    console.error("[RootError]", error);
   }, [error]);
 
   const isDbDown = isConnectionError(error);
 
   return (
-    <div className="flex min-h-[50vh] items-center justify-center px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <ErrorCard
         title={isDbDown ? "Service temporairement indisponible" : "Erreur"}
         icon={isDbDown ? <WifiOff className="size-6" /> : null}
@@ -47,7 +52,7 @@ export default function TranslationsError({
             ? process.env.NODE_ENV === "development"
               ? "La base de données ne répond pas. Vérifiez que Supabase est lancé : supabase start"
               : "La base de données ne répond pas. Contactez l'équipe technique."
-            : "Impossible de charger les traductions."}
+            : "Une erreur inattendue est survenue."}
         </p>
         {process.env.NODE_ENV === "development" && (
           <details className="mt-4">

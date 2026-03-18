@@ -8,6 +8,7 @@ export * from "./data-table/data-table-column-header";
 export * from "./data-table/data-table-faceted-filter";
 export * from "./data-table/data-table-pagination";
 export * from "./data-table/data-table-toolbar";
+export * from "./error";
 export * from "./input";
 export * from "./input";
 export * from "./spinner";
