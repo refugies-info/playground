@@ -532,23 +532,10 @@ export async function triggerForceMetadataOnly(workflowId: string): Promise<{
   workflowRunId?: string;
   error?: string;
 }> {
-  const cookieStore = await cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user || !user.email) {
-    logger.error(userError, "Error getting user for force metadata only");
-    return {
-      success: false,
-      error: "Utilisateur non authentifié",
-    };
-  }
-
   try {
+    const auth = await getAuthorizedSession(workflowId, "modify");
+    if (auth.errorResponse) return auth.errorResponse;
+
     if (!forceMetadataOnlyWorkflow) {
       logger.error("forceMetadataOnlyWorkflow is undefined - cannot start");
       return {
