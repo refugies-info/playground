@@ -29,12 +29,24 @@ export function MetadataView() {
   );
   const [error, setError] = useState<string | null>(null);
 
-  // Subscribe to Realtime UPDATE events on letta_reports during generation.
-  // Active only when isGenerating is true.
-  // The workflow inserts a "generating" sentinel, then updates it to
-  // "complete" or "error" when done — triggering this subscription.
+  // ---------------------------------------------------------------------------
+  // Realtime subscription: unlock the UI when metadata generation completes.
+  //
+  // Flow:
+  //   1. forceMetadataReportStep INSERTs a letta_report with status="generating"
+  //   2. When the AI finishes, the step UPDATEs the same row to "complete"/"error"
+  //   3. This subscription catches the UPDATE and unblocks the spinner.
+  //
   // Requires REPLICA IDENTITY FULL on letta_reports (migration 20260318130000)
-  // for the workflow_id filter to work on UPDATE events.
+  // so that Supabase Realtime can filter UPDATE events by workflow_id.
+  //
+  // ⚠️  Known limitation — Supabase local dev (CLI + Docker):
+  //     UPDATE events with row-level filters are NOT reliably delivered in
+  //     local environments (supabase start). The subscription works correctly
+  //     on Supabase Cloud (staging/production). To test this feature end-to-end,
+  //     deploy to staging. In local dev the spinner will hang after generation
+  //     completes — a manual page refresh will show the updated report.
+  // ---------------------------------------------------------------------------
   useEffect(() => {
     if (!document?.id || !isGenerating) return;
 

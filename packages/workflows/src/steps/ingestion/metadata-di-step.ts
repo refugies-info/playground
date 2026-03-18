@@ -443,49 +443,54 @@ export async function forceMetadataReportStep(workflowId: string) {
 
   const generatingReportId = generatingReport.id;
 
-  // 1. Fetch workflow to get ingestion_record_id
-  const { data: workflow, error: workflowError } = await supabase
-    .from("workflows")
-    .select("ingestion_record_id")
-    .eq("id", workflowId)
-    .single();
-
-  if (workflowError || !workflow?.ingestion_record_id) {
-    logger.error(
-      { workflowId, error: workflowError },
-      "Workflow or Ingestion Record not found for forced metadata",
-    );
-    throw new Error("Workflow or Ingestion Record not found");
-  }
-
-  const ingestionRecordId = workflow.ingestion_record_id;
-
-  // 2. Fetch Ingestion Record
-  const { data: record, error: recordError } = await supabase
-    .from("ingestion_records")
-    .select("id, markdown")
-    .eq("id", ingestionRecordId)
-    .single();
-
-  if (recordError || !record) {
-    throw new Error(`Ingestion Record not found: ${recordError?.message}`);
-  }
-
-  const lettaClient = createLettaClient();
-  const conversationId = await findOrCreateConversation(
-    lettaClient,
-    agentId,
-    `metadata-${workflowId}`,
-  );
-
-  logger.info(
-    { workflowId, ingestionRecordId },
-    "Starting forced metadata generation",
-  );
-
-  let finalContent = "";
+  // Everything below is wrapped in a single try/catch so that any failure
+  // (fetching data, calling Letta, parsing response) always updates the
+  // sentinel to "error" — preventing a stuck "generating" report.
+  let ingestionRecordId: string | undefined;
 
   try {
+    // 1. Fetch workflow to get ingestion_record_id
+    const { data: workflow, error: workflowError } = await supabase
+      .from("workflows")
+      .select("ingestion_record_id")
+      .eq("id", workflowId)
+      .single();
+
+    if (workflowError || !workflow?.ingestion_record_id) {
+      logger.error(
+        { workflowId, error: workflowError },
+        "Workflow or Ingestion Record not found for forced metadata",
+      );
+      throw new Error("Workflow or Ingestion Record not found");
+    }
+
+    ingestionRecordId = workflow.ingestion_record_id;
+
+    // 2. Fetch Ingestion Record
+    const { data: record, error: recordError } = await supabase
+      .from("ingestion_records")
+      .select("id, markdown")
+      .eq("id", ingestionRecordId)
+      .single();
+
+    if (recordError || !record) {
+      throw new Error(`Ingestion Record not found: ${recordError?.message}`);
+    }
+
+    const lettaClient = createLettaClient();
+    const conversationId = await findOrCreateConversation(
+      lettaClient,
+      agentId,
+      `metadata-${workflowId}`,
+    );
+
+    logger.info(
+      { workflowId, ingestionRecordId },
+      "Starting forced metadata generation",
+    );
+
+    let finalContent = "";
+
     for await (const chunk of generateMetadataReport(
       lettaClient,
       record.markdown,
