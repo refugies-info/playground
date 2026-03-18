@@ -3,20 +3,7 @@
 import { ErrorCard } from "@playground/ui/primitives";
 import { WifiOff } from "lucide-react";
 import { useEffect } from "react";
-
-function isConnectionError(error: Error): boolean {
-  const msg = error.message ?? "";
-  const cause =
-    error.cause instanceof Error
-      ? error.cause.message
-      : String(error.cause ?? "");
-  return (
-    msg.includes("fetch failed") ||
-    msg.includes("ECONNREFUSED") ||
-    cause.includes("ECONNREFUSED") ||
-    cause.includes("fetch failed")
-  );
-}
+import { isConnectionError } from "@/lib/errors";
 
 /**
  * Root-level error boundary.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { isConnectionError } from "@/lib/errors";
 
 /**
  * Global error boundary for the root layout.
@@ -8,23 +9,9 @@ import { useEffect } from "react";
  * This is the last resort — it catches errors thrown by the root layout itself.
  * It must render its own <html> and <body> since the root layout won't be available.
  *
- * Note: cannot import ServiceError here because the root layout (and its CSS) won't
- * be loaded — styles are inlined directly.
+ * Note: cannot use ErrorCard here because Tailwind CSS won't be loaded —
+ * styles are inlined directly.
  */
-
-function isConnectionError(error: Error): boolean {
-  const msg = error.message ?? "";
-  const cause =
-    error.cause instanceof Error
-      ? error.cause.message
-      : String(error.cause ?? "");
-  return (
-    msg.includes("fetch failed") ||
-    msg.includes("ECONNREFUSED") ||
-    cause.includes("ECONNREFUSED") ||
-    cause.includes("fetch failed")
-  );
-}
 
 export default function GlobalError({
   error,
