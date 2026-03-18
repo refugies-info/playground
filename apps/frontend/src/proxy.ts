@@ -2,7 +2,16 @@ import { updateSession } from "@playground/supabase";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function proxy(request: NextRequest) {
-  const { supabaseResponse, user } = await updateSession(request);
+  const { supabaseResponse, user, connectionError } =
+    await updateSession(request);
+
+  const pathname = request.nextUrl.pathname;
+
+  // If Supabase is unreachable, redirect to the service unavailable page.
+  // We avoid redirecting if already on that page to prevent redirect loops.
+  if (connectionError && !pathname.startsWith("/service-unavailable")) {
+    return NextResponse.redirect(new URL("/service-unavailable", request.url));
+  }
 
   // Protected routes that require authentication
   // Added /translations
@@ -14,9 +23,13 @@ export async function proxy(request: NextRequest) {
   ];
 
   // Public routes that don't require authentication
-  const PUBLIC_ROUTES = ["/login", "/signup", "/password-reset", "/callback"];
-
-  const pathname = request.nextUrl.pathname;
+  const PUBLIC_ROUTES = [
+    "/login",
+    "/signup",
+    "/password-reset",
+    "/callback",
+    "/service-unavailable",
+  ];
 
   // Check if route is protected
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>

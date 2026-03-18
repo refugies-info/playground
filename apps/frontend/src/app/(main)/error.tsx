@@ -6,9 +6,14 @@ import { useEffect } from "react";
 import { isConnectionError } from "@/lib/errors";
 
 /**
- * Error boundary for the /translations page.
+ * Error boundary for the (main) route group.
+ *
+ * Catches errors thrown by pages under (main)/ (documents, workflow, users, etc.)
+ * when Supabase is unreachable or another unexpected error occurs.
+ *
+ * Note: errors from (main)/layout.tsx itself bubble up to app/error.tsx.
  */
-export default function TranslationsError({
+export default function MainError({
   error,
   reset,
 }: {
@@ -17,7 +22,7 @@ export default function TranslationsError({
 }) {
   useEffect(() => {
     // biome-ignore lint/suspicious/noConsole: intentional — helps debugging in production
-    console.error("[TranslationsError]", error);
+    console.error("[MainError]", error);
   }, [error]);
 
   const isDbDown = isConnectionError(error);
@@ -34,7 +39,7 @@ export default function TranslationsError({
             ? process.env.NODE_ENV === "development"
               ? "La base de données ne répond pas. Vérifiez que Supabase est lancé : supabase start"
               : "La base de données ne répond pas. Contactez l'équipe technique."
-            : "Impossible de charger les traductions."}
+            : "Une erreur inattendue est survenue."}
         </p>
         {process.env.NODE_ENV === "development" && (
           <details className="mt-4">

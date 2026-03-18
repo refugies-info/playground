@@ -1,4 +1,5 @@
 import { logger } from "@playground/shared-types";
+import { unstable_cache } from "next/cache";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -50,7 +51,8 @@ async function fetchFromRi<T>(path: string): Promise<T[]> {
     headers: {
       "webhook-secret": secret,
     },
-    next: { revalidate: 86400 }, // Next.js fetch cache: 24h
+    signal: AbortSignal.timeout(10_000), // 10s max — évite les timeouts silencieux
+    next: { revalidate: 86400 }, // Next.js fetch cache: 24h (complément à unstable_cache)
   });
 
   if (!response.ok) {
@@ -70,34 +72,40 @@ async function fetchFromRi<T>(path: string): Promise<T[]> {
 /**
  * Fetches themes and needs reference data from Réfugiés.info.
  *
- * Uses Next.js fetch cache (24h revalidation).
+ * Uses unstable_cache (24h) pour bypasser le `revalidate = 0` des routes dynamiques
+ * comme /documents/[id]. Sans ça, chaque render refaisait 2 appels HTTP vers RI.
+ *
  * Returns empty maps on failure (non-blocking for the UI).
  */
-export async function fetchRiReferenceData(): Promise<RiReferenceData> {
-  try {
-    const [themes, needs] = await Promise.all([
-      fetchFromRi<RiTheme>("/api/webhook/themes"),
-      fetchFromRi<RiNeed>("/api/webhook/needs"),
-    ]);
+export const fetchRiReferenceData = unstable_cache(
+  async (): Promise<RiReferenceData> => {
+    try {
+      const [themes, needs] = await Promise.all([
+        fetchFromRi<RiTheme>("/api/webhook/themes"),
+        fetchFromRi<RiNeed>("/api/webhook/needs"),
+      ]);
 
-    const themesMap: Record<string, string> = {};
-    for (const t of themes) {
-      themesMap[t.id] = t.name;
-    }
-
-    const needsMap: Record<string, string> = {};
-    const needsByTheme: Record<string, string[]> = {};
-    for (const n of needs) {
-      needsMap[n.id] = n.name;
-      if (!needsByTheme[n.themeId]) {
-        needsByTheme[n.themeId] = [];
+      const themesMap: Record<string, string> = {};
+      for (const t of themes) {
+        themesMap[t.id] = t.name;
       }
-      needsByTheme[n.themeId].push(n.id);
-    }
 
-    return { themes: themesMap, needs: needsMap, needsByTheme };
-  } catch (error) {
-    logger.error(error, "Failed to fetch RI reference data");
-    return { themes: {}, needs: {}, needsByTheme: {} };
-  }
-}
+      const needsMap: Record<string, string> = {};
+      const needsByTheme: Record<string, string[]> = {};
+      for (const n of needs) {
+        needsMap[n.id] = n.name;
+        if (!needsByTheme[n.themeId]) {
+          needsByTheme[n.themeId] = [];
+        }
+        needsByTheme[n.themeId].push(n.id);
+      }
+
+      return { themes: themesMap, needs: needsMap, needsByTheme };
+    } catch (error) {
+      logger.error(error, "Failed to fetch RI reference data");
+      return { themes: {}, needs: {}, needsByTheme: {} };
+    }
+  },
+  ["ri-reference-data"],
+  { revalidate: 86400 }, // 24h
+);

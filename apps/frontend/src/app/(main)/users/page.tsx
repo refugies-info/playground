@@ -6,6 +6,7 @@ import {
 import type { UserData } from "@playground/ui/composites/user-card/UserCard";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getAuthUser } from "@/lib/auth";
 import { UserGrid } from "./user-grid";
 
 export const dynamic = "force-dynamic";
@@ -14,9 +15,7 @@ export default async function UsersPage() {
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser(supabase);
 
   if (!user) {
     redirect("/login");

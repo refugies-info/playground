@@ -39,9 +39,15 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: If you remove getClaims() and you use server-side rendering
   // with the Supabase client, your users may be randomly logged out.
-  const { data } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getUser();
 
   const user = data?.user;
+
+  // Detect connection errors (Supabase unreachable).
+  // getUser() never throws — it returns { data: { user: null }, error } on failure.
+  // A non-null error here always indicates a technical problem (network, DB down),
+  // NOT a normal "unauthenticated" state (which returns error: null, user: null).
+  const connectionError = error !== null;
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
   // creating a new response object with NextResponse.next() make sure to:
@@ -56,5 +62,5 @@ export async function updateSession(request: NextRequest) {
   // If this is not done, you may be causing the browser and server to go out
   // of sync and terminate the user's session prematurely!
 
-  return { supabaseResponse, user };
+  return { supabaseResponse, user, connectionError };
 }
