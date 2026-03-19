@@ -47,11 +47,24 @@ export function DocumentsList({
   const [documents, setDocuments] = useState(initialDocuments);
   const [highlightedIds, setHighlightedIds] = useState<Set<string>>(new Set());
   const prevDocumentsRef = useRef<Document[]>(initialDocuments);
+  // Flag set by the Realtime callback — animation only fires for live DB changes,
+  // not for sort/filter/page navigation (which would falsely highlight every row).
+  const isRealtimeUpdateRef = useRef(false);
 
   // Detect document changes and trigger animations
   useEffect(() => {
-    const prevDocs = prevDocumentsRef.current;
     const newDocs = initialDocuments;
+
+    // Only animate when the refresh was triggered by a Realtime event,
+    // not by a user sort/filter/page action.
+    if (!isRealtimeUpdateRef.current) {
+      setDocuments(newDocs);
+      prevDocumentsRef.current = newDocs;
+      return;
+    }
+    isRealtimeUpdateRef.current = false;
+
+    const prevDocs = prevDocumentsRef.current;
 
     // Find IDs that changed or are new
     const changedIds = new Set<string>();
@@ -136,7 +149,8 @@ export function DocumentsList({
           table: "workflows",
         },
         () => {
-          // Refresh server data when workflows change
+          // Flag the refresh as coming from Realtime so the animation fires
+          isRealtimeUpdateRef.current = true;
           router.refresh();
         },
       )
@@ -185,7 +199,6 @@ export function DocumentsList({
                 >
                   <option value="">Visibilité</option>
                   <option value="published">Publié</option>
-                  <option value="unpublished">Non publié</option>
                   <option value="archived">Archivé</option>
                 </select>
               </div>
