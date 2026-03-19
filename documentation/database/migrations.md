@@ -141,7 +141,6 @@ CREATE INDEX IF NOT EXISTS idx_users_full_name ON public.users(full_name);
    COMMIT;
    ```
 
-7. **Automated Seeding** – Use the TypeScript seeder (`scripts/seed-users.ts`) instead of `seed.sql` for complex User/Auth seeding (Metadata, Passwords).
 
 
 ---
@@ -238,8 +237,6 @@ The workflow will:
 2. Link to the production project
 3. Run `supabase db push` to apply pending migrations
 4. Install Node.js dependencies
-5. Run `pnpm seed:users` to ensure admin users exist
-
 ---
 
 ## Collaboration & Conflicts

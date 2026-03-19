@@ -1,51 +1,37 @@
-# Seed Users Setup Guide
+# Seed Data Setup Guide
 
-This document describes how to set up test users in the local Supabase development environment using the automated seeding script.
+This document describes the seed data in the local Supabase development environment.
 
 ## Overview
 
-We use an automated TypeScript script to seed users with their appropriate roles and language metadata directly into Supabase Auth.
+Seed data is automatically loaded when running `supabase start` or `supabase db reset`. The seed files are located in `supabase/seed/` and are configured in `supabase/config.toml`.
 
-- **Admin/Editor users**: Core team accounts.
-- **Translator users**: One user per supported language (English, Arabic, Spanish, etc.).
+## User Seeding
 
-## 🚀 Recommended Workflow
+Users are seeded via `supabase/seed/00_auth_users.sql` which creates:
 
-Instead of manual creation, use the provided script which handles everything (Auth + Metadata).
+- **Admin/Editor users**: Core team accounts
+- **Translator users**: One user per supported language
 
-### 1. Configure Password
-Define the default password in your `.env` file:
-```bash
-SEED_USER_PASSWORD="your-secure-password"
-```
-*If not set, the script will generate a secure random password and display it in the console.*
+The seed file:
+- Inserts records directly into `auth.users` with bcrypt password hashes
+- Creates corresponding `auth.identities` entries
+- The `on_auth_user_created` trigger automatically creates `profiles` records
 
-### 2. Run the Seed Script
-```bash
-npx tsx scripts/seed-users.ts
-```
+### Passwords
 
-This script will:
-- Create or update users for all roles (`admin`, `editor`, `translator`).
-- For translators, it automatically creates one account per language defined in `LANGUAGES` constants.
-- Sets the correct `user_metadata` (role and language) required for RLS policies.
+All seed users use the same password. For local development, this is a dummy password suitable for testing only.
 
-## 👥 Test Accounts
+**⚠️ Security Note**: Never use production password hashes in seed files. Always use dummy passwords for development.
 
-After running the script, you can test the following accounts:
+## Adding New Users
 
-| Role | Email | Language |
-| :--- | :--- | :--- |
-| **Admin** | `luis@refugies.info` | - |
-| **Editor** | `editor@refugies.info` | - |
-| **Translator** | `translator.en@refugies.info` | English (en) |
-| **Translator** | `translator.es@refugies.info` | Spanish (es) |
+To add a new seed user:
 
-## 🔒 Security & RLS
+1. Add a new INSERT statement to `supabase/seed/00_auth_users.sql`
+2. Generate a bcrypt hash for the password: `openssl rand -base64 12`
+3. Run `supabase db reset` to apply changes
 
-The database uses **Row-Level Security**. Permissions are strictly enforced based on the role and language assigned during seeding:
-- **Translators** can only see/edit translations matching their assigned language.
-- **Admins/Editors** have full visibility across all languages.
+## Production Users
 
----
-*Note: This script is automatically called when you run a full `supabase db reset` via our dev workflows.*
+For production, users are invited via email using Supabase's built-in authentication system. The `on_auth_user_created` trigger automatically creates their profile when they accept the invitation.
