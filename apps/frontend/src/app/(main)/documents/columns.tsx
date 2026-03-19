@@ -43,13 +43,6 @@ export const columns: ColumnDef<Document>[] = [
     },
   },
   {
-    accessorKey: "qualityScore",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Score de qualité" />
-    ),
-    cell: ({ row }) => <QualityScoreCell score={row.original.qualityScore} />,
-  },
-  {
     accessorKey: "title",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Titre" />

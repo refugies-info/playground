@@ -38,7 +38,6 @@ export default async function DocumentsPage(props: PageProps) {
     "work_status",
     "online_status",
     "id",
-    "qualityScore",
     "structureName",
     "sessionStartDate",
   ];
