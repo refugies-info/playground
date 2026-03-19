@@ -6,7 +6,6 @@ Documentation for Supabase, PostgreSQL, and database-related topics including mi
 
 - **[Migrations](./migrations.md)** — Creating, testing, and managing database migrations
 - **[RLS Policies](./rls-policies.md)** — Row-level security design and implementation
-- **[Seed Data Setup](./seed-data.md)** — Test users for local development
 - **[Schema](./schema.md)** — Database schema documentation
 
 ## Tech Stack
@@ -18,5 +17,4 @@ Documentation for Supabase, PostgreSQL, and database-related topics including mi
 
 ## Quick Links
 
-- [Seed Data Setup](./seed-data.md)
 - [Project README](../../README.md)

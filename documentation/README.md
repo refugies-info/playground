@@ -51,7 +51,6 @@ Next.js + Tailwind CSS + shadcn/ui documentation:
 Supabase + PostgreSQL documentation:
 
 - **[Database Overview](./database/README.md)** — Database documentation index
-- **[Seed Data Setup](./database/seed-data.md)** — Test users for local development
 - **[Migrations](./database/migrations.md)** — Migration strategy and patterns (coming soon)
 - **[RLS Policies](./database/rls-policies.md)** — Row-level security implementation (coming soon)
 - **[Query Patterns](./database/query-patterns.md)** — SQL patterns and best practices (coming soon)

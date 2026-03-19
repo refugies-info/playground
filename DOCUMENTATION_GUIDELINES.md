@@ -120,7 +120,6 @@ Proceed? (yes/no)
 
 - "How to set up local development" → `guides/local-development.md`
 - "Component architecture strategy" → `frontend/component-strategy.md`
-- "Supabase seed data setup" → `database/seed-data.md`
 - "Letta custom tools guide" → `ai/tool-development.md`
 - "Environment variables reference" → `reference/environment-variables.md`
 - "LLM documentation guidelines" → `internal/documentation-strategy.md`

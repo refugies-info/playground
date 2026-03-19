@@ -141,7 +141,6 @@ CREATE INDEX IF NOT EXISTS idx_users_full_name ON public.users(full_name);
    COMMIT;
    ```
 
-7. **Automated Seeding** – Use the TypeScript seeder (`scripts/seed-users.ts`) instead of `seed.sql` for complex User/Auth seeding (Metadata, Passwords).
 
 
 ---
@@ -427,7 +426,6 @@ Before committing a migration:
 ## Next Steps
 
 - **Create RLS Policies**: See [RLS Policies Guide](./rls-policies.md)
-- **Seed Test Data**: See [Seed Data Setup](./seed-data.md)
 - **Local Development**: See [Supabase Setup Guide](../guides/supabase-setup.md)
 
 ---

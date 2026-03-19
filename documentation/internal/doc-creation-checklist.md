@@ -109,7 +109,6 @@ Proceed? (yes/no)
 
 **Examples of correct filenames:**
 - ✅ `component-strategy.md`
-- ✅ `seed-data.md`
 - ✅ `local-development.md`
 - ❌ `ComponentStrategy.md` (wrong: CamelCase)
 - ❌ `component_strategy.md` (wrong: snake_case)

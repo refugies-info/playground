@@ -250,17 +250,6 @@ Environment variables are configuration values that change between environments 
 
 ---
 
-## Scripts Configuration
-
-### `SEED_USER_PASSWORD`
-
-- **Type**: String
-- **Required**: Recommended (for `pnpm seed:users` script)
-- **Example**: `your-secure-password`
-- **Description**: Password used for seeded users (admins, editors, and translators).
-- **Behavior**: If not set, the seeding script will generate a secure random password and print it to the console.
-- **Usage**: Run `pnpm seed:users` to create or update test/admin users.
-
 ---
 
 ## Development Configuration

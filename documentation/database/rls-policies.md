@@ -573,7 +573,6 @@ CREATE POLICY "Admins can update any user"
 ## Next Steps
 
 - **Create Migrations**: See [Migrations Guide](./migrations.md)
-- **Seed Test Data**: See [Seed Data Setup](./seed-data.md)
 - **Local Development**: See [Supabase Setup Guide](../guides/supabase-setup.md)
 
 ---
