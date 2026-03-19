@@ -1,7 +1,9 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "source ../../vercel-setup.sh && pnpm install --frozen-lockfile",
   "buildCommand": "source ../../vercel-setup.sh && next build",
+  "regions": ["cdg1"],
   "crons": [
     {
       "path": "/api/cron/di-ingestion",
