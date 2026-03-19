@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { isConnectionError } from "./errors";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -45,9 +46,28 @@ export async function updateSession(request: NextRequest) {
 
   // Detect connection errors (Supabase unreachable).
   // getUser() never throws — it returns { data: { user: null }, error } on failure.
-  // A non-null error here always indicates a technical problem (network, DB down),
-  // NOT a normal "unauthenticated" state (which returns error: null, user: null).
-  const connectionError = error !== null;
+  // We must distinguish between:
+  // - Actual connection errors (network down, DB unreachable) → redirect to /service-unavailable
+  // - Normal auth errors (JWT expired, session not found after signOut) → proceed normally
+  //
+  // The tricky part: Supabase returns AuthSessionMissingError both when:
+  // 1. User is genuinely not logged in (no cookie) → normal case
+  // 2. DB is down and cannot validate an existing session → connection error
+  //
+  // Current solution: Two conditions for connection error:
+  // - Network-level error (fetch failed, ECONNREFUSED) → isConnectionError()
+  // - Session cookie exists but getUser() failed → DB can't validate token
+  //
+  // TODO: This logic is incomplete. When DB is down and user has no session cookie,
+  // they won't see /service-unavailable (they'll see /login but login will fail).
+  // Need to revisit this — perhaps a dedicated health check endpoint or different
+  // error detection strategy. For now, the priority fix (logout → /login) is working.
+  const hasSessionCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.includes("auth-token"));
+
+  const connectionError =
+    isConnectionError(error) || (error && hasSessionCookie);
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
   // creating a new response object with NextResponse.next() make sure to:
