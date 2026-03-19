@@ -129,7 +129,11 @@ export const columns: ColumnDef<Document>[] = [
       <DataTableColumnHeader column={column} title="Date d'import" />
     ),
     cell: ({ row }) => {
-      const date = new Date(row.getValue("date_added") as string);
+      const raw = row.getValue("date_added") as string | null | undefined;
+      if (!raw) return <div className="text-gray-400">—</div>;
+      const date = new Date(raw);
+      if (Number.isNaN(date.getTime()))
+        return <div className="text-gray-400">—</div>;
       return (
         <div>
           <div>{date.toLocaleDateString("fr-FR")}</div>
@@ -233,7 +237,11 @@ export const inProgressColumns: ColumnDef<Document>[] = [
       <DataTableColumnHeader column={column} title="Date d'import" />
     ),
     cell: ({ row }) => {
-      const date = new Date(row.original.date_added);
+      const raw = row.original.date_added;
+      if (!raw) return <div className="text-gray-400">—</div>;
+      const date = new Date(raw);
+      if (Number.isNaN(date.getTime()))
+        return <div className="text-gray-400">—</div>;
       return (
         <div>
           <div>{date.toLocaleDateString("fr-FR")}</div>
