@@ -85,8 +85,6 @@ export function getOnlineStatusLabel(
   switch (status) {
     case "published":
       return "Publié";
-    case "unpublished":
-      return "Non publié";
     case "archived":
       return "Archivé";
     default:

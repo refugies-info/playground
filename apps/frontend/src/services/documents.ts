@@ -108,13 +108,16 @@ export async function getDocuments(params: GetDocumentsParams) {
     }
   }
 
-  // Date filters use session_start_date (actual training/session start date)
+  // Date filters use created_at (date d'import du workflow)
+  // Note: created_at is a timestamptz. dateFrom/dateTo come as "YYYY-MM-DD" strings.
+  // For dateFrom, gte("2026-03-01") = >= 2026-03-01 00:00:00 UTC → correct.
+  // For dateTo, we append T23:59:59 to include documents created during that day.
   if (dateFrom) {
-    query = query.gte("session_start_date", dateFrom);
+    query = query.gte("created_at", dateFrom);
   }
 
   if (dateTo) {
-    query = query.lte("session_start_date", dateTo);
+    query = query.lte("created_at", `${dateTo}T23:59:59`);
   }
 
   if (searchId) {
@@ -123,7 +126,7 @@ export async function getDocuments(params: GetDocumentsParams) {
 
   // Apply sorting
   const sortFieldMap: Record<DocumentSortField, string> = {
-    date_added: "updated_at",
+    date_added: "created_at",
     updated_at: "updated_at",
     compliance_status: "compliance_status",
     work_status: "computed_work_status",
@@ -196,9 +199,8 @@ export async function getDocuments(params: GetDocumentsParams) {
           ? `${cleanBaseUrl}/dispositif/${latestPublication.remote_id}`
           : undefined;
 
-      // Date added: report_created_at > ingestion_created_at > updated_at
-      const dateAdded =
-        item.report_created_at || item.ingestion_created_at || item.updated_at;
+      // Date added: created_at (date de création du workflow)
+      const dateAdded = item.created_at || item.updated_at;
 
       // Parse author profile from JSONB
       const authorProfile = item.author_profile as {
@@ -373,9 +375,8 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       ? `${cleanBaseUrl}/dispositif/${latestPublication.remote_id}`
       : undefined;
 
-  // Date added
-  const dateAdded =
-    item.report_created_at || item.ingestion_created_at || item.updated_at;
+  // Date added: created_at (date de création du workflow)
+  const dateAdded = item.created_at || item.updated_at;
 
   // Author
   const authorProfile = item.author_profile as {
