@@ -43,9 +43,6 @@ LETTA_AGENT_ID=your-agent-id
 NEXT_PUBLIC_APP_URL=https://your-domain.com
 NODE_ENV=production
 
-# Seeding (Optional but recommended for initial setup)
-SEED_USER_PASSWORD=your-secure-production-password
-```
 
 See [Environment Variables](../reference/environment-variables.md) for complete reference.
 
