@@ -203,7 +203,9 @@ export async function getDocuments(params: GetDocumentsParams) {
           : undefined;
 
       // Date added: created_at (date de création du workflow)
-      const dateAdded = item.created_at || item.updated_at;
+      // Fallback chain: workflow.created_at should always be set, but we guard defensively.
+      const dateAdded =
+        item.created_at ?? item.ingestion_created_at ?? item.updated_at ?? null;
 
       // Parse author profile from JSONB
       const authorProfile = item.author_profile as {
@@ -379,7 +381,9 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       : undefined;
 
   // Date added: created_at (date de création du workflow)
-  const dateAdded = item.created_at || item.updated_at;
+  // Fallback chain: workflow.created_at should always be set, but we guard defensively.
+  const dateAdded =
+    item.created_at ?? item.ingestion_created_at ?? item.updated_at ?? null;
 
   // Author
   const authorProfile = item.author_profile as {
