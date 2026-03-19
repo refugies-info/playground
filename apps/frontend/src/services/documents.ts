@@ -110,14 +110,17 @@ export async function getDocuments(params: GetDocumentsParams) {
 
   // Date filters use created_at (date d'import du workflow)
   // Note: created_at is a timestamptz. dateFrom/dateTo come as "YYYY-MM-DD" strings.
-  // For dateFrom, gte("2026-03-01") = >= 2026-03-01 00:00:00 UTC → correct.
-  // For dateTo, we append T23:59:59 to include documents created during that day.
+  // For dateFrom: gte("2026-03-01") = >= 2026-03-01 00:00:00 UTC → correct.
+  // For dateTo: we use lt(day + 1) instead of lte(dayT23:59:59) to avoid
+  // timezone dependency — this correctly includes the full day regardless of DB timezone.
   if (dateFrom) {
     query = query.gte("created_at", dateFrom);
   }
 
   if (dateTo) {
-    query = query.lte("created_at", `${dateTo}T23:59:59`);
+    const dayAfter = new Date(dateTo);
+    dayAfter.setDate(dayAfter.getDate() + 1);
+    query = query.lt("created_at", dayAfter.toISOString().split("T")[0]);
   }
 
   if (searchId) {
