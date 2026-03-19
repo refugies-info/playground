@@ -25,7 +25,9 @@ interface DocumentsListProps {
     onlineStatus?: string;
     dateFrom: string;
     dateTo: string;
+    authorEmail: string;
   };
+  initialAuthors: { email: string; displayName: string }[];
 }
 
 export function DocumentsList({
@@ -37,6 +39,7 @@ export function DocumentsList({
   sortBy,
   sortOrder,
   initialFilters,
+  initialAuthors,
 }: DocumentsListProps) {
   const router = useRouter();
   // We keep local state for filters to allow immediate UI feedback if needed,
@@ -130,6 +133,7 @@ export function DocumentsList({
       onlineStatus: "",
       dateFrom: "",
       dateTo: "",
+      authorEmail: "",
     };
     setFilters(emptyFilters);
     router.push("/documents");
@@ -170,7 +174,7 @@ export function DocumentsList({
       <div className="">
         <div className=" border rounded mb-8 bg-white">
           <div className="px-4 py-3 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
               <div>
                 <select
                   value={filters.complianceStatus || ""}
@@ -243,12 +247,29 @@ export function DocumentsList({
                   className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
                 />
               </div>
+              <div>
+                <select
+                  value={filters.authorEmail || ""}
+                  onChange={(e) =>
+                    updateFilters({ ...filters, authorEmail: e.target.value })
+                  }
+                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
+                >
+                  <option value="">Auteur</option>
+                  {initialAuthors.map((author) => (
+                    <option key={author.email} value={author.email}>
+                      {author.displayName}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             {(filters.complianceStatus ||
               filters.workStatus ||
               filters.onlineStatus ||
               filters.dateFrom ||
-              filters.dateTo) && (
+              filters.dateTo ||
+              filters.authorEmail) && (
               <button
                 type="button"
                 onClick={clearFilters}

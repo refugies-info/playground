@@ -74,6 +74,29 @@ export const columns: ColumnDef<Document>[] = [
     },
   },
   {
+    accessorKey: "commune",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Commune" />
+    ),
+    cell: ({ row }) => {
+      const val = row.original.commune;
+      if (!val) return <div className="text-gray-400">—</div>;
+      return <div className="text-sm">{val}</div>;
+    },
+  },
+  {
+    accessorKey: "modalitesEntreesSorties",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Modalités" />
+    ),
+    cell: ({ row }) => {
+      const val = row.original.modalitesEntreesSorties;
+      if (val === "0") return <div className="text-sm">Permanentes</div>;
+      if (val === "1") return <div className="text-sm">Dates fixes</div>;
+      return <div className="text-gray-400">—</div>;
+    },
+  },
+  {
     accessorKey: "online_status",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Visibilité" />
@@ -148,8 +171,8 @@ export const columns: ColumnDef<Document>[] = [
     },
   },
   {
-    accessorKey: "author",
-    enableSorting: false, // Author is a complex object (email + role), cannot be sorted directly
+    // accessorKey matches the DocumentSortField so TanStack sends the right sort key
+    accessorKey: "authorEmail",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Auteur" />
     ),

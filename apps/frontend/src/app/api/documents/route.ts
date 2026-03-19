@@ -103,6 +103,9 @@ export async function GET(
     qualityScore: "qualityScore",
     structureName: "structureName",
     sessionStartDate: "sessionStartDate",
+    authorEmail: "authorEmail",
+    commune: "commune",
+    modalitesEntreesSorties: "modalitesEntreesSorties",
   };
 
   // Apply sorting
