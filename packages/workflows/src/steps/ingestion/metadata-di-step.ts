@@ -449,10 +449,10 @@ export async function forceMetadataReportStep(workflowId: string) {
   let ingestionRecordId: string | undefined;
 
   try {
-    // 1. Fetch workflow to get ingestion_record_id
+    // 1. Fetch workflow to get ingestion_record_id and editorial_record_id
     const { data: workflow, error: workflowError } = await supabase
       .from("workflows")
-      .select("ingestion_record_id")
+      .select("ingestion_record_id, editorial_record_id")
       .eq("id", workflowId)
       .single();
 
@@ -465,6 +465,7 @@ export async function forceMetadataReportStep(workflowId: string) {
     }
 
     ingestionRecordId = workflow.ingestion_record_id;
+    const editorialRecordId = workflow.editorial_record_id ?? null;
 
     // 2. Fetch Ingestion Record
     const { data: record, error: recordError } = await supabase
@@ -534,6 +535,33 @@ export async function forceMetadataReportStep(workflowId: string) {
       throw new Error(
         `Failed to update letta_report: ${reportError?.message ?? "unknown error"}`,
       );
+    }
+
+    // 4. Clear editorial metadata overrides so the fresh AI report is used
+    // as the new baseline — stale manual overrides from the previous version
+    // would otherwise silently shadow the regenerated values.
+    // Best-effort: don't throw if this fails, the report was already persisted.
+    if (editorialRecordId) {
+      logger.info(
+        { editorialRecordId },
+        "Clearing editorial metadata overrides after regeneration",
+      );
+      const { error: clearError } = await supabase
+        .from("editorial_records")
+        .update({ metadata: {} as Json })
+        .eq("id", editorialRecordId);
+
+      if (clearError) {
+        logger.error(
+          { editorialRecordId, error: clearError },
+          "Failed to clear editorial metadata overrides after regeneration",
+        );
+      } else {
+        logger.info(
+          { editorialRecordId },
+          "Cleared editorial metadata overrides after regeneration",
+        );
+      }
     }
 
     logger.info(

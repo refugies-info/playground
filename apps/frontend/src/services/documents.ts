@@ -309,7 +309,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       // never shadow the last valid report.
       supabase
         .from("letta_reports")
-        .select("metadata, status")
+        .select("id, metadata, status")
         .eq("workflow_id", id)
         .eq("report_type", "metadata")
         .eq("status", "complete")
@@ -401,6 +401,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
 
   // Extract metadata report if available and complete
   const report = metadataReportResult.data as {
+    id: string;
     metadata: Record<string, unknown> | string;
     status: string;
   } | null;
@@ -421,6 +422,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     if (metadata) {
       const metadataObj = metadata as Record<string, unknown>;
       metadataReportValue = {
+        id: report.id,
         metadata_ri: (metadataObj.metadata_ri as Record<string, unknown>) ?? {},
         provenance: metadataObj.provenance as
           | {

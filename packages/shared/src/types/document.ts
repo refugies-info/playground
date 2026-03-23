@@ -36,6 +36,8 @@ export interface Document {
   isMetadataGenerating?: boolean;
   /** AI-generated metadata from letta_reports (type: metadata, status: complete) */
   metadataReport?: {
+    /** letta_reports row id — used as a change-detection key after regeneration */
+    id: string;
     metadata_ri: Record<string, unknown>;
     provenance?: Array<{
       key: string;

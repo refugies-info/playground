@@ -17,7 +17,7 @@ import {
 } from "@playground/workflows";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { start } from "workflow/api";
+import { getRun, start } from "workflow/api";
 import { normalizeMarkdown } from "../lib/markdown/normalizeMarkdown";
 import { verifyWorkflowPermission } from "./permission-helper";
 
@@ -548,10 +548,44 @@ export async function triggerForceMetadataOnly(workflowId: string): Promise<{
 
     logger.info(
       { workflowRunId: result.runId, workflowId },
-      "Force metadata only workflow started",
+      "Force metadata only workflow started — waiting for completion",
+    );
+
+    // We intentionally wait for the workflow to complete here rather than
+    // returning immediately and relying on Supabase Realtime to notify the UI.
+    //
+    // Why not Realtime?
+    // - Supabase Realtime local is unreliable: the service repeatedly hits
+    //   idle_shutdown and CHANNEL_ERROR loops due to a distributed clustering
+    //   bug in the current image (Zero region nodes for us-east-1).
+    // - Even in production, subscribing to letta_reports UPDATEs for a single
+    //   user action is overkill — it adds Realtime infra complexity (RLS,
+    //   REPLICA IDENTITY, publication setup) for a feature that doesn't need
+    //   real-time multi-user sync. The generation is triggered by one user and
+    //   awaited by that same user in the same session.
+    //
+    // The async/await approach is simpler and more robust:
+    // the Server Action blocks until done, then the client calls router.refresh().
+    const run = getRun(result.runId);
+    let finalStatus = await run.status;
+    while (finalStatus === "pending" || finalStatus === "running") {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      finalStatus = await run.status;
+    }
+
+    logger.info(
+      { workflowRunId: result.runId, workflowId, finalStatus },
+      "Force metadata only workflow completed",
     );
 
     revalidatePath("/documents/[id]", "page");
+
+    if (finalStatus !== "completed") {
+      return {
+        success: false,
+        error: "La régénération a échoué. Vérifiez les logs et réessayez.",
+      };
+    }
 
     return {
       success: true,

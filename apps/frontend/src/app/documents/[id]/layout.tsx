@@ -44,6 +44,7 @@ export default async function Layout({
     editorialMetadata: document.editorialMetadata, // Editorial overrides only
     editorialRecordId: document.editorialRecordId, // For Realtime status subscription
     metadataReport: document.metadataReport, // AI-generated metadata report
+    isMetadataGenerating: document.isMetadataGenerating, // Spinner state for MetadataView
     referenceData, // Themes & needs ID→name lookups from RI
     publishedUrl: document.publishedUrl,
   };
