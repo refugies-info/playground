@@ -32,6 +32,11 @@ export function MetadataView() {
   // ---------------------------------------------------------------------------
   // Realtime subscription: unlock the UI when metadata generation completes.
   //
+  // IMPORTANT: Subscription is persistent (not conditional on isGenerating).
+  // This prevents a race condition where the workflow UPDATE happens before
+  // the subscription is fully established. The subscription only reacts when
+  // status changes from "generating" to a terminal state.
+  //
   // Flow:
   //   1. forceMetadataReportStep INSERTs a letta_report with status="generating"
   //   2. When the AI finishes, the step UPDATEs the same row to "complete"/"error"
@@ -48,7 +53,7 @@ export function MetadataView() {
   //     completes — a manual page refresh will show the updated report.
   // ---------------------------------------------------------------------------
   useEffect(() => {
-    if (!document?.id || !isGenerating) return;
+    if (!document?.id) return;
 
     const supabase = createSupabaseBrowserClient();
 
@@ -87,7 +92,7 @@ export function MetadataView() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [document?.id, isGenerating, router]);
+  }, [document?.id, router]);
 
   // Generate or regenerate metadata report (same action in both cases)
   const handleGenerate = async () => {
