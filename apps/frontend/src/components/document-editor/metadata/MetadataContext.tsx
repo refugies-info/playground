@@ -318,7 +318,6 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
   // Normal flow (handleGenerate) uses async/await and doesn't need this.
   // ---------------------------------------------------------------------------
   const isGeneratingOnLoad = document?.isMetadataGenerating ?? false;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — effect runs only on mount to detect in-progress generation from another session
   useEffect(() => {
     if (!isGeneratingOnLoad || !document?.id) return;
 
@@ -341,7 +340,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [isGeneratingOnLoad]);
+  }, [isGeneratingOnLoad, document?.id, router]);
 
   /** Trigger AI metadata generation (or regeneration) */
   const handleGenerate = useCallback(async () => {
