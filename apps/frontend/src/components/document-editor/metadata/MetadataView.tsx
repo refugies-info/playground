@@ -25,6 +25,24 @@ export function MetadataView() {
     return <div className="p-4">Document non trouvé</div>;
   }
 
+  // Error state — show message with refresh button
+  if (generationError) {
+    return (
+      <div className="flex-1 bg-white flex items-center justify-center p-8">
+        <div className="text-center max-w-md">
+          <div className="text-4xl mb-4">⚠️</div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            La génération a rencontré un problème
+          </h3>
+          <p className="text-sm text-gray-500 mb-6">{generationError}</p>
+          <Button onClick={() => window.location.reload()}>
+            Rafraîchir la page
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Full-page loader during generation (first-time or regeneration)
   if (isGenerating) {
     return (
@@ -65,9 +83,6 @@ export function MetadataView() {
           <Button onClick={handleGenerate} className="w-full">
             Générer les métadonnées
           </Button>
-          {generationError && (
-            <p className="mt-4 text-sm text-red-600">{generationError}</p>
-          )}
         </div>
       </div>
     );
@@ -88,9 +103,6 @@ export function MetadataView() {
       {/* Regenerate button — visible only when a report already exists */}
       <div className="px-6 py-3 border-t flex items-center gap-3 bg-gray-50">
         <div className="flex items-center gap-3">
-          {generationError && (
-            <p className="text-sm text-red-600">{generationError}</p>
-          )}
           <Button size="sm" onClick={handleGenerate}>
             Régénérer les métadonnées
           </Button>

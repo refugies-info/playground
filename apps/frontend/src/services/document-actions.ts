@@ -566,9 +566,29 @@ export async function triggerForceMetadataOnly(workflowId: string): Promise<{
     //
     // The async/await approach is simpler and more robust:
     // the Server Action blocks until done, then the client calls router.refresh().
+    //
+    // Safety: Vercel Pro has a 60s timeout. We cap at 55s to fail gracefully
+    // with a clear message rather than letting Vercel kill the connection.
     const run = getRun(result.runId);
+    const startTime = Date.now();
+    const MAX_WAIT_MS = 55_000;
     let finalStatus = await run.status;
     while (finalStatus === "pending" || finalStatus === "running") {
+      if (Date.now() - startTime > MAX_WAIT_MS) {
+        logger.warn(
+          {
+            workflowRunId: result.runId,
+            workflowId,
+            elapsedMs: Date.now() - startTime,
+          },
+          "Metadata generation timed out waiting for workflow",
+        );
+        return {
+          success: false,
+          error:
+            "La génération a pris trop de temps. Elle continue en arrière-plan — rafraîchissez la page dans quelques instants.",
+        };
+      }
       await new Promise((resolve) => setTimeout(resolve, 1000));
       finalStatus = await run.status;
     }
