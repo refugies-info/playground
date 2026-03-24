@@ -76,7 +76,7 @@ export const columns: ColumnDef<Document>[] = [
   {
     accessorKey: "commune",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Commune" />
+      <DataTableColumnHeader column={column} title="Lieu" />
     ),
     cell: ({ row }) => {
       const val = row.original.commune;
@@ -87,7 +87,7 @@ export const columns: ColumnDef<Document>[] = [
   {
     accessorKey: "modalitesEntreesSorties",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Modalités" />
+      <DataTableColumnHeader column={column} title="Entrées/Sorties" />
     ),
     cell: ({ row }) => {
       const val = row.original.modalitesEntreesSorties;
