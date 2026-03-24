@@ -2,12 +2,18 @@
 
 import type { Document } from "@playground/shared-types";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@playground/ui";
+import {
   Avatar,
   Badge,
   DataTableColumnHeader,
 } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Info } from "lucide-react";
 import {
   getComplianceStatusLabel,
   getComplianceStatusVariant,
@@ -27,7 +33,59 @@ const QualityScoreCell = ({ score }: { score: number | undefined | null }) => {
   return <Badge variant={getQualityScoreVariant(score)}>{percentage}%</Badge>;
 };
 
+/**
+ * External ID cell with tooltip and copy-to-clipboard functionality.
+ * Shows an "i" icon that reveals the Carif-Oref ID on hover.
+ * Clicking copies the ID to clipboard with visual feedback.
+ */
+const ExternalIdCell = ({
+  externalId,
+}: {
+  externalId: string | null | undefined;
+}) => {
+  if (!externalId) {
+    return <div className="text-gray-400">—</div>;
+  }
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await navigator.clipboard.writeText(externalId);
+  };
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="p-1 rounded hover:bg-gray-100 transition-colors cursor-pointer"
+          >
+            <Info className="w-4 h-4 text-gray-400" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <div className="text-xs">
+            <div className="font-medium mb-1">ID Carif-Oref</div>
+            <div className="font-mono">{externalId}</div>
+            <div className="text-[10px] text-gray-400 mt-1">
+              Cliquez pour copier l'ID
+            </div>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
 export const columns: ColumnDef<Document>[] = [
+  {
+    id: "externalId",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="ID" />
+    ),
+    cell: ({ row }) => <ExternalIdCell externalId={row.original.externalId} />,
+  },
   {
     accessorKey: "compliance_status",
     header: ({ column }) => (

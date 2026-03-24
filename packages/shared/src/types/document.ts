@@ -63,6 +63,8 @@ export interface Document {
   commune?: string | null;
   /** Modalités entrées/sorties: "0" (permanentes) | "1" (dates fixes) | null */
   modalitesEntreesSorties?: string | null;
+  /** ID Carif-Oref from ingestion metadata (e.g. training offer ID) */
+  externalId?: string | null;
 }
 
 export interface RiMetadata {
