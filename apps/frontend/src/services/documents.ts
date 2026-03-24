@@ -244,13 +244,8 @@ export async function getDocuments(params: GetDocumentsParams) {
         updated_at: item.updated_at || "",
         authorEmail,
         authorRole,
-        commune:
-          ((item as unknown as Record<string, unknown>).commune as
-            | string
-            | null) ?? null,
-        modalitesEntreesSorties:
-          ((item as unknown as Record<string, unknown>)
-            .modalites_entrees_sorties as string | null) ?? null,
+        commune: item.commune ?? null,
+        modalitesEntreesSorties: item.modalites_entrees_sorties ?? null,
       };
     })
     .filter((doc): doc is Document => doc !== null);
