@@ -32,6 +32,8 @@ interface DocumentData
   editorialMetadata?: Record<string, unknown>;
   /** ID of the editorial_record — used for Realtime status subscription */
   editorialRecordId?: string;
+  /** True while an AI metadata generation is in progress — drives MetadataView spinner */
+  isMetadataGenerating?: boolean;
   referenceData?: {
     themes: Record<string, string>;
     needs: Record<string, string>;
@@ -84,13 +86,17 @@ export function DocumentProvider({
   const [isDirty, setIsDirty] = useState(false);
   const [debugBlocks, setDebugBlocks] = useState<unknown[] | null>([]);
 
-  // Synchronize local state only on navigation (initial load)
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Safe Mode - only re-initialize on navigation (ID change)
+  // Synchronize local state when:
+  //   - navigating to a different document (id change)
+  //   - a new metadata report arrives after AI generation (metadataReport?.id change)
+  //     This ensures router.refresh() post-generation delivers the fresh metadataReport
+  //     and cleared editorial overrides to all consumers (MetadataTable, MetadataContext).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only re-sync on navigation or new metadata report
   useEffect(() => {
     if (initialData) {
       setDocument(initialData);
     }
-  }, [initialData?.id]);
+  }, [initialData?.id, initialData?.metadataReport?.id]);
 
   // Update content and mark as dirty (only if content actually changed)
   const updateContent = (content: string) => {

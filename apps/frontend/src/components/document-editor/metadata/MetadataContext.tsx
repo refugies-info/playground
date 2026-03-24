@@ -9,6 +9,8 @@ import {
   validateAllFields,
   validateField,
 } from "@playground/shared-types";
+import { createSupabaseBrowserClient } from "@playground/supabase";
+import { useRouter } from "next/navigation";
 import {
   createContext,
   type ReactNode,
@@ -17,7 +19,9 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useState,
 } from "react";
+import { triggerForceMetadataOnly } from "@/services/document-actions";
 import { saveMetadataFieldAction } from "@/services/metadata-actions";
 import { useDocument } from "../DocumentContext";
 
@@ -263,6 +267,21 @@ interface MetadataContextValue {
   ) =>
     | { description: string; originalValue: unknown; fixedValue: unknown }
     | undefined;
+
+  /** True while AI metadata generation is in progress */
+  isGenerating: boolean;
+
+  /**
+   * True when generation was already in progress at page load (polling mode).
+   * False when the user clicked "Générer" in this session (async/await mode).
+   */
+  isGeneratingOnLoad: boolean;
+
+  /** Error message from the last generation attempt (null if none) */
+  generationError: string | null;
+
+  /** Trigger AI metadata generation (or regeneration) */
+  handleGenerate: () => Promise<void>;
 }
 
 const MetadataContext = createContext<MetadataContextValue | undefined>(
@@ -283,6 +302,66 @@ const MetadataContext = createContext<MetadataContextValue | undefined>(
  */
 export function MetadataProvider({ children }: { children: ReactNode }) {
   const { document } = useDocument();
+  const router = useRouter();
+
+  // ---------------------------------------------------------------------------
+  // Generation state
+  // ---------------------------------------------------------------------------
+  const [isGenerating, setIsGenerating] = useState(
+    document?.isMetadataGenerating ?? false,
+  );
+  const [generationError, setGenerationError] = useState<string | null>(null);
+
+  // ---------------------------------------------------------------------------
+  // Edge case: page loaded while a generation was already in progress
+  // (another tab triggered it). Poll every 3s until the sentinel clears.
+  // Normal flow (handleGenerate) uses async/await and doesn't need this.
+  // ---------------------------------------------------------------------------
+  const isGeneratingOnLoad = document?.isMetadataGenerating ?? false;
+  useEffect(() => {
+    if (!isGeneratingOnLoad || !document?.id) return;
+
+    const supabase = createSupabaseBrowserClient();
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from("letta_reports")
+        .select("id, status")
+        .eq("workflow_id", document.id)
+        .eq("report_type", "metadata")
+        .eq("status", "generating")
+        .maybeSingle();
+
+      // No more "generating" report → generation finished
+      if (!data) {
+        clearInterval(interval);
+        setIsGenerating(false);
+        router.refresh();
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isGeneratingOnLoad, document?.id, router]);
+
+  /** Trigger AI metadata generation (or regeneration) */
+  const handleGenerate = useCallback(async () => {
+    if (!document?.id) return;
+    setIsGenerating(true);
+    setGenerationError(null);
+    try {
+      // triggerForceMetadataOnly waits for the workflow to complete server-side.
+      // No Realtime subscription needed — we just await the Server Action.
+      const result = await triggerForceMetadataOnly(document.id);
+      if (!result.success) {
+        setGenerationError(result.error ?? "Erreur lors de la génération");
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setGenerationError("Erreur inattendue");
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [document?.id, router]);
 
   /** Base metadata from letta_report (AI), memoized */
   const baseMetadata = useMemo(
@@ -309,18 +388,12 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     overrides: existingOverrides,
   });
 
-  /** Sync state when editorialMetadata changes (async load, refresh) */
+  /** Sync overrides when server data changes (async load, refresh, or post-regeneration reset) */
   useEffect(() => {
-    if (
-      document?.editorialMetadata &&
-      Object.keys(document.editorialMetadata).length > 0
-    ) {
-      // Reset state with new overrides
-      dispatch({
-        type: "SET_OVERRIDES",
-        overrides: document.editorialMetadata as Record<string, unknown>,
-      });
-    }
+    dispatch({
+      type: "SET_OVERRIDES",
+      overrides: (document?.editorialMetadata as Record<string, unknown>) ?? {},
+    });
   }, [document?.editorialMetadata]);
 
   /** Merged metadata = fixed base + overrides */
@@ -644,6 +717,10 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       getFieldFixInfo,
       hasMetadataErrors,
       errorFieldKeys,
+      isGenerating,
+      isGeneratingOnLoad,
+      generationError,
+      handleGenerate,
     }),
     [
       mergedMetadata,
@@ -663,6 +740,10 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       getFieldFixInfo,
       hasMetadataErrors,
       errorFieldKeys,
+      isGenerating,
+      isGeneratingOnLoad,
+      generationError,
+      handleGenerate,
     ],
   );
 
