@@ -1,339 +1,44 @@
 "use client";
 
 import type { Document } from "@playground/shared-types";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@playground/ui";
-import {
-  Avatar,
-  Badge,
-  DataTableColumnHeader,
-} from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ExternalLink, Info } from "lucide-react";
+import { createDateColumn, createTextColumn } from "@/lib/column-factories";
 import {
-  getComplianceStatusLabel,
-  getComplianceStatusVariant,
-  getOnlineStatusLabel,
-  getOnlineStatusVariant,
-  getQualityScoreVariant,
-  getWorkStatusLabel,
-  getWorkStatusVariant,
-} from "@/lib/document-labels";
-
-const QualityScoreCell = ({ score }: { score: number | undefined | null }) => {
-  if (score === undefined || score === null) {
-    return <div className="text-gray-400">—</div>;
-  }
-  const percentage = Math.round(score * 100);
-
-  return <Badge variant={getQualityScoreVariant(score)}>{percentage}%</Badge>;
-};
-
-/**
- * External ID cell with tooltip and copy-to-clipboard functionality.
- * Shows an "i" icon that reveals the Carif-Oref ID on hover.
- * Clicking copies the ID to clipboard with visual feedback.
- */
-const ExternalIdCell = ({
-  externalId,
-}: {
-  externalId: string | null | undefined;
-}) => {
-  if (!externalId) {
-    return <div className="text-gray-400">—</div>;
-  }
-
-  const handleCopy = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    await navigator.clipboard.writeText(externalId);
-  };
-
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="p-1 rounded hover:bg-gray-100 transition-colors cursor-pointer"
-          >
-            <Info className="w-4 h-4 text-gray-400" />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <div className="text-xs">
-            <div className="font-medium mb-1">ID Carif-Oref</div>
-            <div className="font-mono">{externalId}</div>
-            <div className="text-[10px] text-gray-400 mt-1">
-              Cliquez pour copier l'ID
-            </div>
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-};
+  createAuthorColumn,
+  createComplianceStatusColumn,
+  createExternalIdColumn,
+  createModalitesEntreesSortiesColumn,
+  createOnlineStatusColumn,
+  createStructureNameColumn,
+  createTitleColumn,
+  createWorkStatusColumn,
+} from "@/lib/document-column-factories";
 
 export const columns: ColumnDef<Document>[] = [
-  {
-    id: "externalId",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="ID" />
-    ),
-    cell: ({ row }) => <ExternalIdCell externalId={row.original.externalId} />,
-  },
-  {
-    accessorKey: "compliance_status",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Conformité" />
-    ),
-    cell: ({ row }) => {
-      const status = row.original.complianceStatus;
-      return (
-        <Badge variant={getComplianceStatusVariant(status)}>
-          {getComplianceStatusLabel(status)}
-        </Badge>
-      );
-    },
-  },
-  {
-    accessorKey: "title",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Titre" />
-    ),
-    cell: ({ row }) => (
-      <div className="font-medium">{row.getValue("title")}</div>
-    ),
-  },
-  {
-    accessorKey: "structureName",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Structure" />
-    ),
-    cell: ({ row }) => {
-      const value = row.original.structureName;
-      return <div className="text-sm text-gray-700">{value || "—"}</div>;
-    },
-  },
-  {
+  createExternalIdColumn(),
+  createComplianceStatusColumn(),
+  createTitleColumn(),
+  createStructureNameColumn(),
+  createDateColumn({
     accessorKey: "sessionStartDate",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Date de début" />
-    ),
-    cell: ({ row }) => {
-      const dateStr = row.original.sessionStartDate;
-      if (!dateStr) return <div className="text-gray-400">—</div>;
-      const date = new Date(dateStr);
-      return <div>{date.toLocaleDateString("fr-FR")}</div>;
-    },
-  },
-  {
+    title: "Date de début",
+    getValue: (doc) => doc.sessionStartDate,
+    showTime: false,
+  }),
+  createTextColumn({
     accessorKey: "commune",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Lieu" />
-    ),
-    cell: ({ row }) => {
-      const val = row.original.commune;
-      if (!val) return <div className="text-gray-400">—</div>;
-      return <div className="text-sm">{val}</div>;
-    },
-  },
-  {
-    accessorKey: "modalitesEntreesSorties",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Entrées/Sorties" />
-    ),
-    cell: ({ row }) => {
-      const val = row.original.modalitesEntreesSorties;
-      if (val === "0") return <div className="text-sm">Permanentes</div>;
-      if (val === "1") return <div className="text-sm">Dates fixes</div>;
-      return <div className="text-gray-400">—</div>;
-    },
-  },
-  {
-    accessorKey: "online_status",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Visibilité" />
-    ),
-    cell: ({ row }) => {
-      const status = row.original.onlineStatus;
-      if (!status) return <div className="text-gray-400">—</div>;
-      // Also show link if published
-      if (status === "published" && row.original.publishedUrl) {
-        return (
-          <div className="flex items-center gap-2">
-            <Badge variant={getOnlineStatusVariant(status)}>
-              {getOnlineStatusLabel(status)}
-            </Badge>
-            <a
-              href={row.original.publishedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-400 hover:text-blue-600 transition-colors"
-              title="Voir la fiche publiée"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          </div>
-        );
-      }
-      return (
-        <Badge variant={getOnlineStatusVariant(status)}>
-          {getOnlineStatusLabel(status)}
-        </Badge>
-      );
-    },
-  },
-  {
-    accessorKey: "work_status",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Traitement" />
-    ),
-    cell: ({ row }) => {
-      const status = row.original.workStatus;
-      if (!status) return <div className="text-gray-400">—</div>;
-      return (
-        <Badge variant={getWorkStatusVariant(status)}>
-          {getWorkStatusLabel(status)}
-        </Badge>
-      );
-    },
-  },
-  {
+    title: "Lieu",
+    getValue: (doc) => doc.commune,
+    className: "text-sm",
+  }),
+  createModalitesEntreesSortiesColumn(),
+  createOnlineStatusColumn(),
+  createWorkStatusColumn<Document>(),
+  createDateColumn({
     accessorKey: "date_added",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Date d'import" />
-    ),
-    cell: ({ row }) => {
-      const raw = row.getValue("date_added") as string | null | undefined;
-      if (!raw) return <div className="text-gray-400">—</div>;
-      const date = new Date(raw);
-      if (Number.isNaN(date.getTime()))
-        return <div className="text-gray-400">—</div>;
-      return (
-        <div>
-          <div>{date.toLocaleDateString("fr-FR")}</div>
-          <div className="text-xs text-gray-400">
-            {date.toLocaleTimeString("fr-FR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </div>
-        </div>
-      );
-    },
-  },
-  {
-    // accessorKey matches the DocumentSortField so TanStack sends the right sort key
-    accessorKey: "authorEmail",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Auteur" />
-    ),
-    cell: ({ row }) => {
-      const email = row.original.authorEmail;
-      const role = row.original.authorRole;
-      return <Avatar email={email} userRole={role} size="sm" />;
-    },
-  },
-];
-
-export const inProgressColumns: ColumnDef<Document>[] = [
-  {
-    accessorKey: "id",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="ID Workflow" />
-    ),
-    cell: ({ row }) => (
-      <div
-        className="text-xs font-mono text-gray-500 truncate w-16"
-        title={row.original.id}
-      >
-        {row.original.id.split("-")[0]}...
-      </div>
-    ),
-  },
-  {
-    id: "externalId",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="ID Carif-Oref" />
-    ),
-    cell: ({ row }) => {
-      const externalId = row.original.metadata?.id as string | undefined;
-      return (
-        <div className="text-xs font-mono text-gray-500">
-          {externalId || "—"}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "compliance_status",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Conformité" />
-    ),
-    cell: ({ row }) => {
-      const status = row.original.complianceStatus;
-      return (
-        <Badge variant={getComplianceStatusVariant(status)}>
-          {getComplianceStatusLabel(status)}
-        </Badge>
-      );
-    },
-  },
-  {
-    accessorKey: "qualityScore",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Score de qualité" />
-    ),
-    cell: ({ row }) => <QualityScoreCell score={row.original.qualityScore} />,
-  },
-  {
-    accessorKey: "title",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Titre" />
-    ),
-    cell: ({ row }) => (
-      <div className="font-medium">{row.getValue("title")}</div>
-    ),
-  },
-  {
-    accessorKey: "structureName",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Structure" />
-    ),
-    cell: ({ row }) => {
-      const value = row.original.structureName;
-      return <div className="text-sm text-gray-700">{value || "—"}</div>;
-    },
-  },
-
-  {
-    accessorKey: "date_added",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Date d'import" />
-    ),
-    cell: ({ row }) => {
-      const raw = row.original.date_added;
-      if (!raw) return <div className="text-gray-400">—</div>;
-      const date = new Date(raw);
-      if (Number.isNaN(date.getTime()))
-        return <div className="text-gray-400">—</div>;
-      return (
-        <div>
-          <div>{date.toLocaleDateString("fr-FR")}</div>
-          <div className="text-xs text-gray-400">
-            {date.toLocaleTimeString("fr-FR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </div>
-        </div>
-      );
-    },
-  },
+    title: "Date d'import",
+    getValue: (doc) => doc.date_added,
+    showTime: true,
+  }),
+  createAuthorColumn(),
 ];

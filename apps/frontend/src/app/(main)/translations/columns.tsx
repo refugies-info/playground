@@ -4,77 +4,22 @@ import {
   Avatar,
   Badge,
   DataTableColumnHeader,
+  LanguageCell,
 } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ExternalLink, Loader2, RotateCw } from "lucide-react";
+import { RotateCw } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import {
-  getLanguageFlag,
-  getLanguageName,
-  getOnlineStatusLabel,
-  getOnlineStatusVariant,
-  getWorkStatusLabel,
-  getWorkStatusVariant,
-} from "@/lib/document-labels";
+import { OnlineStatusCell, WorkStatusCell } from "@/components/documents/cells";
+import { getFlagClass, getLanguageName } from "@/lib/document-labels";
 import { retryTranslationGeneration } from "@/services/translation-actions";
 import type { TranslationItem } from "@/services/translations";
-
-// Work status cell with pending/error handling
-const WorkStatusCell = ({ row }: { row: { original: TranslationItem } }) => {
-  const status = row.original.workStatus;
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-
-  const handleRetry = () => {
-    startTransition(async () => {
-      await retryTranslationGeneration(row.original.id);
-      router.refresh();
-    });
-  };
-
-  if (status === "pending") {
-    return (
-      <Badge variant="neutral" className="gap-1">
-        <Loader2 className="h-3 w-3 animate-spin" />
-        Traduction IA en cours
-      </Badge>
-    );
-  }
-
-  if (status === "error") {
-    return (
-      <div className="flex items-center gap-2">
-        <Badge variant="danger">Erreur de traduction IA</Badge>
-        <button
-          type="button"
-          onClick={handleRetry}
-          disabled={isPending}
-          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-          title="Relancer la génération"
-        >
-          <RotateCw
-            className={`h-4 w-4 text-gray-500 ${isPending ? "animate-spin" : ""}`}
-          />
-        </button>
-      </div>
-    );
-  }
-
-  if (!status) return <div className="text-gray-400">—</div>;
-
-  return (
-    <Badge variant={getWorkStatusVariant(status as "to_process" | "draft")}>
-      {getWorkStatusLabel(status as "to_process" | "draft")}
-    </Badge>
-  );
-};
 
 export const columns: ColumnDef<TranslationItem>[] = [
   {
     accessorKey: "language",
-    size: 100, // Hint for the table (if supported)
+    size: 100,
     minSize: 100,
     maxSize: 100,
     header: ({ column }) => (
@@ -85,14 +30,13 @@ export const columns: ColumnDef<TranslationItem>[] = [
       />
     ),
     cell: ({ row }) => {
-      const lang = row.getValue("language") as string;
+      const lang = row.original.language;
       return (
-        <div className="flex items-center gap-2 w-[100px]" title={lang}>
-          <span className={`${getLanguageFlag(lang)} shadow-sm`} />
-          <Badge variant="neutral" size="sm" className="font-normal capitalize">
-            {getLanguageName(lang)}
-          </Badge>
-        </div>
+        <LanguageCell
+          flagClass={getFlagClass(lang)}
+          name={getLanguageName(lang)}
+          size="sm"
+        />
       );
     },
   },
@@ -115,46 +59,35 @@ export const columns: ColumnDef<TranslationItem>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Visibilité" />
     ),
-    cell: ({ row }) => {
-      const status = row.original.onlineStatus;
-      const url = row.original.publicationUrl;
-
-      if (!status) return <div className="text-gray-400">—</div>;
-
-      const typedStatus = status as "published" | "unpublished" | "archived";
-      const statusBadge = (
-        <Badge variant={getOnlineStatusVariant(typedStatus)}>
-          {getOnlineStatusLabel(typedStatus)}
-        </Badge>
-      );
-
-      // Show link if published
-      if (status === "published" && url) {
-        return (
-          <div className="flex items-center gap-2">
-            {statusBadge}
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-400 hover:text-blue-600 transition-colors"
-              title="Voir la fiche publiée"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          </div>
-        );
-      }
-
-      return statusBadge;
-    },
+    cell: ({ row }) => (
+      <OnlineStatusCell
+        status={
+          row.original.onlineStatus as
+            | "published"
+            | "unpublished"
+            | "archived"
+            | undefined
+        }
+        publishedUrl={row.original.publicationUrl}
+      />
+    ),
   },
   {
     accessorKey: "workStatus",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Traitement" />
     ),
-    cell: ({ row }) => <WorkStatusCell row={row} />,
+    cell: ({ row }) => {
+      const status = row.original.workStatus;
+
+      // Error case: badge + retry button (inline, seul usage)
+      if (status === "error") {
+        return <ErrorWithRetry row={row} />;
+      }
+
+      // Other cases: pure WorkStatusCell
+      return <WorkStatusCell status={status as any} />;
+    },
   },
   {
     accessorKey: "wordCount",
@@ -175,3 +108,37 @@ export const columns: ColumnDef<TranslationItem>[] = [
     },
   },
 ];
+
+// =============================================================================
+// Inline Components (single usage)
+// =============================================================================
+
+/** Error badge with retry button — only used in translations table */
+const ErrorWithRetry = ({ row }: { row: { original: TranslationItem } }) => {
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  const handleRetry = () => {
+    startTransition(async () => {
+      await retryTranslationGeneration(row.original.id);
+      router.refresh();
+    });
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Badge variant="danger">Erreur de traduction IA</Badge>
+      <button
+        type="button"
+        onClick={handleRetry}
+        disabled={isPending}
+        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+        title="Relancer la génération"
+      >
+        <RotateCw
+          className={`h-4 w-4 text-gray-500 ${isPending ? "animate-spin" : ""}`}
+        />
+      </button>
+    </div>
+  );
+};

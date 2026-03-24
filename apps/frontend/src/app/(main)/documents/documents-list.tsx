@@ -1,6 +1,7 @@
 "use client";
 
 import type { Document, DocumentSortField } from "@playground/shared-types";
+import { TooltipProvider } from "@playground/ui";
 import { DataTable } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -280,33 +281,35 @@ export function DocumentsList({
             )}
           </div>
         </div>
-        <DataTable
-          columns={columns}
-          data={documents}
-          pageSize={pageSize}
-          onRowClick={(row) => {
-            const search = window.location.search.substring(1);
-            const query = search ? `?from=${encodeURIComponent(search)}` : "";
-            router.push(`/documents/${row.id}${query}`);
-          }}
-          manualPagination
-          manualSorting
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSortChange={(newSortBy, newSortOrder) => {
-            const params = new URLSearchParams(window.location.search);
-            params.set("sortBy", newSortBy);
-            params.set("sortOrder", newSortOrder);
-            // Reset to page 1 when sorting changes
-            params.set("page", "1");
-            router.push(`/documents?${params.toString()}`);
-          }}
-          getRowClassName={(row) =>
-            highlightedIds.has(row.id)
-              ? "animate-highlight bg-yellow-50 transition-colors duration-1000"
-              : undefined
-          }
-        />
+        <TooltipProvider>
+          <DataTable
+            columns={columns}
+            data={documents}
+            pageSize={pageSize}
+            onRowClick={(row) => {
+              const search = window.location.search.substring(1);
+              const query = search ? `?from=${encodeURIComponent(search)}` : "";
+              router.push(`/documents/${row.id}${query}`);
+            }}
+            manualPagination
+            manualSorting
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSortChange={(newSortBy, newSortOrder) => {
+              const params = new URLSearchParams(window.location.search);
+              params.set("sortBy", newSortBy);
+              params.set("sortOrder", newSortOrder);
+              // Reset to page 1 when sorting changes
+              params.set("page", "1");
+              router.push(`/documents?${params.toString()}`);
+            }}
+            getRowClassName={(row) =>
+              highlightedIds.has(row.id)
+                ? "animate-highlight bg-yellow-50 transition-colors duration-1000"
+                : undefined
+            }
+          />
+        </TooltipProvider>
 
         {/* Custom server-side pagination controls */}
         {totalPages > 1 && (

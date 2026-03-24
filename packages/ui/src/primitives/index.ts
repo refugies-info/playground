@@ -3,6 +3,7 @@ export * from "./badge";
 export * from "./button";
 export * from "./callout";
 export * from "./card";
+export * from "./data-table/cells";
 export * from "./data-table/data-table";
 export * from "./data-table/data-table-column-header";
 export * from "./data-table/data-table-faceted-filter";
