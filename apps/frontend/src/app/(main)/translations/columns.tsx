@@ -8,7 +8,6 @@ import {
 } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
 import { RotateCw } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { OnlineStatusCell, WorkStatusCell } from "@/components/documents/cells";
@@ -46,12 +45,7 @@ export const columns: ColumnDef<TranslationItem>[] = [
       <DataTableColumnHeader column={column} title="Titre" />
     ),
     cell: ({ row }) => (
-      <Link
-        href={`/translations/${row.original.id}`}
-        className="font-medium hover:underline text-blue-600 block truncate"
-      >
-        {row.getValue("title")}
-      </Link>
+      <div className="font-medium truncate">{row.original.title}</div>
     ),
   },
   {

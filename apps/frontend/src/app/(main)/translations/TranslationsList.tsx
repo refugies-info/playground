@@ -203,6 +203,9 @@ export function TranslationsList({
           columns={columns}
           data={initialTranslations}
           pageSize={pageSize}
+          onRowClick={(row) => {
+            router.push(`/translations/${row.id}`);
+          }}
           manualPagination
           manualSorting
           sortBy={initialSorting.sortBy}
