@@ -42,6 +42,9 @@ export async function GET(
     "qualityScore",
     "structureName",
     "sessionStartDate",
+    "authorEmail",
+    "commune",
+    "modalitesEntreesSorties",
   ];
   if (!validSortFields.includes(sortByParam as DocumentSortField)) {
     return NextResponse.json(
