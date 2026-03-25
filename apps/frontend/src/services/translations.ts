@@ -3,6 +3,7 @@ import {
   extractTitleFromMetadata,
   logger,
   type Metadata,
+  type WorkStatus,
 } from "@playground/shared-types";
 import {
   createSupabaseServerClient,
@@ -19,7 +20,7 @@ export interface TranslationItem {
   wordCount: number;
   status: string; // Computed for backward compatibility
   onlineStatus?: string | null; // 'published' | 'archived' | null
-  workStatus?: string | null; // 'to_process' | 'draft' | 'pending' | 'error' | null
+  workStatus?: WorkStatus | "pending" | "error" | null | undefined;
   language: string;
   updatedAt: string;
   publicationUrl?: string;
@@ -220,7 +221,12 @@ export async function getTranslations(params: GetTranslationsParams) {
             ? "published"
             : row.work_status || "to_process",
         onlineStatus: row.online_status,
-        workStatus: row.work_status,
+        workStatus: row.work_status as
+          | WorkStatus
+          | "pending"
+          | "error"
+          | null
+          | undefined,
         language: row.language,
         updatedAt: row.updated_at,
         publicationUrl,
@@ -315,7 +321,12 @@ export async function getTranslationById(id: string) {
         ? "published"
         : row.work_status || "to_process",
     onlineStatus: row.online_status,
-    workStatus: row.work_status,
+    workStatus: row.work_status as
+      | WorkStatus
+      | "pending"
+      | "error"
+      | null
+      | undefined,
     translationMarkdown: row.markdown,
     sourceMarkdown: row.editorial_records?.markdown || "",
     sourceMetadata:

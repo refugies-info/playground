@@ -80,7 +80,7 @@ export const columns: ColumnDef<TranslationItem>[] = [
       }
 
       // Other cases: pure WorkStatusCell
-      return <WorkStatusCell status={status as any} />;
+      return <WorkStatusCell status={status} />;
     },
   },
   {
