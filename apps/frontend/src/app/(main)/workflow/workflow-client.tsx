@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { triggerDiIngestionAction } from "@/app/actions/di";
 import { AppPaginationControls } from "@/components/common/app-pagination";
 import { createClient } from "@/lib/supabase/client";
-import { inProgressColumns } from "../documents/columns";
+import { inProgressColumns } from "./columns";
 import { DocumentPreviewDrawer } from "./document-preview-drawer";
 
 // Duration must match the Tailwind animation duration used in getRowClassName (duration-1000)

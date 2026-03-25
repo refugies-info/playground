@@ -246,6 +246,7 @@ export async function getDocuments(params: GetDocumentsParams) {
         authorRole,
         commune: item.commune ?? null,
         modalitesEntreesSorties: item.modalites_entrees_sorties ?? null,
+        externalId: item.external_id ?? null,
       };
     })
     .filter((doc): doc is Document => doc !== null);
@@ -474,6 +475,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     updated_at: item.updated_at ?? "",
     authorEmail,
     authorRole,
+    externalId: item.external_id ?? null,
   };
 }
 

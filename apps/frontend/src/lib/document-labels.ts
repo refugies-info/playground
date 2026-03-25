@@ -12,104 +12,103 @@ import type { BadgeProps } from "@playground/ui/primitives";
  */
 type BadgeVariant = NonNullable<BadgeProps["variant"]>;
 
-// Compliance Status Helpers
+// =============================================================================
+// Compliance Status
+// =============================================================================
+
+const COMPLIANCE_STATUS_LABELS: Record<ComplianceStatus, string> = {
+  compliant: "Conforme",
+  non_compliant: "Non conforme",
+  pending: "En cours d'arbitrage",
+  error: "Erreur",
+};
+
+const COMPLIANCE_STATUS_VARIANTS: Record<ComplianceStatus, BadgeVariant> = {
+  compliant: "success",
+  non_compliant: "danger",
+  pending: "warning",
+  error: "danger",
+};
+
 export function getComplianceStatusLabel(
   status: ComplianceStatus | null | undefined,
 ): string {
   if (!status) return "À traiter";
-  switch (status) {
-    case "compliant":
-      return "Conforme";
-    case "non_compliant":
-      return "Non conforme";
-    case "pending":
-      return "En cours d'arbitrage";
-    case "error":
-      return "Erreur";
-    default:
-      return status;
-  }
+  return COMPLIANCE_STATUS_LABELS[status];
 }
 
 export function getComplianceStatusVariant(
   status: ComplianceStatus | null | undefined,
 ): BadgeVariant {
   if (!status) return "info";
-  switch (status) {
-    case "compliant":
-      return "success";
-    case "non_compliant":
-      return "danger";
-    case "pending":
-      return "warning";
-    case "error":
-      return "danger";
-    default:
-      return "neutral";
-  }
+  return COMPLIANCE_STATUS_VARIANTS[status];
 }
+
+// =============================================================================
+// Work Status
+// =============================================================================
+
+const WORK_STATUS_LABELS: Record<WorkStatus, string> = {
+  draft: "Brouillon",
+  to_process: "À traiter",
+};
+
+// Both statuses requested as "blue" (info variant)
+const WORK_STATUS_VARIANTS: Record<WorkStatus, BadgeVariant> = {
+  draft: "info",
+  to_process: "info",
+};
 
 export function getWorkStatusLabel(
   status: WorkStatus | null | undefined,
 ): string {
   if (!status) return "—";
-  switch (status) {
-    case "draft":
-      return "Brouillon";
-    case "to_process":
-      return "À traiter";
-    default:
-      return status;
-  }
+  return WORK_STATUS_LABELS[status];
 }
 
 export function getWorkStatusVariant(
   status: WorkStatus | null | undefined,
 ): BadgeVariant {
   if (!status) return "neutral";
-  switch (status) {
-    case "draft":
-      return "info"; // Requested "blue"
-    case "to_process":
-      return "info"; // Requested "blue"
-    default:
-      return "neutral";
-  }
+  return WORK_STATUS_VARIANTS[status];
 }
 
-// Online Status Helpers
+// =============================================================================
+// Online Status
+// =============================================================================
+
+const ONLINE_STATUS_LABELS: Record<OnlineStatus, string> = {
+  published: "Publié",
+  unpublished: "Non publié",
+  archived: "Archivé",
+};
+
+const ONLINE_STATUS_VARIANTS: Record<OnlineStatus, BadgeVariant> = {
+  published: "success",
+  unpublished: "warning",
+  archived: "warning", // Requested "yellow"
+};
+
 export function getOnlineStatusLabel(
   status: OnlineStatus | undefined,
 ): string | undefined {
   if (!status) return undefined;
-  switch (status) {
-    case "published":
-      return "Publié";
-    case "archived":
-      return "Archivé";
-    default:
-      return status;
-  }
+  return ONLINE_STATUS_LABELS[status];
 }
 
 export function getOnlineStatusVariant(
   status: OnlineStatus | undefined,
 ): BadgeVariant {
   if (!status) return "neutral";
-  switch (status) {
-    case "published":
-      return "success";
-    case "unpublished":
-      return "warning";
-    case "archived":
-      return "warning"; // Requested "yellow"
-    default:
-      return "neutral";
-  }
+  return ONLINE_STATUS_VARIANTS[status];
 }
 
+// =============================================================================
+// Quality Score
+// =============================================================================
+
 /**
- * Helper function to get quality score badge variant
+ * Returns a badge variant based on quality score thresholds.
  */
 export function getQualityScoreVariant(score: number | null): BadgeVariant {
   if (score === null) return "warning";
@@ -120,54 +119,52 @@ export function getQualityScoreVariant(score: number | null): BadgeVariant {
   return "neutral";
 }
 
-/**
- * Get the CSS class for the flag icon
- * Requires 'flag-icons' to be imported
- */
-export function getFlagClass(lang: string): string {
-  const countryCode = LANGUAGE_TO_COUNTRY[lang] || "xx"; // xx is placeholder
-  return `fi fi-${countryCode}`;
-}
+// =============================================================================
+// Translation Status (untyped — string union not exported from shared-types)
+// =============================================================================
 
-export function getLanguageFlag(lang: string): string {
-  // Kept for backward compatibility if needed, but we should switch to classes
-  // This will now return the class name, so components need to adapt
-  return getFlagClass(lang);
-}
+const TRANSLATION_STATUS_LABELS: Record<string, string> = {
+  to_process: "À traiter",
+  processing: "En cours",
+  done: "Terminé",
+  error: "Erreur",
+};
 
-// Translation Status Helpers
+const TRANSLATION_STATUS_VARIANTS: Record<string, BadgeVariant> = {
+  to_process: "neutral",
+  processing: "warning",
+  done: "success",
+  error: "danger",
+};
+
 export function getTranslationStatusLabel(status: string | undefined): string {
   if (!status) return "Inconnu";
-  switch (status) {
-    case "to_process":
-      return "À traiter";
-    case "processing":
-      return "En cours";
-    case "done":
-      return "Terminé";
-    case "error":
-      return "Erreur";
-    default:
-      return status;
-  }
+  return TRANSLATION_STATUS_LABELS[status] ?? status;
 }
 
 export function getTranslationStatusVariant(
   status: string | undefined,
 ): BadgeVariant {
   if (!status) return "neutral";
-  switch (status) {
-    case "to_process":
-      return "neutral";
-    case "processing":
-      return "warning";
-    case "done":
-      return "success";
-    case "error":
-      return "danger";
-    default:
-      return "neutral";
-  }
+  return TRANSLATION_STATUS_VARIANTS[status] ?? "neutral";
+}
+
+// =============================================================================
+// Language Helpers
+// =============================================================================
+
+/**
+ * Get the CSS class for the flag icon.
+ * Requires 'flag-icons' to be imported.
+ */
+export function getFlagClass(lang: string): string {
+  const countryCode = LANGUAGE_TO_COUNTRY[lang] || "xx"; // xx is placeholder
+  return `fi fi-${countryCode}`;
+}
+
+/** @deprecated Use getFlagClass instead */
+export function getLanguageFlag(lang: string): string {
+  return getFlagClass(lang);
 }
 
 export function getLanguageName(lang: string): string {
