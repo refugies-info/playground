@@ -10,7 +10,7 @@ export const ModalitesEntreesSortiesCell = ({
   value,
 }: ModalitesEntreesSortiesCellProps) => {
   if (value === "0") return <div className="text-sm">Permanentes</div>;
-  if (value === "1") return <div className="text-sm">Dates fixes</div>;
+  if (value === "1") return <div className="text-sm">Fixes</div>;
   return <EmptyDash />;
 };
 ModalitesEntreesSortiesCell.displayName = "ModalitesEntreesSortiesCell";

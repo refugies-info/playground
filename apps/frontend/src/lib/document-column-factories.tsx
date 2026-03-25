@@ -61,9 +61,7 @@ export const createExternalIdColumn = (): ColumnDef<Document> => ({
 
 export const createModalitesEntreesSortiesColumn = (): ColumnDef<Document> => ({
   accessorKey: "modalitesEntreesSorties",
-  header: ({ column }) => (
-    <DataTableColumnHeader column={column} title="Entrées/Sorties" />
-  ),
+  header: ({ column }) => <DataTableColumnHeader column={column} title="E/S" />,
   cell: ({ row }) => (
     <ModalitesEntreesSortiesCell value={row.original.modalitesEntreesSorties} />
   ),
