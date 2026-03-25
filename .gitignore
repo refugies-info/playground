@@ -69,3 +69,4 @@ supabase/snippets/
 
 # Turborepo
 .turbo
+.env*.local
