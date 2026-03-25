@@ -42,6 +42,9 @@ export async function GET(
     "qualityScore",
     "structureName",
     "sessionStartDate",
+    "authorEmail",
+    "commune",
+    "modalitesEntreesSorties",
   ];
   if (!validSortFields.includes(sortByParam as DocumentSortField)) {
     return NextResponse.json(
@@ -103,6 +106,9 @@ export async function GET(
     qualityScore: "qualityScore",
     structureName: "structureName",
     sessionStartDate: "sessionStartDate",
+    authorEmail: "authorEmail",
+    commune: "commune",
+    modalitesEntreesSorties: "modalitesEntreesSorties",
   };
 
   // Apply sorting

@@ -763,7 +763,9 @@ export type Database = {
       }
       workflows_enriched: {
         Row: {
+          author_email: string | null
           author_profile: Json | null
+          commune: string | null
           compliance_status: string | null
           computed_online_status: string | null
           computed_work_status: string | null
@@ -781,6 +783,7 @@ export type Database = {
           ingestion_record_id: string | null
           ingestion_report_id: string | null
           latest_publication: Json | null
+          modalites_entrees_sorties: string | null
           quality_score: number | null
           raw_online_status: string | null
           raw_work_status: string | null

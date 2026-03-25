@@ -17,7 +17,10 @@ export type DocumentSortField =
   | "id"
   | "qualityScore"
   | "structureName"
-  | "sessionStartDate";
+  | "sessionStartDate"
+  | "authorEmail"
+  | "commune"
+  | "modalitesEntreesSorties";
 
 export interface Document {
   id: string;
@@ -58,6 +61,10 @@ export interface Document {
   updated_at: string;
   authorEmail?: string;
   authorRole?: string;
+  /** Commune from metadata, e.g. "Blois", "Mantes-la-Jolie" */
+  commune?: string | null;
+  /** Modalités entrées/sorties: "0" (permanentes) | "1" (dates fixes) | null */
+  modalitesEntreesSorties?: string | null;
 }
 
 export interface RiMetadata {

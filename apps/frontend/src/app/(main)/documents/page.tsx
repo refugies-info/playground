@@ -1,5 +1,9 @@
 import type { DocumentSortField } from "@playground/shared-types";
-import { type GetDocumentsParams, getDocuments } from "@/services/documents";
+import {
+  type GetDocumentsParams,
+  getDocuments,
+  getEditorsList,
+} from "@/services/documents";
 import { DocumentsList } from "./documents-list";
 
 interface PageProps {
@@ -40,6 +44,9 @@ export default async function DocumentsPage(props: PageProps) {
     "id",
     "structureName",
     "sessionStartDate",
+    "authorEmail",
+    "commune",
+    "modalitesEntreesSorties",
   ];
   const sortBy =
     sortByParam && validSortFields.includes(sortByParam as DocumentSortField)
@@ -54,6 +61,11 @@ export default async function DocumentsPage(props: PageProps) {
     sortOrderParam === "asc" || sortOrderParam === "desc"
       ? sortOrderParam
       : "desc";
+
+  const authorEmailParam =
+    typeof searchParams.authorEmail === "string"
+      ? searchParams.authorEmail
+      : undefined;
 
   const serviceParams: GetDocumentsParams = {
     page: currentPage,
@@ -74,9 +86,13 @@ export default async function DocumentsPage(props: PageProps) {
         : undefined,
     dateTo:
       typeof searchParams.dateTo === "string" ? searchParams.dateTo : undefined,
+    authorEmail: authorEmailParam,
   };
 
-  const result = await getDocuments(serviceParams);
+  const [result, editorsList] = await Promise.all([
+    getDocuments(serviceParams),
+    getEditorsList(),
+  ]);
 
   const initialFilters = {
     complianceStatus:
@@ -96,6 +112,7 @@ export default async function DocumentsPage(props: PageProps) {
     dateFrom:
       typeof searchParams.dateFrom === "string" ? searchParams.dateFrom : "",
     dateTo: typeof searchParams.dateTo === "string" ? searchParams.dateTo : "",
+    authorEmail: authorEmailParam ?? "",
   };
 
   return (
@@ -108,6 +125,7 @@ export default async function DocumentsPage(props: PageProps) {
       sortBy={sortBy}
       sortOrder={sortOrder}
       initialFilters={initialFilters}
+      initialAuthors={editorsList}
     />
   );
 }

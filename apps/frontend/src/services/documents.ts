@@ -29,6 +29,7 @@ export interface GetDocumentsParams {
   dateFrom?: string;
   dateTo?: string;
   searchId?: string;
+  authorEmail?: string;
 }
 
 export async function getDocuments(params: GetDocumentsParams) {
@@ -43,6 +44,7 @@ export async function getDocuments(params: GetDocumentsParams) {
     dateFrom,
     dateTo,
     searchId,
+    authorEmail,
   } = params;
 
   const cookieStore = await cookies();
@@ -127,6 +129,11 @@ export async function getDocuments(params: GetDocumentsParams) {
     query = query.ilike("ingestion_records.metadata->>id", `%${searchId}%`);
   }
 
+  // Filter by author email (editors/admins only — translators excluded from dropdown)
+  if (authorEmail) {
+    query = query.eq("author_email", authorEmail);
+  }
+
   // Apply sorting
   const sortFieldMap: Record<DocumentSortField, string> = {
     date_added: "created_at",
@@ -139,6 +146,9 @@ export async function getDocuments(params: GetDocumentsParams) {
     qualityScore: "quality_score",
     structureName: "structure_name",
     sessionStartDate: "session_start_date",
+    authorEmail: "author_email",
+    commune: "commune",
+    modalitesEntreesSorties: "modalites_entrees_sorties",
   };
 
   const dbColumn = sortFieldMap[sortBy];
@@ -234,6 +244,8 @@ export async function getDocuments(params: GetDocumentsParams) {
         updated_at: item.updated_at || "",
         authorEmail,
         authorRole,
+        commune: item.commune ?? null,
+        modalitesEntreesSorties: item.modalites_entrees_sorties ?? null,
       };
     })
     .filter((doc): doc is Document => doc !== null);
@@ -463,4 +475,45 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     authorEmail,
     authorRole,
   };
+}
+
+/**
+ * Returns the list of editors and admins for the author filter dropdown.
+ * Translators are excluded (they work on translations, not editorial content).
+ */
+export async function getEditorsList(): Promise<
+  { email: string; displayName: string }[]
+> {
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("email, first_name, last_name, username")
+    .in("role", ["admin", "editor"])
+    .order("email", { ascending: true });
+
+  if (error) {
+    logger.error(error, "Error fetching editors list");
+    return [];
+  }
+
+  return (data ?? []).map((p) => {
+    const first = p.first_name?.trim();
+    const last = p.last_name?.trim();
+    // Priority: "Prénom Nom" > username > email prefix (capitalize first letter)
+    let displayName: string;
+    if (first && last) {
+      displayName = `${first} ${last}`;
+    } else if (first || last) {
+      displayName = (first || last) as string;
+    } else if (p.username) {
+      displayName = p.username.charAt(0).toUpperCase() + p.username.slice(1);
+    } else {
+      // Derive from email: "alice@refugies.info" → "Alice"
+      const prefix = (p.email ?? "").split("@")[0];
+      displayName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+    }
+    return { email: p.email ?? "", displayName };
+  });
 }
