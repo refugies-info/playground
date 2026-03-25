@@ -15,7 +15,13 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useDocument } from "../DocumentContext";
 
-export function AssistantPanel() {
+interface AssistantPanelProps {
+  disableChatSidebar?: boolean;
+}
+
+export function AssistantPanel({
+  disableChatSidebar = false,
+}: AssistantPanelProps) {
   const {
     document,
     setAiSuggestion,
@@ -28,12 +34,12 @@ export function AssistantPanel() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Auto-collapse when comparison mode is active
+  // Auto-collapse when comparison mode is active (only when sidebar is not disabled)
   useEffect(() => {
-    if (isComparisonMode) {
+    if (isComparisonMode && !disableChatSidebar) {
       setIsCollapsed(true);
     }
-  }, [isComparisonMode]);
+  }, [isComparisonMode, disableChatSidebar]);
 
   const handleImproveContent = async () => {
     if (!document?.editorialContent) {
@@ -188,34 +194,39 @@ export function AssistantPanel() {
     });
   };
 
+  // When flag is enabled: fixed width, no header, no collapse
+  // When flag is disabled: collapsible sidebar with header
   return (
     <div
       className={cn(
         "flex flex-col h-full border-l bg-white transition-all duration-300 ease-in-out relative",
-        isCollapsed ? "w-12" : "w-80",
+        disableChatSidebar ? "w-80" : isCollapsed ? "w-12" : "w-80",
       )}
     >
-      <div className="flex items-center p-2 border-b">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 px-0"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          disabled={isComparisonMode}
-        >
-          {isCollapsed ? (
-            <ChevronLeft className="w-4 h-4" />
-          ) : (
-            <ChevronRight className="w-4 h-4" />
+      {/* Header with title and collapse button - only when flag is disabled */}
+      {!disableChatSidebar && (
+        <div className="flex items-center p-2 border-b">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 px-0"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            disabled={isComparisonMode}
+          >
+            {isCollapsed ? (
+              <ChevronLeft className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+          </Button>
+          {!isCollapsed && (
+            <span className="font-semibold text-sm ml-2">IA Chat</span>
           )}
-        </Button>
-        {!isCollapsed && (
-          <span className="font-semibold text-sm ml-2">IA Chat</span>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Reasoning Log */}
-      {!isCollapsed && (
+      {/* Reasoning Log - hidden when flag is enabled or sidebar is collapsed */}
+      {!disableChatSidebar && !isCollapsed && (
         <div className="flex-1 overflow-y-auto p-4">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-xs">
@@ -259,8 +270,8 @@ export function AssistantPanel() {
         </div>
       )}
 
-      {/* Action Buttons */}
-      {!isCollapsed && (
+      {/* Action Buttons - always visible (not collapsed) when flag is enabled */}
+      {(!disableChatSidebar ? !isCollapsed : true) && (
         <div className="p-4 border-t space-y-2">
           <button
             type="button"
@@ -275,7 +286,11 @@ export function AssistantPanel() {
             {isProcessing ? (
               <>
                 <Hourglass className="w-4 h-4 animate-pulse" />
-                Je réfléchis...
+                Génération en cours...
+              </>
+            ) : disableChatSidebar ? (
+              <>
+                <WandSparkles className="w-4 h-4" /> LANGAGE CLAIR
               </>
             ) : (
               <>

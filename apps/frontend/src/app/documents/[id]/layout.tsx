@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { AssistantPanelContainer } from "@/components/document-editor/assistant";
 import { DocumentLayout } from "@/components/document-editor/shared";
 import { getDocumentById } from "@/services/documents";
 import { fetchRiReferenceData } from "@/services/ri-reference-data";
@@ -50,7 +51,11 @@ export default async function Layout({
   };
 
   return (
-    <DocumentLayout documentId={id} initialData={initialData}>
+    <DocumentLayout
+      documentId={id}
+      initialData={initialData}
+      assistantPanel={<AssistantPanelContainer />}
+    >
       {children}
     </DocumentLayout>
   );

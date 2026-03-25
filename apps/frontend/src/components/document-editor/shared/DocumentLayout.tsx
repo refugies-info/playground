@@ -3,12 +3,12 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { DocumentActionsProvider } from "../actions";
-import { AssistantPanel } from "../assistant/AssistantPanel";
 import { DocumentProvider } from "../DocumentContext";
 import { MetadataProvider } from "../metadata/MetadataContext";
 import { EditorNavigation } from "./EditorNavigation";
 import { TopBar } from "./TopBar";
 
+// TODO : refactor this :)
 // Disable SSR for DebugPanel to avoid hydration mismatch from Radix UI random IDs
 const DebugPanel = dynamic(
   () => import("./DebugPanel").then((mod) => mod.DebugPanel),
@@ -21,11 +21,12 @@ interface DocumentLayoutProps {
   documentId: string;
   // biome-ignore lint/suspicious/noExplicitAny: Generic initial data
   initialData?: any; // Replace with proper type
+  assistantPanel: React.ReactNode;
   children: React.ReactNode;
 }
 
 export function DocumentLayout(props: DocumentLayoutProps) {
-  const { initialData, children } = props;
+  const { initialData, assistantPanel, children } = props;
 
   // Read `from` once on mount — persists across tab navigation since layout doesn't remount
   const [from, setFrom] = useState("");
@@ -52,8 +53,8 @@ export function DocumentLayout(props: DocumentLayoutProps) {
               {/* Center Editor / Content */}
               {children}
 
-              {/* Right Chat */}
-              <AssistantPanel />
+              {/* Right Chat - passed from server layout */}
+              {assistantPanel}
             </div>
           </div>
         </DocumentActionsProvider>
