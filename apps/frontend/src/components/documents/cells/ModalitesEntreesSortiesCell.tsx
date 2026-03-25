@@ -9,7 +9,7 @@ interface ModalitesEntreesSortiesCellProps {
 export const ModalitesEntreesSortiesCell = ({
   value,
 }: ModalitesEntreesSortiesCellProps) => {
-  if (value === "0") return <div className="text-sm">Permanente</div>;
+  if (value === "0") return <div className="text-sm">Permanent</div>;
   if (value === "1") return <div className="text-sm">Fixe</div>;
   return <EmptyDash />;
 };
