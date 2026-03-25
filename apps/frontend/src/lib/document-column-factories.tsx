@@ -10,6 +10,7 @@ import {
   OnlineStatusCell,
   QualityScoreCell,
   WorkStatusCell,
+  type WorkStatusCellProps,
 } from "@/components/documents/cells";
 import { createTextColumn } from "@/lib/column-factories";
 
@@ -82,7 +83,7 @@ export const createOnlineStatusColumn = (): ColumnDef<Document> => ({
 });
 
 export const createWorkStatusColumn = <
-  T extends { workStatus: string | null | undefined },
+  T extends { workStatus: WorkStatusCellProps["status"] },
 >(
   title: string = "Traitement",
 ): ColumnDef<T> => ({
@@ -90,7 +91,7 @@ export const createWorkStatusColumn = <
   header: ({ column }) => (
     <DataTableColumnHeader column={column} title={title} />
   ),
-  cell: ({ row }) => <WorkStatusCell status={row.original.workStatus as any} />,
+  cell: ({ row }) => <WorkStatusCell status={row.original.workStatus} />,
 });
 
 export const createAuthorColumn = (): ColumnDef<Document> => ({
