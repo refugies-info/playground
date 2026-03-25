@@ -94,6 +94,7 @@ export async function saveMetadataFieldAction(
       .insert({
         ingestion_record_id: workflow.ingestion_record_id,
         work_status: "draft",
+        author_id: user.id,
       })
       .select("id")
       .single();
@@ -225,6 +226,7 @@ export async function saveMetadataFieldsAction(
       .insert({
         ingestion_record_id: workflow.ingestion_record_id,
         work_status: "draft",
+        author_id: user.id,
       })
       .select("id")
       .single();
