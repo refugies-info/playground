@@ -5,10 +5,10 @@
  * It runs before each story and can provide global decorators, parameters, or tags.
  */
 
+import type { Preview } from "@storybook/react";
 import "./globals.css";
 
-/** @type { import('@storybook/react').Preview } */
-const preview = {
+const preview: Preview = {
   parameters: {
     // Center stories in the canvas by default
     layout: "centered",
