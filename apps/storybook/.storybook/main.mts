@@ -1,7 +1,6 @@
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { StorybookConfig } from "@storybook/react-vite";
-import { resolve } from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
 import tailwindcss from "@tailwindcss/postcss";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -11,11 +10,11 @@ const config: StorybookConfig = {
   addons: [
     "@storybook/addon-docs",
     "@storybook/addon-a11y",
-    "@chromatic-com/storybook"
+    "@chromatic-com/storybook",
   ],
   framework: {
     name: "@storybook/react-vite",
-    options: {}
+    options: {},
   },
   viteFinal: async (config) => {
     config.resolve = config.resolve || {};
@@ -23,14 +22,14 @@ const config: StorybookConfig = {
       ...config.resolve.alias,
       "@playground/ui": resolve(__dirname, "../../../packages/ui/src/index.ts"),
     };
-    
+
     config.css = config.css || {};
     config.css.postcss = {
-      plugins: [tailwindcss]
+      plugins: [tailwindcss],
     };
-    
+
     return config;
-  }
+  },
 };
 
 export default config;
