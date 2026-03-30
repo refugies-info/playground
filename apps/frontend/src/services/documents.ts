@@ -30,6 +30,8 @@ export interface GetDocumentsParams {
   dateTo?: string;
   searchId?: string;
   authorEmail?: string;
+  /** Multi-column text search (title, external_id, structure_name, commune) */
+  search?: string;
 }
 
 export async function getDocuments(params: GetDocumentsParams) {
@@ -45,6 +47,7 @@ export async function getDocuments(params: GetDocumentsParams) {
     dateTo,
     searchId,
     authorEmail,
+    search,
   } = params;
 
   const cookieStore = await cookies();
@@ -132,6 +135,15 @@ export async function getDocuments(params: GetDocumentsParams) {
   // Filter by author email (editors/admins only — translators excluded from dropdown)
   if (authorEmail) {
     query = query.eq("author_email", authorEmail);
+  }
+
+  // Multi-column text search (title, external_id, structure_name, commune)
+  // Uses ilike for case-insensitive substring matching
+  if (search) {
+    const term = `%${search}%`;
+    query = query.or(
+      `title.ilike.${term},external_id.ilike.${term},structure_name.ilike.${term},commune.ilike.${term}`,
+    );
   }
 
   // Apply sorting
