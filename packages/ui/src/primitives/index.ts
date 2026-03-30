@@ -11,7 +11,6 @@ export * from "./data-table/data-table-pagination";
 export * from "./data-table/data-table-toolbar";
 export * from "./error";
 export * from "./input";
-export * from "./input";
 export * from "./search-input";
 export * from "./spinner";
 export * from "./table/table";
