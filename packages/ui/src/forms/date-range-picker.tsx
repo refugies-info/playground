@@ -1,3 +1,7 @@
+/**
+ * @deprecated - NOT USED in apps/frontend
+ * TODO: Verify usage before removing. Last checked: 2026-03-30
+ */
 "use client";
 
 import { format } from "date-fns";

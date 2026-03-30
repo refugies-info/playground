@@ -1,0 +1,25 @@
+{
+  "name": "@playground/storybook",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "storybook": "storybook dev -p 6006",
+    "build": "storybook build"
+  },
+  "dependencies": {
+    "@playground/ui": "workspace:*",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@storybook/react-vite": "^8.6.18",
+    "lucide-react": "^0.487.0",
+    "@storybook/addon-docs": "^8.6.18",
+    "@storybook/addon-a11y": "^8.6.18",
+    "@chromatic-com/storybook": "^3.2.6",
+    "storybook": "^8.6.18",
+    "vite": "^6.2.6",
+    "@tailwindcss/postcss": "^4.1.17"
+  }
+}
