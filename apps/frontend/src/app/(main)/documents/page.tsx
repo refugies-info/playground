@@ -67,6 +67,9 @@ export default async function DocumentsPage(props: PageProps) {
       ? searchParams.authorEmail
       : undefined;
 
+  const searchParam =
+    typeof searchParams.search === "string" ? searchParams.search : undefined;
+
   const serviceParams: GetDocumentsParams = {
     page: currentPage,
     pageSize,
@@ -87,6 +90,7 @@ export default async function DocumentsPage(props: PageProps) {
     dateTo:
       typeof searchParams.dateTo === "string" ? searchParams.dateTo : undefined,
     authorEmail: authorEmailParam,
+    search: searchParam,
   };
 
   const [result, editorsList] = await Promise.all([
@@ -113,6 +117,7 @@ export default async function DocumentsPage(props: PageProps) {
       typeof searchParams.dateFrom === "string" ? searchParams.dateFrom : "",
     dateTo: typeof searchParams.dateTo === "string" ? searchParams.dateTo : "",
     authorEmail: authorEmailParam ?? "",
+    search: searchParam ?? "",
   };
 
   return (
