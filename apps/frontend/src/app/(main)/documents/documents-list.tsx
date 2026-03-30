@@ -154,7 +154,7 @@ export function DocumentsList({
             <SearchInput
               value={filters.search}
               onChange={(value) => updateFilter("search", value)}
-              placeholder="Rechercher..."
+              placeholder="Rechercher par Titre, ID, structure, commune"
               wrapperClassName="col-span-2"
             />
 
