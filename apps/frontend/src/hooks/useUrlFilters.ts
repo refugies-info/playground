@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /**
  * Generic hook to manage filters synced with URL search params.
@@ -46,12 +46,17 @@ export function useUrlFilters<T extends Record<string, string>>({
   // (initialFilters come from server-side, so URL is already synced)
   const isInitialMount = useRef(true);
 
+  // Set isInitialMount to false after the first render
+  // This ensures the first filter change actually updates the URL
+  useEffect(() => {
+    isInitialMount.current = false;
+  }, []);
+
   // Sync URL when filters change (but not on initial mount)
   const syncFiltersToUrl = useCallback(
     (newFilters: T) => {
       // Skip on initial mount — URL already contains the filters from server
       if (isInitialMount.current) {
-        isInitialMount.current = false;
         return;
       }
 
@@ -103,7 +108,6 @@ export function useUrlFilters<T extends Record<string, string>>({
       Object.keys(initialFilters).map((key) => [key, ""]),
     ) as T;
     setFilters(emptyFilters);
-    isInitialMount.current = false; // Ensure we navigate on clear
     router.push(basePath);
   }, [router, basePath, initialFilters]);
 
