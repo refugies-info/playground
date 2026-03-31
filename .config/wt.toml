@@ -2,10 +2,6 @@
 # https://worktrunk.dev
 
 [pre-start]
-# Install dependencies before post-start hooks run
-deps = "pnpm install"
-
-[post-start]
-# Copy gitignored files from main (node_modules, .env, .next, .turbo, etc.)
-# Uses copy-on-write (reflink) for fast, space-efficient copies
-copy = "wt step copy-ignored"
+# Bootstrap new worktrees by copying ignored files first (including node_modules cache)
+# then running a fast pnpm install to reconcile links/lockfile.
+bootstrap = "wt step copy-ignored && pnpm install"
