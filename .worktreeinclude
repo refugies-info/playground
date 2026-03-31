@@ -1,5 +1,6 @@
 # Files copied by `wt step copy-ignored` to new worktrees
 # Must also be gitignored to be copied
+# node_modules is intentionally copied to speed up pnpm install in new worktrees
 node_modules/
 .next/
 .turbo/

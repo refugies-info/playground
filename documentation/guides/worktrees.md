@@ -92,8 +92,7 @@ wt switch --create feat/my-feature
 
 Worktrunk automatically:
 1. Creates the branch and worktree at `.worktrees/feat-my-feature/`
-2. Runs `pnpm install` (pre-start hook, on worktree creation)
-3. Copies gitignored files from `main/` — `.env*`, `node_modules/`, `.next/`, `.turbo/` (post-start hook)
+2. Runs `wt step copy-ignored && pnpm install` (pre-start hook, on worktree creation)
 
 No manual dependency installation or `.env` copying needed.
 
@@ -129,7 +128,7 @@ wt switch ^ && git pull
 
 ## How `.env` and `node_modules` Are Shared
 
-When a new worktree is created, `wt step copy-ignored` (configured as a post-start hook in `.config/wt.toml`) copies all gitignored files from `main/` using copy-on-write (reflink) — fast even for large `node_modules/`.
+When a new worktree is created, `wt step copy-ignored && pnpm install` (configured as a pre-start hook in `.config/wt.toml`) runs in order: copy ignored files from `main/` (including `node_modules/`) using copy-on-write (reflink), then run `pnpm install` to reconcile workspace links and lockfile state.
 
 `.config/wt.toml` is a **project-level** config committed to the repo, distinct from your personal `~/.config/worktrunk/config.toml`. Run `wt hook show` to inspect active hooks.
 
