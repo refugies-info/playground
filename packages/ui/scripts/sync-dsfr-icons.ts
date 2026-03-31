@@ -17,6 +17,7 @@
  *   pnpm --filter @playground/ui sync:icons
  */
 
+import { execSync } from "node:child_process";
 import {
   existsSync,
   mkdirSync,
@@ -172,3 +173,14 @@ const barrel = [
 ].join("\n");
 
 writeFileSync(resolve(OUT_DIR, "index.ts"), barrel);
+
+// -- Format with Biome --------------------------------------------------------
+
+try {
+  execSync(`pnpm biome check --write "${OUT_DIR}"`, {
+    cwd: ROOT,
+    stdio: "pipe",
+  });
+} catch {
+  // Biome not available or check failed — not critical
+}
