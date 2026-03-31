@@ -81,12 +81,10 @@ interface IconEntry {
 // -- Checks -------------------------------------------------------------------
 
 if (!existsSync(DSFR_ICONS)) {
-  console.error("@gouvfr/dsfr non installe. Lance pnpm install d'abord.");
   process.exit(1);
 }
 
 if (!existsSync(RI_TYPES)) {
-  console.error("@remixicon/react non installe. Lance pnpm install d'abord.");
   process.exit(1);
 }
 
@@ -102,7 +100,7 @@ for (const cat of readdirSync(DSFR_ICONS, { withFileTypes: true }).filter((d) =>
     f.endsWith(".svg"),
   )) {
     const base = file.replace(".svg", "");
-    const riName = "Ri" + toPascal(base);
+    const riName = `Ri${toPascal(base)}`;
 
     if (!riIndex.includes(riName)) {
       const svg = readFileSync(`${DSFR_ICONS}/${cat.name}/${file}`, "utf8");
@@ -174,9 +172,3 @@ const barrel = [
 ].join("\n");
 
 writeFileSync(resolve(OUT_DIR, "index.ts"), barrel);
-
-// -- Report -------------------------------------------------------------------
-
-console.log(`sync-dsfr-icons: ${exports.length} icones generees`);
-console.log(`  → ${OUT_DIR}/`);
-console.log(`  Source: @gouvfr/dsfr@${dsfrVersion}`);
