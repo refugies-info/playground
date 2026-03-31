@@ -23,6 +23,8 @@ const config: StorybookConfig = {
   addons: [
     "@storybook/addon-docs",
     "@storybook/addon-a11y",
+    "storybook-addon-pseudo-states",
+    "@storybook/addon-designs",
     // NOTE: @chromatic-com/storybook not yet compatible with Storybook 10
     // Will be added when compatible version is available
   ],
@@ -36,6 +38,10 @@ const config: StorybookConfig = {
     config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...config.resolve.alias,
+      "@playground/ui/icons": resolve(
+        __dirname,
+        "../../../packages/ui/src/icons.ts",
+      ),
       "@playground/ui": resolve(__dirname, "../../../packages/ui/src/index.ts"),
     };
 

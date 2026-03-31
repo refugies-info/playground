@@ -17,7 +17,7 @@ export function OriginalContentView() {
           <p className="text-xs text-gray-500">Vue en lecture seule</p>
         </div>
         <Button
-          variant="outline"
+          variant="tertiaire"
           size="sm"
           onClick={rollbackToOriginal}
           className="flex items-center gap-2"

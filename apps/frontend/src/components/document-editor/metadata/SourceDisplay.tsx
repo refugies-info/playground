@@ -36,8 +36,8 @@ export function SourceDisplay({ source, diMetadata }: SourceDisplayProps) {
                 : <span>{trimmedValue}</span>
                 {formattedValue.length > 200 && (
                   <Button
-                    variant="secondary"
-                    size="xs"
+                    variant="secondaire"
+                    size="sm"
                     onClick={() => {
                       setExpandedKeys((prev) => {
                         const next = new Set(prev);

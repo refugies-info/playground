@@ -1,8 +1,6 @@
 "use client";
 
-import { Badge, type BadgeProps } from "../badge/Badge";
-
-type BadgeVariant = NonNullable<BadgeProps["variant"]>;
+import { Badge, type BadgeVariant } from "../badge/Badge";
 
 // =============================================================================
 // EmptyDash — Placeholder for null/undefined values in table cells

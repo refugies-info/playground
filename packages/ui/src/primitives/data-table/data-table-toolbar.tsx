@@ -30,7 +30,7 @@ export function DataTableToolbar<TData>({
       </div>
       {isFiltered && (
         <Button
-          variant="ghost"
+          variant="quatrieme"
           onClick={onClearFilters}
           className="h-8 px-2 lg:px-3"
         >

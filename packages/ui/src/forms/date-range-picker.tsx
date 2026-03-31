@@ -33,7 +33,7 @@ export function DateRangePicker({
       <div className="flex gap-2">
         <div className="relative">
           <Button
-            variant="outline"
+            variant="tertiaire"
             size="sm"
             onClick={() => setShowFromPicker(!showFromPicker)}
             className="w-[140px] justify-start text-left font-normal"
@@ -56,7 +56,7 @@ export function DateRangePicker({
 
         <div className="relative">
           <Button
-            variant="outline"
+            variant="tertiaire"
             size="sm"
             onClick={() => setShowToPicker(!showToPicker)}
             className="w-[140px] justify-start text-left font-normal"

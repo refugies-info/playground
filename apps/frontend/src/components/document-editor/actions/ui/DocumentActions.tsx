@@ -237,7 +237,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
 
       {/* Preview Button */}
       <Button
-        variant="outline"
+        variant="tertiaire"
         size="sm"
         className={cn("gap-2", isCollapsed && "justify-center px-0")}
         onClick={handlePreview}
@@ -248,7 +248,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
 
       {/* Save Button - enabled when modified */}
       <Button
-        variant="primary"
+        variant="primaire"
         size="sm"
         className={cn("gap-2", isCollapsed && "justify-center px-0")}
         onClick={handleSave}
@@ -260,7 +260,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
 
       {/* Publish Button - always show if not archived (wait, user wants to republish if archived) */}
       <Button
-        variant="success"
+        variant="primaire"
         size="sm"
         onClick={handlePublishClick}
         disabled={isPublishing || !canPublishNow}
@@ -276,7 +276,7 @@ export function DocumentActions({ isCollapsed = false }: DocumentActionsProps) {
       {/* Archive - shows if not archived */}
       {document?.onlineStatus !== "archived" && (
         <Button
-          variant="outline"
+          variant="tertiaire"
           size="sm"
           onClick={handleArchive}
           disabled={isArchiving}

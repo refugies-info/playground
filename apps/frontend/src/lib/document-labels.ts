@@ -53,9 +53,9 @@ const WORK_STATUS_LABELS: Record<WorkStatus, string> = {
   to_process: "À traiter",
 };
 
-// Draft = violet, to_process = blue (info)
+// Draft = bleu (badge "draft"), to_process = blue (info)
 const WORK_STATUS_VARIANTS: Record<WorkStatus, BadgeVariant> = {
-  draft: "violet",
+  draft: "draft",
   to_process: "info",
 };
 

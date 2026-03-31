@@ -150,14 +150,14 @@ export function UserCard({
           <p className="text-sm text-red-700">Cette action est irréversible.</p>
           <div className="flex gap-3 mt-2">
             <Button
-              variant="outline"
+              variant="tertiaire"
               size="sm"
               onClick={() => setIsDeleting(false)}
             >
               Annuler
             </Button>
             <Button
-              variant="danger"
+              variant="primaire"
               size="sm"
               onClick={handleDelete}
               disabled={isSaving}
@@ -282,7 +282,7 @@ export function UserCard({
 
           <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
             <Button
-              variant="ghost"
+              variant="quatrieme"
               size="sm"
               className="rounded-full w-8 h-8 p-0"
               onClick={() => (isNew ? onCancel?.() : setIsEditing(false))}
@@ -290,7 +290,7 @@ export function UserCard({
               <X size={18} className="text-gray-400" />
             </Button>
             <Button
-              variant="primary" // Assuming primary is black/dark based on previous design, or adjusting to match
+              variant="primaire" // Assuming primary is black/dark based on previous design, or adjusting to match
               size="sm"
               className="rounded-full bg-gray-900 hover:bg-gray-800"
               onClick={handleSave}
@@ -308,7 +308,7 @@ export function UserCard({
         <>
           <div className="absolute top-4 right-4 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             <Button
-              variant="ghost"
+              variant="quatrieme"
               size="sm"
               className="rounded-full w-8 h-8 p-0 hover:bg-blue-50"
               onClick={() => setIsEditing(true)}
@@ -318,7 +318,7 @@ export function UserCard({
             </Button>
             {onDelete && (
               <Button
-                variant="ghost"
+                variant="quatrieme"
                 size="sm"
                 className="rounded-full w-8 h-8 p-0 hover:bg-red-50"
                 onClick={() => setIsDeleting(true)}

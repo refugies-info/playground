@@ -60,7 +60,7 @@ export function FieldBadge({
 
   if (!hasOriginalValue) {
     return (
-      <Badge size="sm" variant="danger">
+      <Badge size="sm" variant="neutral">
         <FileQuestionMark className="h-3 w-3 mr-1" /> Donnée introuvable
       </Badge>
     );

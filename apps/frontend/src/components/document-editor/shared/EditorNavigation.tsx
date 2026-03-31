@@ -54,7 +54,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
           <span className="font-semibold text-sm">Navigation</span>
         )}
         <Button
-          variant="ghost"
+          variant="quatrieme"
           size="sm"
           className="h-8 w-8 px-0"
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -73,7 +73,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
         <div className="flex flex-col gap-2">
           <Link href={`${baseUrl}${fromSuffix}`}>
             <Button
-              variant={isFicheActive ? "secondary" : "ghost"}
+              variant={isFicheActive ? "secondaire" : "quatrieme"}
               className={cn(
                 "justify-start flex gap-2 w-full",
                 isCollapsed && "justify-center px-0",
@@ -86,7 +86,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
 
           <Link href={`${baseUrl}/metadata${fromSuffix}`}>
             <Button
-              variant={isMetadataActive ? "secondary" : "ghost"}
+              variant={isMetadataActive ? "secondaire" : "quatrieme"}
               className={cn(
                 "justify-start flex gap-2 w-full relative",
                 isCollapsed && "justify-center px-0",
@@ -110,7 +110,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
 
           <Link href={`${baseUrl}/compliance${fromSuffix}`}>
             <Button
-              variant={isComplianceActive ? "secondary" : "ghost"}
+              variant={isComplianceActive ? "secondaire" : "quatrieme"}
               className={cn(
                 "justify-start flex gap-2 w-full",
                 isCollapsed && "justify-center px-0",

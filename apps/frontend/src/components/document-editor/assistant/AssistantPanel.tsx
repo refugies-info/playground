@@ -197,7 +197,7 @@ export function AssistantPanel() {
     >
       <div className="flex items-center p-2 border-b">
         <Button
-          variant="ghost"
+          variant="quatrieme"
           size="sm"
           className="h-8 w-8 px-0"
           onClick={() => setIsCollapsed(!isCollapsed)}

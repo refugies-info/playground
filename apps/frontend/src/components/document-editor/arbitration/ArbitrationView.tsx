@@ -88,7 +88,7 @@ export function ArbitrationView() {
                     document?.onlineStatus === "published"
                   ) ? (
                     <Button
-                      variant={isCompliant ? "danger" : "primary"}
+                      variant="primaire"
                       className="w-fit flex gap-2 items-center justify-center cursor-pointer"
                       onClick={handleToggleStatus}
                       disabled={isUpdating}
