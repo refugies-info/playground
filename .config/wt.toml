@@ -1,7 +1,7 @@
 # Worktrunk project config — shared with team
 # https://worktrunk.dev
 
-[post-create]
+[pre-start]
 # Install dependencies before post-start hooks run
 deps = "pnpm install"
 

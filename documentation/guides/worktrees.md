@@ -92,7 +92,7 @@ wt switch --create feat/my-feature
 
 Worktrunk automatically:
 1. Creates the branch and worktree at `.worktrees/feat-my-feature/`
-2. Runs `pnpm install` (post-create hook)
+2. Runs `pnpm install` (pre-start hook, on worktree creation)
 3. Copies gitignored files from `main/` — `.env*`, `node_modules/`, `.next/`, `.turbo/` (post-start hook)
 
 No manual dependency installation or `.env` copying needed.
