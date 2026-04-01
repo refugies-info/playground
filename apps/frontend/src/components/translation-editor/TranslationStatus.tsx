@@ -1,13 +1,6 @@
 "use client";
 
-import { Badge } from "@playground/ui/primitives";
-import { ExternalLink } from "lucide-react";
-import {
-  getOnlineStatusLabel,
-  getOnlineStatusVariant,
-  getWorkStatusLabel,
-  getWorkStatusVariant,
-} from "@/lib/document-labels";
+import { Tag } from "@playground/ui/primitives";
 import { useTranslation } from "./TranslationContext";
 
 export function TranslationStatus() {
@@ -15,35 +8,18 @@ export function TranslationStatus() {
 
   if (!translation) return null;
 
+  const { workStatus, onlineStatus, publicationUrl } = translation;
+
   return (
     <div className="flex items-center gap-2">
-      {translation.workStatus && (
-        <Badge
-          variant={getWorkStatusVariant(translation.workStatus ?? undefined)}
-        >
-          {getWorkStatusLabel(translation.workStatus ?? undefined)}
-        </Badge>
+      {workStatus === "to_process" && <Tag status="a-traiter" />}
+      {workStatus === "draft" && <Tag status="en-cours" />}
+
+      {onlineStatus === "published" && (
+        <Tag status="publie" href={publicationUrl ?? undefined} />
       )}
-      {translation.onlineStatus && (
-        <Badge
-          variant={getOnlineStatusVariant(
-            translation.onlineStatus ?? undefined,
-          )}
-        >
-          {getOnlineStatusLabel(translation.onlineStatus ?? undefined)}
-        </Badge>
-      )}
-      {translation.publicationUrl && (
-        <a
-          href={translation.publicationUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-400 hover:text-blue-600 transition-colors"
-          title="Voir la fiche publiée"
-        >
-          <ExternalLink className="w-4 h-4" />
-        </a>
-      )}
+      {onlineStatus === "archived" && <Tag status="archive" />}
+      {onlineStatus === "unpublished" && <Tag status="na">Non publié</Tag>}
     </div>
   );
 }

@@ -1,15 +1,6 @@
 "use client";
 
-import { Badge } from "@playground/ui/primitives";
-import { ExternalLink } from "lucide-react";
-import {
-  getComplianceStatusLabel,
-  getComplianceStatusVariant,
-  getOnlineStatusLabel,
-  getOnlineStatusVariant,
-  getWorkStatusLabel,
-  getWorkStatusVariant,
-} from "@/lib/document-labels";
+import { Badge, Conformite, EmptyDash, Tag } from "@playground/ui/primitives";
 import { useDocument } from "../DocumentContext";
 
 export function DocumentStatus() {
@@ -17,32 +8,31 @@ export function DocumentStatus() {
 
   if (!document) return null;
 
+  const { complianceStatus, workStatus, onlineStatus, publishedUrl } = document;
+
   return (
     <div className="flex items-center gap-2">
-      <Badge variant={getComplianceStatusVariant(document.complianceStatus)}>
-        {getComplianceStatusLabel(document.complianceStatus)}
-      </Badge>
-      {document.workStatus && (
-        <Badge variant={getWorkStatusVariant(document.workStatus)}>
-          {getWorkStatusLabel(document.workStatus)}
-        </Badge>
+      {/* Conformité — Conformite pour conforme/non_compliant, Badge pour les états transitoires */}
+      {!complianceStatus && <EmptyDash />}
+      {complianceStatus === "compliant" && <Conformite value="conforme" />}
+      {complianceStatus === "non_compliant" && (
+        <Conformite value="non-conforme" />
       )}
-      {document.onlineStatus && (
-        <Badge variant={getOnlineStatusVariant(document.onlineStatus)}>
-          {getOnlineStatusLabel(document.onlineStatus)}
-        </Badge>
+      {complianceStatus === "pending" && (
+        <Badge variant="neutral">En cours d&apos;arbitrage</Badge>
       )}
-      {document.publishedUrl && (
-        <a
-          href={document.publishedUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-400 hover:text-blue-600 transition-colors"
-          title="Voir la fiche publiée"
-        >
-          <ExternalLink className="w-4 h-4" />
-        </a>
+      {complianceStatus === "error" && <Badge variant="danger">Erreur</Badge>}
+
+      {/* Statut de travail */}
+      {workStatus === "to_process" && <Tag status="a-traiter" />}
+      {workStatus === "draft" && <Tag status="en-cours" />}
+
+      {/* Statut en ligne — Tag publie intègre le lien externe */}
+      {onlineStatus === "published" && (
+        <Tag status="publie" href={publishedUrl ?? undefined} />
       )}
+      {onlineStatus === "archived" && <Tag status="archive" />}
+      {onlineStatus === "unpublished" && <Tag status="na">Non publié</Tag>}
     </div>
   );
 }

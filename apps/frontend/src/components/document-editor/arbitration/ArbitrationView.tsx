@@ -6,13 +6,14 @@ import type {
   WorkStatus,
 } from "@playground/shared-types";
 
-import { Badge, Button } from "@playground/ui/primitives";
+import {
+  Badge,
+  Button,
+  Conformite,
+  EmptyDash,
+} from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import {
-  getComplianceStatusLabel,
-  getComplianceStatusVariant,
-} from "@/lib/document-labels";
 import { toggleWorkflowStatus } from "@/services/document-actions";
 import { useDocument } from "../DocumentContext";
 import { MarkdownViewer } from "../shared/MarkdownViewer";
@@ -72,13 +73,19 @@ export function ArbitrationView() {
             <div className="p-4 border-b grid grid-cols-2 items-center  shadow">
               <p className="flex items-center gap-2">
                 Etat de la fiche :{" "}
-                <Badge
-                  variant={getComplianceStatusVariant(
-                    document?.complianceStatus,
-                  )}
-                >
-                  {getComplianceStatusLabel(document?.complianceStatus)}
-                </Badge>
+                {!document?.complianceStatus && <EmptyDash />}
+                {document?.complianceStatus === "compliant" && (
+                  <Conformite value="conforme" />
+                )}
+                {document?.complianceStatus === "non_compliant" && (
+                  <Conformite value="non-conforme" />
+                )}
+                {document?.complianceStatus === "pending" && (
+                  <Badge variant="neutral">En cours d&apos;arbitrage</Badge>
+                )}
+                {document?.complianceStatus === "error" && (
+                  <Badge variant="danger">Erreur</Badge>
+                )}
               </p>
 
               {!isError && (

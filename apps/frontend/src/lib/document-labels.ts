@@ -1,107 +1,10 @@
-import {
-  type ComplianceStatus,
-  LANGUAGE_NAMES,
-  LANGUAGE_TO_COUNTRY,
-  type OnlineStatus,
-  type WorkStatus,
-} from "@playground/shared-types";
+import { LANGUAGE_NAMES, LANGUAGE_TO_COUNTRY } from "@playground/shared-types";
 import type { BadgeProps } from "@playground/ui/primitives";
 
 /**
  * Badge variant type from UI primitives
  */
 type BadgeVariant = NonNullable<BadgeProps["variant"]>;
-
-// =============================================================================
-// Compliance Status
-// =============================================================================
-
-const COMPLIANCE_STATUS_LABELS: Record<ComplianceStatus, string> = {
-  compliant: "Conforme",
-  non_compliant: "Non conforme",
-  pending: "En cours d'arbitrage",
-  error: "Erreur",
-};
-
-const COMPLIANCE_STATUS_VARIANTS: Record<ComplianceStatus, BadgeVariant> = {
-  compliant: "success",
-  non_compliant: "danger",
-  pending: "warning",
-  error: "danger",
-};
-
-export function getComplianceStatusLabel(
-  status: ComplianceStatus | null | undefined,
-): string {
-  if (!status) return "À traiter";
-  return COMPLIANCE_STATUS_LABELS[status];
-}
-
-export function getComplianceStatusVariant(
-  status: ComplianceStatus | null | undefined,
-): BadgeVariant {
-  if (!status) return "info";
-  return COMPLIANCE_STATUS_VARIANTS[status];
-}
-
-// =============================================================================
-// Work Status
-// =============================================================================
-
-const WORK_STATUS_LABELS: Record<WorkStatus, string> = {
-  draft: "Brouillon",
-  to_process: "À traiter",
-};
-
-// Draft = bleu (badge "draft"), to_process = blue (info)
-const WORK_STATUS_VARIANTS: Record<WorkStatus, BadgeVariant> = {
-  draft: "draft",
-  to_process: "info",
-};
-
-export function getWorkStatusLabel(
-  status: WorkStatus | null | undefined,
-): string {
-  if (!status) return "—";
-  return WORK_STATUS_LABELS[status];
-}
-
-export function getWorkStatusVariant(
-  status: WorkStatus | null | undefined,
-): BadgeVariant {
-  if (!status) return "neutral";
-  return WORK_STATUS_VARIANTS[status];
-}
-
-// =============================================================================
-// Online Status
-// =============================================================================
-
-const ONLINE_STATUS_LABELS: Record<OnlineStatus, string> = {
-  published: "Publié",
-  unpublished: "Non publié",
-  archived: "Archivé",
-};
-
-const ONLINE_STATUS_VARIANTS: Record<OnlineStatus, BadgeVariant> = {
-  published: "success",
-  unpublished: "warning",
-  archived: "warning", // Requested "yellow"
-};
-
-export function getOnlineStatusLabel(
-  status: OnlineStatus | undefined,
-): string | undefined {
-  if (!status) return undefined;
-  return ONLINE_STATUS_LABELS[status];
-}
-
-export function getOnlineStatusVariant(
-  status: OnlineStatus | undefined,
-): BadgeVariant {
-  if (!status) return "neutral";
-  return ONLINE_STATUS_VARIANTS[status];
-}
 
 // =============================================================================
 // Quality Score
