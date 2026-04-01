@@ -111,7 +111,7 @@ const Tag = React.forwardRef<HTMLDivElement, TagProps>(
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Voir la fiche publiée"
-            className="text-[#27A658] hover:opacity-75 transition-opacity after:hidden [--underline-img:none] leading-none flex items-center"
+            className="text-[#27A658] hover:opacity-75 transition-opacity leading-none flex items-center"
             onClick={(e) => e.stopPropagation()}
           >
             <Icon icon={RiExternalLinkLine} size={20} />
