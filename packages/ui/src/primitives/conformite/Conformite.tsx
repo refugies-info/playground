@@ -21,7 +21,7 @@ import { cn } from "../../utils";
  */
 const conformiteVariants = cva(
   // padding: 0px 6px — border-radius: 4px — Marianne Bold 12px/20px uppercase
-  "inline-flex items-center justify-center px-1.5 rounded-xs text-xs font-bold uppercase leading-5",
+  "inline-flex items-center justify-center px-1.5 rounded-xs text-xs font-bold uppercase leading-5 whitespace-nowrap",
   {
     variants: {
       value: {
