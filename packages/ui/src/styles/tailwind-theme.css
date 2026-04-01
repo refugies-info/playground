@@ -50,9 +50,9 @@
   --color-ring: var(--background-action-high-blue-france);
 
   /* ─── Radius ────────────────────────────────── */
-  --radius-base: 0.625rem;   /* 10px — cards, modals, popovers */
-  --radius-xs: 0.25rem;      /*  4px — badges, conformité, tags */
-  --radius-sm: 0.375rem;     /*  6px — inputs, petits éléments */
+  --radius-base: 0.625rem; /* 10px — cards, modals, popovers */
+  --radius-xs: 0.25rem; /*  4px — badges, conformité, tags */
+  --radius-sm: 0.375rem; /*  6px — inputs, petits éléments */
   --radius: var(--radius-base);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
