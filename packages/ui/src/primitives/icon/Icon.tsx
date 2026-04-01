@@ -37,8 +37,13 @@ export type IconSize = keyof typeof SIZE_PX;
 export interface IconProps {
   /** Composant icône Remix Icons (import individuel) */
   icon: IconRef;
-  /** Taille alignée sur le DS DSFR (défaut : md = 24px) */
-  size?: IconSize;
+  /**
+   * Taille de l'icône.
+   * - Chaîne prédéfinie alignée sur DSFR : "xs" | "sm" | "md" | "lg"
+   * - Nombre pour une taille arbitraire en pixels : 20, 18, etc.
+   * Défaut : "md" (24px)
+   */
+  size?: IconSize | number;
   /** Classe CSS additionnelle */
   className?: string;
   /**
@@ -54,7 +59,7 @@ export function Icon({
   className,
   "aria-label": ariaLabel,
 }: IconProps) {
-  const px = SIZE_PX[size];
+  const px = typeof size === "number" ? size : SIZE_PX[size];
   const isDecorative = !ariaLabel;
 
   return (

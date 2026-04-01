@@ -15,3 +15,4 @@ export * from "./input";
 export * from "./search-input";
 export * from "./spinner";
 export * from "./table/table";
+export * from "./tag";
