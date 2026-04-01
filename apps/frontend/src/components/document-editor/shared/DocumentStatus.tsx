@@ -1,6 +1,7 @@
 "use client";
 
-import { Badge, Conformite, EmptyDash, Tag } from "@playground/ui/primitives";
+import { EmptyDash } from "@playground/ui/composites";
+import { Badge, Conformite, Tag } from "@playground/ui/primitives";
 import { useDocument } from "../DocumentContext";
 
 export function DocumentStatus() {

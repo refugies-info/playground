@@ -51,7 +51,7 @@ export default async function DocumentsPage(props: PageProps) {
   const sortBy =
     sortByParam && validSortFields.includes(sortByParam as DocumentSortField)
       ? (sortByParam as DocumentSortField)
-      : "updated_at";
+      : "date_added";
 
   const sortOrderParam =
     typeof searchParams.sortOrder === "string"

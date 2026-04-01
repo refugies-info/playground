@@ -1,7 +1,8 @@
 "use client";
 
 import type { WorkStatus } from "@playground/shared-types";
-import { Badge, EmptyDash, Tag } from "@playground/ui/primitives";
+import { EmptyDash } from "@playground/ui/composites";
+import { Badge, Tag } from "@playground/ui/primitives";
 import { Loader2 } from "lucide-react";
 
 export type TranslationWorkStatus = "pending" | "error";

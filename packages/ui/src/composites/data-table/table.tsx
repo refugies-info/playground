@@ -1,11 +1,21 @@
 import * as React from "react";
 import { cn } from "../../utils/cn";
 
+/**
+ * Primitives HTML table — usage interne à DataTable.
+ *
+ * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/Wireframes_RCO?node-id=1255-8744
+ *
+ * Header : bg action-low-blue-france (#E3E3FD), texte title-grey (#161616) 12px medium
+ * Zèbre  : lignes paires bg alt-blue-france (#F5F5FE) — via data-zebra="true" sur TableRow
+ * Cells  : padding 12px 16px
+ */
+
 const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
-  <div className="w-full overflow-auto rounded border">
+  <div className="w-full overflow-auto border border-[var(--border-default-grey,#DDDDDD)]">
     <table
       ref={ref}
       className={cn("w-full caption-bottom text-sm", className)}
@@ -21,7 +31,12 @@ const TableHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <thead
     ref={ref}
-    className={cn("border-b", "sticky top-0 z-10 bg-white", className)}
+    className={cn(
+      // Figma: action-low-blue-france (#E3E3FD), sticky
+      "border-b border-[var(--border-default-grey,#DDDDDD)] sticky top-0 z-10",
+      "bg-[var(--background-action-low-blue-france,#E3E3FD)]",
+      className,
+    )}
     {...props}
   />
 ));
@@ -46,7 +61,7 @@ const TableFooter = React.forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
+      "border-t border-[var(--border-default-grey,#DDDDDD)] font-medium [&>tr]:last:border-b-0",
       className,
     )}
     {...props}
@@ -61,7 +76,11 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+      "border-b border-[var(--border-default-grey,#DDDDDD)] transition-colors",
+      // Zèbre : data-zebra="true" → alt-blue-france (#F5F5FE)
+      "data-[zebra=true]:bg-[var(--background-alt-blue-france,#F5F5FE)]",
+
+      "data-[state=selected]:bg-[var(--background-alt-blue-france,#F5F5FE)]",
       className,
     )}
     {...props}
@@ -76,7 +95,11 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0",
+      // Figma: padding 12px 4px 12px 16px, texte 12px medium, title-grey (#161616)
+      // Note: le gap de 4px avec l'icône sort est géré dans DataTableColumnHeader
+      "pt-3 pr-1 pb-3 pl-4 text-left align-middle whitespace-nowrap",
+      "text-xs font-medium text-[var(--text-title-grey,#161616)]",
+      "[&:has([role=checkbox])]:pr-0",
       className,
     )}
     {...props}
@@ -91,7 +114,8 @@ const TableCell = React.forwardRef<
   <td
     ref={ref}
     className={cn(
-      "px-4 py-2 align-middle [&:has([role=checkbox])]:pr-0",
+      // Figma: padding 12px 16px
+      "px-4 py-3 align-middle [&:has([role=checkbox])]:pr-0",
       className,
     )}
     {...props}
@@ -105,7 +129,10 @@ const TableCaption = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <caption
     ref={ref}
-    className={cn("mt-4 text-sm text-muted-foreground", className)}
+    className={cn(
+      "mt-4 text-sm text-[var(--text-mention-grey,#666666)]",
+      className,
+    )}
     {...props}
   />
 ));

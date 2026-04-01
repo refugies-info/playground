@@ -1,7 +1,7 @@
 "use client";
 
 import { type Document, logger } from "@playground/shared-types";
-import { DataTable } from "@playground/ui/primitives";
+import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { triggerDiIngestionAction } from "@/app/actions/di";

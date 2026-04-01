@@ -1,7 +1,8 @@
 "use client";
 
 import type { ComplianceStatus } from "@playground/shared-types";
-import { Badge, Conformite, EmptyDash } from "@playground/ui/primitives";
+import { EmptyDash } from "@playground/ui/composites";
+import { Badge, Conformite } from "@playground/ui/primitives";
 
 interface ComplianceStatusCellProps {
   status: ComplianceStatus | null | undefined;

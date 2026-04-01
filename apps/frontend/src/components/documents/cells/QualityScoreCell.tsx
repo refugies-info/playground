@@ -1,6 +1,7 @@
 "use client";
 
-import { Badge, EmptyDash } from "@playground/ui/primitives";
+import { EmptyDash } from "@playground/ui/composites";
+import { Badge } from "@playground/ui/primitives";
 import { getQualityScoreVariant } from "@/lib/document-labels";
 
 interface QualityScoreCellProps {

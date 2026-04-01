@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  Avatar,
-  Badge,
-  DataTableColumnHeader,
-  LanguageCell,
-} from "@playground/ui/primitives";
+import { DataTableColumnHeader, LanguageCell } from "@playground/ui/composites";
+import { Avatar, Badge } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
 import { RotateCw } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -98,7 +94,7 @@ export const columns: ColumnDef<TranslationItem>[] = [
     cell: ({ row }) => {
       const email = row.original.author;
       const role = row.original.authorRole;
-      return <Avatar email={email} userRole={role} size="sm" />;
+      return <Avatar email={email} isAI={!email} />;
     },
   },
 ];

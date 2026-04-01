@@ -2,8 +2,8 @@
 
 import type { Table } from "@tanstack/react-table";
 
-import { Button } from "../button/Button";
-import { Input } from "../input/Input";
+import { Button } from "../../primitives/button/Button";
+import { Input } from "../../primitives/input/Input";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;

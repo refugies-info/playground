@@ -2,7 +2,7 @@
 
 import type { Table } from "@tanstack/react-table";
 
-import { Button } from "../button/Button";
+import { Button } from "../../primitives/button/Button";
 
 interface DataTablePaginationProps<TData> {
   table: Table<TData>;

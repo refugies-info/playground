@@ -1,6 +1,6 @@
 "use client";
 
-import { DataTable } from "@playground/ui/primitives";
+import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppPaginationControls } from "@/components/common/app-pagination";

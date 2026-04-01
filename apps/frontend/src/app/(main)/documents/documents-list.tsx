@@ -1,8 +1,13 @@
 "use client";
 
 import type { Document, DocumentSortField } from "@playground/shared-types";
-import { SearchInput, TooltipProvider } from "@playground/ui";
-import { DataTable } from "@playground/ui/primitives";
+import {
+  BoutonFiltre,
+  BoutonFiltreDate,
+  SearchInput,
+  TooltipProvider,
+} from "@playground/ui";
+import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AppPaginationControls } from "@/components/common/app-pagination";
@@ -143,151 +148,126 @@ export function DocumentsList({
   }, [router]);
 
   return (
-    <div className="w-full h-full p-8 bg-gray-50 min-h-screen">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Documents</h1>
-      </div>
-
-      <div className="">
-        <div className=" border rounded mb-8 bg-white p-4 flex flex-col items-start gap-2">
-          <div className="grid grid-cols-1 md:grid-cols-8 gap-4 w-full">
-            <SearchInput
-              value={filters.search}
-              onChange={(value) => updateFilter("search", value)}
-              placeholder="Rechercher par Titre, ID, structure, commune"
-              wrapperClassName="col-span-2"
-            />
-
-            <select
-              value={filters.complianceStatus || ""}
-              onChange={(e) => updateFilter("complianceStatus", e.target.value)}
-              className="w-full px-3 py-2 border rounded-md text-sm"
-            >
-              <option value="">Conformité</option>
-              <option value="pending">En cours</option>
-              <option value="compliant">Conforme</option>
-              <option value="non_compliant">Non conforme</option>
-              <option value="error">Erreur</option>
-            </select>
-
-            <select
-              value={filters.onlineStatus || ""}
-              onChange={(e) => updateFilter("onlineStatus", e.target.value)}
-              className="w-full px-3 py-2 border rounded-md text-sm"
-            >
-              <option value="">Visibilité</option>
-              <option value="published">Publié</option>
-              <option value="archived">Archivé</option>
-            </select>
-
-            <select
-              value={filters.workStatus || ""}
-              onChange={(e) => updateFilter("workStatus", e.target.value)}
-              className="w-full px-3 py-2 border rounded-md text-sm"
-            >
-              <option value="">Traitement</option>
-              <option value="draft">Brouillon</option>
-              <option value="to_process">À traiter</option>
-            </select>
-
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="dateFrom"
-                className="text-sm font-medium shrink-0"
-              >
-                De
-              </label>
-              <input
-                id="dateFrom"
-                type="date"
-                value={filters.dateFrom}
-                onChange={(e) => updateFilter("dateFrom", e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label htmlFor="dateTo" className="text-sm font-medium shrink-0">
-                à
-              </label>
-              <input
-                id="dateTo"
-                type="date"
-                value={filters.dateTo}
-                onChange={(e) => updateFilter("dateTo", e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm"
-              />
-            </div>
-
-            <select
-              value={filters.authorEmail || ""}
-              onChange={(e) => updateFilter("authorEmail", e.target.value)}
-              className="w-full px-3 py-2 border rounded-md text-sm"
-            >
-              <option value="">Auteur·ice</option>
-              {initialAuthors.map((author) => (
-                <option key={author.email} value={author.email}>
-                  {author.displayName}
-                </option>
-              ))}
-            </select>
-          </div>
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className=" text-sm text-blue-600 hover:text-blue-800 font-medium underline cursor-pointer"
-            >
-              Réinitialiser
-            </button>
-          )}
+    <div className="w-full h-full min-h-screen bg-[var(--background-alt-blue-france,#F5F5FE)]">
+      <div className="container py-8 flex flex-col gap-8 m-auto">
+        <div className="flex items-center justify-between mt-6">
+          <h1 className="text-[40px] font-bold leading-[1.2]">Fiches</h1>
         </div>
-      </div>
-      <TooltipProvider>
-        <DataTable
-          columns={columns}
-          data={documents}
-          pageSize={pageSize}
-          onRowClick={(row) => {
-            const search = window.location.search.substring(1);
-            const query = search ? `?from=${encodeURIComponent(search)}` : "";
-            router.push(`/documents/${row.id}${query}`);
-          }}
-          manualPagination
-          manualSorting
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSortChange={(newSortBy, newSortOrder) => {
-            const params = new URLSearchParams(window.location.search);
-            params.set("sortBy", newSortBy);
-            params.set("sortOrder", newSortOrder);
-            // Reset to page 1 when sorting changes
-            params.set("page", "1");
-            router.push(`/documents?${params.toString()}`);
-          }}
-          getRowClassName={(row) =>
-            highlightedIds.has(row.id)
-              ? "animate-highlight bg-yellow-50 transition-colors duration-1000"
-              : undefined
-          }
-        />
-      </TooltipProvider>
 
-      {/* Custom server-side pagination controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-2 py-4">
-          <div className="text-sm text-gray-700">
-            Page {currentPage} sur {totalPages} ({totalCount} document
-            {totalCount > 1 ? "s" : ""})
-          </div>
-          <div className="flex gap-2">
-            <AppPaginationControls
-              currentPage={currentPage}
-              totalPages={totalPages}
+        {/* Figma node 1264-7549 — gap: 16px, ordre: Search / Auteur / Visibilité / Traitement / Date session / Conformité */}
+        <div className="flex flex-wrap items-center gap-4">
+          <SearchInput
+            value={filters.search}
+            onChange={(value) => updateFilter("search", value)}
+            placeholder="Rechercher par titre, ID, structure, etc."
+            wrapperClassName="w-[400px]"
+          />
+
+          <BoutonFiltre
+            label="Auteur·ice"
+            options={initialAuthors.map((a) => ({
+              label: a.displayName,
+              value: a.email,
+            }))}
+            value={filters.authorEmail || ""}
+            onChange={(value) => updateFilter("authorEmail", value)}
+          />
+
+          <BoutonFiltre
+            label="Statut de publication"
+            options={[
+              { label: "Publié", value: "published" },
+              { label: "Archivé", value: "archived" },
+            ]}
+            value={filters.onlineStatus || ""}
+            onChange={(value) => updateFilter("onlineStatus", value)}
+          />
+
+          <BoutonFiltre
+            label="État de traitement"
+            options={[
+              { label: "Brouillon", value: "draft" },
+              { label: "À traiter", value: "to_process" },
+            ]}
+            value={filters.workStatus || ""}
+            onChange={(value) => updateFilter("workStatus", value)}
+          />
+
+          {/* Groupe date : label + De + à + À */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-[var(--text-default-grey,#3A3A3A)]">
+              Date de session
+            </span>
+            <BoutonFiltreDate
+              value={filters.dateFrom}
+              onChange={(value) => updateFilter("dateFrom", value)}
+            />
+            <span className="text-sm text-[var(--text-default-grey,#3A3A3A)]">
+              à
+            </span>
+            <BoutonFiltreDate
+              value={filters.dateTo}
+              onChange={(value) => updateFilter("dateTo", value)}
             />
           </div>
+
+          <BoutonFiltre
+            label="Conformité"
+            options={[
+              { label: "En cours", value: "pending" },
+              { label: "Conforme", value: "compliant" },
+              { label: "Non conforme", value: "non_compliant" },
+              { label: "Erreur", value: "error" },
+            ]}
+            value={filters.complianceStatus || ""}
+            onChange={(value) => updateFilter("complianceStatus", value)}
+          />
         </div>
-      )}
+        <TooltipProvider>
+          <DataTable
+            columns={columns}
+            data={documents}
+            pageSize={pageSize}
+            onRowClick={(row) => {
+              const search = window.location.search.substring(1);
+              const query = search ? `?from=${encodeURIComponent(search)}` : "";
+              router.push(`/documents/${row.id}${query}`);
+            }}
+            manualPagination
+            manualSorting
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSortChange={(newSortBy, newSortOrder) => {
+              const params = new URLSearchParams(window.location.search);
+              params.set("sortBy", newSortBy);
+              params.set("sortOrder", newSortOrder);
+              params.set("page", "1");
+              router.push(`/documents?${params.toString()}`);
+            }}
+            getRowClassName={(row) =>
+              highlightedIds.has(row.id)
+                ? "animate-highlight bg-yellow-50 transition-colors duration-1000"
+                : undefined
+            }
+          />
+        </TooltipProvider>
+
+        {/* Custom server-side pagination controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between py-4">
+            <div className="text-sm text-gray-700">
+              Page {currentPage} sur {totalPages} ({totalCount} fiche
+              {totalCount > 1 ? "s" : ""})
+            </div>
+            <div className="flex gap-2">
+              <AppPaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+              />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
