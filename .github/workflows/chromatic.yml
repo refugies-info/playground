@@ -39,6 +39,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run Chromatic
-        run: pnpm --filter @playground/storybook chromatic
+        # --exit-zero-on-changes : la CI ne bloque pas sur les changements visuels
+        # détectés. La revue se fait dans l'UI Chromatic, pas en bloquant la PR.
+        run: pnpm --filter @playground/storybook chromatic --exit-zero-on-changes
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
