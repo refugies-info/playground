@@ -1,5 +1,6 @@
 import { Conformite, type ConformiteValue } from "@playground/ui";
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect } from "storybook/test";
 
 const meta = {
   title: "UI/Conformite",
@@ -39,11 +40,19 @@ export const LesDeux: Story = {
 export const Conforme: Story = {
   name: "Conforme",
   args: { value: "conforme" },
+  play: async ({ canvas }) => {
+    const badge = canvas.getByText("Conforme");
+    await expect(badge).toBeInTheDocument();
+    await expect(badge.tagName.toLowerCase()).toBe("span");
+  },
 };
 
 export const NonConforme: Story = {
   name: "Non conforme",
   args: { value: "non-conforme" },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("Non conforme")).toBeInTheDocument();
+  },
 };
 
 export const Reference: Story = {

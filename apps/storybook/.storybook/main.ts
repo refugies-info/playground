@@ -33,6 +33,7 @@ const config: StorybookConfig = {
   addons: [
     "@storybook/addon-docs",
     "@storybook/addon-a11y",
+    "@storybook/addon-vitest",
     "storybook-addon-pseudo-states",
     "@storybook/addon-designs",
     // NOTE: @chromatic-com/storybook not yet compatible with Storybook 10

@@ -45,6 +45,8 @@
     "seed:sync": "supabase db dump --local --data-only --file supabase/seed.sql",
     "gen:types": "pnpm --filter @playground/supabase gen:types",
     "storybook": "pnpm --filter @playground/storybook storybook",
+    "storybook:publish": "dotenv -e .env -- pnpm --filter @playground/storybook chromatic",
+    "storybook:test": "pnpm --filter @playground/storybook test",
     "force:metadata": "tsx scripts/force-metadata-reports.ts"
   },
   "devDependencies": {

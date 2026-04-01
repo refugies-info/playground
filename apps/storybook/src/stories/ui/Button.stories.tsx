@@ -16,6 +16,7 @@ import {
   RiUserLine,
 } from "@playground/ui/icons";
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect } from "storybook/test";
 
 const ICON_MAP = {
   "(aucune)": undefined,
@@ -97,6 +98,12 @@ type Story = StoryObj<typeof meta>;
 export const Primaire: Story = {
   name: "Primaire / Statut=Défaut",
   args: { variant: "primaire", children: "Commencer" },
+  play: async ({ canvas, userEvent }) => {
+    const btn = canvas.getByRole("button", { name: "Commencer" });
+    await expect(btn).toBeEnabled();
+    await userEvent.tab();
+    await expect(btn).toHaveFocus();
+  },
 };
 
 export const Secondaire: Story = {
@@ -182,11 +189,21 @@ export const PrimaireClique: Story = {
 export const PrimaireInactif: Story = {
   name: "Primaire / Statut=Inactif",
   args: { variant: "primaire", children: "Commencer", disabled: true },
+  play: async ({ canvas }) => {
+    const btn = canvas.getByRole("button");
+    await expect(btn).toBeDisabled();
+    await expect(btn).toHaveAttribute("disabled");
+  },
 };
 
 export const PrimaireChargement: Story = {
   name: "Primaire / Chargement",
   args: { variant: "primaire", children: "Enregistrement…", isLoading: true },
+  play: async ({ canvas }) => {
+    const btn = canvas.getByRole("button");
+    await expect(btn).toBeDisabled();
+    await expect(btn.querySelector("svg")).not.toBeNull();
+  },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

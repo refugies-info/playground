@@ -389,9 +389,10 @@ export const DansUnBouton: Story = {
 
 export const TousLesIcones: Story = {
   name: "Tableau — toutes les icônes (2264)",
+  // Exclure des tests Vitest et Chromatic — 2800+ icônes, trop lourd
+  tags: ["!test", "!vitest"],
   parameters: {
     layout: "padded",
-    // Chromatic : trop lourd à capturer (2800+ icônes → timeout 15s)
     chromatic: { disableSnapshot: true },
   },
   render: () => {

@@ -1,5 +1,6 @@
 import { TAG_LABELS, Tag, type TagStatus } from "@playground/ui";
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect } from "storybook/test";
 
 const FIGMA_URL =
   "https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/Wireframes_RCO?node-id=1256-5829";
@@ -62,6 +63,9 @@ export const TousLesStatuts: Story = {
 export const ATraiter: Story = {
   name: "À traiter",
   args: { status: "a-traiter" },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("À traiter")).toBeInTheDocument();
+  },
 };
 
 export const EnCours: Story = {
@@ -87,6 +91,12 @@ export const Publie: Story = {
 export const PublieAvecLien: Story = {
   name: "Publié — avec lien externe",
   args: { status: "publie", href: "https://refugies.info" },
+  play: async ({ canvas }) => {
+    const link = canvas.getByRole("link");
+    await expect(link).toHaveAttribute("href", "https://refugies.info");
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  },
 };
 
 export const NA: Story = {
