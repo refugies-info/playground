@@ -1,4 +1,5 @@
-import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import type * as React from "react";
 import { cn } from "../../utils";
 import type { IconRef } from "../icon";
 import { Icon } from "../icon";
@@ -14,62 +15,62 @@ import { Icon } from "../icon";
  *   - cliqué  → texte blue-france-sun-113-hover (#1212FF)
  */
 
-export interface BoutonMenuProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Icône Remix affichée à gauche du label */
-  icon: IconRef;
-  /** Texte du bouton */
-  label: string;
-  /** État actif (page courante) */
-  active?: boolean;
-  /** Si fourni, le bouton se comporte comme un lien */
-  href?: string;
-  /** Composant Link à utiliser (ex: Next.js Link) — requis si href est fourni */
-  linkComponent?: React.ComponentType<
-    React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }
-  >;
-}
-
-const BoutonMenu = React.forwardRef<HTMLButtonElement, BoutonMenuProps>(
-  (
-    { icon, label, active = false, href, linkComponent, className, ...props },
-    ref,
-  ) => {
-    const classes = cn(
-      "inline-flex items-center gap-2 px-3 py-1 font-medium text-sm leading-6 transition-colors cursor-pointer",
-      "active:bg-transparent",
-      active
-        ? "text-[var(--blue-france-sun-113-625-hover)]"
-        : "text-[var(--text-mention-grey)] hover:text-[var(--text-title-grey)]",
-      className,
-    );
-
-    const content = (
-      <>
-        <span className="shrink-0">
-          <Icon icon={icon} size="sm" />
-        </span>
-        {label}
-      </>
-    );
-
-    // Rendu comme lien si href est fourni
-    if (href && linkComponent) {
-      const LinkComp = linkComponent;
-      return (
-        <LinkComp href={href} className={classes}>
-          {content}
-        </LinkComp>
-      );
-    }
-
-    return (
-      <button ref={ref} type="button" className={classes} {...props}>
-        {content}
-      </button>
-    );
+const boutonMenuVariants = cva(
+  [
+    "inline-flex items-center gap-2 px-3 py-1",
+    "font-medium text-sm leading-6",
+    "cursor-pointer transition-colors",
+    "active:bg-transparent",
+  ].join(" "),
+  {
+    variants: {
+      active: {
+        true: "text-[var(--blue-france-sun-113-625-hover)]",
+        false: [
+          "text-[var(--text-mention-grey)]",
+          "hover:text-[var(--text-title-grey)]",
+        ].join(" "),
+      },
+    },
+    defaultVariants: {
+      active: false,
+    },
   },
 );
-BoutonMenu.displayName = "BoutonMenu";
 
-export { BoutonMenu };
+export interface BoutonMenuProps
+  extends VariantProps<typeof boutonMenuVariants> {
+  icon: IconRef;
+  label: string;
+  href?: string;
+  linkComponent?: React.ElementType;
+  className?: string;
+  [key: string]: unknown;
+}
+
+function BoutonMenu({
+  icon,
+  label,
+  active = false,
+  href,
+  linkComponent,
+  className,
+  ...rest
+}: BoutonMenuProps) {
+  const Comp = href ? (linkComponent ?? "a") : "button";
+
+  return (
+    <Comp
+      {...(href ? { href } : { type: "button" })}
+      className={cn(boutonMenuVariants({ active }), className)}
+      {...rest}
+    >
+      <span className="shrink-0">
+        <Icon icon={icon} size="sm" />
+      </span>
+      {label}
+    </Comp>
+  );
+}
+
+export { BoutonMenu, boutonMenuVariants };
