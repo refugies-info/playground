@@ -18,7 +18,11 @@ import tailwindcss from "@tailwindcss/postcss";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const config: StorybookConfig = {
-  stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
+  stories: [
+    "../src/**/*.mdx",
+    "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+    "../../../packages/ui/src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+  ],
 
   // Fonts DSFR — Vite ne résout pas les url() dans les CSS importés via
   // PostCSS/Tailwind layer(). On les sert en static à /fonts/ pour que
@@ -27,6 +31,10 @@ const config: StorybookConfig = {
     {
       from: "../../../node_modules/@gouvfr/dsfr/dist/fonts",
       to: "/fonts",
+    },
+    {
+      from: "../../frontend/public",
+      to: "/",
     },
   ],
 

@@ -72,3 +72,6 @@ supabase/snippets/
 
 # Storybook
 storybook-static/
+
+# LLMs
+logs/

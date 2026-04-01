@@ -40,7 +40,7 @@ const FIGMA_URL =
   "https://www.figma.com/design/BLVTgrfTTyMWKgi2MaTTAk/Design-System?node-id=2801-17488";
 
 const meta = {
-  title: "UI/Button",
+  title: "Primitives/Button",
   component: Button,
   parameters: {
     layout: "centered",
