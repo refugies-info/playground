@@ -20,6 +20,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const config: StorybookConfig = {
   stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
 
+  // Fonts DSFR — Vite ne résout pas les url() dans les CSS importés via
+  // PostCSS/Tailwind layer(). On les sert en static à /fonts/ pour que
+  // les chemins relatifs ../fonts/ du CSS builté (/assets/) résolvent correctement.
+  staticDirs: [
+    {
+      from: "../../../node_modules/@gouvfr/dsfr/dist/fonts",
+      to: "/fonts",
+    },
+  ],
+
   addons: [
     "@storybook/addon-docs",
     "@storybook/addon-a11y",
