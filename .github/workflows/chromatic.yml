@@ -41,6 +41,8 @@ jobs:
       - name: Run Chromatic
         # --exit-zero-on-changes : la CI ne bloque pas sur les changements visuels
         # détectés. La revue se fait dans l'UI Chromatic, pas en bloquant la PR.
-        run: pnpm --filter @playground/storybook chromatic --exit-zero-on-changes
+        # --exit-once-uploaded : le job termine dès l'upload, Chromatic poste
+        # son propre check GitHub de manière asynchrone.
+        run: pnpm --filter @playground/storybook chromatic --exit-zero-on-changes --exit-once-uploaded
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
