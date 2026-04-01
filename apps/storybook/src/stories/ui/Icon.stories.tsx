@@ -389,7 +389,11 @@ export const DansUnBouton: Story = {
 
 export const TousLesIcones: Story = {
   name: "Tableau — toutes les icônes (2264)",
-  parameters: { layout: "padded" },
+  parameters: {
+    layout: "padded",
+    // Chromatic : trop lourd à capturer (2800+ icônes → timeout 15s)
+    chromatic: { disableSnapshot: true },
+  },
   render: () => {
     const [search, setSearch] = useState("");
     const [activeTab, setActiveTab] = useState("tous");
