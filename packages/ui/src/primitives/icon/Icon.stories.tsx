@@ -254,7 +254,7 @@ const ICON_OPTIONS = {
 } satisfies Record<string, IconRef>;
 
 const meta = {
-  title: "UI/Icon",
+  title: "Primitives/Icon",
   component: Icon,
   parameters: { layout: "padded" },
   tags: ["autodocs"],

@@ -18,7 +18,7 @@ import type { Meta, StoryObj } from "@storybook/react";
  * - Layer 3 `Badge.css`       → `--badge-pending-bg: var(--color-rco-pending)`
  */
 const meta: Meta<typeof Badge> = {
-  title: "UI/Badge",
+  title: "Primitives/Badge",
   component: Badge,
   tags: ["autodocs"],
   parameters: {

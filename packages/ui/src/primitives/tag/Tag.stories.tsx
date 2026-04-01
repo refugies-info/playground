@@ -6,7 +6,7 @@ const FIGMA_URL =
   "https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/Wireframes_RCO?node-id=1256-5829";
 
 const meta = {
-  title: "UI/Tag",
+  title: "Primitives/Tag",
   component: Tag,
   parameters: {
     layout: "centered",

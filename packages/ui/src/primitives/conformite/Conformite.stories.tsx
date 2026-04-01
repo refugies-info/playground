@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { expect } from "storybook/test";
 
 const meta = {
-  title: "UI/Conformite",
+  title: "Primitives/Conformite",
   component: Conformite,
   parameters: {
     layout: "centered",

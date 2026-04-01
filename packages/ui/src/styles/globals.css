@@ -26,6 +26,11 @@
 
 @import "./tailwind-theme.css";
 
+/* ─── Container ────────────────────────────────── */
+@theme {
+  --container-max-width: 1568px;
+}
+
 /* Scanner les classes Tailwind dans tous les composants UI */
 @source "../**/*.{ts,tsx,js,jsx,mdx}";
 

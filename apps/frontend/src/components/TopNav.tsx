@@ -1,5 +1,13 @@
 "use client";
 
+import { AppHeader, AppLogo, BoutonMenu } from "@playground/ui";
+import {
+  RiAccountCircleLine,
+  RiDownloadLine,
+  RiFileTextLine,
+  RiLogoutBoxRLine,
+  RiTranslate2,
+} from "@playground/ui/icons";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -20,98 +28,77 @@ export function TopNav({ role }: TopNavProps) {
     router.push("/login");
   };
 
-  const isWorkflowActive = pathname === "/workflow";
-  const isDocumentsActive = pathname === "/documents";
-  const isTranslationsActive = pathname === "/translations";
-  // Preserve filters when clicking a nav link while already on that page
   const currentSearch = searchParams.toString();
   const documentsHref =
-    isDocumentsActive && currentSearch
+    pathname === "/documents" && currentSearch
       ? `/documents?${currentSearch}`
       : "/documents";
   const translationsHref =
-    isTranslationsActive && currentSearch
+    pathname === "/translations" && currentSearch
       ? `/translations?${currentSearch}`
       : "/translations";
 
-  // Requirement: "pour les tranducteurs on affiche uniquement le bouton se deconnecter"
   const isTranslator = role === "translator";
 
   return (
-    <nav className="border-b border-gray-200 bg-white">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logo-ri.svg"
-              alt="Content Playground"
-              width={40}
-              height={40}
-              className="h-10 w-10"
-            />
-            <h1 className="text-xl font-semibold text-gray-900">
-              Content Playground
-            </h1>
-          </div>
-          <div className="flex items-center gap-8">
-            {!isTranslator && (
-              <>
-                {role === "admin" && (
-                  <Link
-                    href="/workflow"
-                    className={`border-b-2 pb-1 text-sm font-medium transition-colors ${
-                      isWorkflowActive
-                        ? "border-blue-600 text-blue-600"
-                        : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900"
-                    }`}
-                  >
-                    Importer
-                  </Link>
-                )}
-                <Link
-                  href={documentsHref}
-                  className={`border-b-2 pb-1 text-sm font-medium transition-colors ${
-                    isDocumentsActive
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900"
-                  }`}
-                >
-                  Documents
-                </Link>
-                <Link
-                  href={translationsHref}
-                  className={`border-b-2 pb-1 text-sm font-medium transition-colors ${
-                    isTranslationsActive
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900"
-                  }`}
-                >
-                  Traductions
-                </Link>
-                {role === "admin" && (
-                  <Link
-                    href="/users"
-                    className={`border-b-2 pb-1 text-sm font-medium transition-colors ${
-                      pathname === "/users"
-                        ? "border-blue-600 text-blue-600"
-                        : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900"
-                    }`}
-                  >
-                    Utilisateurs
-                  </Link>
-                )}
-              </>
+    <AppHeader>
+      <AppLogo
+        image={
+          <Image
+            src="/logo-ri.svg"
+            alt="BOMO"
+            width={48}
+            height={48}
+            className="h-12 w-12"
+          />
+        }
+        title="BOMO ?"
+        href="/"
+        linkComponent={Link}
+      />
+      <nav className="ml-auto flex items-center gap-2 py-3">
+        {!isTranslator && (
+          <>
+            {role === "admin" && (
+              <BoutonMenu
+                icon={RiDownloadLine}
+                label="Importer"
+                active={pathname === "/workflow"}
+                href="/workflow"
+                linkComponent={Link}
+              />
             )}
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none focus:underline"
-            >
-              Se déconnecter
-            </button>
-          </div>
-        </div>
-      </div>
-    </nav>
+            <BoutonMenu
+              icon={RiFileTextLine}
+              label="Fiches"
+              active={pathname === "/documents"}
+              href={documentsHref}
+              linkComponent={Link}
+            />
+            <BoutonMenu
+              icon={RiTranslate2}
+              label="Espace de traduction"
+              active={pathname === "/translations"}
+              href={translationsHref}
+              linkComponent={Link}
+            />
+            {role === "admin" && (
+              <BoutonMenu
+                icon={RiAccountCircleLine}
+                label="Utilisateurs"
+                active={pathname === "/users"}
+                href="/users"
+                linkComponent={Link}
+              />
+            )}
+          </>
+        )}
+        <BoutonMenu
+          icon={RiLogoutBoxRLine}
+          label="Se déconnecter"
+          onClick={handleLogout}
+        />
+      </nav>
+    </AppHeader>
   );
 }
