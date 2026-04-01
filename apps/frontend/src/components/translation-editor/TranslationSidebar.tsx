@@ -20,7 +20,7 @@ export function TranslationSidebar() {
       <div className="flex items-center p-4 border-b bg-white justify-between">
         {!isCollapsed && <span className="font-semibold text-sm">Actions</span>}
         <Button
-          variant="ghost"
+          variant="quatrieme"
           size="sm"
           className="h-8 w-8 px-0"
           onClick={() => setIsCollapsed(!isCollapsed)}

@@ -1,12 +1,8 @@
 "use client";
 
 import type { WorkStatus } from "@playground/shared-types";
-import { Badge, EmptyDash } from "@playground/ui/primitives";
+import { Badge, EmptyDash, Tag } from "@playground/ui/primitives";
 import { Loader2 } from "lucide-react";
-import {
-  getWorkStatusLabel,
-  getWorkStatusVariant,
-} from "@/lib/document-labels";
 
 export type TranslationWorkStatus = "pending" | "error";
 
@@ -30,10 +26,8 @@ export const WorkStatusCell = ({ status }: WorkStatusCellProps) => {
 
   if (!status) return <EmptyDash />;
 
-  return (
-    <Badge variant={getWorkStatusVariant(status)}>
-      {getWorkStatusLabel(status)}
-    </Badge>
-  );
+  // to_process → À traiter, draft → En cours (édition en cours)
+  if (status === "to_process") return <Tag status="a-traiter" />;
+  if (status === "draft") return <Tag status="en-cours" />;
 };
 WorkStatusCell.displayName = "WorkStatusCell";

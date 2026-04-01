@@ -1,0 +1,13 @@
+/**
+ * Storybook Global Styles
+ *
+ * Imports the centralized design system tokens from @playground/ui.
+ * This ensures Storybook components use the same styles as the main app.
+ *
+ * The @source directive tells Tailwind v4 where to scan for class names.
+ * Without this, Tailwind won't generate utilities used in story files.
+ */
+
+@import "../../../packages/ui/src/styles/globals.css";
+
+@source "../src/**/*.{ts,tsx,js,jsx,mdx}";

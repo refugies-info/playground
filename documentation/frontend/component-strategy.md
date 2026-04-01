@@ -131,50 +131,55 @@ Is this component reusable across multiple pages/features?
 
 ### Design System Component Template
 
+Les composants utilisent CVA (class-variance-authority) avec des noms de variants **en français**, calqués sur le Figma DSFR.
+
 ```typescript
-// /packages/ui/src/primitives/button/Button.tsx
-import * as React from "react";
-import { cn } from "@playground/ui/utils";
+// /packages/ui/src/primitives/button/Button.tsx (simplifié)
+import { cva, type VariantProps } from "class-variance-authority";
+import { Icon } from "../icon";
+import type { IconRef, IconSize } from "../icon";
+
+const buttonVariants = cva("inline-flex items-center justify-center gap-2 ...", {
+  variants: {
+    variant: {
+      primaire: "bg-[var(--background-action-high-blue-france)] text-[var(--text-inverted-grey)] ...",
+      secondaire: "bg-transparent border border-[var(--border-action-high-blue-france)] ...",
+      tertiaire: "bg-transparent border border-[var(--border-default-grey)] ...",
+      quatrieme: "bg-transparent text-[var(--text-default-grey)] ...",
+      violet: "bg-[var(--blue-france-975-75)] text-[var(--blue-france-sun-113-625-hover)] ...",
+      // + primaire-colore, secondaire-colore
+    },
+    size: {
+      sm: "h-8 px-3 py-1 text-sm",
+      md: "h-10 px-4 py-2 text-base",
+      lg: "h-12 px-6 py-2.5 text-lg",
+    },
+  },
+  defaultVariants: { variant: "primaire", size: "md" },
+});
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline";
-  size?: "sm" | "md" | "lg";
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    Omit<VariantProps<typeof buttonVariants>, "iconOnly"> {
   isLoading?: boolean;
+  leftIcon?: IconRef;   // Composant icône à gauche
+  rightIcon?: IconRef;  // Composant icône à droite
 }
-
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    { className, variant = "primary", size = "md", isLoading, ...props },
-    ref
-  ) => (
-    <button
-      ref={ref}
-      className={cn(
-        // Base styles
-        "inline-flex items-center justify-center font-medium transition-colors",
-        // Variants
-        variant === "primary" && "bg-blue-600 text-white hover:bg-blue-700",
-        variant === "secondary" && "bg-gray-200 text-gray-900 hover:bg-gray-300",
-        variant === "outline" && "border border-gray-300 hover:bg-gray-50",
-        // Sizes
-        size === "sm" && "px-3 py-1.5 text-sm",
-        size === "md" && "px-4 py-2 text-base",
-        size === "lg" && "px-6 py-3 text-lg",
-        // States
-        isLoading && "opacity-50 cursor-not-allowed",
-        className
-      )}
-      disabled={isLoading || props.disabled}
-      {...props}
-    />
-  )
-);
-
-Button.displayName = "Button";
-
-export { Button };
 ```
+
+**Usage :**
+
+```tsx
+import { Button } from "@playground/ui";
+import { RiArrowRightLine } from "@playground/ui/icons";
+
+<Button variant="primaire" leftIcon={RiArrowRightLine}>Continuer</Button>
+<Button variant="secondaire" size="sm">Annuler</Button>
+<Button leftIcon={RiCloseLine} aria-label="Fermer" />  {/* icon-only auto-détecté */}
+```
+
+> Les noms de variants disponibles : `primaire`, `secondaire`, `primaire-colore`, `secondaire-colore`, `tertiaire`, `quatrieme`, `violet`.  
+> Voir le [système d'icônes](./icon-system.md) pour plus de détails sur l'intégration icônes.
 
 ### Feature Component Template
 
@@ -287,11 +292,18 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
 ### From Design System
 
 ```typescript
-// ✅ Correct: Import from @playground/ui
-import { Button, Input, Card } from "@playground/ui";
+// ✅ Correct: Import components and types from @playground/ui
+import { Button, Icon, Badge } from "@playground/ui";
+import type { IconRef } from "@playground/ui";
+
+// ✅ Correct: Import icons from @playground/ui/icons
+import { RiArrowRightLine, FrInfoLine } from "@playground/ui/icons";
 
 // ❌ Avoid: Direct path imports
 import { Button } from "@playground/ui/src/primitives/button";
+
+// ❌ Avoid: Direct import from @remixicon/react (use the barrel)
+import { RiSearchLine } from "@remixicon/react";
 ```
 
 ### From Feature Components

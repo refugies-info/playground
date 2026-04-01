@@ -1,0 +1,1358 @@
+{
+  "activity": {},
+  "announcedBuild": {
+    "id": "69ccc78cb55da6a5c3288778",
+    "number": 3,
+    "browsers": ["chrome"],
+    "status": "PUBLISHED",
+    "autoAcceptChanges": true,
+    "features": {
+      "uiTests": true,
+      "uiReview": true,
+      "isReactNativeApp": null
+    },
+    "app": {
+      "id": "69ca59d444eab425d6b6c14b",
+      "turboSnapAvailability": "UNUSED"
+    },
+    "storybookUrl": "https://69ca59d444eab425d6b6c14b-xbhbbyxbki.chromatic.com/"
+  },
+  "build": {
+    "id": "69ccc78cb55da6a5c3288778",
+    "number": 3,
+    "browsers": [
+      {
+        "browser": "chrome"
+      }
+    ],
+    "status": "BROKEN",
+    "autoAcceptChanges": true,
+    "features": {
+      "uiTests": true,
+      "uiReview": true,
+      "isReactNativeApp": null
+    },
+    "app": {
+      "manageUrl": "https://www.chromatic.com/manage?appId=69ca59d444eab425d6b6c14b",
+      "setupUrl": "https://www.chromatic.com/setup?appId=69ca59d444eab425d6b6c14b",
+      "account": {
+        "exceededThreshold": false,
+        "paymentRequired": false,
+        "billingUrl": "https://www.chromatic.com/billing?accountId=675b0b0f1a6e01d1c9f6f801"
+      },
+      "repository": {
+        "provider": "github"
+      }
+    },
+    "storybookUrl": "https://69ca59d444eab425d6b6c14b-xbhbbyxbki.chromatic.com/",
+    "specCount": 51,
+    "componentCount": 5,
+    "testCount": 51,
+    "changeCount": 0,
+    "errorCount": 1,
+    "actualTestCount": 51,
+    "actualCaptureCount": 51,
+    "inheritedCaptureCount": 0,
+    "interactionTestFailuresCount": 0,
+    "webUrl": "https://www.chromatic.com/build?appId=69ca59d444eab425d6b6c14b&number=3",
+    "turboSnapEnabled": null,
+    "wasLimited": false,
+    "tests": [
+      {
+        "spec": {
+          "name": "Validated",
+          "component": {
+            "name": "UI/Badge",
+            "displayName": "Badge"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Refused",
+          "component": {
+            "name": "UI/Badge",
+            "displayName": "Badge"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Conform AI",
+          "component": {
+            "name": "UI/Badge",
+            "displayName": "Badge"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Doublon",
+          "component": {
+            "name": "UI/Badge",
+            "displayName": "Badge"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Pending",
+          "component": {
+            "name": "UI/Badge",
+            "displayName": "Badge"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Draft",
+          "component": {
+            "name": "UI/Badge",
+            "displayName": "Badge"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Archived",
+          "component": {
+            "name": "UI/Badge",
+            "displayName": "Badge"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Published",
+          "component": {
+            "name": "UI/Badge",
+            "displayName": "Badge"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Review",
+          "component": {
+            "name": "UI/Badge",
+            "displayName": "Badge"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Tous les variants",
+          "component": {
+            "name": "UI/Badge",
+            "displayName": "Badge"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Primaire / Statut=Défaut",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Secondaire / Statut=Défaut",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Tertiaire / Statut=Défaut",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Quatrième / Statut=Défaut",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Violet / Statut=Défaut",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Violet / Statut=Survol",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Primaire coloré / Statut=Défaut",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Secondaire coloré / Statut=Défaut",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Primaire / Statut=Survol",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Primaire / Statut=Focus",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Primaire / Statut=Cliqué",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Primaire / Statut=Inactif",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Primaire / Chargement",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Tailles (S / M / L)",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Icône seule (S / M / L)",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Avec icônes (gauche / droite)",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Grille — tous les variants × états",
+          "component": {
+            "name": "UI/Button",
+            "displayName": "Button"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Défaut",
+          "component": {
+            "name": "UI/Icon",
+            "displayName": "Icon"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Tailles DSFR (xs / sm / md / lg)",
+          "component": {
+            "name": "UI/Icon",
+            "displayName": "Icon"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Couleur héritée (currentColor)",
+          "component": {
+            "name": "UI/Icon",
+            "displayName": "Icon"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Accessibilité (décorative vs sémantique)",
+          "component": {
+            "name": "UI/Icon",
+            "displayName": "Icon"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Dans un Button (taille auto)",
+          "component": {
+            "name": "UI/Icon",
+            "displayName": "Icon"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Tableau — toutes les icônes (2264)",
+          "component": {
+            "name": "UI/Icon",
+            "displayName": "Icon"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Galerie — toutes les catégories",
+          "component": {
+            "name": "UI/Icon",
+            "displayName": "Icon"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Default",
+          "component": {
+            "name": "Primitives/Input",
+            "displayName": "Input"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "With Label",
+          "component": {
+            "name": "Primitives/Input",
+            "displayName": "Input"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "With Helper Text",
+          "component": {
+            "name": "Primitives/Input",
+            "displayName": "Input"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "With Error",
+          "component": {
+            "name": "Primitives/Input",
+            "displayName": "Input"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Disabled",
+          "component": {
+            "name": "Primitives/Input",
+            "displayName": "Input"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "With Left Icon",
+          "component": {
+            "name": "Primitives/Input",
+            "displayName": "Input"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "With Right Icon",
+          "component": {
+            "name": "Primitives/Input",
+            "displayName": "Input"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "With Both Icons",
+          "component": {
+            "name": "Primitives/Input",
+            "displayName": "Input"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Tous les statuts",
+          "component": {
+            "name": "UI/Tag",
+            "displayName": "Tag"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "À traiter",
+          "component": {
+            "name": "UI/Tag",
+            "displayName": "Tag"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "En cours",
+          "component": {
+            "name": "UI/Tag",
+            "displayName": "Tag"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Archivé",
+          "component": {
+            "name": "UI/Tag",
+            "displayName": "Tag"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "À revoir",
+          "component": {
+            "name": "UI/Tag",
+            "displayName": "Tag"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Publié",
+          "component": {
+            "name": "UI/Tag",
+            "displayName": "Tag"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Publié — avec lien externe",
+          "component": {
+            "name": "UI/Tag",
+            "displayName": "Tag"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "NA (vide)",
+          "component": {
+            "name": "UI/Tag",
+            "displayName": "Tag"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      },
+      {
+        "spec": {
+          "name": "Référence — tous les statuts",
+          "component": {
+            "name": "UI/Tag",
+            "displayName": "Tag"
+          }
+        },
+        "parameters": {
+          "viewport": 1200,
+          "viewportIsDefault": true
+        },
+        "mode": {
+          "name": "1200px"
+        }
+      }
+    ],
+    "inProgressCount": 0,
+    "completedAt": 1775028273079
+  },
+  "buildCommand": "pnpm run build --output-dir=/var/folders/ms/d3df9x596t7_ps6d9hrk78vh0000gp/T/chromatic--18300-0ZqPZaYYKCHL",
+  "buildLogFile": "/Users/jeremie/refugies.info/content-playground/apps/storybook/build-storybook.log",
+  "configuration": {},
+  "environment": {},
+  "exitCode": 2,
+  "exitCodeKey": "BUILD_HAS_ERRORS",
+  "fileInfo": {
+    "lengths": [
+      {
+        "pathname": "assets/Badge.stories-CDMGLV68.js",
+        "contentLength": 5979,
+        "knownAs": "assets/Badge.stories-CDMGLV68.js"
+      },
+      {
+        "pathname": "assets/Button.stories-C5q-OSAT.js",
+        "contentLength": 17481,
+        "knownAs": "assets/Button.stories-C5q-OSAT.js"
+      },
+      {
+        "pathname": "assets/Color-FRDS63T2-Bwz-1UWm.js",
+        "contentLength": 30250,
+        "knownAs": "assets/Color-FRDS63T2-Bwz-1UWm.js"
+      },
+      {
+        "pathname": "assets/DocsRenderer-LL677BLK-Dvo9yuBh.js",
+        "contentLength": 824576,
+        "knownAs": "assets/DocsRenderer-LL677BLK-Dvo9yuBh.js"
+      },
+      {
+        "pathname": "assets/Icon.stories-C5gDh3WE.js",
+        "contentLength": 128391,
+        "knownAs": "assets/Icon.stories-C5gDh3WE.js"
+      },
+      {
+        "pathname": "assets/Input.stories-C7-CT7Bg.js",
+        "contentLength": 6149,
+        "knownAs": "assets/Input.stories-C7-CT7Bg.js"
+      },
+      {
+        "pathname": "assets/Tag.stories-Byg0myDf.js",
+        "contentLength": 5602,
+        "knownAs": "assets/Tag.stories-Byg0myDf.js"
+      },
+      {
+        "pathname": "assets/WithTooltip-65CFNBJE-De2nzP2w.js",
+        "contentLength": 33240,
+        "knownAs": "assets/WithTooltip-65CFNBJE-De2nzP2w.js"
+      },
+      {
+        "pathname": "assets/axe-C67XikP4.js",
+        "contentLength": 580060,
+        "knownAs": "assets/axe-C67XikP4.js"
+      },
+      {
+        "pathname": "assets/client-07omF4TI.js",
+        "contentLength": 173145,
+        "knownAs": "assets/client-07omF4TI.js"
+      },
+      {
+        "pathname": "assets/formatter-EIJCOSYU-vro4CqU6.js",
+        "contentLength": 317,
+        "knownAs": "assets/formatter-EIJCOSYU-vro4CqU6.js"
+      },
+      {
+        "pathname": "assets/iframe-BJdKjHU3.css",
+        "contentLength": 216547,
+        "knownAs": "assets/iframe-BJdKjHU3.css"
+      },
+      {
+        "pathname": "assets/iframe-Bg0JjWt9.js",
+        "contentLength": 1107157,
+        "knownAs": "assets/iframe-Bg0JjWt9.js"
+      },
+      {
+        "pathname": "assets/index-BQRW9XiJ.js",
+        "contentLength": 3824,
+        "knownAs": "assets/index-BQRW9XiJ.js"
+      },
+      {
+        "pathname": "assets/jsx-runtime-BjG_zV1W.js",
+        "contentLength": 638,
+        "knownAs": "assets/jsx-runtime-BjG_zV1W.js"
+      },
+      {
+        "pathname": "assets/matchers-5TDFFDYO-BEZorklP.js",
+        "contentLength": 29381,
+        "knownAs": "assets/matchers-5TDFFDYO-BEZorklP.js"
+      },
+      {
+        "pathname": "assets/preload-helper-C1FmrZbK.js",
+        "contentLength": 1141,
+        "knownAs": "assets/preload-helper-C1FmrZbK.js"
+      },
+      {
+        "pathname": "assets/react-18-B8-wnCpE.js",
+        "contentLength": 836,
+        "knownAs": "assets/react-18-B8-wnCpE.js"
+      },
+      {
+        "pathname": "assets/syntaxhighlighter-OH4MV7E3-BbWeXDwT.js",
+        "contentLength": 78209,
+        "knownAs": "assets/syntaxhighlighter-OH4MV7E3-BbWeXDwT.js"
+      },
+      {
+        "pathname": "assets/tooltip-3MQXPqBX.css",
+        "contentLength": 8129,
+        "knownAs": "assets/tooltip-3MQXPqBX.css"
+      },
+      {
+        "pathname": "assets/tooltip-B_V3SF26.js",
+        "contentLength": 2589675,
+        "knownAs": "assets/tooltip-B_V3SF26.js"
+      },
+      {
+        "pathname": "favicon-wrapper.svg",
+        "contentLength": 5803,
+        "knownAs": "favicon-wrapper.svg"
+      },
+      {
+        "pathname": "favicon.svg",
+        "contentLength": 2163,
+        "knownAs": "favicon.svg"
+      },
+      {
+        "pathname": "iframe.html",
+        "contentLength": 18630,
+        "knownAs": "iframe.html"
+      },
+      {
+        "pathname": "index.html",
+        "contentLength": 3476,
+        "knownAs": "index.html"
+      },
+      {
+        "pathname": "index.json",
+        "contentLength": 16750,
+        "knownAs": "index.json"
+      },
+      {
+        "pathname": "manifests/components.html",
+        "contentLength": 66269,
+        "knownAs": "manifests/components.html"
+      },
+      {
+        "pathname": "manifests/components.json",
+        "contentLength": 28638,
+        "knownAs": "manifests/components.json"
+      },
+      {
+        "pathname": "nunito-sans-bold-italic.woff2",
+        "contentLength": 49460,
+        "knownAs": "nunito-sans-bold-italic.woff2"
+      },
+      {
+        "pathname": "nunito-sans-bold.woff2",
+        "contentLength": 47144,
+        "knownAs": "nunito-sans-bold.woff2"
+      },
+      {
+        "pathname": "nunito-sans-italic.woff2",
+        "contentLength": 49620,
+        "knownAs": "nunito-sans-italic.woff2"
+      },
+      {
+        "pathname": "nunito-sans-regular.woff2",
+        "contentLength": 47072,
+        "knownAs": "nunito-sans-regular.woff2"
+      },
+      {
+        "pathname": "project.json",
+        "contentLength": 1008,
+        "knownAs": "project.json"
+      },
+      {
+        "pathname": "sb-addons/a11y-2/manager-bundle.js",
+        "contentLength": 66121,
+        "knownAs": "sb-addons/a11y-2/manager-bundle.js"
+      },
+      {
+        "pathname": "sb-addons/designs-4/register-panel-bundle.js",
+        "contentLength": 104121,
+        "knownAs": "sb-addons/designs-4/register-panel-bundle.js"
+      },
+      {
+        "pathname": "sb-addons/designs-4/register-panel-bundle.js.LEGAL.txt",
+        "contentLength": 162,
+        "knownAs": "sb-addons/designs-4/register-panel-bundle.js.LEGAL.txt"
+      },
+      {
+        "pathname": "sb-addons/docs-1/manager-bundle.js",
+        "contentLength": 18702,
+        "knownAs": "sb-addons/docs-1/manager-bundle.js"
+      },
+      {
+        "pathname": "sb-addons/pseudo-states-3/manager-bundle.js",
+        "contentLength": 7659,
+        "knownAs": "sb-addons/pseudo-states-3/manager-bundle.js"
+      },
+      {
+        "pathname": "sb-addons/storybook-core-server-presets-0/common-manager-bundle.js",
+        "contentLength": 429780,
+        "knownAs": "sb-addons/storybook-core-server-presets-0/common-manager-bundle.js"
+      },
+      {
+        "pathname": "sb-common-assets/favicon-wrapper.svg",
+        "contentLength": 5803,
+        "knownAs": "sb-common-assets/favicon-wrapper.svg"
+      },
+      {
+        "pathname": "sb-common-assets/favicon.svg",
+        "contentLength": 2163,
+        "knownAs": "sb-common-assets/favicon.svg"
+      },
+      {
+        "pathname": "sb-common-assets/nunito-sans-bold-italic.woff2",
+        "contentLength": 49460,
+        "knownAs": "sb-common-assets/nunito-sans-bold-italic.woff2"
+      },
+      {
+        "pathname": "sb-common-assets/nunito-sans-bold.woff2",
+        "contentLength": 47144,
+        "knownAs": "sb-common-assets/nunito-sans-bold.woff2"
+      },
+      {
+        "pathname": "sb-common-assets/nunito-sans-italic.woff2",
+        "contentLength": 49620,
+        "knownAs": "sb-common-assets/nunito-sans-italic.woff2"
+      },
+      {
+        "pathname": "sb-common-assets/nunito-sans-regular.woff2",
+        "contentLength": 47072,
+        "knownAs": "sb-common-assets/nunito-sans-regular.woff2"
+      },
+      {
+        "pathname": "sb-manager/globals-runtime.js",
+        "contentLength": 3178617,
+        "knownAs": "sb-manager/globals-runtime.js"
+      },
+      {
+        "pathname": "sb-manager/globals.js",
+        "contentLength": 1019,
+        "knownAs": "sb-manager/globals.js"
+      },
+      {
+        "pathname": "sb-manager/manager-stores.js",
+        "contentLength": 654,
+        "knownAs": "sb-manager/manager-stores.js"
+      },
+      {
+        "pathname": "sb-manager/runtime.js",
+        "contentLength": 1141693,
+        "knownAs": "sb-manager/runtime.js"
+      },
+      {
+        "pathname": "vite-inject-mocker-entry.js",
+        "contentLength": 28534,
+        "knownAs": "vite-inject-mocker-entry.js"
+      }
+    ],
+    "paths": [
+      "assets/Badge.stories-CDMGLV68.js",
+      "assets/Button.stories-C5q-OSAT.js",
+      "assets/Color-FRDS63T2-Bwz-1UWm.js",
+      "assets/DocsRenderer-LL677BLK-Dvo9yuBh.js",
+      "assets/Icon.stories-C5gDh3WE.js",
+      "assets/Input.stories-C7-CT7Bg.js",
+      "assets/Tag.stories-Byg0myDf.js",
+      "assets/WithTooltip-65CFNBJE-De2nzP2w.js",
+      "assets/axe-C67XikP4.js",
+      "assets/client-07omF4TI.js",
+      "assets/formatter-EIJCOSYU-vro4CqU6.js",
+      "assets/iframe-BJdKjHU3.css",
+      "assets/iframe-Bg0JjWt9.js",
+      "assets/index-BQRW9XiJ.js",
+      "assets/jsx-runtime-BjG_zV1W.js",
+      "assets/matchers-5TDFFDYO-BEZorklP.js",
+      "assets/preload-helper-C1FmrZbK.js",
+      "assets/react-18-B8-wnCpE.js",
+      "assets/syntaxhighlighter-OH4MV7E3-BbWeXDwT.js",
+      "assets/tooltip-3MQXPqBX.css",
+      "assets/tooltip-B_V3SF26.js",
+      "favicon-wrapper.svg",
+      "favicon.svg",
+      "iframe.html",
+      "index.html",
+      "index.json",
+      "manifests/components.html",
+      "manifests/components.json",
+      "nunito-sans-bold-italic.woff2",
+      "nunito-sans-bold.woff2",
+      "nunito-sans-italic.woff2",
+      "nunito-sans-regular.woff2",
+      "project.json",
+      "sb-addons/a11y-2/manager-bundle.js",
+      "sb-addons/designs-4/register-panel-bundle.js",
+      "sb-addons/designs-4/register-panel-bundle.js.LEGAL.txt",
+      "sb-addons/docs-1/manager-bundle.js",
+      "sb-addons/pseudo-states-3/manager-bundle.js",
+      "sb-addons/storybook-core-server-presets-0/common-manager-bundle.js",
+      "sb-common-assets/favicon-wrapper.svg",
+      "sb-common-assets/favicon.svg",
+      "sb-common-assets/nunito-sans-bold-italic.woff2",
+      "sb-common-assets/nunito-sans-bold.woff2",
+      "sb-common-assets/nunito-sans-italic.woff2",
+      "sb-common-assets/nunito-sans-regular.woff2",
+      "sb-manager/globals-runtime.js",
+      "sb-manager/globals.js",
+      "sb-manager/manager-stores.js",
+      "sb-manager/runtime.js",
+      "vite-inject-mocker-entry.js"
+    ],
+    "statsPath": "",
+    "total": 11355084,
+    "hashes": {
+      "assets/Badge.stories-CDMGLV68.js": "9af50367a85ce17a",
+      "assets/Button.stories-C5q-OSAT.js": "c7c003596d2525cc",
+      "assets/Color-FRDS63T2-Bwz-1UWm.js": "98480eddb993dd20",
+      "assets/DocsRenderer-LL677BLK-Dvo9yuBh.js": "28a8519c58c2ec9c",
+      "assets/Icon.stories-C5gDh3WE.js": "0cee732437038627",
+      "assets/Input.stories-C7-CT7Bg.js": "bc7809f1d43ed3b1",
+      "assets/Tag.stories-Byg0myDf.js": "276533d407dfc1a7",
+      "assets/WithTooltip-65CFNBJE-De2nzP2w.js": "aa6fdc7bfcbc76ee",
+      "assets/axe-C67XikP4.js": "4b0e6d8e40d49c0d",
+      "assets/client-07omF4TI.js": "3c2bd785a4e6bd42",
+      "assets/formatter-EIJCOSYU-vro4CqU6.js": "481645450137aee4",
+      "assets/iframe-BJdKjHU3.css": "7f4921de969372f1",
+      "assets/iframe-Bg0JjWt9.js": "21136f6d1f43e72a",
+      "assets/index-BQRW9XiJ.js": "b8400c9a42f50e54",
+      "assets/jsx-runtime-BjG_zV1W.js": "11ee0d9be161e4d2",
+      "assets/matchers-5TDFFDYO-BEZorklP.js": "90545d0dbc59b399",
+      "assets/preload-helper-C1FmrZbK.js": "5ac2a2a3c0f65f87",
+      "assets/react-18-B8-wnCpE.js": "46700074b13d431c",
+      "assets/syntaxhighlighter-OH4MV7E3-BbWeXDwT.js": "231e9bc0c987d1d4",
+      "assets/tooltip-3MQXPqBX.css": "174056f95a4635eb",
+      "assets/tooltip-B_V3SF26.js": "fd5ffce9556468d2",
+      "favicon-wrapper.svg": "ac2f5da4f59a4ab7",
+      "favicon.svg": "d3380c3fb63a8430",
+      "iframe.html": "34a7d4cfa1556a3a",
+      "index.html": "1318b0c7c3eddf28",
+      "index.json": "1d34c2e3297448ca",
+      "manifests/components.html": "f364c22b988cbb2f",
+      "manifests/components.json": "74391400ff8a007e",
+      "nunito-sans-bold-italic.woff2": "d64464b3594b3fb9",
+      "nunito-sans-bold.woff2": "0bd5b61b7fb7f7d5",
+      "nunito-sans-italic.woff2": "b7807d9de055e9a0",
+      "nunito-sans-regular.woff2": "6687b7be04c2debe",
+      "project.json": "b056ec0d6de3fffb",
+      "sb-addons/a11y-2/manager-bundle.js": "27796dd94d42335b",
+      "sb-addons/designs-4/register-panel-bundle.js": "5278965e6a784537",
+      "sb-addons/designs-4/register-panel-bundle.js.LEGAL.txt": "838592059445e23a",
+      "sb-addons/docs-1/manager-bundle.js": "cf3c5b85c6404d76",
+      "sb-addons/pseudo-states-3/manager-bundle.js": "e5a640838d1d7d15",
+      "sb-addons/storybook-core-server-presets-0/common-manager-bundle.js": "928a42e468e04d60",
+      "sb-common-assets/favicon-wrapper.svg": "ac2f5da4f59a4ab7",
+      "sb-common-assets/favicon.svg": "d3380c3fb63a8430",
+      "sb-common-assets/nunito-sans-bold-italic.woff2": "d64464b3594b3fb9",
+      "sb-common-assets/nunito-sans-bold.woff2": "0bd5b61b7fb7f7d5",
+      "sb-common-assets/nunito-sans-italic.woff2": "b7807d9de055e9a0",
+      "sb-common-assets/nunito-sans-regular.woff2": "6687b7be04c2debe",
+      "sb-manager/globals-runtime.js": "24eebac8726d1fb9",
+      "sb-manager/globals.js": "2c4cf7380e550517",
+      "sb-manager/manager-stores.js": "9201ef0cd1069e23",
+      "sb-manager/runtime.js": "0af5ce3d4a68c178",
+      "vite-inject-mocker-entry.js": "1c518ebd9fef23af"
+    }
+  },
+  "flags": {
+    "buildScriptName": "build",
+    "debug": true,
+    "outputDir": [],
+    "storybookBuildDir": [],
+    "externals": [],
+    "onlyStoryFiles": [],
+    "onlyStoryNames": [],
+    "untraced": [],
+    "fileHashing": true,
+    "interactive": true
+  },
+  "git": {
+    "version": "2.50.1",
+    "gitUserEmail": "j@jeremie-gisserot.net",
+    "uncommittedHash": "d832a77e44762c8e4068d7765776b38f3c0ef196",
+    "rootPath": "/Users/jeremie/refugies.info/content-playground",
+    "commit": "9bfcde320f97e90ba4831973c189a12992a02621",
+    "committedAt": 1775027605000,
+    "committerEmail": "j@jeremie-gisserot.net",
+    "committerName": "Jérémie Gisserot",
+    "branch": "jeremie/implement-storybook",
+    "slug": "refugies-info/playground",
+    "fromCI": false,
+    "parentCommits": ["9bfcde320f97e90ba4831973c189a12992a02621"]
+  },
+  "input": [],
+  "isOnboarding": true,
+  "isPublishOnly": false,
+  "isReactNativeApp": false,
+  "options": {
+    "fromCI": false,
+    "inAction": false,
+    "dryRun": false,
+    "debug": true,
+    "autoAcceptChanges": false,
+    "exitZeroOnChanges": false,
+    "exitOnceUploaded": false,
+    "diagnosticsFile": "chromatic-diagnostics.json",
+    "fileHashing": true,
+    "interactive": false,
+    "isLocalBuild": false,
+    "originalArgv": ["--build-script-name", "build", "--debug"],
+    "logFile": "chromatic.log",
+    "forceRebuild": true,
+    "buildScriptName": "build",
+    "storybookLogFile": "build-storybook.log",
+    "branchName": ""
+  },
+  "packageJson": {
+    "name": "@playground/storybook",
+    "version": "0.0.1",
+    "private": true,
+    "type": "module",
+    "scripts": {
+      "storybook": "storybook dev -p 6006",
+      "build": "storybook build",
+      "chromatic": "chromatic --build-script-name build"
+    },
+    "dependencies": {
+      "@playground/ui": "workspace:*",
+      "react": "19.1.0",
+      "react-dom": "19.1.0"
+    },
+    "devDependencies": {
+      "@storybook/addon-a11y": "10.3.3",
+      "@storybook/addon-designs": "^11.1.2",
+      "@storybook/addon-docs": "10.3.3",
+      "@storybook/react-vite": "10.3.3",
+      "@tailwindcss/postcss": "4.1.17",
+      "chromatic": "^16.0.0",
+      "lucide-react": "0.487.0",
+      "storybook": "10.3.3",
+      "storybook-addon-pseudo-states": "^10.3.3",
+      "vite": "6.2.6"
+    }
+  },
+  "packagePath": "/Users/jeremie/refugies.info/content-playground/apps/storybook/package.json",
+  "projectMetadata": {
+    "hasRouter": false,
+    "creationDate": {},
+    "storybookCreationDate": {},
+    "numberOfCommitters": 3,
+    "numberOfAppFiles": 0
+  },
+  "rebuildForBuildId": "69ccc6f70e05587ed1c4f803",
+  "runtimeMetadata": {
+    "nodePlatform": "darwin",
+    "nodeVersion": "22.14.0",
+    "packageManager": "pnpm",
+    "packageManagerVersion": "10.29.3"
+  },
+  "sentinelUrls": [
+    "https://chromatic-builds.s3.us-west-2.amazonaws.com/69ca59d444eab425d6b6c14b-xbhbbyxbki/.chromatic/files-copied.3398698789.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAJVVEQEOBEEPXSNNQ%2F20260401%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20260401T072157Z&X-Amz-Expires=1800&X-Amz-Signature=10ed6fcbf13f064e0661698afd6f700dd265a01252d4b22617664d92b4cda837&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject"
+  ],
+  "sessionId": "04378e38-743b-479c-a76e-8bb6ac007481",
+  "sourceDir": "/var/folders/ms/d3df9x596t7_ps6d9hrk78vh0000gp/T/chromatic--18300-0ZqPZaYYKCHL",
+  "startedAt": 1775028123595,
+  "storybook": {
+    "version": "10.3.3",
+    "builder": {
+      "name": "@storybook/react-vite",
+      "packageVersion": "10.3.3"
+    },
+    "baseDir": "apps/storybook"
+  },
+  "storybookUrl": "https://69ca59d444eab425d6b6c14b-xbhbbyxbki.chromatic.com/",
+  "task": "snapshot",
+  "uploadedBytes": 29646,
+  "uploadedFiles": 2,
+  "userError": true
+}

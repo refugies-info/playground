@@ -69,3 +69,6 @@ supabase/snippets/
 
 # Turborepo
 .turbo
+
+# Storybook
+storybook-static/

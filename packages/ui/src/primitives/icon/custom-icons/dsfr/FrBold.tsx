@@ -1,0 +1,22 @@
+// AUTO-GENERE — ne pas editer (sync-dsfr-icons.ts)
+import type { ComponentType } from "react";
+
+type DsfrIconProps = { color?: string; size?: number | string };
+
+export const FrBold: ComponentType<DsfrIconProps> = ({
+  color = "currentColor",
+  size = 24,
+  ...props
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    width={size}
+    height={size}
+    fill={color}
+    aria-hidden="true"
+    {...props}
+  >
+    <path d="M12.5 4a4.5 4.5 0 0 1 3.256 7.606 4.498 4.498 0 0 1 .926 7.076A4.5 4.5 0 0 1 13.5 20H6V4h6.5Zm.625 9.5H9v4h4.125c1.036 0 1.875-.895 1.875-2s-.84-2-1.875-2Zm-.91-7H9v4h3.214c.987 0 1.786-.895 1.786-2s-.8-2-1.786-2Z" />
+  </svg>
+);

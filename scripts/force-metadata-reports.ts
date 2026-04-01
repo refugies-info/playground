@@ -22,6 +22,8 @@
  *   pnpm force:metadata --prod --retry-failed --dry-run
  */
 
+import * as path from "node:path";
+import * as readline from "node:readline";
 import {
   createLettaClient,
   findOrCreateConversation,
@@ -32,8 +34,6 @@ import {
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin, type Json } from "@playground/supabase";
 import * as dotenv from "dotenv";
-import * as path from "path";
-import * as readline from "readline";
 
 // =============================================================================
 // Config
@@ -92,19 +92,8 @@ async function confirmProductionRun(): Promise<boolean> {
   });
 
   const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "unknown";
-  const supabaseUrl =
+  const _supabaseUrl =
     rawUrl.length > 47 ? `${rawUrl.substring(0, 44)}...` : rawUrl;
-
-  console.error("");
-  console.error("┌─────────────────────────────────────────────────────────┐");
-  console.error("│  ⚠️   PRODUCTION MODE                                   │");
-  console.error("│                                                         │");
-  console.error("│  This will write to the PRODUCTION database.            │");
-  console.error(`│  Target: ${supabaseUrl.padEnd(47)} │`);
-  console.error("│                                                         │");
-  console.error("│  Make sure you know what you're doing.                  │");
-  console.error("└─────────────────────────────────────────────────────────┘");
-  console.error("");
 
   return new Promise((resolve) => {
     rl.question("Continue? (y/N) ", (answer) => {

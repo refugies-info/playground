@@ -82,7 +82,7 @@ export function PublishSuccessDialog({
           </div>
           <div className="flex gap-2">
             <Button
-              variant="outline"
+              variant="tertiaire"
               size="sm"
               onClick={onClose}
               className="h-7 text-[10px] px-3"
@@ -90,7 +90,7 @@ export function PublishSuccessDialog({
               Fermer
             </Button>
             <Button
-              variant="primary"
+              variant="primaire"
               size="sm"
               onClick={onRetry}
               className="h-7 text-[10px] px-3"
@@ -124,7 +124,7 @@ export function PublishSuccessDialog({
           </div>
           <Button
             onClick={onOpenLink}
-            variant="outline"
+            variant="tertiaire"
             size="sm"
             className="w-full gap-2 h-8 text-xs"
           >

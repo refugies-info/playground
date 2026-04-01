@@ -36,11 +36,35 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check if UI or Storybook changed
+        id: ui-changed
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            BASE_SHA="${{ github.event.before }}"
+          else
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          fi
+          CHANGED=$(git diff --name-only "$BASE_SHA" HEAD -- packages/ui/ apps/storybook/ || true)
+          if [ -n "$CHANGED" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Playwright Chromium
+        if: steps.ui-changed.outputs.changed == 'true'
+        run: pnpm --filter @playground/storybook exec playwright install --with-deps chromium
+
       - name: Lint & Format Check
         run: pnpm biome ci .
 
       - name: Type check
         run: pnpm check:types
 
-      - name: Run Tests
+      - name: Run Tests (with Storybook)
+        if: steps.ui-changed.outputs.changed == 'true'
         run: pnpm test
+
+      - name: Run Tests (without Storybook)
+        if: steps.ui-changed.outputs.changed != 'true'
+        run: pnpm turbo test --filter='!@playground/storybook'

@@ -91,7 +91,7 @@ export function PublishConfirmationDialog({
 
       <Button
         onClick={onConfirm}
-        variant="success"
+        variant="primaire"
         size="sm"
         className="w-full gap-2 h-8 text-xs"
       >

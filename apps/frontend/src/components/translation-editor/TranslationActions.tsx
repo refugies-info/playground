@@ -97,7 +97,7 @@ export function TranslationActions({
 
       {/* Preview Button - disabled if source not published */}
       <Button
-        variant="outline"
+        variant="tertiaire"
         size="sm"
         className={cn("gap-2", isCollapsed && "justify-center px-0")}
         onClick={previewTranslation}
@@ -110,7 +110,7 @@ export function TranslationActions({
 
       {/* Save Button - enabled when modified */}
       <Button
-        variant="primary"
+        variant="primaire"
         size="sm"
         className={cn("gap-2", isCollapsed && "justify-center px-0")}
         onClick={() => saveTranslation()}
@@ -122,7 +122,7 @@ export function TranslationActions({
 
       {/* Publish Button - always available except when publishing (auto-saves before publishing) */}
       <Button
-        variant="success"
+        variant="primaire"
         size="sm"
         onClick={handlePublish}
         disabled={isPublishing}
@@ -192,7 +192,7 @@ export function TranslationActions({
               </div>
               <div className="flex gap-2 w-full">
                 <Button
-                  variant="outline"
+                  variant="tertiaire"
                   size="sm"
                   onClick={handleRetry}
                   className="flex-1 h-8 text-xs"
@@ -201,7 +201,7 @@ export function TranslationActions({
                   Réessayer
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="tertiaire"
                   size="sm"
                   onClick={() => setShowPublishSuccessOverlay(false)}
                   className="flex-1 h-8 text-xs"
@@ -236,7 +236,7 @@ export function TranslationActions({
               <div className="flex gap-2 w-full">
                 <Button
                   onClick={() => window.open(publicationUrl, "_blank")}
-                  variant="outline"
+                  variant="tertiaire"
                   size="sm"
                   className="flex-1 gap-2 h-8 text-xs"
                 >

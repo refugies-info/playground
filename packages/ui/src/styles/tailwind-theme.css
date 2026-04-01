@@ -1,0 +1,60 @@
+/**
+ * Tailwind Theme Configuration
+ *
+ * Mappe les variables DSFR sur les tokens Tailwind/shadcn.
+ * Existe uniquement pour que les utilities Tailwind héritées
+ * (bg-background, bg-muted, border-border…) fonctionnent.
+ *
+ * ⚠️  Ce fichier est voué à disparaître.
+ *     Au fur et à mesure qu'on remplace les composants shadcn/ui
+ *     par des composants maison, les références à bg-background,
+ *     bg-muted etc. disparaissent — et ce fichier avec elles.
+ *
+ * Règle : pour tout nouveau composant → utiliser les vars DSFR directement.
+ *         Ne JAMAIS ajouter de nouveaux tokens ici.
+ */
+
+@theme inline {
+  /* ─── Surfaces ──────────────────────────────── */
+  --color-background: var(--background-default-grey);
+  --color-foreground: var(--text-default-grey);
+
+  --color-card: var(--background-default-grey);
+  --color-card-foreground: var(--text-default-grey);
+
+  --color-popover: var(--background-default-grey);
+  --color-popover-foreground: var(--text-default-grey);
+
+  /* ─── Muted / Subtle ────────────────────────── */
+  --color-muted: var(--background-alt-grey);
+  --color-muted-foreground: var(--text-mention-grey);
+
+  /* ─── Accent ────────────────────────────────── */
+  --color-accent: var(--background-alt-grey);
+  --color-accent-foreground: var(--text-default-grey);
+
+  /* ─── Primary = Bleu France ─────────────────── */
+  --color-primary: var(--background-action-high-blue-france);
+  --color-primary-foreground: var(--text-inverted-grey);
+
+  /* ─── Secondary ─────────────────────────────── */
+  --color-secondary: var(--background-alt-grey);
+  --color-secondary-foreground: var(--text-default-grey);
+
+  /* ─── Feedback ──────────────────────────────── */
+  --color-destructive: var(--background-flat-error);
+
+  /* ─── UI Controls ───────────────────────────── */
+  --color-border: var(--border-default-grey);
+  --color-input: var(--border-default-grey);
+  --color-ring: var(--background-action-high-blue-france);
+
+  /* ─── Radius ────────────────────────────────── */
+  --radius-base: 0.625rem; /* 10px — cards, modals, popovers */
+  --radius-xs: 0.25rem; /*  4px — badges, conformité, tags */
+  --radius-sm: 0.375rem; /*  6px — inputs, petits éléments */
+  --radius: var(--radius-base);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}

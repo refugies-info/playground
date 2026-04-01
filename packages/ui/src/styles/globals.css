@@ -1,0 +1,75 @@
+/**
+ * Design System — Point d'entrée CSS
+ *
+ * Ordre des layers (du plus faible au plus fort) :
+ *   dsfr < base < components < utilities
+ *
+ * Le layer "dsfr" est déclaré EN PREMIER pour qu'il ait la priorité
+ * la plus basse. Les utilities Tailwind l'emportent toujours,
+ * même quand DSFR applique des règles comportementales
+ * (ex: button:hover { background-color: var(--hover-tint) }).
+ *
+ * Inspiré du pattern karfur/RI — voir apps/client/src/css/index.css.
+ *
+ * Usage dans les apps :
+ *   import "@playground/ui/styles/globals.css"
+ */
+
+/* Layer order must be declared BEFORE @import "tailwindcss" */
+@layer dsfr, base, components, utilities;
+
+@import "tailwindcss";
+
+/* DSFR dans son propre layer — ses règles comportementales ne peuvent
+ * plus écraser les utilities Tailwind */
+@import "@gouvfr/dsfr/dist/core/core.css" layer(dsfr);
+
+@import "./tailwind-theme.css";
+
+/* Scanner les classes Tailwind dans tous les composants UI */
+@source "../**/*.{ts,tsx,js,jsx,mdx}";
+
+/* ─── Base styles ─────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* ── DSFR link side effects — disabled globally ──────────────────────────
+   *
+   * DSFR injecte deux effets automatiques sur tous les <a> :
+   *
+   * 1. Fausse underline via background-image (--underline-img)
+   *    Pas un text-decoration classique — impossible à désactiver avec
+   *    "no-underline". Il faut neutraliser la variable CSS à la source.
+   *
+   * 2. Icône "lien externe" via [target="_blank"]::after
+   *    DSFR ajoute automatiquement l'icône external-link sur tout lien
+   *    qui ouvre dans un nouvel onglet.
+   *
+   * Les deux sont désactivés ici par défaut.
+   * Pour les réactiver sur un lien spécifique : ajouter la classe .fr-link.
+   *
+   * Pourquoi ça marche : ce bloc est dans @layer base, qui est déclaré
+   * après @layer dsfr → il prend toujours le dessus sur les règles DSFR.
+   */
+  a {
+    --underline-img: none;
+  }
+
+  [target="_blank"]::after {
+    display: none;
+  }
+
+  /* Réactiver les effets DSFR pour les liens explicitement stylés .fr-link */
+  .fr-link {
+    --underline-img: linear-gradient(0deg, currentColor, currentColor);
+  }
+
+  .fr-link[target="_blank"]::after {
+    display: inline-block;
+  }
+}

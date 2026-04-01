@@ -45,8 +45,12 @@ layout/              ← Header, Sidebar, Navigation, etc.
 ### ✅ Correct
 
 ```typescript
-// Design system
-import { Button, Input, Card } from "@playground/ui";
+// Composants et types
+import { Button, Icon, Badge } from "@playground/ui";
+import type { IconRef } from "@playground/ui";
+
+// Icônes (Remix Icons + DSFR custom)
+import { RiArrowRightLine, FrInfoLine } from "@playground/ui/icons";
 
 // Feature components
 import { LoginForm } from "@/components/auth";
@@ -58,9 +62,37 @@ import { LoginForm } from "@/components/auth";
 // Deep paths
 import { Button } from "@playground/ui/src/primitives/button";
 
+// Direct import depuis @remixicon/react (utiliser le barrel)
+import { RiSearchLine } from "@remixicon/react";
+
 // Cross-feature imports
 import { SomeComponent } from "../dashboard";
 ```
+
+---
+
+## Icônes
+
+```tsx
+import { Icon } from "@playground/ui"
+import { RiSearchLine, RiArrowRightLine, FrInfoLine } from "@playground/ui/icons"
+
+// Icône standalone
+<Icon icon={RiSearchLine} size="md" />
+
+// Icône accessible
+<Icon icon={RiSearchLine} aria-label="Rechercher" />
+
+// Icône dans un Button (auto-détecte icon-only)
+<Button leftIcon={RiArrowRightLine}>Continuer</Button>
+<Button leftIcon={RiCloseLine} aria-label="Fermer" />
+```
+
+**Tailles :** `xs` (12px) · `sm` (16px) · `md` (24px, défaut) · `lg` (32px)
+
+**Préfixes :** `Ri*` = Remix Icons (~2800) · `Fr*` = DSFR custom (~45)
+
+→ Voir [icon-system.md](./icon-system.md)
 
 ---
 

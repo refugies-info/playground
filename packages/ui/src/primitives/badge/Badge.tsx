@@ -3,24 +3,30 @@ import * as React from "react";
 
 import { cn } from "../../utils";
 
+/**
+ * Badge — Composant générique d'étiquette
+ *
+ * 5 variants sémantiques génériques.
+ * Les variantes RCO (validated, refused, conform-ai, doublon, pending, draft,
+ * archived, published, review) ont été supprimées — remplacées par Tag et Conformite.
+ *
+ * Suppression complète de Badge prévue lors de la refonte des écrans.
+ */
 const badgeVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded font-semibold text-sm px-2.5 py-0.5 transition-colors",
+  "inline-flex items-center gap-1 rounded font-bold text-xs uppercase tracking-wide px-2 py-1 transition-colors select-none whitespace-nowrap",
   {
     variants: {
       variant: {
-        success: "bg-green-100 text-green-700 border border-green-200",
-        danger: "bg-red-100 text-red-700 border border-red-200",
-        warning: "bg-yellow-100 text-yellow-700 border border-yellow-200",
-        info: "bg-blue-100 text-blue-700 border border-blue-200",
-        neutral: "bg-gray-100 text-gray-700 border border-gray-200",
-        pink: "bg-pink-100 text-pink-700 border border-pink-200",
-        orange: "bg-orange-100 text-orange-700 border border-orange-200",
-        violet: "bg-violet-100 text-violet-700 border border-violet-200",
+        info: "bg-blue-100   text-blue-700",
+        neutral: "bg-gray-100   text-gray-700",
+        success: "bg-green-100  text-green-700",
+        danger: "bg-red-100    text-red-700",
+        warning: "bg-yellow-100 text-yellow-700",
       },
       size: {
-        sm: "text-xs px-2 py-0.5",
-        md: "text-sm px-2.5 py-0.5",
-        lg: "text-base px-3 py-1",
+        sm: "text-[10px] px-1.5 py-0.5",
+        md: "text-xs px-2 py-1",
+        lg: "text-sm px-3 py-1.5",
       },
     },
     defaultVariants: {
@@ -32,15 +38,22 @@ const badgeVariants = cva(
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof badgeVariants> {}
+    VariantProps<typeof badgeVariants> {
+  /** Icône optionnelle affichée avant le label */
+  icon?: React.ReactNode;
+}
+
+/** Type utilitaire pour typer les variants à l'extérieur du composant */
+export type BadgeVariant = NonNullable<BadgeProps["variant"]>;
 
 const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ className, variant, size, children, ...props }, ref) => (
+  ({ className, variant, icon, children, ...props }, ref) => (
     <span
-      className={cn(badgeVariants({ variant, size, className }))}
       ref={ref}
+      className={cn(badgeVariants({ variant, className }))}
       {...props}
     >
+      {icon && <span className="shrink-0 size-4">{icon}</span>}
       {children}
     </span>
   ),
