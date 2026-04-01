@@ -1,6 +1,7 @@
 import { AppHeader, AppLogo, BoutonMenu } from "@playground/ui";
 import {
   RiAccountCircleLine,
+  RiDownloadLine,
   RiFileTextLine,
   RiLogoutBoxRLine,
   RiTranslate2,
@@ -13,6 +14,10 @@ const meta: Meta<typeof AppHeader> = {
   tags: ["autodocs"],
   parameters: {
     layout: "fullscreen",
+    design: {
+      type: "figma",
+      url: "https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/Wireframes_RCO?node-id=1255-8294",
+    },
   },
 };
 
@@ -26,30 +31,68 @@ const Logo = () => (
   />
 );
 
-/** Header complet admin */
+const Nav = ({ children }: { children: React.ReactNode }) => (
+  <nav className="ml-auto flex items-center gap-2 py-3">{children}</nav>
+);
+
+/** Header admin complet — tous les accès rapides visibles */
 export const Admin: Story = {
+  name: "Admin — tous les accès",
   render: () => (
     <AppHeader>
       <Logo />
-      <nav className="ml-auto flex items-center gap-2 py-3">
-        <BoutonMenu icon={RiFileTextLine} label="Importer" />
+      <Nav>
+        <BoutonMenu icon={RiDownloadLine} label="Importer" />
         <BoutonMenu icon={RiFileTextLine} label="Fiches" active />
         <BoutonMenu icon={RiTranslate2} label="Espace de traduction" />
         <BoutonMenu icon={RiAccountCircleLine} label="Utilisateurs" />
         <BoutonMenu icon={RiLogoutBoxRLine} label="Se déconnecter" />
-      </nav>
+      </Nav>
     </AppHeader>
   ),
 };
 
-/** Header traducteur (seul Se déconnecter visible) */
-export const Traducteur: Story = {
+/** Header admin — page Espace de traduction active */
+export const AdminTraduction: Story = {
+  name: "Admin — Traduction active",
   render: () => (
     <AppHeader>
       <Logo />
-      <nav className="ml-auto flex items-center gap-2 py-3">
+      <Nav>
+        <BoutonMenu icon={RiDownloadLine} label="Importer" />
+        <BoutonMenu icon={RiFileTextLine} label="Fiches" />
+        <BoutonMenu icon={RiTranslate2} label="Espace de traduction" active />
+        <BoutonMenu icon={RiAccountCircleLine} label="Utilisateurs" />
         <BoutonMenu icon={RiLogoutBoxRLine} label="Se déconnecter" />
-      </nav>
+      </Nav>
+    </AppHeader>
+  ),
+};
+
+/** Header éditeur — pas d'accès à Importer ni Utilisateurs */
+export const Editeur: Story = {
+  name: "Éditeur — accès réduit",
+  render: () => (
+    <AppHeader>
+      <Logo />
+      <Nav>
+        <BoutonMenu icon={RiFileTextLine} label="Fiches" active />
+        <BoutonMenu icon={RiTranslate2} label="Espace de traduction" />
+        <BoutonMenu icon={RiLogoutBoxRLine} label="Se déconnecter" />
+      </Nav>
+    </AppHeader>
+  ),
+};
+
+/** Header traducteur — seul Se déconnecter visible */
+export const Traducteur: Story = {
+  name: "Traducteur — minimal",
+  render: () => (
+    <AppHeader>
+      <Logo />
+      <Nav>
+        <BoutonMenu icon={RiLogoutBoxRLine} label="Se déconnecter" />
+      </Nav>
     </AppHeader>
   ),
 };
