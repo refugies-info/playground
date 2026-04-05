@@ -107,13 +107,13 @@ Environment variables are configuration values that change between environments 
 - **Description**: Number of structures to fetch per API page (pagination)
 - **Usage**: Adjust based on network conditions and API rate limits
 
-### `MAX_PENDING_AUDITS`
+### `MAX_EDITORIAL_BACKLOG`
 
 - **Type**: Number
 - **Required**: No
 - **Default**: `50`
-- **Description**: Maximum number of pending unaudited items to process in a single run
-- **Usage**: Controls the batch size for audit generation to prevent overloading the system
+- **Description**: Maximum size of the editorial backlog (records with Letta reports waiting for editorial work)
+- **Usage**: Cost control - the workflow won't process new records through Letta if the backlog exceeds this limit. Records are counted when they have `ingestion_report_id IS NOT NULL` and `compliance_status = 'compliant'`.
 
 ---
 

@@ -23,7 +23,7 @@
  *         │                   ├── RPC: claim_di_audit_targets (atomic lock)
  *         │                   │     └── compliance_status = 'pending'
  *         │                   │         + zombie reclamation
- *         │                   │         + MAX_PENDING_AUDITS cap
+ *         │                   │         + MAX_EDITORIAL_BACKLOG cap
  *         │                   └── For each target:
  *         │                             ├── generateIngestionReport()  [Letta agent]
  *         │                             ├── parseIngestionResponse()
@@ -36,7 +36,7 @@
  * Key decisions:
  * - Uses an atomic RPC claim (FOR UPDATE SKIP LOCKED) to prevent duplicate processing
  *   across concurrent workflow runs
- * - MAX_PENDING_AUDITS cap (env: MAX_PENDING_AUDITS, default: 50) prevents runaway costs
+ * - MAX_EDITORIAL_BACKLOG cap (env: MAX_EDITORIAL_BACKLOG, default: 50) prevents runaway costs
  * - Requires service IDs to scope to DI origin (vs. RCO etc.)
  * - compliance_status lives on `ingestion_records` (RI-1093), updated directly after audit
  */
@@ -62,13 +62,16 @@ import {
 // Config
 // =============================================================================
 
-const envVal = Number(process.env.MAX_PENDING_AUDITS);
+const envVal = Number(process.env.MAX_EDITORIAL_BACKLOG);
 
 /**
- * Maximum number of audit records that can be in 'pending' state simultaneously.
- * Controlled via MAX_PENDING_AUDITS env var. Defaults to 50.
+ * Maximum number of records that can have Letta reports waiting for editorial work.
+ * Controlled via MAX_EDITORIAL_BACKLOG env var. Defaults to 50.
+ *
+ * This is a cost-control measure: we only process records through Letta if there
+ * are fewer than this many records already processed and waiting for editorial work.
  */
-const MAX_PENDING_AUDITS = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
+const MAX_EDITORIAL_BACKLOG = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
 
 /**
  * Maximum number of audit LLM calls running in parallel.
@@ -114,7 +117,7 @@ type DiAuditTarget = {
  *
  * Uses two RPCs:
  * - `count_di_audit_candidates`: counts total eligible records (for logging).
- * - `claim_di_audit_targets`: atomically locks up to `MAX_PENDING_AUDITS` records
+ * - `claim_di_audit_targets`: atomically claims records based on editorial backlog limit
  *   by setting their `compliance_status` to 'pending' if it was NULL.
  *   This prevents multiple parallel workflow runs from auditing the same record.
  *
@@ -151,7 +154,7 @@ async function fetchDiAuditTargets(
     "claim_di_audit_targets",
     {
       p_service_ids: serviceIds,
-      max_total_pending: MAX_PENDING_AUDITS,
+      max_editorial_backlog: MAX_EDITORIAL_BACKLOG,
     },
   );
 

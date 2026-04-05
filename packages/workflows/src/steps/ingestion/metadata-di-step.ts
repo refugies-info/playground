@@ -56,13 +56,17 @@ import { getSupabaseClient, runWithConcurrency } from "./utils";
 // Config
 // =============================================================================
 
-const envVal = Number(process.env.MAX_PENDING_AUDITS);
+const envVal = Number(process.env.MAX_EDITORIAL_BACKLOG);
 
 /**
  * Maximum number of metadata records to process per run.
- * Shared with the audit step via MAX_PENDING_AUDITS env var. Defaults to 50.
+ * Shared with the audit step via MAX_EDITORIAL_BACKLOG env var. Defaults to 50.
+ *
+ * Note: This is used by the legacy batch workflow (generateDiMetadataReportsStep).
+ * The main fan-out workflow uses diSingleMetadataStep which doesn't need this limit
+ * since it processes one record at a time.
  */
-const MAX_PENDING_AUDITS = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
+const MAX_EDITORIAL_BACKLOG = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
 
 /**
  * Maximum number of metadata LLM calls running in parallel.
@@ -132,7 +136,7 @@ async function fetchDiMetadataTargets(): Promise<{
     )
     .not("ingestion_report_id", "is", null)
     .order("created_at", { ascending: false })
-    .limit(MAX_PENDING_AUDITS);
+    .limit(MAX_EDITORIAL_BACKLOG);
 
   if (error) {
     throw new Error(

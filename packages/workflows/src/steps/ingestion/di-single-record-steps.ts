@@ -26,12 +26,16 @@ import { fetchAllDiServiceIds, getSupabaseClient } from "./utils";
 // Config
 // =============================================================================
 
-const envVal = Number(process.env.MAX_PENDING_AUDITS);
+const envVal = Number(process.env.MAX_EDITORIAL_BACKLOG);
 
 /**
- * Maximum number of records that can be in 'pending' audit state at once.
+ * Maximum number of records that can have Letta reports waiting for editorial work.
+ * Controlled via MAX_EDITORIAL_BACKLOG env var. Defaults to 50.
+ *
+ * This is a cost-control measure: we only process records through Letta if there
+ * are fewer than this many records already processed and waiting for editorial work.
  */
-const MAX_PENDING_AUDITS = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
+const MAX_EDITORIAL_BACKLOG = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
 
 // =============================================================================
 // Internal Types
@@ -353,7 +357,7 @@ export async function claimDiAuditTargetsStep(runId: string) {
     "claim_di_audit_targets",
     {
       p_service_ids: serviceIds,
-      max_total_pending: MAX_PENDING_AUDITS,
+      max_editorial_backlog: MAX_EDITORIAL_BACKLOG,
     },
   );
 
