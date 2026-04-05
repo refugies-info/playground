@@ -8,9 +8,15 @@
 --
 -- Fix: Count records that have ingestion_report_id (already processed by Letta)
 -- and are ready for editorial work (compliance_status = 'compliant').
+--
+-- Note: We must DROP the function first because PostgreSQL does not allow
+-- changing parameter names with CREATE OR REPLACE FUNCTION.
+
+-- Drop the existing function to allow parameter name change
+DROP FUNCTION IF EXISTS public.claim_di_audit_targets(uuid[], integer, interval);
 
 -- Replace claim_di_audit_targets() with corrected logic
-CREATE OR REPLACE FUNCTION public.claim_di_audit_targets(
+CREATE FUNCTION public.claim_di_audit_targets(
   p_service_ids uuid[],
   max_editorial_backlog integer DEFAULT 50,
   timeout_interval interval DEFAULT '10 minutes'::interval
@@ -36,9 +42,9 @@ BEGIN
   --    and are waiting for editorial work.
   --    This is the key fix: we limit based on how many records are already
   --    processed and waiting, not how many are currently being processed.
+  --    Note: No join needed - ingestion_report_id IS NOT NULL is sufficient.
   SELECT count(*)::integer INTO v_editorial_backlog
   FROM public.ingestion_records ir
-  INNER JOIN public.workflows w ON w.ingestion_record_id = ir.id
   WHERE ir.di_service_id = ANY(p_service_ids)
     AND ir.ingestion_report_id IS NOT NULL  -- Already has Letta report
     AND ir.compliance_status = 'compliant';  -- Ready for editorial work
@@ -103,6 +109,7 @@ END;
 $$;
 
 -- Add a new function to count the editorial backlog for monitoring
+-- Note: No join needed - ingestion_report_id IS NOT NULL is sufficient
 CREATE OR REPLACE FUNCTION public.count_di_editorial_backlog(
   p_service_ids uuid[]
 )
@@ -118,7 +125,6 @@ BEGIN
   -- Count records that have Letta reports and are waiting for editorial work
   SELECT count(*)::integer INTO v_count
   FROM public.ingestion_records ir
-  INNER JOIN public.workflows w ON w.ingestion_record_id = ir.id
   WHERE ir.di_service_id = ANY(p_service_ids)
     AND ir.ingestion_report_id IS NOT NULL
     AND ir.compliance_status = 'compliant';
