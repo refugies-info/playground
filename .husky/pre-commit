@@ -1,4 +1,9 @@
 # Detect hardcoded secrets before committing
-gitleaks protect --verbose
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "Error: gitleaks is not installed. Please install it to commit."
+  echo "On macOS: brew install gitleaks"
+  exit 1
+fi
+gitleaks protect --staged --verbose
 pnpm dlx lint-staged
 pnpm check:types

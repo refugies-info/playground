@@ -12,7 +12,8 @@ useDefault = true
 description = "Global allowlist for false positives"
 paths = [
   # Supabase seed data uses example.com emails (safe)
-  '''supabase/seed/.*\.sql''',
+  # Matches both supabase/seed.sql and supabase/seed/*.sql
+  '''supabase/seed.*\\.sql''',
   # Test files may contain example secrets
   '''tests/.*''',
   '''\.test\.(ts|tsx|js|jsx)$''',
