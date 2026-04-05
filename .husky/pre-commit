@@ -1,2 +1,4 @@
+# Detect hardcoded secrets before committing
+gitleaks protect --verbose
 pnpm dlx lint-staged
 pnpm check:types
