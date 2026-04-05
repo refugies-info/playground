@@ -36,7 +36,7 @@
  * Key decisions:
  * - Uses an atomic RPC claim (FOR UPDATE SKIP LOCKED) to prevent duplicate processing
  *   across concurrent workflow runs
- * - MAX_EDITORIAL_BACKLOG cap (env: MAX_PENDING_AUDITS, default: 50) prevents runaway costs
+ * - MAX_EDITORIAL_BACKLOG cap (env: MAX_EDITORIAL_BACKLOG, default: 50) prevents runaway costs
  * - Requires service IDs to scope to DI origin (vs. RCO etc.)
  * - compliance_status lives on `ingestion_records` (RI-1093), updated directly after audit
  */
