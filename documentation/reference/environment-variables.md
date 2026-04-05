@@ -107,7 +107,7 @@ Environment variables are configuration values that change between environments 
 - **Description**: Number of structures to fetch per API page (pagination)
 - **Usage**: Adjust based on network conditions and API rate limits
 
-### `MAX_PENDING_AUDITS`
+### `MAX_EDITORIAL_BACKLOG`
 
 - **Type**: Number
 - **Required**: No

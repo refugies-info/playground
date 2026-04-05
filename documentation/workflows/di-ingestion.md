@@ -50,13 +50,13 @@ Chaque step de la paire `diSingleAuditStep` / `diSingleMetadataStep` a :
 
 | Variable | Description | Défaut |
 |---|---|---|
-| `MAX_PENDING_AUDITS` | Taille max du backlog éditorial (records avec rapports Letta en attente de travail éditorial) | `50` |
+| `MAX_EDITORIAL_BACKLOG` | Taille max du backlog éditorial (records avec rapports Letta en attente de travail éditorial) | `50` |
 | `PLAYGROUND_AGENT_ID` | Agent Letta pour l'audit compliance | — |
 | `METADATA_AGENT_ID` | Agent Letta pour les métadonnées | fallback sur `PLAYGROUND_AGENT_ID` |
 
 ## Throttling par backlog éditorial (RI-1172)
 
-Le workflow n'importe pas de nouveaux records via Letta si le backlog éditorial dépasse `MAX_PENDING_AUDITS`. Le backlog est défini comme les records qui :
+Le workflow n'importe pas de nouveaux records via Letta si le backlog éditorial dépasse `MAX_EDITORIAL_BACKLOG`. Le backlog est défini comme les records qui :
 
 1. Ont déjà un rapport Letta (`ingestion_report_id IS NOT NULL`)
 2. Sont prêts pour le travail éditorial (`compliance_status = 'compliant'`)

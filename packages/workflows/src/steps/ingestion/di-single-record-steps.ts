@@ -26,11 +26,11 @@ import { fetchAllDiServiceIds, getSupabaseClient } from "./utils";
 // Config
 // =============================================================================
 
-const envVal = Number(process.env.MAX_PENDING_AUDITS);
+const envVal = Number(process.env.MAX_EDITORIAL_BACKLOG);
 
 /**
  * Maximum number of records that can have Letta reports waiting for editorial work.
- * Controlled via MAX_PENDING_AUDITS env var. Defaults to 50.
+ * Controlled via MAX_EDITORIAL_BACKLOG env var. Defaults to 50.
  *
  * This is a cost-control measure: we only process records through Letta if there
  * are fewer than this many records already processed and waiting for editorial work.
