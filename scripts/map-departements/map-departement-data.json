@@ -1,0 +1,410 @@
+[
+  {
+    "departement": "01",
+    "nb_services": 161
+  },
+  {
+    "departement": "02",
+    "nb_services": 48
+  },
+  {
+    "departement": "03",
+    "nb_services": 161
+  },
+  {
+    "departement": "04",
+    "nb_services": 226
+  },
+  {
+    "departement": "05",
+    "nb_services": 226
+  },
+  {
+    "departement": "06",
+    "nb_services": 226
+  },
+  {
+    "departement": "07",
+    "nb_services": 161
+  },
+  {
+    "departement": "08",
+    "nb_services": 155
+  },
+  {
+    "departement": "09",
+    "nb_services": 3
+  },
+  {
+    "departement": "10",
+    "nb_services": 155
+  },
+  {
+    "departement": "11",
+    "nb_services": 3
+  },
+  {
+    "departement": "12",
+    "nb_services": 3
+  },
+  {
+    "departement": "13",
+    "nb_services": 226
+  },
+  {
+    "departement": "14",
+    "nb_services": 49
+  },
+  {
+    "departement": "15",
+    "nb_services": 161
+  },
+  {
+    "departement": "16",
+    "nb_services": 124
+  },
+  {
+    "departement": "17",
+    "nb_services": 124
+  },
+  {
+    "departement": "18",
+    "nb_services": 114
+  },
+  {
+    "departement": "19",
+    "nb_services": 124
+  },
+  {
+    "departement": "21",
+    "nb_services": 125
+  },
+  {
+    "departement": "22",
+    "nb_services": 83
+  },
+  {
+    "departement": "23",
+    "nb_services": 124
+  },
+  {
+    "departement": "24",
+    "nb_services": 124
+  },
+  {
+    "departement": "25",
+    "nb_services": 125
+  },
+  {
+    "departement": "26",
+    "nb_services": 161
+  },
+  {
+    "departement": "27",
+    "nb_services": 49
+  },
+  {
+    "departement": "28",
+    "nb_services": 114
+  },
+  {
+    "departement": "29",
+    "nb_services": 83
+  },
+  {
+    "departement": "30",
+    "nb_services": 3
+  },
+  {
+    "departement": "31",
+    "nb_services": 3
+  },
+  {
+    "departement": "32",
+    "nb_services": 3
+  },
+  {
+    "departement": "33",
+    "nb_services": 124
+  },
+  {
+    "departement": "34",
+    "nb_services": 3
+  },
+  {
+    "departement": "35",
+    "nb_services": 83
+  },
+  {
+    "departement": "36",
+    "nb_services": 114
+  },
+  {
+    "departement": "37",
+    "nb_services": 114
+  },
+  {
+    "departement": "38",
+    "nb_services": 161
+  },
+  {
+    "departement": "39",
+    "nb_services": 125
+  },
+  {
+    "departement": "40",
+    "nb_services": 124
+  },
+  {
+    "departement": "41",
+    "nb_services": 114
+  },
+  {
+    "departement": "42",
+    "nb_services": 161
+  },
+  {
+    "departement": "43",
+    "nb_services": 161
+  },
+  {
+    "departement": "44",
+    "nb_services": 91
+  },
+  {
+    "departement": "45",
+    "nb_services": 114
+  },
+  {
+    "departement": "46",
+    "nb_services": 3
+  },
+  {
+    "departement": "47",
+    "nb_services": 124
+  },
+  {
+    "departement": "48",
+    "nb_services": 3
+  },
+  {
+    "departement": "49",
+    "nb_services": 91
+  },
+  {
+    "departement": "50",
+    "nb_services": 49
+  },
+  {
+    "departement": "51",
+    "nb_services": 155
+  },
+  {
+    "departement": "52",
+    "nb_services": 155
+  },
+  {
+    "departement": "53",
+    "nb_services": 91
+  },
+  {
+    "departement": "54",
+    "nb_services": 155
+  },
+  {
+    "departement": "55",
+    "nb_services": 155
+  },
+  {
+    "departement": "56",
+    "nb_services": 83
+  },
+  {
+    "departement": "57",
+    "nb_services": 155
+  },
+  {
+    "departement": "58",
+    "nb_services": 125
+  },
+  {
+    "departement": "59",
+    "nb_services": 48
+  },
+  {
+    "departement": "60",
+    "nb_services": 48
+  },
+  {
+    "departement": "61",
+    "nb_services": 49
+  },
+  {
+    "departement": "62",
+    "nb_services": 48
+  },
+  {
+    "departement": "63",
+    "nb_services": 161
+  },
+  {
+    "departement": "64",
+    "nb_services": 124
+  },
+  {
+    "departement": "65",
+    "nb_services": 3
+  },
+  {
+    "departement": "66",
+    "nb_services": 3
+  },
+  {
+    "departement": "67",
+    "nb_services": 155
+  },
+  {
+    "departement": "68",
+    "nb_services": 155
+  },
+  {
+    "departement": "69",
+    "nb_services": 161
+  },
+  {
+    "departement": "70",
+    "nb_services": 125
+  },
+  {
+    "departement": "71",
+    "nb_services": 125
+  },
+  {
+    "departement": "72",
+    "nb_services": 91
+  },
+  {
+    "departement": "73",
+    "nb_services": 161
+  },
+  {
+    "departement": "74",
+    "nb_services": 161
+  },
+  {
+    "departement": "75",
+    "nb_services": 666
+  },
+  {
+    "departement": "76",
+    "nb_services": 49
+  },
+  {
+    "departement": "77",
+    "nb_services": 666
+  },
+  {
+    "departement": "78",
+    "nb_services": 666
+  },
+  {
+    "departement": "79",
+    "nb_services": 124
+  },
+  {
+    "departement": "80",
+    "nb_services": 48
+  },
+  {
+    "departement": "81",
+    "nb_services": 3
+  },
+  {
+    "departement": "82",
+    "nb_services": 3
+  },
+  {
+    "departement": "83",
+    "nb_services": 226
+  },
+  {
+    "departement": "84",
+    "nb_services": 226
+  },
+  {
+    "departement": "85",
+    "nb_services": 91
+  },
+  {
+    "departement": "86",
+    "nb_services": 124
+  },
+  {
+    "departement": "87",
+    "nb_services": 124
+  },
+  {
+    "departement": "88",
+    "nb_services": 155
+  },
+  {
+    "departement": "89",
+    "nb_services": 125
+  },
+  {
+    "departement": "90",
+    "nb_services": 125
+  },
+  {
+    "departement": "91",
+    "nb_services": 666
+  },
+  {
+    "departement": "92",
+    "nb_services": 666
+  },
+  {
+    "departement": "93",
+    "nb_services": 666
+  },
+  {
+    "departement": "94",
+    "nb_services": 666
+  },
+  {
+    "departement": "95",
+    "nb_services": 666
+  },
+  {
+    "departement": "971",
+    "nb_services": 5
+  },
+  {
+    "departement": "972",
+    "nb_services": 5
+  },
+  {
+    "departement": "973",
+    "nb_services": 28
+  },
+  {
+    "departement": "974",
+    "nb_services": 5
+  },
+  {
+    "departement": "976",
+    "nb_services": 35
+  },
+  {
+    "departement": "978",
+    "nb_services": 4
+  },
+  {
+    "departement": "2A",
+    "nb_services": 12
+  },
+  {
+    "departement": "2B",
+    "nb_services": 12
+  }
+]
