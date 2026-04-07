@@ -2,14 +2,19 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { Avatar } from "../../primitives/avatar";
+import { Badge } from "../../primitives/badge/Badge";
+import { Conformite } from "../../primitives/conformite/Conformite";
+import { Tag } from "../../primitives/tag/Tag";
+import { DateCell, EmptyDash, TextCell } from "./cells";
 import { DataTable } from "./data-table";
 import { DataTableColumnHeader } from "./data-table-column-header";
 
 /**
- * DataTable — Wrapper TanStack React Table avec pagination, tri et état vide.
+ * Tableau de données TanStack avec pagination, tri par colonne et état vide.
  *
- * Utilise les primitives Table/TableHeader/TableCell.
- * Header : bg alt-grey, texte xs bold uppercase (Figma BO/Fiches).
+ * `manualPagination` + `manualSorting` → délègue la pagination et le tri au serveur
+ * (mode utilisé dans /documents et /translations).
  */
 const meta: Meta<typeof DataTable> = {
   title: "Primitives/DataTable",
@@ -22,174 +27,383 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // =============================================================================
-// Données de démo
+// Données de démo — miroir du type Document (/documents)
 // =============================================================================
 
-interface Fiche {
+interface FicheDemo {
   id: string;
-  titre: string;
-  structure: string;
-  lieu: string;
-  dateDebut: string;
-  statut: string;
+  authorEmail: string | null;
+  onlineStatus: "published" | "archived" | "unpublished" | null;
+  workStatus: "to_process" | "draft" | null;
+  title: string;
+  structureName: string | null;
+  commune: string | null;
+  sessionStartDate: string | null;
+  modalitesEntreesSorties: "0" | "1" | null;
+  dateAdded: string | null;
+  complianceStatus: "compliant" | "non_compliant" | "pending" | "error" | null;
+  externalId: string;
 }
 
-const FICHES: Fiche[] = [
+const FICHES: FicheDemo[] = [
   {
-    id: "OF-001",
-    titre: "Formation développeur web",
-    structure: "AFPA Lyon",
-    lieu: "Lyon",
-    dateDebut: "2026-03-01",
-    statut: "Publié",
+    id: "1",
+    authorEmail: "alice@example.com",
+    onlineStatus: "published",
+    workStatus: "draft",
+    title: "Formation développeur web fullstack",
+    structureName: "AFPA Lyon",
+    commune: "Lyon",
+    sessionStartDate: "2026-03-01T00:00:00Z",
+    modalitesEntreesSorties: "1",
+    dateAdded: "2026-01-15T10:30:00Z",
+    complianceStatus: "compliant",
+    externalId: "OF-001",
   },
   {
-    id: "OF-002",
-    titre: "CAP Cuisine",
-    structure: "CFA Rhône",
-    lieu: "Villeurbanne",
-    dateDebut: "2026-03-15",
-    statut: "Archivé",
+    id: "2",
+    authorEmail: "bob@example.com",
+    onlineStatus: "archived",
+    workStatus: null,
+    title: "CAP Cuisine",
+    structureName: "CFA Rhône",
+    commune: "Villeurbanne",
+    sessionStartDate: "2026-03-15T00:00:00Z",
+    modalitesEntreesSorties: "0",
+    dateAdded: "2026-01-20T14:00:00Z",
+    complianceStatus: "non_compliant",
+    externalId: "OF-002",
   },
   {
-    id: "OF-003",
-    titre: "Bac Pro Commerce",
-    structure: "Lycée Ampère",
-    lieu: "Grenoble",
-    dateDebut: "2026-04-01",
-    statut: "Publié",
+    id: "3",
+    authorEmail: null,
+    onlineStatus: null,
+    workStatus: "to_process",
+    title: "Bac Pro Commerce et Vente",
+    structureName: "Lycée Ampère",
+    commune: "Grenoble",
+    sessionStartDate: "2026-04-01T00:00:00Z",
+    modalitesEntreesSorties: null,
+    dateAdded: "2026-02-01T09:00:00Z",
+    complianceStatus: "pending",
+    externalId: "OF-003",
   },
   {
-    id: "OF-004",
-    titre: "BTS Informatique",
-    structure: "IUT Clermont",
-    lieu: "Clermont-Ferrand",
-    dateDebut: "2026-04-15",
-    statut: "Archivé",
+    id: "4",
+    authorEmail: "charlie@example.com",
+    onlineStatus: "published",
+    workStatus: "draft",
+    title: "BTS Informatique et Réseaux",
+    structureName: "IUT Clermont-Ferrand",
+    commune: "Clermont-Ferrand",
+    sessionStartDate: "2026-04-15T00:00:00Z",
+    modalitesEntreesSorties: "1",
+    dateAdded: "2026-02-05T11:00:00Z",
+    complianceStatus: "compliant",
+    externalId: "OF-004",
   },
   {
-    id: "OF-005",
-    titre: "Master Data Science",
-    structure: "Univ. Lyon 1",
-    lieu: "Lyon",
-    dateDebut: "2026-09-01",
-    statut: "Publié",
+    id: "5",
+    authorEmail: null,
+    onlineStatus: null,
+    workStatus: "to_process",
+    title: "Master Data Science & IA",
+    structureName: "Université Claude Bernard Lyon 1",
+    commune: "Lyon",
+    sessionStartDate: "2026-09-01T00:00:00Z",
+    modalitesEntreesSorties: "0",
+    dateAdded: "2026-02-10T16:00:00Z",
+    complianceStatus: "error",
+    externalId: "OF-005",
   },
   {
-    id: "OF-006",
-    titre: "Licence Pro RH",
-    structure: "IAE Grenoble",
-    lieu: "Grenoble",
-    dateDebut: "2026-09-15",
-    statut: "Publié",
+    id: "6",
+    authorEmail: "alice@example.com",
+    onlineStatus: "published",
+    workStatus: "draft",
+    title: "Licence Pro Ressources Humaines",
+    structureName: "IAE Grenoble",
+    commune: "Grenoble",
+    sessionStartDate: "2026-09-15T00:00:00Z",
+    modalitesEntreesSorties: "1",
+    dateAdded: "2026-02-12T08:00:00Z",
+    complianceStatus: "compliant",
+    externalId: "OF-006",
   },
   {
-    id: "OF-007",
-    titre: "CAP Maçonnerie",
-    structure: "CFA BTP",
-    lieu: "Chambéry",
-    dateDebut: "2026-02-01",
-    statut: "Archivé",
+    id: "7",
+    authorEmail: null,
+    onlineStatus: "archived",
+    workStatus: null,
+    title: "CAP Maçonnerie et Carrelage",
+    structureName: "CFA BTP Savoie",
+    commune: "Chambéry",
+    sessionStartDate: null,
+    modalitesEntreesSorties: "0",
+    dateAdded: "2025-12-01T09:00:00Z",
+    complianceStatus: "non_compliant",
+    externalId: "OF-007",
   },
   {
-    id: "OF-008",
-    titre: "BEP Électronique",
-    structure: "Lycée Vaucanson",
-    lieu: "Grenoble",
-    dateDebut: "2026-02-15",
-    statut: "Publié",
+    id: "8",
+    authorEmail: "bob@example.com",
+    onlineStatus: "published",
+    workStatus: "draft",
+    title: "BEP Électrotechnique",
+    structureName: null,
+    commune: "Grenoble",
+    sessionStartDate: "2026-02-15T00:00:00Z",
+    modalitesEntreesSorties: "1",
+    dateAdded: "2025-11-20T14:00:00Z",
+    complianceStatus: "compliant",
+    externalId: "OF-008",
   },
   {
-    id: "OF-009",
-    titre: "DUT GEA",
-    structure: "IUT Lyon 2",
-    lieu: "Lyon",
-    dateDebut: "2026-01-01",
-    statut: "Publié",
+    id: "9",
+    authorEmail: null,
+    onlineStatus: null,
+    workStatus: "to_process",
+    title: "DUT Gestion des Entreprises et Administrations",
+    structureName: "IUT Lyon 2",
+    commune: "Lyon",
+    sessionStartDate: "2026-01-01T00:00:00Z",
+    modalitesEntreesSorties: "0",
+    dateAdded: "2025-10-15T11:00:00Z",
+    complianceStatus: "pending",
+    externalId: "OF-009",
   },
   {
-    id: "OF-010",
-    titre: "Titre Pro Soudeur",
-    structure: "GRETA Rhône",
-    lieu: "Saint-Étienne",
-    dateDebut: "2026-01-15",
-    statut: "Archivé",
+    id: "10",
+    authorEmail: "charlie@example.com",
+    onlineStatus: "unpublished",
+    workStatus: "draft",
+    title: "Titre Pro Soudeur Assembleur",
+    structureName: "GRETA Rhône-Alpes",
+    commune: "Saint-Étienne",
+    sessionStartDate: "2026-01-15T00:00:00Z",
+    modalitesEntreesSorties: "1",
+    dateAdded: "2025-10-20T09:00:00Z",
+    complianceStatus: "compliant",
+    externalId: "OF-010",
   },
   {
-    id: "OF-011",
-    titre: "CQP Agent de sécurité",
-    structure: "IFOCOP",
-    lieu: "Valence",
-    dateDebut: "2026-05-01",
-    statut: "Publié",
+    id: "11",
+    authorEmail: "alice@example.com",
+    onlineStatus: "published",
+    workStatus: "draft",
+    title: "CQP Agent de Prévention et de Sécurité",
+    structureName: "IFOCOP",
+    commune: "Valence",
+    sessionStartDate: "2026-05-01T00:00:00Z",
+    modalitesEntreesSorties: "0",
+    dateAdded: "2026-03-01T10:00:00Z",
+    complianceStatus: "compliant",
+    externalId: "OF-011",
   },
   {
-    id: "OF-012",
-    titre: "Prépa Concours IDE",
-    structure: "IFSI Lyon",
-    lieu: "Lyon",
-    dateDebut: "2026-06-01",
-    statut: "Publié",
+    id: "12",
+    authorEmail: null,
+    onlineStatus: null,
+    workStatus: "to_process",
+    title: "Prépa Concours Infirmier IDE",
+    structureName: "IFSI Lyon",
+    commune: "Lyon",
+    sessionStartDate: "2026-06-01T00:00:00Z",
+    modalitesEntreesSorties: "1",
+    dateAdded: "2026-03-05T08:00:00Z",
+    complianceStatus: "pending",
+    externalId: "OF-012",
   },
 ];
 
-const columns: ColumnDef<Fiche>[] = [
+// =============================================================================
+// Helpers cellules — miroir de OnlineStatusCell, WorkStatusCell,
+// ComplianceStatusCell, ModalitesEntreesSortiesCell (apps/frontend)
+// =============================================================================
+
+const OnlineStatusCellDemo = ({
+  status,
+}: {
+  status: FicheDemo["onlineStatus"];
+}) => {
+  if (!status) return <EmptyDash />;
+  if (status === "published") return <Tag status="publie" />;
+  if (status === "archived") return <Tag status="archive" />;
+  return <Tag status="na">Non publié</Tag>;
+};
+OnlineStatusCellDemo.displayName = "OnlineStatusCellDemo";
+
+const WorkStatusCellDemo = ({
+  status,
+}: {
+  status: FicheDemo["workStatus"];
+}) => {
+  if (!status) return <EmptyDash />;
+  if (status === "to_process") return <Tag status="a-traiter" />;
+  if (status === "draft") return <Tag status="en-cours" />;
+  return <EmptyDash />;
+};
+WorkStatusCellDemo.displayName = "WorkStatusCellDemo";
+
+const ComplianceStatusCellDemo = ({
+  status,
+}: {
+  status: FicheDemo["complianceStatus"];
+}) => {
+  if (!status) return <EmptyDash />;
+  if (status === "compliant") return <Conformite value="conforme" />;
+  if (status === "non_compliant") return <Conformite value="non-conforme" />;
+  if (status === "pending")
+    return <Badge variant="neutral">En cours d&apos;arbitrage</Badge>;
+  if (status === "error") return <Badge variant="danger">Erreur</Badge>;
+  return <EmptyDash />;
+};
+ComplianceStatusCellDemo.displayName = "ComplianceStatusCellDemo";
+
+const ModalitesCellDemo = ({
+  value,
+}: {
+  value: FicheDemo["modalitesEntreesSorties"];
+}) => {
+  if (value === "0")
+    return <div className="text-sm whitespace-nowrap">À tout moment</div>;
+  if (value === "1")
+    return <div className="text-sm whitespace-nowrap">À dates fixes</div>;
+  return <EmptyDash />;
+};
+ModalitesCellDemo.displayName = "ModalitesCellDemo";
+
+// =============================================================================
+// Colonnes — miroir exact de /documents/columns.tsx (Figma node 1255:8745)
+// =============================================================================
+
+const columns: ColumnDef<FicheDemo>[] = [
+  // Auteur (80px) — Avatar utilisateur ou IA
   {
-    accessorKey: "id",
+    accessorKey: "authorEmail",
+    size: 80,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Auteur" />
+    ),
+    cell: ({ row }) => (
+      <Avatar
+        email={row.original.authorEmail}
+        isAI={!row.original.authorEmail}
+      />
+    ),
+  },
+  // Statut (136px) — publication online
+  {
+    accessorKey: "online_status",
+    size: 136,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Statut" />
+    ),
+    cell: ({ row }) => (
+      <OnlineStatusCellDemo status={row.original.onlineStatus} />
+    ),
+  },
+  // État (121px) — traitement éditorial
+  {
+    accessorKey: "work_status",
+    size: 121,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="État" />
+    ),
+    cell: ({ row }) => <WorkStatusCellDemo status={row.original.workStatus} />,
+  },
+  // Titre (fill) — intitulé de la formation
+  {
+    accessorKey: "title",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Titre" />
+    ),
+    cell: ({ row }) => <div className="font-medium">{row.original.title}</div>,
+  },
+  // Structure (148px) — organisme porteur, tronqué si long
+  {
+    accessorKey: "structureName",
+    size: 148,
+    meta: { className: "overflow-hidden" },
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Structure" />
+    ),
+    cell: ({ row }) => {
+      const value = row.original.structureName;
+      if (!value) return <EmptyDash />;
+      return (
+        <div className="text-sm text-gray-700 truncate" title={value}>
+          {value}
+        </div>
+      );
+    },
+  },
+  // Ville (120px)
+  {
+    accessorKey: "commune",
+    size: 120,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Ville" />
+    ),
+    cell: ({ row }) => (
+      <TextCell value={row.original.commune} className="text-sm" />
+    ),
+  },
+  // Date de session (121px)
+  {
+    accessorKey: "sessionStartDate",
+    size: 121,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date de session" />
+    ),
+    cell: ({ row }) => <DateCell value={row.original.sessionStartDate} />,
+  },
+  // Type d'entrée (154px) — 0=À tout moment, 1=À dates fixes
+  {
+    accessorKey: "modalitesEntreesSorties",
+    size: 154,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Type d'entrée" />
+    ),
+    cell: ({ row }) => (
+      <ModalitesCellDemo value={row.original.modalitesEntreesSorties} />
+    ),
+  },
+  // Date d'import (121px)
+  {
+    accessorKey: "dateAdded",
+    size: 121,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date d'import" />
+    ),
+    cell: ({ row }) => <DateCell value={row.original.dateAdded} />,
+  },
+  // Conformité (149px) — résultat arbitrage IA
+  {
+    accessorKey: "compliance_status",
+    size: 149,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Conformité" />
+    ),
+    cell: ({ row }) => (
+      <ComplianceStatusCellDemo status={row.original.complianceStatus} />
+    ),
+  },
+  // ID (80px) — identifiant externe RCO
+  {
+    id: "externalId",
     size: 80,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="ID" />
     ),
     cell: ({ row }) => (
-      <span className="font-mono text-xs">{row.original.id}</span>
-    ),
-  },
-  {
-    accessorKey: "titre",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Titre" />
-    ),
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.titre}</span>
-    ),
-  },
-  {
-    accessorKey: "structure",
-    size: 148,
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Structure" />
-    ),
-    cell: ({ row }) => (
-      <span className="text-sm text-gray-700">{row.original.structure}</span>
-    ),
-  },
-  {
-    accessorKey: "lieu",
-    size: 154,
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Lieu" />
-    ),
-    cell: ({ row }) => <span className="text-sm">{row.original.lieu}</span>,
-  },
-  {
-    accessorKey: "dateDebut",
-    size: 120,
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Date de début" />
-    ),
-    cell: ({ row }) => (
-      <span className="text-sm">
-        {new Date(row.original.dateDebut).toLocaleDateString("fr-FR")}
+      <span
+        className="font-mono text-xs text-[var(--text-mention-grey)] bg-[var(--background-alt-grey)] rounded px-1.5 py-0.5"
+        title={row.original.externalId}
+      >
+        {row.original.externalId}
       </span>
     ),
-  },
-  {
-    accessorKey: "statut",
-    size: 120,
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Statut" />
-    ),
-    cell: ({ row }) => <span className="text-sm">{row.original.statut}</span>,
   },
 ];
 
@@ -197,7 +411,7 @@ const columns: ColumnDef<Fiche>[] = [
 // Stories
 // =============================================================================
 
-/** Table avec données et pagination (5 lignes par page) */
+/** Colonnes et données miroir de /documents (Figma node 1255:8745) */
 export const Default: Story = {
   args: {
     columns,
@@ -206,13 +420,13 @@ export const Default: Story = {
   },
 };
 
-/** Ligne cliquable — curseur pointer + hover */
+/** Ligne cliquable — curseur pointer + hover (comme /documents) */
 export const LigneCliquable: Story = {
   args: {
     columns,
     data: FICHES,
     pageSize: 5,
-    onRowClick: (row) => alert(`Clic sur : ${row.titre}`),
+    onRowClick: (row) => alert(`Clic sur : ${row.title}`),
   },
 };
 

@@ -27,7 +27,7 @@ export const Utilisateur: Story = {
   },
 };
 
-/** Initiales avec un email court */
+/** 4 initiales différentes — dérivées de la partie locale de l'email */
 export const UtilisateurInitiales: Story = {
   name: "Utilisateur — initiales variées",
   render: () => (

@@ -7,6 +7,11 @@ import {
 } from "@playground/ui/icons";
 import type { Meta, StoryObj } from "@storybook/react";
 
+/**
+ * Élément de navigation de l'AppHeader — icône + label, état actif/inactif.
+ *
+ * Utilisé exclusivement dans AppHeader via un élément <nav>.
+ */
 const meta: Meta<typeof BoutonMenu> = {
   component: BoutonMenu,
   title: "Primitives/BoutonMenu",
@@ -20,6 +25,7 @@ const meta: Meta<typeof BoutonMenu> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** État inactif — fond transparent, icône + label gris */
 export const Defaut: Story = {
   args: {
     icon: RiFileTextLine,
@@ -28,6 +34,7 @@ export const Defaut: Story = {
   },
 };
 
+/** État actif — fond bleu France, barre de soulignement */
 export const Actif: Story = {
   args: {
     icon: RiFileTextLine,

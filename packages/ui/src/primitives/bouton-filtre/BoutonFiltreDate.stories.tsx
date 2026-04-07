@@ -34,6 +34,7 @@ export const Actif: Story = {
 };
 
 /** Interactif — ouvre le date picker et affiche la date sélectionnée */
+/** Ouvre le date picker natif et affiche la date formatée */
 export const Interactif: Story = {
   render: (args) => {
     const [value, setValue] = useState("");
@@ -42,6 +43,7 @@ export const Interactif: Story = {
 };
 
 /** Groupe date de session tel qu'il apparaît dans la barre Fiches */
+/** Groupe "Date de session — De … à …" tel qu'il apparaît dans la barre Fiches */
 export const GroupeDateSession: Story = {
   render: () => {
     const [dateFrom, setDateFrom] = useState("");

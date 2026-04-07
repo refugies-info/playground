@@ -3,7 +3,9 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
 /**
- * Bouton toggle qui ouvre un Popover Radix avec une liste d'options.
+ * Filtre à sélection unique — Popover Radix avec liste d'options radio.
+ *
+ * Actif → fond bleu France, label remplacé, croix pour effacer.
  *
  * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/Wireframes_RCO?node-id=1308-4566
  */
@@ -37,7 +39,7 @@ export const Actif: Story = {
   args: { value: "compliant" },
 };
 
-/** Interactif — sélectionne et désélectionne une option */
+/** Sélectionne et désélectionne une option en live */
 export const Interactif: Story = {
   render: (args) => {
     const [value, setValue] = useState("");
@@ -45,7 +47,7 @@ export const Interactif: Story = {
   },
 };
 
-/** Tous les filtres de la barre Fiches — gap 16px comme dans le Figma */
+/** Les 4 filtres de la page Fiches côte à côte — gap 16px comme dans le Figma */
 export const BarreFiltres: Story = {
   render: () => {
     const [auteur, setAuteur] = useState("");

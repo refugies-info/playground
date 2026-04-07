@@ -2,6 +2,13 @@ import { Conformite, type ConformiteValue } from "@playground/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect } from "storybook/test";
 
+/**
+ * Résultat d'arbitrage IA : conforme ou non conforme.
+ *
+ * Pour les statuts workflow (publié, archivé…) → Tag.
+ *
+ * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/Wireframes_RCO?node-id=1264-5919
+ */
 const meta = {
   title: "Primitives/Conformite",
   component: Conformite,

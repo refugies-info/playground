@@ -39,6 +39,13 @@ const ICON_MAP = {
 const FIGMA_URL =
   "https://www.figma.com/design/BLVTgrfTTyMWKgi2MaTTAk/Design-System?node-id=2801-17488";
 
+/**
+ * 7 variants (primaire → quatrième, violet, primaire-coloré, secondaire-coloré), 3 tailles.
+ *
+ * `primaire-coloré` et `secondaire-coloré` réservés aux fonds bleu France (--blue-france-975-75).
+ *
+ * @figma https://www.figma.com/design/BLVTgrfTTyMWKgi2MaTTAk/Design-System?node-id=2801-17488
+ */
 const meta = {
   title: "Primitives/Button",
   component: Button,
