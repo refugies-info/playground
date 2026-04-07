@@ -511,15 +511,11 @@ export function WorkflowClient(props: WorkflowClientProps) {
             Fiches en cours de traitement ({totalCount})
           </h2>
           {totalPages > 1 && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700 mr-2">
-                Page {currentPage} sur {totalPages}
-              </span>
-              <AppPaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-              />
-            </div>
+            <AppPaginationControls
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalCount={totalCount}
+            />
           )}
         </div>
         {documents.length > 0 ? (
@@ -538,10 +534,11 @@ export function WorkflowClient(props: WorkflowClientProps) {
             />
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-end px-2 py-4">
+              <div className="flex justify-end py-4">
                 <AppPaginationControls
                   currentPage={currentPage}
-                  totalPages={totalPages}
+                  pageSize={pageSize}
+                  totalCount={totalCount}
                 />
               </div>
             )}

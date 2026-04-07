@@ -196,11 +196,7 @@ export function DataTable<TData, TValue>({
           )}
         </TableBody>
       </Table>
-      {!manualPagination && (
-        <div className="py-4">
-          <DataTablePagination table={table} />
-        </div>
-      )}
+      {!manualPagination && <DataTablePagination table={table} />}
     </div>
   );
 }

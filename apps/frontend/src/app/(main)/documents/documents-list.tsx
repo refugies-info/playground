@@ -253,18 +253,13 @@ export function DocumentsList({
         </TooltipProvider>
 
         {/* Custom server-side pagination controls */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between py-4">
-            <div className="text-sm text-gray-700">
-              Page {currentPage} sur {totalPages} ({totalCount} fiche
-              {totalCount > 1 ? "s" : ""})
-            </div>
-            <div className="flex gap-2">
-              <AppPaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-              />
-            </div>
+        {totalCount > 0 && (
+          <div className="flex justify-end">
+            <AppPaginationControls
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalCount={totalCount}
+            />
           </div>
         )}
       </div>

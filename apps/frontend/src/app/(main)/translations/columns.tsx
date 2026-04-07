@@ -93,7 +93,6 @@ export const columns: ColumnDef<TranslationItem>[] = [
     ),
     cell: ({ row }) => {
       const email = row.original.author;
-      const role = row.original.authorRole;
       return <Avatar email={email} isAI={!email} />;
     },
   },
