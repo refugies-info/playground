@@ -34,7 +34,7 @@ export function Avatar({ email, isAI, className, ...props }: AvatarProps) {
           "flex items-center justify-center shrink-0",
           "size-8 rounded-full",
           "bg-[var(--background-contrast-grey,#EEEEEE)]",
-          "border border-[var(--border-default-grey,#DDDDDD)] border-[0.5px]",
+          "border-[0.5px] border-[var(--border-default-grey,#DDDDDD)]",
           className,
         )}
         title="Intelligence Artificielle"
@@ -65,7 +65,7 @@ export function Avatar({ email, isAI, className, ...props }: AvatarProps) {
         "flex items-center justify-center shrink-0",
         "size-8 rounded-full",
         "bg-[var(--background-action-low-blue-france,#E3E3FD)]",
-        "border border-[var(--border-default-grey,#DDDDDD)] border-[0.5px]",
+        "border-[0.5px] border-[var(--border-default-grey,#DDDDDD)]",
         className,
       )}
       title={email ?? undefined}

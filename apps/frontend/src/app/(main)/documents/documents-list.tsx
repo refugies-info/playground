@@ -160,7 +160,7 @@ export function DocumentsList({
             value={filters.search}
             onChange={(value) => updateFilter("search", value)}
             placeholder="Rechercher par titre, ID, structure, etc."
-            wrapperClassName="w-[400px]"
+            wrapperClassName="max-w-[400px] w-full"
           />
 
           <BoutonFiltre
