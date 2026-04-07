@@ -35,9 +35,10 @@ function BoutonFiltreDate({
   const inputRef = React.useRef<HTMLInputElement>(null);
   const hasValue = value !== "";
 
-  const displayValue = hasValue
-    ? new Date(value).toLocaleDateString("fr-FR")
-    : label;
+  // Manipulation directe de la chaîne YYYY-MM-DD → DD/MM/YYYY.
+  // new Date("YYYY-MM-DD") est interprété en UTC, ce qui décalerait
+  // d'un jour pour les fuseaux négatifs (Antilles, Amérique…).
+  const displayValue = hasValue ? value.split("-").reverse().join("/") : label;
 
   const handleClick = () => {
     if (hasValue) {
