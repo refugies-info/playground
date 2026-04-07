@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, type BadgeVariant } from "../badge/Badge";
+import { Badge, type BadgeVariant } from "../../primitives/badge/Badge";
 
 // =============================================================================
 // EmptyDash — Placeholder for null/undefined values in table cells

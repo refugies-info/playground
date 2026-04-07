@@ -5,6 +5,13 @@ import { expect } from "storybook/test";
 const FIGMA_URL =
   "https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/Wireframes_RCO?node-id=1256-5829";
 
+/**
+ * Statut workflow d'une fiche : publication et traitement éditorial.
+ *
+ * Pour les résultats d'arbitrage (conforme/non conforme) → Conformite.
+ *
+ * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/Wireframes_RCO?node-id=1256-5829
+ */
 const meta = {
   title: "Primitives/Tag",
   component: Tag,
@@ -60,6 +67,7 @@ export const TousLesStatuts: Story = {
 // Variants individuels
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Fiche en attente d'action — étape initiale après import */
 export const ATraiter: Story = {
   name: "À traiter",
   args: { status: "a-traiter" },
@@ -68,26 +76,31 @@ export const ATraiter: Story = {
   },
 };
 
+/** Fiche ouverte par un éditeur */
 export const EnCours: Story = {
   name: "En cours",
   args: { status: "en-cours" },
 };
 
+/** Fiche retirée de la liste active, conservée en historique */
 export const Archive: Story = {
   name: "Archivé",
   args: { status: "archive" },
 };
 
+/** Fiche signalée pour relecture */
 export const ARevoir: Story = {
   name: "À revoir",
   args: { status: "a-revoir" },
 };
 
+/** Fiche visible sur refugies.info */
 export const Publie: Story = {
   name: "Publié",
   args: { status: "publie" },
 };
 
+/** Publiée + icône lien externe vers la fiche en ligne */
 export const PublieAvecLien: Story = {
   name: "Publié — avec lien externe",
   args: { status: "publie", href: "https://refugies.info" },
@@ -99,6 +112,7 @@ export const PublieAvecLien: Story = {
   },
 };
 
+/** Aucun statut applicable — affiché comme tiret */
 export const NA: Story = {
   name: "NA (vide)",
   args: { status: "na" },

@@ -5,13 +5,8 @@ import type {
   OnlineStatus,
   WorkStatus,
 } from "@playground/shared-types";
-
-import {
-  Badge,
-  Button,
-  Conformite,
-  EmptyDash,
-} from "@playground/ui/primitives";
+import { EmptyDash } from "@playground/ui/composites";
+import { Badge, Button, Conformite } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toggleWorkflowStatus } from "@/services/document-actions";

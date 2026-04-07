@@ -4,7 +4,7 @@ import {
   DataTableColumnHeader,
   DateCell,
   TextCell,
-} from "@playground/ui/primitives";
+} from "@playground/ui/composites";
 import type { ColumnDef } from "@tanstack/react-table";
 
 /**

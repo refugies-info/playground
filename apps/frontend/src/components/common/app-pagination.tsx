@@ -1,17 +1,19 @@
 "use client";
 
-import { PaginationControls } from "@playground/ui/composites";
+import { Pagination } from "@playground/ui/composites";
 import { usePathname, useRouter } from "next/navigation";
 
 interface AppPaginationControlsProps {
   currentPage: number;
-  totalPages: number;
+  pageSize: number;
+  totalCount: number;
   className?: string;
 }
 
 export function AppPaginationControls({
   currentPage,
-  totalPages,
+  pageSize,
+  totalCount,
   className,
 }: AppPaginationControlsProps) {
   const router = useRouter();
@@ -24,9 +26,10 @@ export function AppPaginationControls({
   };
 
   return (
-    <PaginationControls
+    <Pagination
       currentPage={currentPage}
-      totalPages={totalPages}
+      pageSize={pageSize}
+      totalCount={totalCount}
       onPageChange={handlePageChange}
       className={className}
     />

@@ -13,7 +13,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import * as React from "react";
-
+import { DataTablePagination } from "./data-table-pagination";
 import {
   Table,
   TableBody,
@@ -21,8 +21,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../table/table";
-import { DataTablePagination } from "./data-table-pagination";
+} from "./table";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -107,6 +106,8 @@ export function DataTable<TData, TValue>({
                     style={{
                       width:
                         header.getSize() !== 150 ? header.getSize() : undefined,
+                      maxWidth:
+                        header.getSize() !== 150 ? header.getSize() : undefined,
                     }}
                   >
                     {header.isPlaceholder
@@ -123,10 +124,12 @@ export function DataTable<TData, TValue>({
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
+            table.getRowModel().rows.map((row, index) => (
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
+                // Figma Zébré=on : lignes paires → alt-blue-france (#F5F5FE)
+                data-zebra={index % 2 === 1 ? "true" : undefined}
                 onClick={
                   onRowClick ? () => onRowClick(row.original) : undefined
                 }
@@ -143,25 +146,38 @@ export function DataTable<TData, TValue>({
                 role={onRowClick ? "button" : undefined}
                 tabIndex={onRowClick ? 0 : undefined}
                 className={[
-                  onRowClick ? "cursor-pointer hover:bg-gray-50" : undefined,
+                  onRowClick ? "cursor-pointer" : undefined,
                   getRowClassName ? getRowClassName(row.original) : undefined,
                 ]
                   .filter(Boolean)
                   .join(" ")}
               >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    key={cell.id}
-                    style={{
-                      width:
-                        cell.column.getSize() !== 150
-                          ? cell.column.getSize()
-                          : undefined,
-                    }}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
+                {row.getVisibleCells().map((cell) => {
+                  const fixedSize =
+                    cell.column.getSize() !== 150
+                      ? cell.column.getSize()
+                      : undefined;
+                  const metaClassName = (
+                    cell.column.columnDef.meta as
+                      | { className?: string }
+                      | undefined
+                  )?.className;
+                  return (
+                    <TableCell
+                      key={cell.id}
+                      style={{
+                        width: fixedSize,
+                        maxWidth: fixedSize,
+                      }}
+                      className={metaClassName}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             ))
           ) : (
@@ -180,11 +196,7 @@ export function DataTable<TData, TValue>({
           )}
         </TableBody>
       </Table>
-      {!manualPagination && (
-        <div className="py-4">
-          <DataTablePagination table={table} />
-        </div>
-      )}
+      {!manualPagination && <DataTablePagination table={table} />}
     </div>
   );
 }

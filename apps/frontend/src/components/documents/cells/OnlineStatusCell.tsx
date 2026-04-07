@@ -1,7 +1,8 @@
 "use client";
 
 import type { OnlineStatus } from "@playground/shared-types";
-import { EmptyDash, Tag } from "@playground/ui/primitives";
+import { EmptyDash } from "@playground/ui/composites";
+import { Tag } from "@playground/ui/primitives";
 
 interface OnlineStatusCellProps {
   status: OnlineStatus | undefined;

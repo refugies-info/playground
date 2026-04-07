@@ -1,6 +1,6 @@
 "use client";
 
-import { EmptyDash } from "@playground/ui/primitives";
+import { EmptyDash } from "@playground/ui/composites";
 
 interface ModalitesEntreesSortiesCellProps {
   value: string | null | undefined;
@@ -9,8 +9,10 @@ interface ModalitesEntreesSortiesCellProps {
 export const ModalitesEntreesSortiesCell = ({
   value,
 }: ModalitesEntreesSortiesCellProps) => {
-  if (value === "0") return <div className="text-sm">Permanent</div>;
-  if (value === "1") return <div className="text-sm">Fixe</div>;
+  if (value === "0")
+    return <div className="text-sm whitespace-nowrap">À tout moment</div>;
+  if (value === "1")
+    return <div className="text-sm whitespace-nowrap">À dates fixes</div>;
   return <EmptyDash />;
 };
 ModalitesEntreesSortiesCell.displayName = "ModalitesEntreesSortiesCell";

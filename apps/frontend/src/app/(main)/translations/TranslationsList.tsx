@@ -1,6 +1,6 @@
 "use client";
 
-import { DataTable } from "@playground/ui/primitives";
+import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppPaginationControls } from "@/components/common/app-pagination";
@@ -213,18 +213,13 @@ export function TranslationsList({
           onSortChange={handleSortChange}
         />
 
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-2 py-4">
-            <div className="text-sm text-gray-700">
-              Page {currentPage} sur {totalPages} ({totalCount} traduction
-              {totalCount > 1 ? "s" : ""})
-            </div>
-            <div className="flex gap-2">
-              <AppPaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-              />
-            </div>
+        {totalCount > 0 && (
+          <div className="flex justify-end px-2 py-4">
+            <AppPaginationControls
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalCount={totalCount}
+            />
           </div>
         )}
       </div>

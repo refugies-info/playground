@@ -8,6 +8,14 @@ import {
 } from "@playground/ui/icons";
 import type { Meta, StoryObj } from "@storybook/react";
 
+/**
+ * Barre de navigation principale — slot composition.
+ *
+ * Logo à gauche, <nav> + BoutonMenu à droite.
+ * Le layout (hauteur, flex) est géré par AppHeader, le contenu est libre.
+ *
+ * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/Wireframes_RCO?node-id=1255-8294
+ */
 const meta: Meta<typeof AppHeader> = {
   component: AppHeader,
   title: "Composites/AppHeader",

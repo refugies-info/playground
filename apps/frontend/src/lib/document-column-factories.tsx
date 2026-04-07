@@ -1,7 +1,8 @@
 "use client";
 
 import type { Document } from "@playground/shared-types";
-import { Avatar, DataTableColumnHeader } from "@playground/ui/primitives";
+import { DataTableColumnHeader } from "@playground/ui/composites";
+import { Avatar } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   ComplianceStatusCell,
@@ -12,7 +13,6 @@ import {
   WorkStatusCell,
   type WorkStatusCellProps,
 } from "@/components/documents/cells";
-import { createTextColumn } from "@/lib/column-factories";
 
 /**
  * Domain-specific column factories for the Document type.
@@ -41,13 +41,22 @@ export const createTitleColumn = (): ColumnDef<Document> => ({
   cell: ({ row }) => <div className="font-medium">{row.original.title}</div>,
 });
 
-export const createStructureNameColumn = (): ColumnDef<Document> =>
-  createTextColumn({
-    accessorKey: "structureName",
-    title: "Structure",
-    getValue: (doc) => doc.structureName,
-    className: "text-sm text-gray-700",
-  });
+export const createStructureNameColumn = (): ColumnDef<Document> => ({
+  accessorKey: "structureName",
+  meta: { className: "overflow-hidden" },
+  header: ({ column }) => (
+    <DataTableColumnHeader column={column} title="Structure" />
+  ),
+  cell: ({ row }) => {
+    const value = row.original.structureName;
+    if (!value) return <span className="text-gray-400">—</span>;
+    return (
+      <div className="text-sm text-gray-700 truncate" title={value}>
+        {value}
+      </div>
+    );
+  },
+});
 
 // =============================================================================
 // Documents-specific Factories (/documents table)
@@ -61,7 +70,9 @@ export const createExternalIdColumn = (): ColumnDef<Document> => ({
 
 export const createModalitesEntreesSortiesColumn = (): ColumnDef<Document> => ({
   accessorKey: "modalitesEntreesSorties",
-  header: ({ column }) => <DataTableColumnHeader column={column} title="E/S" />,
+  header: ({ column }) => (
+    <DataTableColumnHeader column={column} title="Type d'entrée" />
+  ),
   cell: ({ row }) => (
     <ModalitesEntreesSortiesCell value={row.original.modalitesEntreesSorties} />
   ),
@@ -70,7 +81,7 @@ export const createModalitesEntreesSortiesColumn = (): ColumnDef<Document> => ({
 export const createOnlineStatusColumn = (): ColumnDef<Document> => ({
   accessorKey: "online_status",
   header: ({ column }) => (
-    <DataTableColumnHeader column={column} title="Visibilité" />
+    <DataTableColumnHeader column={column} title="Statut" />
   ),
   cell: ({ row }) => (
     <OnlineStatusCell
@@ -83,7 +94,7 @@ export const createOnlineStatusColumn = (): ColumnDef<Document> => ({
 export const createWorkStatusColumn = <
   T extends { workStatus: WorkStatusCellProps["status"] },
 >(
-  title: string = "Traitement",
+  title: string = "État",
 ): ColumnDef<T> => ({
   accessorKey: "work_status",
   header: ({ column }) => (
@@ -99,11 +110,7 @@ export const createAuthorColumn = (): ColumnDef<Document> => ({
     <DataTableColumnHeader column={column} title="Auteur" />
   ),
   cell: ({ row }) => (
-    <Avatar
-      email={row.original.authorEmail}
-      userRole={row.original.authorRole}
-      size="sm"
-    />
+    <Avatar email={row.original.authorEmail} isAI={!row.original.authorEmail} />
   ),
 });
 

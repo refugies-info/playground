@@ -11,83 +11,88 @@ const meta: Meta<typeof Input> = {
       control: "select",
       options: ["text", "email", "password", "number", "search"],
     },
-    placeholder: {
-      control: "text",
-    },
-    disabled: {
-      control: "boolean",
-    },
-    label: {
-      control: "text",
-    },
-    error: {
-      control: "text",
-    },
-    helperText: {
-      control: "text",
-    },
+    placeholder: { control: "text" },
+    disabled: { control: "boolean" },
+    label: { control: "text" },
+    error: { control: "text" },
+    helperText: { control: "text" },
   },
 };
 
 export default meta;
 type Story = StoryObj<typeof Input>;
 
-export const Default: Story = {
+export const Defaut: Story = {
+  name: "Défaut",
   args: {
-    placeholder: "Enter text...",
+    placeholder: "Saisir un texte…",
   },
 };
 
-export const WithLabel: Story = {
+/** Label affiché au-dessus du champ */
+export const AvecLabel: Story = {
+  name: "Avec label",
   args: {
-    label: "Email Address",
+    label: "Adresse e-mail",
     type: "email",
-    placeholder: "name@example.com",
+    placeholder: "prenom@exemple.fr",
   },
 };
 
-export const WithHelperText: Story = {
+/** Message d'aide gris affiché sous le champ */
+export const AvecAide: Story = {
+  name: "Avec texte d'aide",
   args: {
-    label: "Username",
-    placeholder: "Enter your username",
-    helperText: "This will be your display name",
+    label: "Nom d'utilisateur",
+    placeholder: "Saisir un nom…",
+    helperText: "Ce nom sera visible par les autres membres",
   },
 };
 
-export const WithError: Story = {
+/** Bordure rouge + message d'erreur sous le champ */
+export const AvecErreur: Story = {
+  name: "Avec erreur",
   args: {
-    label: "Email",
+    label: "E-mail",
     type: "email",
-    placeholder: "name@example.com",
-    error: "Please enter a valid email address",
+    placeholder: "prenom@exemple.fr",
+    error: "Veuillez saisir une adresse e-mail valide",
   },
 };
 
-export const Disabled: Story = {
+/** Champ non éditable — curseur not-allowed */
+export const Desactive: Story = {
+  name: "Désactivé",
   args: {
-    label: "Disabled Input",
-    placeholder: "Cannot edit",
+    label: "Champ désactivé",
+    placeholder: "Non modifiable",
     disabled: true,
   },
 };
 
-export const WithLeftIcon: Story = {
+/** Icône décorative avant la saisie */
+export const AvecIconeGauche: Story = {
+  name: "Avec icône gauche",
   args: {
-    placeholder: "Search...",
+    placeholder: "Rechercher…",
     leftIcon: <Search className="h-4 w-4 text-gray-400" />,
   },
 };
 
-export const WithRightIcon: Story = {
+/** Icône action après la saisie */
+export const AvecIconeDroite: Story = {
+  name: "Avec icône droite",
   args: {
-    placeholder: "Search...",
+    placeholder: "Rechercher…",
     rightIcon: <X className="h-4 w-4 text-gray-400 cursor-pointer" />,
   },
 };
 
-export const WithBothIcons: Story = {
+/** Icônes gauche et droite combinées */
+export const AvecDeuxIcones: Story = {
+  name: "Avec icônes gauche et droite",
   args: {
-    placeholder: "Search...",
+    placeholder: "Rechercher…",
     leftIcon: <Search className="h-4 w-4 text-gray-400" />,
     rightIcon: <X className="h-4 w-4 text-gray-400 cursor-pointer" />,
   },
