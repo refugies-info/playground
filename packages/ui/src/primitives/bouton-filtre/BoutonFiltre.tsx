@@ -83,7 +83,7 @@ function BoutonFiltre({
           align="start"
           sideOffset={4}
           className={cn(
-            "z-50 w-[124px] rounded-lg border bg-white py-2 px-6 shadow-md",
+            "z-50 min-w-[124px] rounded-lg border bg-white py-2 px-6 shadow-md",
             "border-[var(--border-default-grey,#DDDDDD)]",
             "animate-in fade-in-0 zoom-in-95",
           )}
