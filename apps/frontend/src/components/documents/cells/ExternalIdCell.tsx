@@ -20,13 +20,18 @@ interface ExternalIdCellProps {
 export const ExternalIdCell = ({ externalId }: ExternalIdCellProps) => {
   const [copied, setCopied] = React.useState(false);
 
+  React.useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
   if (!externalId) return <EmptyDash />;
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
     await navigator.clipboard.writeText(externalId);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
