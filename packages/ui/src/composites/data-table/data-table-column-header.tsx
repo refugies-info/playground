@@ -16,9 +16,11 @@ import { cn } from "../../utils/cn";
  * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/Wireframes_RCO?node-id=1256-5614
  *
  * 3 variants (Figma component set 1256:5614) :
- *   Statut=No         → texte title-grey (#161616), icône Tri (#FFFFFF) xs=12px
- *   Statut=Ascendant  → texte blue-france-hover (#1212FF), icône arrow-up (#1212FF) xs=12px
- *   Statut=Descendant → texte blue-france-hover (#1212FF), icône arrow-down (#1212FF) xs=12px
+ *   Statut=No         → texte title-blue-france (#000091), icône Tri xs=12px
+ *   Statut=Ascendant  → texte blue-france-hover (#1212FF), icône arrow-up xs=12px
+ *   Statut=Descendant → texte blue-france-hover (#1212FF), icône arrow-down xs=12px
+ *
+ * Tous les états : Marianne Bold (700), 12px
  *
  * Layout : row, gap 4px — padding délégué à TableHead (12px 4px 12px 16px)
  */
@@ -40,7 +42,7 @@ export function DataTableColumnHeader<TData, TValue>({
     return (
       <span
         className={cn(
-          "text-xs font-medium text-[var(--text-title-grey,#161616)]",
+          "text-xs font-bold text-[var(--text-title-blue-france,#000091)]",
           className,
         )}
       >
@@ -54,10 +56,10 @@ export function DataTableColumnHeader<TData, TValue>({
       type="button"
       className={cn(
         "inline-flex items-center gap-1 cursor-pointer select-none",
-        "text-xs font-medium",
+        "text-xs font-bold",
         sorted
           ? "text-[var(--blue-france-sun-113-625-hover,#1212FF)]"
-          : "text-[var(--text-title-grey,#161616)]",
+          : "text-[var(--text-title-blue-france,#000091)]",
         className,
       )}
       onClick={() => column.toggleSorting(sorted === "asc")}
