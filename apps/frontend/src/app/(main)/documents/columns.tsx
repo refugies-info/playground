@@ -32,7 +32,7 @@ export const columns: ColumnDef<Document>[] = [
   { ...createWorkStatusColumn<Document>(), size: 121 }, // "État"
   // Mots (76px) — non mappé
   createTitleColumn(), // "Titre" fill
-  { ...createStructureNameColumn(), size: 148 }, // "Structure"
+  createStructureNameColumn(), // "Structure"
   {
     ...createTextColumn({
       accessorKey: "commune",

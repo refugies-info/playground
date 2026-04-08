@@ -80,6 +80,7 @@ const TableRow = React.forwardRef<
       // Zèbre : data-zebra="true" → alt-blue-france (#F5F5FE)
       "data-[zebra=true]:bg-[var(--background-alt-blue-france,#F5F5FE)]",
 
+      "hover:!bg-[var(--blue-france-950,#ECECFE)]",
       "data-[state=selected]:bg-[var(--background-alt-blue-france,#F5F5FE)]",
       className,
     )}
