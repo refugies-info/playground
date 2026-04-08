@@ -83,7 +83,7 @@ function BoutonFiltre({
           align="start"
           sideOffset={4}
           className={cn(
-            "z-50 min-w-[124px] rounded-lg border bg-white py-2 px-6 shadow-md",
+            "z-50 min-w-[124px] rounded-lg border bg-white p-2 shadow-md",
             "border-[var(--border-default-grey,#DDDDDD)]",
             "animate-in fade-in-0 zoom-in-95",
           )}
@@ -95,9 +95,9 @@ function BoutonFiltre({
               setOpen(false);
             }}
             className={cn(
-              "block w-full text-left text-sm font-medium leading-6 py-0.5",
+              "block w-full text-left text-sm font-medium leading-6 px-2 py-1 rounded-sm",
               "text-[var(--text-default-grey,#3A3A3A)]",
-              "hover:text-[var(--text-title-grey,#161616)]",
+              "hover:bg-[var(--background-alt-grey,#F6F6F6)]",
               value === "" && "font-bold",
             )}
           >
@@ -112,9 +112,9 @@ function BoutonFiltre({
                 setOpen(false);
               }}
               className={cn(
-                "block w-full text-left text-sm font-medium leading-6 py-0.5",
+                "block w-full text-left text-sm font-medium leading-6 px-2 py-1 rounded-sm",
                 "text-[var(--text-default-grey,#3A3A3A)]",
-                "hover:text-[var(--text-title-grey,#161616)]",
+                "hover:bg-[var(--background-alt-grey,#F6F6F6)]",
                 value === option.value && "font-bold",
               )}
             >
