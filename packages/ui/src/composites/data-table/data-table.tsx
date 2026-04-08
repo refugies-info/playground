@@ -100,6 +100,11 @@ export function DataTable<TData, TValue>({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
+                const headerMetaClassName = (
+                  header.column.columnDef.meta as
+                    | { className?: string }
+                    | undefined
+                )?.className;
                 return (
                   <TableHead
                     key={header.id}
@@ -109,6 +114,7 @@ export function DataTable<TData, TValue>({
                       maxWidth:
                         header.getSize() !== 150 ? header.getSize() : undefined,
                     }}
+                    className={headerMetaClassName}
                   >
                     {header.isPlaceholder
                       ? null
@@ -185,7 +191,7 @@ export function DataTable<TData, TValue>({
               <TableCell colSpan={columns.length} className="h-24 text-center">
                 <div className="flex flex-col items-center justify-center py-8">
                   <p className="text-gray-500 text-lg font-medium">
-                    Aucun document trouvé
+                    Aucune fiche trouvée
                   </p>
                   <p className="text-gray-400 text-sm mt-1">
                     Essayez d'ajuster vos filtres ou critères de recherche

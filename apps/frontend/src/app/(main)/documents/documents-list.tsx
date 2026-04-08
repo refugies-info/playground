@@ -186,7 +186,7 @@ export function DocumentsList({
           <BoutonFiltre
             label="État de traitement"
             options={[
-              { label: "Brouillon", value: "draft" },
+              { label: "En cours", value: "draft" },
               { label: "À traiter", value: "to_process" },
             ]}
             value={filters.workStatus || ""}

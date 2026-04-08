@@ -43,7 +43,7 @@ export const createTitleColumn = (): ColumnDef<Document> => ({
 
 export const createStructureNameColumn = (): ColumnDef<Document> => ({
   accessorKey: "structureName",
-  meta: { className: "overflow-hidden" },
+  meta: { className: "overflow-hidden max-w-[250px]" },
   header: ({ column }) => (
     <DataTableColumnHeader column={column} title="Structure" />
   ),

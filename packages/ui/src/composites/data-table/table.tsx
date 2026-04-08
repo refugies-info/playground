@@ -80,6 +80,7 @@ const TableRow = React.forwardRef<
       // Zèbre : data-zebra="true" → alt-blue-france (#F5F5FE)
       "data-[zebra=true]:bg-[var(--background-alt-blue-france,#F5F5FE)]",
 
+      "hover:!bg-[var(--blue-france-950,#ECECFE)]",
       "data-[state=selected]:bg-[var(--background-alt-blue-france,#F5F5FE)]",
       className,
     )}
@@ -95,10 +96,10 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      // Figma: padding 12px 4px 12px 16px, texte 12px medium, title-grey (#161616)
+      // Figma node 1256:5614 — padding 12px 4px 12px 16px, texte 12px bold, title-blue-france (#000091)
       // Note: le gap de 4px avec l'icône sort est géré dans DataTableColumnHeader
       "pt-3 pr-1 pb-3 pl-4 text-left align-middle whitespace-nowrap",
-      "text-xs font-medium text-[var(--text-title-grey,#161616)]",
+      "text-xs font-bold text-[var(--text-title-blue-france,#000091)]",
       "[&:has([role=checkbox])]:pr-0",
       className,
     )}
