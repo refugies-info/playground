@@ -185,7 +185,7 @@ export function DataTable<TData, TValue>({
               <TableCell colSpan={columns.length} className="h-24 text-center">
                 <div className="flex flex-col items-center justify-center py-8">
                   <p className="text-gray-500 text-lg font-medium">
-                    Aucun document trouvé
+                    Aucune fiche trouvée
                   </p>
                   <p className="text-gray-400 text-sm mt-1">
                     Essayez d'ajuster vos filtres ou critères de recherche
