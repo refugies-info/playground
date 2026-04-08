@@ -100,6 +100,11 @@ export function DataTable<TData, TValue>({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
+                const headerMetaClassName = (
+                  header.column.columnDef.meta as
+                    | { className?: string }
+                    | undefined
+                )?.className;
                 return (
                   <TableHead
                     key={header.id}
@@ -109,6 +114,7 @@ export function DataTable<TData, TValue>({
                       maxWidth:
                         header.getSize() !== 150 ? header.getSize() : undefined,
                     }}
+                    className={headerMetaClassName}
                   >
                     {header.isPlaceholder
                       ? null
