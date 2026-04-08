@@ -26,9 +26,9 @@
 
 @import "./tailwind-theme.css";
 
-/* ─── Container ────────────────────────────────── */
-@theme {
-  --container-max-width: 1568px;
+/* ─── Container — override Tailwind max-width ─── */
+@utility container {
+  max-width: 1920px;
 }
 
 /* Scanner les classes Tailwind dans tous les composants UI */
