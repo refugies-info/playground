@@ -38,20 +38,31 @@ export const createTitleColumn = (): ColumnDef<Document> => ({
   header: ({ column }) => (
     <DataTableColumnHeader column={column} title="Titre" />
   ),
-  cell: ({ row }) => <div className="font-medium">{row.original.title}</div>,
+  cell: ({ row }) => (
+    <div className="min-w-[242px] font-medium">{row.original.title}</div>
+  ),
 });
 
 export const createStructureNameColumn = (): ColumnDef<Document> => ({
   accessorKey: "structureName",
-  meta: { className: "overflow-hidden max-w-[250px]" },
+  meta: { className: "max-w-[148px]" },
   header: ({ column }) => (
     <DataTableColumnHeader column={column} title="Structure" />
   ),
   cell: ({ row }) => {
     const value = row.original.structureName;
     if (!value) return <span className="text-gray-400">—</span>;
+    const titleLength = row.original.title?.length ?? 0;
+    const structureLength = value.length;
+    // Truncate si la structure risque de prendre plus de lignes que le titre.
+    // La colonne structure est ~2x plus étroite que le titre, donc à longueur
+    // égale elle prend ~2x plus de lignes. On tronque quand le ratio dépasse.
+    const shouldTruncate = structureLength > titleLength * 0.4;
     return (
-      <div className="text-sm text-gray-700 truncate" title={value}>
+      <div
+        className={`text-sm text-gray-700 ${shouldTruncate ? "truncate" : ""}`}
+        title={value}
+      >
         {value}
       </div>
     );
