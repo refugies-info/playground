@@ -1,131 +1,238 @@
 "use client";
 
+import { logger } from "@playground/shared-types";
 import { cn } from "@playground/ui";
-import { Button } from "@playground/ui/primitives";
 import {
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  File,
-  Gavel,
-  LayoutList,
-} from "lucide-react";
+  RiCodeSSlashLine,
+  RiDatabase2Line,
+  RiDeleteBinLine,
+  RiFileTextLine,
+  RiHammerLine,
+  RiPencilLine,
+} from "@playground/ui/icons";
+import {
+  Icon,
+  IconToggle,
+  type IconToggleOption,
+} from "@playground/ui/primitives";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { DocumentActions } from "../actions";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { useDocumentActions } from "../actions/DocumentActionsContext";
 import { useDocument } from "../DocumentContext";
-import { useMetadata } from "../metadata/MetadataContext";
 
 interface EditorNavigationProps {
   from?: string;
 }
 
-export function EditorNavigation({ from }: EditorNavigationProps) {
-  const { isComparisonMode, document } = useDocument();
-  const { hasMetadataErrors } = useMetadata();
-  const pathname = usePathname();
-  const fromSuffix = from ? `?from=${encodeURIComponent(from)}` : "";
-  const [isCollapsed, setIsCollapsed] = useState(false);
+/** Options du toggle éditeur visuel / markdown brut */
+const EDITOR_MODE_OPTIONS: IconToggleOption<"visual" | "raw">[] = [
+  { value: "visual", icon: RiPencilLine, label: "Éditeur visuel" },
+  { value: "raw", icon: RiCodeSSlashLine, label: "Markdown brut" },
+];
 
-  // Auto-collapse when comparison mode is active
-  useEffect(() => {
-    if (isComparisonMode) {
-      setIsCollapsed(true);
-    }
-  }, [isComparisonMode]);
+/** Style commun d'un item de menu */
+const menuItemBase =
+  "flex items-center gap-2 w-full px-3 py-1 rounded-[2px] text-sm font-medium transition-colors cursor-pointer select-none";
+
+/**
+ * EditorNavigation — Sidebar gauche de l'écran d'édition de document.
+ *
+ * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/BOMO?node-id=1415-7009
+ */
+export function EditorNavigation({ from }: EditorNavigationProps) {
+  const { document, isRawMarkdownMode, setIsRawMarkdownMode } = useDocument();
+  const { archiveDocument, isArchiving } = useDocumentActions();
+  const pathname = usePathname();
+  const router = useRouter();
+  const fromSuffix = from ? `?from=${encodeURIComponent(from)}` : "";
 
   if (!document) return null;
 
   const baseUrl = `/documents/${document.id}`;
   const isFicheActive = pathname === baseUrl;
-  const isComplianceActive = pathname === `${baseUrl}/compliance`;
   const isMetadataActive = pathname === `${baseUrl}/metadata`;
+  const isComplianceActive = pathname === `${baseUrl}/compliance`;
+
+  const isCompliant = document.complianceStatus === "compliant";
+  const isNonCompliant = document.complianceStatus === "non_compliant";
+  const canArchive =
+    !!document.publicationRemoteId && document.onlineStatus !== "archived";
+
+  const handleArchive = async () => {
+    if (
+      !confirm(
+        "Êtes-vous sûr de vouloir archiver ce document ? Il ne sera plus visible publiquement.",
+      )
+    ) {
+      return;
+    }
+    // On attend que le channel soit SUBSCRIBED avant de lancer le workflow.
+    // .subscribe() est async (WebSocket) — lancer archiveDocument() immédiatement
+    // après crée une race condition si l'INSERT arrive avant l'établissement.
+    const supabase = createClient();
+    const startedAt = new Date().toISOString();
+    let fallbackInterval: ReturnType<typeof setInterval> | null = null;
+    let fallbackTimeout: ReturnType<typeof setTimeout>;
+    // biome-ignore lint/suspicious/noExplicitAny: channel assigned in Promise below
+    let channel: any;
+
+    const cleanup = () => {
+      supabase.removeChannel(channel);
+      fallbackInterval && clearInterval(fallbackInterval);
+      clearTimeout(fallbackTimeout);
+    };
+
+    const handleRefresh = () => {
+      cleanup();
+      router.refresh();
+    };
+
+    await new Promise<void>((resolve) => {
+      channel = supabase // eslint-disable-line prefer-const
+        .channel(`archive-${document.id}-${Date.now()}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "publication_records",
+            filter: `workflow_id=eq.${document.id}`,
+          },
+          (payload) => {
+            logger.info(
+              { record: payload.new, workflowId: document.id },
+              "Realtime INSERT received (archive)",
+            );
+            if (payload.new.status === "archived") handleRefresh();
+          },
+        )
+        .subscribe((status, err) => {
+          logger.info(
+            { status, workflowId: document.id },
+            "Realtime channel status (archive)",
+          );
+          if (err)
+            logger.error(
+              { err, workflowId: document.id },
+              "Realtime channel error (archive)",
+            );
+          if (status === "SUBSCRIBED") resolve();
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") resolve();
+        });
+    });
+
+    // Polling de secours toutes les 3s — le Realtime est non fiable
+    // pour les inserts faits par le backend Vercel (RLS + service role).
+    fallbackTimeout = setTimeout(() => {
+      fallbackInterval = setInterval(async () => {
+        const { data } = await supabase
+          .from("publication_records")
+          .select("status")
+          .eq("workflow_id", document.id)
+          .eq("status", "archived")
+          .gte("created_at", startedAt)
+          .maybeSingle();
+        if (data) handleRefresh();
+      }, 3_000);
+    }, 3_000);
+
+    const result = await archiveDocument();
+    if (!result.success) cleanup();
+  };
 
   return (
-    <div
-      className={cn(
-        "flex flex-col border-r bg-gray-50 transition-all duration-300 ease-in-out h-full overflow-hidden",
-        isCollapsed ? "w-16" : "w-64",
-      )}
-    >
-      <div className="flex items-center p-4 border-b bg-white justify-between">
-        {!isCollapsed && (
-          <span className="font-semibold text-sm">Navigation</span>
-        )}
-        <Button
-          variant="quatrieme"
-          size="sm"
-          className="h-8 w-8 px-0"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          disabled={isComparisonMode}
-        >
-          {isCollapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <ChevronLeft className="w-4 h-4" />
-          )}
-        </Button>
-      </div>
-
-      {/* Navigation Buttons */}
-      <div className="flex-1 flex flex-col p-4 gap-4">
-        <div className="flex flex-col gap-2">
+    <div className="flex flex-col bg-white py-12 px-10 shadow-[2px_0px_6px_0px_rgba(0,0,18,0.16)]">
+      {/* Menu principal */}
+      <nav className="flex flex-col gap-6">
+        <div className="flex flex-col gap-2 w-48">
+          {/* Contenu */}
           <Link href={`${baseUrl}${fromSuffix}`}>
-            <Button
-              variant={isFicheActive ? "secondaire" : "quatrieme"}
+            <span
               className={cn(
-                "justify-start flex gap-2 w-full",
-                isCollapsed && "justify-center px-0",
+                menuItemBase,
+                isFicheActive
+                  ? "bg-[var(--background-alt-blue-france)] text-[var(--blue-france-sun-113-625-hover)]"
+                  : "text-[var(--text-mention-grey)]",
               )}
             >
-              <File className="w-4 h-4" />
-              {!isCollapsed && "Fiche "}
-            </Button>
+              <Icon icon={RiFileTextLine} size="sm" />
+              Contenu
+            </span>
           </Link>
 
+          {/* Métadonnées */}
           <Link href={`${baseUrl}/metadata${fromSuffix}`}>
-            <Button
-              variant={isMetadataActive ? "secondaire" : "quatrieme"}
+            <span
               className={cn(
-                "justify-start flex gap-2 w-full relative",
-                isCollapsed && "justify-center px-0",
+                menuItemBase,
+                isMetadataActive
+                  ? "bg-[var(--background-alt-blue-france)] text-[var(--blue-france-sun-113-625-hover)]"
+                  : "text-[var(--text-mention-grey)]",
               )}
             >
-              <LayoutList className="w-4 h-4 shrink-0" />
-              {!isCollapsed && (
-                <>
-                  <span className="flex-1 text-left">Metadonnées</span>
-                  {hasMetadataErrors && (
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  )}
-                </>
-              )}
-              {/* In collapsed mode: small dot indicator */}
-              {isCollapsed && hasMetadataErrors && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-500" />
-              )}
-            </Button>
+              <Icon icon={RiDatabase2Line} size="sm" />
+              Métadonnées
+            </span>
           </Link>
 
+          {/* Arbitrage + badge conformité à l'intérieur */}
           <Link href={`${baseUrl}/compliance${fromSuffix}`}>
-            <Button
-              variant={isComplianceActive ? "secondaire" : "quatrieme"}
+            <span
               className={cn(
-                "justify-start flex gap-2 w-full",
-                isCollapsed && "justify-center px-0",
+                menuItemBase,
+                isComplianceActive
+                  ? "bg-[var(--background-alt-blue-france)] text-[var(--blue-france-sun-113-625-hover)]"
+                  : "text-[var(--text-mention-grey)]",
               )}
             >
-              <Gavel className="w-4 h-4" />
-              {!isCollapsed && "Arbitrage"}
-            </Button>
+              <Icon icon={RiHammerLine} size="sm" />
+              <span className="flex-1">Arbitrage</span>
+              {isCompliant && (
+                <span className="flex items-center justify-center size-5 shrink-0 rounded-xs bg-[var(--background-contrast-info)]">
+                  <span className="size-2 rounded-full bg-[var(--text-default-info)]" />
+                </span>
+              )}
+              {isNonCompliant && (
+                <span className="flex items-center justify-center size-5 shrink-0 rounded-xs bg-[var(--background-contrast-warning)]">
+                  <span className="size-2 rounded-full bg-[var(--text-default-warning)]" />
+                </span>
+              )}
+            </span>
           </Link>
         </div>
-      </div>
 
-      {/* Action Buttons - Sticky Bottom */}
-      <div className="sticky bottom-0 mt-auto">
-        <DocumentActions isCollapsed={isCollapsed} />
+        {/* Archiver — visible uniquement si publié, avec transition */}
+        <div
+          className={cn(
+            "w-48 transition-all duration-300 ease-in-out overflow-hidden",
+            canArchive
+              ? "max-h-12 opacity-100"
+              : "max-h-0 opacity-0 pointer-events-none",
+          )}
+        >
+          <button
+            type="button"
+            onClick={handleArchive}
+            disabled={isArchiving || !canArchive}
+            className={cn(
+              menuItemBase,
+              "text-[var(--text-default-error)] disabled:opacity-50",
+            )}
+          >
+            <Icon icon={RiDeleteBinLine} size="sm" />
+            {isArchiving ? "Archivage..." : "Archiver"}
+          </button>
+        </div>
+      </nav>
+
+      {/* Toggle éditeur — gap 56px sous le menu (Figma) */}
+      <div className="mt-14">
+        <IconToggle
+          options={EDITOR_MODE_OPTIONS}
+          value={isRawMarkdownMode ? "raw" : "visual"}
+          onChange={(mode) => setIsRawMarkdownMode(mode === "raw")}
+        />
       </div>
     </div>
   );

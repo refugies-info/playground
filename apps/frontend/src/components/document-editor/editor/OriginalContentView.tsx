@@ -1,7 +1,14 @@
+"use client";
+
 import { Button } from "@playground/ui/primitives";
 import { Undo2 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useDocument } from "../DocumentContext";
-import { MarkdownViewer } from "../shared/MarkdownViewer";
+
+const MarkdownViewer = dynamic(
+  () => import("../shared/MarkdownViewer").then((m) => m.MarkdownViewer),
+  { ssr: false },
+);
 
 export function OriginalContentView() {
   const { document, rollbackToOriginal, isRawMarkdownMode } = useDocument();

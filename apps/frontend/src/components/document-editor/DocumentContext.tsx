@@ -34,6 +34,8 @@ interface DocumentData
   editorialRecordId?: string;
   /** True while an AI metadata generation is in progress — drives MetadataView spinner */
   isMetadataGenerating?: boolean;
+  /** MongoDB ObjectId of the dispositif on Réfugiés.info — set after first publication */
+  publicationRemoteId?: string;
   referenceData?: {
     themes: Record<string, string>;
     needs: Record<string, string>;
@@ -96,7 +98,13 @@ export function DocumentProvider({
     if (initialData) {
       setDocument(initialData);
     }
-  }, [initialData?.id, initialData?.metadataReport?.id]);
+  }, [
+    initialData?.id,
+    initialData?.metadataReport?.id,
+    initialData?.onlineStatus,
+    initialData?.workStatus,
+    initialData?.publicationRemoteId,
+  ]);
 
   // Update content and mark as dirty (only if content actually changed)
   const updateContent = (content: string) => {

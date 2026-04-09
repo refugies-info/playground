@@ -8,6 +8,7 @@ export * from "./card";
 export * from "./conformite";
 export * from "./error";
 export * from "./icon";
+export * from "./icon-toggle";
 export * from "./input";
 export * from "./save-indicator";
 export * from "./search-input";

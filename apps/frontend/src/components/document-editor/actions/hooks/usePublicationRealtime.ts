@@ -147,7 +147,17 @@ export function usePublicationRealtime({
           }
         },
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        logger.info(
+          { status, workflowId },
+          "Realtime channel status (publication)",
+        );
+        if (err)
+          logger.error(
+            { err, workflowId },
+            "Realtime channel error (publication)",
+          );
+      });
 
     return () => {
       supabase.removeChannel(channel);
