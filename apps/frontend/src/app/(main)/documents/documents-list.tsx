@@ -214,10 +214,8 @@ export function DocumentsList({
           <BoutonFiltre
             label="Conformité"
             options={[
-              { label: "En cours", value: "pending" },
               { label: "Conforme", value: "compliant" },
               { label: "Non conforme", value: "non_compliant" },
-              { label: "Erreur", value: "error" },
             ]}
             value={filters.complianceStatus || ""}
             onChange={(value) => updateFilter("complianceStatus", value)}
