@@ -9,6 +9,7 @@ export * from "./conformite";
 export * from "./error";
 export * from "./icon";
 export * from "./input";
+export * from "./save-indicator";
 export * from "./search-input";
 export * from "./spinner";
 export * from "./tag";
