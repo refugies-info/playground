@@ -142,7 +142,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
   };
 
   return (
-    <div className="flex flex-col bg-white py-12 px-10 shadow-[2px_0px_6px_0px_rgba(0,0,18,0.16)]">
+    <div className="absolute left-0 top-0 h-full z-10 flex flex-col bg-white py-12 px-10 shadow-[2px_0px_6px_0px_rgba(0,0,18,0.16)]">
       {/* Menu principal */}
       <nav className="flex flex-col gap-6">
         <div className="flex flex-col gap-2 w-48">

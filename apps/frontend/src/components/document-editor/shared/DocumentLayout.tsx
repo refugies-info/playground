@@ -1,9 +1,11 @@
 "use client";
 
+import { cn } from "@playground/ui";
+import { PapaIA } from "@playground/ui/primitives";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { DocumentActionsProvider } from "../actions";
-import { AssistantPanel } from "../assistant/AssistantPanel";
+import { useAssistant } from "../assistant/useAssistant";
 import { DocumentProvider } from "../DocumentContext";
 import { MetadataProvider } from "../metadata/MetadataContext";
 import { EditorNavigation } from "./EditorNavigation";
@@ -34,6 +36,26 @@ interface DocumentLayoutProps {
   children: React.ReactNode;
 }
 
+function PapaIAFab() {
+  const { toggle, isProcessing } = useAssistant();
+  return (
+    <div
+      className={cn(
+        "absolute bottom-8 right-8 z-20",
+        isProcessing && "animate-pulse",
+      )}
+    >
+      <PapaIA
+        variant={isProcessing ? "loading" : "default"}
+        onClick={toggle}
+        aria-label={
+          isProcessing ? "Annuler la génération" : "Améliorer avec l'IA"
+        }
+      />
+    </div>
+  );
+}
+
 export function DocumentLayout(props: DocumentLayoutProps) {
   const { initialData, children } = props;
   const from = useFromParam();
@@ -48,15 +70,15 @@ export function DocumentLayout(props: DocumentLayoutProps) {
             <HeaderFiche />
 
             {/* Main Content Area */}
-            <div className="flex flex-1 overflow-hidden">
-              {/* Left Sidebar */}
+            <div className="relative flex-1 overflow-hidden">
+              {/* Nav — absolute left, overlay */}
               <EditorNavigation from={from} />
 
-              {/* Center Editor / Content */}
+              {/* Content — pleine largeur */}
               {children}
 
-              {/* Right Chat */}
-              <AssistantPanel />
+              {/* PapaIA FAB */}
+              <PapaIAFab />
             </div>
           </div>
         </DocumentActionsProvider>

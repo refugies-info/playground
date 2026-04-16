@@ -10,6 +10,7 @@ export * from "./error";
 export * from "./icon";
 export * from "./icon-toggle";
 export * from "./input";
+export * from "./papa-ia";
 export * from "./save-indicator";
 export * from "./search-input";
 export * from "./spinner";

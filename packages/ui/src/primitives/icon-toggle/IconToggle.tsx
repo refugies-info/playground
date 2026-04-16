@@ -55,7 +55,6 @@ function IconToggleInner<T extends string>(
   return (
     <div
       ref={ref}
-      role="radiogroup"
       className={cn(
         "relative inline-flex items-center rounded-xs bg-[var(--background-alt-grey)] p-0.5",
         className,
