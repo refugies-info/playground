@@ -7,6 +7,16 @@ import { createTranslationRecordsStep } from "../../steps/translation/create-tra
 import { getAvailableTranslationAgentsStep } from "../../steps/translation/get-available-translation-agents";
 import { triggerTranslationWorkflowStep } from "../../steps/translation/trigger-translation-workflow";
 
+/**
+ * Délai entre les appels Letta pour éviter le rate limiting (429).
+ * Doit être un "use step" — setTimeout n'est pas disponible dans le
+ * contexte orchestrateur des Vercel Workflows (uniquement dans les steps).
+ */
+async function sleepStep(ms: number): Promise<void> {
+  "use step";
+  await new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
 export interface PublicationWorkflowResult {
   publicationRecordId: string;
   remoteId: string;
@@ -61,15 +71,17 @@ export async function publicationWorkflow(
           : [];
 
       if (languages.length > 0) {
-        const translationPromises = languages.map((lang) =>
-          triggerTranslationWorkflowStep(
+        // Séquentiel avec délai entre chaque langue pour éviter
+        // le rate limiting Letta (429 requests/tokens per minute).
+        for (const lang of languages) {
+          await triggerTranslationWorkflowStep(
             editorialRecordId,
             lang,
             input.workflowId,
             input.userId,
-          ),
-        );
-        await Promise.allSettled(translationPromises);
+          );
+          await sleepStep(5000);
+        }
       }
     }
   }
