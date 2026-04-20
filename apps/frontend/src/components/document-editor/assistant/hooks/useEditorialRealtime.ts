@@ -139,7 +139,7 @@ export function useEditorialRealtime({
 
       try {
         const supabase = createClient();
-        const query = supabase
+        let query = supabase
           .from("letta_reports")
           .select("report_type, status, markdown, raw_response")
           .eq("workflow_id", workflowId)
@@ -150,7 +150,7 @@ export function useEditorialRealtime({
 
         // Only fetch reports created after we started listening
         if (listeningStartedAt.current) {
-          query.gte("created_at", listeningStartedAt.current);
+          query = query.gte("created_at", listeningStartedAt.current);
         }
 
         const { data, error: queryError } = await query.maybeSingle();
