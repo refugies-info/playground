@@ -2,6 +2,7 @@
 // Types
 // =============================================================================
 
+export { forceEditorialWorkflow } from "./pipelines/editorial/force-editorial";
 export type { PersistEditorialWorkflowResult } from "./pipelines/editorial/persist-editorial";
 export { persistEditorialWorkflow } from "./pipelines/editorial/persist-editorial";
 export type { PersistMetadataWorkflowResult } from "./pipelines/editorial/persist-metadata";
@@ -49,6 +50,7 @@ export { getEditorialRecordIdStep } from "./steps/common/get-editorial-record-id
 // Common Utilities
 // =============================================================================
 export { getSupabaseClient } from "./steps/common/supabase";
+export type { ForceEditorialStepResult } from "./steps/editorial/force-editorial-step";
 export type { PersistEditorialReportResult } from "./steps/editorial/persist-editorial-report";
 export { persistEditorialReportStep } from "./steps/editorial/persist-editorial-report";
 export type { PersistMetadataReportResult } from "./steps/editorial/persist-metadata-report";

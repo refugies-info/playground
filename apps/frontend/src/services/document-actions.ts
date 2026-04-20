@@ -10,6 +10,7 @@ import { createSupabaseServerClient } from "@playground/supabase";
 import {
   archiveWorkflow,
   forceArbitrationWorkflow,
+  forceEditorialWorkflow,
   forceMetadataOnlyWorkflow,
   publicationWorkflow,
   saveWorkflow,
@@ -619,6 +620,53 @@ export async function triggerForceMetadataOnly(workflowId: string): Promise<{
     return {
       success: false,
       error: "Erreur inattendue lors du démarrage de la régénération",
+    };
+  }
+}
+
+/**
+ * Triggers an AI-powered content rewrite for a document.
+ *
+ * Fire-and-forget: starts the workflow and returns immediately.
+ * The client should use `useEditorialRealtime` to listen for the result
+ * via Supabase Realtime (with polling fallback).
+ *
+ * @param workflowId - The workflow (document) ID to rewrite.
+ * @returns Object indicating success/failure and the workflow run ID.
+ */
+export async function triggerEditorialRewrite(workflowId: string): Promise<{
+  success: boolean;
+  workflowRunId?: string;
+  error?: string;
+}> {
+  try {
+    const auth = await getAuthorizedSession(workflowId, "modify");
+    if (auth.errorResponse) return auth.errorResponse;
+
+    if (!forceEditorialWorkflow) {
+      logger.error("forceEditorialWorkflow is undefined - cannot start");
+      return {
+        success: false,
+        error: "Workflow non disponible",
+      };
+    }
+
+    const result = await start(forceEditorialWorkflow, [workflowId]);
+
+    logger.info(
+      { workflowRunId: result.runId, workflowId },
+      "Editorial rewrite workflow started",
+    );
+
+    return {
+      success: true,
+      workflowRunId: result.runId,
+    };
+  } catch (error) {
+    logger.error(error, "Unexpected error starting editorial rewrite workflow");
+    return {
+      success: false,
+      error: "Erreur inattendue lors du démarrage de l'amélioration par l'IA",
     };
   }
 }

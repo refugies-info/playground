@@ -9,7 +9,7 @@
     "check:types": "tsc --noEmit"
   },
   "dependencies": {
-    "@letta-ai/letta-client": "1.6.5",
+    "@letta-ai/letta-client": "1.10.2",
     "@playground/rco": "workspace:^",
     "dotenv": "^17.2.3",
     "gray-matter": "^4.0.3"
