@@ -91,10 +91,16 @@ export async function forceEditorialStep(
     });
     conversationId = conversation.id;
 
-    await supabase
+    const { error: updateError } = await supabase
       .from("workflows")
       .update({ conversation_id: conversationId })
       .eq("id", workflowId);
+
+    if (updateError) {
+      throw new Error(
+        `Failed to link conversation to workflow: ${updateError.message}`,
+      );
+    }
 
     logger.info(
       { workflowId, conversationId },
