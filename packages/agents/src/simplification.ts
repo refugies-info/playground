@@ -1,5 +1,5 @@
 import type { Letta } from "@letta-ai/letta-client";
-import type { LettaResponse } from "@letta-ai/letta-client/resources/agents/messages";
+
 import { logger } from "@playground/shared-types";
 import matter from "gray-matter";
 import { REDACTION_SLASH_COMMAND } from "./prompts";
@@ -114,36 +114,31 @@ export async function simplifyContentSync(
   markdownContent: string,
   conversationId: string,
 ): Promise<string> {
-  if (!conversationId) {
-    throw new Error("Conversation ID is required");
-  }
-
-  const sanitizedContent = markdownContent.replace(/<\/?document>/gi, "");
-  const messageContent = `${REDACTION_SLASH_COMMAND}\n\n<document>\n${sanitizedContent}\n</document>`;
+  const startTime = Date.now();
 
   logger.info(
     { conversationId, contentLength: markdownContent.length },
-    "[simplifyContentSync] Sending message to Letta agent (non-streaming)",
+    "[simplifyContentSync] Starting (consuming stream, breaking on first content)",
   );
 
-  const startTime = Date.now();
-
-  // streaming: false → Letta returns a complete JSON response instead of SSE.
-  // The conversations API types don't have the non-streaming overload,
-  // so we cast the result to LettaResponse.
-  const response = (await client.conversations.messages.create(conversationId, {
-    messages: [{ role: "user", content: messageContent }],
-    streaming: false,
-  })) as unknown as LettaResponse;
-
-  // Extract assistant message from the response
+  // The Letta SDK always streams for conversations.messages.create.
+  // We reuse the existing generator but exit as soon as we have the
+  // assistant message — no need to wait for pings to stop.
   let assistantContent = "";
-  for (const message of response.messages) {
+
+  for await (const chunk of simplifyContent(
+    client,
+    markdownContent,
+    conversationId,
+  )) {
     if (
-      message.message_type === "assistant_message" &&
-      typeof message.content === "string"
+      chunk.message_type === "assistant_message" &&
+      typeof chunk.content === "string" &&
+      chunk.content
     ) {
-      assistantContent = message.content;
+      assistantContent = chunk.content;
+      // Break immediately — don't wait for pings or end of stream.
+      break;
     }
   }
 
@@ -153,9 +148,8 @@ export async function simplifyContentSync(
       totalMs: Date.now() - startTime,
       hasContent: !!assistantContent,
       contentLength: assistantContent.length,
-      messageCount: response.messages.length,
     },
-    "[simplifyContentSync] Response received",
+    "[simplifyContentSync] Content received",
   );
 
   if (!assistantContent) {
