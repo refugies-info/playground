@@ -125,6 +125,18 @@ export const createAuthorColumn = (): ColumnDef<Document> => ({
   ),
 });
 
+export const createWordCountColumn = (): ColumnDef<Document> => ({
+  accessorKey: "wordCount",
+  header: ({ column }) => (
+    <DataTableColumnHeader column={column} title="Mots" />
+  ),
+  cell: ({ row }) => {
+    const count = row.original.wordCount;
+    if (count == null) return <span className="text-gray-400">—</span>;
+    return <span className="text-sm tabular-nums">{count}</span>;
+  },
+});
+
 // =============================================================================
 // Workflow-specific Factories (/workflow table)
 // =============================================================================

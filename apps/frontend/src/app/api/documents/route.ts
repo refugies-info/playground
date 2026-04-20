@@ -109,6 +109,7 @@ export async function GET(
     authorEmail: "authorEmail",
     commune: "commune",
     modalitesEntreesSorties: "modalitesEntreesSorties",
+    wordCount: "wordCount",
   };
 
   // Apply sorting

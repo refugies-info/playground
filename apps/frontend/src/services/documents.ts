@@ -156,6 +156,7 @@ export async function getDocuments(params: GetDocumentsParams) {
     authorEmail: "author_email",
     commune: "commune",
     modalitesEntreesSorties: "modalites_entrees_sorties",
+    wordCount: "ingestion_word_count",
   };
 
   const dbColumn = sortFieldMap[sortBy];
@@ -254,6 +255,9 @@ export async function getDocuments(params: GetDocumentsParams) {
         commune: item.commune ?? null,
         modalitesEntreesSorties: item.modalites_entrees_sorties ?? null,
         externalId: item.external_id ?? null,
+        wordCount:
+          (item as unknown as { ingestion_word_count: number | null })
+            .ingestion_word_count ?? null,
       };
     })
     .filter((doc): doc is Document => doc !== null);
