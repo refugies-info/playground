@@ -1,4 +1,6 @@
 import type { Letta } from "@letta-ai/letta-client";
+
+import { logger } from "@playground/shared-types";
 import matter from "gray-matter";
 import { REDACTION_SLASH_COMMAND } from "./prompts";
 
@@ -37,6 +39,14 @@ export const simplifyContent = async function* (
 ${sanitizedContent}
 </document>`;
 
+  logger.info(
+    { conversationId, contentLength: markdownContent.length },
+    "[simplifyContent] Sending message to Letta agent",
+  );
+
+  const startTime = Date.now();
+  let chunkCount = 0;
+
   const stream = await client.conversations.messages.create(conversationId, {
     messages: [
       {
@@ -46,17 +56,108 @@ ${sanitizedContent}
     ],
   });
 
+  logger.info(
+    { conversationId, elapsedMs: Date.now() - startTime },
+    "[simplifyContent] Stream created, starting to read chunks",
+  );
+
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
   for await (const chunk of stream as AsyncIterable<any>) {
+    chunkCount++;
     // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
     const msg = chunk as any;
+
+    if (chunkCount <= 3 || msg.message_type === "assistant_message") {
+      logger.info(
+        {
+          conversationId,
+          chunkCount,
+          messageType: msg.message_type,
+          hasContent: !!msg.content,
+          contentPreview:
+            typeof msg.content === "string"
+              ? msg.content.slice(0, 80)
+              : undefined,
+          elapsedMs: Date.now() - startTime,
+        },
+        `[simplifyContent] Chunk #${chunkCount}`,
+      );
+    }
 
     // Add timestamp to every message
     msg.timestamp = new Date().toISOString();
 
     yield msg;
   }
+
+  logger.info(
+    {
+      conversationId,
+      totalChunks: chunkCount,
+      totalMs: Date.now() - startTime,
+    },
+    "[simplifyContent] Stream completed",
+  );
 };
+
+/**
+ * Non-streaming version of simplifyContent.
+ * Calls the Letta agent and waits for the full response — no chunks, no pings.
+ *
+ * Use this in durable workflow steps where streaming to a client is not needed.
+ *
+ * @returns The assistant's final message content (markdown).
+ * @throws If the agent returns no assistant message.
+ */
+export async function simplifyContentSync(
+  client: Letta,
+  markdownContent: string,
+  conversationId: string,
+): Promise<string> {
+  const startTime = Date.now();
+
+  logger.info(
+    { conversationId, contentLength: markdownContent.length },
+    "[simplifyContentSync] Starting (consuming stream, breaking on first content)",
+  );
+
+  // The Letta SDK always streams for conversations.messages.create.
+  // We reuse the existing generator but exit as soon as we have the
+  // assistant message — no need to wait for pings to stop.
+  let assistantContent = "";
+
+  for await (const chunk of simplifyContent(
+    client,
+    markdownContent,
+    conversationId,
+  )) {
+    if (
+      chunk.message_type === "assistant_message" &&
+      typeof chunk.content === "string" &&
+      chunk.content
+    ) {
+      assistantContent = chunk.content;
+      // Break immediately — don't wait for pings or end of stream.
+      break;
+    }
+  }
+
+  logger.info(
+    {
+      conversationId,
+      totalMs: Date.now() - startTime,
+      hasContent: !!assistantContent,
+      contentLength: assistantContent.length,
+    },
+    "[simplifyContentSync] Content received",
+  );
+
+  if (!assistantContent) {
+    throw new Error("No assistant message in Letta response");
+  }
+
+  return assistantContent;
+}
 
 /**
  * Builds markdown with frontmatter from separate content and metadata.
