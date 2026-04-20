@@ -47,6 +47,7 @@ export default async function DocumentsPage(props: PageProps) {
     "authorEmail",
     "commune",
     "modalitesEntreesSorties",
+    "wordCount",
   ];
   const sortBy =
     sortByParam && validSortFields.includes(sortByParam as DocumentSortField)
