@@ -11,6 +11,7 @@ import {
   createOnlineStatusColumn,
   createStructureNameColumn,
   createTitleColumn,
+  createWordCountColumn,
   createWorkStatusColumn,
 } from "@/lib/document-column-factories";
 
@@ -20,17 +21,15 @@ import {
  * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/Wireframes_RCO?node-id=1255-8745
  *
  * Ordre et intitulés exacts (header row 1255:8745) :
- *   Auteur=80 | Statut=136 | État=121 | Mots=76* | Titre=fill |
+ *   Auteur=80 | Statut=136 | État=121 | Mots=76 | Titre=fill |
  *   Structure=148 | Ville=120 | Date de session=121 | Type d'entrée=154 |
  *   Date d'import=121 | Conformité=149 | ID=80
- *
- * * Mots non mappé pour l'instant (donnée non disponible)
  */
 export const columns: ColumnDef<Document>[] = [
   { ...createAuthorColumn(), size: 80 },
   { ...createOnlineStatusColumn(), size: 136 }, // "Statut"
   { ...createWorkStatusColumn<Document>(), size: 121 }, // "État"
-  // Mots (76px) — non mappé
+  { ...createWordCountColumn(), size: 76 }, // "Mots"
   createTitleColumn(), // "Titre" fill
   createStructureNameColumn(), // "Structure"
   {

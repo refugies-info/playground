@@ -20,7 +20,8 @@ export type DocumentSortField =
   | "sessionStartDate"
   | "authorEmail"
   | "commune"
-  | "modalitesEntreesSorties";
+  | "modalitesEntreesSorties"
+  | "wordCount";
 
 export interface Document {
   id: string;
@@ -63,10 +64,12 @@ export interface Document {
   authorRole?: string;
   /** Commune from metadata, e.g. "Blois", "Mantes-la-Jolie" */
   commune?: string | null;
-  /** Modalités entrées/sorties: "0" (permanentes) | "1" (dates fixes) | null */
+  /** Entry/exit modalities: "0" (rolling admission) | "1" (fixed dates) | null */
   modalitesEntreesSorties?: string | null;
   /** ID Carif-Oref from ingestion metadata (e.g. training offer ID) */
   externalId?: string | null;
+  /** Word count from ingestion markdown (frontmatter excluded) */
+  wordCount?: number | null;
 }
 
 export interface RiMetadata {
