@@ -66,8 +66,12 @@ export async function updateSession(request: NextRequest) {
     .getAll()
     .some((c) => c.name.includes("auth-token"));
 
-  const connectionError =
-    isConnectionError(error) || (error && hasSessionCookie);
+  // Only treat genuine network errors as connection errors (fetch failed, ECONNREFUSED...).
+  // We deliberately exclude `(error && hasSessionCookie)` here: that condition was meant
+  // to catch "DB down with active session" but causes a feedback loop — once a transient
+  // error sets a cookie, every subsequent request triggers connectionError and the user
+  // is permanently stuck on /service-unavailable until they clear cookies manually.
+  const connectionError = isConnectionError(error);
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
   // creating a new response object with NextResponse.next() make sure to:

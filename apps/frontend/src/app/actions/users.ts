@@ -1,6 +1,5 @@
 "use server";
 
-import crypto from "node:crypto";
 import { logger } from "@playground/shared-types";
 
 import {
@@ -76,29 +75,21 @@ export async function createUser(data: {
     throw new Error("La langue est obligatoire pour un traducteur.");
   }
 
-  // Generate a random secure password
-  const password = `${crypto.randomBytes(8).toString("hex")}!`;
-
   try {
-    const { error } = await adminClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        username,
-        role,
-        language,
-      },
+    // Use inviteUserByEmail instead of createUser + random password.
+    // Supabase sends an invitation email; the user sets their own password
+    // via the /accept-invite flow.
+    const { error } = await adminClient.auth.admin.inviteUserByEmail(email, {
+      data: { username, role, language },
     });
 
     if (error) {
-      logger.error({ err: error, email }, "Error creating user");
-      throw new Error(`Erreur lors de la création: ${error.message}`);
+      logger.error({ err: error, email }, "Error inviting user");
+      throw new Error(`Erreur lors de l'invitation: ${error.message}`);
     }
 
     revalidatePath("/users");
-    // Return the password so it can be displayed to the admin
-    return { success: true, password };
+    return { success: true };
   } catch (e: unknown) {
     const message =
       e instanceof Error ? e.message : "Une erreur inattendue est survenue.";

@@ -38,12 +38,6 @@ export function UserGrid({ initialUsers }: UserGridProps) {
         // Refresh server data to get IDs and dates
         router.refresh();
       }
-
-      if (res?.password) {
-        alert(
-          `Utilisateur créé !\n\nMot de passe temporaire à communiquer :\n${res.password}\n\nCopiez-le, il ne sera plus affiché.`,
-        );
-      }
     } catch (e: unknown) {
       const message =
         e instanceof Error ? e.message : "Une erreur est survenue";

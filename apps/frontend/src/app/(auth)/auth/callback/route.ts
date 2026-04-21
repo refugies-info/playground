@@ -13,8 +13,11 @@ export async function GET(request: NextRequest) {
     const cookieStore = await cookies();
 
     // Read environment variables - they should be available in server context
+    // NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is the preferred name (align with clients.ts)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabaseAnonKey =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
       logger.error(
@@ -24,7 +27,9 @@ export async function GET(request: NextRequest) {
         },
         "Missing Supabase environment variables",
       );
-      return NextResponse.redirect(`${origin}/`);
+      return NextResponse.redirect(
+        `${origin}/login?error=${encodeURIComponent("Erreur de configuration. Veuillez contacter un administrateur.")}`,
+      );
     }
 
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -52,8 +57,15 @@ export async function GET(request: NextRequest) {
       // Redirect to password reset page on success
       return NextResponse.redirect(`${origin}/password-reset`);
     }
+
+    logger.error({ error }, "Failed to exchange code for session");
+    return NextResponse.redirect(
+      `${origin}/login?error=${encodeURIComponent("Lien invalide ou expiré. Veuillez réessayer.")}`,
+    );
   }
 
-  // Redirect to home page on error
-  return NextResponse.redirect(`${origin}/`);
+  // No code in URL — redirect to login with error
+  return NextResponse.redirect(
+    `${origin}/login?error=${encodeURIComponent("Lien invalide ou expiré. Veuillez réessayer.")}`,
+  );
 }

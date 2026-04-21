@@ -9,8 +9,25 @@ export async function proxy(request: NextRequest) {
 
   // If Supabase is unreachable, redirect to the service unavailable page.
   // We avoid redirecting if already on that page to prevent redirect loops.
-  if (connectionError && !pathname.startsWith("/service-unavailable")) {
-    return NextResponse.redirect(new URL("/service-unavailable", request.url));
+  // We also skip /auth/* routes (callback, etc.) since they handle their own
+  // auth flow and must be reachable even when Supabase is momentarily busy.
+  if (
+    connectionError &&
+    !pathname.startsWith("/service-unavailable") &&
+    !pathname.startsWith("/auth/")
+  ) {
+    const response = NextResponse.redirect(
+      new URL("/service-unavailable", request.url),
+    );
+    // Clear auth cookies to prevent the user from being permanently stuck:
+    // a stale session cookie would cause every subsequent request to fail
+    // the same way, looping back to /service-unavailable.
+    for (const cookie of request.cookies.getAll()) {
+      if (cookie.name.includes("auth-token")) {
+        response.cookies.delete(cookie.name);
+      }
+    }
+    return response;
   }
 
   // Protected routes that require authentication
@@ -27,6 +44,7 @@ export async function proxy(request: NextRequest) {
     "/login",
     "/signup",
     "/password-reset",
+    "/accept-invite",
     "/callback",
     "/service-unavailable",
   ];
@@ -57,6 +75,11 @@ export async function proxy(request: NextRequest) {
           new URL(`/auth/callback?code=${code}`, request.url),
         );
       }
+      // Invite flow: Supabase redirects to root with type=invite in query params
+      const type = request.nextUrl.searchParams.get("type");
+      if (type === "invite") {
+        return NextResponse.redirect(new URL("/accept-invite", request.url));
+      }
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
@@ -69,8 +92,13 @@ export async function proxy(request: NextRequest) {
   }
 
   // If accessing public auth route with session, redirect to documents (or translations if translator)
-  // EXCEPT for password-reset (allow password reset even when authenticated)
-  if (isPublicRoute && user && !pathname.startsWith("/password-reset")) {
+  // EXCEPT for password-reset and accept-invite (allow these flows even when authenticated)
+  if (
+    isPublicRoute &&
+    user &&
+    !pathname.startsWith("/password-reset") &&
+    !pathname.startsWith("/accept-invite")
+  ) {
     const role = user.user_metadata?.role;
     const target = role === "translator" ? "/translations" : "/documents";
     return NextResponse.redirect(new URL(target, request.url));
