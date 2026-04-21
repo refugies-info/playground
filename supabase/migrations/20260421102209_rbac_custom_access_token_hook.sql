@@ -65,11 +65,7 @@ $$;
 --    The trigger only handles non-sensitive display fields.
 -- ─────────────────────────────────────────────
 create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
-as $$
+returns trigger as $$
 begin
   insert into public.profiles (id, email, first_name, last_name, full_name, avatar_url, created_at, last_sign_in_at)
   values (
@@ -92,7 +88,7 @@ begin
     -- be overwritten by login events or auth.users updates.
   return new;
 end;
-$$;
+$$ language plpgsql security definer;
 
 -- ─────────────────────────────────────────────
 -- 5. Data migration: populate profiles.role and profiles.language
