@@ -3,10 +3,13 @@ import {
   createSupabaseServerClient,
   getSupabaseAdmin,
 } from "@playground/supabase";
-import type { UserData } from "@playground/ui/composites/user-card/UserCard";
+import type {
+  UserData,
+  UserRole,
+} from "@playground/ui/composites/user-card/UserCard";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getAuthUser } from "@/lib/auth";
+import { getAuthUser, getUserProfile } from "@/lib/auth";
 import { UserGrid } from "./user-grid";
 
 export const dynamic = "force-dynamic";
@@ -21,21 +24,25 @@ export default async function UsersPage() {
     redirect("/login");
   }
 
-  const userRole = user.user_metadata?.role;
-  if (userRole !== "admin") {
+  const currentUserProfile = await getUserProfile(supabase, user.id);
+  if (currentUserProfile?.role !== "admin") {
     redirect("/");
   }
 
   const adminClient = getSupabaseAdmin();
-  const {
-    data: { users },
-    error,
-  } = await adminClient.auth.admin.listUsers();
 
-  if (error) {
-    logger.error({ err: error }, "Error fetching users");
+  // Fetch users and profiles in parallel (independent queries)
+  const [usersResult, profilesResult] = await Promise.all([
+    adminClient.auth.admin.listUsers(),
+    adminClient.from("profiles").select("id, role, language"),
+  ]);
+
+  if (usersResult.error) {
+    logger.error({ err: usersResult.error }, "Error fetching users");
     return <div>Erreur lors du chargement des utilisateurs.</div>;
   }
+
+  const { users } = usersResult.data;
 
   // Sort users by created_at desc
   const sortedUsers = users.sort(
@@ -43,13 +50,15 @@ export default async function UsersPage() {
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
 
+  const profileMap = new Map((profilesResult.data ?? []).map((p) => [p.id, p]));
+
   // Map to UserData interface
   const formattedUsers: UserData[] = sortedUsers.map((u) => ({
     id: u.id,
     email: u.email || "",
     username: u.user_metadata?.username,
-    role: u.user_metadata?.role || "editor", // default fallback
-    language: u.user_metadata?.language,
+    role: (profileMap.get(u.id)?.role as UserRole) || "editor",
+    language: profileMap.get(u.id)?.language ?? undefined,
     created_at: u.created_at,
   }));
 

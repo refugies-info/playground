@@ -59,18 +59,10 @@ export async function proxy(request: NextRequest) {
 
   // Handle root path "/"
   if (pathname === "/") {
-    if (user) {
-      // Determine dashboard based on role
-      const role = user.user_metadata?.role;
-      if (role === "translator") {
-        return NextResponse.redirect(new URL("/translations", request.url));
-      }
-      return NextResponse.redirect(new URL("/documents", request.url));
-    } else {
+    if (!user) {
       // Allow PKCE flow (password recovery, email confirmation, etc.)
       const code = request.nextUrl.searchParams.get("code");
       if (code) {
-        // Redirect to callback to exchange the code
         return NextResponse.redirect(
           new URL(`/auth/callback?code=${code}`, request.url),
         );
@@ -82,6 +74,9 @@ export async function proxy(request: NextRequest) {
       }
       return NextResponse.redirect(new URL("/login", request.url));
     }
+    // Authenticated users: let /app/(main)/page.tsx handle role-based routing
+    // (it queries profiles.role and redirects to /documents or /translations)
+    return supabaseResponse;
   }
 
   // If accessing protected route without session, redirect to login
@@ -91,7 +86,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // If accessing public auth route with session, redirect to documents (or translations if translator)
+  // If accessing public auth route with session, redirect to / (role-based routing)
   // EXCEPT for password-reset and accept-invite (allow these flows even when authenticated)
   if (
     isPublicRoute &&
@@ -99,18 +94,7 @@ export async function proxy(request: NextRequest) {
     !pathname.startsWith("/password-reset") &&
     !pathname.startsWith("/accept-invite")
   ) {
-    const role = user.user_metadata?.role;
-    const target = role === "translator" ? "/translations" : "/documents";
-    return NextResponse.redirect(new URL(target, request.url));
-  }
-
-  // Translator Access Control
-  // Block access to /documents for translators
-  if (user && pathname.startsWith("/documents")) {
-    const role = user.user_metadata?.role;
-    if (role === "translator") {
-      return NextResponse.redirect(new URL("/translations", request.url));
-    }
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return supabaseResponse;

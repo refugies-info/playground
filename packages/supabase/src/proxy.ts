@@ -54,23 +54,10 @@ export async function updateSession(request: NextRequest) {
   // 1. User is genuinely not logged in (no cookie) → normal case
   // 2. DB is down and cannot validate an existing session → connection error
   //
-  // Current solution: Two conditions for connection error:
-  // - Network-level error (fetch failed, ECONNREFUSED) → isConnectionError()
-  // - Session cookie exists but getUser() failed → DB can't validate token
-  //
-  // TODO: This logic is incomplete. When DB is down and user has no session cookie,
-  // they won't see /service-unavailable (they'll see /login but login will fail).
-  // Need to revisit this — perhaps a dedicated health check endpoint or different
-  // error detection strategy. For now, the priority fix (logout → /login) is working.
-  const hasSessionCookie = request.cookies
-    .getAll()
-    .some((c) => c.name.includes("auth-token"));
-
   // Only treat genuine network errors as connection errors (fetch failed, ECONNREFUSED...).
-  // We deliberately exclude `(error && hasSessionCookie)` here: that condition was meant
-  // to catch "DB down with active session" but causes a feedback loop — once a transient
-  // error sets a cookie, every subsequent request triggers connectionError and the user
-  // is permanently stuck on /service-unavailable until they clear cookies manually.
+  // We deliberately exclude cookie-based heuristics here: checking hasSessionCookie
+  // caused a feedback loop — once a transient error set a cookie, every subsequent
+  // request triggered connectionError and the user was stuck on /service-unavailable.
   const connectionError = isConnectionError(error);
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're

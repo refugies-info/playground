@@ -19,6 +19,7 @@ import {
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getRun, start } from "workflow/api";
+import { getUserProfile } from "../lib/auth";
 import { normalizeMarkdown } from "../lib/markdown/normalizeMarkdown";
 import { verifyWorkflowPermission } from "./permission-helper";
 
@@ -53,11 +54,12 @@ async function getAuthorizedSession(
     };
   }
 
+  const profile = await getUserProfile(supabase, user.id);
   const hasPermission = await verifyWorkflowPermission(
     supabase,
     workflowId,
     user.id,
-    user.user_metadata?.role,
+    profile?.role ?? undefined,
   );
 
   if (!hasPermission) {
