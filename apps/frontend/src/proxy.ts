@@ -61,10 +61,14 @@ export async function proxy(request: NextRequest) {
   if (pathname === "/") {
     if (!user) {
       // Allow PKCE flow (password recovery, email confirmation, etc.)
+      // Forward all query params (code, type, etc.) so the callback can route correctly.
       const code = request.nextUrl.searchParams.get("code");
       if (code) {
         return NextResponse.redirect(
-          new URL(`/auth/callback?code=${code}`, request.url),
+          new URL(
+            `/auth/callback?${request.nextUrl.searchParams.toString()}`,
+            request.url,
+          ),
         );
       }
       // Invite flow: Supabase redirects to root with type=invite in query params
