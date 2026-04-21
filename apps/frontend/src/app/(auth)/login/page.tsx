@@ -64,6 +64,8 @@ export default function LoginPage() {
       .then(({ error }) => {
         if (!error) {
           router.replace("/accept-invite");
+        } else {
+          setHashError("Lien d'invitation invalide ou expiré.");
         }
       });
   }, [router, supabase.auth]);
