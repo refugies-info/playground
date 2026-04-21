@@ -10,7 +10,6 @@
 -- profiles: SELECT for reading role/language, column-restricted UPDATE for display fields only.
 -- role and language are written exclusively via service_role (users.ts).
 grant select on public.profiles to authenticated;
-grant select on public.profiles to anon;
 revoke update on public.profiles from authenticated;
 grant update (first_name, last_name, full_name, avatar_url) on public.profiles to authenticated;
 
