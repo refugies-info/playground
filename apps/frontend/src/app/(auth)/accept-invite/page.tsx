@@ -14,9 +14,10 @@ export default function AcceptInvitePage() {
 
   useEffect(() => {
     // Session is already established by /login before redirecting here.
-    // getSession() should return it immediately.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+    // getUser() verifies the session server-side (safer than getSession()
+    // which only reads local storage without validation).
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
         setIsReady(true);
       } else {
         setError(
@@ -33,8 +34,8 @@ export default function AcceptInvitePage() {
       throw error;
     }
 
-    // Session is valid after setting password — redirect directly to the app.
-    router.push("/documents");
+    // Session is valid after setting password — redirect to role-based routing.
+    router.push("/");
   };
 
   return (
