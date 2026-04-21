@@ -401,6 +401,7 @@ export type Database = {
           first_name: string | null
           full_name: string | null
           id: string
+          language: string | null
           last_name: string | null
           last_sign_in_at: string | null
           role: string | null
@@ -414,6 +415,7 @@ export type Database = {
           first_name?: string | null
           full_name?: string | null
           id: string
+          language?: string | null
           last_name?: string | null
           last_sign_in_at?: string | null
           role?: string | null
@@ -427,6 +429,7 @@ export type Database = {
           first_name?: string | null
           full_name?: string | null
           id?: string
+          language?: string | null
           last_name?: string | null
           last_sign_in_at?: string | null
           role?: string | null
@@ -782,6 +785,7 @@ export type Database = {
           ingestion_metadata: Json | null
           ingestion_record_id: string | null
           ingestion_report_id: string | null
+          ingestion_word_count: number | null
           latest_publication: Json | null
           modalites_entrees_sorties: string | null
           quality_score: number | null
@@ -836,7 +840,7 @@ export type Database = {
     Functions: {
       claim_di_audit_targets: {
         Args: {
-          max_total_pending?: number
+          max_editorial_backlog?: number
           p_service_ids: string[]
           timeout_interval?: string
         }
@@ -847,6 +851,10 @@ export type Database = {
         }[]
       }
       count_di_audit_candidates: {
+        Args: { p_service_ids: string[] }
+        Returns: number
+      }
+      count_di_editorial_backlog: {
         Args: { p_service_ids: string[] }
         Returns: number
       }

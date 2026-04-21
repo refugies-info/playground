@@ -2,7 +2,7 @@ import { createSupabaseServerClient } from "@playground/supabase";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getAuthUser } from "@/lib/auth";
+import { getAuthUser, getUserProfile } from "@/lib/auth";
 import {
   type GetTranslationsParams,
   getTranslations,
@@ -46,8 +46,9 @@ export default async function TranslationsPage(props: PageProps) {
     redirect("/login");
   }
 
-  const userLanguage = user.user_metadata?.language;
-  const role = user.user_metadata?.role;
+  const profile = await getUserProfile(supabase, user.id);
+  const userLanguage = profile?.language ?? undefined;
+  const role = profile?.role ?? undefined;
 
   // If a specific language filter is applied, use it.
   // Otherwise, default to user's assigned language if they have one (and they are a translator).

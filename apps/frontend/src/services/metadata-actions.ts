@@ -5,6 +5,7 @@ import { createSupabaseServerClient, type Json } from "@playground/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { getUserProfile } from "../lib/auth";
 import { verifyWorkflowPermission } from "./permission-helper";
 
 // =============================================================================
@@ -137,11 +138,12 @@ export async function saveMetadataFieldAction(
   }
 
   // 4. Verify permission
+  const profile = await getUserProfile(supabase, user.id);
   const hasPermission = await verifyWorkflowPermission(
     supabase,
     workflowId,
     user.id,
-    user.user_metadata?.role,
+    profile?.role ?? undefined,
   );
 
   if (!hasPermission) {
@@ -232,11 +234,12 @@ export async function saveMetadataFieldsAction(
   }
 
   // 4. Verify permission
+  const profile = await getUserProfile(supabase, user.id);
   const hasPermission = await verifyWorkflowPermission(
     supabase,
     workflowId,
     user.id,
-    user.user_metadata?.role,
+    profile?.role ?? undefined,
   );
 
   if (!hasPermission) {

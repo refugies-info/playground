@@ -1,3 +1,15 @@
+-- Backfill profiles.role and profiles.language from auth.users metadata.
+-- The handle_new_user trigger no longer copies role/language (they are managed
+-- by server actions). But seed data has role/language in raw_user_meta_data,
+-- so we need to backfill profiles after all users are created.
+UPDATE public.profiles p
+SET
+  role     = coalesce(p.role,     u.raw_user_meta_data->>'role'),
+  language = coalesce(p.language, nullif(u.raw_user_meta_data->>'language', ''))
+FROM auth.users u
+WHERE p.id = u.id
+  AND (p.role IS NULL OR p.language IS NULL);
+
 -- Backfill circular FK references
 -- These were set to NULL during initial insert to avoid FK violations.
 

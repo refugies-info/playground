@@ -51,11 +51,11 @@ async function getAuthorizedTranslationSession({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, language")
     .eq("id", user.id)
     .single();
 
-  const role = profile?.role ?? user.user_metadata?.role;
+  const role = profile?.role;
 
   if (role === "admin" || role === "editor") {
     return { user, supabase };
@@ -107,7 +107,7 @@ async function getAuthorizedTranslationSession({
       };
     }
 
-    const userLanguage = user.user_metadata?.language;
+    const userLanguage = profile?.language;
     if (!userLanguage) {
       logger.warn(
         { userId: user.id, translationId },

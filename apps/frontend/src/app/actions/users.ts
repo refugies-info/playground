@@ -1,6 +1,5 @@
 "use server";
 
-import crypto from "node:crypto";
 import { logger } from "@playground/shared-types";
 
 import {
@@ -23,8 +22,16 @@ async function assertAdmin() {
     throw new Error("Non authentifié.");
   }
 
-  const role = user.user_metadata?.role;
-  if (role !== "admin") {
+  // Read role from profiles (source of truth), not from JWT claims.
+  // Server actions use the admin client to bypass RLS and get a fresh value.
+  const adminClient = getSupabaseAdmin();
+  const { data: profile } = await adminClient
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "admin") {
     logger.warn(
       { userId: user.id },
       "Unauthorized attempt to access admin action",
@@ -76,29 +83,39 @@ export async function createUser(data: {
     throw new Error("La langue est obligatoire pour un traducteur.");
   }
 
-  // Generate a random secure password
-  const password = `${crypto.randomBytes(8).toString("hex")}!`;
-
   try {
-    const { error } = await adminClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        username,
-        role,
-        language,
-      },
-    });
+    // Invite user — Supabase sends the invitation email.
+    // Only non-sensitive display data (username) goes in user_metadata.
+    // role and language are written to profiles (source of truth for RBAC).
+    const { data: inviteData, error: inviteError } =
+      await adminClient.auth.admin.inviteUserByEmail(email, {
+        data: { username },
+      });
 
-    if (error) {
-      logger.error({ err: error, email }, "Error creating user");
-      throw new Error(`Erreur lors de la création: ${error.message}`);
+    if (inviteError) {
+      logger.error({ err: inviteError, email }, "Error inviting user");
+      throw new Error(`Erreur lors de l'invitation: ${inviteError.message}`);
+    }
+
+    // Write role and language to profiles (source of truth for RBAC).
+    // get_my_role() queries profiles directly for RLS policies.
+    const { error: profileError } = await adminClient
+      .from("profiles")
+      .update({ role, language })
+      .eq("id", inviteData.user.id);
+
+    if (profileError) {
+      logger.error(
+        { err: profileError, email },
+        "Error setting user profile role",
+      );
+      throw new Error(
+        `Erreur lors de la configuration du rôle: ${profileError.message}`,
+      );
     }
 
     revalidatePath("/users");
-    // Return the password so it can be displayed to the admin
-    return { success: true, password };
+    return { success: true };
   } catch (e: unknown) {
     const message =
       e instanceof Error ? e.message : "Une erreur inattendue est survenue.";
@@ -131,13 +148,33 @@ export async function updateUser(data: {
   }
 
   try {
-    const { error } = await adminClient.auth.admin.updateUserById(id, {
-      user_metadata: { username, role, language },
-    });
+    // username → user_metadata (display data, not security-sensitive)
+    const { error: authError } = await adminClient.auth.admin.updateUserById(
+      id,
+      {
+        user_metadata: { username },
+      },
+    );
 
-    if (error) {
-      logger.error({ err: error, id }, "Error updating user");
-      throw new Error(`Erreur lors de la mise à jour: ${error.message}`);
+    if (authError) {
+      logger.error({ err: authError, id }, "Error updating user auth metadata");
+      throw new Error(`Erreur lors de la mise à jour: ${authError.message}`);
+    }
+
+    // role and language → profiles (source of truth for RBAC)
+    const { error: profileError } = await adminClient
+      .from("profiles")
+      .update({ role, language })
+      .eq("id", id);
+
+    if (profileError) {
+      logger.error(
+        { err: profileError, id },
+        "Error updating user profile role",
+      );
+      throw new Error(
+        `Erreur lors de la mise à jour du rôle: ${profileError.message}`,
+      );
     }
 
     revalidatePath("/users");

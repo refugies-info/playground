@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { TopNav } from "@/components/TopNav";
-import { getAuthUser } from "@/lib/auth";
+import { getAuthUser, getUserProfile } from "@/lib/auth";
 
 export default async function MainLayout({
   children,
@@ -12,8 +12,8 @@ export default async function MainLayout({
   const supabase = createSupabaseServerClient(cookieStore);
 
   const user = await getAuthUser(supabase);
-
-  const role = user?.user_metadata?.role;
+  const profile = user ? await getUserProfile(supabase, user.id) : null;
+  const role = profile?.role ?? undefined;
 
   return (
     <div className="min-h-screen bg-gray-50">
