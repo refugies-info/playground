@@ -28,10 +28,13 @@ export default function AcceptInvitePage() {
   }, [supabase.auth]);
 
   const handleConfirmPassword = async (password: string) => {
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error: updateError } = await supabase.auth.updateUser({
+      password,
+    });
 
-    if (error) {
-      throw error;
+    if (updateError) {
+      setError(updateError.message);
+      return;
     }
 
     // Session is valid after setting password — redirect to role-based routing.
