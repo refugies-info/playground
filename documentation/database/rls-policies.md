@@ -80,20 +80,32 @@ ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 **Important**: Once RLS is enabled, ALL queries are blocked unless a policy allows them.
 
 ### Step 2: Create Helper Functions
-For security and performance, we use helper functions to extract metadata from the JWT. These functions use `deterministic` and `search_path = ''` strictly.
+Helper functions query `public.profiles` directly (source of truth for RBAC).
+They use `security definer` to bypass RLS on profiles (since RLS itself calls these functions).
+`auth.uid()` comes from the verified JWT `sub` claim — cannot be forged.
 
 ```sql
--- Returns the role from JWT user_metadata (admin, editor, translator)
+-- Returns the role from profiles (admin, editor, translator)
 create or replace function public.get_my_role()
-returns text as $$
-  select coalesce(nullif(current_setting('request.jwt.claims', true)::jsonb -> 'user_metadata' ->> 'role', ''), 'none');
-$$ language sql stable set search_path = '';
+returns text
+language sql stable security definer set search_path = ''
+as $$
+  select coalesce(
+    (select role from public.profiles where id = auth.uid()),
+    'none'
+  );
+$$;
 
 -- Returns the language assigned to the translator
 create or replace function public.get_my_language()
-returns text as $$
-  select coalesce(nullif(current_setting('request.jwt.claims', true)::jsonb -> 'user_metadata' ->> 'language', ''), 'none');
-$$ language sql stable set search_path = '';
+returns text
+language sql stable security definer set search_path = ''
+as $$
+  select coalesce(
+    (select language from public.profiles where id = auth.uid()),
+    'none'
+  );
+$$;
 ```
 
 ### Step 3: Create Policies
