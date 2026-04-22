@@ -34,7 +34,9 @@ export function NeedSelectField({ fieldKey }: { fieldKey: string }) {
   const rawValue = getFieldValue(fieldKey);
   const value = useMemo(() => {
     const raw = Array.isArray(rawValue) ? rawValue : [];
-    return raw.filter((id) => id in needsLookup);
+    return raw.filter(
+      (id) => typeof id === "string" && Object.hasOwn(needsLookup, id),
+    );
   }, [rawValue, needsLookup]);
 
   // Filter needs by selected themes — if no theme selected, show all needs.

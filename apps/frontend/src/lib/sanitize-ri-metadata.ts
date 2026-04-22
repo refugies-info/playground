@@ -24,14 +24,17 @@ export function sanitizeRiMetadata(
   const { themes, needs } = referenceData;
 
   // Theme (string) — falls back to DEFAULT_THEME_ID in buildRefugiesInfoPayload when null
-  if (typeof result.theme === "string" && !(result.theme in themes)) {
+  if (
+    typeof result.theme === "string" &&
+    !Object.hasOwn(themes, result.theme)
+  ) {
     result.theme = null;
   }
 
   // Secondary themes (string[])
   if (Array.isArray(result.secondaryThemes)) {
     const valid = result.secondaryThemes.filter(
-      (id) => typeof id === "string" && id in themes,
+      (id) => typeof id === "string" && Object.hasOwn(themes, id),
     );
     result.secondaryThemes = valid.length > 0 ? valid : null;
   }
@@ -39,7 +42,7 @@ export function sanitizeRiMetadata(
   // Needs (string[])
   if (Array.isArray(result.needs)) {
     const valid = result.needs.filter(
-      (id) => typeof id === "string" && id in needs,
+      (id) => typeof id === "string" && Object.hasOwn(needs, id),
     );
     result.needs = valid.length > 0 ? valid : null;
   }

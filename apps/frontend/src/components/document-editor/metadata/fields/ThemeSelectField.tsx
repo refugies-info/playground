@@ -39,14 +39,18 @@ export function ThemeSelectField({ fieldKey }: { fieldKey: string }) {
         : Array.isArray(rawValue)
           ? rawValue
           : [];
-    return raw.filter((id) => id in themesLookup);
+    return raw.filter(
+      (id) => typeof id === "string" && Object.hasOwn(themesLookup, id),
+    );
   }, [rawValue, themesLookup]);
 
   // Get secondary themes
   const rawSecondary = getFieldValue("secondaryThemes");
   const secondaryThemes = useMemo(() => {
     const raw = Array.isArray(rawSecondary) ? rawSecondary : [];
-    return raw.filter((id) => id in themesLookup);
+    return raw.filter(
+      (id) => typeof id === "string" && Object.hasOwn(themesLookup, id),
+    );
   }, [rawSecondary, themesLookup]);
 
   // All themes (primary + secondary) — deduplicated to avoid React key conflicts
