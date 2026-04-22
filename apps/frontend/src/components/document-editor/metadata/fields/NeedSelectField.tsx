@@ -52,11 +52,13 @@ export function NeedSelectField({ fieldKey }: { fieldKey: string }) {
   }, [needsLookup, needsByTheme, selectedThemeIds]);
 
   // Get current value (array of need IDs)
+  // Filter out IDs that don't exist in RI reference data — the AI may hallucinate
+  // arbitrary values instead of valid MongoDB ObjectIds (RI-1211)
   const rawValue = getFieldValue(fieldKey);
   const value = useMemo(() => {
-    if (Array.isArray(rawValue)) return rawValue;
-    return [];
-  }, [rawValue]);
+    const raw = Array.isArray(rawValue) ? rawValue : [];
+    return raw.filter((id) => id in needsLookup);
+  }, [rawValue, needsLookup]);
 
   const handleChange = useCallback(
     (newValue: string[]) => {
