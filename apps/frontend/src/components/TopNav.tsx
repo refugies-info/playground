@@ -52,7 +52,7 @@ export function TopNav({ role }: TopNavProps) {
             className="h-12 w-12"
           />
         }
-        title="BOMO ?"
+        title="BOMO"
         href="/"
         linkComponent={Link}
       />

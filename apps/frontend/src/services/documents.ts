@@ -32,6 +32,8 @@ export interface GetDocumentsParams {
   authorEmail?: string;
   /** Multi-column text search (title, external_id, structure_name, commune) */
   search?: string;
+  /** Filter by entry type: "0" (rolling admission) or "1" (fixed dates) */
+  modalitesEntreesSorties?: string | null;
 }
 
 export async function getDocuments(params: GetDocumentsParams) {
@@ -48,6 +50,7 @@ export async function getDocuments(params: GetDocumentsParams) {
     searchId,
     authorEmail,
     search,
+    modalitesEntreesSorties,
   } = params;
 
   const cookieStore = await cookies();
@@ -130,6 +133,11 @@ export async function getDocuments(params: GetDocumentsParams) {
   // Filter by author email (editors/admins only — translators excluded from dropdown)
   if (authorEmail) {
     query = query.eq("author_email", authorEmail);
+  }
+
+  // Filter by entry type (modalités d'entrées/sorties)
+  if (modalitesEntreesSorties) {
+    query = query.eq("modalites_entrees_sorties", modalitesEntreesSorties);
   }
 
   // Multi-column text search (title, external_id, structure_name, commune)

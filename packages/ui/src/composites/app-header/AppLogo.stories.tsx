@@ -34,7 +34,7 @@ const LogoImage = () => (
 export const Defaut: Story = {
   args: {
     image: <LogoImage />,
-    title: "BOMO ?",
+    title: "BOMO",
   },
 };
 
@@ -43,7 +43,7 @@ export const AvecLien: Story = {
   name: "Avec lien",
   args: {
     image: <LogoImage />,
-    title: "BOMO ?",
+    title: "BOMO",
     href: "/",
   },
 };

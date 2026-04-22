@@ -35,7 +35,7 @@ type Story = StoryObj<typeof meta>;
 const Logo = () => (
   <AppLogo
     image={<img src="/logo-ri.svg" alt="BOMO" className="h-12 w-12" />}
-    title="BOMO ?"
+    title="BOMO"
   />
 );
 
