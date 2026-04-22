@@ -13,7 +13,7 @@ import { cn } from "../../utils";
  * Usage :
  * ```tsx
  * <AppHeader>
- *   <AppLogo image={<img … />} title="BOMO ?" />
+ *   <AppLogo image={<img … />} title="BOMO" />
  *   <BoutonMenu icon={RiFileTextLine} label="Fiches" active />
  *   <BoutonMenu icon={RiTranslate2} label="Espace de traduction" />
  * </AppHeader>
