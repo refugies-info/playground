@@ -28,8 +28,23 @@ export function NeedSelectField({ fieldKey }: { fieldKey: string }) {
     return ids;
   }, [primaryTheme, secondaryThemes]);
 
-  // Filter needs by selected themes — if no theme selected, show all needs
+  // Get current value (array of need IDs)
+  // Filter out IDs that don't exist in RI reference data — the AI may hallucinate
+  // arbitrary values instead of valid MongoDB ObjectIds (RI-1211)
+  const rawValue = getFieldValue(fieldKey);
+  const value = useMemo(() => {
+    const raw = Array.isArray(rawValue) ? rawValue : [];
+    return raw.filter(
+      (id) => typeof id === "string" && Object.hasOwn(needsLookup, id),
+    );
+  }, [rawValue, needsLookup]);
+
+  // Filter needs by selected themes — if no theme selected, show all needs.
+  // Always include currently selected values so their labels resolve correctly
+  // (the AI may pick needs from a different theme than the one currently selected).
   const needOptions = useMemo(() => {
+    const selectedSet = new Set(value);
+
     if (selectedThemeIds.length === 0) {
       return Object.entries(needsLookup).map(([id, name]) => ({
         value: id,
@@ -44,19 +59,12 @@ export function NeedSelectField({ fieldKey }: { fieldKey: string }) {
       }
     }
     return Object.entries(needsLookup)
-      .filter(([id]) => allowedNeedIds.has(id))
+      .filter(([id]) => allowedNeedIds.has(id) || selectedSet.has(id))
       .map(([id, name]) => ({
         value: id,
         label: name as string,
       }));
-  }, [needsLookup, needsByTheme, selectedThemeIds]);
-
-  // Get current value (array of need IDs)
-  const rawValue = getFieldValue(fieldKey);
-  const value = useMemo(() => {
-    if (Array.isArray(rawValue)) return rawValue;
-    return [];
-  }, [rawValue]);
+  }, [needsLookup, needsByTheme, selectedThemeIds, value]);
 
   const handleChange = useCallback(
     (newValue: string[]) => {

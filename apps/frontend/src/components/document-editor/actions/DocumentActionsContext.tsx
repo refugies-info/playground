@@ -24,6 +24,7 @@ import {
 } from "react";
 import { buildDispositifPayload } from "@/lib/payload-builder";
 import { submitPreview } from "@/lib/preview-utils";
+import { sanitizeRiMetadata } from "@/lib/sanitize-ri-metadata";
 import {
   archiveDocument as archiveDocumentAction,
   publishDocument as publishDocumentAction,
@@ -98,7 +99,11 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
 
     setIsPreviewing(true);
     try {
-      const currentMergedMetadata = mergedMetadataRef.current;
+      // Sanitize metadata to strip hallucinated theme/need IDs (RI-1211)
+      const currentMergedMetadata = sanitizeRiMetadata(
+        mergedMetadataRef.current,
+        document.referenceData,
+      );
 
       // Build preview payload with merged metadata
       const payload = await buildDispositifPayload({
@@ -209,11 +214,11 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
         // Save before publishing
         await saveDocumentAction(document.id, document.editorialContent || "");
 
-        // Build publication metadata, nulling out any error fields
-        // (avoids sending invalid values when user chose "Publier quand même")
-        const publicationMetadata: Record<string, unknown> = {
-          ...mergedMetadata,
-        };
+        // Sanitize metadata to strip hallucinated theme/need IDs
+        const publicationMetadata: Record<string, unknown> = sanitizeRiMetadata(
+          mergedMetadata,
+          document.referenceData,
+        );
         for (const key of overrideNullFields) {
           publicationMetadata[key] = null;
         }

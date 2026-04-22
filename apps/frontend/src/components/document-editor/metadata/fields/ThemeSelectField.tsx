@@ -29,19 +29,29 @@ export function ThemeSelectField({ fieldKey }: { fieldKey: string }) {
   }, [themesLookup]);
 
   // Get current value (can be a string or array of theme IDs)
+  // Filter out IDs that don't exist in RI reference data — the AI may hallucinate
+  // arbitrary values (e.g. "FR") instead of valid MongoDB ObjectIds (RI-1211)
   const rawValue = getFieldValue(fieldKey);
   const primaryThemes = useMemo(() => {
-    if (typeof rawValue === "string") return [rawValue];
-    if (Array.isArray(rawValue)) return rawValue;
-    return [];
-  }, [rawValue]);
+    const raw =
+      typeof rawValue === "string"
+        ? [rawValue]
+        : Array.isArray(rawValue)
+          ? rawValue
+          : [];
+    return raw.filter(
+      (id) => typeof id === "string" && Object.hasOwn(themesLookup, id),
+    );
+  }, [rawValue, themesLookup]);
 
   // Get secondary themes
   const rawSecondary = getFieldValue("secondaryThemes");
   const secondaryThemes = useMemo(() => {
-    if (Array.isArray(rawSecondary)) return rawSecondary;
-    return [];
-  }, [rawSecondary]);
+    const raw = Array.isArray(rawSecondary) ? rawSecondary : [];
+    return raw.filter(
+      (id) => typeof id === "string" && Object.hasOwn(themesLookup, id),
+    );
+  }, [rawSecondary, themesLookup]);
 
   // All themes (primary + secondary) — deduplicated to avoid React key conflicts
   const allThemes = useMemo(
