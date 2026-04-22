@@ -103,6 +103,10 @@ export default async function DocumentsPage(props: PageProps) {
       typeof searchParams.dateTo === "string" ? searchParams.dateTo : undefined,
     authorEmail: authorEmailParam,
     search: searchParam,
+    modalitesEntreesSorties:
+      typeof searchParams.modalitesEntreesSorties === "string"
+        ? searchParams.modalitesEntreesSorties
+        : undefined,
   };
 
   const [result, editorsList] = await Promise.all([
@@ -130,6 +134,10 @@ export default async function DocumentsPage(props: PageProps) {
     dateTo: typeof searchParams.dateTo === "string" ? searchParams.dateTo : "",
     authorEmail: authorEmailParam ?? "",
     search: searchParam ?? "",
+    modalitesEntreesSorties:
+      typeof searchParams.modalitesEntreesSorties === "string"
+        ? searchParams.modalitesEntreesSorties
+        : "",
   };
 
   return (

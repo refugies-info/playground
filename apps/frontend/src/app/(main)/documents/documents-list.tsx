@@ -34,6 +34,7 @@ interface DocumentsListProps {
     dateTo: string;
     authorEmail: string;
     search: string;
+    modalitesEntreesSorties?: string;
   };
   initialAuthors: { email: string; displayName: string }[];
 }
@@ -160,7 +161,7 @@ export function DocumentsList({
             value={filters.search}
             onChange={(value) => updateFilter("search", value)}
             placeholder="Rechercher par titre, ID, structure, etc."
-            wrapperClassName="max-w-[400px] w-full"
+            wrapperClassName="max-w-[330px] w-full"
           />
 
           <BoutonFiltre
@@ -210,6 +211,16 @@ export function DocumentsList({
               onChange={(value) => updateFilter("dateTo", value)}
             />
           </div>
+
+          <BoutonFiltre
+            label="Type d'entrée"
+            options={[
+              { label: "À tout moment", value: "0" },
+              { label: "À dates fixes", value: "1" },
+            ]}
+            value={filters.modalitesEntreesSorties || ""}
+            onChange={(value) => updateFilter("modalitesEntreesSorties", value)}
+          />
 
           <BoutonFiltre
             label="Conformité"
