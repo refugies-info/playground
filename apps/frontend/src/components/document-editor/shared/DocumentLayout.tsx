@@ -6,6 +6,7 @@ import { DocumentActionsProvider } from "../actions";
 import { AssistantPanel } from "../assistant/AssistantPanel";
 import { DocumentProvider } from "../DocumentContext";
 import { MetadataProvider } from "../metadata/MetadataContext";
+import { DocumentSidebar } from "./DocumentSidebar";
 import { EditorNavigation } from "./EditorNavigation";
 import { TopBar } from "./TopBar";
 
@@ -22,10 +23,17 @@ interface DocumentLayoutProps {
   // biome-ignore lint/suspicious/noExplicitAny: Generic initial data
   initialData?: any; // Replace with proper type
   children: React.ReactNode;
+  /** Rôle de l'utilisateur connecté — pour afficher/masquer les liens de nav */
+  userRole?: string | null;
+  /** Email de l'utilisateur connecté — pour l'avatar dans la sidebar */
+  userEmail?: string | null;
+  /** État initial de la sidebar lu côté serveur depuis le cookie */
+  sidebarCollapsed?: boolean;
 }
 
 export function DocumentLayout(props: DocumentLayoutProps) {
-  const { initialData, children } = props;
+  const { initialData, children, userRole, userEmail, sidebarCollapsed } =
+    props;
 
   // Read `from` once on mount — persists across tab navigation since layout doesn't remount
   const [from, setFrom] = useState("");
@@ -40,20 +48,30 @@ export function DocumentLayout(props: DocumentLayoutProps) {
       <MetadataProvider>
         <DocumentActionsProvider>
           <DebugPanel />
-          <div className="flex flex-col h-screen w-full overflow-hidden bg-gray-100">
-            {/* Top Toolbar */}
-            <TopBar from={from} />
+          <div className="flex h-screen w-full overflow-hidden bg-gray-100">
+            {/* Global Nav Sidebar */}
+            <DocumentSidebar
+              userRole={userRole}
+              userEmail={userEmail}
+              initialCollapsed={sidebarCollapsed}
+            />
 
-            {/* Main Content Area */}
-            <div className="flex flex-1 overflow-hidden">
-              {/* Left Sidebar */}
-              <EditorNavigation from={from} />
+            {/* Editor Area */}
+            <div className="flex flex-col flex-1 overflow-hidden rounded-tl-2xl rounded-bl-2xl border-l border-t border-b border-[var(--border-default-grey)]">
+              {/* Top Toolbar */}
+              <TopBar from={from} />
 
-              {/* Center Editor / Content */}
-              {children}
+              {/* Main Content Area */}
+              <div className="flex flex-1 overflow-hidden">
+                {/* Left Editor Navigation */}
+                <EditorNavigation from={from} />
 
-              {/* Right Chat */}
-              <AssistantPanel />
+                {/* Center Editor / Content */}
+                {children}
+
+                {/* Right Chat */}
+                <AssistantPanel />
+              </div>
             </div>
           </div>
         </DocumentActionsProvider>
