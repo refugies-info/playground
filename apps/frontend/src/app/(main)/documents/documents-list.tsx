@@ -43,7 +43,6 @@ export function DocumentsList({
   initialDocuments,
   totalCount,
   currentPage,
-  totalPages,
   pageSize,
   sortBy,
   sortOrder,
@@ -215,8 +214,8 @@ export function DocumentsList({
           <BoutonFiltre
             label="Type d'entrée"
             options={[
-              { label: "À tout moment", value: "0" },
-              { label: "À dates fixes", value: "1" },
+              { label: "À dates fixes", value: "0" },
+              { label: "À tout moment", value: "1" },
             ]}
             value={filters.modalitesEntreesSorties || ""}
             onChange={(value) => updateFilter("modalitesEntreesSorties", value)}

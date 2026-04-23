@@ -32,7 +32,7 @@ export interface GetDocumentsParams {
   authorEmail?: string;
   /** Multi-column text search (title, external_id, structure_name, commune) */
   search?: string;
-  /** Filter by entry type: "0" (rolling admission) or "1" (fixed dates) */
+  /** Filter by entry type: "0" (dates fixes) or "1" (entrées permanentes) */
   modalitesEntreesSorties?: string | null;
 }
 
