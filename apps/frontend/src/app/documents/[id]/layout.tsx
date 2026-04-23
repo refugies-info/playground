@@ -1,5 +1,8 @@
+import { createSupabaseServerClient } from "@playground/supabase";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { DocumentLayout } from "@/components/document-editor/shared";
+import { getAuthUser, getUserProfile } from "@/lib/auth";
 import { getDocumentById } from "@/services/documents";
 import { fetchRiReferenceData } from "@/services/ri-reference-data";
 
@@ -19,7 +22,12 @@ export default async function Layout({
 }: DocumentLayoutProps) {
   const { id } = await params;
 
-  // Fetch the document and reference data in parallel
+  // Fetch user auth + document + reference data in parallel
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+  const user = await getAuthUser(supabase);
+  const profile = user ? await getUserProfile(supabase, user.id) : null;
+
   const [document, referenceData] = await Promise.all([
     getDocumentById(id),
     fetchRiReferenceData(),
@@ -49,8 +57,17 @@ export default async function Layout({
     publishedUrl: document.publishedUrl,
   };
 
+  const sidebarCollapsed =
+    cookieStore.get("bomo_sidebar_collapsed")?.value === "true";
+
   return (
-    <DocumentLayout documentId={id} initialData={initialData}>
+    <DocumentLayout
+      documentId={id}
+      initialData={initialData}
+      userRole={profile?.role ?? null}
+      userEmail={user?.email ?? null}
+      sidebarCollapsed={sidebarCollapsed}
+    >
       {children}
     </DocumentLayout>
   );

@@ -47,3 +47,30 @@ export const AvecLien: Story = {
     href: "/",
   },
 };
+
+/** Mode replié — seule l'icône est visible (sidebar repliée). */
+export const Replie: Story = {
+  name: "Replié (sidebar)",
+  args: {
+    image: <LogoImage />,
+    title: "BOMO",
+    collapsed: true,
+  },
+};
+
+/** Comparaison déployé / replié */
+export const DeployeVsReplie: Story = {
+  name: "Déployé vs replié",
+  render: () => (
+    <div className="flex gap-8 items-center">
+      <div>
+        <p className="text-xs text-gray-400 mb-2">Déployé</p>
+        <AppLogo image={<LogoImage />} title="BOMO" />
+      </div>
+      <div>
+        <p className="text-xs text-gray-400 mb-2">Replié</p>
+        <AppLogo image={<LogoImage />} title="BOMO" collapsed />
+      </div>
+    </div>
+  ),
+};

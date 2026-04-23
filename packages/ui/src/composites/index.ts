@@ -7,3 +7,4 @@ export * from "./data-table/data-table-pagination";
 export * from "./data-table/data-table-toolbar";
 export * from "./pagination";
 export * from "./pagination-controls";
+export * from "./sidebar";
