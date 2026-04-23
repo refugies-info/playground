@@ -1,12 +1,12 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { SIDEBAR_COOKIE } from "@/lib/cookies";
 
-const SIDEBAR_COOKIE = "bomo_sidebar_collapsed";
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
 /**
- * Persiste la préférence sidebar dans un cookie HttpOnly lisible côté serveur.
+ * Persiste la préférence sidebar dans un cookie lisible côté serveur.
  * Appelé en fire-and-forget depuis DocumentSidebar au toggle.
  */
 export async function setSidebarCollapsed(collapsed: boolean) {

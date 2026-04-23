@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { DocumentLayout } from "@/components/document-editor/shared";
 import { getAuthUser, getUserProfile } from "@/lib/auth";
+import { SIDEBAR_COOKIE } from "@/lib/cookies";
 import { getDocumentById } from "@/services/documents";
 import { fetchRiReferenceData } from "@/services/ri-reference-data";
 
@@ -22,15 +23,18 @@ export default async function Layout({
 }: DocumentLayoutProps) {
   const { id } = await params;
 
-  // Fetch user auth + document + reference data in parallel
+  // Lance tout en parallèle — auth, document et référentiels ne se bloquent pas mutuellement
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
-  const user = await getAuthUser(supabase);
-  const profile = user ? await getUserProfile(supabase, user.id) : null;
+  const userPromise = getAuthUser(supabase);
+  const documentPromise = getDocumentById(id);
+  const referenceDataPromise = fetchRiReferenceData();
 
-  const [document, referenceData] = await Promise.all([
-    getDocumentById(id),
-    fetchRiReferenceData(),
+  const user = await userPromise;
+  const [profile, document, referenceData] = await Promise.all([
+    user ? getUserProfile(supabase, user.id) : null,
+    documentPromise,
+    referenceDataPromise,
   ]);
 
   // If document not found, show 404
@@ -57,8 +61,7 @@ export default async function Layout({
     publishedUrl: document.publishedUrl,
   };
 
-  const sidebarCollapsed =
-    cookieStore.get("bomo_sidebar_collapsed")?.value === "true";
+  const sidebarCollapsed = cookieStore.get(SIDEBAR_COOKIE)?.value === "true";
 
   return (
     <DocumentLayout

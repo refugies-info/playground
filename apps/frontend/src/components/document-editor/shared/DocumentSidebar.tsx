@@ -23,10 +23,9 @@ export interface DocumentSidebarProps {
 /**
  * DocumentSidebar — Sidebar globale de l'éditeur de fiches
  *
- * Gère l'état replié/déplié en localStorage pour persister la préférence
- * entre les navigations. L'état initial est `false` (déplié) côté serveur pour
- * éviter les erreurs de hydratation, puis mis à jour depuis localStorage au
- * montage côté client.
+ * La préférence replié/déplié est persistée dans un cookie via la Server Action
+ * `setSidebarCollapsed`. L'état initial est lu côté serveur dans le layout et
+ * passé via `initialCollapsed` — zéro flash au chargement.
  */
 export function DocumentSidebar({
   userRole,
@@ -41,7 +40,7 @@ export function DocumentSidebar({
   const handleToggle = () => {
     const next = !isCollapsed;
     setIsCollapsed(next);
-    // Fire-and-forget : persiste dans un cookie HttpOnly lisible côté serveur
+    // Fire-and-forget : persiste dans un cookie lisible côté serveur
     setSidebarCollapsed(next);
   };
 
