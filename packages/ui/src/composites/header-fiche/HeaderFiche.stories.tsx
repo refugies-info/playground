@@ -4,6 +4,7 @@ import { Avatar } from "../../primitives/avatar";
 import { Badge } from "../../primitives/badge/Badge";
 import { Button } from "../../primitives/button/Button";
 import { Conformite } from "../../primitives/conformite/Conformite";
+import { IndicationSauvegarde } from "../../primitives/indication-sauvegarde/IndicationSauvegarde";
 import { Tag } from "../../primitives/tag/Tag";
 import { HeaderFiche } from "./HeaderFiche";
 
@@ -53,14 +54,13 @@ const SlotPreviewPublier = () => (
 // Stories
 // ---------------------------------------------------------------------------
 
-/** Fiche brouillon — conforme, non publiée */
+/** Fiche brouillon — conforme, non publiée, modifications non enregistrées */
 export const Brouillon: Story = {
   args: {
     left: (
       <>
         <BoutonRetour />
-        {/* IndicationSauvegarde — placeholder jusqu'à l'étape 2 */}
-        <span className="text-xs font-medium text-[#666]">À enregistrer</span>
+        <IndicationSauvegarde status="unsaved" onSave={() => {}} />
         <Conformite value="conforme" />
         <Tag status="en-cours" />
         <Avatar email="alice@refugies.info" />
@@ -77,7 +77,7 @@ export const Publiee: Story = {
     left: (
       <>
         <BoutonRetour />
-        <span className="text-xs font-medium text-[#18753c]">Enregistré</span>
+        <IndicationSauvegarde status="saved" />
         <Conformite value="conforme" />
         <Tag status="publie" />
         <Avatar email="alice@refugies.info" />
@@ -94,7 +94,7 @@ export const NonConforme: Story = {
     left: (
       <>
         <BoutonRetour />
-        <span className="text-xs font-medium text-[#666]">Enregistré</span>
+        <IndicationSauvegarde status="saved" />
         <Conformite value="non-conforme" />
         <Tag status="archive" />
         <Avatar email="xavier@refugies.info" />
@@ -111,7 +111,7 @@ export const ArbitrageEnCours: Story = {
     left: (
       <>
         <BoutonRetour />
-        <span className="text-xs font-medium text-[#666]">En cours...</span>
+        <IndicationSauvegarde status="saving" />
         <Badge variant="neutral">En cours d&apos;arbitrage</Badge>
         <Avatar email="claudia@refugies.info" />
       </>

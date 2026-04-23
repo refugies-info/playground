@@ -1,10 +1,11 @@
 "use client";
 
-import { Avatar } from "@playground/ui";
+import { Avatar, IndicationSauvegarde } from "@playground/ui";
 import { HeaderFiche } from "@playground/ui/composites";
 import { RiArrowLeftSLine } from "@playground/ui/icons";
 import { Button } from "@playground/ui/primitives";
 import Link from "next/link";
+import { useDocumentActions } from "../actions/DocumentActionsContext";
 import { useDocument } from "../DocumentContext";
 import { DocumentStatus } from "./DocumentStatus";
 import { useDocumentStatusRealtime } from "./hooks/useDocumentStatusRealtime";
@@ -23,18 +24,17 @@ interface HeaderFicheConnectedProps {
  * (contexte document, email utilisateur) dans les slots de HeaderFiche.
  *
  * Évolution prévue :
- * - Étape 2 : slot left enrichi avec <IndicationSauvegarde>
- * - Étape 3 : avatar wire avec userEmail
  * - Étape 5 : slot right avec Preview + PublishPanel (logique métier complète)
  *
- * ⚠️ Pendant la transition (étapes 1→4), les actions de sauvegarde/publication
+ * ⚠️ Pendant la transition (étapes 2→4), les actions de publication/preview
  * restent dans DocumentActions (sidebar). Elles seront migrées en étape 5.
  */
 export function HeaderFicheConnected({
   from,
   userEmail,
 }: HeaderFicheConnectedProps) {
-  const { document } = useDocument();
+  const { document, isDirty } = useDocument();
+  const { saveDocument, isSaving } = useDocumentActions();
 
   // Maintient les badges de statut en temps réel (était dans TopBar)
   useDocumentStatusRealtime();
@@ -42,6 +42,9 @@ export function HeaderFicheConnected({
   const backHref = from
     ? `/documents?${decodeURIComponent(from)}`
     : "/documents";
+
+  // Dérive l'état de l'IndicationSauvegarde depuis les flags du contexte
+  const saveStatus = isSaving ? "saving" : isDirty ? "unsaved" : "saved";
 
   return (
     <HeaderFiche
@@ -55,10 +58,13 @@ export function HeaderFicheConnected({
             </Button>
           </Link>
 
+          {/* Indicateur de sauvegarde — cliquable quand unsaved */}
+          <IndicationSauvegarde status={saveStatus} onSave={saveDocument} />
+
           {/* Statut conformité + travail + en ligne */}
           <DocumentStatus />
 
-          {/* Avatar utilisateur — Assignation dans un sprint dédié */}
+          {/* Avatar utilisateur — logique d'assignation dans un sprint dédié */}
           <Avatar email={userEmail} />
         </>
       }
