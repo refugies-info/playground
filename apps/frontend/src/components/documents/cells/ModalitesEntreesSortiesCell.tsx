@@ -12,7 +12,7 @@ export const ModalitesEntreesSortiesCell = ({
   if (value === "0")
     return <div className="text-sm whitespace-nowrap">À dates fixes</div>;
   if (value === "1")
-    return <div className="text-sm whitespace-nowrap">Entrées permanentes</div>;
+    return <div className="text-sm whitespace-nowrap">À tout moment</div>;
   return <EmptyDash />;
 };
 ModalitesEntreesSortiesCell.displayName = "ModalitesEntreesSortiesCell";
