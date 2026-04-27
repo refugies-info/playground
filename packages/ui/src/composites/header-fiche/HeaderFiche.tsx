@@ -42,27 +42,22 @@ export function HeaderFiche({
   return (
     <header
       className={cn(
-        "relative flex items-center justify-between",
-        "px-4 h-14",
-        "border-b border-[var(--border-default-grey)]",
+        "grid grid-cols-[1fr_auto_1fr] items-center gap-6",
+        "px-6 py-6",
         "bg-[var(--background-default-grey,#fff)]",
         className,
       )}
     >
       {/* LEFT — retour, sauvegarde, statut, avatar */}
-      <div className="flex items-center gap-6 shrink-0">{left}</div>
+      <div className="flex items-center gap-6">{left}</div>
 
-      {/* CENTER — titre, centré absolument pour ne pas dépendre des slots */}
-      {center && (
-        <div className="absolute inset-x-0 flex justify-center pointer-events-none">
-          <div className="pointer-events-auto max-w-md truncate text-sm font-medium text-[var(--text-label-grey)]">
-            {center}
-          </div>
-        </div>
-      )}
+      {/* CENTER — titre, centré mathématiquement grâce à la grid 1fr/auto/1fr */}
+      <div className="min-w-0 truncate text-center text-base font-medium text-[var(--text-default-grey,#3a3a3a)]">
+        {center}
+      </div>
 
       {/* RIGHT — preview + publish */}
-      <div className="flex items-center gap-4 shrink-0">{right}</div>
+      <div className="flex items-center gap-4 justify-end">{right}</div>
     </header>
   );
 }

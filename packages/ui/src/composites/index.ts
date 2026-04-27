@@ -8,4 +8,5 @@ export * from "./data-table/data-table-toolbar";
 export * from "./header-fiche";
 export * from "./pagination";
 export * from "./pagination-controls";
+export * from "./publish-panel";
 export * from "./sidebar";
