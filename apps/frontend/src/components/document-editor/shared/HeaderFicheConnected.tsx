@@ -14,7 +14,7 @@ import {
 import { Button } from "@playground/ui/primitives";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useDocumentActions } from "../actions/DocumentActionsContext";
 import { usePublicationRealtime } from "../actions/hooks/usePublicationRealtime";
 import { useDocument } from "../DocumentContext";
@@ -56,7 +56,6 @@ export function HeaderFicheConnected({
     isPublishing,
   } = useDocumentActions();
 
-  const isMounted = useRef(true);
   useDocumentStatusRealtime();
 
   const [saveError, setSaveError] = useState(false);
@@ -90,7 +89,6 @@ export function HeaderFicheConnected({
       router.refresh();
     },
     onError: (message) => {
-      if (!isMounted.current) return;
       setPublishResult({ type: "error", error: message });
       setError(message);
     },
@@ -118,8 +116,6 @@ export function HeaderFicheConnected({
     setPublishResult(null);
 
     const result = await publishDocument(triggerTranslations, errorFieldKeys);
-
-    if (!isMounted.current) return;
 
     if (result.success) {
       // Le workflow a démarré — on attend le résultat via Realtime
