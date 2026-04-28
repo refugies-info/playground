@@ -1,5 +1,6 @@
 "use client";
 
+import { BoutonFiltre } from "@playground/ui";
 import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -125,80 +126,53 @@ export function TranslationsList({
   const isTranslator = userRole === "translator";
 
   return (
-    <div className="w-full h-full p-8 bg-gray-50 min-h-screen">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">{title}</h1>
+    <div className="w-full flex flex-col gap-8">
+      <h1 className="text-[40px] font-bold leading-[1.2]">{title}</h1>
+
+      <div className="flex flex-wrap items-center gap-4">
+        <BoutonFiltre
+          label="Statut de publication"
+          options={[
+            { label: "Publié", value: "published" },
+            { label: "Non publié", value: "unpublished" },
+            ...(!isTranslator ? [{ label: "Archivé", value: "archived" }] : []),
+          ]}
+          value={filters.onlineStatus}
+          onChange={(value) =>
+            updateFilters({ ...filters, onlineStatus: value })
+          }
+        />
+
+        <BoutonFiltre
+          label="État de traitement"
+          options={[
+            { label: "À traiter", value: "to_process" },
+            { label: "Brouillon", value: "draft" },
+            ...(!isTranslator
+              ? [
+                  { label: "Traduction IA en cours", value: "pending" },
+                  { label: "Erreur de traduction IA", value: "error" },
+                ]
+              : []),
+          ]}
+          value={filters.workStatus}
+          onChange={(value) => updateFilters({ ...filters, workStatus: value })}
+        />
+
+        {showLanguageFilter && (
+          <BoutonFiltre
+            label="Langue"
+            options={LANGUAGES.map((lang) => ({
+              label: lang.label,
+              value: lang.value,
+            }))}
+            value={filters.language}
+            onChange={(value) => updateFilters({ ...filters, language: value })}
+          />
+        )}
       </div>
 
-      <div className="">
-        <div className=" border rounded mb-8 bg-white">
-          <div className="px-4 py-3 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <select
-                  value={filters.onlineStatus}
-                  onChange={(e) =>
-                    updateFilters({ ...filters, onlineStatus: e.target.value })
-                  }
-                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
-                >
-                  <option value="">Visibilité</option>
-                  <option value="published">Publié</option>
-                  <option value="unpublished">Non publié</option>
-                  {!isTranslator && <option value="archived">Archivé</option>}
-                </select>
-              </div>
-              <div>
-                <select
-                  value={filters.workStatus}
-                  onChange={(e) =>
-                    updateFilters({ ...filters, workStatus: e.target.value })
-                  }
-                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
-                >
-                  <option value="">Traitement</option>
-                  <option value="to_process">À traiter</option>
-                  <option value="draft">Brouillon</option>
-                  {!isTranslator && (
-                    <option value="pending">Traduction IA en cours</option>
-                  )}
-                  {!isTranslator && (
-                    <option value="error">Erreur de traduction IA</option>
-                  )}
-                </select>
-              </div>
-              {showLanguageFilter && (
-                <div>
-                  <select
-                    value={filters.language}
-                    onChange={(e) =>
-                      updateFilters({ ...filters, language: e.target.value })
-                    }
-                    className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
-                  >
-                    <option value="">Langue</option>
-                    {LANGUAGES.map((lang) => (
-                      <option key={lang.value} value={lang.value}>
-                        {lang.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-            {(filters.workStatus ||
-              filters.onlineStatus ||
-              (showLanguageFilter && filters.language)) && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Re-initialiser les filtres
-              </button>
-            )}
-          </div>
-        </div>
+      <div>
         <DataTable
           columns={columns}
           data={initialTranslations}

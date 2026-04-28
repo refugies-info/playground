@@ -2,8 +2,7 @@ import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { DocumentLayout } from "@/components/document-editor/shared";
-import { getAuthUser, getUserProfile } from "@/lib/auth";
-import { SIDEBAR_COOKIE } from "@/lib/cookies";
+import { getAuthUser } from "@/lib/auth";
 import { getDocumentById } from "@/services/documents";
 import { fetchRiReferenceData } from "@/services/ri-reference-data";
 
@@ -23,18 +22,14 @@ export default async function Layout({
 }: DocumentLayoutProps) {
   const { id } = await params;
 
-  // Lance tout en parallèle — auth, document et référentiels ne se bloquent pas mutuellement
+  // Auth (user email pour l'Avatar dans le header) + document + référentiels en parallèle
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
-  const userPromise = getAuthUser(supabase);
-  const documentPromise = getDocumentById(id);
-  const referenceDataPromise = fetchRiReferenceData();
 
-  const user = await userPromise;
-  const [profile, document, referenceData] = await Promise.all([
-    user ? getUserProfile(supabase, user.id) : null,
-    documentPromise,
-    referenceDataPromise,
+  const [user, document, referenceData] = await Promise.all([
+    getAuthUser(supabase),
+    getDocumentById(id),
+    fetchRiReferenceData(),
   ]);
 
   // If document not found, show 404
@@ -61,15 +56,11 @@ export default async function Layout({
     publishedUrl: document.publishedUrl,
   };
 
-  const sidebarCollapsed = cookieStore.get(SIDEBAR_COOKIE)?.value === "true";
-
   return (
     <DocumentLayout
       documentId={id}
       initialData={initialData}
-      userRole={profile?.role ?? null}
       userEmail={user?.email ?? null}
-      sidebarCollapsed={sidebarCollapsed}
     >
       {children}
     </DocumentLayout>

@@ -1,6 +1,7 @@
 "use client";
 
 import { type Document, logger } from "@playground/shared-types";
+import { Button, SearchInput } from "@playground/ui";
 import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -53,11 +54,20 @@ export function WorkflowClient(props: WorkflowClientProps) {
   const [documents, setDocuments] = useState(inProgressDocuments);
   const [highlightedIds, setHighlightedIds] = useState<Set<string>>(new Set());
   const prevDocumentsRef = useRef<Document[]>(inProgressDocuments);
+  const skipHighlightRef = useRef(false);
 
   // Detect document changes and trigger animations
   useEffect(() => {
     const prevDocs = prevDocumentsRef.current;
     const newDocs = inProgressDocuments;
+
+    // Skip highlight after navigation (search/page change)
+    if (skipHighlightRef.current) {
+      skipHighlightRef.current = false;
+      setDocuments(newDocs);
+      prevDocumentsRef.current = newDocs;
+      return;
+    }
 
     // Find IDs that changed or are new
     const changedIds = new Set<string>();
@@ -125,15 +135,15 @@ export function WorkflowClient(props: WorkflowClientProps) {
     };
   }, [router]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearchChange = (value: string) => {
+    setSearchId(value);
+    skipHighlightRef.current = true;
     const params = new URLSearchParams(window.location.search);
-    if (searchId) {
-      params.set("searchId", searchId);
+    if (value) {
+      params.set("searchId", value);
     } else {
       params.delete("searchId");
     }
-    // Reset to page 1 on search
     params.set("page", "1");
     router.push(`/workflow?${params.toString()}`);
   };
@@ -265,69 +275,26 @@ export function WorkflowClient(props: WorkflowClientProps) {
         const isLoading = arbitrationLoading === row.original.id;
         return (
           <div className="flex items-center gap-2 justify-end">
-            <button
-              type="button"
+            <Button
+              variant="tertiaire"
+              size="sm"
               onClick={(e) => {
                 e.stopPropagation();
                 handleOpenDrawer(row.original);
               }}
-              className="px-3 py-1 text-sm border rounded hover:bg-gray-50 transition-colors"
             >
               Voir
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="primaire"
+              size="sm"
               onClick={(e) => handleForceArbitration(row.original.id, e)}
               disabled={isLoading}
-              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-1"
+              isLoading={isLoading}
               title="Forcer l'arbitrage (générer le rapport IA)"
             >
-              {isLoading ? (
-                <>
-                  <svg
-                    className="animate-spin h-3 w-3 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <title>Chargement</title>
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  <span>Arbitrage en cours...</span>
-                </>
-              ) : (
-                <>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-3 h-3"
-                  >
-                    <title>Arbitrer</title>
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
-                    />
-                  </svg>
-                  <span>Arbitrer</span>
-                </>
-              )}
-            </button>
+              {isLoading ? "Arbitrage en cours…" : "Arbitrer"}
+            </Button>
           </div>
         );
       },
@@ -335,34 +302,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
   ];
 
   return (
-    <div className="w-full h-full p-8 bg-gray-50 min-h-screen">
-      <div className="mb-8 flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Importer du contenu</h1>
-        <button
-          type="button"
-          onClick={handleRunDiIngestion}
-          disabled={isLoading}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-4 h-4"
-          >
-            <title>Refresh Icon</title>
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
-            />
-          </svg>
-          {isLoading ? "En cours..." : "Lancer l'import DI"}
-        </button>
-      </div>
-
+    <div className="w-full flex flex-col">
       <div className="container mx-auto max-w-4xl">
         {error && (
           <div className="mt-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
@@ -399,13 +339,13 @@ export function WorkflowClient(props: WorkflowClientProps) {
                   </p>
                 )}
               </div>
-              <button
-                type="button"
+              <Button
+                variant="tertiaire"
+                size="sm"
                 onClick={handleRefreshStatus}
-                className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
               >
                 Refresh Status
-              </button>
+              </Button>
             </div>
             <p className="mt-2 text-sm">
               Check the{" "}
@@ -463,47 +403,24 @@ export function WorkflowClient(props: WorkflowClientProps) {
         )}
       </div>
 
-      <div className="mt-8">
+      <div>
         <div className="mb-6 flex items-end gap-4">
-          <form
-            onSubmit={handleSearch}
-            className="flex-1 max-w-sm flex items-end gap-2"
+          <SearchInput
+            value={searchId}
+            onChange={handleSearchChange}
+            placeholder="Ex: carif-oref--10_396692S"
+            wrapperClassName="max-w-[330px] w-full"
+          />
+
+          {/* Bouton aligné à droite dans le même conteneur que la recherche */}
+          <Button
+            className="ml-auto"
+            onClick={handleRunDiIngestion}
+            disabled={isLoading}
+            isLoading={isLoading}
           >
-            <div className="flex-1">
-              <label
-                htmlFor="searchId"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Rechercher par ID Carif-Oref
-              </label>
-              <input
-                id="searchId"
-                type="text"
-                placeholder="Ex: carif-oref--10_396692S"
-                value={searchId}
-                onChange={(e) => setSearchId(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors border"
-            >
-              Rechercher
-            </button>
-            {initialSearchId && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchId("");
-                  router.push("/workflow");
-                }}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium pb-2"
-              >
-                Réinitialiser
-              </button>
-            )}
-          </form>
+            {isLoading ? "En cours…" : "Lancer l'import DI"}
+          </Button>
         </div>
 
         <div className="flex justify-between items-center mb-4">

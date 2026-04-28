@@ -148,129 +148,123 @@ export function DocumentsList({
   }, [router]);
 
   return (
-    <div className="w-full h-full min-h-screen bg-[var(--background-alt-blue-france,#F5F5FE)]">
-      <div className="container py-8 flex flex-col gap-8 m-auto">
-        <div className="flex items-center justify-between mt-6">
-          <h1 className="text-[40px] font-bold leading-[1.2]">Fiches</h1>
-        </div>
+    <div className="w-full flex flex-col gap-8">
+      {/* Figma node 1264-7549 — gap: 16px, ordre: Search / Auteur / Visibilité / Traitement / Date session / Conformité */}
+      <div className="flex flex-wrap items-center gap-4">
+        <SearchInput
+          value={filters.search}
+          onChange={(value) => updateFilter("search", value)}
+          placeholder="Rechercher par titre, ID, structure, etc."
+          wrapperClassName="max-w-[330px] w-full"
+        />
 
-        {/* Figma node 1264-7549 — gap: 16px, ordre: Search / Auteur / Visibilité / Traitement / Date session / Conformité */}
-        <div className="flex flex-wrap items-center gap-4">
-          <SearchInput
-            value={filters.search}
-            onChange={(value) => updateFilter("search", value)}
-            placeholder="Rechercher par titre, ID, structure, etc."
-            wrapperClassName="max-w-[330px] w-full"
+        <BoutonFiltre
+          label="Auteur·ice"
+          options={initialAuthors.map((a) => ({
+            label: a.displayName,
+            value: a.email,
+          }))}
+          value={filters.authorEmail || ""}
+          onChange={(value) => updateFilter("authorEmail", value)}
+        />
+
+        <BoutonFiltre
+          label="Statut de publication"
+          options={[
+            { label: "Publié", value: "published" },
+            { label: "Archivé", value: "archived" },
+          ]}
+          value={filters.onlineStatus || ""}
+          onChange={(value) => updateFilter("onlineStatus", value)}
+        />
+
+        <BoutonFiltre
+          label="État de traitement"
+          options={[
+            { label: "En cours", value: "draft" },
+            { label: "À traiter", value: "to_process" },
+          ]}
+          value={filters.workStatus || ""}
+          onChange={(value) => updateFilter("workStatus", value)}
+        />
+
+        {/* Groupe date : label + De + à + À */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-[var(--text-default-grey,#3A3A3A)]">
+            Date de session
+          </span>
+          <BoutonFiltreDate
+            value={filters.dateFrom}
+            onChange={(value) => updateFilter("dateFrom", value)}
           />
-
-          <BoutonFiltre
-            label="Auteur·ice"
-            options={initialAuthors.map((a) => ({
-              label: a.displayName,
-              value: a.email,
-            }))}
-            value={filters.authorEmail || ""}
-            onChange={(value) => updateFilter("authorEmail", value)}
-          />
-
-          <BoutonFiltre
-            label="Statut de publication"
-            options={[
-              { label: "Publié", value: "published" },
-              { label: "Archivé", value: "archived" },
-            ]}
-            value={filters.onlineStatus || ""}
-            onChange={(value) => updateFilter("onlineStatus", value)}
-          />
-
-          <BoutonFiltre
-            label="État de traitement"
-            options={[
-              { label: "En cours", value: "draft" },
-              { label: "À traiter", value: "to_process" },
-            ]}
-            value={filters.workStatus || ""}
-            onChange={(value) => updateFilter("workStatus", value)}
-          />
-
-          {/* Groupe date : label + De + à + À */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-[var(--text-default-grey,#3A3A3A)]">
-              Date de session
-            </span>
-            <BoutonFiltreDate
-              value={filters.dateFrom}
-              onChange={(value) => updateFilter("dateFrom", value)}
-            />
-            <span className="text-sm text-[var(--text-default-grey,#3A3A3A)]">
-              à
-            </span>
-            <BoutonFiltreDate
-              value={filters.dateTo}
-              onChange={(value) => updateFilter("dateTo", value)}
-            />
-          </div>
-
-          <BoutonFiltre
-            label="Type d'entrée"
-            options={[
-              { label: "À dates fixes", value: "0" },
-              { label: "À tout moment", value: "1" },
-            ]}
-            value={filters.modalitesEntreesSorties || ""}
-            onChange={(value) => updateFilter("modalitesEntreesSorties", value)}
-          />
-
-          <BoutonFiltre
-            label="Conformité"
-            options={[
-              { label: "Conforme", value: "compliant" },
-              { label: "Non conforme", value: "non_compliant" },
-            ]}
-            value={filters.complianceStatus || ""}
-            onChange={(value) => updateFilter("complianceStatus", value)}
+          <span className="text-sm text-[var(--text-default-grey,#3A3A3A)]">
+            à
+          </span>
+          <BoutonFiltreDate
+            value={filters.dateTo}
+            onChange={(value) => updateFilter("dateTo", value)}
           />
         </div>
-        <TooltipProvider>
-          <DataTable
-            columns={columns}
-            data={documents}
-            pageSize={pageSize}
-            onRowClick={(row) => {
-              const search = window.location.search.substring(1);
-              const query = search ? `?from=${encodeURIComponent(search)}` : "";
-              router.push(`/documents/${row.id}${query}`);
-            }}
-            manualPagination
-            manualSorting
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSortChange={(newSortBy, newSortOrder) => {
-              const params = new URLSearchParams(window.location.search);
-              params.set("sortBy", newSortBy);
-              params.set("sortOrder", newSortOrder);
-              params.set("page", "1");
-              router.push(`/documents?${params.toString()}`);
-            }}
-            getRowClassName={(row) =>
-              highlightedIds.has(row.id)
-                ? "animate-highlight bg-yellow-50 transition-colors duration-1000"
-                : undefined
-            }
-          />
-        </TooltipProvider>
 
-        {/* Custom server-side pagination controls */}
-        {totalCount > 0 && (
-          <div className="flex justify-end">
-            <AppPaginationControls
-              currentPage={currentPage}
-              pageSize={pageSize}
-              totalCount={totalCount}
-            />
-          </div>
-        )}
+        <BoutonFiltre
+          label="Type d'entrée"
+          options={[
+            { label: "À dates fixes", value: "0" },
+            { label: "À tout moment", value: "1" },
+          ]}
+          value={filters.modalitesEntreesSorties || ""}
+          onChange={(value) => updateFilter("modalitesEntreesSorties", value)}
+        />
+
+        <BoutonFiltre
+          label="Conformité"
+          options={[
+            { label: "Conforme", value: "compliant" },
+            { label: "Non conforme", value: "non_compliant" },
+          ]}
+          value={filters.complianceStatus || ""}
+          onChange={(value) => updateFilter("complianceStatus", value)}
+        />
       </div>
+      <TooltipProvider>
+        <DataTable
+          columns={columns}
+          data={documents}
+          pageSize={pageSize}
+          onRowClick={(row) => {
+            const search = window.location.search.substring(1);
+            const query = search ? `?from=${encodeURIComponent(search)}` : "";
+            router.push(`/documents/${row.id}${query}`);
+          }}
+          manualPagination
+          manualSorting
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={(newSortBy, newSortOrder) => {
+            const params = new URLSearchParams(window.location.search);
+            params.set("sortBy", newSortBy);
+            params.set("sortOrder", newSortOrder);
+            params.set("page", "1");
+            router.push(`/documents?${params.toString()}`);
+          }}
+          getRowClassName={(row) =>
+            highlightedIds.has(row.id)
+              ? "animate-highlight bg-yellow-50 transition-colors duration-1000"
+              : undefined
+          }
+        />
+      </TooltipProvider>
+
+      {/* Custom server-side pagination controls */}
+      {totalCount > 0 && (
+        <div className="flex justify-end">
+          <AppPaginationControls
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalCount={totalCount}
+          />
+        </div>
+      )}
     </div>
   );
 }
