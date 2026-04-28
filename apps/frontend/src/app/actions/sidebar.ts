@@ -7,7 +7,7 @@ const ONE_YEAR = 60 * 60 * 24 * 365;
 
 /**
  * Persiste la préférence sidebar dans un cookie lisible côté serveur.
- * Appelé en fire-and-forget depuis DocumentSidebar au toggle.
+ * Appelé en fire-and-forget depuis AppSidebar au toggle.
  */
 export async function setSidebarCollapsed(collapsed: boolean) {
   const cookieStore = await cookies();

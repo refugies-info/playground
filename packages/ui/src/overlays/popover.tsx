@@ -26,9 +26,11 @@ const PopoverAnchor = PopoverPrimitive.Anchor;
 const PopoverClose = PopoverPrimitive.Close;
 
 const popoverContentVariants = cva(
-  // Base : positionnement + animations Radix
+  // Base : positionnement + animations Radix + look par défaut (Figma node 1842-8956)
+  // border 1px #dddddd · radius 4px · fond blanc · padding 8px
   [
     "z-50 outline-none",
+    "bg-white rounded-xs border border-[var(--border-default-grey,#dddddd)] p-2",
     "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
     "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
     "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
@@ -37,14 +39,13 @@ const popoverContentVariants = cva(
   {
     variants: {
       variant: {
-        /** Neutre — styles laissés au consommateur via className */
+        /** Look par défaut (Figma 1842-8956) — fond blanc, border gris, radius 4px, pb-2 */
         default: "",
         /**
          * Style PublishPanel — Figma node 1824-25605
-         * border #dddddd, radius 4px, padding 24px, width 368px, fond blanc
+         * padding 24px · width 368px (surcharge pb-2 de la base)
          */
-        panel:
-          "w-[368px] rounded-xs bg-white p-6 border border-[var(--border-default-grey,#dddddd)]",
+        panel: "w-[368px] p-6",
       },
     },
     defaultVariants: { variant: "default" },

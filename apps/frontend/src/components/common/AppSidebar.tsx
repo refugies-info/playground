@@ -1,19 +1,30 @@
 "use client";
 
-import { AppLogo, Avatar, BoutonMenu, Sidebar } from "@playground/ui";
+import {
+  AppLogo,
+  Avatar,
+  BoutonMenu,
+  Button,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Sidebar,
+} from "@playground/ui";
 import {
   RiAccountCircleLine,
   RiDownloadLine,
   RiFileTextLine,
+  RiLogoutBoxRLine,
   RiTranslate2,
 } from "@playground/ui/icons";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { setSidebarCollapsed } from "@/app/actions/sidebar";
+import { createClient } from "@/lib/supabase/client";
 
-export interface DocumentSidebarProps {
+export interface AppSidebarProps {
   userRole?: string | null;
   userEmail?: string | null;
   /** État initial lu depuis le cookie côté serveur — évite le flash au chargement */
@@ -21,18 +32,19 @@ export interface DocumentSidebarProps {
 }
 
 /**
- * DocumentSidebar — Sidebar globale de l'éditeur de fiches
+ * AppSidebar — Sidebar de navigation globale (layout principal)
  *
  * La préférence replié/déplié est persistée dans un cookie via la Server Action
  * `setSidebarCollapsed`. L'état initial est lu côté serveur dans le layout et
  * passé via `initialCollapsed` — zéro flash au chargement.
  */
-export function DocumentSidebar({
+export function AppSidebar({
   userRole,
   userEmail,
   initialCollapsed = false,
-}: DocumentSidebarProps) {
+}: AppSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   // Initialisé depuis le cookie lu côté serveur → pas de flash au chargement
   const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
@@ -44,10 +56,46 @@ export function DocumentSidebar({
     setSidebarCollapsed(next);
   };
 
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.refresh(); // Invalide le cache RSC pour éviter des données de session stale
+    router.push("/login");
+  };
+
   const isAdmin = userRole === "admin";
   const isTranslator = userRole === "translator";
 
-  const userAvatar = <Avatar email={userEmail} className="size-12" />;
+  const userAvatar = (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label="Menu utilisateur"
+          className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-action-high-blue-france)]"
+        >
+          <Avatar email={userEmail} className="size-12" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        variant="default"
+        side="top"
+        align="start"
+        sideOffset={8}
+        className="w-48"
+      >
+        <Button
+          variant="quatrieme"
+          size="sm"
+          leftIcon={RiLogoutBoxRLine}
+          onClick={handleLogout}
+          className="w-full justify-start"
+        >
+          Se déconnecter
+        </Button>
+      </PopoverContent>
+    </Popover>
+  );
 
   const logo = (
     <AppLogo

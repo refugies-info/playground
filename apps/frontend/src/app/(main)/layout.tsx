@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
-import { DocumentSidebar } from "@/components/document-editor/shared/DocumentSidebar";
+import { AppSidebar } from "@/components/common/AppSidebar";
 import { getAuthUser, getUserProfile } from "@/lib/auth";
 import { SIDEBAR_COOKIE } from "@/lib/cookies";
 import { PageShell } from "./page-shell";
@@ -20,7 +20,7 @@ export default async function MainLayout({
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[var(--background-alt-blue-france,#f5f5fe)]">
-      <DocumentSidebar
+      <AppSidebar
         userRole={profile?.role ?? null}
         userEmail={user?.email ?? null}
         initialCollapsed={sidebarCollapsed}
