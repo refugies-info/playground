@@ -59,6 +59,7 @@ export function AppSidebar({
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    router.refresh(); // Invalide le cache RSC pour éviter des données de session stale
     router.push("/login");
   };
 
