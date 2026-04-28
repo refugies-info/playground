@@ -245,7 +245,7 @@ export function DocumentsList({
             params.set("sortBy", newSortBy);
             params.set("sortOrder", newSortOrder);
             params.set("page", "1");
-            router.push(`/documents?${params.toString()}`);
+            router.push(`/documents?${params.toString()}`, { scroll: false });
           }}
           getRowClassName={(row) =>
             highlightedIds.has(row.id)

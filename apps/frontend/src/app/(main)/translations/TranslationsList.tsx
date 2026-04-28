@@ -108,19 +108,19 @@ export function TranslationsList({
       params.delete("language");
     }
 
-    router.push(`/translations?${params.toString()}`);
+    router.push(`/translations?${params.toString()}`, { scroll: false });
   };
 
   const handleSortChange = (sortBy: string, sortOrder: "asc" | "desc") => {
     const params = new URLSearchParams(window.location.search);
     params.set("sortBy", sortBy);
     params.set("sortOrder", sortOrder);
-    router.push(`/translations?${params.toString()}`);
+    router.push(`/translations?${params.toString()}`, { scroll: false });
   };
 
   const clearFilters = () => {
     setFilters({ workStatus: "", onlineStatus: "", language: "" });
-    router.push("/translations");
+    router.push("/translations", { scroll: false });
   };
 
   const isTranslator = userRole === "translator";

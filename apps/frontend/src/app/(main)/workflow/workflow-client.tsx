@@ -145,7 +145,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
       params.delete("searchId");
     }
     params.set("page", "1");
-    router.push(`/workflow?${params.toString()}`);
+    router.push(`/workflow?${params.toString()}`, { scroll: false });
   };
 
   const handleOpenDrawer = (doc: Document) => {
