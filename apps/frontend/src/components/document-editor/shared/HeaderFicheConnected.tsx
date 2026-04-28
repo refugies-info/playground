@@ -1,5 +1,6 @@
 "use client";
 
+import { logger } from "@playground/shared-types";
 import { Avatar, IndicationSauvegarde } from "@playground/ui";
 import {
   HeaderFiche,
@@ -133,11 +134,17 @@ export function HeaderFicheConnected({
   const handleCopy = () => {
     const url =
       publishResult?.type === "success" ? publishResult.publishedUrl : null;
-    if (url) {
-      navigator.clipboard.writeText(url);
-      setHasCopied(true);
-      setTimeout(() => setHasCopied(false), 2000);
-    }
+    if (!url) return;
+
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        setHasCopied(true);
+        setTimeout(() => setHasCopied(false), 2000);
+      })
+      .catch((err) => {
+        logger.warn({ err }, "Clipboard write failed");
+      });
   };
 
   const handleReset = () => {
