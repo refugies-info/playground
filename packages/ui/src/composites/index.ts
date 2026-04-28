@@ -5,6 +5,8 @@ export * from "./data-table/data-table-column-header";
 export * from "./data-table/data-table-faceted-filter";
 export * from "./data-table/data-table-pagination";
 export * from "./data-table/data-table-toolbar";
+export * from "./header-fiche";
 export * from "./pagination";
 export * from "./pagination-controls";
+export * from "./publish-panel";
 export * from "./sidebar";

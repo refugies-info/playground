@@ -8,7 +8,7 @@ import { DocumentProvider } from "../DocumentContext";
 import { MetadataProvider } from "../metadata/MetadataContext";
 import { DocumentSidebar } from "./DocumentSidebar";
 import { EditorNavigation } from "./EditorNavigation";
-import { TopBar } from "./TopBar";
+import { HeaderFicheConnected } from "./HeaderFicheConnected";
 
 // Disable SSR for DebugPanel to avoid hydration mismatch from Radix UI random IDs
 const DebugPanel = dynamic(
@@ -25,7 +25,7 @@ interface DocumentLayoutProps {
   children: React.ReactNode;
   /** Rôle de l'utilisateur connecté — pour afficher/masquer les liens de nav */
   userRole?: string | null;
-  /** Email de l'utilisateur connecté — pour l'avatar dans la sidebar */
+  /** Email de l'utilisateur connecté — pour l'avatar dans le header et la sidebar */
   userEmail?: string | null;
   /** État initial de la sidebar lu côté serveur depuis le cookie */
   sidebarCollapsed?: boolean;
@@ -58,8 +58,8 @@ export function DocumentLayout(props: DocumentLayoutProps) {
 
             {/* Editor Area */}
             <div className="flex flex-col flex-1 overflow-hidden rounded-tl-2xl rounded-bl-2xl border-l border-t border-b border-[var(--border-default-grey)]">
-              {/* Top Toolbar */}
-              <TopBar from={from} />
+              {/* Header fiche — remplace TopBar */}
+              <HeaderFicheConnected from={from} userEmail={userEmail} />
 
               {/* Main Content Area */}
               <div className="flex flex-1 overflow-hidden">
