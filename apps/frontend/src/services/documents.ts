@@ -56,21 +56,10 @@ export async function getDocuments(params: GetDocumentsParams) {
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
-  // Build select string - include all fields from the view
-  // For searchId filter on ingestion metadata, we need to join with ingestion_records
-  const selectString = searchId
-    ? `
-      *,
-      ingestion_records!inner (
-        metadata
-      )
-    `
-    : "*";
-
   // Use the enriched view - single query with all needed data
   let query = supabase
     .from("workflows_enriched")
-    .select(selectString, { count: "exact" });
+    .select("*", { count: "exact" });
 
   // Apply filters
   if (complianceStatus) {
@@ -126,8 +115,9 @@ export async function getDocuments(params: GetDocumentsParams) {
     query = query.lte("session_start_date", dateTo);
   }
 
+  // Filter by Carif-Oref ID (external_id is already extracted in the view)
   if (searchId) {
-    query = query.ilike("ingestion_records.metadata->>id", `%${searchId}%`);
+    query = query.ilike("external_id", `%${searchId}%`);
   }
 
   // Filter by author email (editors/admins only — translators excluded from dropdown)
