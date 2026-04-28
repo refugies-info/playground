@@ -7,9 +7,10 @@ import { IndicationSauvegarde } from "./IndicationSauvegarde";
  *
  * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/BOMO?node-id=1361-7769
  *
- * - `saved`   → dot vert + "Enregistré"
- * - `saving`  → spinner + "En cours..."
+ * - `saved`   → dot vert  + "Enregistré"
+ * - `saving`  → spinner  + "En cours..."
  * - `unsaved` → dot orange + "À enregistrer" (cliquable)
+ * - `error`   → dot rouge + "Erreur" (cliquable → réessai)
  */
 const meta: Meta<typeof IndicationSauvegarde> = {
   title: "Primitives/IndicationSauvegarde",
@@ -43,38 +44,56 @@ export const AEnregistrer: Story = {
   },
 };
 
+/** Erreur d'enregistrement — dot rouge, cliquable pour réessayer */
+export const Erreur: Story = {
+  args: {
+    status: "error",
+    onSave: () => alert("Réessai déclenché !"),
+  },
+};
+
 /**
- * Story interactive — simule le cycle complet unsaved → saving → saved.
+ * Story interactive — simule le cycle complet unsaved → saving → saved/error.
  * Cliquer sur "À enregistrer" déclenche une sauvegarde fictive de 1,5s.
+ * Boutons pour simuler succès ou échec.
  */
 export const CycleComplet: Story = {
   name: "Cycle complet (interactif)",
   render: () => {
-    const [status, setStatus] = useState<"saved" | "saving" | "unsaved">(
-      "unsaved",
-    );
+    const [status, setStatus] = useState<
+      "saved" | "saving" | "unsaved" | "error"
+    >("unsaved");
 
-    const handleSave = () => {
+    const handleSave = (succeed = true) => {
       setStatus("saving");
-      setTimeout(() => setStatus("saved"), 1500);
+      setTimeout(() => setStatus(succeed ? "saved" : "error"), 1500);
     };
 
     return (
       <div className="flex flex-col items-center gap-4">
-        <IndicationSauvegarde status={status} onSave={handleSave} />
-        <button
-          type="button"
-          onClick={() => setStatus("unsaved")}
-          className="text-xs text-gray-400 underline"
-        >
-          Remettre à « À enregistrer »
-        </button>
+        <IndicationSauvegarde status={status} onSave={() => handleSave(true)} />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setStatus("unsaved")}
+            className="text-xs text-gray-400 underline"
+          >
+            Remettre à « À enregistrer »
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSave(false)}
+            className="text-xs text-red-400 underline"
+          >
+            Simuler une erreur
+          </button>
+        </div>
       </div>
     );
   },
 };
 
-/** Les 3 états côte à côte pour comparaison visuelle */
+/** Les 4 états côte à côte pour comparaison visuelle */
 export const TousLesEtats: Story = {
   name: "Tous les états",
   render: () => (
@@ -82,6 +101,7 @@ export const TousLesEtats: Story = {
       <IndicationSauvegarde status="saved" />
       <IndicationSauvegarde status="saving" />
       <IndicationSauvegarde status="unsaved" onSave={() => {}} />
+      <IndicationSauvegarde status="error" onSave={() => {}} />
     </div>
   ),
 };

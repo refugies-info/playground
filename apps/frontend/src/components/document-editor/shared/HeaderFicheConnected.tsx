@@ -59,6 +59,14 @@ export function HeaderFicheConnected({
   const isMounted = useRef(true);
   useDocumentStatusRealtime();
 
+  const [saveError, setSaveError] = useState(false);
+
+  const handleSave = async () => {
+    setSaveError(false);
+    const result = await saveDocument();
+    if (!result.success) setSaveError(true);
+  };
+
   const [publishResult, setPublishResult] = useState<PublishPanelResult | null>(
     null,
   );
@@ -91,7 +99,13 @@ export function HeaderFicheConnected({
   const backHref = from
     ? `/documents?${decodeURIComponent(from)}`
     : "/documents";
-  const saveStatus = isSaving ? "saving" : isDirty ? "unsaved" : "saved";
+  const saveStatus = isSaving
+    ? "saving"
+    : saveError
+      ? "error"
+      : isDirty
+        ? "unsaved"
+        : "saved";
   const isCompliant = document?.complianceStatus === "compliant";
   const showSaveIndicator =
     document?.complianceStatus !== "non_compliant" &&
@@ -154,7 +168,7 @@ export function HeaderFicheConnected({
             </Button>
           </Link>
           {showSaveIndicator ? (
-            <IndicationSauvegarde status={saveStatus} onSave={saveDocument} />
+            <IndicationSauvegarde status={saveStatus} onSave={handleSave} />
           ) : null}
           <DocumentStatus />
           <Avatar email={userEmail} className="size-6" />

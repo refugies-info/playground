@@ -8,19 +8,24 @@ import { RiLoaderLine } from "../../icons";
  *
  * Specs Figma (COMPONENT_SET, node 1361:7769) :
  *   Layout    : HORIZONTAL, gap=4px, padding=6px H / 2px V, border-radius=4px
- *   Fond      : #ffffff (normal) — #f6f6f6 (hover sur unsaved)
+ *   Fond      : #ffffff (normal) — #f6f6f6 (hover sur unsaved/error)
  *   Bordure   : 1px solid --border-default-grey
- *   Dot       : ~6.7px — vert (--text-default-success) | orange (--orange-terre-battue-main-645)
+ *   Dot       : ~6.7px — vert (--text-default-success) | orange | rouge
  *   Spinner   : 12×12px RiLoaderLine — --text-mention-grey
  *   Texte     : 12px / weight 500 / --text-mention-grey
  *
- * 3 états :
- *   saved   → dot vert  + "Enregistré"    — non interactif
- *   saving  → spinner   + "En cours..."   — non interactif
- *   unsaved → dot orange+ "À enregistrer" — cliquable → onSave()
+ * 4 états :
+ *   saved   → dot vert  + "Enregistré"         — non interactif
+ *   saving  → spinner   + "En cours..."        — non interactif
+ *   unsaved → dot orange+ "À enregistrer"      — cliquable → onSave()
+ *   error   → dot rouge + "Erreur"             — cliquable → onSave() (réessai)
  */
 
-export type IndicationSauvegardeStatus = "saved" | "saving" | "unsaved";
+export type IndicationSauvegardeStatus =
+  | "saved"
+  | "saving"
+  | "unsaved"
+  | "error";
 
 // ---------------------------------------------------------------------------
 // cva variants
@@ -49,6 +54,12 @@ const indicationVariants = cva(
           "active:bg-[#ececec]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-action-high-blue-france)] focus-visible:ring-offset-1",
         ],
+        error: [
+          "cursor-pointer",
+          "hover:bg-[#f6f6f6]",
+          "active:bg-[#ececec]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-action-high-blue-france)] focus-visible:ring-offset-1",
+        ],
       },
     },
   },
@@ -63,6 +74,7 @@ const iconZoneVariants = cva(
         saved: "w-2",
         saving: "w-3",
         unsaved: "w-2",
+        error: "w-2",
       },
     },
   },
@@ -81,6 +93,7 @@ const dotVariants = cva(
         saved: "opacity-100 bg-[var(--text-default-success,#18753c)]",
         saving: "opacity-0  bg-transparent",
         unsaved: "opacity-100 bg-[var(--orange-terre-battue-main-645,#fa794a)]",
+        error: "opacity-100 bg-[var(--text-default-error,#ce0500)]",
       },
     },
   },
@@ -95,6 +108,7 @@ const spinnerVariants = cva(
         saved: "opacity-0",
         saving: "opacity-100 animate-spin",
         unsaved: "opacity-0",
+        error: "opacity-0",
       },
     },
   },
@@ -109,6 +123,7 @@ const textZoneVariants = cva(
         saved: "w-[58px]",
         saving: "w-[59px]",
         unsaved: "w-[75px]",
+        error: "w-[38px]",
       },
     },
   },
@@ -140,6 +155,14 @@ const LABEL: Record<IndicationSauvegardeStatus, string> = {
   saved: "Enregistré",
   saving: "En cours...",
   unsaved: "À enregistrer",
+  error: "Erreur",
+};
+
+const ARIA_LABEL: Record<IndicationSauvegardeStatus, string> = {
+  saved: "Enregistré",
+  saving: "Enregistrement en cours",
+  unsaved: "Enregistrer le document",
+  error: "Réessayer l'enregistrement",
 };
 
 // ---------------------------------------------------------------------------
@@ -149,7 +172,7 @@ const LABEL: Record<IndicationSauvegardeStatus, string> = {
 export interface IndicationSauvegardeProps
   extends VariantProps<typeof indicationVariants> {
   status: IndicationSauvegardeStatus;
-  /** Appelé au clic quand status === 'unsaved' */
+  /** Appelé au clic quand status === 'unsaved' ou 'error' */
   onSave?: () => void;
   className?: string;
 }
@@ -167,7 +190,7 @@ const IconZone = ({ status }: { status: IndicationSauvegardeStatus }) => (
 
 const TextZone = ({ status }: { status: IndicationSauvegardeStatus }) => (
   <span className={textZoneVariants({ status })}>
-    {(["saved", "saving", "unsaved"] as const).map((s) => (
+    {(["saved", "saving", "unsaved", "error"] as const).map((s) => (
       <span key={s} className={labelVariants({ active: s === status })}>
         {LABEL[s]}
       </span>
@@ -184,7 +207,7 @@ export function IndicationSauvegarde({
   onSave,
   className,
 }: IndicationSauvegardeProps) {
-  const isInteractive = status === "unsaved";
+  const isInteractive = status === "unsaved" || status === "error";
 
   return (
     <button
@@ -193,7 +216,7 @@ export function IndicationSauvegarde({
       disabled={!isInteractive}
       className={indicationVariants({ status, className })}
       aria-live={!isInteractive ? "polite" : undefined}
-      aria-label={isInteractive ? "Enregistrer le document" : LABEL[status]}
+      aria-label={ARIA_LABEL[status]}
     >
       <IconZone status={status} />
       <TextZone status={status} />
