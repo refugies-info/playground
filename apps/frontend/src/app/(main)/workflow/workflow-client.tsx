@@ -410,6 +410,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
             onChange={handleSearchChange}
             placeholder="Ex: carif-oref--10_396692S"
             wrapperClassName="max-w-[330px] w-full"
+            aria-label="Rechercher par ID Carif-Oref"
           />
 
           {/* Bouton aligné à droite dans le même conteneur que la recherche */}
