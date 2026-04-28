@@ -16,7 +16,8 @@ interface TranslationLayoutProps {
 export function TranslationLayout({ initialData }: TranslationLayoutProps) {
   return (
     <TranslationProvider initialData={initialData}>
-      <div className="flex flex-col h-screen w-full overflow-hidden bg-white">
+      {/* La sidebar globale vient du layout parent (main) */}
+      <div className="flex flex-col flex-1 overflow-hidden bg-white">
         <TranslationTopBar />
 
         <div className="flex flex-1 overflow-hidden">

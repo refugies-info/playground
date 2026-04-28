@@ -1,7 +1,10 @@
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
-import { TopNav } from "@/components/TopNav";
+import { Suspense } from "react";
+import { DocumentSidebar } from "@/components/document-editor/shared/DocumentSidebar";
 import { getAuthUser, getUserProfile } from "@/lib/auth";
+import { SIDEBAR_COOKIE } from "@/lib/cookies";
+import { PageShell } from "./page-shell";
 
 export default async function MainLayout({
   children,
@@ -13,12 +16,23 @@ export default async function MainLayout({
 
   const user = await getAuthUser(supabase);
   const profile = user ? await getUserProfile(supabase, user.id) : null;
-  const role = profile?.role ?? undefined;
+  const sidebarCollapsed = cookieStore.get(SIDEBAR_COOKIE)?.value === "true";
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <TopNav role={role} />
-      <main>{children}</main>
+    <div className="flex h-screen w-full overflow-hidden bg-[var(--background-alt-blue-france,#f5f5fe)]">
+      <DocumentSidebar
+        userRole={profile?.role ?? null}
+        userEmail={user?.email ?? null}
+        initialCollapsed={sidebarCollapsed}
+      />
+      {/* Panel principal — fond blanc, arrondi côté gauche, bordure */}
+      <main className="flex flex-col flex-1 overflow-auto bg-white rounded-tl-[16px] rounded-bl-[16px] border-l border-t border-b border-[#dddddd]">
+        {/* Suspense requis : PageShell appelle usePathname() qui provoque un
+            CSR bailout sur les routes dynamiques (/documents/[id]) sans boundary */}
+        <Suspense fallback={null}>
+          <PageShell>{children}</PageShell>
+        </Suspense>
+      </main>
     </div>
   );
 }

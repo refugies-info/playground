@@ -37,23 +37,27 @@ export const getUserProfile = cache(
  * - If no session → returns null (caller handles redirect to /login)
  * - If authenticated → returns the User object
  *
+ * Wrapped in React.cache() to deduplicate within the same server request:
+ * (main)/layout.tsx et documents/[id]/layout.tsx s'exécutent tous les deux
+ * pour les pages éditeur — un seul appel Supabase est effectué.
+ *
  * Usage:
  * ```ts
  * const user = await getAuthUser(supabase);
  * if (!user) redirect("/login");
  * ```
  */
-export async function getAuthUser(
-  supabase: SupabaseClient<Database>,
-): Promise<User | null> {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+export const getAuthUser = cache(
+  async (supabase: SupabaseClient<Database>): Promise<User | null> => {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
-  if (error && isConnectionError(error)) {
-    redirect("/service-unavailable");
-  }
+    if (error && isConnectionError(error)) {
+      redirect("/service-unavailable");
+    }
 
-  return user;
-}
+    return user;
+  },
+);
