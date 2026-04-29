@@ -133,6 +133,13 @@ export function PublicationLinksPopover({
   // Distingue fermeture souris (hover-out) vs clavier (Escape) pour le focus-return
   const closedByMouseRef = React.useRef(false);
 
+  // Nettoyage du timer au démontage pour éviter une mise à jour sur composant démonté
+  React.useEffect(() => {
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    };
+  }, []);
+
   const handleOpen = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     if (!open) {
