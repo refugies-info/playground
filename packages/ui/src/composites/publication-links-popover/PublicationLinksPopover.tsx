@@ -1,6 +1,6 @@
 "use client";
 
-import type * as React from "react";
+import * as React from "react";
 import { RiExternalLinkLine, RiLoaderLine } from "../../icons";
 import {
   Popover,
@@ -125,13 +125,69 @@ export function PublicationLinksPopover({
   onOpenChange,
   children,
 }: PublicationLinksPopoverProps) {
+  const [open, setOpen] = React.useState(false);
+  // Délai pour éviter le flicker quand la souris passe du trigger au contenu
+  const closeTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Distingue ouverture souris vs clavier pour le focus management
+  const openedByMouseRef = React.useRef(false);
+  // Distingue fermeture souris (hover-out) vs clavier (Escape) pour le focus-return
+  const closedByMouseRef = React.useRef(false);
+
+  // Nettoyage du timer au démontage pour éviter une mise à jour sur composant démonté
+  React.useEffect(() => {
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    };
+  }, []);
+
+  const handleOpen = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    if (!open) {
+      openedByMouseRef.current = true;
+      setOpen(true);
+      onOpenChange?.(true);
+    }
+  };
+
+  const handleClose = () => {
+    closeTimer.current = setTimeout(() => {
+      closedByMouseRef.current = true;
+      setOpen(false);
+      onOpenChange?.(false);
+    }, 80);
+  };
+
+  const handleOpenChange = (next: boolean) => {
+    // Radix appelle onOpenChange(false) sur Escape ou focus-out → on ferme proprement
+    if (!next) {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+      setOpen(false);
+      onOpenChange?.(false);
+    }
+  };
+
   return (
-    <Popover onOpenChange={onOpenChange}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        {/* <button> = élément interactif requis pour que Radix asChild fonctionne */}
+        {/*
+         * Souris  : hover (onMouseEnter/Leave avec délai anti-flicker)
+         * Clavier : onClick = Enter/Space toggle — pas de onFocus/onBlur pour éviter
+         *           la boucle "fermeture → focus retourne au trigger → réouverture"
+         * Radix gère nativement : Escape, fermeture sur focus-out, aria-expanded
+         */}
         <button
           type="button"
-          className="cursor-pointer inline-flex bg-transparent border-0 p-0 leading-none focus-visible:outline-none"
+          aria-label="Voir les langues publiées"
+          className="cursor-pointer inline-flex bg-transparent border-0 p-0 leading-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-outline-color,#0a76f6)]"
+          onMouseEnter={handleOpen}
+          onMouseLeave={handleClose}
+          onClick={() => {
+            if (closeTimer.current) clearTimeout(closeTimer.current);
+            const next = !open;
+            openedByMouseRef.current = false; // ouverture clavier
+            setOpen(next);
+            onOpenChange?.(next);
+          }}
         >
           {children}
         </button>
@@ -142,6 +198,21 @@ export function PublicationLinksPopover({
         variant="default"
         align="start"
         className="w-[155px] p-0 pb-2"
+        onMouseEnter={handleOpen}
+        onMouseLeave={handleClose}
+        // Souris → focus reste où il est (pas de déplacement inattendu).
+        // Clavier (Enter/Space) → Radix déplace le focus vers le premier item (comportement natif).
+        onOpenAutoFocus={(e) => {
+          if (openedByMouseRef.current) e.preventDefault();
+        }}
+        // Fermeture souris → pas de focus-return (perturbant).
+        // Fermeture clavier (Escape) → Radix retourne bien le focus au trigger.
+        onCloseAutoFocus={(e) => {
+          if (closedByMouseRef.current) {
+            e.preventDefault();
+            closedByMouseRef.current = false;
+          }
+        }}
       >
         {/* Header — layout_CJ5N30 : column, gap-1 (4px), pt-2 pb-1
             Le séparateur est DANS le header (gap entre texte et ligne) */}
