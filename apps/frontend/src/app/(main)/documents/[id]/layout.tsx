@@ -54,6 +54,7 @@ export default async function Layout({
     isMetadataGenerating: document.isMetadataGenerating, // Spinner state for MetadataView
     referenceData, // Themes & needs ID→name lookups from RI
     publishedUrl: document.publishedUrl,
+    publicationRemoteId: document.publicationRemoteId,
   };
 
   return (

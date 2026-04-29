@@ -6,17 +6,12 @@ import { Tag } from "@playground/ui/primitives";
 
 interface OnlineStatusCellProps {
   status: OnlineStatus | undefined;
-  publishedUrl?: string | null;
 }
 
-export const OnlineStatusCell = ({
-  status,
-  publishedUrl,
-}: OnlineStatusCellProps) => {
+export const OnlineStatusCell = ({ status }: OnlineStatusCellProps) => {
   if (!status) return <EmptyDash />;
 
-  if (status === "published")
-    return <Tag status="publie" href={publishedUrl ?? undefined} />;
+  if (status === "published") return <Tag status="publie" />;
   if (status === "archived") return <Tag status="archive" />;
 
   // unpublished — pas de variant Tag dédié

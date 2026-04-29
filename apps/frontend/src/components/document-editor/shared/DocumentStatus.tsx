@@ -2,11 +2,12 @@
 
 import { Badge, Conformite, Tag } from "@playground/ui/primitives";
 import { useDocument } from "../DocumentContext";
+import { DocumentPublicationStatus } from "./DocumentPublicationStatus";
 
 /**
  * DocumentStatus — Affiche UN seul badge de statut, par ordre de priorité :
  *
- *   1. published     → Tag "Publié" (avec lien)
+ *   1. published     → Tag "Publié" + popover multi-langues (DocumentPublicationStatus)
  *   2. archived      → Tag "Archivé"
  *   3. non_compliant → Conformite "non-conforme"
  *   4. pending       → Badge "En cours d'arbitrage"
@@ -20,10 +21,10 @@ export function DocumentStatus() {
 
   if (!document) return null;
 
-  const { complianceStatus, workStatus, onlineStatus, publishedUrl } = document;
+  const { complianceStatus, workStatus, onlineStatus } = document;
 
   if (onlineStatus === "published") {
-    return <Tag status="publie" href={publishedUrl ?? undefined} />;
+    return <DocumentPublicationStatus />;
   }
 
   if (onlineStatus === "archived") {

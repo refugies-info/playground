@@ -1,8 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
-import { RiExternalLinkLine } from "../../icons";
 import { cn } from "../../utils";
-import { Icon } from "../icon";
 
 /**
  * Tag — Statut workflow document (publication & traitement)
@@ -90,33 +88,15 @@ export const TAG_LABELS: Record<TagStatus, string> = {
 
 export interface TagProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof tagVariants> {
-  /**
-   * Pour le statut "publié" uniquement — affiche une icône lien externe.
-   * @see Figma node 902:10470
-   */
-  href?: string;
-}
+    VariantProps<typeof tagVariants> {}
 
 const Tag = React.forwardRef<HTMLDivElement, TagProps>(
-  ({ className, status, href, children, ...props }, ref) => {
+  ({ className, status, children, ...props }, ref) => {
     const label = children ?? (status ? TAG_LABELS[status] : "—");
 
     return (
-      <div ref={ref} className="inline-flex items-center gap-1.5" {...props}>
+      <div ref={ref} className="inline-flex items-center" {...props}>
         <span className={cn(tagVariants({ status }), className)}>{label}</span>
-        {status === "publie" && href && (
-          <a
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Voir la fiche publiée"
-            className="text-[#27A658] hover:opacity-75 transition-opacity leading-none flex items-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Icon icon={RiExternalLinkLine} size={20} />
-          </a>
-        )}
       </div>
     );
   },
