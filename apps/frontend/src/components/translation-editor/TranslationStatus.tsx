@@ -15,9 +15,7 @@ export function TranslationStatus() {
       {workStatus === "to_process" && <Tag status="a-traiter" />}
       {workStatus === "draft" && <Tag status="en-cours" />}
 
-      {onlineStatus === "published" && (
-        <Tag status="publie" href={publicationUrl ?? undefined} />
-      )}
+      {onlineStatus === "published" && <Tag status="publie" />}
       {onlineStatus === "archived" && <Tag status="archive" />}
       {onlineStatus === "unpublished" && <Tag status="na">Non publié</Tag>}
     </div>

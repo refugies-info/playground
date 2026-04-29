@@ -94,12 +94,7 @@ export const createOnlineStatusColumn = (): ColumnDef<Document> => ({
   header: ({ column }) => (
     <DataTableColumnHeader column={column} title="Statut" />
   ),
-  cell: ({ row }) => (
-    <OnlineStatusCell
-      status={row.original.onlineStatus}
-      publishedUrl={row.original.publishedUrl}
-    />
-  ),
+  cell: ({ row }) => <OnlineStatusCell status={row.original.onlineStatus} />,
 });
 
 export const createWorkStatusColumn = <

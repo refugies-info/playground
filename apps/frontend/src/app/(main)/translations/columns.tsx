@@ -58,7 +58,6 @@ export const columns: ColumnDef<TranslationItem>[] = [
             | "archived"
             | undefined
         }
-        publishedUrl={row.original.publicationUrl}
       />
     ),
   },
