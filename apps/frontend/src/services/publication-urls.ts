@@ -73,15 +73,15 @@ export async function getPublicationUrls(
 
     // Find latest successful publication record for this translation
     const pubRecords = (
-      tr.publication_records as { remote_id: string; status: string }[]
+      (tr.publication_records as
+        | { remote_id: string; status: string }[]
+        | null) ?? []
     ).filter((pr) => pr.status === "published");
 
-    const remoteId = pubRecords[0]?.remote_id ?? null;
-    publishedByLang[tr.language] = buildPublicationUrl(
-      baseUrl,
-      tr.language,
-      remoteId,
-    );
+    const remoteId = pubRecords[0]?.remote_id;
+    publishedByLang[tr.language] = remoteId
+      ? buildPublicationUrl(baseUrl, tr.language, remoteId)
+      : null;
   }
 
   // Merge with full LANGUAGES list — FR always published, others from DB
