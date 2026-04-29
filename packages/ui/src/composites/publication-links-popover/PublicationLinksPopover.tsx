@@ -79,7 +79,8 @@ function LanguageRow({
     );
   }
 
-  const handleClick = () => window.open(publishedUrl, "_blank");
+  const handleClick = () =>
+    window.open(publishedUrl, "_blank", "noopener,noreferrer");
 
   return (
     <button
