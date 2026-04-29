@@ -45,7 +45,12 @@ export async function getPublicationUrls(
       )
     `,
     )
-    .eq("workflow_id", workflowId);
+    .eq("workflow_id", workflowId)
+    // Plus récent en premier — garantit de prendre le bon remote_id si plusieurs publications
+    .order("created_at", {
+      referencedTable: "publication_records",
+      ascending: false,
+    });
 
   if (error) {
     // On failure, return all languages unpublished (except FR)
