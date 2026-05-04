@@ -8,6 +8,8 @@ import { fetchRiReferenceData } from "@/services/ri-reference-data";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+// La réécriture IA (Letta) peut prendre 1 à 3 minutes — on porte la limite à 5 min.
+export const maxDuration = 300;
 
 interface DocumentLayoutProps {
   children: React.ReactNode;

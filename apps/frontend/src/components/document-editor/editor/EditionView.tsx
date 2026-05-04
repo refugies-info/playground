@@ -12,7 +12,6 @@ import { logger } from "@playground/shared-types";
 import { Loader2 } from "lucide-react";
 import { blocksToDirectiveMarkdown, markdownToBlocks } from "@/lib/markdown";
 import { useDocument } from "../DocumentContext";
-import { AiSuggestionBanner } from "./AiSuggestionBanner";
 import { type CustomEditor, customSchema } from "./blocks/custom-schema";
 import { EditorTabs } from "./EditorTabs";
 import { RawMarkdownView } from "./RawMarkdownView";
@@ -252,18 +251,6 @@ export function EditionView() {
 
   return (
     <div className="flex-1 overflow-hidden bg-white relative flex flex-col">
-      {isProcessing && (
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            <p className="text-sm font-medium text-gray-700">
-              L'IA travaille sur votre document...
-            </p>
-          </div>
-        </div>
-      )}
-
-      <AiSuggestionBanner />
       <EditorTabs />
       <div className="flex-1 overflow-y-auto">
         {isRawMarkdownMode ? (
