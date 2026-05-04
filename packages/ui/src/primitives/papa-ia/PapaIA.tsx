@@ -39,6 +39,7 @@ const papaIAVariants = cva(
           "bg-[var(--background-contrast-grey,#EEEEEE)]",
           "text-[var(--text-default-grey,#3A3A3A)]",
           "hover:opacity-80",
+          "animate-papa-ia-breathe",
         ].join(" "),
       },
     },
