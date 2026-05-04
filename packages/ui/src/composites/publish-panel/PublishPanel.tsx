@@ -337,10 +337,9 @@ export function PublishPanel({
       </PopoverTrigger>
 
       <PopoverContent
-        variant="panel"
         align={align}
         sideOffset={8}
-        className={className}
+        className={cn("w-[368px]", className)}
       >
         <PublishPanelContent
           isPublishing={isPublishing}

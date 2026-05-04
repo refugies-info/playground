@@ -58,11 +58,10 @@ export function AppSidebar({ userRole, userEmail }: AppSidebarProps) {
         </button>
       </PopoverTrigger>
       <PopoverContent
-        variant="default"
         side="top"
         align="start"
         sideOffset={8}
-        className="w-48"
+        className="w-48 p-2"
       >
         <Button
           variant="quatrieme"

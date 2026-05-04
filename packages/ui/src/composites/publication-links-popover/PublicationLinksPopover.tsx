@@ -195,7 +195,6 @@ export function PublicationLinksPopover({
 
       {/* w-[155px] pb-2 = largeur + padding-bottom Figma (layout_Z77DOF : 0 0 8px, width 155) */}
       <PopoverContent
-        variant="default"
         align="start"
         className="w-[155px] p-0 pb-2"
         onMouseEnter={handleOpen}
