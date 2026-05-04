@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { DocumentActions } from "../actions";
 import { useDocument } from "../DocumentContext";
 import { useMetadata } from "../metadata/MetadataContext";
@@ -22,18 +22,17 @@ interface EditorNavigationProps {
 }
 
 export function EditorNavigation({ from }: EditorNavigationProps) {
-  const { isComparisonMode, document } = useDocument();
+  const { isSourceOpen, document } = useDocument();
   const { hasMetadataErrors } = useMetadata();
   const pathname = usePathname();
   const fromSuffix = from ? `?from=${encodeURIComponent(from)}` : "";
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Auto-collapse when comparison mode is active
-  useEffect(() => {
-    if (isComparisonMode) {
-      setIsCollapsed(true);
-    }
-  }, [isComparisonMode]);
+  // Valeur dérivée — pas de useEffect+setState : évite un cycle de render supplémentaire
+  // Quand source se ferme, la nav revient à la préférence manuelle de l'utilisateur (isCollapsed)
+  const isEffectivelyCollapsed = isCollapsed || isSourceOpen;
+
+  const handleToggle = useCallback(() => setIsCollapsed((prev) => !prev), []);
 
   if (!document) return null;
 
@@ -45,22 +44,23 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
   return (
     <div
       className={cn(
-        "flex flex-col border-r bg-gray-50 transition-all duration-300 ease-in-out h-full overflow-hidden",
-        isCollapsed ? "w-16" : "w-64",
+        // Flex item dans la row — prend sa place dans le flux (pas d'overlap avec le contenu)
+        "flex-shrink-0 flex flex-col border-r bg-gray-50 transition-[width] duration-500 ease-expo-out overflow-hidden",
+        isEffectivelyCollapsed ? "w-16" : "w-64",
       )}
     >
       <div className="flex items-center p-4 border-b bg-white justify-between">
-        {!isCollapsed && (
+        {!isEffectivelyCollapsed && (
           <span className="font-semibold text-sm">Navigation</span>
         )}
         <Button
           variant="quatrieme"
           size="sm"
           className="h-8 w-8 px-0"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          disabled={isComparisonMode}
+          onClick={handleToggle}
+          disabled={isSourceOpen}
         >
-          {isCollapsed ? (
+          {isEffectivelyCollapsed ? (
             <ChevronRight className="w-4 h-4" />
           ) : (
             <ChevronLeft className="w-4 h-4" />
@@ -76,11 +76,11 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
               variant={isFicheActive ? "secondaire" : "quatrieme"}
               className={cn(
                 "justify-start flex gap-2 w-full",
-                isCollapsed && "justify-center px-0",
+                isEffectivelyCollapsed && "justify-center px-0",
               )}
             >
               <File className="w-4 h-4" />
-              {!isCollapsed && "Fiche "}
+              {!isEffectivelyCollapsed && "Fiche "}
             </Button>
           </Link>
 
@@ -89,11 +89,11 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
               variant={isMetadataActive ? "secondaire" : "quatrieme"}
               className={cn(
                 "justify-start flex gap-2 w-full relative",
-                isCollapsed && "justify-center px-0",
+                isEffectivelyCollapsed && "justify-center px-0",
               )}
             >
               <LayoutList className="w-4 h-4 shrink-0" />
-              {!isCollapsed && (
+              {!isEffectivelyCollapsed && (
                 <>
                   <span className="flex-1 text-left">Metadonnées</span>
                   {hasMetadataErrors && (
@@ -102,7 +102,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
                 </>
               )}
               {/* In collapsed mode: small dot indicator */}
-              {isCollapsed && hasMetadataErrors && (
+              {isEffectivelyCollapsed && hasMetadataErrors && (
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-500" />
               )}
             </Button>
@@ -113,11 +113,11 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
               variant={isComplianceActive ? "secondaire" : "quatrieme"}
               className={cn(
                 "justify-start flex gap-2 w-full",
-                isCollapsed && "justify-center px-0",
+                isEffectivelyCollapsed && "justify-center px-0",
               )}
             >
               <Gavel className="w-4 h-4" />
-              {!isCollapsed && "Arbitrage"}
+              {!isEffectivelyCollapsed && "Arbitrage"}
             </Button>
           </Link>
         </div>
@@ -125,7 +125,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
 
       {/* Action Buttons - Sticky Bottom */}
       <div className="sticky bottom-0 mt-auto">
-        <DocumentActions isCollapsed={isCollapsed} />
+        <DocumentActions isCollapsed={isEffectivelyCollapsed} />
       </div>
     </div>
   );

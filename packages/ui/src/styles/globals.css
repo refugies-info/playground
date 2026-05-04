@@ -25,6 +25,7 @@
 @import "@gouvfr/dsfr/dist/core/core.css" layer(dsfr);
 
 @import "./tailwind-theme.css";
+@import "./tailwind-animations.css";
 
 /* ─── Container — override Tailwind max-width ─── */
 @utility container {

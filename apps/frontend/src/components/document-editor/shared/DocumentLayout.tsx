@@ -3,11 +3,13 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { DocumentActionsProvider } from "../actions";
-import { AssistantPanel } from "../assistant/AssistantPanel";
 import { DocumentProvider } from "../DocumentContext";
 import { MetadataProvider } from "../metadata/MetadataContext";
+import { AIFloatingButton } from "./AIFloatingButton";
 import { EditorNavigation } from "./EditorNavigation";
 import { HeaderFicheConnected } from "./HeaderFicheConnected";
+import { SourcePanel } from "./SourcePanel";
+import { SourceToggleButton } from "./SourceToggleButton";
 
 // Disable SSR for DebugPanel to avoid hydration mismatch from Radix UI random IDs
 const DebugPanel = dynamic(
@@ -44,19 +46,27 @@ export function DocumentLayout(props: DocumentLayoutProps) {
           <DebugPanel />
           {/* Editor Area — fond blanc + arrondis fournis par le layout parent (main) */}
           <div className="flex flex-col flex-1 h-full overflow-hidden">
-            {/* Header fiche — remplace TopBar */}
+            {/* Header fiche */}
             <HeaderFicheConnected from={from} userEmail={userEmail} />
 
             {/* Main Content Area */}
-            <div className="flex flex-1 overflow-hidden">
-              {/* Left Editor Navigation */}
+            <div className="flex flex-row flex-1 relative overflow-hidden">
+              {/* Left Editor Navigation — flex item, prend sa place dans le flux */}
               <EditorNavigation from={from} />
 
-              {/* Center Editor / Content */}
-              {children}
+              {/* Center Editor / Content — flex-1 flex-col pour propager la hauteur à EditionView */}
+              <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+                {children}
+              </div>
 
-              {/* Right Chat */}
-              <AssistantPanel />
+              {/* Source Panel — en flux à droite, pousse le contenu vers la gauche */}
+              <SourcePanel />
+
+              {/* Source Toggle Button — absolute top-right, figé dans le content row */}
+              <SourceToggleButton />
+
+              {/* AI Floating Button — absolute bottom-right */}
+              <AIFloatingButton />
             </div>
           </div>
         </DocumentActionsProvider>

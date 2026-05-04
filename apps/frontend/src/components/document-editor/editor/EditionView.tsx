@@ -8,20 +8,19 @@ import { getCustomSlashMenuItems } from "./slash-menu-config";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { logger } from "@playground/shared-types";
+
 import { Loader2 } from "lucide-react";
 import { blocksToDirectiveMarkdown, markdownToBlocks } from "@/lib/markdown";
 import { useDocument } from "../DocumentContext";
-import { AiSuggestionBanner } from "./AiSuggestionBanner"; // Keeping existing import
+import { AiSuggestionBanner } from "./AiSuggestionBanner";
 import { type CustomEditor, customSchema } from "./blocks/custom-schema";
 import { EditorTabs } from "./EditorTabs";
-import { OriginalContentView } from "./OriginalContentView";
 import { RawMarkdownView } from "./RawMarkdownView";
 
 export function EditionView() {
   const {
     document,
     updateContent,
-    isComparisonMode,
     isProcessing,
     isRawMarkdownMode,
     setDebugBlocks,
@@ -38,22 +37,14 @@ export function EditionView() {
   const isUpdating = useRef(false);
   const editorJustInitialized = useRef(false);
 
-  // Check if document is compliant (editable)
   const isCompliant = document?.complianceStatus === "compliant";
-
-  // Initialize (or re-initialize) editor when needed
-  // We destroy the editor when in Raw Mode to ensure a fresh state when switching back.
-  // Delayed content hydration state
   const [isEditorReady, setIsEditorReady] = useState(false);
   // biome-ignore lint/suspicious/noExplicitAny: BlockNote content type
   const pendingInitialContent = useRef<any[] | null>(null);
 
-  // Initialize (or re-initialize) editor when needed
-  // We destroy the editor when in Raw Mode to ensure a fresh state when switching back.
   // 1. Lifecycle Effect: Editor Initialization & Destruction
   useEffect(() => {
-    // SWITCHING TO RAW MODE:
-    // We must capture the current state and destroy the visual editor.
+    // SWITCHING TO RAW MODE: capture state et destruction de l'éditeur visuel
     if (isRawMarkdownMode) {
       if (editor) {
         // Snapshot current state to ensure Raw View has the latest data
@@ -74,8 +65,6 @@ export function EditionView() {
       return;
     }
 
-    // NORMAL MODE:
-    // If editor already exists, we don't need to re-init
     if (editor) {
       return;
     }
@@ -86,24 +75,20 @@ export function EditionView() {
       try {
         if (!isMounted) return;
 
-        // 1. Prepare initial content
-        // We use the current editorialContent from context (which might have been updated by Raw Mode)
         const initialMarkdown = document?.editorialContent || "";
         const initialBlocks = await markdownToBlocks(initialMarkdown);
 
         if (!isMounted) return;
 
-        // 2. Store content for later hydration
         pendingInitialContent.current = initialBlocks;
 
-        // 3. Create Editor with INITIAL EMPTY content
-        // initializing with complex custom NodeViews directly can cause "Cannot find node position" errors.
+        // Initialisation avec contenu vide — évite les erreurs "Cannot find node position"
+        // avec les custom NodeViews complexes lors d'une init directe
         const newEditor = BlockNoteEditor.create({
           schema: customSchema,
           initialContent: [{ type: "paragraph", content: [] }],
         });
 
-        // 4. Prime the sync ref
         const standardizedMarkdown = blocksToDirectiveMarkdown(
           // biome-ignore lint/suspicious/noExplicitAny: BlockNote types compatibility
           initialBlocks as any,
@@ -111,11 +96,8 @@ export function EditionView() {
         lastSyncedContent.current = standardizedMarkdown;
         editorJustInitialized.current = true;
 
-        // 5. Set editor (triggers mount)
         setEditor(newEditor as unknown as CustomEditor);
-        // Do NOT set isEditorReady yet - wait for hydration (Effect 2)
-
-        // Also ensure raw markdown state is sync
+        // Ne pas mettre isEditorReady ici — attend la hydratation (Effect 2)
         setRawMarkdown(standardizedMarkdown);
       } catch (error) {
         logger.error(error, "Error initializing editor:");
@@ -154,17 +136,6 @@ export function EditionView() {
     }
   }, [editor, isEditorReady]);
 
-  // Handle Comparison Mode Switch: Force Re-initialization
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Trigger reset on mode change
-  useEffect(() => {
-    if (editor) {
-      // Force reset to safety pattern (Init Empty -> Hydrate)
-      // This prevents "Cannot find node position" when moving Editor to new part of DOM
-      setEditor(null);
-      setIsEditorReady(false);
-    }
-  }, [isComparisonMode]);
-
   // 3. Sync Effect: Pushes changes to global context
   useEffect(() => {
     if (!editor || document?.aiSuggestion) return;
@@ -178,7 +149,6 @@ export function EditionView() {
         lastSyncedContent.current = markdown;
         updateContent(markdown);
 
-        // Push to debug context for real-time sync ONLY in development and when panel is open
         if (process.env.NODE_ENV === "development" && showDebug) {
           setDebugBlocks([...editor.document]);
         }
@@ -200,7 +170,7 @@ export function EditionView() {
     setDebugBlocks,
   ]);
 
-  // 3.5 Initial Debug Sync: Population of debug state when panel opens (DEV ONLY)
+  // Sync initial debug state quand le panel s'ouvre (DEV uniquement)
   useEffect(() => {
     if (editor && showDebug && process.env.NODE_ENV === "development") {
       setDebugBlocks([...editor.document]);
@@ -262,11 +232,8 @@ export function EditionView() {
     isRawMarkdownMode,
   ]);
 
-  // Handle raw markdown content changes
   const handleRawMarkdownChange = async (newMarkdown: string) => {
     setRawMarkdown(newMarkdown);
-
-    // Update the document context with the new markdown (marks as dirty)
     updateContent(newMarkdown);
   };
 
@@ -283,82 +250,8 @@ export function EditionView() {
     );
   }
 
-  // Render side-by-side view in comparison mode
-  if (isComparisonMode && document?.ingestionContent) {
-    return (
-      <div className="flex-1 overflow-hidden bg-white relative flex flex-col">
-        {/* Processing overlay */}
-        {isProcessing && (
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-              <p className="text-sm font-medium text-gray-700">
-                L'IA travaille sur votre document...
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* AI Suggestion Banner */}
-        <AiSuggestionBanner />
-
-        {/* Tab Bar - same as normal mode */}
-        <EditorTabs />
-
-        {/* Comparison content */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Original content on the left */}
-          <OriginalContentView />
-
-          {/* Rewritten content on the right */}
-          <div className="flex-1 overflow-y-auto bg-white">
-            <div className="sticky top-0 z-10 bg-white border-b px-8 py-4">
-              <h3 className="font-semibold text-sm text-gray-700">
-                Contenu modifié
-              </h3>
-              <p className="text-xs text-gray-500">Editable</p>
-            </div>
-            {isRawMarkdownMode ? (
-              <RawMarkdownView
-                markdownContent={rawMarkdown}
-                onContentChange={handleRawMarkdownChange}
-                readOnly={!isCompliant}
-              />
-            ) : (
-              <div className="p-8">
-                <div className="max-w-3xl mx-auto">
-                  {editor ? (
-                    <BlockNoteView
-                      editor={editor}
-                      theme="light"
-                      editable={
-                        isCompliant && !isProcessing && !document?.aiSuggestion
-                      }
-                      slashMenu={false}
-                    >
-                      <SuggestionMenuController
-                        triggerCharacter={"/"}
-                        getItems={async (query) =>
-                          getCustomSlashMenuItems(editor, query)
-                        }
-                      />
-                    </BlockNoteView>
-                  ) : (
-                    <div />
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Normal single-editor view with tabs
   return (
     <div className="flex-1 overflow-hidden bg-white relative flex flex-col">
-      {/* Processing overlay */}
       {isProcessing && (
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
@@ -370,13 +263,8 @@ export function EditionView() {
         </div>
       )}
 
-      {/* AI Suggestion Banner */}
       <AiSuggestionBanner />
-
-      {/* Tab Bar */}
       <EditorTabs />
-
-      {/* Content Area */}
       <div className="flex-1 overflow-y-auto">
         {isRawMarkdownMode ? (
           <RawMarkdownView
@@ -385,7 +273,7 @@ export function EditionView() {
             readOnly={!isCompliant}
           />
         ) : (
-          <div className="p-8">
+          <div className="py-8">
             <div className="max-w-3xl mx-auto">
               {editor ? (
                 <BlockNoteView

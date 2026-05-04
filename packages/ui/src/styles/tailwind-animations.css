@@ -1,0 +1,21 @@
+/**
+ * Animation tokens — courbes et durées personnalisées
+ *
+ * Convention Tailwind v4 : --ease-{name} → classe `ease-{name}`
+ *
+ * Famille expo : démarrage rapide, décélération douce (friction naturelle).
+ * Utilisé pour les panels, drawers, menus — tout ce qui "glisse" dans l'UI.
+ *
+ * Référence : https://easings.net/#easeOutExpo
+ */
+
+@theme {
+  /* Expo out — ouverture de panels/drawers (démarre vite, atterrit en douceur) */
+  --ease-expo-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Expo in — fermeture (démarre doucement, finit vite) */
+  --ease-expo-in: cubic-bezier(0.7, 0, 0.84, 0);
+
+  /* Expo in-out — transitions symétriques (ex: tabs, toggles) */
+  --ease-expo-in-out: cubic-bezier(0.87, 0, 0.13, 1);
+}

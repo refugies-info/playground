@@ -20,41 +20,21 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
-import { setSidebarCollapsed } from "@/app/actions/sidebar";
+import { useSidebar } from "@/contexts/SidebarContext";
 import { createClient } from "@/lib/supabase/client";
 
 export interface AppSidebarProps {
   userRole?: string | null;
   userEmail?: string | null;
-  /** État initial lu depuis le cookie côté serveur — évite le flash au chargement */
-  initialCollapsed?: boolean;
 }
 
-/**
- * AppSidebar — Sidebar de navigation globale (layout principal)
- *
- * La préférence replié/déplié est persistée dans un cookie via la Server Action
- * `setSidebarCollapsed`. L'état initial est lu côté serveur dans le layout et
- * passé via `initialCollapsed` — zéro flash au chargement.
- */
-export function AppSidebar({
-  userRole,
-  userEmail,
-  initialCollapsed = false,
-}: AppSidebarProps) {
+/** Sidebar de navigation globale. État replié/déplié persisté en cookie, lu côté serveur → zéro flash. */
+export function AppSidebar({ userRole, userEmail }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { isCollapsed, setIsCollapsed } = useSidebar();
 
-  // Initialisé depuis le cookie lu côté serveur → pas de flash au chargement
-  const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
-
-  const handleToggle = () => {
-    const next = !isCollapsed;
-    setIsCollapsed(next);
-    // Fire-and-forget : persiste dans un cookie lisible côté serveur
-    setSidebarCollapsed(next);
-  };
+  const handleToggle = () => setIsCollapsed(!isCollapsed);
 
   const handleLogout = async () => {
     const supabase = createClient();

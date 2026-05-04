@@ -53,8 +53,8 @@ interface DocumentContextType {
   debugBlocks: unknown[] | null;
   setDebugBlocks: (blocks: unknown[]) => void;
   rollbackToOriginal: () => void;
-  isComparisonMode: boolean;
-  setIsComparisonMode: (mode: boolean) => void;
+  isSourceOpen: boolean;
+  setIsSourceOpen: (open: boolean) => void;
   isProcessing: boolean;
   setIsProcessing: (processing: boolean) => void;
   isLoading: boolean;
@@ -80,7 +80,7 @@ export function DocumentProvider({
   );
   const [showDebug, setShowDebug] = useState(false);
   const [isLoading] = useState(false);
-  const [isComparisonMode, setIsComparisonMode] = useState(false);
+  const [isSourceOpen, setIsSourceOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRawMarkdownMode, setIsRawMarkdownMode] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -166,8 +166,8 @@ export function DocumentProvider({
         acceptAiSuggestion,
         rejectAiSuggestion,
         rollbackToOriginal,
-        isComparisonMode,
-        setIsComparisonMode,
+        isSourceOpen,
+        setIsSourceOpen,
         isProcessing,
         setIsProcessing,
         isLoading,
