@@ -3,11 +3,19 @@
 import {
   FrArrowRightSLineDouble,
   RiArrowGoBackLine,
+  RiCheckLine,
+  RiCloseLine,
   RiExternalLinkLine,
 } from "@playground/ui/icons";
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  PopoverTrigger,
+} from "@playground/ui/overlays";
 import { Button } from "@playground/ui/primitives";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useDocument } from "../DocumentContext";
 
@@ -40,10 +48,17 @@ export function SourcePanel() {
 
   const lienSource = document?.metadata?.lien_source as string | undefined;
 
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
   const handleClose = useCallback(
     () => setIsSourceOpen(false),
     [setIsSourceOpen],
   );
+
+  const handleConfirmRestore = useCallback(() => {
+    rollbackToOriginal();
+    setIsConfirmOpen(false);
+  }, [rollbackToOriginal]);
 
   const handleRco = useCallback(() => {
     if (!lienSource) return;
@@ -73,30 +88,67 @@ export function SourcePanel() {
             <FrArrowRightSLineDouble size={24} aria-hidden />
           </Button>
 
-          {/* Actions droite — Restaurer + RCO (Taille=S, Noir=on, border, icône droite) */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="quatrieme"
-              size="sm"
-              onClick={rollbackToOriginal}
-              disabled={!document?.ingestionContent}
-              rightIcon={RiArrowGoBackLine}
-              className="border border-border text-[var(--text-action-high-grey)]"
-            >
-              Restaurer
-            </Button>
+          {/* Actions droite — Restaurer + RCO. PopoverAnchor sur le div entier
+              pour que align="end" se cale sur le bord droit du bloc, pas juste du bouton */}
+          <Popover open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+            <PopoverAnchor asChild>
+              <div className="flex items-center gap-2">
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="quatrieme"
+                    size="sm"
+                    disabled={!document?.ingestionContent}
+                    rightIcon={RiArrowGoBackLine}
+                    className="border border-border text-[var(--text-action-high-grey)]"
+                  >
+                    Restaurer
+                  </Button>
+                </PopoverTrigger>
 
-            <Button
-              variant="quatrieme"
-              size="sm"
-              onClick={handleRco}
-              disabled={!lienSource}
-              rightIcon={RiExternalLinkLine}
-              className="border border-border text-[var(--text-action-high-grey)]"
+                <Button
+                  variant="quatrieme"
+                  size="sm"
+                  onClick={handleRco}
+                  disabled={!lienSource}
+                  rightIcon={RiExternalLinkLine}
+                  className="border border-border text-[var(--text-action-high-grey)]"
+                >
+                  RCO
+                </Button>
+              </div>
+            </PopoverAnchor>
+
+            <PopoverContent
+              align="end"
+              className="w-[388px] flex flex-col gap-7"
             >
-              RCO
-            </Button>
-          </div>
+              <div className="flex flex-col gap-4 text-base text-[var(--text-default-grey,#3a3a3a)]">
+                <p>Êtes-vous sûr de vouloir restaurer la source RCO ?</p>
+                <p>
+                  Restaurer la source RCO écrasera les modifications apportées
+                  dans l'éditeur de texte.
+                </p>
+              </div>
+              <div className="flex justify-end gap-4">
+                <Button
+                  variant="tertiaire"
+                  size="sm"
+                  rightIcon={RiCloseLine}
+                  onClick={() => setIsConfirmOpen(false)}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  variant="primaire"
+                  size="sm"
+                  rightIcon={RiCheckLine}
+                  onClick={handleConfirmRestore}
+                >
+                  Restaurer
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* px-10 sur .bn-editor directement — évite l'empilement avec le padding interne de BlockNote */}

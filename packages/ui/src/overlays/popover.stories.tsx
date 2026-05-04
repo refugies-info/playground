@@ -5,86 +5,115 @@ import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 /**
  * Popover — Overlay générique basé sur Radix UI.
  *
- * Le primitif est intentionnellement non-opinioné : pas de shadow ni de
- * border par défaut. Les styles métier sont passés via `className` sur
- * `PopoverContent` par le consommateur (ex : PublishPanel).
+ * **Look fixe** : border bleue `--border-default-blue-france`, shadow sm,
+ * fond blanc, radius 2px, `p-6` par défaut.
+ *
+ * Surcharger via `className` si besoin (`p-2`, `p-0`…).
+ * Positionnement via `align` et `side`.
  */
 const meta: Meta<typeof PopoverContent> = {
   title: "Overlays/Popover",
   component: PopoverContent,
   tags: ["autodocs"],
   parameters: { layout: "centered" },
+  argTypes: {
+    align: {
+      control: "inline-radio",
+      options: ["start", "center", "end"],
+      description: "Alignement horizontal par rapport au trigger",
+      table: { defaultValue: { summary: "center" } },
+    },
+    side: {
+      control: "inline-radio",
+      options: ["top", "bottom", "left", "right"],
+      description: "Côté d'apparition",
+      table: { defaultValue: { summary: "bottom" } },
+    },
+    sideOffset: {
+      control: { type: "range", min: 0, max: 32, step: 2 },
+      description: "Distance (px) entre le trigger et le popover",
+      table: { defaultValue: { summary: "8" } },
+    },
+    className: {
+      control: "text",
+      description: "Classes Tailwind pour surcharger padding, largeur, layout",
+    },
+    // Masquer les props internes Radix peu utiles dans le panel
+    asChild: { table: { disable: true } },
+    forceMount: { table: { disable: true } },
+    onOpenAutoFocus: { table: { disable: true } },
+    onCloseAutoFocus: { table: { disable: true } },
+    onEscapeKeyDown: { table: { disable: true } },
+    onPointerDownOutside: { table: { disable: true } },
+    onFocusOutside: { table: { disable: true } },
+    onInteractOutside: { table: { disable: true } },
+    hideWhenDetached: { table: { disable: true } },
+    avoidCollisions: { table: { disable: true } },
+    collisionBoundary: { table: { disable: true } },
+    collisionPadding: { table: { disable: true } },
+    arrowPadding: { table: { disable: true } },
+    sticky: { table: { disable: true } },
+    updatePositionStrategy: { table: { disable: true } },
+  },
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Popover basique avec contenu texte */
+/** Story interactive — utiliser les controls pour tester `align`, `side`, `sideOffset` */
 export const Default: Story = {
-  render: () => (
-    <Popover>
+  args: {
+    align: "center",
+    side: "bottom",
+    sideOffset: 8,
+    className: "w-64",
+  },
+  render: ({ align, side, sideOffset, className }) => (
+    <Popover defaultOpen>
       <PopoverTrigger asChild>
         <Button>Ouvrir</Button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 rounded bg-white p-4 shadow-md border border-[var(--border-default-grey,#DDDDDD)]">
-        <p className="text-sm text-gray-700">Contenu du popover.</p>
+      <PopoverContent
+        align={align}
+        side={side}
+        sideOffset={sideOffset}
+        className={className}
+      >
+        <p className="text-sm text-[var(--text-default-grey,#3a3a3a)]">
+          Contenu du popover.
+        </p>
       </PopoverContent>
     </Popover>
   ),
 };
 
 /**
- * Popover avec style PublishPanel — reproduit le Figma (node 1824-25605) :
- *   border #dddddd (--border-default-grey), pas de shadow,
- *   border-radius 4px, padding 24px, width 368px.
+ * Confirmation — pattern dialogue de confirmation.
+ * Deux blocs texte (gap-4), boutons Annuler + Confirmer.
  */
-export const StylePublishPanel: Story = {
-  name: "Style PublishPanel (Figma)",
+export const Confirmation: Story = {
   render: () => (
     <Popover defaultOpen>
       <PopoverTrigger asChild>
-        <Button variant="primaire">Publier</Button>
+        <Button variant="quatrieme" size="sm">
+          Action irréversible
+        </Button>
       </PopoverTrigger>
-      <PopoverContent
-        variant="panel"
-        align="end"
-        sideOffset={8}
-        className="flex flex-col gap-6"
-      >
-        <p className="text-sm text-[#3a3a3a]">
-          Êtes-vous sûr de vouloir publier cette fiche ? Elle sera visible par
-          tous les utilisateurs de Réfugiés.info.
-        </p>
+      <PopoverContent align="end" className="w-[388px] flex flex-col gap-7">
+        <div className="flex flex-col gap-4 text-base text-[var(--text-default-grey,#3a3a3a)]">
+          <p>Êtes-vous sûr de vouloir effectuer cette action ?</p>
+          <p>
+            Cette opération est irréversible et écrasera les données existantes.
+          </p>
+        </div>
         <div className="flex justify-end gap-4">
           <Button variant="tertiaire" size="sm">
             Annuler
           </Button>
           <Button variant="primaire" size="sm">
-            Publier
+            Confirmer
           </Button>
         </div>
-      </PopoverContent>
-    </Popover>
-  ),
-};
-
-/** Popover aligné à gauche du trigger */
-export const AlignStart: Story = {
-  name: "Align start",
-  render: () => (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="secondaire">Options</Button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        className="w-48 rounded bg-white p-3 border border-[var(--border-default-grey,#DDDDDD)] shadow-md"
-      >
-        <ul className="text-sm space-y-2 text-gray-700">
-          <li>Option 1</li>
-          <li>Option 2</li>
-          <li>Option 3</li>
-        </ul>
       </PopoverContent>
     </Popover>
   ),

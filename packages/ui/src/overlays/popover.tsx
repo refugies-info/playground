@@ -1,23 +1,14 @@
 "use client";
 
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "../utils/cn";
 
 /**
  * Popover — Wrapper Radix UI générique.
  *
- * `PopoverContent` expose un `variant` pour les styles métier courants :
- *   - `default` : neutre (pas de border ni shadow prédéfinis)
- *   - `panel`   : style PublishPanel — Figma node 1824-25605
- *                 border #dddddd, radius 4px, padding 24px, width 368px
- *
- * Usage avec variant :
- *   <PopoverContent variant="panel" align="end">…</PopoverContent>
- *
- * Usage custom (className libre) :
- *   <PopoverContent className="w-48 p-3 border shadow-md">…</PopoverContent>
+ * Look fixe (Figma) : border bleue `--border-default-blue-france`, shadow sm,
+ * fond blanc, radius 2px, `p-6` par défaut. Surcharger via `className` si besoin (`p-2`, `p-0`…).
  */
 
 const Popover = PopoverPrimitive.Root;
@@ -25,47 +16,30 @@ const PopoverTrigger = PopoverPrimitive.Trigger;
 const PopoverAnchor = PopoverPrimitive.Anchor;
 const PopoverClose = PopoverPrimitive.Close;
 
-const popoverContentVariants = cva(
-  // Base : positionnement + animations Radix + look par défaut (Figma node 1842-8956)
-  // border 1px #dddddd · radius 4px · fond blanc · padding 8px
-  [
-    "z-50 outline-none",
-    "bg-white rounded-xs border border-[var(--border-default-grey,#dddddd)] p-2",
-    "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
-    "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
-    "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
-    "data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2",
-  ],
-  {
-    variants: {
-      variant: {
-        /** Look par défaut (Figma 1842-8956) — fond blanc, border gris, radius 4px, pb-2 */
-        default: "",
-        /**
-         * Style PublishPanel — Figma node 1824-25605
-         * padding 24px · width 368px (surcharge pb-2 de la base)
-         */
-        panel: "w-[368px] p-6",
-      },
-    },
-    defaultVariants: { variant: "default" },
-  },
-);
+const popoverContentBase = [
+  "z-50 outline-none p-6",
+  "bg-white rounded-[2px]",
+  "border border-[var(--border-default-blue-france,#6a6af4)]",
+  "shadow-[0px_2px_6px_0px_rgba(0,0,18,0.16)]",
+  "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+  "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
+  "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
+  "data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2",
+].join(" ");
 
 interface PopoverContentProps
-  extends React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>,
-    VariantProps<typeof popoverContentVariants> {}
+  extends React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> {}
 
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
   PopoverContentProps
->(({ className, variant, align = "center", sideOffset = 8, ...props }, ref) => (
+>(({ className, align = "center", sideOffset = 8, ...props }, ref) => (
   <PopoverPrimitive.Portal>
     <PopoverPrimitive.Content
       ref={ref}
       align={align}
       sideOffset={sideOffset}
-      className={cn(popoverContentVariants({ variant }), className)}
+      className={cn(popoverContentBase, className)}
       {...props}
     />
   </PopoverPrimitive.Portal>
