@@ -15,8 +15,7 @@
   "scripts": {
     "build": "tsc",
     "check:types": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests",
-    "dev:workflow": "PORT=3002 workflow inspect runs --web"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@playground/agents": "workspace:*",

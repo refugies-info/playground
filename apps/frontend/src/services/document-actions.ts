@@ -10,7 +10,6 @@ import { createSupabaseServerClient } from "@playground/supabase";
 import {
   archiveWorkflow,
   forceArbitrationWorkflow,
-  forceEditorialWorkflow,
   forceMetadataOnlyWorkflow,
   publicationWorkflow,
   saveWorkflow,
@@ -622,82 +621,6 @@ export async function triggerForceMetadataOnly(workflowId: string): Promise<{
     return {
       success: false,
       error: "Erreur inattendue lors du démarrage de la régénération",
-    };
-  }
-}
-
-/**
- * Déclenche la réécriture IA du document et attend le résultat directement.
- *
- * Le workflow Vercel appelle Letta (/redaction) et renvoie le contenu réécrit.
- * On attend via `run.returnValue` avec un timeout de 55s (limite Vercel).
- *
- * Si Letta répond à temps → le contenu est retourné directement au client
- * (pas de Realtime, pas de polling).
- *
- * Si le timeout est atteint → erreur claire, le workflow continue en arrière-plan.
- *
- * @param workflowId - L'ID du workflow (document) à réécrire.
- */
-export async function triggerEditorialRewrite(workflowId: string): Promise<{
-  success: boolean;
-  content?: string;
-  error?: string;
-}> {
-  try {
-    const auth = await getAuthorizedSession(workflowId, "modify");
-    if (auth.errorResponse) return auth.errorResponse;
-
-    if (!forceEditorialWorkflow) {
-      logger.error("forceEditorialWorkflow is undefined - cannot start");
-      return { success: false, error: "Workflow non disponible" };
-    }
-
-    const result = await start(forceEditorialWorkflow, [workflowId]);
-
-    logger.info(
-      { workflowRunId: result.runId, workflowId },
-      "Editorial rewrite workflow started — awaiting returnValue",
-    );
-
-    // Timeout calé à 270s pour rester sous maxDuration=300s (30s de marge).
-    // Le layout /documents/[id] exporte maxDuration=300 pour couvrir Letta (1-3 min).
-    const MAX_WAIT_MS = 270_000;
-    const run = getRun<{ content: string }>(result.runId);
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("TIMEOUT")), MAX_WAIT_MS),
-    );
-
-    const { content } = await Promise.race([run.returnValue, timeoutPromise]);
-
-    logger.info(
-      {
-        workflowRunId: result.runId,
-        workflowId,
-        contentLength: content.length,
-      },
-      "Editorial rewrite completed",
-    );
-
-    return { success: true, content };
-  } catch (error) {
-    const isTimeout = error instanceof Error && error.message === "TIMEOUT";
-
-    if (isTimeout) {
-      logger.warn({ workflowId }, "Editorial rewrite timed out (>270s)");
-      return {
-        success: false,
-        error:
-          "La réécriture a dépassé 4 minutes. Vérifiez les logs Letta et réessayez.",
-      };
-    }
-
-    const message = error instanceof Error ? error.message : "Erreur inconnue";
-    logger.error({ workflowId, message }, "Editorial rewrite workflow failed");
-    return {
-      success: false,
-      error:
-        "L'IA n'a pas pu améliorer le document. Réessayez dans quelques instants.",
     };
   }
 }

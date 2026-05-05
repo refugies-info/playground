@@ -43,7 +43,9 @@ interface DocumentActionsContextValue {
   isPreviewing: boolean;
 
   // Save
-  saveDocument: () => Promise<{ success: boolean; error?: string }>;
+  saveDocument: (
+    contentOverride?: string,
+  ) => Promise<{ success: boolean; error?: string }>;
   isSaving: boolean;
 
   // Publish
@@ -137,65 +139,68 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
   // Validates H1 presence, resets dirty state, and optimistically updates title.
   // =============================================================================
 
-  const saveDocument = useCallback(async () => {
-    if (!document?.id) {
-      return { success: false, error: "Document non trouvé" };
-    }
-
-    // Validate that the document has a main title (H1)
-    const h1Exists = await hasH1(document.editorialContent || "");
-    if (!h1Exists) {
-      alert(
-        "Votre document doit contenir un titre principal (ex: # Mon Titre).\nCelui-ci est nécessaire pour identifier la fiche.",
-      );
-      return { success: false, error: "Titre principal manquant" };
-    }
-
-    setIsSaving(true);
-    try {
-      const result = await saveDocumentAction(
-        document.id,
-        document.editorialContent || "",
-      );
-
-      if (result.success) {
-        setIsDirty(false);
-
-        // Optimistically update local title and metadata from content
-        const newTitleFromMarkdown = await extractTitleFromMarkdown(
-          document.editorialContent || "",
-        );
-        const effectiveTitle =
-          newTitleFromMarkdown || document.title || "Sans titre";
-        setDocument((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            title: effectiveTitle,
-            workStatus: "draft" as WorkStatus,
-            metadata: {
-              ...prev.metadata,
-              title: effectiveTitle,
-              "intitule-formation": effectiveTitle,
-            },
-          };
-        });
+  const saveDocument = useCallback(
+    async (contentOverride?: string) => {
+      if (!document?.id) {
+        return { success: false, error: "Document non trouvé" };
       }
 
-      return result;
-    } catch (error) {
-      logger.error(error, "Error saving document");
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Erreur lors de la sauvegarde",
-      };
-    } finally {
-      setIsSaving(false);
-    }
-  }, [document, setDocument, setIsDirty]);
+      // contentOverride permet d'éviter le problème de stale closure :
+      // quand on accepte une suggestion IA, le state n'est pas encore mis à jour
+      // au moment où saveDocument est appelé — on passe le contenu explicitement.
+      const content = contentOverride ?? document.editorialContent ?? "";
+
+      // Validate that the document has a main title (H1)
+      const h1Exists = await hasH1(content);
+      if (!h1Exists) {
+        alert(
+          "Votre document doit contenir un titre principal (ex: # Mon Titre).\nCelui-ci est nécessaire pour identifier la fiche.",
+        );
+        return { success: false, error: "Titre principal manquant" };
+      }
+
+      setIsSaving(true);
+      try {
+        const result = await saveDocumentAction(document.id, content);
+
+        if (result.success) {
+          setIsDirty(false);
+
+          // Optimistically update local title and metadata from content
+          const newTitleFromMarkdown = await extractTitleFromMarkdown(content);
+          const effectiveTitle =
+            newTitleFromMarkdown || document.title || "Sans titre";
+          setDocument((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              title: effectiveTitle,
+              workStatus: "draft" as WorkStatus,
+              metadata: {
+                ...prev.metadata,
+                title: effectiveTitle,
+                "intitule-formation": effectiveTitle,
+              },
+            };
+          });
+        }
+
+        return result;
+      } catch (error) {
+        logger.error(error, "Error saving document");
+        return {
+          success: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Erreur lors de la sauvegarde",
+        };
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [document, setDocument, setIsDirty],
+  );
 
   // =============================================================================
   // Publish
