@@ -38,25 +38,28 @@ import { forceEditorialWorkflow } from "@playground/workflows";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { start } from "workflow/api";
+import { z } from "zod";
 import { getUserProfile } from "@/lib/auth";
 import { verifyWorkflowPermission } from "@/services/permission-helper";
 
+const PostBodySchema = z.object({
+  workflowId: z.string().uuid(),
+});
+
 export async function POST(request: NextRequest) {
   try {
-    // ─── 1. Parse body ────────────────────────────────────────────────────
-    const body = await request.json().catch(() => null);
-    // biome-ignore lint/suspicious/noExplicitAny: body from JSON.parse is any
-    const workflowId =
-      typeof (body as any)?.workflowId === "string"
-        ? String((body as any).workflowId)
-        : null;
+    // ─── 1. Parse + valider le body ───────────────────────────────────────
+    const raw = await request.json().catch(() => null);
+    const parsed = PostBodySchema.safeParse(raw);
 
-    if (!workflowId) {
+    if (!parsed.success) {
       return NextResponse.json(
         { error: "workflowId manquant ou invalide" },
         { status: 400 },
       );
     }
+
+    const { workflowId } = parsed.data;
 
     // ─── 2. Auth ──────────────────────────────────────────────────────────
     const cookieStore = await cookies();
