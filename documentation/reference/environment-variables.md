@@ -112,8 +112,8 @@ Environment variables are configuration values that change between environments 
 - **Type**: Number
 - **Required**: No
 - **Default**: `50`
-- **Description**: Maximum size of the editorial backlog (records with Letta reports waiting for editorial work)
-- **Usage**: Cost control - the workflow won't process new records through Letta if the backlog exceeds this limit. Records are counted when they have `ingestion_report_id IS NOT NULL` and `compliance_status = 'compliant'`.
+- **Description**: Maximum number of records claimed per cron execution
+- **Usage**: Each nightly cron run claims up to this many candidate records (`compliance_status IS NULL`) for audit + metadata processing through Letta.
 
 ---
 
