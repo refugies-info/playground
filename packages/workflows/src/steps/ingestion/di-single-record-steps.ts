@@ -29,7 +29,11 @@ import { fetchAllDiServiceIds, getSupabaseClient } from "./utils";
 const envVal = Number(process.env.MAX_EDITORIAL_BACKLOG);
 
 /**
- * Maximum number of records claimed per cron run. Defaults to 50.
+ * Maximum number of records that can have Letta reports waiting for editorial work.
+ * Controlled via MAX_EDITORIAL_BACKLOG env var. Defaults to 50.
+ *
+ * This is a cost-control measure: we only process records through Letta if there
+ * are fewer than this many records already processed and waiting for editorial work.
  */
 const MAX_EDITORIAL_BACKLOG = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
 

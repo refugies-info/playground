@@ -857,10 +857,12 @@ export type Database = {
         Args: { p_service_ids: string[] }
         Returns: number
       }
+      count_di_editorial_backlog: {
+        Args: { p_service_ids: string[] }
+        Returns: number
+      }
       get_my_language: { Args: never; Returns: string }
       get_my_role: { Args: never; Returns: string }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
       update_metadata_field: {
         Args: {
           delete_key?: boolean
