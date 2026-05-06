@@ -52,11 +52,10 @@ export function DocumentsList({
   const router = useRouter();
 
   // Use the shared hook for filter state + URL sync
-  const { filters, updateFilter, clearFilters, hasActiveFilters } =
-    useUrlFilters({
-      basePath: "/documents",
-      initialFilters,
-    });
+  const { filters, updateFilter } = useUrlFilters({
+    basePath: "/documents",
+    initialFilters,
+  });
 
   // Track documents locally to detect changes for animation
   const [documents, setDocuments] = useState(initialDocuments);

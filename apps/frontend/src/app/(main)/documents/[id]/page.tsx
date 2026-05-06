@@ -1,5 +1,5 @@
-import { EditionView } from "@/components/document-editor/editor";
+import { EditionViewDynamic } from "@/components/document-editor/editor/EditionViewDynamic";
 
 export default function DocumentPage() {
-  return <EditionView />;
+  return <EditionViewDynamic />;
 }

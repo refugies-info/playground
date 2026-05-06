@@ -99,7 +99,7 @@ export function DocumentProvider({
   //   - the active AI rewrite runId changes (start, cancel, accept, reject)
   //     so the AIFloatingButton resume logic sees an up-to-date activeRunId
   //     (e.g. after revalidatePath following a DELETE, or in multi-tab scenarios).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only re-sync on navigation, new metadata report, or activeRunId change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only re-sync on navigation, new metadata report, activeRunId, or onlineStatus change
   useEffect(() => {
     if (initialData) {
       // Préserver aiSuggestion : c'est un état transient client non présent dans
@@ -118,6 +118,7 @@ export function DocumentProvider({
     initialData?.id,
     initialData?.metadataReport?.id,
     initialData?.activeRunId,
+    initialData?.onlineStatus,
   ]);
 
   // Update content and mark as dirty (only if content actually changed)

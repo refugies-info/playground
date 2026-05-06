@@ -67,7 +67,7 @@ export function SourcePanel() {
 
   return (
     <div
-      className={`relative z-10 flex-shrink-0 flex flex-col h-full bg-white rounded-tl-[16px] overflow-hidden transition-[width,border-width,box-shadow] duration-500 ease-expo-out ${
+      className={`sticky top-20 self-start h-[calc(100vh-5rem)] z-10 flex-shrink-0 flex flex-col bg-white rounded-tl-[16px] overflow-hidden transition-[width,border-width,box-shadow] duration-500 ease-expo-out ${
         isSourceOpen
           ? "w-1/3 border-l border-t border-border shadow-[-1px_0px_6px_0px_rgba(0,0,18,0.06)] delay-0"
           : "w-0 border-0 shadow-none delay-150"

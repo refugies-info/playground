@@ -43,7 +43,7 @@ export function TranslationsList({
   initialFilters,
   title,
   currentPage,
-  totalPages,
+  totalPages: _totalPages,
   totalCount,
   pageSize,
   showLanguageFilter,
@@ -118,7 +118,7 @@ export function TranslationsList({
     router.push(`/translations?${params.toString()}`, { scroll: false });
   };
 
-  const clearFilters = () => {
+  const _clearFilters = () => {
     setFilters({ workStatus: "", onlineStatus: "", language: "" });
     router.push("/translations", { scroll: false });
   };

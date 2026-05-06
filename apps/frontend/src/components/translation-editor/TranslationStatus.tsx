@@ -8,7 +8,7 @@ export function TranslationStatus() {
 
   if (!translation) return null;
 
-  const { workStatus, onlineStatus, publicationUrl } = translation;
+  const { workStatus, onlineStatus } = translation;
 
   return (
     <div className="flex items-center gap-2">

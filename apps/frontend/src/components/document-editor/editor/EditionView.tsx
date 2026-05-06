@@ -13,7 +13,6 @@ import { Loader2 } from "lucide-react";
 import { blocksToDirectiveMarkdown, markdownToBlocks } from "@/lib/markdown";
 import { useDocument } from "../DocumentContext";
 import { type CustomEditor, customSchema } from "./blocks/custom-schema";
-import { EditorTabs } from "./EditorTabs";
 import { RawMarkdownView } from "./RawMarkdownView";
 
 export function EditionView() {
@@ -250,40 +249,34 @@ export function EditionView() {
   }
 
   return (
-    <div className="flex-1 overflow-hidden bg-white relative flex flex-col">
-      <EditorTabs />
-      <div className="flex-1 overflow-y-auto">
-        {isRawMarkdownMode ? (
-          <RawMarkdownView
-            markdownContent={rawMarkdown || document?.editorialContent || ""}
-            onContentChange={handleRawMarkdownChange}
-            readOnly={!isCompliant}
-          />
-        ) : (
-          <div className="py-8">
-            <div className="max-w-3xl mx-auto">
-              {editor ? (
-                <BlockNoteView
-                  editor={editor}
-                  theme="light"
-                  editable={
-                    isCompliant && !isProcessing && !document?.aiSuggestion
-                  }
-                  slashMenu={false}
-                >
-                  <SuggestionMenuController
-                    triggerCharacter={"/"}
-                    getItems={async (query) =>
-                      getCustomSlashMenuItems(editor, query)
-                    }
-                  />
-                </BlockNoteView>
-              ) : (
-                <div />
-              )}
-            </div>
-          </div>
-        )}
+    <div className="w-full bg-white">
+      <div className="p-10">
+        <div className="max-w-[800px] mx-auto w-full">
+          {isRawMarkdownMode ? (
+            <RawMarkdownView
+              markdownContent={rawMarkdown || document?.editorialContent || ""}
+              onContentChange={handleRawMarkdownChange}
+              readOnly={!isCompliant}
+            />
+          ) : editor ? (
+            <BlockNoteView
+              editor={editor}
+              theme="light"
+              editable={isCompliant && !isProcessing && !document?.aiSuggestion}
+              slashMenu={false}
+              className="[&_.bn-editor]:!px-0"
+            >
+              <SuggestionMenuController
+                triggerCharacter={"/"}
+                getItems={async (query) =>
+                  getCustomSlashMenuItems(editor, query)
+                }
+              />
+            </BlockNoteView>
+          ) : (
+            <div />
+          )}
+        </div>
       </div>
     </div>
   );

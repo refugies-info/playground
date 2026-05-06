@@ -19,7 +19,7 @@ export function SourceToggleButton() {
   if (!document?.ingestionContent) return null;
 
   return (
-    <div className="absolute top-12 right-6 z-0">
+    <div className="fixed top-24 right-6 z-0">
       <Button
         variant="quatrieme"
         size="sm"

@@ -24,7 +24,7 @@
     "check:types": "turbo check:types",
     "test": "turbo test",
     "clean:branches": "pnpx git-removed-branches --prune --force",
-    "dev": "turbo dev dev:workflow",
+    "dev": "turbo dev",
     "dev:workflow": "workflow inspect runs --web",
     "format": "biome format --write .",
     "knip": "knip",
