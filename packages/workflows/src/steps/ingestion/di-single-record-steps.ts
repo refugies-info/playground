@@ -33,6 +33,12 @@ const envVal = Number(process.env.MAX_EDITORIAL_BACKLOG);
  */
 const MAX_EDITORIAL_BACKLOG = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
 
+/**
+ * Delay between spawning child workflows to spread Letta API calls over time
+ * and avoid hitting the rate limit.
+ */
+const SPAWN_DELAY_MS = 500;
+
 // =============================================================================
 // Internal Types
 // =============================================================================
@@ -419,6 +425,7 @@ export async function fanOutDiRecordsStep(runId: string) {
       target.workflow_id,
       target.markdown,
     ]);
+    await new Promise((resolve) => setTimeout(resolve, SPAWN_DELAY_MS));
   }
 
   logger.info(
