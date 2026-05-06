@@ -2,6 +2,7 @@
 // Types
 // =============================================================================
 
+export type { ForceEditorialWorkflowResult } from "./pipelines/editorial/force-editorial";
 export { forceEditorialWorkflow } from "./pipelines/editorial/force-editorial";
 export type { PersistEditorialWorkflowResult } from "./pipelines/editorial/persist-editorial";
 export { persistEditorialWorkflow } from "./pipelines/editorial/persist-editorial";

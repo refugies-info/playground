@@ -127,6 +127,7 @@ export type Database = {
       }
       editorial_records: {
         Row: {
+          active_run_id: string | null
           author_id: string | null
           content_report_id: string | null
           created_at: string
@@ -140,6 +141,7 @@ export type Database = {
           work_status: string | null
         }
         Insert: {
+          active_run_id?: string | null
           author_id?: string | null
           content_report_id?: string | null
           created_at?: string
@@ -153,6 +155,7 @@ export type Database = {
           work_status?: string | null
         }
         Update: {
+          active_run_id?: string | null
           author_id?: string | null
           content_report_id?: string | null
           created_at?: string

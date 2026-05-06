@@ -306,14 +306,18 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   };
   let ingestionRecord: IngestionWithReports | null = null;
 
-  // Fetch ingestion record, metadata report, and generating flag in parallel
-  const [ingestionResult, metadataReportResult, generatingReportResult] =
-    await Promise.all([
-      item.ingestion_record_id
-        ? supabase
-            .from("ingestion_records")
-            .select(
-              `
+  // Fetch ingestion record, metadata report, generating flag, and active rewrite in parallel
+  const [
+    ingestionResult,
+    metadataReportResult,
+    generatingReportResult,
+    activeRunResult,
+  ] = await Promise.all([
+    item.ingestion_record_id
+      ? supabase
+          .from("ingestion_records")
+          .select(
+            `
             markdown,
             metadata,
             created_at,
@@ -322,32 +326,41 @@ export async function getDocumentById(id: string): Promise<Document | null> {
               created_at
             )
           `,
-            )
-            .eq("id", item.ingestion_record_id)
-            .single()
-        : Promise.resolve({ data: null, error: null }),
-      // Fetch the AI-generated metadata report (letta_reports type: metadata).
-      // Filter on status="complete" so that "generating" and "error" reports
-      // never shadow the last valid report.
-      supabase
-        .from("letta_reports")
-        .select("id, metadata, status")
-        .eq("workflow_id", id)
-        .eq("report_type", "metadata")
-        .eq("status", "complete")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      // Check if a metadata generation is currently in progress for this workflow.
-      // Used by the UI to restore the loading state after a page refresh.
-      supabase
-        .from("letta_reports")
-        .select("id")
-        .eq("workflow_id", id)
-        .eq("report_type", "metadata")
-        .eq("status", "generating")
-        .maybeSingle(),
-    ]);
+          )
+          .eq("id", item.ingestion_record_id)
+          .single()
+      : Promise.resolve({ data: null, error: null }),
+    // Fetch the AI-generated metadata report (letta_reports type: metadata).
+    // Filter on status="complete" so that "generating" and "error" reports
+    // never shadow the last valid report.
+    supabase
+      .from("letta_reports")
+      .select("id, metadata, status")
+      .eq("workflow_id", id)
+      .eq("report_type", "metadata")
+      .eq("status", "complete")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    // Check if a metadata generation is currently in progress for this workflow.
+    // Used by the UI to restore the loading state after a page refresh.
+    supabase
+      .from("letta_reports")
+      .select("id")
+      .eq("workflow_id", id)
+      .eq("report_type", "metadata")
+      .eq("status", "generating")
+      .maybeSingle(),
+    // Check if an editorial AI rewrite is in progress or pending user decision.
+    // Used by AIFloatingButton to resume via GET /api/editorial-rewrite/[runId].
+    item.editorial_record_id
+      ? supabase
+          .from("editorial_records")
+          .select("active_run_id")
+          .eq("id", item.editorial_record_id)
+          .single()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
 
   if (ingestionResult.data) {
     ingestionRecord = ingestionResult.data as unknown as IngestionWithReports;
@@ -485,6 +498,10 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     authorEmail,
     authorRole,
     externalId: item.external_id ?? null,
+    // AI editorial rewrite — runId for resume via GET /api/editorial-rewrite/[runId]
+    activeRunId:
+      (activeRunResult.data as { active_run_id: string | null } | null)
+        ?.active_run_id ?? undefined,
   };
 }
 

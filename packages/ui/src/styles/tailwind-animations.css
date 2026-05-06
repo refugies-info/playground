@@ -9,7 +9,20 @@
  * Référence : https://easings.net/#easeOutExpo
  */
 
+@keyframes papa-ia-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
+}
+
 @theme {
+  /* PapaIA loading — scale up-down léger (indique une activité en cours) */
+  --animate-papa-ia-breathe: papa-ia-breathe 2s ease-in-out infinite;
+
   /* Expo out — ouverture de panels/drawers (démarre vite, atterrit en douceur) */
   --ease-expo-out: cubic-bezier(0.16, 1, 0.3, 1);
 

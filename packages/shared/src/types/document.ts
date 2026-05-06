@@ -70,6 +70,8 @@ export interface Document {
   externalId?: string | null;
   /** Word count from ingestion markdown (frontmatter excluded) */
   wordCount?: number | null;
+  /** Vercel Workflow runId when an AI editorial rewrite is in progress or waiting for user decision */
+  activeRunId?: string;
 }
 
 export interface RiMetadata {
