@@ -96,7 +96,10 @@ export function DocumentProvider({
   //   - a new metadata report arrives after AI generation (metadataReport?.id change)
   //     This ensures router.refresh() post-generation delivers the fresh metadataReport
   //     and cleared editorial overrides to all consumers (MetadataTable, MetadataContext).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only re-sync on navigation or new metadata report
+  //   - the active AI rewrite runId changes (start, cancel, accept, reject)
+  //     so the AIFloatingButton resume logic sees an up-to-date activeRunId
+  //     (e.g. after revalidatePath following a DELETE, or in multi-tab scenarios).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only re-sync on navigation, new metadata report, or activeRunId change
   useEffect(() => {
     if (initialData) {
       // Préserver aiSuggestion : c'est un état transient client non présent dans
@@ -111,7 +114,11 @@ export function DocumentProvider({
           prev?.id === initialData.id ? prev?.aiSuggestion : undefined,
       }));
     }
-  }, [initialData?.id, initialData?.metadataReport?.id]);
+  }, [
+    initialData?.id,
+    initialData?.metadataReport?.id,
+    initialData?.activeRunId,
+  ]);
 
   // Update content and mark as dirty (only if content actually changed)
   const updateContent = (content: string) => {
