@@ -50,19 +50,14 @@ Chaque step de la paire `diSingleAuditStep` / `diSingleMetadataStep` a :
 
 | Variable | Description | Défaut |
 |---|---|---|
-| `MAX_EDITORIAL_BACKLOG` | Taille max du backlog éditorial (records avec rapports Letta en attente de travail éditorial) | `50` |
+| `MAX_EDITORIAL_BACKLOG` | Nombre max de records claimés par exécution du cron | `50` |
 | `PLAYGROUND_AGENT_ID` | Agent Letta pour l'audit compliance | — |
 | `METADATA_AGENT_ID` | Agent Letta pour les métadonnées | fallback sur `PLAYGROUND_AGENT_ID` |
 
-## Throttling par backlog éditorial (RI-1172)
+## Rate cap par exécution
 
-Le workflow n'importe pas de nouveaux records via Letta si le backlog éditorial dépasse `MAX_EDITORIAL_BACKLOG`. Le backlog est défini comme les records qui :
-
-1. Ont déjà un rapport Letta (`ingestion_report_id IS NOT NULL`)
-2. Sont prêts pour le travail éditorial (`compliance_status = 'compliant'`)
-
-Ceci permet de contrôler les coûts Letta en ne traitant que lorsque l'équipe éditoriale a de la capacité.
+Chaque exécution du cron claime au maximum `MAX_EDITORIAL_BACKLOG` records candidats (`compliance_status IS NULL`), indépendamment du nombre de records déjà traités en attente côté édito.
 
 ## Claim atomique
 
-Le step `claimDiAuditTargetsStep` utilise le RPC Supabase `claim_di_audit_targets` qui pose un `FOR UPDATE SKIP LOCKED` pour éviter les doublons en cas de runs concurrents. Le RPC compte le backlog éditorial avant de claimer de nouveaux records.
+Le step `claimDiAuditTargetsStep` utilise le RPC Supabase `claim_di_audit_targets` qui pose un `FOR UPDATE SKIP LOCKED` pour éviter les doublons en cas de runs concurrents. Le RPC reclaim aussi les records "zombies" (stuck en `pending` depuis plus de 10 minutes).

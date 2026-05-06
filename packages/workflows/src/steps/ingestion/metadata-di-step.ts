@@ -59,12 +59,11 @@ import { getSupabaseClient, runWithConcurrency } from "./utils";
 const envVal = Number(process.env.MAX_EDITORIAL_BACKLOG);
 
 /**
- * Maximum number of metadata records to process per run.
- * Shared with the audit step via MAX_EDITORIAL_BACKLOG env var. Defaults to 50.
+ * Maximum number of metadata records to process per run. Defaults to 50.
  *
- * Note: This is used by the legacy batch workflow (generateDiMetadataReportsStep).
- * The main fan-out workflow uses diSingleMetadataStep which doesn't need this limit
- * since it processes one record at a time.
+ * Note: Used by the legacy batch workflow (generateDiMetadataReportsStep).
+ * The main fan-out workflow uses diSingleMetadataStep which doesn't need this
+ * limit since it processes one record at a time.
  */
 const MAX_EDITORIAL_BACKLOG = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
 

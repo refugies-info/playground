@@ -36,7 +36,7 @@
  * Key decisions:
  * - Uses an atomic RPC claim (FOR UPDATE SKIP LOCKED) to prevent duplicate processing
  *   across concurrent workflow runs
- * - MAX_EDITORIAL_BACKLOG cap (env: MAX_EDITORIAL_BACKLOG, default: 50) prevents runaway costs
+ * - MAX_EDITORIAL_BACKLOG cap (default: 50) is a per-run rate cap on records claimed
  * - Requires service IDs to scope to DI origin (vs. RCO etc.)
  * - compliance_status lives on `ingestion_records` (RI-1093), updated directly after audit
  */
@@ -65,11 +65,7 @@ import {
 const envVal = Number(process.env.MAX_EDITORIAL_BACKLOG);
 
 /**
- * Maximum number of records that can have Letta reports waiting for editorial work.
- * Controlled via MAX_EDITORIAL_BACKLOG env var. Defaults to 50.
- *
- * This is a cost-control measure: we only process records through Letta if there
- * are fewer than this many records already processed and waiting for editorial work.
+ * Maximum number of records claimed per cron run. Defaults to 50.
  */
 const MAX_EDITORIAL_BACKLOG = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
 
