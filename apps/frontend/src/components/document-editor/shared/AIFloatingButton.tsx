@@ -104,6 +104,18 @@ export function AIFloatingButton() {
     abortControllerRef.current = controller;
 
     try {
+      // Étape 0 — sauvegarder pour que l'IA travaille sur la version courante
+      // de l'éditeur (et pas sur une version périmée en DB).
+      // saveDocument valide la présence d'un H1 et bloque sinon (alert).
+      const saveResult = await saveDocument();
+      if (!saveResult.success) {
+        // saveDocument a déjà alerté l'utilisateur (titre manquant, etc.)
+        // ou retourné l'erreur. On annule sans faire de bruit supplémentaire.
+        setIsProcessing(false);
+        abortControllerRef.current = null;
+        return;
+      }
+
       // Étape 1 — démarrer le workflow (rapide, retourne { runId })
       const startRes = await fetch("/api/editorial-rewrite", {
         method: "POST",
@@ -162,9 +174,10 @@ export function AIFloatingButton() {
   };
 
   // ─── Cleanup active_run_id en base ────────────────────────────────────────
-  // Retourne une Promise pour pouvoir l'awaiter dans handleAccept
-  // (évite la réapparition de la popover si l'utilisateur recharge avant la fin).
-  // Fire-and-forget acceptable dans handleReject/handleCancel (moins critique).
+  // Retourne une Promise pour pouvoir l'awaiter avant tout side-effect
+  // (save, navigation) qui pourrait déclencher un revalidate côté serveur.
+  // Sans await, un refresh rapide après accept/reject ferait réapparaître
+  // la popover car active_run_id serait encore présent en DB.
   const clearActiveRunId = () => {
     const runId = runIdRef.current ?? document?.activeRunId;
     if (!runId) return Promise.resolve();
@@ -174,11 +187,13 @@ export function AIFloatingButton() {
   };
 
   // ─── handleReject / handleAccept ───────────────────────────────────────
-  const handleReject = () => {
+  const handleReject = async () => {
     rejectAiSuggestion();
     setIsProcessing(false);
     setError(null);
-    clearActiveRunId(); // fire-and-forget ok ici
+    // Awaité : sinon refresh rapide après reject → popover réapparaît
+    // car active_run_id encore en DB et run.returnValue cache encore le résultat.
+    await clearActiveRunId();
   };
 
   const handleAccept = async () => {

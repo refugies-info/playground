@@ -55,6 +55,8 @@ import type { ForceEditorialWorkflowResult } from "@playground/workflows";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { getRun } from "workflow/api";
+import { getUserProfile } from "@/lib/auth";
+import { verifyWorkflowPermission } from "@/services/permission-helper";
 
 // Couvre les appels Letta les plus longs (1-3 min typiquement).
 export const maxDuration = 300;
@@ -68,6 +70,99 @@ type RouteParams = { params: Promise<{ runId: string }> };
 async function getSupabase() {
   const cookieStore = await cookies();
   return createSupabaseServerClient(cookieStore);
+}
+
+/**
+ * Vérifie l'auth + la permission d'accès au workflow associé à ce runId.
+ *
+ * Le `runId` n'est pas un secret cryptographique — sans ce check, n'importe
+ * quel utilisateur authentifié pourrait lire (GET) ou annuler (DELETE) la
+ * réécriture IA d'un document auquel il n'a pas accès.
+ *
+ * Retourne `{ ok: true, supabase }` si autorisé, sinon une `NextResponse`
+ * d'erreur (401 / 403 / 404) à retourner directement.
+ */
+async function authorizeRunId(
+  runId: string,
+): Promise<
+  | { ok: true; supabase: Awaited<ReturnType<typeof getSupabase>> }
+  | { ok: false; response: NextResponse }
+> {
+  const supabase = await getSupabase();
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Utilisateur non authentifié" },
+        { status: 401 },
+      ),
+    };
+  }
+
+  // Trouver le workflow_id via l'editorial_record qui a ce active_run_id.
+  const { data: record } = await supabase
+    .from("editorial_records")
+    .select("id")
+    .eq("active_run_id", runId)
+    .maybeSingle();
+
+  if (!record) {
+    // Pas d'editorial_record actif pour ce runId — soit déjà nettoyé,
+    // soit runId invalide. On répond 404 pour ne pas leaker.
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Run introuvable ou déjà nettoyé" },
+        { status: 404 },
+      ),
+    };
+  }
+
+  const { data: workflow } = await supabase
+    .from("workflows")
+    .select("id")
+    .eq("editorial_record_id", record.id)
+    .maybeSingle();
+
+  if (!workflow) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Workflow introuvable" },
+        { status: 404 },
+      ),
+    };
+  }
+
+  const profile = await getUserProfile(supabase, user.id);
+  const hasPermission = await verifyWorkflowPermission(
+    supabase,
+    workflow.id,
+    user.id,
+    profile?.role ?? undefined,
+  );
+
+  if (!hasPermission) {
+    logger.warn(
+      { userId: user.id, runId, workflowId: workflow.id },
+      "[editorial-rewrite] Unauthorized access to runId",
+    );
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: "Vous n'avez pas la permission d'accéder à ce run" },
+        { status: 403 },
+      ),
+    };
+  }
+
+  return { ok: true, supabase };
 }
 
 /**
@@ -89,8 +184,19 @@ async function clearActiveRunId(runId: string) {
 
 /**
  * Fallback : lit le contenu depuis letta_reports quand run.returnValue a expiré.
- * Le workflow persiste toujours le résultat dans letta_reports (report_type='editorial').
+ *
+ * ⚠️ Risque : sans filtre temporel, on retournerait le DERNIER rapport éditorial
+ * complet du workflow — qui peut être très ancien (généré il y a des semaines)
+ * et n'a aucun rapport avec le run en cours. L'éditeur verrait alors un contenu
+ * obsolète présenté comme un nouveau résultat.
+ *
+ * Stratégie : on filtre les rapports par `created_at >= editorial_records.updated_at`,
+ * `updated_at` ayant été touché par le POST au moment de l'écriture d'`active_run_id`.
+ * Filet de sécurité supplémentaire : fenêtre absolue de 30 min (largement plus que
+ * `maxDuration=300s`).
  */
+const MAX_FALLBACK_AGE_MS = 30 * 60 * 1000; // 30 min
+
 async function getContentFromLettaReports(
   runId: string,
 ): Promise<string | null> {
@@ -100,7 +206,7 @@ async function getContentFromLettaReports(
     // Trouver le workflow_id via l'editorial_record qui a ce active_run_id
     const { data: record } = await supabase
       .from("editorial_records")
-      .select("id, ingestion_record_id")
+      .select("id, ingestion_record_id, updated_at")
       .eq("active_run_id", runId)
       .maybeSingle();
 
@@ -115,18 +221,40 @@ async function getContentFromLettaReports(
 
     if (!workflow) return null;
 
-    // Lire le dernier rapport éditorial complet
+    // Borne basse : le run a démarré au moment de l'écriture d'active_run_id
+    // (= editorial_records.updated_at). On accepte une légère marge (1 min)
+    // pour couvrir l'ordre INSERT-vs-UPDATE des réplications Postgres.
+    const runStartedAt = record.updated_at
+      ? new Date(record.updated_at).getTime() - 60_000
+      : Date.now() - MAX_FALLBACK_AGE_MS;
+
+    // Filet de sécurité : pas plus vieux que MAX_FALLBACK_AGE_MS
+    const minTimestamp = Math.max(
+      runStartedAt,
+      Date.now() - MAX_FALLBACK_AGE_MS,
+    );
+
+    // Lire le dernier rapport éditorial complet généré APRÈS le démarrage du run
     const { data: report } = await supabase
       .from("letta_reports")
-      .select("markdown")
+      .select("markdown, created_at")
       .eq("workflow_id", workflow.id)
       .eq("report_type", "editorial")
       .eq("status", "complete")
+      .gte("created_at", new Date(minTimestamp).toISOString())
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    return report?.markdown ?? null;
+    if (!report) {
+      logger.warn(
+        { runId, workflowId: workflow.id, minTimestamp },
+        "[editorial-rewrite] No recent letta_report — refusing stale fallback",
+      );
+      return null;
+    }
+
+    return report.markdown;
   } catch {
     return null;
   }
@@ -144,6 +272,9 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   if (!runId) {
     return NextResponse.json({ error: "runId manquant" }, { status: 400 });
   }
+
+  const auth = await authorizeRunId(runId);
+  if (!auth.ok) return auth.response;
 
   try {
     logger.info({ runId }, "[editorial-rewrite] Awaiting returnValue");
@@ -206,6 +337,9 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   if (!runId) {
     return NextResponse.json({ error: "runId manquant" }, { status: 400 });
   }
+
+  const auth = await authorizeRunId(runId);
+  if (!auth.ok) return auth.response;
 
   try {
     const run = getRun(runId);

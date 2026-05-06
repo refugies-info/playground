@@ -95,27 +95,122 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ─── 3. Démarrer le workflow ──────────────────────────────────────────
+    // ─── 3. Garantir qu'un editorial_record existe avant de démarrer ──────
+    // Pour les fiches toutes neuves, l'editorial_record n'existe pas encore.
+    // On le crée ici (depuis ingestion_record) pour pouvoir écrire active_run_id
+    // de façon synchrone dans le POST — sans dépendre du client restant connecté
+    // jusqu'à la complétion du GET.
+    // Si l'editorial_record existe déjà, on récupère simplement son id.
+    const { data: workflowData } = await supabase
+      .from("workflows")
+      .select("editorial_record_id, ingestion_record_id")
+      .eq("id", workflowId)
+      .maybeSingle();
+
+    let editorialRecordId = workflowData?.editorial_record_id ?? null;
+
+    if (!editorialRecordId && workflowData?.ingestion_record_id) {
+      logger.info(
+        { workflowId },
+        "[editorial-rewrite] Creating editorial_record for new fiche",
+      );
+
+      const { data: ingestion, error: ingestionError } = await supabase
+        .from("ingestion_records")
+        .select("markdown, metadata")
+        .eq("id", workflowData.ingestion_record_id)
+        .maybeSingle();
+
+      if (ingestionError || !ingestion) {
+        logger.error(
+          { workflowId, ingestionError },
+          "[editorial-rewrite] Failed to fetch ingestion_record",
+        );
+      } else {
+        const { data: newRecord, error: insertError } = await supabase
+          .from("editorial_records")
+          .insert({
+            ingestion_record_id: workflowData.ingestion_record_id,
+            markdown: ingestion.markdown,
+          })
+          .select("id")
+          .single();
+
+        if (insertError || !newRecord) {
+          // Cas typique : race avec un autre process (step Letta, autre POST)
+          // qui aurait créé l'editorial_record entre-temps. On re-fetch pour
+          // récupérer l'id existant plutôt que de crasher.
+          logger.warn(
+            { workflowId, insertError },
+            "[editorial-rewrite] INSERT editorial_record failed — refetching",
+          );
+          const { data: refetch } = await supabase
+            .from("workflows")
+            .select("editorial_record_id")
+            .eq("id", workflowId)
+            .maybeSingle();
+          editorialRecordId = refetch?.editorial_record_id ?? null;
+        } else {
+          editorialRecordId = newRecord.id;
+          const { error: linkError } = await supabase
+            .from("workflows")
+            .update({ editorial_record_id: editorialRecordId })
+            .eq("id", workflowId);
+          if (linkError) {
+            logger.error(
+              { workflowId, editorialRecordId, linkError },
+              "[editorial-rewrite] Failed to link editorial_record to workflow",
+            );
+          } else {
+            logger.info(
+              { workflowId, editorialRecordId },
+              "[editorial-rewrite] editorial_record created",
+            );
+          }
+        }
+      }
+    }
+
+    // Si on n'a TOUJOURS pas d'editorial_record_id, on bloque : sans lui,
+    // active_run_id ne sera pas persisté → reprise impossible après refresh.
+    if (!editorialRecordId) {
+      logger.error(
+        { workflowId },
+        "[editorial-rewrite] Cannot proceed without editorial_record_id",
+      );
+      return NextResponse.json(
+        {
+          error:
+            "Impossible de préparer le document pour la réécriture. Réessayez ou contactez le support.",
+        },
+        { status: 500 },
+      );
+    }
+
+    // ─── 4. Démarrer le workflow ──────────────────────────────────────────
     // biome-ignore lint/suspicious/noExplicitAny: workflow typing
     const result = await start(forceEditorialWorkflow as any, [workflowId]);
 
-    // ─── 4. Persister le runId dans editorial_records ─────────────────────
-    // Permet la reprise après refresh, fermeture d'onglet, ou changement de navigateur.
-    const { data: workflow } = await supabase
-      .from("workflows")
-      .select("editorial_record_id")
-      .eq("id", workflowId)
-      .single();
+    // ─── 5. Persister le runId dans editorial_records ─────────────────────
+    // Synchrone et garanti : editorial_record existe depuis l'étape 3
+    // (sinon on aurait return 500 plus haut).
+    const { error: runIdError } = await supabase
+      .from("editorial_records")
+      .update({ active_run_id: result.runId })
+      .eq("id", editorialRecordId);
 
-    if (workflow?.editorial_record_id) {
-      await supabase
-        .from("editorial_records")
-        .update({ active_run_id: result.runId })
-        .eq("id", workflow.editorial_record_id);
+    if (runIdError) {
+      // Non bloquant : le workflow tourne déjà. La reprise après refresh
+      // sera impossible mais l'utilisateur recevra le résultat tant qu'il
+      // reste sur la page.
+      logger.error(
+        { runId: result.runId, editorialRecordId, runIdError },
+        "[editorial-rewrite] Failed to persist active_run_id (resume disabled)",
+      );
     } else {
-      logger.warn(
-        { runId: result.runId, workflowId },
-        "[editorial-rewrite] No editorial_record_id — cannot persist active_run_id",
+      logger.info(
+        { runId: result.runId, editorialRecordId },
+        "[editorial-rewrite] active_run_id written",
       );
     }
 

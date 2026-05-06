@@ -81,7 +81,12 @@ export function DocumentProvider({
   const [showDebug, setShowDebug] = useState(false);
   const [isLoading] = useState(false);
   const [isSourceOpen, setIsSourceOpen] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  // Initialise isProcessing à true si une réécriture IA est déjà en cours
+  // (active_run_id présent en DB) pour éviter le flash visuel default → loading
+  // au premier render après refresh.
+  const [isProcessing, setIsProcessing] = useState(
+    () => !!initialData?.activeRunId,
+  );
   const [isRawMarkdownMode, setIsRawMarkdownMode] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [debugBlocks, setDebugBlocks] = useState<unknown[] | null>([]);
@@ -94,7 +99,17 @@ export function DocumentProvider({
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only re-sync on navigation or new metadata report
   useEffect(() => {
     if (initialData) {
-      setDocument(initialData);
+      // Préserver aiSuggestion : c'est un état transient client non présent dans
+      // initialData. Si un revalidatePath se déclenche pendant qu'une suggestion
+      // est en attente de confirmation, elle ne doit pas être écrasée.
+      // ⚠️ Important : on préserve UNIQUEMENT si on reste sur le même document.
+      // Sinon (navigation entre docs), la suggestion du précédent serait
+      // transférée au suivant — bug visuel + risque d'écraser le mauvais contenu.
+      setDocument((prev) => ({
+        ...initialData,
+        aiSuggestion:
+          prev?.id === initialData.id ? prev?.aiSuggestion : undefined,
+      }));
     }
   }, [initialData?.id, initialData?.metadataReport?.id]);
 
