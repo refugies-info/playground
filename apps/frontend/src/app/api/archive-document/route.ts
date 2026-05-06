@@ -25,6 +25,7 @@
  * | 500  | `{ error: string }`   | Erreur interne           |
  */
 
+import { logger } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
@@ -145,7 +146,7 @@ export async function POST(request: NextRequest) {
         });
 
       if (insertError) {
-        console.error(
+        logger.error(
           insertError,
           "[archive-document] Insert publication_record failed",
         );
@@ -164,7 +165,7 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (workflowFetchError) {
-      console.error(
+      logger.error(
         workflowFetchError,
         "[archive-document] Fetch workflow failed",
       );
@@ -177,7 +178,7 @@ export async function POST(request: NextRequest) {
         .eq("id", workflow.editorial_record_id);
 
       if (updateError) {
-        console.error(
+        logger.error(
           updateError,
           "[archive-document] Update editorial_record failed",
         );
@@ -194,7 +195,7 @@ export async function POST(request: NextRequest) {
         .eq("editorial_record_id", workflow.editorial_record_id);
 
       if (translationUpdateError) {
-        console.error(
+        logger.error(
           translationUpdateError,
           "[archive-document] Update translation_records failed",
         );
@@ -203,7 +204,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(error, "[archive-document] Unexpected error");
+    logger.error(error, "[archive-document] Unexpected error");
     return NextResponse.json(
       { error: "Erreur inattendue lors de l'archivage" },
       { status: 500 },
