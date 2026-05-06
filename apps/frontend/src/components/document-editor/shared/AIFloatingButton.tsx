@@ -141,6 +141,8 @@ export function AIFloatingButton() {
           { workflowId: document.id },
           "[AIFloatingButton] Cancelled",
         );
+        // En cas d'abort, le runId est déjà nettoyé par handleCancel (DELETE).
+        runIdRef.current = null;
         return;
       }
       const message =
@@ -152,10 +154,15 @@ export function AIFloatingButton() {
         "[AIFloatingButton] Failed",
       );
       setError(message);
+      // Erreur côté GET → server-side a déjà fait clearActiveRunId.
+      runIdRef.current = null;
     } finally {
       setIsProcessing(false);
       abortControllerRef.current = null;
-      runIdRef.current = null;
+      // ⚠️ NE PAS reset runIdRef.current ici : il doit rester set tant que
+      // l'utilisateur n'a pas pris sa décision (Accept/Reject/Cancel) sur la
+      // popover. Le DocumentContext n'est pas synchronisé après le POST, donc
+      // sans cette ref, clearActiveRunId() ne saurait pas quel runId nettoyer.
     }
   };
 
@@ -171,6 +178,9 @@ export function AIFloatingButton() {
     }
 
     setIsProcessing(false);
+    // Cleanup post-DELETE : on a envoyé l'ordre, on libère la ref pour la
+    // prochaine génération (le DELETE part en fire-and-forget en arrière-plan).
+    runIdRef.current = null;
   };
 
   // ─── Cleanup active_run_id en base ────────────────────────────────────────
@@ -178,12 +188,18 @@ export function AIFloatingButton() {
   // (save, navigation) qui pourrait déclencher un revalidate côté serveur.
   // Sans await, un refresh rapide après accept/reject ferait réapparaître
   // la popover car active_run_id serait encore présent en DB.
-  const clearActiveRunId = () => {
+  const clearActiveRunId = async () => {
     const runId = runIdRef.current ?? document?.activeRunId;
-    if (!runId) return Promise.resolve();
-    return fetch(`/api/editorial-rewrite/${runId}`, { method: "DELETE" }).catch(
-      () => {},
-    );
+    if (!runId) return;
+    try {
+      await fetch(`/api/editorial-rewrite/${runId}`, { method: "DELETE" });
+    } catch {
+      // Best effort — l'utilisateur peut retomber sur la popover au refresh
+      // mais elle proposera la même suggestion (idempotent).
+    } finally {
+      // Ref libérée APRÈS le DELETE (success ou échec).
+      runIdRef.current = null;
+    }
   };
 
   // ─── handleReject / handleAccept ───────────────────────────────────────
@@ -228,16 +244,23 @@ export function AIFloatingButton() {
     awaitResult(document.activeRunId, controller.signal)
       .then((content) => setAiSuggestion(content))
       .catch((err) => {
-        if (err instanceof DOMException && err.name === "AbortError") return;
+        if (err instanceof DOMException && err.name === "AbortError") {
+          // Abort → ref nettoyée par le bloc qui a déclenché l'abort.
+          runIdRef.current = null;
+          return;
+        }
         const message =
           err instanceof Error ? err.message : "Erreur lors de la reprise.";
         logger.warn({ message }, "[AIFloatingButton] Resume failed");
         setError(message);
+        // Erreur → server a déjà nettoyé active_run_id côté GET.
+        runIdRef.current = null;
       })
       .finally(() => {
         setIsProcessing(false);
         abortControllerRef.current = null;
-        runIdRef.current = null;
+        // ⚠️ NE PAS reset runIdRef.current ici : il doit rester set jusqu'à
+        // ce que l'utilisateur prenne sa décision (Accept/Reject/Cancel).
       });
 
     return () => {
