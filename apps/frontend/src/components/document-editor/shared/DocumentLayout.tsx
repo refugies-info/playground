@@ -66,11 +66,12 @@ interface DocumentLayoutProps {
 export function DocumentLayout(props: DocumentLayoutProps) {
   const { initialData, children, userEmail } = props;
 
-  // Read `from` once on mount — persists across tab navigation since layout doesn't remount
+  // Read `from` once on mount — persists across tab navigation since layout
+  // doesn't remount. useEffect garantit que window n'est lu que côté client
+  // (évite hydration mismatch vs lazy init avec typeof window !== "undefined").
   const [from, setFrom] = useState("");
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const fromParam = params.get("from");
+    const fromParam = new URLSearchParams(window.location.search).get("from");
     if (fromParam) setFrom(fromParam);
   }, []);
 

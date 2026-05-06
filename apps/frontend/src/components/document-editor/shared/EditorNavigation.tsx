@@ -16,7 +16,7 @@ import {
 } from "@playground/ui/primitives";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useDocumentActions } from "../actions";
 import { useDocument } from "../DocumentContext";
 import { useMetadata } from "../metadata/MetadataContext";
@@ -50,14 +50,6 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
   const fromSuffix = from ? `?from=${encodeURIComponent(from)}` : "";
 
   const [archiveError, setArchiveError] = useState<string | null>(null);
-  const isMounted = useRef(true);
-
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
 
   if (!document) return null;
 
@@ -72,11 +64,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
 
   const handleArchive = async () => {
     setArchiveError(null);
-
     const result = await archiveDocument();
-
-    if (!isMounted.current) return;
-
     if (result.success) {
       router.refresh();
     } else {

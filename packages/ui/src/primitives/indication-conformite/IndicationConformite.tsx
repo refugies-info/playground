@@ -7,8 +7,8 @@ import { cn } from "../../utils";
  * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/BOMO?node-id=1728-9296
  *
  * Deux variants (Figma "Indication conformité") :
- *   - `conforme`     → fond contrast-info (#E8EDFF)  + point vert  (#18753c)
- *   - `non-conforme` → fond contrast-warning (#FFE8E5) + point orange (#B34000)
+ *   - `conforme`     → fond contrast-info (#e8edff)  + point bleu  (#0063cb)
+ *   - `non-conforme` → fond contrast-warning (#ffe9e6) + point orange (#b34000)
  *
  * Dimensions : padding 2px 6px, height 20px, borderRadius 4px.
  * Le "Signal" Figma est un cercle plein 8×8px — pas de texte.
@@ -43,10 +43,12 @@ function IndicationConformite({
   className,
   ...props
 }: IndicationConformiteProps) {
-  const { container, dot } = VARIANTS[value];
+  const { container, dot, ariaLabel } = VARIANTS[value];
 
   return (
     <span
+      role="img"
+      aria-label={ariaLabel}
       className={cn(
         "inline-flex items-center justify-center h-5 px-1.5 rounded-xs",
         container,

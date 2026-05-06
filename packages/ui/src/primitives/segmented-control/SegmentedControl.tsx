@@ -57,17 +57,17 @@ function SegmentedControl<T extends string>({
   const activeIndex = options.findIndex((o) => o.value === value);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    const currentIndex = options.findIndex((o) => o.value === value);
-    let nextIndex = currentIndex;
+    // activeIndex est déjà calculé au render — on le réutilise
+    let nextIndex = activeIndex;
 
     switch (e.key) {
       case "ArrowLeft":
       case "ArrowUp":
-        nextIndex = currentIndex - 1;
+        nextIndex = activeIndex - 1;
         break;
       case "ArrowRight":
       case "ArrowDown":
-        nextIndex = currentIndex + 1;
+        nextIndex = activeIndex + 1;
         break;
       case "Home":
         nextIndex = 0;
