@@ -26,7 +26,7 @@ export default async function MainLayout({
           userRole={profile?.role ?? null}
           userEmail={user?.email ?? null}
         />
-        <main className="flex flex-col flex-1 overflow-auto bg-white rounded-tl-[16px] rounded-bl-[16px] border-l border-t border-b border-[#dddddd]">
+        <main className="flex flex-col flex-1 overflow-y-auto bg-white rounded-tl-[16px] rounded-bl-[16px] border-l border-t border-b border-[#dddddd]">
           {/* Suspense requis : usePathname() dans PageShell provoque un CSR bailout sans boundary */}
           <Suspense fallback={null}>
             <PageShell>{children}</PageShell>

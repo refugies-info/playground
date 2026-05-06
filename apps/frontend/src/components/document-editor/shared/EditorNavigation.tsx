@@ -1,132 +1,180 @@
 "use client";
 
 import { cn } from "@playground/ui";
-import { Button } from "@playground/ui/primitives";
 import {
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  File,
-  Gavel,
-  LayoutList,
-} from "lucide-react";
+  RiCodeSSlashLine,
+  RiDatabaseLine,
+  RiDeleteBinLine,
+  RiFileTextLine,
+  RiHammerLine,
+  RiPencilLine,
+} from "@playground/ui/icons";
+import {
+  BoutonMenu,
+  IndicationConformite,
+  SegmentedControl,
+} from "@playground/ui/primitives";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useCallback, useState } from "react";
-import { DocumentActions } from "../actions";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useDocumentActions } from "../actions";
 import { useDocument } from "../DocumentContext";
 import { useMetadata } from "../metadata/MetadataContext";
 
+/**
+ * EditorNavigation — Menu latéral de navigation de la fiche.
+ *
+ * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/BOMO?node-id=1415-7009
+ *
+ * Structure :
+ *   - Items de navigation : Contenu, Métadonnées, Arbitrage (+ badge conformité)
+ *   - Bouton Archiver (variant error)
+ *   - SegmentedControl : Visuel / Markdown
+ *   - (futur) Compteur de tokens
+ */
 interface EditorNavigationProps {
   from?: string;
 }
 
+const EDITOR_MODES = [
+  { value: "visual" as const, icon: RiPencilLine, label: "Visuel" },
+  { value: "raw" as const, icon: RiCodeSSlashLine, label: "Markdown" },
+];
+
 export function EditorNavigation({ from }: EditorNavigationProps) {
-  const { isSourceOpen, document } = useDocument();
+  const { document, isRawMarkdownMode, setIsRawMarkdownMode } = useDocument();
   const { hasMetadataErrors } = useMetadata();
+  const { archiveDocument, isArchiving } = useDocumentActions();
   const pathname = usePathname();
+  const router = useRouter();
   const fromSuffix = from ? `?from=${encodeURIComponent(from)}` : "";
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Valeur dérivée — pas de useEffect+setState : évite un cycle de render supplémentaire
-  // Quand source se ferme, la nav revient à la préférence manuelle de l'utilisateur (isCollapsed)
-  const isEffectivelyCollapsed = isCollapsed || isSourceOpen;
+  const [archiveError, setArchiveError] = useState<string | null>(null);
+  const isMounted = useRef(true);
 
-  const handleToggle = useCallback(() => setIsCollapsed((prev) => !prev), []);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   if (!document) return null;
 
   const baseUrl = `/documents/${document.id}`;
   const isFicheActive = pathname === baseUrl;
-  const isComplianceActive = pathname === `${baseUrl}/compliance`;
   const isMetadataActive = pathname === `${baseUrl}/metadata`;
+  const isComplianceActive = pathname === `${baseUrl}/compliance`;
+
+  // Archiver uniquement si le document est actuellement publié sur RI
+  // (= un publication_record actif existe, pas en erreur, pas déjà archivé)
+  const canArchive = document.onlineStatus === "published";
+
+  const handleArchive = async () => {
+    setArchiveError(null);
+
+    const result = await archiveDocument();
+
+    if (!isMounted.current) return;
+
+    if (result.success) {
+      router.refresh();
+    } else {
+      setArchiveError(result.error || "Échec de l'archivage");
+    }
+  };
 
   return (
-    <div
-      className={cn(
-        // Flex item dans la row — prend sa place dans le flux (pas d'overlap avec le contenu)
-        "flex-shrink-0 flex flex-col border-r bg-gray-50 transition-[width] duration-500 ease-expo-out overflow-hidden",
-        isEffectivelyCollapsed ? "w-16" : "w-64",
-      )}
-    >
-      <div className="flex items-center p-4 border-b bg-white justify-between">
-        {!isEffectivelyCollapsed && (
-          <span className="font-semibold text-sm">Navigation</span>
-        )}
-        <Button
-          variant="quatrieme"
-          size="sm"
-          className="h-8 w-8 px-0"
-          onClick={handleToggle}
-          disabled={isSourceOpen}
-        >
-          {isEffectivelyCollapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <ChevronLeft className="w-4 h-4" />
-          )}
-        </Button>
-      </div>
+    <div className="sticky top-20 self-start h-[calc(100vh-5rem)] flex-shrink-0 w-63 flex flex-col justify-between py-12 px-10">
+      {/* Partie supérieure — gap 56px (Figma) */}
+      <div className="flex flex-col gap-14">
+        {/* Contenu — gap 24px (Figma) */}
+        <div className="flex flex-col gap-6">
+          {/* Items de navigation — gap 8px (Figma) */}
+          <nav
+            className="flex flex-col gap-2"
+            aria-label="Navigation de la fiche"
+          >
+            <Link href={`${baseUrl}${fromSuffix}`} className="w-full">
+              <BoutonMenu
+                icon={RiFileTextLine}
+                label="Contenu"
+                active={isFicheActive}
+                className="w-full"
+              />
+            </Link>
 
-      {/* Navigation Buttons */}
-      <div className="flex-1 flex flex-col p-4 gap-4">
-        <div className="flex flex-col gap-2">
-          <Link href={`${baseUrl}${fromSuffix}`}>
-            <Button
-              variant={isFicheActive ? "secondaire" : "quatrieme"}
-              className={cn(
-                "justify-start flex gap-2 w-full",
-                isEffectivelyCollapsed && "justify-center px-0",
-              )}
-            >
-              <File className="w-4 h-4" />
-              {!isEffectivelyCollapsed && "Fiche "}
-            </Button>
-          </Link>
+            <Link href={`${baseUrl}/metadata${fromSuffix}`} className="w-full">
+              <BoutonMenu
+                icon={RiDatabaseLine}
+                label="Métadonnées"
+                active={isMetadataActive}
+                className={cn("w-full", hasMetadataErrors && "relative")}
+              />
+            </Link>
 
-          <Link href={`${baseUrl}/metadata${fromSuffix}`}>
-            <Button
-              variant={isMetadataActive ? "secondaire" : "quatrieme"}
-              className={cn(
-                "justify-start flex gap-2 w-full relative",
-                isEffectivelyCollapsed && "justify-center px-0",
-              )}
+            <Link
+              href={`${baseUrl}/compliance${fromSuffix}`}
+              className="w-full"
             >
-              <LayoutList className="w-4 h-4 shrink-0" />
-              {!isEffectivelyCollapsed && (
-                <>
-                  <span className="flex-1 text-left">Metadonnées</span>
-                  {hasMetadataErrors && (
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  )}
-                </>
-              )}
-              {/* In collapsed mode: small dot indicator */}
-              {isEffectivelyCollapsed && hasMetadataErrors && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-500" />
-              )}
-            </Button>
-          </Link>
+              <BoutonMenu
+                icon={RiHammerLine}
+                label="Arbitrage"
+                active={isComplianceActive}
+                className="w-full"
+                suffix={
+                  document.complianceStatus ? (
+                    <IndicationConformite
+                      value={
+                        document.complianceStatus === "compliant"
+                          ? "conforme"
+                          : "non-conforme"
+                      }
+                    />
+                  ) : undefined
+                }
+              />
+            </Link>
+          </nav>
 
-          <Link href={`${baseUrl}/compliance${fromSuffix}`}>
-            <Button
-              variant={isComplianceActive ? "secondaire" : "quatrieme"}
-              className={cn(
-                "justify-start flex gap-2 w-full",
-                isEffectivelyCollapsed && "justify-center px-0",
-              )}
-            >
-              <Gavel className="w-4 h-4" />
-              {!isEffectivelyCollapsed && "Arbitrage"}
-            </Button>
-          </Link>
+          {/* Archiver — visible uniquement si le doc est publié sur RI.
+              Toujours dans le DOM pour permettre la transition CSS. */}
+          <div
+            className={cn(
+              "flex flex-col gap-1 overflow-hidden transition-all duration-300 ease-in-out",
+              canArchive
+                ? "max-h-20 opacity-100"
+                : "max-h-0 opacity-0 pointer-events-none",
+            )}
+          >
+            <BoutonMenu
+              icon={RiDeleteBinLine}
+              label={isArchiving ? "Archivage..." : "Archiver"}
+              variant="error"
+              onClick={handleArchive}
+              disabled={isArchiving}
+              className="w-full"
+            />
+            {archiveError && (
+              <p className="text-xs text-[var(--text-default-error)] px-3">
+                {archiveError}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Toggle markdown — SegmentedControl */}
+        <div className="px-2">
+          <SegmentedControl
+            options={EDITOR_MODES}
+            value={isRawMarkdownMode ? "raw" : "visual"}
+            onChange={(v) => setIsRawMarkdownMode(v === "raw")}
+            aria-label="Mode d'édition"
+          />
         </div>
       </div>
 
-      {/* Action Buttons - Sticky Bottom */}
-      <div className="sticky bottom-0 mt-auto">
-        <DocumentActions isCollapsed={isEffectivelyCollapsed} />
-      </div>
+      {/* (futur) Compteur de tokens */}
     </div>
   );
 }

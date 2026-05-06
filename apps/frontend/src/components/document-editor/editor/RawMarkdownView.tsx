@@ -35,42 +35,40 @@ export function RawMarkdownView({
   };
 
   return (
-    <div className="p-8 h-full flex flex-col">
-      <div className="max-w-3xl mx-auto flex-1 flex flex-col">
-        {/* Warning banner */}
-        {showWarning && (
-          <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm text-amber-900 font-medium mb-1">
-                Mode Markdown Brut
-              </p>
-              <p className="text-xs text-amber-800">
-                Lorsque vous revenez à l'éditeur visuel, BlockNote analysera à
-                nouveau le contenu. Certaines syntaxes markdown non prises en
-                charge peuvent être modifiées ou perdues.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowWarning(false)}
-              className="text-amber-600 hover:text-amber-800 text-xs font-medium"
-            >
-              Masquer
-            </button>
+    <div className="flex flex-col gap-4">
+      {/* Warning banner */}
+      {showWarning && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm text-amber-900 font-medium mb-1">
+              Mode Markdown Brut
+            </p>
+            <p className="text-xs text-amber-800">
+              Lorsque vous revenez à l'éditeur visuel, BlockNote analysera à
+              nouveau le contenu. Certaines syntaxes markdown non prises en
+              charge peuvent être modifiées ou perdues.
+            </p>
           </div>
-        )}
+          <button
+            type="button"
+            onClick={() => setShowWarning(false)}
+            className="text-amber-600 hover:text-amber-800 text-xs font-medium"
+          >
+            Masquer
+          </button>
+        </div>
+      )}
 
-        {/* Textarea */}
-        <textarea
-          value={localContent}
-          onChange={handleChange}
-          disabled={isProcessing || readOnly}
-          className="flex-1 w-full p-4 border border-gray-300 font-mono text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
-          placeholder="Entrez votre contenu markdown ici..."
-          spellCheck={false}
-        />
-      </div>
+      {/* Textarea — hauteur naturelle, grandit avec le contenu */}
+      <textarea
+        value={localContent}
+        onChange={handleChange}
+        disabled={isProcessing || readOnly}
+        className="w-full min-h-[60vh] p-4 border border-gray-300 font-mono text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
+        placeholder="Entrez votre contenu markdown ici..."
+        spellCheck={false}
+      />
     </div>
   );
 }

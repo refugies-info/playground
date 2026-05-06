@@ -27,7 +27,7 @@ const boutonMenuVariants = cva(
   {
     variants: {
       active: {
-        true: "text-[var(--blue-france-sun-113-625-hover)]",
+        true: "bg-[var(--background-alt-blue-france,#f5f5fe)] text-[var(--blue-france-sun-113-625-hover)]",
         false: [
           "text-[var(--text-mention-grey)]",
           "hover:text-[var(--text-title-grey)]",
@@ -38,10 +38,20 @@ const boutonMenuVariants = cva(
         true: "py-3",
         false: "",
       },
+      variant: {
+        default: "",
+        error: [
+          // Même pattern que default : texte qui fonce au hover
+          // --error-425-625 (#ce0500) → --error-425-625-hover (#ff2725)
+          "text-[var(--text-default-error)]",
+          "hover:text-[var(--error-425-625-hover,#ff2725)]",
+        ].join(" "),
+      },
     },
     defaultVariants: {
       active: false,
       iconOnly: false,
+      variant: "default",
     },
   },
 );
@@ -52,6 +62,10 @@ export interface BoutonMenuProps
   label: string;
   /** Mode icône seule — cache le label. Utilisé dans la sidebar repliée. */
   iconOnly?: boolean;
+  /** Variant visuel : default (gris → bleu) ou error (rouge). */
+  variant?: "default" | "error";
+  /** Élément optionnel affiché après le label (ex: badge conformité). */
+  suffix?: React.ReactNode;
   href?: string;
   linkComponent?: React.ElementType;
   className?: string;
@@ -63,6 +77,8 @@ function BoutonMenu({
   label,
   active = false,
   iconOnly = false,
+  variant = "default",
+  suffix,
   href,
   linkComponent,
   className,
@@ -73,7 +89,10 @@ function BoutonMenu({
   return (
     <Comp
       {...(href ? { href } : { type: "button" })}
-      className={cn(boutonMenuVariants({ active, iconOnly }), className)}
+      className={cn(
+        boutonMenuVariants({ active, iconOnly, variant }),
+        className,
+      )}
       {...rest}
     >
       {/* Taille S (16px) avec label, taille L (24px) en icon-only — calqué sur Figma "Base des boutons".
@@ -99,6 +118,10 @@ function BoutonMenu({
       >
         {label}
       </span>
+      {/* Suffix optionnel (ex: badge conformité) — affiché après le label */}
+      {!iconOnly && suffix && (
+        <span className="ml-auto shrink-0">{suffix}</span>
+      )}
     </Comp>
   );
 }

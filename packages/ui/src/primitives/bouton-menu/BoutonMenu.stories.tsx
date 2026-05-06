@@ -92,6 +92,15 @@ export const IconOnlyActif: Story = {
   },
 };
 
+/** Variant error — utilisé pour les actions destructrices comme "Archiver". */
+export const ErrorVariant: Story = {
+  args: {
+    icon: RiLogoutBoxRLine,
+    label: "Archiver",
+    variant: "error",
+  },
+};
+
 /** Comparaison : sidebar déployée vs repliée */
 export const SidebarDeployeeVsRepliee: Story = {
   name: "Sidebar — déployée vs repliée",

@@ -26,7 +26,6 @@ import { buildDispositifPayload } from "@/lib/payload-builder";
 import { submitPreview } from "@/lib/preview-utils";
 import { sanitizeRiMetadata } from "@/lib/sanitize-ri-metadata";
 import {
-  archiveDocument as archiveDocumentAction,
   publishDocument as publishDocumentAction,
   saveDocument as saveDocumentAction,
 } from "@/services/document-actions";
@@ -263,13 +262,24 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
 
     setIsArchiving(true);
     try {
-      const result = await archiveDocumentAction(
-        document.id,
-        document.title || "Sans titre",
-        document.editorialContent || "",
-        mergedMetadata,
-      );
-      return result;
+      const response = await fetch("/api/archive-document", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workflowId: document.id,
+          title: document.title || "Sans titre",
+          markdown: document.editorialContent || "",
+          metadata: mergedMetadata,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error ?? "Erreur lors de l'archivage",
+        };
+      }
+      return { success: true };
     } catch (error) {
       logger.error(error, "Error archiving document");
       return {

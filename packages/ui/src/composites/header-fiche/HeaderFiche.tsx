@@ -45,6 +45,7 @@ export function HeaderFiche({
         "grid grid-cols-[1fr_auto_1fr] items-center gap-6",
         "px-6 py-6",
         "bg-[var(--background-default-grey,#fff)]",
+        "sticky top-0 z-10",
         className,
       )}
     >

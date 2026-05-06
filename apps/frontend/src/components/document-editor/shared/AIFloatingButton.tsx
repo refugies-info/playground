@@ -273,7 +273,7 @@ export function AIFloatingButton() {
     !document?.editorialContent || document?.complianceStatus !== "compliant";
 
   return (
-    <div className="absolute bottom-6 right-6 z-20">
+    <div className="fixed bottom-6 right-6 z-20">
       <Popover
         open={hasSuggestion || !!error}
         onOpenChange={(open) => {
