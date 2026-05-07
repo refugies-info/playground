@@ -296,6 +296,13 @@ export function AIFloatingButton() {
           align="end"
           className="w-72 p-6"
           onOpenAutoFocus={(e) => e.preventDefault()}
+          // Empêche la fermeture par interactions extérieures.
+          // Sans ces guards, Radix UI ferme la popover via onOpenChange(false)
+          // lorsque le navigateur dispatche focusin sur le document au retour
+          // d'un autre onglet/fenêtre — ce qui déclenche handleReject() et
+          // efface la suggestion avant même qu'elle soit visible.
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onFocusOutside={(e) => e.preventDefault()}
         >
           {error ? (
             <>
