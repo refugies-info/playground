@@ -1,28 +1,37 @@
 "use client";
 
-import { DataTableColumnHeader, LanguageCell } from "@playground/ui/composites";
+import {
+  DataTableColumnHeader,
+  EmptyDash,
+  LanguageCell,
+} from "@playground/ui/composites";
+import { RiErrorWarningFill } from "@playground/ui/icons";
 import { Avatar, Badge } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
 import { RotateCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { OnlineStatusCell, WorkStatusCell } from "@/components/documents/cells";
+import { createTextColumn } from "@/lib/column-factories";
 import { getFlagClass, getLanguageName } from "@/lib/document-labels";
 import { retryTranslationGeneration } from "@/services/translation-actions";
 import type { TranslationItem } from "@/services/translations";
 
+/**
+ * Colonnes de la table Traductions.
+ *
+ * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/BOMO?node-id=1284-6260
+ *
+ * Ordre et intitulés exacts (header row 1284:6291) :
+ *   Langue | Auteur | Statut | État | Priorité | Mots | Titre |
+ *   Structure | Ville | ID
+ */
 export const columns: ColumnDef<TranslationItem>[] = [
+  // 1 — Langue
   {
     accessorKey: "language",
-    size: 100,
-    minSize: 100,
-    maxSize: 100,
     header: ({ column }) => (
-      <DataTableColumnHeader
-        column={column}
-        title="Langue"
-        className="w-[100px]"
-      />
+      <DataTableColumnHeader column={column} title="Langue" />
     ),
     cell: ({ row }) => {
       const lang = row.original.language;
@@ -35,19 +44,24 @@ export const columns: ColumnDef<TranslationItem>[] = [
       );
     },
   },
+
+  // 2 — Auteur
   {
-    accessorKey: "title",
+    accessorKey: "author",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Titre" />
+      <DataTableColumnHeader column={column} title="Auteur" />
     ),
-    cell: ({ row }) => (
-      <div className="font-medium truncate">{row.original.title}</div>
-    ),
+    cell: ({ row }) => {
+      const email = row.original.author;
+      return <Avatar email={email} isAI={!email} />;
+    },
   },
+
+  // 3 — Statut de publication
   {
     accessorKey: "onlineStatus",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Visibilité" />
+      <DataTableColumnHeader column={column} title="Statut" />
     ),
     cell: ({ row }) => (
       <OnlineStatusCell
@@ -61,40 +75,68 @@ export const columns: ColumnDef<TranslationItem>[] = [
       />
     ),
   },
+
+  // 4 — État de traitement
   {
     accessorKey: "workStatus",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Traitement" />
+      <DataTableColumnHeader column={column} title="État" />
     ),
     cell: ({ row }) => {
       const status = row.original.workStatus;
-
-      // Error case: badge + retry button (inline, seul usage)
-      if (status === "error") {
-        return <ErrorWithRetry row={row} />;
-      }
-
-      // Other cases: pure WorkStatusCell
+      if (status === "error") return <ErrorWithRetry row={row} />;
       return <WorkStatusCell status={status} />;
     },
   },
+
+  // 5 — Priorité
+  {
+    accessorKey: "priority",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Priorité" />
+    ),
+    cell: ({ row }) =>
+      row.original.priority === "urgent" ? (
+        <RiErrorWarningFill
+          className="w-4 h-4 text-[var(--text-default-warning,#b34000)]"
+          aria-label="Urgent"
+        />
+      ) : (
+        <EmptyDash />
+      ),
+  },
+
+  // 6 — Mots
   {
     accessorKey: "wordCount",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Mots" />
     ),
-    cell: ({ row }) => <div>{row.getValue("wordCount")}</div>,
-  },
-  {
-    accessorKey: "author",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Auteur" />
-    ),
     cell: ({ row }) => {
-      const email = row.original.author;
-      return <Avatar email={email} isAI={!email} />;
+      const count = row.original.wordCount;
+      if (count == null) return <EmptyDash />;
+      return <span className="text-sm tabular-nums">{count}</span>;
     },
   },
+
+  // 7 — Titre (fill)
+  {
+    accessorKey: "title",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Titre" />
+    ),
+    cell: ({ row }) => (
+      <div className="min-w-[242px] font-medium">{row.original.title}</div>
+    ),
+  },
+
+  // 8 — Ville (réutilise createTextColumn générique)
+  createTextColumn<TranslationItem>({
+    accessorKey: "commune",
+    title: "Ville",
+    getValue: (row) => row.commune,
+    className: "text-sm",
+  }),
 ];
 
 // =============================================================================

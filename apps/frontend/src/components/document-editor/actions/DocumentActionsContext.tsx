@@ -51,6 +51,7 @@ interface DocumentActionsContextValue {
   publishDocument: (
     triggerTranslations?: boolean,
     overrideNullFields?: string[],
+    isUrgent?: boolean,
   ) => Promise<{
     success: boolean;
     remoteId?: string;
@@ -208,7 +209,11 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
   // =============================================================================
 
   const publishDocument = useCallback(
-    async (triggerTranslations = false, overrideNullFields: string[] = []) => {
+    async (
+      triggerTranslations = false,
+      overrideNullFields: string[] = [],
+      isUrgent = false,
+    ) => {
       if (!document?.id) {
         return { success: false, error: "Document non trouvé" };
       }
@@ -233,6 +238,7 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
           document.editorialContent || "",
           publicationMetadata,
           triggerTranslations,
+          isUrgent,
         );
         return result;
       } catch (error) {

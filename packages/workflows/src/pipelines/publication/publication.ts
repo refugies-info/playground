@@ -28,6 +28,7 @@ export interface PublicationWorkflowResult {
 export async function publicationWorkflow(
   input: PublishDocumentInput,
   triggerTranslations: boolean,
+  isUrgent = false,
 ): Promise<PublicationWorkflowResult> {
   "use workflow";
 
@@ -58,6 +59,7 @@ export async function publicationWorkflow(
       const translationResult = await createTranslationRecordsStep(
         editorialRecordId,
         input.workflowId,
+        isUrgent,
       );
 
       if (translationResult.success && translationResult.data) {

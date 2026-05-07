@@ -295,6 +295,7 @@ export async function publishDocument(
   markdown: string,
   metadata?: Record<string, unknown>,
   triggerTranslations?: boolean,
+  isUrgent?: boolean,
 ): Promise<{
   success: boolean;
   workflowRunId?: string;
@@ -327,6 +328,7 @@ export async function publishDocument(
         platform: "refugies.info",
       },
       triggerTranslations ?? false,
+      isUrgent ?? false,
     ]);
 
     logger.info(

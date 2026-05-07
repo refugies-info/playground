@@ -27,11 +27,15 @@ export interface TranslationItem {
   sourceMarkdown?: string; // from editorial_record
   author: string;
   authorRole: string;
+  priority?: string | null; // 'urgent' | null
+  commune?: string | null;
 }
 
 // Extended helper type including profiles
+// Note: `priority` added in migration 20260507 — not yet in generated DB types
 type TranslationWithRelations =
   Database["public"]["Tables"]["translation_records"]["Row"] & {
+    priority?: string | null;
     editorial_records: Pick<
       Database["public"]["Tables"]["editorial_records"]["Row"],
       "markdown" | "metadata"
@@ -53,6 +57,7 @@ export interface GetTranslationsParams {
   language?: string; // Filter by specific language
   workStatus?: string; // Filter by work_status
   onlineStatus?: string; // Filter by online_status
+  priority?: string; // Filter by priority ('urgent')
   status?: string; // Deprecated: for backward compatibility
   sortBy?: string;
   sortOrder?: "asc" | "desc";
@@ -76,6 +81,7 @@ export async function getTranslations(params: GetTranslationsParams) {
     language,
     workStatus,
     onlineStatus,
+    priority,
     status, // Deprecated: for backward compatibility
     sortBy = "updated_at",
     sortOrder = "desc",
@@ -122,6 +128,11 @@ export async function getTranslations(params: GetTranslationsParams) {
     query = query.eq("work_status", status);
   }
 
+  // Filter by priority
+  if (priority) {
+    query = query.eq("priority", priority);
+  }
+
   // Filter by online_status
   // Special case: "unpublished" means online_status IS NULL
   if (onlineStatus === "unpublished") {
@@ -165,6 +176,25 @@ export async function getTranslations(params: GetTranslationsParams) {
   }
 
   const rows = data as unknown as TranslationWithRelations[];
+
+  // Second query: enrich with structure_name, commune, external_id from workflows_enriched
+  const workflowIds = rows
+    .map((r) => r.workflow_id)
+    .filter((id): id is string => typeof id === "string");
+
+  const enrichedMap = new Map<string, { commune: string | null }>();
+
+  if (workflowIds.length > 0) {
+    const { data: enrichedData } = await supabase
+      .from("workflows_enriched")
+      .select("id, commune")
+      .in("id", workflowIds);
+
+    for (const row of enrichedData ?? []) {
+      if (!row.id) continue;
+      enrichedMap.set(row.id, { commune: row.commune ?? null });
+    }
+  }
 
   const translations: TranslationItem[] = await Promise.all(
     rows.map(async (row) => {
@@ -233,7 +263,9 @@ export async function getTranslations(params: GetTranslationsParams) {
         sourceMarkdown,
         author: authorEmail || "",
         authorRole: authorRole || "",
-      };
+        priority: row.priority ?? null,
+        ...(row.workflow_id ? (enrichedMap.get(row.workflow_id) ?? {}) : {}),
+      } as TranslationItem;
     }),
   );
 

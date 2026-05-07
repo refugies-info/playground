@@ -25,6 +25,7 @@ interface TranslationsListProps {
     workStatus: string;
     onlineStatus: string;
     language: string;
+    priority: string;
   };
   title: string;
   currentPage: number;
@@ -108,6 +109,9 @@ export function TranslationsList({
       params.delete("language");
     }
 
+    if (newFilters.priority) params.set("priority", newFilters.priority);
+    else params.delete("priority");
+
     router.push(`/translations?${params.toString()}`, { scroll: false });
   };
 
@@ -119,7 +123,12 @@ export function TranslationsList({
   };
 
   const _clearFilters = () => {
-    setFilters({ workStatus: "", onlineStatus: "", language: "" });
+    setFilters({
+      workStatus: "",
+      onlineStatus: "",
+      language: "",
+      priority: "",
+    });
     router.push("/translations", { scroll: false });
   };
 
@@ -170,6 +179,13 @@ export function TranslationsList({
             onChange={(value) => updateFilters({ ...filters, language: value })}
           />
         )}
+
+        <BoutonFiltre
+          label="Priorité"
+          options={[{ label: "Urgent", value: "urgent" }]}
+          value={filters.priority}
+          onChange={(value) => updateFilters({ ...filters, priority: value })}
+        />
       </div>
 
       <div>

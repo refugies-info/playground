@@ -73,7 +73,9 @@ export const createStructureNameColumn = (): ColumnDef<Document> => ({
 // Documents-specific Factories (/documents table)
 // =============================================================================
 
-export const createExternalIdColumn = (): ColumnDef<Document> => ({
+export const createExternalIdColumn = <
+  T extends { externalId?: string | null },
+>(): ColumnDef<T> => ({
   id: "externalId",
   header: ({ column }) => <DataTableColumnHeader column={column} title="ID" />,
   cell: ({ row }) => <ExternalIdCell externalId={row.original.externalId} />,
