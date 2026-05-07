@@ -8,6 +8,7 @@ import { DocumentActionsProvider } from "../actions";
 import { DocumentProvider, useDocument } from "../DocumentContext";
 import { MetadataProvider } from "../metadata/MetadataContext";
 import { AIFloatingButton } from "./AIFloatingButton";
+import { ContentProvider, useContentContext } from "./ContentContext";
 import { EditorNavigation } from "./EditorNavigation";
 import { HeaderFicheConnected } from "./HeaderFicheConnected";
 import { SourcePanel } from "./SourcePanel";
@@ -26,13 +27,11 @@ const DebugPanel = dynamic(
  *
  * Onglet Contenu :
  * - Source fermée → pr-64 pour compenser l'asymétrie du sidebar
- *   (le contenu apparaît centré par rapport au titre du header)
  * - Source ouverte → pr-0, alignement gauche pour laisser la place
- * - overflow-hidden (EditionView gère son propre scroll)
+ * - transition-[padding] activée uniquement pendant l'animation source
+ *   (via ContentContext.activatePaddingTransition)
  *
- * Autres onglets (Métadonnées, Arbitrage) :
- * - Pas de compensation → pleine largeur disponible
- * - overflow-y-auto (scroll naturel de la page)
+ * Autres onglets : pleine largeur, pas de transition.
  */
 function CenterContent({
   children,
@@ -42,11 +41,13 @@ function CenterContent({
   isContentTab: boolean;
 }) {
   const { isSourceOpen } = useDocument();
+  const { isPaddingTransitionActive } = useContentContext();
+
   return (
     <div
       className={cn(
         "flex-1 flex flex-col min-w-0",
-        isContentTab && "transition-[padding] duration-300",
+        isPaddingTransitionActive && "transition-[padding] duration-300",
         isContentTab && !isSourceOpen && "pr-64",
       )}
     >
@@ -84,30 +85,32 @@ export function DocumentLayout(props: DocumentLayoutProps) {
     <DocumentProvider initialData={initialData}>
       <MetadataProvider>
         <DocumentActionsProvider>
-          <DebugPanel />
-          {/* Editor Area — fond blanc + arrondis fournis par le layout parent (main) */}
-          <div className="flex flex-col flex-1">
-            {/* Header fiche */}
-            <HeaderFicheConnected from={from} userEmail={userEmail} />
+          <ContentProvider>
+            <DebugPanel />
+            {/* Editor Area — fond blanc + arrondis fournis par le layout parent (main) */}
+            <div className="flex flex-col flex-1">
+              {/* Header fiche */}
+              <HeaderFicheConnected from={from} userEmail={userEmail} />
 
-            {/* Main Content Area */}
-            <div className="flex flex-row flex-1 relative">
-              {/* Left Editor Navigation — flex item, prend sa place dans le flux */}
-              <EditorNavigation from={from} />
+              {/* Main Content Area */}
+              <div className="flex flex-row flex-1 relative">
+                {/* Left Editor Navigation — flex item, prend sa place dans le flux */}
+                <EditorNavigation from={from} />
 
-              {/* Center Editor / Content — centré visuellement par rapport au header */}
-              <CenterContent isContentTab={isContentTab}>
-                {children}
-              </CenterContent>
+                {/* Center Editor / Content — centré visuellement par rapport au header */}
+                <CenterContent isContentTab={isContentTab}>
+                  {children}
+                </CenterContent>
 
-              {/* Source Panel + Toggle — uniquement sur l'onglet Contenu */}
-              {isContentTab && <SourcePanel />}
-              {isContentTab && <SourceToggleButton />}
+                {/* Source Panel + Toggle — uniquement sur l'onglet Contenu */}
+                {isContentTab && <SourcePanel />}
+                {isContentTab && <SourceToggleButton />}
 
-              {/* AI Floating Button — absolute bottom-right */}
-              <AIFloatingButton />
+                {/* AI Floating Button — absolute bottom-right */}
+                <AIFloatingButton />
+              </div>
             </div>
-          </div>
+          </ContentProvider>
         </DocumentActionsProvider>
       </MetadataProvider>
     </DocumentProvider>

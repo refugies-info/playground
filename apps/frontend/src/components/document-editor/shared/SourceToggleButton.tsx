@@ -2,7 +2,9 @@
 
 import { FrArrowLeftSLineDouble } from "@playground/ui/icons";
 import { Button } from "@playground/ui/primitives";
+import { useCallback } from "react";
 import { useDocument } from "../DocumentContext";
+import { useContentContext } from "./ContentContext";
 
 /**
  * SourceToggleButton — bouton "Source" flottant dans la zone contenu.
@@ -15,6 +17,12 @@ import { useDocument } from "../DocumentContext";
  */
 export function SourceToggleButton() {
   const { document, setIsSourceOpen } = useDocument();
+  const { activatePaddingTransition } = useContentContext();
+
+  const handleOpen = useCallback(() => {
+    activatePaddingTransition();
+    setIsSourceOpen(true);
+  }, [activatePaddingTransition, setIsSourceOpen]);
 
   if (!document?.ingestionContent) return null;
 
@@ -24,7 +32,7 @@ export function SourceToggleButton() {
         variant="quatrieme"
         size="sm"
         leftIcon={FrArrowLeftSLineDouble}
-        onClick={() => setIsSourceOpen(true)}
+        onClick={handleOpen}
         aria-label="Afficher la source RCO"
         className="bg-[var(--background-contrast-grey)] text-[var(--text-default-grey)] hover:bg-[var(--background-contrast-grey-hover)]"
       >

@@ -17,6 +17,7 @@ import { Button } from "@playground/ui/primitives";
 import { useCallback, useEffect, useState } from "react";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useDocument } from "../DocumentContext";
+import { useContentContext } from "./ContentContext";
 import { MarkdownViewer } from "./MarkdownViewer";
 
 /**
@@ -33,6 +34,7 @@ import { MarkdownViewer } from "./MarkdownViewer";
 export function SourcePanel() {
   const { document, isSourceOpen, setIsSourceOpen, rollbackToOriginal } =
     useDocument();
+  const { activatePaddingTransition } = useContentContext();
   const { setIsCollapsed: setSidebarCollapsed } = useSidebar();
 
   // Auto-collapse de la sidebar globale quand le panneau source s'ouvre
@@ -44,10 +46,10 @@ export function SourcePanel() {
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-  const handleClose = useCallback(
-    () => setIsSourceOpen(false),
-    [setIsSourceOpen],
-  );
+  const handleClose = useCallback(() => {
+    activatePaddingTransition();
+    setIsSourceOpen(false);
+  }, [activatePaddingTransition, setIsSourceOpen]);
 
   const handleConfirmRestore = useCallback(() => {
     rollbackToOriginal();
