@@ -60,7 +60,10 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
 
   // Archiver uniquement si le document est actuellement publié sur RI
   // (= un publication_record actif existe, pas en erreur, pas déjà archivé)
-  const canArchive = document.onlineStatus === "published";
+  // Une fiche non conforme ne peut pas être archivée depuis l'éditeur.
+  const canArchive =
+    document.onlineStatus === "published" &&
+    document.complianceStatus !== "non_compliant";
 
   const handleArchive = async () => {
     setArchiveError(null);

@@ -186,6 +186,7 @@ export function HeaderFicheConnected({
             className="gap-2"
             onClick={previewDocument}
             isLoading={isPreviewing}
+            disabled={!isCompliant || isPreviewing}
           >
             Prévisualiser
             {!isPreviewing && <RiEyeLine className="w-4 h-4" />}
