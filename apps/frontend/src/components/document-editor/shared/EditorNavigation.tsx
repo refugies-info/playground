@@ -162,7 +162,6 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
               <PopoverContent
                 side="right"
                 className="w-[388px] flex flex-col gap-7"
-                onOpenAutoFocus={(e) => e.preventDefault()}
               >
                 <p className="text-base leading-6 text-[var(--text-default-grey,#3a3a3a)]">
                   Êtes-vous sûr de vouloir archiver cette fiche ? Elle ne sera
@@ -170,7 +169,11 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
                 </p>
                 <div className="flex justify-end items-center gap-4">
                   <PopoverClose asChild>
-                    <Button variant="tertiaire" rightIcon={RiCloseLine}>
+                    <Button
+                      variant="tertiaire"
+                      rightIcon={RiCloseLine}
+                      disabled={isArchiving}
+                    >
                       Annuler
                     </Button>
                   </PopoverClose>
@@ -179,8 +182,8 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
                     rightIcon={RiCheckLine}
                     isLoading={isArchiving}
                     onClick={async () => {
-                      setIsConfirmOpen(false);
                       await handleArchive();
+                      setIsConfirmOpen(false);
                     }}
                   >
                     Archiver
