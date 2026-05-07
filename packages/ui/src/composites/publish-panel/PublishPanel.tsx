@@ -83,9 +83,8 @@ function ConfirmationContent({
     <div className="flex flex-col gap-12">
       <div className="flex flex-col gap-6">
         <p className="text-sm text-[var(--text-default-grey,#3a3a3a)] leading-relaxed">
-          La fiche sera publiée sur{" "}
-          <span className="font-medium">Réfugiés.info</span> et visible par tous
-          les utilisateurs. Les métadonnées validées seront incluses.
+          Les modifications seront visibles par les usagers. Souhaites-tu les
+          faire traduire également ?
         </p>
 
         <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -101,7 +100,7 @@ function ConfirmationContent({
             )}
           />
           <span className="text-sm text-[var(--text-label-grey,#161616)]">
-            Déclencher les traductions
+            Lancer les traductions
           </span>
         </label>
       </div>
