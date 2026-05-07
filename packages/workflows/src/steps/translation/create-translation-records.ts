@@ -20,11 +20,13 @@ export interface CreateTranslationRecordsResult {
  *
  * @param editorialRecordId - The editorial record to create translations for
  * @param workflowId - The workflow ID to associate with translations
+ * @param isUrgent - Whether translations should be marked as urgent (priority = 'urgent')
  * @returns Result with count of created records and languages
  */
 export async function createTranslationRecordsStep(
   editorialRecordId: string,
   workflowId: string,
+  isUrgent = false,
 ): Promise<StepResult<CreateTranslationRecordsResult>> {
   "use step";
 
@@ -62,12 +64,30 @@ export async function createTranslationRecordsStep(
       };
     }
 
-    // 3. Create missing translation records
+    const priority = isUrgent ? "urgent" : null;
+
+    // 3a. Update priority on existing records (re-publication)
+    if (existingTranslations && existingTranslations.length > 0) {
+      const { error: updateError } = await supabase
+        .from("translation_records")
+        .update({ priority })
+        .eq("editorial_record_id", editorialRecordId);
+
+      if (updateError) {
+        logger.error(
+          updateError,
+          "Error updating priority on existing translation records",
+        );
+      }
+    }
+
+    // 3b. Create missing translation records
     const newRecords = targetLanguages.map((lang) => ({
       editorial_record_id: editorialRecordId,
       language: lang.code,
       work_status: "to_process",
       workflow_id: workflowId,
+      priority,
     }));
 
     const { error: insertError } = await supabase

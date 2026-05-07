@@ -24,6 +24,7 @@ export default async function TranslationsPage(props: PageProps) {
   const onlineStatus = searchParams.onlineStatus;
   const status = searchParams.status; // Deprecated: for backward compatibility
   const language = searchParams.language;
+  const priority = searchParams.priority;
   const sortBy = searchParams.sortBy;
   const sortOrder = searchParams.sortOrder;
 
@@ -76,6 +77,7 @@ export default async function TranslationsPage(props: PageProps) {
     pageSize,
     workStatus: typeof workStatus === "string" ? workStatus : undefined,
     onlineStatus: typeof onlineStatus === "string" ? onlineStatus : undefined,
+    priority: typeof priority === "string" ? priority : undefined,
     status: typeof status === "string" ? status : undefined, // Deprecated: backward compatibility
     language: effectiveLanguage,
     sortBy: typeof sortBy === "string" ? sortBy : undefined,
@@ -94,6 +96,7 @@ export default async function TranslationsPage(props: PageProps) {
     workStatus: typeof workStatus === "string" ? workStatus : "",
     onlineStatus: typeof onlineStatus === "string" ? onlineStatus : "",
     language: typeof language === "string" ? language : "",
+    priority: typeof priority === "string" ? priority : "",
   };
 
   const title =

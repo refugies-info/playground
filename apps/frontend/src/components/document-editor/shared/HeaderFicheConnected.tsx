@@ -72,6 +72,7 @@ export function HeaderFicheConnected({
   );
   const [hasCopied, setHasCopied] = useState(false);
   const [triggerTranslations, setTriggerTranslations] = useState(true);
+  const [isUrgent, setIsUrgent] = useState(false);
 
   // Realtime — met à jour l'URL dans le result success si elle n'était pas dispo immédiatement
   const { isWaiting, setError, startListening } = usePublicationRealtime({
@@ -116,7 +117,11 @@ export function HeaderFicheConnected({
   const handleConfirmPublish = async () => {
     setPublishResult(null);
 
-    const result = await publishDocument(triggerTranslations, errorFieldKeys);
+    const result = await publishDocument(
+      triggerTranslations,
+      errorFieldKeys,
+      isUrgent,
+    );
 
     if (result.success) {
       // Le workflow a démarré — on attend le résultat via Realtime
@@ -150,6 +155,7 @@ export function HeaderFicheConnected({
   const handleReset = () => {
     setPublishResult(null);
     setHasCopied(false);
+    setIsUrgent(false);
   };
   const handleRetry = () => {
     handleReset();
@@ -209,7 +215,12 @@ export function HeaderFicheConnected({
             result={publishResult}
             onReset={handleReset}
             triggerTranslations={triggerTranslations}
-            onToggleTranslations={setTriggerTranslations}
+            onToggleTranslations={(v) => {
+              setTriggerTranslations(v);
+              if (!v) setIsUrgent(false);
+            }}
+            isUrgent={isUrgent}
+            onToggleUrgent={setIsUrgent}
             onConfirm={handleConfirmPublish}
             hasCopied={hasCopied}
             onCopy={handleCopy}
