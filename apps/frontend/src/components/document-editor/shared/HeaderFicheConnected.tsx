@@ -155,6 +155,7 @@ export function HeaderFicheConnected({
   const handleReset = () => {
     setPublishResult(null);
     setHasCopied(false);
+    setIsUrgent(false);
   };
   const handleRetry = () => {
     handleReset();

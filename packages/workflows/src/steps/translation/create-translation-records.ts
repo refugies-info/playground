@@ -20,6 +20,7 @@ export interface CreateTranslationRecordsResult {
  *
  * @param editorialRecordId - The editorial record to create translations for
  * @param workflowId - The workflow ID to associate with translations
+ * @param isUrgent - Whether translations should be marked as urgent (priority = 'urgent')
  * @returns Result with count of created records and languages
  */
 export async function createTranslationRecordsStep(

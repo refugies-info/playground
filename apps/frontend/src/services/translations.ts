@@ -185,10 +185,14 @@ export async function getTranslations(params: GetTranslationsParams) {
   const enrichedMap = new Map<string, { commune: string | null }>();
 
   if (workflowIds.length > 0) {
-    const { data: enrichedData } = await supabase
+    const { data: enrichedData, error: enrichedError } = await supabase
       .from("workflows_enriched")
       .select("id, commune")
       .in("id", workflowIds);
+
+    if (enrichedError) {
+      logger.error(enrichedError, "Error fetching enriched workflow data");
+    }
 
     for (const row of enrichedData ?? []) {
       if (!row.id) continue;
