@@ -45,7 +45,8 @@ function CenterContent({
   return (
     <div
       className={cn(
-        "flex-1 flex flex-col min-w-0 transition-[padding] duration-300",
+        "flex-1 flex flex-col min-w-0",
+        isContentTab && "transition-[padding] duration-300",
         isContentTab && !isSourceOpen && "pr-64",
       )}
     >

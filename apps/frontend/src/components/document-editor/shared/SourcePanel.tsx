@@ -14,16 +14,10 @@ import {
   PopoverTrigger,
 } from "@playground/ui/overlays";
 import { Button } from "@playground/ui/primitives";
-import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useDocument } from "../DocumentContext";
-
-// MarkdownViewer accède à `window` via BlockNote → SSR impossible
-const MarkdownViewer = dynamic(
-  () => import("./MarkdownViewer").then((m) => m.MarkdownViewer),
-  { ssr: false },
-);
+import { MarkdownViewer } from "./MarkdownViewer";
 
 /**
  * SourcePanel — panneau de comparaison avec le contenu source RCO.

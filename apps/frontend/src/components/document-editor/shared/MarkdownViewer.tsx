@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { cn } from "@playground/ui/utils";
+import dynamic from "next/dynamic";
 
 interface MarkdownViewerProps {
   /** Markdown content to render (can include YAML frontmatter) */
@@ -21,8 +22,12 @@ interface MarkdownViewerProps {
 /**
  * Reusable component for rendering markdown content with BlockNote.
  * Handles frontmatter stripping and markdown-to-HTML conversion.
+ *
+ * Exporté via `dynamic({ ssr: false })` — BlockNote accède à `window` au montage,
+ * ce qui provoquerait une erreur SSR si le composant était rendu côté serveur.
+ * Les consommateurs peuvent importer `{ MarkdownViewer }` directement sans wrapper local.
  */
-export function MarkdownViewer({
+function MarkdownViewerInner({
   content,
   loadingMessage = "Chargement...",
   emptyMessage = "Aucun contenu disponible",
@@ -87,3 +92,8 @@ export function MarkdownViewer({
     />
   );
 }
+
+export const MarkdownViewer = dynamic(
+  () => Promise.resolve({ default: MarkdownViewerInner }),
+  { ssr: false },
+);
