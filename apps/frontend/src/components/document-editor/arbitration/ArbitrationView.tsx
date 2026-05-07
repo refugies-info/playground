@@ -7,11 +7,17 @@ import type {
 } from "@playground/shared-types";
 import { EmptyDash } from "@playground/ui/composites";
 import { Badge, Button, Conformite } from "@playground/ui/primitives";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toggleWorkflowStatus } from "@/services/document-actions";
 import { useDocument } from "../DocumentContext";
-import { MarkdownViewer } from "../shared/MarkdownViewer";
+
+// MarkdownViewer accède à `window` via BlockNote → SSR impossible
+const MarkdownViewer = dynamic(
+  () => import("../shared/MarkdownViewer").then((m) => m.MarkdownViewer),
+  { ssr: false },
+);
 
 export function ArbitrationView() {
   const router = useRouter();
