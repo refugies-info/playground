@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-Le workflow d'ingestion DI (`diIngestionWorkflow`) importe les fiches de l'API Data Inclusion (DI), évalue leur conformité via un agent Letta, et génère les métadonnées associées. Il s'exécute en cron (dimanche–jeudi à 2h00).
+Le workflow d'ingestion DI (`diIngestionWorkflow`) importe les fiches de l'API Data Inclusion (DI), évalue leur conformité via un agent Letta, et génère les métadonnées associées. Il s'exécute en cron 3 fois par jour (12h, 13h, 14h heure de Paris), avec un maximum de 10 records par exécution (`MAX_EDITORIAL_BACKLOG`).
 
 ## Architecture fan-out
 
@@ -50,7 +50,7 @@ Chaque step de la paire `diSingleAuditStep` / `diSingleMetadataStep` a :
 
 | Variable | Description | Défaut |
 |---|---|---|
-| `MAX_EDITORIAL_BACKLOG` | Nombre max de records claimés par exécution du cron | `50` |
+| `MAX_EDITORIAL_BACKLOG` | Nombre max de records claimés par exécution du cron | `10` |
 | `PLAYGROUND_AGENT_ID` | Agent Letta pour l'audit compliance | — |
 | `METADATA_AGENT_ID` | Agent Letta pour les métadonnées | fallback sur `PLAYGROUND_AGENT_ID` |
 
