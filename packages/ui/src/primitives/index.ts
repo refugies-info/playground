@@ -15,4 +15,5 @@ export * from "./papa-ia";
 export * from "./search-input";
 export * from "./segmented-control";
 export * from "./spinner";
+export * from "./switch";
 export * from "./tag";

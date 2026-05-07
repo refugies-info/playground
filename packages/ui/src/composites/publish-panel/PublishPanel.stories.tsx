@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { useState } from "react";
 import { RiSendPlaneLine } from "../../icons";
 import { Button } from "../../primitives/button/Button";
 import { PublishPanel } from "./PublishPanel";
@@ -6,12 +7,7 @@ import { PublishPanel } from "./PublishPanel";
 /**
  * PublishPanel — Popover de confirmation + résultat de publication.
  *
- * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/BOMO?node-id=1824-25605
- *
- * 3 phases avec transition animée (fade + slide) :
- *   1. Confirmation → description + checkbox + Annuler/Publier
- *   2. Succès       → "La fiche a bien été publiée" + URL copiable + Voir la fiche
- *   3. Erreur       → message d'erreur + Fermer/Réessayer
+ * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/BOMO?node-id=2115-11219
  */
 const meta: Meta<typeof PublishPanel> = {
   title: "Composites/PublishPanel",
@@ -25,8 +21,11 @@ const meta: Meta<typeof PublishPanel> = {
         Publier
       </Button>
     ),
+    defaultOpen: true,
     triggerTranslations: true,
     onToggleTranslations: () => {},
+    isUrgent: false,
+    onToggleUrgent: () => {},
     onConfirm: () => {},
   },
 };
@@ -34,27 +33,61 @@ const meta: Meta<typeof PublishPanel> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Phase 1 — Confirmation (état initial) */
+// ---------------------------------------------------------------------------
+// Phase 1 — Confirmation
+// ---------------------------------------------------------------------------
+
+/**
+ * Interactif — coche/décoche la checkbox pour voir le toggle Urgent
+ * apparaître/disparaître avec sa transition.
+ */
 export const Confirmation: Story = {
-  args: {
-    defaultOpen: true,
+  name: "Confirmation — interactif",
+  render: (args) => {
+    const [triggerTranslations, setTriggerTranslations] = useState(true);
+    const [isUrgent, setIsUrgent] = useState(false);
+    return (
+      <PublishPanel
+        {...args}
+        triggerTranslations={triggerTranslations}
+        onToggleTranslations={(v) => {
+          setTriggerTranslations(v);
+          if (!v) setIsUrgent(false);
+        }}
+        isUrgent={isUrgent}
+        onToggleUrgent={setIsUrgent}
+      />
+    );
   },
+  parameters: { controls: { disable: true } },
 };
 
-/** Phase 1b — Loading (attente réponse API + Realtime) */
+/** Urgent activé — checkbox ON + interrupteur ON */
+export const ConfirmationUrgent: Story = {
+  name: "Confirmation — Urgent activé",
+  args: { isUrgent: true },
+};
+
+/** Sans traductions — checkbox décochée, toggle masqué */
+export const ConfirmationSansTraductions: Story = {
+  name: "Confirmation — Sans traductions",
+  args: { triggerTranslations: false },
+};
+
+/** Loading — bouton Publier en attente */
 export const Loading: Story = {
-  name: "Loading (isPublishing)",
-  args: {
-    defaultOpen: true,
-    isPublishing: true,
-  },
+  name: "Confirmation — Loading",
+  args: { isPublishing: true },
 };
 
-/** Phase 2 — Succès */
+// ---------------------------------------------------------------------------
+// Phase 2 & 3 — Résultat
+// ---------------------------------------------------------------------------
+
+/** Publication réussie — URL copiable */
 export const Succes: Story = {
   name: "Succès",
   args: {
-    defaultOpen: true,
     result: {
       type: "success",
       publishedUrl: "https://refugies.info/dispositif/6507c1a2b3f4e5d6c7a8b9c0",
@@ -63,10 +96,9 @@ export const Succes: Story = {
   },
 };
 
-/** Phase 3 — Erreur */
+/** Échec — message d'erreur + Réessayer */
 export const Erreur: Story = {
   args: {
-    defaultOpen: true,
     result: {
       type: "error",
       error:

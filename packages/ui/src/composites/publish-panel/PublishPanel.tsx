@@ -25,6 +25,7 @@ import {
   PopoverTrigger,
 } from "../../overlays/popover";
 import { Button } from "../../primitives/button/Button";
+import { Switch } from "../../primitives/switch/Switch";
 import { cn } from "../../utils";
 
 /**
@@ -56,6 +57,9 @@ export interface PublishPanelProps {
   onReset?: () => void;
   triggerTranslations: boolean;
   onToggleTranslations: (value: boolean) => void;
+  /** Marquer les traductions comme urgentes (visible quand triggerTranslations=true) */
+  isUrgent?: boolean;
+  onToggleUrgent?: (value: boolean) => void;
   onConfirm: () => void;
   hasCopied?: boolean;
   onCopy?: () => void;
@@ -73,11 +77,18 @@ function ConfirmationContent({
   isPublishing,
   triggerTranslations,
   onToggleTranslations,
+  isUrgent = false,
+  onToggleUrgent = () => {},
   onConfirm,
   onClose,
 }: Pick<
   PublishPanelProps,
-  "isPublishing" | "triggerTranslations" | "onToggleTranslations" | "onConfirm"
+  | "isPublishing"
+  | "triggerTranslations"
+  | "onToggleTranslations"
+  | "isUrgent"
+  | "onToggleUrgent"
+  | "onConfirm"
 > & { onClose?: () => void }) {
   return (
     <div className="flex flex-col gap-12">
@@ -87,22 +98,58 @@ function ConfirmationContent({
           faire traduire également ?
         </p>
 
-        <label className="flex items-center gap-2 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={triggerTranslations}
-            onChange={(e) => onToggleTranslations(e.target.checked)}
+        {/*
+         * Row : checkbox "Lancer les traductions" (gauche)
+         *        + interrupteur "Urgent" (droite, visible si triggerTranslations)
+         * Figma : layout_JTWQMG — row, justify-between, padding: 8px 0
+         */}
+        <div className="flex items-center justify-between py-2">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={triggerTranslations}
+              onChange={(e) => onToggleTranslations(e.target.checked)}
+              className={cn(
+                "w-4 h-4 rounded cursor-pointer",
+                "border border-[var(--border-action-high-blue-france,#000091)]",
+                "text-[var(--background-action-high-blue-france,#000091)]",
+                "focus:ring-[var(--border-action-high-blue-france,#000091)]",
+              )}
+            />
+            <span className="text-base text-[var(--text-label-grey,#161616)]">
+              Lancer les traductions
+            </span>
+          </label>
+
+          {/*
+           * Interrupteur "Urgent" — slide-in depuis la droite quand triggerTranslations=true.
+           *
+           * Toujours dans le DOM (pas de unmount) pour que la transition CSS fonctionne.
+           * max-width 0→160px + opacity 0→1 : effet slide horizontal depuis la droite.
+           * overflow-hidden : clippe le contenu pendant l'animation.
+           * whitespace-nowrap : empêche le texte de wrapper pendant le slide.
+           * pointer-events-none quand caché : évite les clics accidentels.
+           */}
+          <div
             className={cn(
-              "w-4 h-4 rounded cursor-pointer",
-              "border border-[var(--border-action-high-blue-france,#000091)]",
-              "text-[var(--background-action-high-blue-france,#000091)]",
-              "focus:ring-[var(--border-action-high-blue-france,#000091)]",
+              "flex items-center gap-3",
+              "transition-opacity duration-100",
+              triggerTranslations
+                ? "opacity-100"
+                : "opacity-0 pointer-events-none",
             )}
-          />
-          <span className="text-sm text-[var(--text-label-grey,#161616)]">
-            Lancer les traductions
-          </span>
-        </label>
+          >
+            <span className="text-base text-[var(--text-label-grey,#161616)]">
+              Urgent
+            </span>
+            <Switch
+              checked={isUrgent}
+              onChange={onToggleUrgent}
+              disabled={!triggerTranslations}
+              aria-label="Marquer les traductions comme urgentes"
+            />
+          </div>
+        </div>
       </div>
 
       <div className="flex justify-end gap-4">
@@ -247,6 +294,8 @@ export function PublishPanelContent({
   onReset,
   triggerTranslations,
   onToggleTranslations,
+  isUrgent = false,
+  onToggleUrgent = () => {},
   onConfirm,
   hasCopied,
   onCopy,
@@ -287,6 +336,8 @@ export function PublishPanelContent({
           isPublishing={isPublishing}
           triggerTranslations={triggerTranslations}
           onToggleTranslations={onToggleTranslations}
+          isUrgent={isUrgent}
+          onToggleUrgent={onToggleUrgent}
           onConfirm={onConfirm}
           onClose={onClose}
         />
@@ -308,6 +359,8 @@ export function PublishPanel({
   onReset,
   triggerTranslations,
   onToggleTranslations,
+  isUrgent = false,
+  onToggleUrgent = () => {},
   onConfirm,
   hasCopied,
   onCopy,
@@ -347,6 +400,8 @@ export function PublishPanel({
           onClose={handleClose}
           triggerTranslations={triggerTranslations}
           onToggleTranslations={onToggleTranslations}
+          isUrgent={isUrgent}
+          onToggleUrgent={onToggleUrgent}
           onConfirm={onConfirm}
           hasCopied={hasCopied}
           onCopy={onCopy}
