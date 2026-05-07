@@ -14,16 +14,11 @@ import {
   PopoverTrigger,
 } from "@playground/ui/overlays";
 import { Button } from "@playground/ui/primitives";
-import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useDocument } from "../DocumentContext";
-
-// MarkdownViewer accède à `window` via BlockNote → SSR impossible
-const MarkdownViewer = dynamic(
-  () => import("./MarkdownViewer").then((m) => m.MarkdownViewer),
-  { ssr: false },
-);
+import { useContentContext } from "./ContentContext";
+import { MarkdownViewer } from "./MarkdownViewer";
 
 /**
  * SourcePanel — panneau de comparaison avec le contenu source RCO.
@@ -39,6 +34,7 @@ const MarkdownViewer = dynamic(
 export function SourcePanel() {
   const { document, isSourceOpen, setIsSourceOpen, rollbackToOriginal } =
     useDocument();
+  const { activatePaddingTransition } = useContentContext();
   const { setIsCollapsed: setSidebarCollapsed } = useSidebar();
 
   // Auto-collapse de la sidebar globale quand le panneau source s'ouvre
@@ -50,10 +46,10 @@ export function SourcePanel() {
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-  const handleClose = useCallback(
-    () => setIsSourceOpen(false),
-    [setIsSourceOpen],
-  );
+  const handleClose = useCallback(() => {
+    activatePaddingTransition();
+    setIsSourceOpen(false);
+  }, [activatePaddingTransition, setIsSourceOpen]);
 
   const handleConfirmRestore = useCallback(() => {
     rollbackToOriginal();

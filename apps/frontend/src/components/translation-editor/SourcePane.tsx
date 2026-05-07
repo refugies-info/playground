@@ -1,16 +1,7 @@
 "use client";
 
-// import { MarkdownViewer } from "../document-editor/MarkdownViewer";
-import dynamic from "next/dynamic";
+import { MarkdownViewer } from "../document-editor/shared/MarkdownViewer";
 import { useTranslation } from "./TranslationContext";
-
-const MarkdownViewer = dynamic(
-  () =>
-    import("../document-editor/shared/MarkdownViewer").then(
-      (mod) => mod.MarkdownViewer,
-    ),
-  { ssr: false },
-);
 
 export function SourcePane() {
   const { translation } = useTranslation();

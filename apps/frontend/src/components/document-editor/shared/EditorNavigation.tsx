@@ -2,6 +2,8 @@
 
 import { cn } from "@playground/ui";
 import {
+  RiCheckLine,
+  RiCloseLine,
   RiCodeSSlashLine,
   RiDatabaseLine,
   RiDeleteBinLine,
@@ -10,7 +12,14 @@ import {
   RiPencilLine,
 } from "@playground/ui/icons";
 import {
+  Popover,
+  PopoverAnchor,
+  PopoverClose,
+  PopoverContent,
+} from "@playground/ui/overlays";
+import {
   BoutonMenu,
+  Button,
   IndicationConformite,
   SegmentedControl,
 } from "@playground/ui/primitives";
@@ -50,6 +59,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
   const fromSuffix = from ? `?from=${encodeURIComponent(from)}` : "";
 
   const [archiveError, setArchiveError] = useState<string | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   if (!document) return null;
 
@@ -138,14 +148,49 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
                 : "max-h-0 opacity-0 pointer-events-none",
             )}
           >
-            <BoutonMenu
-              icon={RiDeleteBinLine}
-              label={isArchiving ? "Archivage..." : "Archiver"}
-              variant="error"
-              onClick={handleArchive}
-              disabled={isArchiving}
-              className="w-full"
-            />
+            <Popover open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+              <PopoverAnchor asChild>
+                <BoutonMenu
+                  icon={RiDeleteBinLine}
+                  label="Archiver"
+                  variant="error"
+                  disabled={isArchiving}
+                  onClick={() => setIsConfirmOpen(true)}
+                  className="w-full"
+                />
+              </PopoverAnchor>
+              <PopoverContent
+                side="right"
+                className="w-[388px] flex flex-col gap-7"
+              >
+                <p className="text-base leading-6 text-[var(--text-default-grey,#3a3a3a)]">
+                  Êtes-vous sûr de vouloir archiver cette fiche ? Elle ne sera
+                  plus visible sur le site par les usagers.
+                </p>
+                <div className="flex justify-end items-center gap-4">
+                  <PopoverClose asChild>
+                    <Button
+                      variant="tertiaire"
+                      rightIcon={RiCloseLine}
+                      disabled={isArchiving}
+                    >
+                      Annuler
+                    </Button>
+                  </PopoverClose>
+                  <Button
+                    variant="primaire"
+                    rightIcon={RiCheckLine}
+                    isLoading={isArchiving}
+                    onClick={async () => {
+                      await handleArchive();
+                      setIsConfirmOpen(false);
+                    }}
+                  >
+                    Archiver
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
             {archiveError && (
               <p className="text-xs text-[var(--text-default-error)] px-3">
                 {archiveError}
@@ -154,15 +199,17 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
           </div>
         </div>
 
-        {/* Toggle markdown — SegmentedControl */}
-        <div className="px-2">
-          <SegmentedControl
-            options={EDITOR_MODES}
-            value={isRawMarkdownMode ? "raw" : "visual"}
-            onChange={(v) => setIsRawMarkdownMode(v === "raw")}
-            aria-label="Mode d'édition"
-          />
-        </div>
+        {/* Toggle markdown — SegmentedControl : uniquement sur l'onglet Contenu */}
+        {isFicheActive && (
+          <div className="px-2">
+            <SegmentedControl
+              options={EDITOR_MODES}
+              value={isRawMarkdownMode ? "raw" : "visual"}
+              onChange={(v) => setIsRawMarkdownMode(v === "raw")}
+              aria-label="Mode d'édition"
+            />
+          </div>
+        )}
       </div>
 
       {/* (futur) Compteur de tokens */}
