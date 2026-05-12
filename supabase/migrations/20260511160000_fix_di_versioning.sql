@@ -10,7 +10,11 @@
 -- Step 1: Fix increment_ingestion_version trigger
 -- =============================================================================
 CREATE OR REPLACE FUNCTION public.increment_ingestion_version()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
 DECLARE
     max_ver integer;
     new_di_id text;
@@ -31,7 +35,7 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- =============================================================================
 -- Step 2: Fix handle_new_ingestion_record trigger
