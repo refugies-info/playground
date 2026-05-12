@@ -12,15 +12,19 @@ export async function processIngestionRecords(
 ) {
   logger.info({ runId }, "Finding services without ingestion records");
 
-  // 1. Get all di_service_ids that already have ingestion_records
-  const existingServiceIds = new Set<string>();
+  // 1. Build a map of known di_service UUIDs by di_id (stable API ID)
+  // di_id is used instead of di_service_id (UUID) because each new version
+  // of a service gets a new UUID — di_id remains stable across versions.
+  // We store a Set of ALL known UUIDs per di_id to avoid false positives
+  // when multiple ingestion_records exist for the same di_id (duplicates).
+  const knownUuidsByDiId = new Map<string, Set<string>>();
   let irPage = 0;
   let irHasMore = true;
 
   while (irHasMore) {
     const { data: existing, error: existingError } = await supabase
       .from("ingestion_records")
-      .select("di_service_id")
+      .select("id, di_service_id, di_services(di_id)")
       .not("di_service_id", "is", null)
       .range(irPage * FETCH_PAGE_SIZE, (irPage + 1) * FETCH_PAGE_SIZE - 1);
 
@@ -32,8 +36,10 @@ export async function processIngestionRecords(
     }
 
     for (const record of existing) {
-      if (record.di_service_id) {
-        existingServiceIds.add(record.di_service_id);
+      const diId = (record.di_services as { di_id: string } | null)?.di_id;
+      if (diId && record.di_service_id) {
+        if (!knownUuidsByDiId.has(diId)) knownUuidsByDiId.set(diId, new Set());
+        knownUuidsByDiId.get(diId)!.add(record.di_service_id);
       }
     }
 
@@ -42,18 +48,21 @@ export async function processIngestionRecords(
   }
 
   logger.info(
-    { existingCount: existingServiceIds.size },
+    { existingCount: knownUuidsByDiId.size },
     "Found existing ingestion records",
   );
 
-  // 2. Fetch all services and filter out those that already have ingestion_records
-  let allServices: Database["public"]["Tables"]["di_services"]["Row"][] = [];
+  // 2. Fetch latest version of each service and detect new/updated ones
+  // di_services_latest returns exactly one row per di_id (highest version),
+  // so we never process outdated duplicates.
+  let allServices: Database["public"]["Views"]["di_services_latest"]["Row"][] =
+    [];
   let page = 0;
   let hasMore = true;
 
   while (hasMore) {
     const { data: services, error: servicesError } = await supabase
-      .from("di_services")
+      .from("di_services_latest")
       .select("*")
       .range(page * FETCH_PAGE_SIZE, (page + 1) * FETCH_PAGE_SIZE - 1);
 
@@ -64,15 +73,23 @@ export async function processIngestionRecords(
       break;
     }
 
-    // Filter out services that already have ingestion_records
-    const newServices = services.filter((s) => !existingServiceIds.has(s.id));
-    allServices = allServices.concat(newServices);
+    // Keep only:
+    // - New services (di_id not in map)
+    // - Updated services (di_id known but this UUID never seen = new version)
+    const newOrUpdatedServices = services.filter((s) => {
+      if (!s.id || !s.di_id) return false;
+      const knownUuids = knownUuidsByDiId.get(s.di_id);
+      if (!knownUuids) return true; // new service
+      return !knownUuids.has(s.id); // UUID never seen = updated service
+    });
+
+    allServices = allServices.concat(newOrUpdatedServices);
 
     logger.debug(
       {
         page: page + 1,
         fetched: services.length,
-        new: newServices.length,
+        newOrUpdated: newOrUpdatedServices.length,
         total: allServices.length,
       },
       "Fetched services page",
