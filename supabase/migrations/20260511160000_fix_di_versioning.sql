@@ -122,7 +122,45 @@ JOIN di_best_ir best ON best.di_id = ds.di_id
 WHERE er.ingestion_record_id = ir.id
   AND er.ingestion_record_id IS DISTINCT FROM best.best_ir_id;
 
--- 3D. Delete non-editorial workflows pointing to non-best IRs
+-- 3D. Recover compliance_status + ingestion_report_id from audited duplicate IRs
+--     The best IR may never have been audited — copy from the most recent audited sibling.
+UPDATE public.ingestion_records ir_best
+SET
+  compliance_status = COALESCE(ir_best.compliance_status, audited.compliance_status),
+  ingestion_report_id = COALESCE(ir_best.ingestion_report_id, audited.ingestion_report_id)
+FROM di_best_ir best
+JOIN LATERAL (
+  SELECT ir2.compliance_status, ir2.ingestion_report_id
+  FROM public.ingestion_records ir2
+  JOIN public.di_services ds2 ON ir2.di_service_id = ds2.id
+  WHERE ds2.di_id = best.di_id
+    AND ir2.id != best.best_ir_id
+    AND ir2.compliance_status IS NOT NULL
+  ORDER BY ir2.created_at DESC
+  LIMIT 1
+) audited ON true
+WHERE ir_best.id = best.best_ir_id
+  AND ir_best.compliance_status IS NULL;
+
+-- 3E. Re-link letta_reports from doomed workflows to the surviving workflow
+--     Prefer the editorial workflow; fall back to any workflow on the best IR.
+UPDATE public.letta_reports lr
+SET workflow_id = (
+  SELECT w_surv.id
+  FROM public.workflows w_surv
+  WHERE w_surv.ingestion_record_id = best.best_ir_id
+  ORDER BY (w_surv.editorial_record_id IS NOT NULL) DESC
+  LIMIT 1
+)
+FROM public.workflows w_dup
+JOIN public.ingestion_records ir_dup ON w_dup.ingestion_record_id = ir_dup.id
+JOIN public.di_services ds ON ir_dup.di_service_id = ds.id
+JOIN di_best_ir best ON best.di_id = ds.di_id
+WHERE lr.workflow_id = w_dup.id
+  AND w_dup.editorial_record_id IS NULL
+  AND NOT EXISTS (SELECT 1 FROM di_best_ir b WHERE b.best_ir_id = w_dup.ingestion_record_id);
+
+-- 3F. Delete non-editorial workflows pointing to non-best IRs
 DELETE FROM public.workflows w
 WHERE w.editorial_record_id IS NULL
   AND NOT EXISTS (
@@ -132,7 +170,7 @@ WHERE w.editorial_record_id IS NULL
       SELECT ir.id FROM public.ingestion_records ir WHERE ir.di_service_id IS NOT NULL
   );
 
--- 3E. Delete non-editorial workflows on the best IR when an editorial
+-- 3G. Delete non-editorial workflows on the best IR when an editorial
 --     workflow already points to the same IR (after re-pointing in 3B)
 DELETE FROM public.workflows w
 WHERE w.editorial_record_id IS NULL
@@ -143,7 +181,7 @@ WHERE w.editorial_record_id IS NULL
         AND w2.id != w.id
   );
 
--- 3F. Delete orphan ingestion_records (not the best, not referenced)
+-- 3H. Delete orphan ingestion_records (not the best, not referenced)
 DELETE FROM public.ingestion_records ir
 WHERE ir.di_service_id IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM di_best_ir b WHERE b.best_ir_id = ir.id)
