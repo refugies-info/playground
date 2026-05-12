@@ -36,10 +36,14 @@ export async function processIngestionRecords(
     }
 
     for (const record of existing) {
-      const diId = (record.di_services as { di_id: string } | null)?.di_id;
+      const diServices = Array.isArray(record.di_services)
+        ? record.di_services[0]
+        : (record.di_services as { di_id: string } | null);
+      const diId = diServices?.di_id;
       if (diId && record.di_service_id) {
-        if (!knownUuidsByDiId.has(diId)) knownUuidsByDiId.set(diId, new Set());
-        knownUuidsByDiId.get(diId)!.add(record.di_service_id);
+        const uuids = knownUuidsByDiId.get(diId) ?? new Set<string>();
+        uuids.add(record.di_service_id);
+        knownUuidsByDiId.set(diId, uuids);
       }
     }
 
