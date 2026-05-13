@@ -10,7 +10,7 @@
 --
 -- Impact:
 --   - assertAdmin() uses adminClient (service_role) to read profiles.role → SELECT needed
---   - createUser() writes profiles.role after invite → INSERT needed
+--   - createUser() upserts profiles.role after invite → INSERT + UPDATE needed
 --   - updateUser() updates profiles.role → UPDATE needed
 
 grant select, insert, update, delete on public.profiles to service_role;
