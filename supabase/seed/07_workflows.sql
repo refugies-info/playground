@@ -1,16 +1,45 @@
--- Seed workflows
--- editorial_record_id set to NULL here, backfilled in 99_backfill_fks.sql
+-- Seed workflows — scénarios crafted (RI-1243)
+--
+-- Schéma UUID stable :
+--   cc000001-... svc-01 → bb000001 (pas d''editorial_record)
+--   cc000002-... svc-02 → bb000002 (pas d''editorial_record)
+--   cc000003-... svc-03 → bb000003 (editorial_record ee000001, brouillon)
+--   cc000004-... svc-04 → bb000004 (editorial_record ee000002, publié)
+--   cc000005-... svc-05 → bb000006 v2 (pas d''editorial_record — scénario clé RI-1243)
+--   cc000006-... svc-06 → bb000008 v2 (editorial_record ee000003 sur v1 = obsolète)
+--
+-- editorial_record_id laissé NULL ici, backfillé dans 99_backfill_fks.sql
 
-INSERT INTO workflows ("id", "created_at", "updated_at", "rco_record_id", "ingestion_record_id", "editorial_record_id", "vercel_workflow_id", "vercel_hook_token", "conversation_id") VALUES ($seed$9aa94d11-6b40-4504-ba99-38e951e652a4$seed$, $seed$2026-02-16 09:55:46.840481+00$seed$, $seed$2026-02-16 15:12:32.2645+00$seed$, NULL, $seed$e5266641-084d-4ab5-a6e1-acb6b21c5a3d$seed$, NULL, NULL, NULL, NULL) ON CONFLICT DO NOTHING;
-INSERT INTO workflows ("id", "created_at", "updated_at", "rco_record_id", "ingestion_record_id", "editorial_record_id", "vercel_workflow_id", "vercel_hook_token", "conversation_id") VALUES ($seed$3aa0a9ec-32ce-4f18-9d65-b2816cd6cffa$seed$, $seed$2026-02-16 09:55:50.773099+00$seed$, $seed$2026-02-25 17:24:34.535894+00$seed$, NULL, $seed$fb5fc33c-00eb-478b-8889-f975edfb1624$seed$, NULL, NULL, NULL, NULL) ON CONFLICT DO NOTHING;
-INSERT INTO workflows ("id", "created_at", "updated_at", "rco_record_id", "ingestion_record_id", "editorial_record_id", "vercel_workflow_id", "vercel_hook_token", "conversation_id") VALUES ($seed$0a930a51-906a-4710-9bb9-d96c045c022d$seed$, $seed$2026-02-16 09:55:49.692879+00$seed$, $seed$2026-02-19 03:59:04.610744+00$seed$, NULL, $seed$7549bd3e-aff2-453e-8105-d79639a98b4a$seed$, NULL, NULL, NULL, NULL) ON CONFLICT DO NOTHING;
-INSERT INTO workflows ("id", "created_at", "updated_at", "rco_record_id", "ingestion_record_id", "editorial_record_id", "vercel_workflow_id", "vercel_hook_token", "conversation_id") VALUES ($seed$f411d731-ba70-42d7-85da-e05dc79f951b$seed$, $seed$2026-02-16 09:55:49.692879+00$seed$, $seed$2026-02-24 13:46:18.16031+00$seed$, NULL, $seed$4c6b9a8a-5ad8-4a8f-9ccf-6f3be424c773$seed$, NULL, NULL, NULL, $seed$conv-fef6312d-5df5-46cf-a26b-3eea30a209d1$seed$) ON CONFLICT DO NOTHING;
-INSERT INTO workflows ("id", "created_at", "updated_at", "rco_record_id", "ingestion_record_id", "editorial_record_id", "vercel_workflow_id", "vercel_hook_token", "conversation_id") VALUES ($seed$a1ca9718-325e-45fe-bc4c-3d2cdff29a1a$seed$, $seed$2026-02-16 09:55:50.000604+00$seed$, $seed$2026-02-19 08:33:25.675786+00$seed$, NULL, $seed$2598d2a2-6421-4de4-b7e3-4af4500ca8d4$seed$, NULL, NULL, NULL, NULL) ON CONFLICT DO NOTHING;
-INSERT INTO workflows ("id", "created_at", "updated_at", "rco_record_id", "ingestion_record_id", "editorial_record_id", "vercel_workflow_id", "vercel_hook_token", "conversation_id") VALUES ($seed$e173e735-552e-46a6-9b4b-a56521d43ce0$seed$, $seed$2026-02-16 09:55:51.078406+00$seed$, $seed$2026-03-02 13:26:07.237257+00$seed$, NULL, $seed$131769a1-f80d-457d-80e4-58a0a57df15e$seed$, NULL, NULL, NULL, NULL) ON CONFLICT DO NOTHING;
-INSERT INTO workflows ("id", "created_at", "updated_at", "rco_record_id", "ingestion_record_id", "editorial_record_id", "vercel_workflow_id", "vercel_hook_token", "conversation_id") VALUES ($seed$ef7a8315-f3e6-4274-bd31-11af28ce12b3$seed$, $seed$2026-02-16 11:10:28.409546+00$seed$, $seed$2026-02-16 11:10:28.409546+00$seed$, NULL, $seed$025a23c3-ec34-4f5c-98c8-48ab5e9b79a0$seed$, NULL, NULL, NULL, NULL) ON CONFLICT DO NOTHING;
-INSERT INTO workflows ("id", "created_at", "updated_at", "rco_record_id", "ingestion_record_id", "editorial_record_id", "vercel_workflow_id", "vercel_hook_token", "conversation_id") VALUES ($seed$d020a9f2-07e9-41d5-b9f4-ebaff6db5e10$seed$, $seed$2026-02-16 09:55:46.840481+00$seed$, $seed$2026-02-25 10:57:45.998393+00$seed$, NULL, $seed$64be85c4-0e9f-4578-aa75-d72b78353ee6$seed$, NULL, NULL, NULL, $seed$conv-70dc6e8b-9a02-4ec0-a6c3-23dc2e1a9c05$seed$) ON CONFLICT DO NOTHING;
-INSERT INTO workflows ("id", "created_at", "updated_at", "rco_record_id", "ingestion_record_id", "editorial_record_id", "vercel_workflow_id", "vercel_hook_token", "conversation_id") VALUES ($seed$09689ca9-1653-4ce7-8532-fe8cbf7f1b99$seed$, $seed$2026-02-16 09:55:46.840481+00$seed$, $seed$2026-02-16 13:21:43.345153+00$seed$, NULL, $seed$6bdce5bd-1f0d-44fc-ba80-b39bb463f33e$seed$, NULL, NULL, NULL, NULL) ON CONFLICT DO NOTHING;
-INSERT INTO workflows ("id", "created_at", "updated_at", "rco_record_id", "ingestion_record_id", "editorial_record_id", "vercel_workflow_id", "vercel_hook_token", "conversation_id") VALUES ($seed$26c0e650-0e85-4819-b64b-013f8a972dad$seed$, $seed$2026-02-16 09:55:51.078406+00$seed$, $seed$2026-03-02 13:35:56.503992+00$seed$, NULL, $seed$6c7489e5-de43-4b6a-95b5-9ad6d40cc3db$seed$, NULL, NULL, NULL, NULL) ON CONFLICT DO NOTHING;
-INSERT INTO workflows ("id", "created_at", "updated_at", "rco_record_id", "ingestion_record_id", "editorial_record_id", "vercel_workflow_id", "vercel_hook_token", "conversation_id") VALUES ($seed$f4def384-fdce-44cd-840e-3fa936a02fc7$seed$, $seed$2026-02-16 09:55:50.000604+00$seed$, $seed$2026-02-19 08:32:42.05509+00$seed$, NULL, $seed$647c3976-8243-423b-98a2-61151a56994f$seed$, NULL, NULL, NULL, NULL) ON CONFLICT DO NOTHING;
-INSERT INTO workflows ("id", "created_at", "updated_at", "rco_record_id", "ingestion_record_id", "editorial_record_id", "vercel_workflow_id", "vercel_hook_token", "conversation_id") VALUES ($seed$18fc7d09-52ec-4b16-b732-2e5e5d37f0a1$seed$, $seed$2026-02-16 09:55:49.692879+00$seed$, $seed$2026-02-19 15:41:54.894105+00$seed$, NULL, $seed$5676e468-63f0-4944-958b-ece04393803b$seed$, NULL, NULL, NULL, $seed$conv-8744663d-d6bb-480d-b0f0-44c453c8b595$seed$) ON CONFLICT DO NOTHING;
-INSERT INTO workflows ("id", "created_at", "updated_at", "rco_record_id", "ingestion_record_id", "editorial_record_id", "vercel_workflow_id", "vercel_hook_token", "conversation_id") VALUES ($seed$8833fcfc-763e-4a14-87bc-947cdcff9757$seed$, $seed$2026-02-25 02:01:10.428947+00$seed$, $seed$2026-02-25 02:01:10.428947+00$seed$, NULL, $seed$3ecab6bf-c363-41d2-b4f7-e4f387e5f420$seed$, NULL, NULL, NULL, NULL) ON CONFLICT DO NOTHING;
+INSERT INTO workflows ("id", "ingestion_record_id", "editorial_record_id")
+VALUES ('cc000001-0000-0000-0000-000000000000', 'bb000001-0000-0000-0000-000000000000', NULL)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO workflows ("id", "ingestion_record_id", "editorial_record_id")
+VALUES ('cc000002-0000-0000-0000-000000000000', 'bb000002-0000-0000-0000-000000000000', NULL)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO workflows ("id", "ingestion_record_id", "editorial_record_id")
+VALUES ('cc000003-0000-0000-0000-000000000000', 'bb000003-0000-0000-0000-000000000000', NULL)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO workflows ("id", "ingestion_record_id", "editorial_record_id")
+VALUES ('cc000004-0000-0000-0000-000000000000', 'bb000004-0000-0000-0000-000000000000', NULL)
+ON CONFLICT DO NOTHING;
+
+-- Scénario clé RI-1243 : workflow pointe sur la v2 (bb000006), pas d''editorial_record
+-- → l''éditeur doit voir la v2 dans le BOMO
+INSERT INTO workflows ("id", "ingestion_record_id", "editorial_record_id")
+VALUES ('cc000005-0000-0000-0000-000000000000', 'bb000006-0000-0000-0000-000000000000', NULL)
+ON CONFLICT DO NOTHING;
+
+-- Scénario 6 : workflow pointe sur la v2 (bb000008)
+-- mais editorial_record (ee000003) pointe encore sur la v1 (bb000007) → obsolescence
+INSERT INTO workflows ("id", "ingestion_record_id", "editorial_record_id")
+VALUES ('cc000006-0000-0000-0000-000000000000', 'bb000008-0000-0000-0000-000000000000', NULL)
+ON CONFLICT DO NOTHING;
+
+-- Scénario 7 : workflow pointe sur la v2 (bb000010), compliance 'compliant' sur la v2
+-- → état nominal après RI-1243 : Letta a réévalué la v2, fiche visible normalement
+INSERT INTO workflows ("id", "ingestion_record_id", "editorial_record_id")
+VALUES ('cc000007-0000-0000-0000-000000000000', 'bb000010-0000-0000-0000-000000000000', NULL)
+ON CONFLICT DO NOTHING;
