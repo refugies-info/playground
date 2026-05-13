@@ -25,15 +25,23 @@ async function assertAdmin() {
   // Read role from profiles (source of truth), not from JWT claims.
   // Server actions use the admin client to bypass RLS and get a fresh value.
   const adminClient = getSupabaseAdmin();
-  const { data: profile } = await adminClient
+  const { data: profile, error: profileError } = await adminClient
     .from("profiles")
     .select("role")
     .eq("id", user.id)
     .single();
 
+  if (profileError) {
+    logger.error(
+      { userId: user.id, err: profileError },
+      "Failed to fetch profile for admin check",
+    );
+    throw new Error("Non autorisé : Droits d'administrateur requis.");
+  }
+
   if (profile?.role !== "admin") {
     logger.warn(
-      { userId: user.id },
+      { userId: user.id, role: profile?.role ?? null },
       "Unauthorized attempt to access admin action",
     );
     throw new Error("Non autorisé : Droits d'administrateur requis.");
