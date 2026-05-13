@@ -107,10 +107,11 @@ export async function createUser(data: {
 
     // Write role and language to profiles (source of truth for RBAC).
     // get_my_role() queries profiles directly for RLS policies.
+    // upsert instead of update: the handle_new_user trigger creates the profile
+    // on auth.users INSERT, but upsert is safer if the trigger hasn't fired yet.
     const { error: profileError } = await adminClient
       .from("profiles")
-      .update({ role, language })
-      .eq("id", inviteData.user.id);
+      .upsert({ id: inviteData.user.id, role, language }, { onConflict: "id" });
 
     if (profileError) {
       logger.error(
