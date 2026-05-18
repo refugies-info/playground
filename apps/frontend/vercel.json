@@ -4,5 +4,14 @@
   "installCommand": "source ../../vercel-setup.sh && pnpm install --frozen-lockfile",
   "buildCommand": "source ../../vercel-setup.sh && next build",
   "regions": ["cdg1"],
-  "crons": []
+  "crons": [
+    {
+      "path": "/api/cron/di-ingestion",
+      "schedule": "0 12 18 5 *"
+    },
+    {
+      "path": "/api/cron/di-ingestion",
+      "schedule": "0 15 18 5 *"
+    }
+  ]
 }
