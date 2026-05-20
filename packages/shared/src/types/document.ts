@@ -10,6 +10,7 @@ export type OnlineStatus = "published" | "unpublished" | "archived";
 export type DocumentSortField =
   | "title"
   | "date_added"
+  | "arbitrationDate"
   | "updated_at"
   | "compliance_status"
   | "work_status"
@@ -27,6 +28,7 @@ export interface Document {
   id: string;
   title: string;
   date_added: string;
+  arbitrationDate?: string | null;
   complianceStatus: ComplianceStatus | null;
   workStatus: WorkStatus | null;
   onlineStatus: OnlineStatus;
