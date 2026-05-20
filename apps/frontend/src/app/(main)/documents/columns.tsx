@@ -9,6 +9,7 @@ import {
   createExternalIdColumn,
   createModalitesEntreesSortiesColumn,
   createOnlineStatusColumn,
+  createSessionPeriodColumn,
   createStructureNameColumn,
   createTitleColumn,
   createWordCountColumn,
@@ -42,12 +43,7 @@ export const columns: ColumnDef<Document>[] = [
     size: 120,
   },
   {
-    ...createDateColumn({
-      accessorKey: "sessionStartDate",
-      title: "Date de session",
-      getValue: (doc) => doc.sessionStartDate,
-      showTime: false,
-    }),
+    ...createSessionPeriodColumn(),
     size: 121,
   },
   { ...createModalitesEntreesSortiesColumn(), size: 154 }, // "Type d'entrée"

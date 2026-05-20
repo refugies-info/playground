@@ -7,6 +7,7 @@ import {
   createComplianceStatusColumn,
   createExternalIdRawColumn,
   createQualityScoreColumn,
+  createSessionPeriodColumn,
   createStructureNameColumn,
   createTitleColumn,
   createWordCountColumn,
@@ -19,6 +20,7 @@ export const inProgressColumns: ColumnDef<Document>[] = [
   createWordCountColumn(),
   createTitleColumn(),
   createStructureNameColumn(),
+  { ...createSessionPeriodColumn(), size: 121 },
   createDateColumn({
     accessorKey: "date_added",
     title: "Date d'import",

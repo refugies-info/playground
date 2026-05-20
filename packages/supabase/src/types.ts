@@ -796,6 +796,7 @@ export type Database = {
           raw_work_status: string | null
           rco_record_id: string | null
           report_created_at: string | null
+          session_end_date: string | null
           session_start_date: string | null
           structure_name: string | null
           title: string | null

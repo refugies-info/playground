@@ -57,6 +57,7 @@ export interface Document {
   publicationRemoteId?: string;
   structureName?: string;
   sessionStartDate?: string;
+  sessionEndDate?: string | null;
   qualityScore?: number | null;
   sourceSystem: "RCO" | "DI";
   updated_at: string;
