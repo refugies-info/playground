@@ -31,8 +31,16 @@ export async function diSingleRecordWorkflow(
     markdown,
   );
 
-  // 2. Metadata — always runs, regardless of compliance_status
-  await diSingleMetadataStep(ingestionRecordId, workflowId, markdown);
+  // Generate metadata only for compliant records to avoid spending AI calls
+  // on records that won't enter the editorial pipeline automatically.
+  if (auditResult.complianceStatus === "compliant") {
+    await diSingleMetadataStep(ingestionRecordId, workflowId, markdown);
+  } else {
+    // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
+    console.log(
+      `↷ Skipping metadata for record ${ingestionRecordId} (${auditResult.complianceStatus})`,
+    );
+  }
 
   // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
   console.log(
