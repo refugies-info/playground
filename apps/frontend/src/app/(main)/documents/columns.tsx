@@ -24,7 +24,7 @@ import {
  * Ordre et intitulés exacts (header row 1255:8745) :
  *   Auteur=80 | Statut=136 | État=121 | Mots=76 | Titre=fill |
  *   Structure=148 | Ville=120 | Date de session=121 | Type d'entrée=154 |
- *   Date d'import=121 | Conformité=149 | ID=80
+ *   Date d'arbitrage=121 | Conformité=149 | ID=80
  */
 export const columns: ColumnDef<Document>[] = [
   { ...createAuthorColumn(), size: 80 },
@@ -49,10 +49,10 @@ export const columns: ColumnDef<Document>[] = [
   { ...createModalitesEntreesSortiesColumn(), size: 154 }, // "Type d'entrée"
   {
     ...createDateColumn({
-      accessorKey: "date_added",
-      title: "Date d'import",
-      getValue: (doc) => doc.date_added,
-      showTime: false,
+      accessorKey: "arbitrationDate",
+      title: "Date d'arbitrage",
+      getValue: (doc) => doc.arbitrationDate,
+      showTime: true,
     }),
     size: 121,
   },

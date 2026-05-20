@@ -142,6 +142,7 @@ export async function getDocuments(params: GetDocumentsParams) {
   // Apply sorting
   const sortFieldMap: Record<DocumentSortField, string> = {
     date_added: "created_at",
+    arbitrationDate: "report_created_at",
     updated_at: "updated_at",
     compliance_status: "compliance_status",
     work_status: "computed_work_status",
@@ -235,6 +236,7 @@ export async function getDocuments(params: GetDocumentsParams) {
         id: item.id,
         title: item.title || "Untitled",
         date_added: dateAdded ?? "",
+        arbitrationDate: item.report_created_at ?? null,
         complianceStatus: (item.compliance_status as ComplianceStatus) ?? null,
         workStatus: (item.computed_work_status as WorkStatus) ?? null,
         onlineStatus: (item.computed_online_status as OnlineStatus) ?? null,
@@ -477,6 +479,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     id: item.id,
     title: item.title || "Untitled",
     date_added: dateAdded ?? "",
+    arbitrationDate: item.report_created_at ?? null,
     complianceStatus: (item.compliance_status as ComplianceStatus) ?? null,
     workStatus: (item.computed_work_status as WorkStatus) ?? null,
     onlineStatus: (item.computed_online_status as OnlineStatus) ?? null,
