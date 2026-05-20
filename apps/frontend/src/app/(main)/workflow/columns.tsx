@@ -9,12 +9,14 @@ import {
   createQualityScoreColumn,
   createStructureNameColumn,
   createTitleColumn,
+  createWordCountColumn,
 } from "@/lib/document-column-factories";
 
 export const inProgressColumns: ColumnDef<Document>[] = [
   createExternalIdRawColumn(),
   createComplianceStatusColumn(),
   createQualityScoreColumn(),
+  createWordCountColumn(),
   createTitleColumn(),
   createStructureNameColumn(),
   createDateColumn({

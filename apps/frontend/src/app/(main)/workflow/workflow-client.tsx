@@ -4,7 +4,7 @@ import { type Document, logger } from "@playground/shared-types";
 import { Button, SearchInput } from "@playground/ui";
 import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { triggerDiIngestionAction } from "@/app/actions/di";
 import { AppPaginationControls } from "@/components/common/app-pagination";
 import { createClient } from "@/lib/supabase/client";
@@ -13,6 +13,7 @@ import { DocumentPreviewDrawer } from "./document-preview-drawer";
 
 // Duration must match the Tailwind animation duration used in getRowClassName (duration-1000)
 const HIGHLIGHT_ANIMATION_DURATION_MS = 1000;
+const REALTIME_REFRESH_THROTTLE_MS = 2000;
 
 interface WorkflowClientProps {
   inProgressDocuments: Document[];
@@ -55,6 +56,33 @@ export function WorkflowClient(props: WorkflowClientProps) {
   const [highlightedIds, setHighlightedIds] = useState<Set<string>>(new Set());
   const prevDocumentsRef = useRef<Document[]>(inProgressDocuments);
   const skipHighlightRef = useRef(false);
+  const lastRealtimeRefreshRef = useRef(0);
+  const realtimeRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  const scheduleRealtimeRefresh = useCallback(() => {
+    const now = Date.now();
+    const elapsed = now - lastRealtimeRefreshRef.current;
+
+    if (elapsed >= REALTIME_REFRESH_THROTTLE_MS) {
+      if (realtimeRefreshTimerRef.current) {
+        clearTimeout(realtimeRefreshTimerRef.current);
+        realtimeRefreshTimerRef.current = null;
+      }
+      lastRealtimeRefreshRef.current = now;
+      router.refresh();
+      return;
+    }
+
+    if (realtimeRefreshTimerRef.current) return;
+
+    realtimeRefreshTimerRef.current = setTimeout(() => {
+      lastRealtimeRefreshRef.current = Date.now();
+      realtimeRefreshTimerRef.current = null;
+      router.refresh();
+    }, REALTIME_REFRESH_THROTTLE_MS - elapsed);
+  }, [router]);
 
   // Detect document changes and trigger animations
   useEffect(() => {
@@ -104,6 +132,18 @@ export function WorkflowClient(props: WorkflowClientProps) {
     }
   }, [inProgressDocuments]);
 
+  useEffect(() => {
+    if (!arbitrationLoading) return;
+
+    const currentDocument = inProgressDocuments.find(
+      (doc) => doc.id === arbitrationLoading,
+    );
+
+    if (!currentDocument || currentDocument.complianceStatus !== "pending") {
+      setArbitrationLoading(null);
+    }
+  }, [arbitrationLoading, inProgressDocuments]);
+
   // Supabase Realtime: refresh when workflows change
   useEffect(() => {
     const supabase = createClient();
@@ -117,7 +157,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
           schema: "public",
           table: "workflows",
         },
-        () => router.refresh(),
+        scheduleRealtimeRefresh,
       )
       .on(
         "postgres_changes",
@@ -126,14 +166,27 @@ export function WorkflowClient(props: WorkflowClientProps) {
           schema: "public",
           table: "workflows",
         },
-        () => router.refresh(),
+        scheduleRealtimeRefresh,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "ingestion_records",
+        },
+        scheduleRealtimeRefresh,
       )
       .subscribe();
 
     return () => {
+      if (realtimeRefreshTimerRef.current) {
+        clearTimeout(realtimeRefreshTimerRef.current);
+        realtimeRefreshTimerRef.current = null;
+      }
       supabase.removeChannel(channel);
     };
-  }, [router]);
+  }, [scheduleRealtimeRefresh]);
 
   const handleSearchChange = (value: string) => {
     setSearchId(value);
@@ -252,7 +305,6 @@ export function WorkflowClient(props: WorkflowClientProps) {
       const result = await forceArbitrationAction(id);
 
       if (result.success) {
-        setArbitrationLoading(null);
         router.refresh();
       } else {
         setArbitrationLoading(null);
@@ -272,12 +324,14 @@ export function WorkflowClient(props: WorkflowClientProps) {
       id: "actions",
       header: "Actions",
       cell: ({ row }: { row: { original: Document } }) => {
-        const isLoading = arbitrationLoading === row.original.id;
+        const isPending = row.original.complianceStatus === "pending";
+        const isLoading = arbitrationLoading === row.original.id || isPending;
         return (
-          <div className="flex items-center gap-2 justify-end">
+          <div className="flex items-center justify-end gap-2 whitespace-nowrap">
             <Button
               variant="tertiaire"
               size="sm"
+              className="shrink-0"
               onClick={(e) => {
                 e.stopPropagation();
                 handleOpenDrawer(row.original);
@@ -288,12 +342,13 @@ export function WorkflowClient(props: WorkflowClientProps) {
             <Button
               variant="primaire"
               size="sm"
+              className="min-w-[104px] shrink-0 whitespace-nowrap"
               onClick={(e) => handleForceArbitration(row.original.id, e)}
               disabled={isLoading}
               isLoading={isLoading}
               title="Forcer l'arbitrage (générer le rapport IA)"
             >
-              {isLoading ? "Arbitrage en cours…" : "Arbitrer"}
+              {isLoading ? "En cours…" : "Arbitrer"}
             </Button>
           </div>
         );
