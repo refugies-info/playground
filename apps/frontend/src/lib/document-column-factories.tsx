@@ -10,6 +10,7 @@ import {
   ModalitesEntreesSortiesCell,
   OnlineStatusCell,
   QualityScoreCell,
+  SessionPeriodCell,
   WorkStatusCell,
   type WorkStatusCellProps,
 } from "@/components/documents/cells";
@@ -137,6 +138,19 @@ export const createWordCountColumn = (): ColumnDef<Document> => ({
     if (count == null) return <span className="text-gray-400">—</span>;
     return <span className="text-sm tabular-nums">{count}</span>;
   },
+});
+
+export const createSessionPeriodColumn = (): ColumnDef<Document> => ({
+  accessorKey: "sessionStartDate",
+  header: ({ column }) => (
+    <DataTableColumnHeader column={column} title="Date de session" />
+  ),
+  cell: ({ row }) => (
+    <SessionPeriodCell
+      startDate={row.original.sessionStartDate}
+      endDate={row.original.sessionEndDate}
+    />
+  ),
 });
 
 // =============================================================================
