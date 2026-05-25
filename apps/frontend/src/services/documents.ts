@@ -18,6 +18,37 @@ import { extractAuthorProfile } from "./helpers";
 type WorkflowEnriched =
   Database["public"]["Views"]["workflows_enriched"]["Row"];
 
+const DOCUMENT_LIST_SELECT = `
+  id,
+  title,
+  created_at,
+  ingestion_created_at,
+  updated_at,
+  report_created_at,
+  compliance_status,
+  computed_work_status,
+  computed_online_status,
+  latest_publication,
+  structure_name,
+  session_start_date,
+  session_end_date,
+  quality_score,
+  rco_record_id,
+  author_email,
+  author_profile,
+  commune,
+  modalites_entrees_sorties,
+  external_id,
+  ingestion_word_count
+`;
+
+const DOCUMENT_PREVIEW_FIELDS_SELECT = `
+  editorial_markdown,
+  editorial_metadata,
+  ingestion_markdown,
+  ingestion_metadata
+`;
+
 export interface GetDocumentsParams {
   page?: number;
   pageSize?: number;
@@ -34,6 +65,8 @@ export interface GetDocumentsParams {
   search?: string;
   /** Filter by entry type: "0" (dates fixes) or "1" (entrées permanentes) */
   modalitesEntreesSorties?: string | null;
+  /** Include large markdown/json fields. Used by /workflow preview drawer only. */
+  includePreviewFields?: boolean;
 }
 
 export async function getDocuments(params: GetDocumentsParams) {
@@ -51,6 +84,7 @@ export async function getDocuments(params: GetDocumentsParams) {
     authorEmail,
     search,
     modalitesEntreesSorties,
+    includePreviewFields = false,
   } = params;
 
   const cookieStore = await cookies();
@@ -59,7 +93,12 @@ export async function getDocuments(params: GetDocumentsParams) {
   // Use the enriched view - single query with all needed data
   let query = supabase
     .from("workflows_enriched")
-    .select("*", { count: "exact" });
+    .select(
+      includePreviewFields
+        ? `${DOCUMENT_LIST_SELECT},${DOCUMENT_PREVIEW_FIELDS_SELECT}`
+        : DOCUMENT_LIST_SELECT,
+      { count: "exact" },
+    );
 
   // Apply filters
   if (complianceStatus) {
@@ -190,21 +229,37 @@ export async function getDocuments(params: GetDocumentsParams) {
         return null;
       }
 
-      // Merge metadata from ingestion and editorial
-      const ingestionMetadata = (item.ingestion_metadata as Metadata) || {};
-      const editorialMetadata = (item.editorial_metadata as Metadata) || {};
-      const metadata: Metadata = {
-        ...ingestionMetadata,
-        ...editorialMetadata,
-      };
+      // Keep list rows light by default: full content and merged metadata are
+      // fetched only on detail pages, or explicitly for the /workflow preview
+      // drawer. Selecting large markdown/json fields on /documents causes
+      // PostgREST to serialize tens of MB on staging dumps and can hit the role
+      // statement_timeout.
+      const ingestionMetadata = includePreviewFields
+        ? ((item.ingestion_metadata as Metadata) ?? {})
+        : {};
+      const editorialMetadata = includePreviewFields
+        ? ((item.editorial_metadata as Metadata) ?? {})
+        : {};
+      const metadata: Metadata = includePreviewFields
+        ? {
+            ...ingestionMetadata,
+            ...editorialMetadata,
+          }
+        : item.external_id
+          ? { id: item.external_id }
+          : {};
 
-      // Preserve critical identifiers
-      if (ingestionMetadata.id) metadata.id = ingestionMetadata.id;
-      if (ingestionMetadata.structure_id)
-        metadata.structure_id = ingestionMetadata.structure_id;
+      // Preserve critical identifiers when preview metadata is selected.
+      if (includePreviewFields) {
+        if (ingestionMetadata.id) metadata.id = ingestionMetadata.id;
+        if (ingestionMetadata.structure_id) {
+          metadata.structure_id = ingestionMetadata.structure_id;
+        }
+      }
 
-      // Content priority: editorial > ingestion
-      const content = item.editorial_markdown || item.ingestion_markdown || "";
+      const content = includePreviewFields
+        ? item.editorial_markdown || item.ingestion_markdown || ""
+        : "";
 
       // Parse publication info from JSONB
       const latestPublication = item.latest_publication as {
@@ -302,72 +357,76 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     markdown: string;
     metadata: Json;
     created_at: string;
-    letta_reports:
+    metadata_report_id: string | null;
+    compliance_report:
       | { markdown: string; created_at?: string }
       | { markdown: string; created_at?: string }[]
       | null;
   };
   let ingestionRecord: IngestionWithReports | null = null;
 
-  // Fetch ingestion record, metadata report, generating flag, and active rewrite in parallel
-  const [
-    ingestionResult,
-    metadataReportResult,
-    generatingReportResult,
-    activeRunResult,
-  ] = await Promise.all([
-    item.ingestion_record_id
-      ? supabase
-          .from("ingestion_records")
-          .select(
-            `
-            markdown,
-            metadata,
-            created_at,
-            letta_reports (
+  // Fetch the active ingestion record, metadata generation flag, and active rewrite
+  // in parallel. Compliance and metadata reports are tied to the active ingestion
+  // source so pending updates cannot shadow the current fiche.
+  const [ingestionResult, generatingReportResult, activeRunResult] =
+    await Promise.all([
+      item.ingestion_record_id
+        ? supabase
+            .from("ingestion_records")
+            .select(
+              `
               markdown,
-              created_at
+              metadata,
+              created_at,
+              metadata_report_id,
+              compliance_report:letta_reports!ingestion_records_ingestion_report_id_fkey (
+                markdown,
+                created_at
+              )
+            `,
             )
-          `,
-          )
-          .eq("id", item.ingestion_record_id)
-          .single()
-      : Promise.resolve({ data: null, error: null }),
-    // Fetch the AI-generated metadata report (letta_reports type: metadata).
-    // Filter on status="complete" so that "generating" and "error" reports
-    // never shadow the last valid report.
-    supabase
-      .from("letta_reports")
-      .select("id, metadata, status")
-      .eq("workflow_id", id)
-      .eq("report_type", "metadata")
-      .eq("status", "complete")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    // Check if a metadata generation is currently in progress for this workflow.
-    // Used by the UI to restore the loading state after a page refresh.
-    supabase
-      .from("letta_reports")
-      .select("id")
-      .eq("workflow_id", id)
-      .eq("report_type", "metadata")
-      .eq("status", "generating")
-      .maybeSingle(),
-    // Check if an editorial AI rewrite is in progress or pending user decision.
-    // Used by AIFloatingButton to resume via GET /api/editorial-rewrite/[runId].
-    item.editorial_record_id
-      ? supabase
-          .from("editorial_records")
-          .select("active_run_id")
-          .eq("id", item.editorial_record_id)
-          .single()
-      : Promise.resolve({ data: null, error: null }),
-  ]);
+            .eq("id", item.ingestion_record_id)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
+      // Check if a metadata generation is currently in progress for this workflow.
+      // Used by the UI to restore the loading state after a page refresh.
+      supabase
+        .from("letta_reports")
+        .select("id")
+        .eq("workflow_id", id)
+        .eq("report_type", "metadata")
+        .eq("status", "generating")
+        .maybeSingle(),
+      // Check if an editorial AI rewrite is in progress or pending user decision.
+      // Used by AIFloatingButton to resume via GET /api/editorial-rewrite/[runId].
+      item.editorial_record_id
+        ? supabase
+            .from("editorial_records")
+            .select("active_run_id")
+            .eq("id", item.editorial_record_id)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
+    ]);
 
   if (ingestionResult.data) {
     ingestionRecord = ingestionResult.data as unknown as IngestionWithReports;
   }
+
+  const activeRunData = activeRunResult.data as {
+    active_run_id: string | null;
+  } | null;
+
+  const metadataReportId = ingestionRecord?.metadata_report_id ?? null;
+
+  const metadataReportResult = metadataReportId
+    ? await supabase
+        .from("letta_reports")
+        .select("id, metadata, status")
+        .eq("id", metadataReportId)
+        .eq("report_type", "metadata")
+        .eq("status", "complete")
+        .maybeSingle()
+    : { data: null, error: null };
 
   // Merge metadata
   const ingestionMetadata = (item.ingestion_metadata as Metadata) || {};
@@ -396,7 +455,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   // Compliance report from letta_reports
   let complianceReport = "";
   if (ingestionRecord) {
-    const lettaReportsData = ingestionRecord.letta_reports;
+    const lettaReportsData = ingestionRecord.compliance_report;
     if (lettaReportsData) {
       const report = Array.isArray(lettaReportsData)
         ? lettaReportsData[0]
@@ -504,9 +563,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     authorRole,
     externalId: item.external_id ?? null,
     // AI editorial rewrite — runId for resume via GET /api/editorial-rewrite/[runId]
-    activeRunId:
-      (activeRunResult.data as { active_run_id: string | null } | null)
-        ?.active_run_id ?? undefined,
+    activeRunId: activeRunData?.active_run_id ?? undefined,
   };
 }
 

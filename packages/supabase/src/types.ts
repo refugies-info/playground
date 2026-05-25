@@ -216,6 +216,7 @@ export type Database = {
           ingestion_report_id: string | null
           markdown: string
           metadata: Json
+          metadata_report_id: string | null
           origin: string
           rco_record_id: string | null
           updated_at: string
@@ -230,6 +231,7 @@ export type Database = {
           ingestion_report_id?: string | null
           markdown: string
           metadata: Json
+          metadata_report_id?: string | null
           origin?: string
           rco_record_id?: string | null
           updated_at?: string
@@ -244,6 +246,7 @@ export type Database = {
           ingestion_report_id?: string | null
           markdown?: string
           metadata?: Json
+          metadata_report_id?: string | null
           origin?: string
           rco_record_id?: string | null
           updated_at?: string
@@ -281,6 +284,13 @@ export type Database = {
           {
             foreignKeyName: "ingestion_records_ingestion_report_id_fkey"
             columns: ["ingestion_report_id"]
+            isOneToOne: false
+            referencedRelation: "letta_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ingestion_records_metadata_report_id_fkey"
+            columns: ["metadata_report_id"]
             isOneToOne: false
             referencedRelation: "letta_reports"
             referencedColumns: ["id"]
@@ -669,6 +679,7 @@ export type Database = {
           editorial_record_id: string | null
           id: string
           ingestion_record_id: string | null
+          latest_ingestion_record_id: string | null
           rco_record_id: string | null
           updated_at: string
           vercel_hook_token: string | null
@@ -680,6 +691,7 @@ export type Database = {
           editorial_record_id?: string | null
           id?: string
           ingestion_record_id?: string | null
+          latest_ingestion_record_id?: string | null
           rco_record_id?: string | null
           updated_at?: string
           vercel_hook_token?: string | null
@@ -691,6 +703,7 @@ export type Database = {
           editorial_record_id?: string | null
           id?: string
           ingestion_record_id?: string | null
+          latest_ingestion_record_id?: string | null
           rco_record_id?: string | null
           updated_at?: string
           vercel_hook_token?: string | null
@@ -707,6 +720,13 @@ export type Database = {
           {
             foreignKeyName: "status_ingestion_record_id_fkey"
             columns: ["ingestion_record_id"]
+            isOneToOne: false
+            referencedRelation: "ingestion_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflows_latest_ingestion_record_id_fkey"
+            columns: ["latest_ingestion_record_id"]
             isOneToOne: false
             referencedRelation: "ingestion_records"
             referencedColumns: ["id"]
@@ -769,6 +789,8 @@ export type Database = {
       }
       workflows_enriched: {
         Row: {
+          active_ingestion_record_id: string | null
+          active_ingestion_version: number | null
           author_email: string | null
           author_profile: Json | null
           commune: string | null
@@ -780,7 +802,10 @@ export type Database = {
           editorial_markdown: string | null
           editorial_metadata: Json | null
           editorial_record_id: string | null
+          editorial_source_ingestion_record_id: string | null
+          editorial_source_version: number | null
           external_id: string | null
+          has_pending_ingestion_update: boolean | null
           has_publication_history: boolean | null
           id: string | null
           ingestion_created_at: string | null
@@ -788,9 +813,13 @@ export type Database = {
           ingestion_metadata: Json | null
           ingestion_record_id: string | null
           ingestion_report_id: string | null
+          ingestion_version_label: string | null
           ingestion_word_count: number | null
+          latest_ingestion_record_id: string | null
+          latest_ingestion_version: number | null
           latest_publication: Json | null
           modalites_entrees_sorties: string | null
+          pending_ingestion_record_id: string | null
           quality_score: number | null
           raw_online_status: string | null
           raw_work_status: string | null
@@ -832,6 +861,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "workflows_latest_ingestion_record_id_fkey"
+            columns: ["latest_ingestion_record_id"]
+            isOneToOne: false
+            referencedRelation: "ingestion_records"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "status_rco_record_id_fkey"
             columns: ["rco_record_id"]
             isOneToOne: false
@@ -850,6 +886,7 @@ export type Database = {
         }
         Returns: {
           id: string
+          is_pending_update: boolean
           markdown: string
           workflow_id: string
         }[]

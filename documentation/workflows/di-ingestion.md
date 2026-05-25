@@ -78,6 +78,10 @@ Quand un nouvel `ingestion_record` DI est créé :
 
 Toutes les données principales de `workflows_enriched` (`ingestion_markdown`, `ingestion_metadata`, `compliance_status`, `ingestion_report_id`, dates de session, nombre de mots) restent basées sur la **source active** (`workflows.ingestion_record_id`). `latest_ingestion_record_id` sert uniquement à détecter et afficher une version plus récente tant qu'elle n'est pas acceptée.
 
+### Audit des versions en attente
+
+Une version en attente peut être auditée même si elle n'est pas encore la source active du workflow. Si elle est conforme, ses métadonnées sont générées comme pour une version active. Les rapports sont liés à l'`ingestion_record` concerné via `ingestion_report_id` et `metadata_report_id`, ce qui permet de garder les rapports d'une version en attente séparés de ceux de la source active.
+
 ## Retry
 
 Chaque step de la paire `diSingleAuditStep` / `diSingleMetadataStep` a :

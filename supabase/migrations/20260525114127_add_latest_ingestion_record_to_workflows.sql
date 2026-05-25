@@ -54,10 +54,12 @@ SET latest_ingestion_record_id = ingestion_record_id
 WHERE latest_ingestion_record_id IS NULL
   AND ingestion_record_id IS NOT NULL;
 
--- For DI workflows, recompute latest by stable Data Inclusion ID (`di_services.di_id`).
--- This keeps the latest available version even when the active source was restored
--- to an older editorial baseline above.
-WITH workflow_latest AS (
+-- For DI workflows without editorial work, the active source should follow the
+-- latest available DI version automatically. Only consider strictly higher
+-- version numbers: historical dumps can contain several ingestion_records with
+-- the same broken version number, and those must not appear as fake "1/1"
+-- pending updates.
+WITH unedited_workflow_latest AS (
   SELECT
     w.id AS workflow_id,
     latest_ir.id AS latest_ingestion_record_id
@@ -69,15 +71,47 @@ WITH workflow_latest AS (
     FROM public.ingestion_records ir2
     JOIN public.di_services ds2 ON ds2.id = ir2.di_service_id
     WHERE ds2.di_id = active_ds.di_id
+      AND COALESCE(ir2.version, 0) > COALESCE(active_ir.version, 0)
     ORDER BY COALESCE(ir2.version, 0) DESC, ir2.created_at DESC, ir2.id DESC
     LIMIT 1
   ) latest_ir ON true
+  WHERE w.editorial_record_id IS NULL
 )
 UPDATE public.workflows w
-SET latest_ingestion_record_id = wl.latest_ingestion_record_id
-FROM workflow_latest wl
-WHERE w.id = wl.workflow_id
-  AND w.latest_ingestion_record_id IS DISTINCT FROM wl.latest_ingestion_record_id;
+SET ingestion_record_id = uwl.latest_ingestion_record_id,
+    latest_ingestion_record_id = uwl.latest_ingestion_record_id
+FROM unedited_workflow_latest uwl
+WHERE w.id = uwl.workflow_id
+  AND (
+    w.ingestion_record_id IS DISTINCT FROM uwl.latest_ingestion_record_id
+    OR w.latest_ingestion_record_id IS DISTINCT FROM uwl.latest_ingestion_record_id
+  );
+
+-- For DI workflows with editorial work, keep active on the editorial baseline
+-- but expose a pending update when a strictly newer DI version exists.
+WITH edited_workflow_latest AS (
+  SELECT
+    w.id AS workflow_id,
+    latest_ir.id AS latest_ingestion_record_id
+  FROM public.workflows w
+  JOIN public.ingestion_records active_ir ON active_ir.id = w.ingestion_record_id
+  JOIN public.di_services active_ds ON active_ds.id = active_ir.di_service_id
+  JOIN LATERAL (
+    SELECT ir2.id
+    FROM public.ingestion_records ir2
+    JOIN public.di_services ds2 ON ds2.id = ir2.di_service_id
+    WHERE ds2.di_id = active_ds.di_id
+      AND COALESCE(ir2.version, 0) > COALESCE(active_ir.version, 0)
+    ORDER BY COALESCE(ir2.version, 0) DESC, ir2.created_at DESC, ir2.id DESC
+    LIMIT 1
+  ) latest_ir ON true
+  WHERE w.editorial_record_id IS NOT NULL
+)
+UPDATE public.workflows w
+SET latest_ingestion_record_id = ewl.latest_ingestion_record_id
+FROM edited_workflow_latest ewl
+WHERE w.id = ewl.workflow_id
+  AND w.latest_ingestion_record_id IS DISTINCT FROM ewl.latest_ingestion_record_id;
 
 -- =============================================================================
 -- 3. Trigger: new DI versions update latest, but not active once edited
@@ -150,6 +184,11 @@ $$;
 COMMENT ON FUNCTION public.handle_new_ingestion_record() IS
   'Creates/updates workflows for new ingestion_records. RI-1242: workflows.ingestion_record_id is the active accepted source; workflows.latest_ingestion_record_id tracks the latest DI version. Existing editorial work prevents automatic active-source repointing.';
 
+-- Trigger function only: it should not be callable through exposed APIs.
+REVOKE EXECUTE ON FUNCTION public.handle_new_ingestion_record() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.handle_new_ingestion_record() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.handle_new_ingestion_record() FROM authenticated;
+
 -- =============================================================================
 -- 4. View: expose active/latest versions while reading content from active source
 -- =============================================================================
@@ -176,12 +215,14 @@ SELECT
     CASE
         WHEN w.latest_ingestion_record_id IS NULL THEN NULL
         WHEN w.ingestion_record_id IS DISTINCT FROM w.latest_ingestion_record_id
+            AND COALESCE(latest_ir.version, 0) > COALESCE(active_ir.version, 0)
             THEN w.latest_ingestion_record_id
         ELSE NULL
     END as pending_ingestion_record_id,
     CASE
         WHEN w.latest_ingestion_record_id IS NULL THEN false
         ELSE w.ingestion_record_id IS DISTINCT FROM w.latest_ingestion_record_id
+            AND COALESCE(latest_ir.version, 0) > COALESCE(active_ir.version, 0)
     END as has_pending_ingestion_update,
     CASE
         WHEN active_ir.version IS NULL OR latest_ir.version IS NULL THEN NULL
@@ -337,6 +378,7 @@ LEFT JOIN LATERAL (
 -- Re-grant access (view was recreated)
 GRANT SELECT ON workflows_enriched TO authenticated;
 GRANT SELECT ON workflows_enriched TO service_role;
+REVOKE SELECT ON workflows_enriched FROM anon;
 
 COMMENT ON VIEW workflows_enriched IS
     'Enriched view of workflows combining computed statuses, presentation metadata, publication info, and active/latest ingestion version tracking.
