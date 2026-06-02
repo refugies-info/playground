@@ -24,7 +24,7 @@
     "check:types": "turbo check:types",
     "test": "turbo test",
     "clean:branches": "pnpx git-removed-branches --prune --force",
-    "dev": "turbo dev",
+    "dev": "turbo dev dev:workflow",
     "dev:workflow": "workflow inspect runs --web",
     "format": "biome format --write .",
     "knip": "knip",
@@ -63,7 +63,7 @@
     "postcss": "^8.5.6",
     "tsx": "^4.20.6",
     "turbo": "^2.6.1",
-    "workflow": "4.0.1-beta.21"
+    "workflow": "4.2.5"
   },
   "lint-staged": {
     "**/*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [

@@ -24,7 +24,7 @@
     "@playground/shared-types": "workspace:*",
     "@playground/supabase": "workspace:*",
     "gray-matter": "^4.0.3",
-    "workflow": "4.0.1-beta.21"
+    "workflow": "4.2.5"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
