@@ -7,6 +7,7 @@ import {
   createAuthorColumn,
   createComplianceStatusColumn,
   createExternalIdColumn,
+  createIngestionVersionColumn,
   createModalitesEntreesSortiesColumn,
   createOnlineStatusColumn,
   createSessionPeriodColumn,
@@ -22,7 +23,7 @@ import {
  * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/Wireframes_RCO?node-id=1255-8745
  *
  * Ordre et intitulés exacts (header row 1255:8745) :
- *   Auteur=80 | Statut=136 | État=121 | Mots=76 | Titre=fill |
+ *   Auteur=80 | Statut=136 | État=121 | Version=80 | Mots=76 | Titre=fill |
  *   Structure=148 | Ville=120 | Date de session=121 | Type d'entrée=154 |
  *   Date d'arbitrage=121 | Conformité=149 | ID=80
  */
@@ -30,6 +31,7 @@ export const columns: ColumnDef<Document>[] = [
   { ...createAuthorColumn(), size: 80 },
   { ...createOnlineStatusColumn(), size: 136 }, // "Statut"
   { ...createWorkStatusColumn<Document>(), size: 121 }, // "État"
+  { ...createIngestionVersionColumn(), size: 80 }, // "Version"
   { ...createWordCountColumn(), size: 76 }, // "Mots"
   createTitleColumn(), // "Titre" fill
   createStructureNameColumn(), // "Structure"

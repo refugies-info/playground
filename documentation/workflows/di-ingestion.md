@@ -82,6 +82,12 @@ Toutes les données principales de `workflows_enriched` (`ingestion_markdown`, `
 
 Une version en attente peut être auditée même si elle n'est pas encore la source active du workflow. Si elle est conforme, ses métadonnées sont générées comme pour une version active. Les rapports sont liés à l'`ingestion_record` concerné via `ingestion_report_id` et `metadata_report_id`, ce qui permet de garder les rapports d'une version en attente séparés de ceux de la source active.
 
+### Métadonnées par version d'ingestion
+
+Pour les contenus DI, la source cible des métadonnées générées par l'ingestion est `ingestion_records.metadata_report_id`. Chaque version d'ingestion porte ainsi son propre rapport metadata, qu'elle soit active ou en attente.
+
+`editorial_records.metadata_report_id` reste un lien historique / éditorial. Il peut servir à préserver les métadonnées déjà associées à une fiche éditorialisée, mais il ne doit pas être utilisé comme source principale pour déterminer les métadonnées d'une version DI. La lecture de la fiche privilégie les métadonnées éditoriales lorsqu'elles existent, puis retombe sur le rapport metadata de la source active.
+
 ## Retry
 
 Chaque step de la paire `diSingleAuditStep` / `diSingleMetadataStep` a :

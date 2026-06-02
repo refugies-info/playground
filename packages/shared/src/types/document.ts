@@ -73,6 +73,14 @@ export interface Document {
   externalId?: string | null;
   /** Word count from ingestion markdown (frontmatter excluded) */
   wordCount?: number | null;
+  /** Ingestion version display label, e.g. "1/2" */
+  ingestionVersionLabel?: string | null;
+  /** Active/accepted ingestion version used by the workflow */
+  activeIngestionVersion?: number | null;
+  /** Latest available ingestion version for the workflow */
+  latestIngestionVersion?: number | null;
+  /** True when a newer ingestion version exists but is not active yet */
+  hasPendingIngestionUpdate?: boolean;
   /** Vercel Workflow runId when an AI editorial rewrite is in progress or waiting for user decision */
   activeRunId?: string;
 }

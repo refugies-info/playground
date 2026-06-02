@@ -15,6 +15,7 @@ import {
 } from "@playground/ui/overlays";
 import { Button } from "@playground/ui/primitives";
 import { useCallback, useEffect, useState } from "react";
+import { formatIngestionVersion } from "@/components/documents/cells/format-ingestion-version";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useDocument } from "../DocumentContext";
 import { useContentContext } from "./ContentContext";
@@ -43,6 +44,11 @@ export function SourcePanel() {
   }, [isSourceOpen, setSidebarCollapsed]);
 
   const lienSource = document?.metadata?.lien_source as string | undefined;
+  const ingestionVersion = formatIngestionVersion({
+    label: document?.ingestionVersionLabel,
+    activeVersion: document?.activeIngestionVersion,
+    latestVersion: document?.latestIngestionVersion,
+  });
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
@@ -89,6 +95,10 @@ export function SourcePanel() {
           <Popover open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
             <PopoverAnchor asChild>
               <div className="flex items-center gap-2">
+                <span className="text-sm text-[var(--text-mention-grey)] whitespace-nowrap">
+                  Version : {ingestionVersion}
+                </span>
+
                 <PopoverTrigger asChild>
                   <Button
                     variant="quatrieme"

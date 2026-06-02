@@ -119,6 +119,10 @@ export function DocumentProvider({
     initialData?.metadataReport?.id,
     initialData?.activeRunId,
     initialData?.onlineStatus,
+    initialData?.ingestionVersionLabel,
+    initialData?.activeIngestionVersion,
+    initialData?.latestIngestionVersion,
+    initialData?.hasPendingIngestionUpdate,
   ]);
 
   // Update content and mark as dirty (only if content actually changed)
