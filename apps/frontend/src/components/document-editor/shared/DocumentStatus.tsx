@@ -5,14 +5,12 @@ import { useDocument } from "../DocumentContext";
 import { DocumentPublicationStatus } from "./DocumentPublicationStatus";
 
 /**
- * DocumentStatus — Affiche UN seul badge de statut, par ordre de priorité :
+ * DocumentStatus — Affiche les statuts de publication et de travail.
  *
- *   1. published     → Tag "Publié" + popover multi-langues (DocumentPublicationStatus)
- *   2. archived      → Tag "Archivé"
- *   3. non_compliant → Conformite "non-conforme"
- *   4. pending       → Badge "En cours d'arbitrage"
- *   5. draft         → Tag "En cours"
- *   6. to_process    → Tag "À traiter"
+ *   - Si la fiche est publiée ou archivée, le statut de publication est affiché
+ *     en premier, puis l'état de travail éventuel (ex: "Archivé" + "En cours").
+ *   - Si la fiche n'a pas de statut de publication, les statuts d'arbitrage
+ *     gardent la priorité historique sur l'état de travail.
  *
  * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/BOMO?node-id=1739-8632
  */
@@ -23,12 +21,25 @@ export function DocumentStatus() {
 
   const { complianceStatus, workStatus, onlineStatus } = document;
 
-  if (onlineStatus === "published") {
-    return <DocumentPublicationStatus />;
-  }
+  const publicationStatus = (() => {
+    if (onlineStatus === "published") return <DocumentPublicationStatus />;
+    if (onlineStatus === "archived") return <Tag status="archive" />;
+    return null;
+  })();
 
-  if (onlineStatus === "archived") {
-    return <Tag status="archive" />;
+  const workStatusTag = (() => {
+    if (workStatus === "draft") return <Tag status="en-cours" />;
+    if (workStatus === "to_process") return <Tag status="a-traiter" />;
+    return null;
+  })();
+
+  if (publicationStatus) {
+    return (
+      <div className="flex items-center gap-2">
+        {publicationStatus}
+        {workStatusTag}
+      </div>
+    );
   }
 
   if (complianceStatus === "non_compliant") {
@@ -39,13 +50,5 @@ export function DocumentStatus() {
     return <Badge variant="neutral">En cours d&apos;arbitrage</Badge>;
   }
 
-  if (workStatus === "draft") {
-    return <Tag status="en-cours" />;
-  }
-
-  if (workStatus === "to_process") {
-    return <Tag status="a-traiter" />;
-  }
-
-  return null;
+  return workStatusTag;
 }
