@@ -37,7 +37,7 @@ const PostBodySchema = z.object({
   workflowId: z.string().uuid(),
   title: z.string(),
   markdown: z.string(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export async function POST(request: NextRequest) {

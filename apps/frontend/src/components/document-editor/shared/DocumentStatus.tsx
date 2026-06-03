@@ -34,6 +34,8 @@ export function DocumentStatus() {
   })();
 
   if (publicationStatus) {
+    if (!workStatusTag) return publicationStatus;
+
     return (
       <div className="flex items-center gap-2">
         {publicationStatus}

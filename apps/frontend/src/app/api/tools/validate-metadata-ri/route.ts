@@ -14,7 +14,7 @@ import { z } from "zod";
  */
 
 const requestSchema = z.object({
-  metadata_ri: z.record(z.unknown()),
+  metadata_ri: z.record(z.string(), z.unknown()),
 });
 
 export async function POST(request: NextRequest) {
