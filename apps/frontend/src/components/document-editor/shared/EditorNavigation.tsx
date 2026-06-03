@@ -68,12 +68,11 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
   const isMetadataActive = pathname === `${baseUrl}/metadata`;
   const isComplianceActive = pathname === `${baseUrl}/compliance`;
 
-  // Archiver uniquement si le document est actuellement publié sur RI
-  // (= un publication_record actif existe, pas en erreur, pas déjà archivé)
-  // Une fiche non conforme ne peut pas être archivée depuis l'éditeur.
-  const canArchive =
-    document.onlineStatus === "published" &&
-    document.complianceStatus !== "non_compliant";
+  const isPublished = document.onlineStatus === "published";
+  const canArchive = document.onlineStatus !== "archived";
+  const archiveConfirmationMessage = isPublished
+    ? "Êtes-vous sûr de vouloir archiver cette fiche ? Elle ne sera plus visible sur le site par les usagers."
+    : "Êtes-vous sûr de vouloir archiver cette fiche ? Elle sera marquée comme archivée sans jamais avoir été publiée.";
 
   const handleArchive = async () => {
     setArchiveError(null);
@@ -138,8 +137,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
             </Link>
           </nav>
 
-          {/* Archiver — visible uniquement si le doc est publié sur RI.
-              Toujours dans le DOM pour permettre la transition CSS. */}
+          {/* Archiver — toujours dans le DOM pour permettre la transition CSS. */}
           <div
             className={cn(
               "flex flex-col gap-1 overflow-hidden transition-all duration-300 ease-in-out",
@@ -164,8 +162,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
                 className="w-[388px] flex flex-col gap-7"
               >
                 <p className="text-base leading-6 text-[var(--text-default-grey,#3a3a3a)]">
-                  Êtes-vous sûr de vouloir archiver cette fiche ? Elle ne sera
-                  plus visible sur le site par les usagers.
+                  {archiveConfirmationMessage}
                 </p>
                 <div className="flex justify-end items-center gap-4">
                   <PopoverClose asChild>

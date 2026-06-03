@@ -275,7 +275,6 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
           workflowId: document.id,
           title: document.title || "Sans titre",
           markdown: document.editorialContent || "",
-          metadata: mergedMetadata,
         }),
       });
       const data = await response.json();
@@ -296,7 +295,7 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsArchiving(false);
     }
-  }, [document, mergedMetadata]);
+  }, [document]);
 
   // =============================================================================
   // Context Value
