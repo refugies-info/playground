@@ -28,7 +28,7 @@ export const NoFrontmatterSchema = z.void();
  */
 export const MetadataMetadataSchema = z
   .object({
-    metadata_ri: z.record(z.unknown()),
+    metadata_ri: z.record(z.string(), z.unknown()),
     provenance: z.array(z.unknown()).optional(),
   })
   .passthrough();

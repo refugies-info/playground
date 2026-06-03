@@ -109,8 +109,7 @@ export function HeaderFicheConnected({
   const isCompliant = document?.complianceStatus === "compliant";
   const showSaveIndicator =
     document?.complianceStatus !== "non_compliant" &&
-    document?.complianceStatus !== "pending" &&
-    document?.onlineStatus !== "archived";
+    document?.complianceStatus !== "pending";
   // Loading = workflow en cours d'appel OU en attente du résultat Realtime
   const isLoading = isPublishing || isWaiting;
 
