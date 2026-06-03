@@ -21,7 +21,7 @@ import type { MetadataFieldDef } from "./types";
 interface MetadataRowProps {
   field: MetadataFieldDef;
   metadata_ri: Record<string, unknown>;
-  provenanceByKey: Map<string, { key: string; source: string[] }>;
+  provenanceByKey: Map<string, { key: string; source?: unknown }>;
   diMetadata: Record<string, unknown>;
 }
 

@@ -23,6 +23,52 @@ export function resolvePath(
   return current;
 }
 
+export interface SourceDisplayEntry {
+  key: string;
+  value: string;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Normalizes AI-generated provenance sources for display.
+ *
+ * The expected format is an array of dot-notation paths. Some reports contain
+ * objects with a `field` and `rawValue`; in that case we keep the declared field
+ * and display the raw value directly instead of trying to resolve it again.
+ */
+export function normalizeSourceEntries(
+  source: unknown,
+  diMetadata: Record<string, unknown>,
+): SourceDisplayEntry[] {
+  if (!Array.isArray(source)) return [];
+
+  return source.flatMap((entry): SourceDisplayEntry[] => {
+    if (typeof entry === "string") {
+      return [
+        {
+          key: entry,
+          value: formatSourceValue(resolvePath(diMetadata, entry)),
+        },
+      ];
+    }
+
+    if (!isRecord(entry) || typeof entry.field !== "string") return [];
+
+    const hasRawValue = Object.hasOwn(entry, "rawValue");
+    return [
+      {
+        key: entry.field,
+        value: formatSourceValue(
+          hasRawValue ? entry.rawValue : resolvePath(diMetadata, entry.field),
+        ),
+      },
+    ];
+  });
+}
+
 /**
  * Formats a source value for display in the "Source RCO" column.
  */

@@ -21,7 +21,7 @@ interface MetadataTableProps {
           label: string;
           value: string;
           status: string;
-          source: string[];
+          source?: unknown;
         }>;
       }
     | null

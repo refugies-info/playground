@@ -50,7 +50,7 @@ export interface Document {
       label: string;
       value: string;
       status: string;
-      source: string[];
+      source?: unknown;
     }>;
   } | null;
   editorialRecordId?: string;

@@ -3,48 +3,48 @@
 import { Button } from "@playground/ui/primitives";
 import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
-import { formatSourceValue, resolvePath } from "./shared/helpers";
+import { normalizeSourceEntries } from "./shared/helpers";
 
 interface SourceDisplayProps {
-  source?: string[];
+  source?: unknown;
   diMetadata: Record<string, unknown>;
 }
 
 export function SourceDisplay({ source, diMetadata }: SourceDisplayProps) {
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+  const sourceEntries = normalizeSourceEntries(source, diMetadata);
 
-  if (!source?.length) {
+  if (sourceEntries.length === 0) {
     return <span className="text-gray-400">—</span>;
   }
 
   return (
     <div className="space-y-1 text-sm">
-      {source.map((srcKey) => {
-        const resolved = resolvePath(diMetadata, srcKey);
-        const formattedValue = formatSourceValue(resolved);
-        const isExpanded = expandedKeys.has(srcKey);
+      {sourceEntries.map(({ key, value }, index) => {
+        const entryKey = `${key}-${index}`;
+        const isExpanded = expandedKeys.has(entryKey);
         const trimmedValue =
-          formattedValue && !isExpanded && formattedValue.length > 200
-            ? `${formattedValue.slice(0, 200)}…`
-            : formattedValue;
+          value && !isExpanded && value.length > 200
+            ? `${value.slice(0, 200)}…`
+            : value;
         return (
-          <div key={srcKey}>
-            <span className="font-bold">{srcKey}</span>
-            {formattedValue && (
+          <div key={entryKey}>
+            <span className="font-bold">{key}</span>
+            {value && (
               <>
                 {" "}
                 : <span>{trimmedValue}</span>
-                {formattedValue.length > 200 && (
+                {value.length > 200 && (
                   <Button
                     variant="secondaire"
                     size="sm"
                     onClick={() => {
                       setExpandedKeys((prev) => {
                         const next = new Set(prev);
-                        if (next.has(srcKey)) {
-                          next.delete(srcKey);
+                        if (next.has(entryKey)) {
+                          next.delete(entryKey);
                         } else {
-                          next.add(srcKey);
+                          next.add(entryKey);
                         }
                         return next;
                       });
