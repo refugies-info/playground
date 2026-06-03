@@ -38,7 +38,6 @@ const meta = {
         "na",
       ] satisfies TagStatus[],
     },
-    href: { control: "text" },
   },
 } satisfies Meta<typeof Tag>;
 
@@ -100,18 +99,6 @@ export const Publie: Story = {
   args: { status: "publie" },
 };
 
-/** Publiée + icône lien externe vers la fiche en ligne */
-export const PublieAvecLien: Story = {
-  name: "Publié — avec lien externe",
-  args: { status: "publie", href: "https://refugies.info" },
-  play: async ({ canvas }) => {
-    const link = canvas.getByRole("link");
-    await expect(link).toHaveAttribute("href", "https://refugies.info");
-    await expect(link).toHaveAttribute("target", "_blank");
-    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
-  },
-};
-
 /** Aucun statut applicable — affiché comme tiret */
 export const NA: Story = {
   name: "NA (vide)",
@@ -147,10 +134,7 @@ export const Reference: Story = {
           <tr key={status} className="border-b border-gray-100">
             <td className="py-2 pr-8 text-gray-600">{TAG_LABELS[status]}</td>
             <td className="py-2 pr-8">
-              <Tag
-                status={status}
-                href={status === "publie" ? "https://refugies.info" : undefined}
-              />
+              <Tag status={status} />
             </td>
             <td className="py-2 font-mono text-xs text-gray-400">
               status="{status}"
