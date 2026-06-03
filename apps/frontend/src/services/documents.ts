@@ -468,7 +468,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
               label: string;
               value: string;
               status: string;
-              source: string[];
+              source?: unknown;
             }[]
           | undefined,
       };
