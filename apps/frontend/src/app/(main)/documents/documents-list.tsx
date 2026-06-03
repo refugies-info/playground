@@ -32,7 +32,7 @@ interface DocumentsListProps {
     onlineStatus?: string;
     dateFrom: string;
     dateTo: string;
-    authorEmail: string;
+    assigneeEmail: string;
     search: string;
     modalitesEntreesSorties?: string;
   };
@@ -158,13 +158,13 @@ export function DocumentsList({
         />
 
         <BoutonFiltre
-          label="Auteur·ice"
+          label="Assigné·e"
           options={initialAuthors.map((a) => ({
             label: a.displayName,
             value: a.email,
           }))}
-          value={filters.authorEmail || ""}
-          onChange={(value) => updateFilter("authorEmail", value)}
+          value={filters.assigneeEmail || ""}
+          onChange={(value) => updateFilter("assigneeEmail", value)}
         />
 
         <BoutonFiltre

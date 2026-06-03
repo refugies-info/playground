@@ -64,7 +64,7 @@ async function getOrCreateEditorialRecord(
     .insert({
       ingestion_record_id: workflow.ingestion_record_id,
       work_status: "draft",
-      author_id: userId,
+      assignee_id: userId,
     })
     .select("id")
     .single();

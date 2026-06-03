@@ -234,19 +234,19 @@ export async function publishDocumentStep(
       return failStep(db, "Workflow not found");
     }
 
-    // 4. Fetch the author_id from the editorial record
-    let author_id: string | null = null;
+    // 4. Fetch the assignee_id from the editorial record
+    let assignee_id: string | null = null;
     if (workflow.editorial_record_id) {
       const { data: edRecord, error: edError } = await db
         .from("editorial_records")
-        .select("author_id")
+        .select("assignee_id")
         .eq("id", workflow.editorial_record_id)
         .maybeSingle();
 
       if (edError) {
-        logger.error(edError, "Error fetching editorial record author");
+        logger.error(edError, "Error fetching editorial record assignee");
       } else if (edRecord) {
-        author_id = edRecord.author_id;
+        assignee_id = edRecord.assignee_id;
       }
     }
 
@@ -263,7 +263,7 @@ export async function publishDocumentStep(
         mode: "publish",
         payload: webhookPayload,
         published_by: userId,
-        author_id,
+        author_id: assignee_id,
       })
       .select("id")
       .maybeSingle();

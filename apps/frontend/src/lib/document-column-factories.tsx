@@ -119,12 +119,15 @@ export const createWorkStatusColumn = <
 
 export const createAuthorColumn = (): ColumnDef<Document> => ({
   // accessorKey matches DocumentSortField for correct sort key
-  accessorKey: "authorEmail",
+  accessorKey: "assigneeEmail",
   header: ({ column }) => (
-    <DataTableColumnHeader column={column} title="Auteur" />
+    <DataTableColumnHeader column={column} title="Assigné·e" />
   ),
   cell: ({ row }) => (
-    <Avatar email={row.original.authorEmail} isAI={!row.original.authorEmail} />
+    <Avatar
+      email={row.original.assigneeEmail}
+      isAI={!row.original.assigneeEmail}
+    />
   ),
 });
 

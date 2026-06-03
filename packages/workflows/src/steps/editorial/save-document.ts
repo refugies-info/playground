@@ -109,7 +109,7 @@ export async function saveDocumentStep(
       const updatePayload: Record<string, unknown> = {
         markdown,
         metadata: updatedMetadata,
-        author_id: userId,
+        assignee_id: userId,
         updated_at: new Date().toISOString(),
       };
 
@@ -144,7 +144,7 @@ export async function saveDocumentStep(
         .insert({
           ingestion_record_id: workflow.ingestion_record_id,
           markdown,
-          author_id: userId,
+          assignee_id: userId,
           work_status: "draft",
         })
         .select("id")

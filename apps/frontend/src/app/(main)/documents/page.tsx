@@ -56,7 +56,7 @@ export default async function DocumentsPage(props: PageProps) {
     "id",
     "structureName",
     "sessionStartDate",
-    "authorEmail",
+    "assigneeEmail",
     "commune",
     "modalitesEntreesSorties",
     "wordCount",
@@ -75,9 +75,9 @@ export default async function DocumentsPage(props: PageProps) {
       ? sortOrderParam
       : "desc";
 
-  const authorEmailParam =
-    typeof searchParams.authorEmail === "string"
-      ? searchParams.authorEmail
+  const assigneeEmailParam =
+    typeof searchParams.assigneeEmail === "string"
+      ? searchParams.assigneeEmail
       : undefined;
 
   const searchParam =
@@ -102,7 +102,7 @@ export default async function DocumentsPage(props: PageProps) {
         : undefined,
     dateTo:
       typeof searchParams.dateTo === "string" ? searchParams.dateTo : undefined,
-    authorEmail: authorEmailParam,
+    assigneeEmail: assigneeEmailParam,
     search: searchParam,
     modalitesEntreesSorties:
       typeof searchParams.modalitesEntreesSorties === "string"
@@ -133,7 +133,7 @@ export default async function DocumentsPage(props: PageProps) {
     dateFrom:
       typeof searchParams.dateFrom === "string" ? searchParams.dateFrom : "",
     dateTo: typeof searchParams.dateTo === "string" ? searchParams.dateTo : "",
-    authorEmail: authorEmailParam ?? "",
+    assigneeEmail: assigneeEmailParam ?? "",
     search: searchParam ?? "",
     modalitesEntreesSorties:
       typeof searchParams.modalitesEntreesSorties === "string"
