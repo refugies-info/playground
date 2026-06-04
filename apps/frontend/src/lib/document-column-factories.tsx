@@ -120,7 +120,7 @@ export const createWorkStatusColumn = <
   cell: ({ row }) => <WorkStatusCell status={row.original.workStatus} />,
 });
 
-export const createAuthorColumn = (
+export const createAssigneeColumn = (
   editors: AssigneeEditor[],
   onOptimisticUpdate: (docId: string, email: string | null) => void,
 ): ColumnDef<Document> => ({

@@ -170,4 +170,4 @@ COMMENT ON VIEW workflows_enriched IS
      RI-1146: added assignee_email, commune, modalites_entrees_sorties for sort/filter support.
      RI-1172: added ingestion_word_count for "Mots" column with server-side sorting.
      Added DI-only session_start_date/session_end_date period.
-     Renamed editorial_records.author_id to assignee_id (author_email/author_profile follow).';
+     Renamed editorial_records.author_id to assignee_id (assignee_email/assignee_profile follow).';

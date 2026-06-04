@@ -5,7 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { AssigneeEditor } from "@/components/common/assignee-dropdown";
 import { createDateColumn, createTextColumn } from "@/lib/column-factories";
 import {
-  createAuthorColumn,
+  createAssigneeColumn,
   createComplianceStatusColumn,
   createExternalIdColumn,
   createModalitesEntreesSortiesColumn,
@@ -32,7 +32,7 @@ export function getColumns(
   onOptimisticUpdate: (docId: string, email: string | null) => void,
 ): ColumnDef<Document>[] {
   return [
-    { ...createAuthorColumn(editors, onOptimisticUpdate), size: 80 },
+    { ...createAssigneeColumn(editors, onOptimisticUpdate), size: 80 },
     { ...createOnlineStatusColumn(), size: 136 }, // "Statut"
     { ...createWorkStatusColumn<Document>(), size: 121 }, // "État"
     { ...createWordCountColumn(), size: 76 }, // "Mots"

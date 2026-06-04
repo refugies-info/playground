@@ -278,12 +278,12 @@ ModalitesCellDemo.displayName = "ModalitesCellDemo";
 // =============================================================================
 
 const columns: ColumnDef<FicheDemo>[] = [
-  // Auteur (80px) — Avatar utilisateur ou IA
+  // Assignée (80px) — Avatar utilisateur ou IA
   {
     accessorKey: "assigneeEmail",
     size: 80,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Auteur" />
+      <DataTableColumnHeader column={column} title="Assignée" />
     ),
     cell: ({ row }) => (
       <Avatar
