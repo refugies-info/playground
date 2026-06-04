@@ -110,24 +110,28 @@ export async function saveDocument(
     if (auth.errorResponse) return auth.errorResponse;
     const { user } = auth;
 
-    const result = await start(saveWorkflow, [workflowId, markdown, user.id]);
+    const run = await start(saveWorkflow, [workflowId, markdown, user.id]);
 
     logger.info(
-      { workflowRunId: result.runId, workflowId },
+      { workflowRunId: run.runId, workflowId },
       "Save workflow started",
+    );
+
+    await run.returnValue;
+
+    logger.info(
+      { workflowRunId: run.runId, workflowId },
+      "Save workflow completed",
     );
 
     revalidatePath("/documents/[id]", "page");
 
-    // Note: The UI handles optimistic updates.
-    // We return success immediately knowing the workflow is processing in background.
-
     return {
       success: true,
-      workflowRunId: result.runId,
+      workflowRunId: run.runId,
     };
   } catch (error) {
-    logger.error(error, "Unexpected error starting save workflow");
+    logger.error(error, "Unexpected error during save workflow");
     return {
       success: false,
       error: "Erreur inattendue lors de la sauvegarde",
