@@ -97,14 +97,14 @@ export function TitledPopover({
           }}
         >
           <Header title={title} />
-          <button
-            type={"button"}
+          <div
+            role="none"
             onClick={
               closeOnChildClick ? () => handleOpenChange(false) : undefined
             }
           >
             {children}
-          </button>
+          </div>
         </PopoverContent>
       ) : (
         <PopoverContent
