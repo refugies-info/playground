@@ -4,7 +4,7 @@ import type { Document } from "@playground/shared-types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { createDateColumn, createTextColumn } from "@/lib/column-factories";
 import {
-  createAuthorColumn,
+  createAssigneeColumn,
   createComplianceStatusColumn,
   createExternalIdColumn,
   createModalitesEntreesSortiesColumn,
@@ -27,7 +27,7 @@ import {
  *   Date d'arbitrage=121 | Conformité=149 | ID=80
  */
 export const columns: ColumnDef<Document>[] = [
-  { ...createAuthorColumn(), size: 80 },
+  { ...createAssigneeColumn(), size: 80 },
   { ...createOnlineStatusColumn(), size: 136 }, // "Statut"
   { ...createWorkStatusColumn<Document>(), size: 121 }, // "État"
   { ...createWordCountColumn(), size: 76 }, // "Mots"

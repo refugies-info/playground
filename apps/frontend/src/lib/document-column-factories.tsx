@@ -117,7 +117,7 @@ export const createWorkStatusColumn = <
   cell: ({ row }) => <WorkStatusCell status={row.original.workStatus} />,
 });
 
-export const createAuthorColumn = (): ColumnDef<Document> => ({
+export const createAssigneeColumn = (): ColumnDef<Document> => ({
   // accessorKey matches DocumentSortField for correct sort key
   accessorKey: "assigneeEmail",
   header: ({ column }) => (
