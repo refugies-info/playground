@@ -1,7 +1,7 @@
 "use client";
 
 import { logger } from "@playground/shared-types";
-import { Avatar, IndicationSauvegarde } from "@playground/ui";
+import { IndicationSauvegarde } from "@playground/ui";
 import {
   HeaderFiche,
   PublishPanel,
@@ -16,6 +16,10 @@ import { Button } from "@playground/ui/primitives";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {
+  AssigneeDropdown,
+  type AssigneeEditor,
+} from "@/components/common/assignee-dropdown";
 import { useDocumentActions } from "../actions/DocumentActionsContext";
 import { usePublicationRealtime } from "../actions/hooks/usePublicationRealtime";
 import { useDocument } from "../DocumentContext";
@@ -25,7 +29,7 @@ import { useDocumentStatusRealtime } from "./hooks/useDocumentStatusRealtime";
 
 interface HeaderFicheConnectedProps {
   from?: string;
-  userEmail?: string | null;
+  editors?: AssigneeEditor[];
 }
 
 /**
@@ -43,7 +47,7 @@ interface HeaderFicheConnectedProps {
  */
 export function HeaderFicheConnected({
   from,
-  userEmail,
+  editors = [],
 }: HeaderFicheConnectedProps) {
   const router = useRouter();
   const { document, setDocument, isDirty } = useDocument();
@@ -179,7 +183,11 @@ export function HeaderFicheConnected({
             <IndicationSauvegarde status={saveStatus} onSave={handleSave} />
           ) : null}
           <DocumentStatus />
-          <Avatar email={userEmail} className="size-6" />
+          <AssigneeDropdown
+            editorialRecordId={document?.editorialRecordId}
+            currentEmail={document?.assigneeEmail}
+            editors={editors}
+          />
         </>
       }
       center={document?.title ? <span>{document.title}</span> : undefined}
