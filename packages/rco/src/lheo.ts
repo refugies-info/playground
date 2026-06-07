@@ -45,18 +45,20 @@ const parser = new XMLParser({
   attributesGroupName: "attributes",
   textNodeName: "_text",
   isArray: (name, jpath) => {
+    const path = jpath ? String(jpath) : "";
+
     if (alwaysArray.includes(name)) return true;
     if (
       name === "reference-module" &&
-      jpath.endsWith("modules-prerequis.reference-module")
+      path.endsWith("modules-prerequis.reference-module")
     )
       return true;
-    if (name === "urlweb" && !jpath.endsWith("recrutement.urlweb")) return true;
+    if (name === "urlweb" && !path.endsWith("recrutement.urlweb")) return true;
     // In lheo-plus, organisme-formation-responsable is unbounded (array).
     // JPath for lheo-plus might vary depending on if it's root or nested, but typically 'lheo-plus.organisme-formation-responsable'
     if (
       name === "organisme-formation-responsable" &&
-      jpath.indexOf("lheo-plus") !== -1
+      path.includes("lheo-plus")
     )
       return true;
     return false;

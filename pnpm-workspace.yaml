@@ -21,6 +21,19 @@ packages:
 # (10080 minutes). Mitigates attacks using freshly published malicious versions.
 # See: https://pnpm.io/settings#minimumreleaseage
 minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  # TODO: Remove after 2026-06-15 once security patch releases are older than 7 days
+  - "@next/*"
+  - "@vitest/*"
+  - "@workflow/*"
+  - "@rollup/*"
+  - next
+  - vitest
+  - vite
+  - workflow
+  - lodash
+  - rollup
+  - undici
 
 # Prevent downgrading packages to older versions during updates.
 # Protects against attacks that republish older vulnerable versions.

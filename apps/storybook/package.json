@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@playground/ui": "workspace:*",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
   },
   "devDependencies": {
     "@storybook/addon-a11y": "10.3.3",
@@ -29,7 +29,8 @@
     "playwright": "^1.58.2",
     "storybook": "10.3.3",
     "storybook-addon-pseudo-states": "^10.3.3",
-    "vite": "6.2.6",
-    "vitest": "^3.2.4"
+    "vite": "6.4.2",
+    "vitest": "^4.1.0",
+    "@vitest/browser-playwright": "^4.1.8"
   }
 }

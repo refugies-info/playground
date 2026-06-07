@@ -7,12 +7,19 @@
   "pnpm": {
     "overrides": {
       "undici-types": "6.18.2",
-      "vite": "5.4.19",
+      "vite": "6.4.2",
       "caniuse-lite": "1.0.30001756",
-      "semver": "7.7.1"
+      "semver": "7.7.1",
+      "fast-uri": "3.1.2",
+      "lodash": "4.18.1",
+      "devalue": "5.8.1",
+      "minimatch@5": "5.1.8",
+      "minimatch@9": "9.0.7",
+      "undici": "7.24.0"
     },
     "onlyBuiltDependencies": [
       "@swc/core",
+      "better-sqlite3",
       "esbuild",
       "sharp"
     ]
@@ -29,6 +36,7 @@
     "format": "biome format --write .",
     "knip": "knip",
     "lint": "biome check --write .",
+    "security:scan:js": "cve-lite . --fail-on high",
     "validate:docs": "tsx scripts/validate-docs.ts",
     "validate": "pnpm validate:docs && pnpm knip",
     "convert:dispositifs": "tsx scripts/convert-dispositifs.ts",
@@ -56,6 +64,7 @@
     "@refugies-info/di": "workspace:*",
     "@types/js-yaml": "^4.0.9",
     "commander": "^14.0.2",
+    "cve-lite-cli": "1.18.1",
     "dotenv": "^17.2.3",
     "husky": "^9.1.7",
     "knip": "^5.70.0",
@@ -63,7 +72,7 @@
     "postcss": "^8.5.6",
     "tsx": "^4.20.6",
     "turbo": "^2.6.1",
-    "workflow": "4.2.5"
+    "workflow": "4.3.1"
   },
   "lint-staged": {
     "**/*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
