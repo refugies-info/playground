@@ -45,7 +45,7 @@ const parser = new XMLParser({
   attributesGroupName: "attributes",
   textNodeName: "_text",
   isArray: (name, jpath) => {
-    const path = typeof jpath === "string" ? jpath : String(jpath);
+    const path = jpath ? String(jpath) : "";
 
     if (alwaysArray.includes(name)) return true;
     if (
@@ -58,7 +58,7 @@ const parser = new XMLParser({
     // JPath for lheo-plus might vary depending on if it's root or nested, but typically 'lheo-plus.organisme-formation-responsable'
     if (
       name === "organisme-formation-responsable" &&
-      path.indexOf("lheo-plus") !== -1
+      path.includes("lheo-plus")
     )
       return true;
     return false;
