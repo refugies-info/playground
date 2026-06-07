@@ -24,11 +24,11 @@
     "@playground/shared-types": "workspace:*",
     "@playground/supabase": "workspace:*",
     "gray-matter": "^4.0.3",
-    "workflow": "4.2.5"
+    "workflow": "4.3.1"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
     "typescript": "^5.9.3",
-    "vitest": "^2.1.9"
+    "vitest": "^4.1.0"
   }
 }

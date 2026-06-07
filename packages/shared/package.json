@@ -16,7 +16,7 @@
   "devDependencies": {
     "@types/mdast": "^4.0.4",
     "typescript": "^5.9.3",
-    "vitest": "^3.0.0"
+    "vitest": "^4.1.0"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
