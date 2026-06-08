@@ -2,8 +2,11 @@
 
 import type { Document } from "@playground/shared-types";
 import { DataTableColumnHeader } from "@playground/ui/composites";
-import { Avatar } from "@playground/ui/primitives";
 import type { ColumnDef } from "@tanstack/react-table";
+import {
+  AssigneeDropdown,
+  type AssigneeEditor,
+} from "@/components/common/assignee-dropdown";
 import {
   ComplianceStatusCell,
   ExternalIdCell,
@@ -117,16 +120,21 @@ export const createWorkStatusColumn = <
   cell: ({ row }) => <WorkStatusCell status={row.original.workStatus} />,
 });
 
-export const createAssigneeColumn = (): ColumnDef<Document> => ({
+export const createAssigneeColumn = (
+  editors: AssigneeEditor[],
+  onOptimisticUpdate: (docId: string, email: string | null) => void,
+): ColumnDef<Document> => ({
   // accessorKey matches DocumentSortField for correct sort key
   accessorKey: "assigneeEmail",
   header: ({ column }) => (
     <DataTableColumnHeader column={column} title="Assigné·e" />
   ),
   cell: ({ row }) => (
-    <Avatar
-      email={row.original.assigneeEmail}
-      isAI={!row.original.assigneeEmail}
+    <AssigneeDropdown
+      editorialRecordId={row.original.editorialRecordId}
+      currentEmail={row.original.assigneeEmail}
+      editors={editors}
+      onOptimisticUpdate={(email) => onOptimisticUpdate(row.original.id, email)}
     />
   ),
 });

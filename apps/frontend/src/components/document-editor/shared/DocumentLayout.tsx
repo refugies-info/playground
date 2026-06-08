@@ -61,12 +61,12 @@ interface DocumentLayoutProps {
   // biome-ignore lint/suspicious/noExplicitAny: Generic initial data
   initialData?: any; // Replace with proper type
   children: React.ReactNode;
-  /** Email de l'utilisateur connecté — pour l'avatar dans le header */
-  userEmail?: string | null;
+  /** Liste des éditeurs/admins pour le dropdown d'assignation */
+  editors?: { id: string; email: string; displayName: string }[];
 }
 
 export function DocumentLayout(props: DocumentLayoutProps) {
-  const { initialData, children, userEmail } = props;
+  const { initialData, children, editors } = props;
 
   // Read `from` once on mount — persists across tab navigation since layout
   // doesn't remount. useEffect garantit que window n'est lu que côté client
@@ -90,7 +90,7 @@ export function DocumentLayout(props: DocumentLayoutProps) {
             {/* Editor Area — fond blanc + arrondis fournis par le layout parent (main) */}
             <div className="flex flex-col flex-1">
               {/* Header fiche */}
-              <HeaderFicheConnected from={from} userEmail={userEmail} />
+              <HeaderFicheConnected from={from} editors={editors ?? []} />
 
               {/* Main Content Area */}
               <div className="flex flex-row flex-1 relative">

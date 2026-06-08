@@ -119,6 +119,7 @@ export function DocumentProvider({
     initialData?.metadataReport?.id,
     initialData?.activeRunId,
     initialData?.onlineStatus,
+    initialData?.assigneeEmail,
   ]);
 
   // Update content and mark as dirty (only if content actually changed)

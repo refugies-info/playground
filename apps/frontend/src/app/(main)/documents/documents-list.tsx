@@ -9,11 +9,11 @@ import {
 } from "@playground/ui";
 import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppPaginationControls } from "@/components/common/app-pagination";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { createClient } from "@/lib/supabase/client";
-import { columns } from "./columns";
+import { getColumns } from "./columns";
 
 // Duration must match the Tailwind animation duration used in getRowClassName (duration-1000)
 const HIGHLIGHT_ANIMATION_DURATION_MS = 1000;
@@ -36,7 +36,7 @@ interface DocumentsListProps {
     search: string;
     modalitesEntreesSorties?: string;
   };
-  initialAuthors: { email: string; displayName: string }[];
+  initialAuthors: { id: string; email: string; displayName: string }[];
 }
 
 export function DocumentsList({
@@ -64,6 +64,22 @@ export function DocumentsList({
   // Flag set by the Realtime callback — animation only fires for live DB changes,
   // not for sort/filter/page navigation (which would falsely highlight every row).
   const isRealtimeUpdateRef = useRef(false);
+
+  const columns = useMemo(
+    () =>
+      getColumns(initialAuthors, (docId, email) => {
+        setDocuments((prev) =>
+          prev.map((doc) =>
+            doc.id === docId
+              ? { ...doc, assigneeEmail: email ?? undefined }
+              : doc,
+          ),
+        );
+      }),
+    // initialAuthors is server-rendered and stable across renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [initialAuthors],
+  );
 
   // Detect document changes and trigger animations
   useEffect(() => {
@@ -159,10 +175,13 @@ export function DocumentsList({
 
         <BoutonFiltre
           label="Assigné·e"
-          options={initialAuthors.map((a) => ({
-            label: a.displayName,
-            value: a.email,
-          }))}
+          options={[
+            { label: "PapaIA", value: "__unassigned__" },
+            ...initialAuthors.map((a) => ({
+              label: a.displayName,
+              value: a.email,
+            })),
+          ]}
           value={filters.assigneeEmail || ""}
           onChange={(value) => updateFilter("assigneeEmail", value)}
         />

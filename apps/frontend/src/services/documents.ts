@@ -121,7 +121,9 @@ export async function getDocuments(params: GetDocumentsParams) {
   }
 
   // Filter by assignee email (editors/admins only — translators excluded from dropdown)
-  if (assigneeEmail) {
+  if (assigneeEmail === "__unassigned__") {
+    query = query.is("assignee_email", null);
+  } else if (assigneeEmail) {
     query = query.eq("assignee_email", assigneeEmail);
   }
 
@@ -251,6 +253,7 @@ export async function getDocuments(params: GetDocumentsParams) {
         qualityScore: item.quality_score ?? undefined,
         sourceSystem: item.rco_record_id ? "RCO" : "DI",
         updated_at: item.updated_at || "",
+        editorialRecordId: item.editorial_record_id ?? undefined,
         assigneeEmail,
         assigneeRole,
         commune: item.commune ?? null,
@@ -515,14 +518,14 @@ export async function getDocumentById(id: string): Promise<Document | null> {
  * Translators are excluded (they work on translations, not editorial content).
  */
 export async function getEditorsList(): Promise<
-  { email: string; displayName: string }[]
+  { id: string; email: string; displayName: string }[]
 > {
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("email, first_name, last_name, username")
+    .select("id, email, first_name, last_name, username")
     .in("role", ["admin", "editor"])
     .order("email", { ascending: true });
 
@@ -547,6 +550,6 @@ export async function getEditorsList(): Promise<
       const prefix = (p.email ?? "").split("@")[0];
       displayName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
     }
-    return { email: p.email ?? "", displayName };
+    return { id: p.id, email: p.email ?? "", displayName };
   });
 }
