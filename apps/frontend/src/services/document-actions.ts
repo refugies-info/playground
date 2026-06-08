@@ -117,7 +117,7 @@ export async function saveDocument(
       "Save workflow started",
     );
 
-    await run.returnValue;
+    await getRun(run.runId).returnValue;
 
     logger.info(
       { workflowRunId: run.runId, workflowId },
