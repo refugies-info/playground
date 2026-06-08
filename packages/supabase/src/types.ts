@@ -128,7 +128,7 @@ export type Database = {
       editorial_records: {
         Row: {
           active_run_id: string | null
-          author_id: string | null
+          assignee_id: string | null
           content_report_id: string | null
           created_at: string
           id: string
@@ -142,7 +142,7 @@ export type Database = {
         }
         Insert: {
           active_run_id?: string | null
-          author_id?: string | null
+          assignee_id?: string | null
           content_report_id?: string | null
           created_at?: string
           id?: string
@@ -156,7 +156,7 @@ export type Database = {
         }
         Update: {
           active_run_id?: string | null
-          author_id?: string | null
+          assignee_id?: string | null
           content_report_id?: string | null
           created_at?: string
           id?: string
@@ -170,8 +170,8 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "editorial_records_author_id_fkey"
-            columns: ["author_id"]
+            foreignKeyName: "editorial_records_assignee_id_fkey"
+            columns: ["assignee_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -769,14 +769,14 @@ export type Database = {
       }
       workflows_enriched: {
         Row: {
-          author_email: string | null
-          author_profile: Json | null
+          assignee_email: string | null
+          assignee_profile: Json | null
           commune: string | null
           compliance_status: string | null
           computed_online_status: string | null
           computed_work_status: string | null
           created_at: string | null
-          editorial_author_id: string | null
+          editorial_assignee_id: string | null
           editorial_markdown: string | null
           editorial_metadata: Json | null
           editorial_record_id: string | null
@@ -804,8 +804,8 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "editorial_records_author_id_fkey"
-            columns: ["editorial_author_id"]
+            foreignKeyName: "editorial_records_assignee_id_fkey"
+            columns: ["editorial_assignee_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

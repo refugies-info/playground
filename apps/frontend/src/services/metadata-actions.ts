@@ -26,7 +26,7 @@ import { verifyWorkflowPermission } from "./permission-helper";
 async function getOrCreateEditorialRecord(
   supabase: SupabaseClient,
   workflowId: string,
-  userId: string,
+  _userId: string,
 ): Promise<
   | { success: true; editorialRecordId: string }
   | { success: false; error: string }
@@ -64,7 +64,6 @@ async function getOrCreateEditorialRecord(
     .insert({
       ingestion_record_id: workflow.ingestion_record_id,
       work_status: "draft",
-      author_id: userId,
     })
     .select("id")
     .single();

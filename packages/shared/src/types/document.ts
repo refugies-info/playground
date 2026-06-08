@@ -19,7 +19,7 @@ export type DocumentSortField =
   | "qualityScore"
   | "structureName"
   | "sessionStartDate"
-  | "authorEmail"
+  | "assigneeEmail"
   | "commune"
   | "modalitesEntreesSorties"
   | "wordCount";
@@ -63,8 +63,8 @@ export interface Document {
   qualityScore?: number | null;
   sourceSystem: "RCO" | "DI";
   updated_at: string;
-  authorEmail?: string;
-  authorRole?: string;
+  assigneeEmail?: string;
+  assigneeRole?: string;
   /** Commune from metadata, e.g. "Blois", "Mantes-la-Jolie" */
   commune?: string | null;
   /** Entry/exit modalities: "0" (rolling admission) | "1" (fixed dates) | null */
