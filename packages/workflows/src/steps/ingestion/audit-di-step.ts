@@ -516,11 +516,19 @@ export async function forceAuditReportStep(workflowId: string) {
     }
 
     logger.info(
-      { workflowId, reportId: report.id },
+      {
+        workflowId,
+        reportId: report.id,
+        complianceStatus: finalComplianceStatus,
+      },
       "Forced arbitration audit completed successfully",
     );
 
-    return { success: true, reportId: report.id };
+    return {
+      success: true,
+      reportId: report.id,
+      complianceStatus: finalComplianceStatus,
+    };
   } catch (error) {
     if (error instanceof APIError) {
       logger.error(
