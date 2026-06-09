@@ -127,7 +127,7 @@ export type Database = {
       };
       editorial_records: {
         Row: {
-          author_id: string | null;
+          assignee_id: string | null;
           content_report_id: string | null;
           created_at: string;
           id: string;
@@ -140,7 +140,7 @@ export type Database = {
           work_status: string | null;
         };
         Insert: {
-          author_id?: string | null;
+          assignee_id?: string | null;
           content_report_id?: string | null;
           created_at?: string;
           id?: string;
@@ -153,7 +153,7 @@ export type Database = {
           work_status?: string | null;
         };
         Update: {
-          author_id?: string | null;
+          assignee_id?: string | null;
           content_report_id?: string | null;
           created_at?: string;
           id?: string;
@@ -167,8 +167,8 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "editorial_records_author_id_fkey";
-            columns: ["author_id"];
+            foreignKeyName: "editorial_records_assignee_id_fkey";
+            columns: ["assignee_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];

@@ -64,7 +64,7 @@ export interface GetDocumentsParams {
   dateFrom?: string;
   dateTo?: string;
   searchId?: string;
-  authorEmail?: string;
+  assigneeEmail?: string;
   /** Multi-column text search (title, external_id, structure_name, commune) */
   search?: string;
   /** Filter by entry type: "0" (dates fixes) or "1" (entrées permanentes) */
@@ -85,7 +85,7 @@ export async function getDocuments(params: GetDocumentsParams) {
     dateFrom,
     dateTo,
     searchId,
-    authorEmail,
+    assigneeEmail,
     search,
     modalitesEntreesSorties,
     includePreviewFields = false,
@@ -163,9 +163,11 @@ export async function getDocuments(params: GetDocumentsParams) {
     query = query.ilike("external_id", `%${searchId}%`);
   }
 
-  // Filter by author email (editors/admins only — translators excluded from dropdown)
-  if (authorEmail) {
-    query = query.eq("author_email", authorEmail);
+  // Filter by assignee email (editors/admins only — translators excluded from dropdown)
+  if (assigneeEmail === "__unassigned__") {
+    query = query.is("assignee_email", null);
+  } else if (assigneeEmail) {
+    query = query.eq("assignee_email", assigneeEmail);
   }
 
   // Filter by entry type (modalités d'entrées/sorties)
@@ -195,7 +197,7 @@ export async function getDocuments(params: GetDocumentsParams) {
     qualityScore: "quality_score",
     structureName: "structure_name",
     sessionStartDate: "session_start_date",
-    authorEmail: "author_email",
+    assigneeEmail: "assignee_email",
     commune: "commune",
     modalitesEntreesSorties: "modalites_entrees_sorties",
     wordCount: "ingestion_word_count",
@@ -283,13 +285,13 @@ export async function getDocuments(params: GetDocumentsParams) {
       const dateAdded =
         item.created_at ?? item.ingestion_created_at ?? item.updated_at ?? null;
 
-      // Parse author profile from JSONB
-      const authorProfile = item.author_profile as {
+      // Parse assignee profile from JSONB
+      const assigneeProfile = item.assignee_profile as {
         email?: string;
         role?: string;
       } | null;
-      const { email: authorEmail, role: authorRole } =
-        extractAuthorProfile(authorProfile);
+      const { email: assigneeEmail, role: assigneeRole } =
+        extractAuthorProfile(assigneeProfile);
 
       return {
         id: item.id,
@@ -310,8 +312,9 @@ export async function getDocuments(params: GetDocumentsParams) {
         qualityScore: item.quality_score ?? undefined,
         sourceSystem: item.rco_record_id ? "RCO" : "DI",
         updated_at: item.updated_at || "",
-        authorEmail,
-        authorRole,
+        editorialRecordId: item.editorial_record_id ?? undefined,
+        assigneeEmail,
+        assigneeRole,
         commune: item.commune ?? null,
         modalitesEntreesSorties: item.modalites_entrees_sorties ?? null,
         externalId: item.external_id ?? null,
@@ -490,13 +493,13 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const dateAdded =
     item.created_at ?? item.ingestion_created_at ?? item.updated_at ?? null;
 
-  // Author
-  const authorProfile = item.author_profile as {
+  // Assignee
+  const assigneeProfile = item.assignee_profile as {
     email?: string;
     role?: string;
   } | null;
-  const { email: authorEmail, role: authorRole } =
-    extractAuthorProfile(authorProfile);
+  const { email: assigneeEmail, role: assigneeRole } =
+    extractAuthorProfile(assigneeProfile);
 
   // ID is required - should never be null after the data check above
   if (!item.id) {
@@ -535,7 +538,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
               label: string;
               value: string;
               status: string;
-              source: string[];
+              source?: unknown;
             }[]
           | undefined,
       };
@@ -567,8 +570,8 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     qualityScore: item.quality_score ?? undefined,
     sourceSystem: item.rco_record_id ? "RCO" : "DI",
     updated_at: item.updated_at ?? "",
-    authorEmail,
-    authorRole,
+    assigneeEmail,
+    assigneeRole,
     externalId: item.external_id ?? null,
     ingestionVersionLabel: item.ingestion_version_label ?? null,
     activeIngestionVersion: item.active_ingestion_version ?? null,
@@ -584,14 +587,14 @@ export async function getDocumentById(id: string): Promise<Document | null> {
  * Translators are excluded (they work on translations, not editorial content).
  */
 export async function getEditorsList(): Promise<
-  { email: string; displayName: string }[]
+  { id: string; email: string; displayName: string }[]
 > {
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("email, first_name, last_name, username")
+    .select("id, email, first_name, last_name, username")
     .in("role", ["admin", "editor"])
     .order("email", { ascending: true });
 
@@ -616,6 +619,6 @@ export async function getEditorsList(): Promise<
       const prefix = (p.email ?? "").split("@")[0];
       displayName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
     }
-    return { email: p.email ?? "", displayName };
+    return { id: p.id, email: p.email ?? "", displayName };
   });
 }

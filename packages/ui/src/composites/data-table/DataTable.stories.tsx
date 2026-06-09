@@ -32,7 +32,7 @@ type Story = StoryObj<typeof meta>;
 
 interface FicheDemo {
   id: string;
-  authorEmail: string | null;
+  assigneeEmail: string | null;
   onlineStatus: "published" | "archived" | "unpublished" | null;
   workStatus: "to_process" | "draft" | null;
   title: string;
@@ -48,7 +48,7 @@ interface FicheDemo {
 const FICHES: FicheDemo[] = [
   {
     id: "1",
-    authorEmail: "alice@example.com",
+    assigneeEmail: "alice@example.com",
     onlineStatus: "published",
     workStatus: "draft",
     title: "Formation développeur web fullstack",
@@ -62,7 +62,7 @@ const FICHES: FicheDemo[] = [
   },
   {
     id: "2",
-    authorEmail: "bob@example.com",
+    assigneeEmail: "bob@example.com",
     onlineStatus: "archived",
     workStatus: null,
     title: "CAP Cuisine",
@@ -76,7 +76,7 @@ const FICHES: FicheDemo[] = [
   },
   {
     id: "3",
-    authorEmail: null,
+    assigneeEmail: null,
     onlineStatus: null,
     workStatus: "to_process",
     title: "Bac Pro Commerce et Vente",
@@ -90,7 +90,7 @@ const FICHES: FicheDemo[] = [
   },
   {
     id: "4",
-    authorEmail: "charlie@example.com",
+    assigneeEmail: "charlie@example.com",
     onlineStatus: "published",
     workStatus: "draft",
     title: "BTS Informatique et Réseaux",
@@ -104,7 +104,7 @@ const FICHES: FicheDemo[] = [
   },
   {
     id: "5",
-    authorEmail: null,
+    assigneeEmail: null,
     onlineStatus: null,
     workStatus: "to_process",
     title: "Master Data Science & IA",
@@ -118,7 +118,7 @@ const FICHES: FicheDemo[] = [
   },
   {
     id: "6",
-    authorEmail: "alice@example.com",
+    assigneeEmail: "alice@example.com",
     onlineStatus: "published",
     workStatus: "draft",
     title: "Licence Pro Ressources Humaines",
@@ -132,7 +132,7 @@ const FICHES: FicheDemo[] = [
   },
   {
     id: "7",
-    authorEmail: null,
+    assigneeEmail: null,
     onlineStatus: "archived",
     workStatus: null,
     title: "CAP Maçonnerie et Carrelage",
@@ -146,7 +146,7 @@ const FICHES: FicheDemo[] = [
   },
   {
     id: "8",
-    authorEmail: "bob@example.com",
+    assigneeEmail: "bob@example.com",
     onlineStatus: "published",
     workStatus: "draft",
     title: "BEP Électrotechnique",
@@ -160,7 +160,7 @@ const FICHES: FicheDemo[] = [
   },
   {
     id: "9",
-    authorEmail: null,
+    assigneeEmail: null,
     onlineStatus: null,
     workStatus: "to_process",
     title: "DUT Gestion des Entreprises et Administrations",
@@ -174,7 +174,7 @@ const FICHES: FicheDemo[] = [
   },
   {
     id: "10",
-    authorEmail: "charlie@example.com",
+    assigneeEmail: "charlie@example.com",
     onlineStatus: "unpublished",
     workStatus: "draft",
     title: "Titre Pro Soudeur Assembleur",
@@ -188,7 +188,7 @@ const FICHES: FicheDemo[] = [
   },
   {
     id: "11",
-    authorEmail: "alice@example.com",
+    assigneeEmail: "alice@example.com",
     onlineStatus: "published",
     workStatus: "draft",
     title: "CQP Agent de Prévention et de Sécurité",
@@ -202,7 +202,7 @@ const FICHES: FicheDemo[] = [
   },
   {
     id: "12",
-    authorEmail: null,
+    assigneeEmail: null,
     onlineStatus: null,
     workStatus: "to_process",
     title: "Prépa Concours Infirmier IDE",
@@ -278,17 +278,17 @@ ModalitesCellDemo.displayName = "ModalitesCellDemo";
 // =============================================================================
 
 const columns: ColumnDef<FicheDemo>[] = [
-  // Auteur (80px) — Avatar utilisateur ou IA
+  // Assignée (80px) — Avatar utilisateur ou IA
   {
-    accessorKey: "authorEmail",
+    accessorKey: "assigneeEmail",
     size: 80,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Auteur" />
+      <DataTableColumnHeader column={column} title="Assignée" />
     ),
     cell: ({ row }) => (
       <Avatar
-        email={row.original.authorEmail}
-        isAI={!row.original.authorEmail}
+        email={row.original.assigneeEmail}
+        isAI={!row.original.assigneeEmail}
       />
     ),
   },

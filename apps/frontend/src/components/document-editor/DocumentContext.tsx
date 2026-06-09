@@ -119,6 +119,7 @@ export function DocumentProvider({
     initialData?.metadataReport?.id,
     initialData?.activeRunId,
     initialData?.onlineStatus,
+    initialData?.assigneeEmail,
     initialData?.ingestionVersionLabel,
     initialData?.activeIngestionVersion,
     initialData?.latestIngestionVersion,

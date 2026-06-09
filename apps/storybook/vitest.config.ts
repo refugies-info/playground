@@ -2,6 +2,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import tailwindcss from "@tailwindcss/postcss";
+import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -21,6 +22,7 @@ export default defineConfig({
   },
 
   resolve: {
+    dedupe: ["react", "react-dom"],
     alias: {
       "@playground/ui/icons": resolve(
         __dirname,
@@ -30,6 +32,15 @@ export default defineConfig({
     },
   },
 
+  optimizeDeps: {
+    include: [
+      "react",
+      "react-dom",
+      "react-dom/client",
+      "react/jsx-dev-runtime",
+    ],
+  },
+
   test: {
     name: "storybook",
 
@@ -37,7 +48,7 @@ export default defineConfig({
     // (nécessaire pour axe-core et les tests d'interaction réalistes)
     browser: {
       enabled: true,
-      provider: "playwright",
+      provider: playwright(),
       headless: true,
       instances: [{ browser: "chromium" }],
     },

@@ -23,6 +23,6 @@
     "gray-matter": "^4.0.3",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
-    "workflow": "4.0.1-beta.21"
+    "workflow": "4.3.1"
   }
 }

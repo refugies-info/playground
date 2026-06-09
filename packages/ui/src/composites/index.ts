@@ -11,3 +11,4 @@ export * from "./pagination-controls";
 export * from "./publication-links-popover";
 export * from "./publish-panel";
 export * from "./sidebar";
+export * from "./titled-popover";

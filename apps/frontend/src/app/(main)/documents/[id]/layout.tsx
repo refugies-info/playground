@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { DocumentLayout } from "@/components/document-editor/shared";
 import { getAuthUser } from "@/lib/auth";
-import { getDocumentById } from "@/services/documents";
+import { getDocumentById, getEditorsList } from "@/services/documents";
 import { fetchRiReferenceData } from "@/services/ri-reference-data";
 
 export const dynamic = "force-dynamic";
@@ -26,10 +26,11 @@ export default async function Layout({
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
-  const [user, document, referenceData] = await Promise.all([
+  const [_user, document, referenceData, editors] = await Promise.all([
     getAuthUser(supabase),
     getDocumentById(id),
     fetchRiReferenceData(),
+    getEditorsList(),
   ]);
 
   // If document not found, show 404
@@ -60,14 +61,11 @@ export default async function Layout({
     latestIngestionVersion: document.latestIngestionVersion,
     hasPendingIngestionUpdate: document.hasPendingIngestionUpdate,
     activeRunId: document.activeRunId,
+    assigneeEmail: document.assigneeEmail,
   };
 
   return (
-    <DocumentLayout
-      documentId={id}
-      initialData={initialData}
-      userEmail={user?.email ?? null}
-    >
+    <DocumentLayout documentId={id} initialData={initialData} editors={editors}>
       {children}
     </DocumentLayout>
   );
