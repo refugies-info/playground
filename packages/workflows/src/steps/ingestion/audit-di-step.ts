@@ -513,6 +513,9 @@ export async function forceAuditReportStep(workflowId: string) {
         { error: finalStatusError, ingestionRecordId },
         "Failed to update ingestion_record final status",
       );
+      throw new Error(
+        `Failed to update compliance status: ${finalStatusError.message}`,
+      );
     }
 
     logger.info(
