@@ -30,8 +30,6 @@ export async function saveDocumentStep(
   markdown: string,
   _userId: string,
 ): Promise<StepResult<SaveDocumentResult>> {
-  "use step";
-
   try {
     const supabase = getSupabaseClient();
 
