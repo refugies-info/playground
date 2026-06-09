@@ -13,18 +13,23 @@ export function useAutosave(
   saveDocument: () => Promise<{ success: boolean; error?: string }>,
 ) {
   const isDirtyRef = useRef(isDirty);
+  const saveDocumentRef = useRef(saveDocument);
 
   useEffect(() => {
     isDirtyRef.current = isDirty;
   }, [isDirty]);
 
   useEffect(() => {
+    saveDocumentRef.current = saveDocument;
+  }, [saveDocument]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       if (isDirtyRef.current) {
-        saveDocument();
+        saveDocumentRef.current();
       }
     }, AUTOSAVE_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [saveDocument]);
+  }, []);
 }
