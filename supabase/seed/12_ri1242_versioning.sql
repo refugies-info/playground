@@ -409,7 +409,7 @@ INSERT INTO public.editorial_records (
   ingestion_record_id,
   markdown,
   metadata,
-  author_id,
+  assignee_id,
   online_status,
   work_status
 )
@@ -472,7 +472,7 @@ INSERT INTO public.editorial_records (
   ingestion_record_id,
   markdown,
   metadata,
-  author_id,
+  assignee_id,
   online_status,
   work_status
 )

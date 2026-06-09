@@ -60,7 +60,7 @@ SELECT
     -- Content sources
     er.markdown as editorial_markdown,
     er.metadata as editorial_metadata,
-    er.author_id as editorial_author_id,
+    er.assignee_id as editorial_assignee_id,
     ir.markdown as ingestion_markdown,
     ir.metadata as ingestion_metadata,
     ir.created_at as ingestion_created_at,
@@ -85,13 +85,13 @@ SELECT
         ORDER BY pr.updated_at DESC NULLS LAST, pr.created_at DESC NULLS LAST
         LIMIT 1
     ) as latest_publication,
-    -- Author: dedicated text column for sort + filter (RI-1146)
+    -- Assignee: dedicated text column for sort + filter (RI-1146)
     -- LEFT JOIN replaces the previous correlated subquery for better performance
-    p.email as author_email,
+    p.email as assignee_email,
     CASE
         WHEN p.id IS NOT NULL THEN jsonb_build_object('email', p.email, 'role', p.role)
         ELSE NULL
-    END as author_profile,
+    END as assignee_profile,
     -- Location (commune): editorial override first, ingestion fallback (RI-1146)
     -- Root-level key in RCO ingestion metadata, e.g. "Blois", "Mantes-la-Jolie"
     COALESCE(
@@ -139,7 +139,7 @@ FROM workflows w
 LEFT JOIN editorial_records er ON er.id = w.editorial_record_id
 LEFT JOIN ingestion_records ir ON ir.id = w.ingestion_record_id
 LEFT JOIN ingestion_records er_ir ON er_ir.id = er.ingestion_record_id
-LEFT JOIN profiles p ON p.id = er.author_id
+LEFT JOIN profiles p ON p.id = er.assignee_id
 LEFT JOIN di_structures ds_struct ON ds_struct.id = ir.di_structure_id
 LEFT JOIN di_services ds_service ON ds_service.id = ir.di_service_id
 LEFT JOIN LATERAL (
@@ -189,7 +189,7 @@ COMMENT ON VIEW workflows_enriched IS
     'Enriched view of workflows combining computed statuses, presentation metadata, publication info, and ingestion version tracking.
      Designed for list views and filtering operations.
      RI-1128: fixed invalid published/archived + to_process combinations.
-     RI-1146: added author_email, commune, modalites_entrees_sorties for sort/filter support.
+     RI-1146: added assignee_email, commune, modalites_entrees_sorties for sort/filter support.
      RI-1172: added ingestion_word_count for "Mots" column with server-side sorting.
      Added DI-only session_start_date/session_end_date period.
      RI-1242: added current/editorial source ingestion versions and outdated-source detection.';
