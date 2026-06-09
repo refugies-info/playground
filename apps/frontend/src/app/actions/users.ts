@@ -51,22 +51,17 @@ async function assertAdmin() {
 // User Schemas
 const createUserSchema = z.object({
   email: z.string().email(),
-  username: z.string().min(2).max(50).optional(),
+  username: z.string().min(2).max(50),
   role: z.enum(["admin", "editor", "translator"]),
   language: z.string().optional(),
 });
 
 const updateUserSchema = z.object({
   id: z.string().uuid(),
-  username: z.string().min(2).max(50).optional(),
+  username: z.string().min(2).max(50),
   role: z.enum(["admin", "editor", "translator"]),
   language: z.string().optional(),
 });
-
-export type CreateUserState = {
-  message?: string;
-  error?: string;
-};
 
 // Create User
 export async function createUser(data: {
@@ -139,7 +134,7 @@ export async function createUser(data: {
 // Update User
 export async function updateUser(data: {
   id: string;
-  username?: string;
+  username: string;
   role: string;
   language?: string;
 }) {

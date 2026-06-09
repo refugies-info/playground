@@ -105,7 +105,7 @@ export function UserCard({
       setError("L'email est requis");
       return;
     }
-    if (!formData.username) {
+    if (!formData.username.trim()) {
       setError("Le nom de l'utilisateur est requis");
       return;
     }
