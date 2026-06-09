@@ -513,14 +513,25 @@ export async function forceAuditReportStep(workflowId: string) {
         { error: finalStatusError, ingestionRecordId },
         "Failed to update ingestion_record final status",
       );
+      throw new Error(
+        `Failed to update compliance status: ${finalStatusError.message}`,
+      );
     }
 
     logger.info(
-      { workflowId, reportId: report.id },
+      {
+        workflowId,
+        reportId: report.id,
+        complianceStatus: finalComplianceStatus,
+      },
       "Forced arbitration audit completed successfully",
     );
 
-    return { success: true, reportId: report.id };
+    return {
+      success: true,
+      reportId: report.id,
+      complianceStatus: finalComplianceStatus,
+    };
   } catch (error) {
     if (error instanceof APIError) {
       logger.error(

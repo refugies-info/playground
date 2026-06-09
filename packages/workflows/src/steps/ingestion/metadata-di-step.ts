@@ -22,7 +22,7 @@
  *                   │         └── Supabase query on ingestion_records
  *                   │             + !inner join on di_services (DI scoping)
  *                   │             + !inner join on workflows (get workflow_id)
- *                   │             + only records with ingestion_report_id (audited)
+ *                   │             + only compliant records with ingestion_report_id (audited)
  *                   │             + exclude records with existing metadata report
  *                   │
  *                   └── For each target:
@@ -32,7 +32,7 @@
  *
  * Key decisions:
  * - Runs AFTER audit step to guarantee same workflow alignment
- * - Only targets records with ingestion_report_id (already audited)
+ * - Only targets compliant records with ingestion_report_id (already audited)
  * - Does NOT create editorial_records (unlike persistMetadataReportStep)
  * - Idempotent: records already having a metadata report are filtered out
  * - Uses METADATA_AGENT_ID env var, falls back to PLAYGROUND_AGENT_ID
@@ -110,9 +110,9 @@ type DiMetadataTarget = {
 /**
  * Fetches ingestion records that are eligible for metadata generation.
  *
- * Eligibility: the record has no existing `letta_report` of type 'metadata'
- * linked to its workflow. Scoped to DI records via an `!inner` join on
- * `di_services` (same pool as the audit step).
+ * Eligibility: the record is compliant and has no existing `letta_report` of
+ * type 'metadata' linked to its workflow. Scoped to DI records via an `!inner`
+ * join on `di_services` (same pool as the audit step).
  *
  * @returns An object containing the list of eligible targets.
  */
@@ -134,6 +134,7 @@ async function fetchDiMetadataTargets(): Promise<{
     `,
     )
     .not("ingestion_report_id", "is", null)
+    .eq("compliance_status", "compliant")
     .order("created_at", { ascending: false })
     .limit(MAX_EDITORIAL_BACKLOG);
 
