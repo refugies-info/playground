@@ -39,7 +39,7 @@ export async function saveDocumentStep(
         `
         editorial_record_id,
         editorial_records (metadata, work_status),
-        ingestion_records (metadata)
+        ingestion_records!status_ingestion_record_id_fkey (metadata)
       `,
       )
       .eq("id", workflowId)

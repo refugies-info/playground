@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-const AUTOSAVE_INTERVAL_MS = 60_000;
+const AUTOSAVE_INTERVAL_MS = 20_000;
 
 /**
  * Triggers autosave every minute if there are unsaved changes.
