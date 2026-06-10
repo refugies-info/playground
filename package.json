@@ -46,7 +46,7 @@
     "generate:json": "tsx scripts/generate-json.ts",
     "generate:md": "tsx scripts/generate-md.ts",
     "copy:schema": "tsx scripts/copy-schema.ts",
-    "db:migrate": "supabase db migrate up",
+    "db:migrate": "supabase migration up",
     "di:ingest": "tsx scripts/ingest-di.ts",
     "di:extract": "tsx scripts/extract-random-records.ts",
     "di:cron": "dotenv -e .env -- sh -c 'curl -s -X GET http://localhost:3001/api/cron/di-ingestion -H \"Authorization: Bearer $CRON_SECRET\" | jq .'",
