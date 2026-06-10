@@ -1,8 +1,5 @@
 import { logger } from "@playground/shared-types";
-import {
-  createSupabaseServerClient,
-  getSupabaseAdmin,
-} from "@playground/supabase";
+import { createSupabaseServerClient } from "@playground/supabase";
 import type {
   UserData,
   UserRole,
@@ -29,37 +26,23 @@ export default async function UsersPage() {
     redirect("/");
   }
 
-  const adminClient = getSupabaseAdmin();
+  const profilesResult = await supabase
+    .from("profiles")
+    .select("id, role, language, username, email, created_at")
+    .order("created_at", { ascending: false });
 
-  // Fetch users and profiles in parallel (independent queries)
-  const [usersResult, profilesResult] = await Promise.all([
-    adminClient.auth.admin.listUsers(),
-    adminClient.from("profiles").select("id, role, language"),
-  ]);
-
-  if (usersResult.error) {
-    logger.error({ err: usersResult.error }, "Error fetching users");
+  if (profilesResult.error) {
+    logger.error({ err: profilesResult.error }, "Error fetching users");
     return <div>Erreur lors du chargement des utilisateurs.</div>;
   }
 
-  const { users } = usersResult.data;
-
-  // Sort users by created_at desc
-  const sortedUsers = users.sort(
-    (a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-  );
-
-  const profileMap = new Map((profilesResult.data ?? []).map((p) => [p.id, p]));
-
-  // Map to UserData interface
-  const formattedUsers: UserData[] = sortedUsers.map((u) => ({
-    id: u.id,
-    email: u.email || "",
-    username: u.user_metadata?.username,
-    role: (profileMap.get(u.id)?.role as UserRole) || "editor",
-    language: profileMap.get(u.id)?.language ?? undefined,
-    created_at: u.created_at,
+  const formattedUsers: UserData[] = profilesResult.data.map((p) => ({
+    id: p.id,
+    email: p.email || "",
+    username: p.username || "",
+    role: (p.role as UserRole) || "editor",
+    language: p.language ?? undefined,
+    created_at: p.created_at ?? undefined,
   }));
 
   return (

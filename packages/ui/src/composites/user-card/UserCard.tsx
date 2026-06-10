@@ -47,7 +47,7 @@ export type UserRole = "admin" | "editor" | "translator";
 export interface UserData {
   id?: string;
   email: string;
-  username?: string;
+  username: string;
   role: UserRole;
   language?: string;
   created_at?: string;
@@ -103,6 +103,10 @@ export function UserCard({
     setError(null);
     if (!formData.email) {
       setError("L'email est requis");
+      return;
+    }
+    if (!formData.username.trim()) {
+      setError("Le nom de l'utilisateur est requis");
       return;
     }
     if (formData.role === "translator" && !formData.language) {
