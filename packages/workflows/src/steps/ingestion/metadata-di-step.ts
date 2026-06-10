@@ -22,7 +22,7 @@
  *                   │         └── Supabase query on ingestion_records
  *                   │             + !inner join on di_services (DI scoping)
  *                   │             + !inner join on workflows (get workflow_id)
- *                   │             + only records with ingestion_report_id (audited)
+ *                   │             + only compliant records with ingestion_report_id (audited)
  *                   │             + exclude records with existing metadata report
  *                   │
  *                   └── For each target:
@@ -32,7 +32,7 @@
  *
  * Key decisions:
  * - Runs AFTER audit step to guarantee same workflow alignment
- * - Only targets records with ingestion_report_id (already audited)
+ * - Only targets compliant records with ingestion_report_id (already audited)
  * - Does NOT create editorial_records (unlike persistMetadataReportStep)
  * - Idempotent: records already having a metadata report are filtered out
  * - Uses METADATA_AGENT_ID env var, falls back to PLAYGROUND_AGENT_ID
