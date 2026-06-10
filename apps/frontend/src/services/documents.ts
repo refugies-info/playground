@@ -40,7 +40,6 @@ const DOCUMENT_LIST_SELECT = `
   modalites_entrees_sorties,
   external_id,
   ingestion_word_count,
-  ingestion_version_label,
   active_ingestion_version,
   latest_ingestion_version,
   has_pending_ingestion_update
@@ -321,7 +320,6 @@ export async function getDocuments(params: GetDocumentsParams) {
         wordCount:
           (item as unknown as { ingestion_word_count: number | null })
             .ingestion_word_count ?? null,
-        ingestionVersionLabel: item.ingestion_version_label ?? null,
         activeIngestionVersion: item.active_ingestion_version ?? null,
         latestIngestionVersion: item.latest_ingestion_version ?? null,
         hasPendingIngestionUpdate: item.has_pending_ingestion_update ?? false,
@@ -573,7 +571,6 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     assigneeEmail,
     assigneeRole,
     externalId: item.external_id ?? null,
-    ingestionVersionLabel: item.ingestion_version_label ?? null,
     activeIngestionVersion: item.active_ingestion_version ?? null,
     latestIngestionVersion: item.latest_ingestion_version ?? null,
     hasPendingIngestionUpdate: item.has_pending_ingestion_update ?? false,

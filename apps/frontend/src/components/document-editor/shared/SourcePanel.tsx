@@ -45,7 +45,6 @@ export function SourcePanel() {
 
   const lienSource = document?.metadata?.lien_source as string | undefined;
   const ingestionVersion = formatIngestionVersion({
-    label: document?.ingestionVersionLabel,
     activeVersion: document?.activeIngestionVersion,
     latestVersion: document?.latestIngestionVersion,
   });

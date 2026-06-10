@@ -789,7 +789,6 @@ export type Database = {
       };
       workflows_enriched: {
         Row: {
-          active_ingestion_record_id: string | null;
           active_ingestion_version: number | null;
           assignee_email: string | null;
           assignee_profile: Json | null;
@@ -802,8 +801,6 @@ export type Database = {
           editorial_markdown: string | null;
           editorial_metadata: Json | null;
           editorial_record_id: string | null;
-          editorial_source_ingestion_record_id: string | null;
-          editorial_source_version: number | null;
           external_id: string | null;
           has_pending_ingestion_update: boolean | null;
           has_publication_history: boolean | null;
@@ -813,13 +810,10 @@ export type Database = {
           ingestion_metadata: Json | null;
           ingestion_record_id: string | null;
           ingestion_report_id: string | null;
-          ingestion_version_label: string | null;
           ingestion_word_count: number | null;
-          latest_ingestion_record_id: string | null;
           latest_ingestion_version: number | null;
           latest_publication: Json | null;
           modalites_entrees_sorties: string | null;
-          pending_ingestion_record_id: string | null;
           quality_score: number | null;
           raw_online_status: string | null;
           raw_work_status: string | null;

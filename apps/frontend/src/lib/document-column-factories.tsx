@@ -160,7 +160,6 @@ export const createIngestionVersionColumn = (): ColumnDef<Document> => ({
   ),
   cell: ({ row }) => (
     <IngestionVersionCell
-      label={row.original.ingestionVersionLabel}
       activeVersion={row.original.activeIngestionVersion}
       latestVersion={row.original.latestIngestionVersion}
     />

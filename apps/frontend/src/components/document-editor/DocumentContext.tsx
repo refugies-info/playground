@@ -120,7 +120,6 @@ export function DocumentProvider({
     initialData?.activeRunId,
     initialData?.onlineStatus,
     initialData?.assigneeEmail,
-    initialData?.ingestionVersionLabel,
     initialData?.activeIngestionVersion,
     initialData?.latestIngestionVersion,
     initialData?.hasPendingIngestionUpdate,

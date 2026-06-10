@@ -204,35 +204,17 @@ SELECT
     w.rco_record_id,
     w.editorial_record_id,
     w.ingestion_record_id,
-    w.latest_ingestion_record_id,
     w.created_at,
     -- Version tracking (RI-1242)
     -- The main view content below intentionally uses active_ir. latest_ir is only
-    -- used to detect and display pending DI updates (e.g. "1/4").
-    w.ingestion_record_id as active_ingestion_record_id,
+    -- used to detect and display pending DI updates.
     active_ir.version as active_ingestion_version,
     latest_ir.version as latest_ingestion_version,
-    CASE
-        WHEN w.latest_ingestion_record_id IS NULL THEN NULL
-        WHEN w.ingestion_record_id IS DISTINCT FROM w.latest_ingestion_record_id
-            AND COALESCE(latest_ir.version, 0) > COALESCE(active_ir.version, 0)
-            THEN w.latest_ingestion_record_id
-        ELSE NULL
-    END as pending_ingestion_record_id,
     CASE
         WHEN w.latest_ingestion_record_id IS NULL THEN false
         ELSE w.ingestion_record_id IS DISTINCT FROM w.latest_ingestion_record_id
             AND COALESCE(latest_ir.version, 0) > COALESCE(active_ir.version, 0)
     END as has_pending_ingestion_update,
-    CASE
-        WHEN active_ir.version IS NULL OR latest_ir.version IS NULL THEN NULL
-        ELSE active_ir.version::text || '/' || latest_ir.version::text
-    END as ingestion_version_label,
-    -- Debug/reference: editorial baseline should normally match active source once
-    -- the RI-1242 backfill has run, but keeping these fields visible makes future
-    -- update/acceptance flows easier to inspect.
-    er.ingestion_record_id as editorial_source_ingestion_record_id,
-    er_ir.version as editorial_source_version,
     -- Computed work_status: editorial_record.work_status OR fallback logic
     CASE
         WHEN er.work_status IS NOT NULL THEN er.work_status
@@ -332,7 +314,6 @@ FROM workflows w
 LEFT JOIN editorial_records er ON er.id = w.editorial_record_id
 LEFT JOIN ingestion_records active_ir ON active_ir.id = w.ingestion_record_id
 LEFT JOIN ingestion_records latest_ir ON latest_ir.id = COALESCE(w.latest_ingestion_record_id, w.ingestion_record_id)
-LEFT JOIN ingestion_records er_ir ON er_ir.id = er.ingestion_record_id
 LEFT JOIN profiles p ON p.id = er.assignee_id
 LEFT JOIN di_structures ds_struct ON ds_struct.id = active_ir.di_structure_id
 LEFT JOIN di_services ds_service ON ds_service.id = active_ir.di_service_id
@@ -381,10 +362,10 @@ GRANT SELECT ON workflows_enriched TO service_role;
 REVOKE SELECT ON workflows_enriched FROM anon;
 
 COMMENT ON VIEW workflows_enriched IS
-    'Enriched view of workflows combining computed statuses, presentation metadata, publication info, and active/latest ingestion version tracking.
+    'Enriched view of workflows combining computed statuses, presentation metadata, publication info, and ingestion version tracking.
      Designed for list views and filtering operations.
      RI-1128: fixed invalid published/archived + to_process combinations.
      RI-1146: added assignee_email, commune, modalites_entrees_sorties for sort/filter support.
      RI-1172: added ingestion_word_count for "Mots" column with server-side sorting.
      Added DI-only session_start_date/session_end_date period.
-     RI-1242: workflows.ingestion_record_id is active/accepted; workflows.latest_ingestion_record_id is latest available; pending update fields expose labels such as "1/4".';
+     RI-1242: workflows.ingestion_record_id is active/accepted; workflows.latest_ingestion_record_id is latest available; version fields expose active/latest state.';
