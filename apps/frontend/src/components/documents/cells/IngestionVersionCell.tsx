@@ -1,7 +1,7 @@
 "use client";
 
 import { EmptyDash } from "@playground/ui/composites";
-import { formatIngestionVersion } from "./format-ingestion-version";
+import { formatIngestionVersion } from "@/lib/format-ingestion-version";
 
 interface IngestionVersionCellProps {
   activeVersion?: number | null;
