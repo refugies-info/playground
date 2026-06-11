@@ -12,7 +12,7 @@ import {
   forceArbitrationWorkflow,
   forceMetadataOnlyWorkflow,
   publicationWorkflow,
-  saveWorkflow,
+  saveDocumentStep,
   toggleStatusWorkflow,
 } from "@playground/workflows";
 import { revalidatePath } from "next/cache";
@@ -93,43 +93,24 @@ export async function saveDocument(
   markdown: string,
 ): Promise<{
   success: boolean;
-  workflowRunId?: string;
   error?: string;
-  metadata?: Record<string, unknown>;
 }> {
   try {
-    if (!saveWorkflow) {
-      logger.error("saveWorkflow is undefined - cannot start workflow");
-      return {
-        success: false,
-        error: "Configuration error: Workflow not loaded",
-      };
-    }
-
     const auth = await getAuthorizedSession(workflowId, "modify");
     if (auth.errorResponse) return auth.errorResponse;
     const { user } = auth;
 
-    const run = await start(saveWorkflow, [workflowId, markdown, user.id]);
+    const saveResult = await saveDocumentStep(workflowId, markdown, user.id);
 
-    logger.info(
-      { workflowRunId: run.runId, workflowId },
-      "Save workflow started",
-    );
+    if (!saveResult.success) {
+      return { success: false, error: saveResult.error ?? "Save failed" };
+    }
 
-    await getRun(run.runId).returnValue;
-
-    logger.info(
-      { workflowRunId: run.runId, workflowId },
-      "Save workflow completed",
-    );
+    logger.info({ workflowId }, "Document saved successfully");
 
     revalidatePath("/documents/[id]", "page");
 
-    return {
-      success: true,
-      workflowRunId: run.runId,
-    };
+    return { success: true };
   } catch (error) {
     logger.error(error, "Unexpected error during save workflow");
     return {

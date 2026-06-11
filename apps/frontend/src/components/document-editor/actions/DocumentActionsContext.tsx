@@ -31,6 +31,7 @@ import {
 } from "@/services/document-actions";
 import { useDocument } from "../DocumentContext";
 import { useMetadata } from "../metadata/MetadataContext";
+import { useAutosave } from "./hooks/useAutosave";
 
 // =============================================================================
 // Types
@@ -78,7 +79,7 @@ const DocumentActionsContext = createContext<
 // =============================================================================
 
 export function DocumentActionsProvider({ children }: { children: ReactNode }) {
-  const { document, setDocument, setIsDirty } = useDocument();
+  const { document, setDocument, setIsDirty, isDirty } = useDocument();
   const { mergedMetadata } = useMetadata();
 
   const [isPreviewing, setIsPreviewing] = useState(false);
@@ -201,6 +202,8 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
     },
     [document, setDocument, setIsDirty],
   );
+
+  useAutosave(isDirty, saveDocument);
 
   // =============================================================================
   // Publish
