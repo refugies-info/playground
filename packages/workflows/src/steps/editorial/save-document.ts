@@ -7,6 +7,7 @@ import { getSupabaseClient } from "../common/supabase";
  */
 export interface SaveDocumentResult {
   editorialRecordId: string;
+  isNew: boolean;
   progressUpdated: boolean;
   metadata: Record<string, unknown>;
 }
@@ -17,7 +18,7 @@ export interface SaveDocumentResult {
  * This function:
  * 1. Gets the workflow to retrieve the existing editorial_record (fails if absent)
  * 2. Extracts title from markdown and syncs it to metadata
- * 3. Updates the editorial_record with new content and metadata
+ * 3. Updates existing record or creates new one
  * 4. Ensures work_status is set to 'draft'
  *
  * @param workflowId - The workflow ID to save document for
@@ -37,7 +38,9 @@ export async function saveDocumentStep(
       .from("workflows")
       .select(
         `
-        editorial_record_id,
+        id, 
+        editorial_record_id, 
+        ingestion_record_id, 
         editorial_records (metadata, work_status),
         ingestion_records!status_ingestion_record_id_fkey (metadata)
       `,
@@ -48,13 +51,6 @@ export async function saveDocumentStep(
     if (workflowError || !workflow) {
       logger.error(workflowError, "Error fetching workflow for save");
       return { success: false, error: "Workflow not found" };
-    }
-
-    if (!workflow.editorial_record_id) {
-      return {
-        success: false,
-        error: "No editorial record found for this workflow",
-      };
     }
 
     // Supabase join can return array or object
@@ -94,41 +90,82 @@ export async function saveDocumentStep(
       "intitule-formation": title, // Sync for LHEO compatibility
     };
 
-    // 3. Update existing editorial_record
+    // 3. Update or create editorial_record
     // Also ensure work_status is set to 'draft' if not already
-    const currentWorkStatus = editorialRecord?.work_status;
-    const shouldUpdateStatus = currentWorkStatus !== "draft";
 
-    const updatePayload: Record<string, unknown> = {
-      markdown,
-      metadata: updatedMetadata,
-      updated_at: new Date().toISOString(),
-    };
+    let editorialRecordId: string;
+    let isNew = false;
+    let progressUpdated = false;
 
-    if (shouldUpdateStatus) {
-      updatePayload.work_status = "draft";
-    }
+    if (workflow.editorial_record_id) {
+      // Update existing editorial_record
+      // Also ensure work_status is set to 'draft' if not already
 
-    const { error: updateError } = await supabase
-      .from("editorial_records")
-      .update(updatePayload)
-      .eq("id", workflow.editorial_record_id);
+      const currentWorkStatus = editorialRecord?.work_status;
+      const shouldUpdateStatus = currentWorkStatus !== "draft";
 
-    if (updateError) {
-      logger.error(updateError, "Error updating editorial_record");
-      return { success: false, error: "Failed to update editorial record" };
+      const updatePayload: Record<string, unknown> = {
+        markdown,
+        metadata: updatedMetadata,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (shouldUpdateStatus) {
+        updatePayload.work_status = "draft";
+        progressUpdated = true;
+      }
+
+      const { error: updateError } = await supabase
+        .from("editorial_records")
+        .update(updatePayload)
+        .eq("id", workflow.editorial_record_id);
+
+      if (updateError) {
+        logger.error(updateError, "Error updating editorial_record");
+        return { success: false, error: "Failed to update editorial record" };
+      }
+
+      editorialRecordId = workflow.editorial_record_id;
+    } else {
+      // Create new editorial_record - we need ingestion_record_id
+      if (!workflow.ingestion_record_id) {
+        return {
+          success: false,
+          error: "No ingestion record found for this workflow",
+        };
+      }
+      // New record starts as draft (metadata left to default)
+      const { data: newRecord, error: insertError } = await supabase
+        .from("editorial_records")
+        .insert({
+          ingestion_record_id: workflow.ingestion_record_id,
+          markdown,
+          work_status: "draft",
+        })
+        .select("id")
+        .single();
+
+      if (insertError || !newRecord) {
+        logger.error(insertError, "Error creating editorial_record");
+        return { success: false, error: "Failed to create editorial record" };
+      }
+
+      editorialRecordId = newRecord.id;
+      isNew = true;
+      progressUpdated = true; // Implicitly established status
     }
 
     logger.info(
-      { workflowId, editorialRecordId: workflow.editorial_record_id, title },
+      { workflowId, editorialRecordId, isNew, progressUpdated, title },
       "Document saved successfully",
     );
 
     return {
       success: true,
       data: {
-        editorialRecordId: workflow.editorial_record_id,
-        progressUpdated: shouldUpdateStatus,
+        editorialRecordId,
+        isNew,
+        progressUpdated,
         metadata: updatedMetadata,
       },
     };
