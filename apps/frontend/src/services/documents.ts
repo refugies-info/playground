@@ -576,6 +576,13 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     hasPendingIngestionUpdate: item.has_pending_ingestion_update ?? false,
     // AI editorial rewrite — runId for resume via GET /api/editorial-rewrite/[runId]
     activeRunId: activeRunData?.active_run_id ?? undefined,
+    currentEditorId:
+      (
+        activeRunResult.data as {
+          active_run_id: string | null;
+          current_editor_id: string | null;
+        } | null
+      )?.current_editor_id ?? null,
   };
 }
 

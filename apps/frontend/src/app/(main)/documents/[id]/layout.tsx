@@ -26,7 +26,7 @@ export default async function Layout({
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
-  const [_user, document, referenceData, editors] = await Promise.all([
+  const [user, document, referenceData, editors] = await Promise.all([
     getAuthUser(supabase),
     getDocumentById(id),
     fetchRiReferenceData(),
@@ -37,6 +37,9 @@ export default async function Layout({
   if (!document) {
     notFound();
   }
+
+  // Display name of the user currently holding the edit lock (if any)
+  const currentEditor = editors.find((e) => e.id === document.currentEditorId);
 
   // Prepare initial data for the editor
   const initialData = {
@@ -61,6 +64,9 @@ export default async function Layout({
     hasPendingIngestionUpdate: document.hasPendingIngestionUpdate,
     activeRunId: document.activeRunId,
     assigneeEmail: document.assigneeEmail,
+    currentEditorId: document.currentEditorId,
+    currentEditorName: currentEditor?.displayName ?? null,
+    currentUserId: user?.id,
   };
 
   return (

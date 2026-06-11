@@ -2,9 +2,10 @@
 
 import { cn } from "@playground/ui";
 import dynamic from "next/dynamic";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DocumentActionsProvider } from "../actions";
+import { DocumentActionsProvider, useDocumentActions } from "../actions";
+import { EditLockDialog } from "../actions/ui/EditLockDialog";
 import { DocumentProvider, useDocument } from "../DocumentContext";
 import { MetadataProvider } from "../metadata/MetadataContext";
 import { AIFloatingButton } from "./AIFloatingButton";
@@ -53,6 +54,28 @@ function CenterContent({
     >
       {children}
     </div>
+  );
+}
+
+/**
+ * Overlay affiché par-dessus toute la zone de contenu lorsque la fiche est
+ * verrouillée par un autre utilisateur (cf. useEditLock).
+ */
+function EditLockOverlay({ from }: { from: string }) {
+  const router = useRouter();
+  const { isLocked } = useDocumentActions();
+  const { document } = useDocument();
+
+  const backHref = from
+    ? `/documents?${decodeURIComponent(from)}`
+    : "/documents";
+
+  return (
+    <EditLockDialog
+      isOpen={isLocked}
+      editorName={document?.currentEditorName}
+      onBack={() => router.push(backHref)}
+    />
   );
 }
 
@@ -108,6 +131,9 @@ export function DocumentLayout(props: DocumentLayoutProps) {
 
                 {/* AI Floating Button — absolute bottom-right */}
                 <AIFloatingButton />
+
+                {/* Edit lock overlay — bloque la zone de contenu si la fiche est éditée ailleurs */}
+                <EditLockOverlay from={from} />
               </div>
             </div>
           </ContentProvider>

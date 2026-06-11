@@ -81,6 +81,8 @@ export interface Document {
   hasPendingIngestionUpdate?: boolean;
   /** Vercel Workflow runId when an AI editorial rewrite is in progress or waiting for user decision */
   activeRunId?: string;
+  /** User ID currently holding the edit lock on this fiche (NULL if free) */
+  currentEditorId?: string | null;
 }
 
 export interface RiMetadata {

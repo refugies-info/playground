@@ -32,6 +32,7 @@ import {
 import { useDocument } from "../DocumentContext";
 import { useMetadata } from "../metadata/MetadataContext";
 import { useAutosave } from "./hooks/useAutosave";
+import { useEditLock } from "./hooks/useEditLock";
 
 // =============================================================================
 // Types
@@ -64,6 +65,9 @@ interface DocumentActionsContextValue {
   // Archive
   archiveDocument: () => Promise<{ success: boolean; error?: string }>;
   isArchiving: boolean;
+
+  // Edit lock
+  isLocked: boolean;
 }
 
 // =============================================================================
@@ -205,6 +209,12 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
 
   useAutosave(isDirty, saveDocument);
 
+  const { isLocked } = useEditLock(
+    document?.editorialRecordId,
+    document?.currentUserId,
+    document?.currentEditorId,
+  );
+
   // =============================================================================
   // Publish
   // Publishes current content + merged metadata. Save-before-publish is intentional
@@ -313,6 +323,7 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
     isPublishing,
     archiveDocument,
     isArchiving,
+    isLocked,
   };
 
   return (
