@@ -75,3 +75,4 @@ storybook-static/
 
 # LLMs
 logs/
+.env*.local
