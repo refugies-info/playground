@@ -15,7 +15,6 @@ overrides:
   minimatch@5: 5.1.8
   minimatch@9: 9.0.7
   undici: 7.24.0
-  '@workflow/builders': 4.1.0
 
 importers:
 
