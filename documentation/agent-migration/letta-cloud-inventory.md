@@ -4,18 +4,18 @@
 > **Cible** : fournir une vue de référence exhaustive de ce qui existe aujourd'hui (prompts, blocs mémoire, outils, identifiants, intégrations) pour servir de base aux PR suivants.
 > **Branche de référence** : `main` (`9aa3bda`) au 2026-06-15.
 >
-> ⚠️ Le playground abrite **deux implémentations d'agent IA** qui coexistent :
+> ⚠️ Le playground abritait historiquement **deux implémentations d'agent IA** qui coexistaient :
 > 1. **Agent Letta Cloud** (`@letta-ai/letta-client`) — setup **production**, sert les workflows d'ingestion/édition/traduction du frontend Next.js (consomme du **markdown + frontmatter YAML** issu de l'API Data Inclusion). C'est la **source** de la migration.
-> 2. **Agent Letta Code** (`.agents/`, `.commands/`, `.skills/`) — setup **scaffoldé** pour un agent "Agathe" travaillant sur des fichiers **RCO XML (Lhéo)**. Pas actif en production aujourd'hui, mais RCO redeviendra pertinent à l'horizon de la migration. C'est la **cible** de la migration.
+> 2. ~~**Agent Letta Code** scaffoldé pour RCO XML (`.agents/`, `.commands/`, `.skills/`) — setup **archivé** le 15 juin 2026 (PR « archive legacy RCO assets »)~~. Ces trois dossiers ont été retirés du repo pour éviter toute confusion avec le setup Letta Cloud et pour faire place nette au pattern de migration (Letta Code runtime + corpus `qmd`). Voir l'**Annexe C** pour la justification complète.
 >
-> Le présent document inventorie les deux, en marquant clairement le rôle de chacun dans la migration.
+> Le présent document inventorie uniquement le **setup Letta Cloud** (la source de la migration). Le setup RCO XML historiquement hébergé dans le repo a été archivé — il reste accessible via `git log` (commit antérieur à l'archive) si jamais RCO redevient pertinent.
 >
 > ## Contraintes structurantes (Luis, 15 juin 2026)
 >
 > 1. **Les ressources Letta Cloud sont gelées.** Letta a déprécié la mise à jour des "File" resources ; les agents en prod reposent sur des ressources uploaded **avant** cette dépréciation et ne seront **plus jamais mises à jour** côté Letta Cloud. Conséquence : la migration ne peut plus compter sur des pushes de prompts/blocs vers l'agent distant — tout doit devenir local et versionné (la cible Letta Code + qmd est précisément ce pattern).
-> 2. **Format d'entrée actuel = markdown (frontmatter YAML + corps)** issu de l'API Data Inclusion (structures + services). RCO XML n'est plus utilisé en production mais redeviendra pertinent — les ressources associées doivent être **conservées**.
+> 2. **Format d'entrée actuel = markdown (frontmatter YAML + corps)** issu de l'API Data Inclusion (structures + services). RCO XML n'est plus utilisé en production et n'est **plus maintenu** dans le repo (assets archivés le 15 juin 2026, voir Annexe C).
 > 3. **`search_ri_duplicate_dispositifs` n'est pas un outil self-contained.** C'est un **client vers une API ad-hoc du repo karfur** qui renvoie des candidats doublons probables ; l'agent Letta analyse ensuite les résultats. La migration doit donc remplacer ce client par un équivalent playground (requête Supabase sur la table `dispositifs`, cf. PR 20).
-> 4. **`ressources_metadatas/base-connaissance.md` (référencé par `.skills/metadata/SKILL.md`) est manquant et doit rester manquant** pour le moment. Luis se charge de vérifier auprès de l'équipe RI si la base est toujours pertinente.
+> 4. **`memfs` (memory filesystem) remplace l'ancien pattern `.agents/` du repo.** Les agents Letta Code stockent désormais leur mémoire dans `~/.letta/agents/{agent_id}/memory/` (git-backed par le serveur Letta), pas dans le repo. La présence de `.agents/` dans le repo était une relique d'une architecture plus ancienne ; elle a été archivée avec les autres assets RCO le 15 juin 2026.
 
 ---
 
@@ -214,23 +214,21 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 
 ---
 
-## B. Setup 2 — Agent Letta Code (cible de la migration, scaffoldé pour RCO)
+## B. Setup 2 — Agent Letta Code (archivé le 15 juin 2026)
 
-> Ce setup est **scaffoldé** dans le repo (mémoire + commands + skills existent) mais **n'est pas branché en production** aujourd'hui. Il consomme du **RCO XML (Lhéo)** et cible un agent nommé "Agathe". RCO n'étant plus la source de données active (la prod utilise maintenant l'API Data Inclusion → markdown), ce setup est en sommeil mais **doit être conservé** : RCO redeviendra pertinent à terme (cf. contrainte 2).
+> 🗄️ **Statut** : ce setup a été **archivé** (cf. Annexe C). Les 3 dossiers du repo qui le matérialisaient (`.agents/`, `.commands/`, `.skills/`) ont été retirés. La mémoire de l'agent Letta Code vit désormais dans **memfs** (`~/.letta/agents/{agent_id}/memory/`), pas dans le repo.
+>
+> Cette section est conservée pour **référence historique uniquement** — elle décrit ce que le setup archivé contenait, au cas où RCO XML redeviendrait pertinent à l'horizon 2027+. Les sections C et suivantes traitent uniquement du setup Letta Cloud (la cible de migration active).
 
-### B.1 Identité de l'agent
+### B.1 Identité de l'agent (archivé)
 
 | Élément        | Valeur                                                                                | Source                                          |
 | -------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | Persona        | **Agathe**                                                                            | `.commands/*.md` (toutes les commandes)         |
-| Format d'entrée| **RCO XML (Lhéo)** — non utilisé en prod aujourd'hui, prévu pour un futur mode d'ingestion RCO | `.commands/*.md` (toutes les commandes)         |
-| Localisation   | `.agents/` (config), `.commands/` (slash commands), `.skills/` (skills)              | Racine du repo                                  |
+| Format d'entrée| **RCO XML (Lhéo)**                                                                   | `.commands/*.md` (toutes les commandes)         |
+| Localisation (avant archive) | `.agents/` (config), `.commands/` (slash commands), `.skills/` (skills)    | Racine du repo                                  |
 
-> 📌 **Distinction des deux flux** :
-> - **Flux de production actuel** : Letta Cloud + markdown (cf. Section A).
-> - **Flux scaffoldé** : Letta Code + RCO XML (cf. Section B). Il sera pertinent dès que RCO redeviendra une source d'ingestion. Le travail de migration doit **préserver ce setup** (ne pas supprimer les `.commands/*.md` ni `.skills/metadata/`) même s'il n'est pas actif en prod.
-
-### B.2 Blocs mémoire (`.agents/memory/system/`)
+### B.2 Blocs mémoire (`.agents/memory/system/`, archivé)
 
 | Fichier            | Contenu                                                              | Taille |
 | ------------------ | -------------------------------------------------------------------- | ------ |
@@ -240,9 +238,9 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 | `jeremie.md`       | Profil de Jérémie (full-stack) — focus, contributions, prochain chantier | 24 l. |
 | `mcp_servers.md`   | Recommandations de serveurs MCP (Supabase, GitHub, MD, Vercel)        | 23 l.  |
 
-> ✅ Contrairement au setup Letta Cloud, **tous** les blocs mémoire sont versionnés dans le repo. C'est précisément le pattern que la migration Letta Cloud → Letta Code doit viser.
+> ⚠️ **Note migration** : le pattern « blocs versionnés dans le repo » reste pertinent en théorie, mais en pratique chaque agent Letta Code a maintenant sa **propre mémoire isolée dans memfs** (git-backed par le serveur Letta, pas par le repo). Ce pattern est adapté à des agents _génériques_ (un par projet) mais pas à des agents _spécialisés_ qui ont besoin d'une mémoire commune à l'équipe — d'où l'archive de cette section.
 
-### B.3 Slash commands (`.commands/`)
+### B.3 Slash commands (`.commands/`, archivé)
 
 | Commande   | Description                                                          | Format entrée | Source                          |
 | ---------- | -------------------------------------------------------------------- | ------------- | ------------------------------- |
@@ -253,29 +251,22 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 
 > Les 3 premières commands **mappent 1:1** aux slash commands Letta Cloud (`/audit`, `/redaction`, `/metadata`). `pipeline.md` est une **commande composée** qui n'a pas d'équivalent direct côté Letta Cloud.
 
-### B.4 Skills (`.skills/`)
+### B.4 Skills (`.skills/`, archivé)
 
 | Skill             | Description                                                  | Scripts                                         | Source                                              |
 | ----------------- | ------------------------------------------------------------ | ----------------------------------------------- | --------------------------------------------------- |
 | `metadata`        | Mapping Carif-Oref (RCO) XML → Réfugiés.info structured metadata | `scripts/map-metadata.ts` (182 lignes)         | `.skills/metadata/SKILL.md` + `.skills/metadata/scripts/` |
 
-> Le skill `metadata` actuel **ne fait pas appel à un LLM** — c'est un script TypeScript de transformation déterministe qui :
-> 1. Parse le XML RCO (Lhéo) avec `packages/rco/src/lheo.ts`.
-> 2. Applique des règles de conversion (PUBLIC_STATUS_MAP, FINANCEURS_PUBLICS, FRENCH_LEVELS) en constantes inline dans le script.
-> 3. Produit un frontmatter YAML `metadata_ri` + tableau de traçabilité.
->
-> C'est intéressant car cela démontre la viabilité d'un skill **déterministe** (pas besoin d'agent IA pour cette étape), ce qui correspond exactement à la vision du PR 16 ("Introduire une abstraction de runtime agent") et au PR 18 ("validation déterministe des métadonnées RI"). Le pattern est à dupliquer pour le flux de prod (markdown) avec un script équivalent qui travaillerait sur le frontmatter YAML en entrée.
+> Le skill `metadata` archivé **ne faisait pas appel à un LLM** — c'était un script TypeScript de transformation déterministe. Ce pattern est à dupliquer pour le flux de prod (markdown) avec un script équivalent qui travaillerait sur le frontmatter YAML en entrée.
 
-### B.5 Outils / scripts
+### B.5 Outils / scripts (archivé)
 
 | Script                                     | Rôle                                                                                  |
 | ------------------------------------------ | ------------------------------------------------------------------------------------- |
 | `.skills/metadata/scripts/map-metadata.ts` | Lit un XML RCO, applique des règles de mapping, produit un frontmatter YAML `metadata_ri` |
 | `packages/rco/src/lheo.ts` (helper)        | `parseLheoXml()` — parser XML Lhéo utilisé par `map-metadata.ts`                       |
 
-> Aucun outil applicatif HTTP exposé (contrairement au setup Letta Cloud) — les skills accèdent directement au système de fichiers.
-
-### B.6 Ressources / données de référence
+### B.6 Ressources / données de référence (archivé)
 
 | Fichier                                                                  | Usage                                                                |
 | ------------------------------------------------------------------------ | -------------------------------------------------------------------- |
@@ -284,7 +275,7 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 | `packages/rco/src/lheo-types.ts`                                         | Types TypeScript du format Lhéo                                      |
 | `packages/rco/src/lheo.ts`                                               | Parser Lhéo                                                           |
 
-> 📌 **Référence manquante** : la SKILL.md mentionne `ressources_metadatas/base-connaissance.md` qui **n'existe pas** dans le repo. Décision Luis (15 juin 2026) : **laisser manquant**, ne pas recréer. Luis se charge de vérifier auprès de l'équipe RI si la base de connaissance est toujours pertinente. Si oui, recréer ; si non, mettre à jour la SKILL.md pour retirer la référence.
+> 📌 **Référence manquante résolue** : la SKILL.md archivée mentionnait `ressources_metadatas/base-connaissance.md` qui n'existait pas dans le repo. L'archive supprime la question — la référence est partie avec le fichier. Si RCO redevient pertinent, recréer la base ou mettre à jour la skill.
 
 ---
 
@@ -298,9 +289,9 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 | Agent de traduction `ar/ru/uk`                              | Skill de traduction multilingue (RI-1270/PR 13–15)            | ⏳ à faire |
 | Bloc mémoire `metadata_schema`                              | `MEMORY.md` ou `SKILL.md` du skill metadata (RI-1259)          | ⏳ à faire |
 | Bloc mémoire `compliance` + `doublons`                      | Skill `audit` (RI-1264/PR 09)                                  | ⏳ à faire |
-| Slash command `/audit` (constante `AUDIT_SLASH_COMMAND`)     | `.commands/audit.md` (existe déjà) → à enrichir                 | 🟡 partiel |
-| Slash command `/redaction` (`REDACTION_SLASH_COMMAND`)      | `.commands/redaction.md` (existe déjà) → à enrichir             | 🟡 partiel |
-| Slash command `/metadata` (`METADATA_SLASH_COMMAND`)        | `.commands/metadata.md` (existe déjà) → à enrichir              | 🟡 partiel |
+| Slash command `/audit` (constante `AUDIT_SLASH_COMMAND`)     | **Skill `audit` (markdown, à créer)** — _les anciennes `.commands/audit.md` RCO XML ont été archivées_ | ⏳ à faire |
+| Slash command `/redaction` (`REDACTION_SLASH_COMMAND`)      | **Skill `redaction` (markdown, à créer)** — _idem_ | ⏳ à faire |
+| Slash command `/metadata` (`METADATA_SLASH_COMMAND`)        | **Skill `metadata` (markdown, à créer)** — _idem_ | ⏳ à faire |
 | Slash command `/translate` (`TRANSLATE_SLASH_COMMAND`)      | Skill de traduction multilingue (à créer)                      | ⏳ à faire |
 | Outil `validate_metadata_ri` (HTTP route)                   | Tool Letta Code (PR 18)                                        | ⏳ à faire |
 | Outil `search_ri_duplicate_dispositifs` (client API karfur) | Tool Letta Code **réécrit** comme requête Supabase (PR 20)     | ⏳ à faire |
@@ -310,20 +301,16 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 ### C.2 Format d'entrée : décision actée
 
 - **Flux de production (actuel)** : **markdown (YAML frontmatter + corps texte)**, issu de l'API Data Inclusion (structures + services). C'est ce que consomme `packages/agents/` et que les workflows envoient à l'agent Letta Cloud.
-- **Flux scaffoldé pour RCO (futur)** : **RCO XML (Lhéo)**, qui redeviendra pertinent à terme (cf. contrainte 2). Le setup Letta Code actuel dans `.commands/` et `.skills/metadata/` est taillé pour ce format.
+- **Flux RCO (futur)** : **RCO XML (Lhéo)**, qui redeviendra pertinent à terme. Les helpers `packages/rco/src/{lheo,lheo-types}.ts` sont conservés pour cette reprise ; les anciennes commands/skills RCO (`.commands/*.md`, `.skills/metadata/`) ont été **archivées** (cf. Annexe C) et devront être recréées le jour où RCO redevient actif.
 
-> **Décision** : la migration doit supporter **les deux formats** :
-> - Les nouveaux skills Letta Code de la prod (audit, redaction, metadata, translate) doivent consommer du **markdown** (et utiliser les helpers existants dans `packages/agents/`).
-> - Les skills scaffoldés pour RCO XML (`.commands/*.md`, `.skills/metadata/`) sont **conservés tels quels** pour la reprise future. Quand RCO redeviendra actif, on aura un agent Letta Code déjà pré-câblé pour ce format.
->
-> En pratique, cela veut dire que la migration ne "réécrit" pas la section B — elle l'enrichit avec une famille de skills "markdown" et conserve la famille "RCO XML" en l'état.
+> **Décision (post-archive, 15 juin 2026)** : la migration cible **uniquement le flux markdown**. Les nouveaux skills Letta Code de la prod (audit, redaction, metadata, translate) consommeront du **markdown** et utiliseront les helpers existants dans `packages/agents/`. La famille RCO XML est **hors-scope** et n'est plus maintenue dans le repo — elle pourra être réintroduite comme nouvelle famille le jour où RCO redevient pertinent (avec `git checkout` des fichiers archivés comme point de départ).
 
 ### C.3 Pattern de blocs mémoire
 
 Le projet `project-pZvdCSjhJ7Fgmi66gqgy` a 3 blocs uploadés (cf. Section A.4) — tous **gelés** depuis la dépréciation des "File" resources par Letta (contrainte 1). Les fichiers sources existent dans le repo mais ne peuvent plus être pushés vers l'agent en prod. ⚠️ **Ces 3 blocs sont orphelins** : 0 agent actif dans ce projet (cf. B.1). Les 6 agents de prod (dans `97c52a94-…`) ont **0 memory block attaché** et vivent uniquement de leur `system` prompt.
-Le setup Letta Code a 5 blocs (cf. Section B.2) — **tous commités dans le repo** et modifiables à volonté.
+Le setup Letta Code _historique_ avait 5 blocs (cf. Section B.2) — **archivés le 15 juin 2026**. La mémoire agent vit désormais dans **memfs** (par-agent, git-backed par le serveur Letta), pas dans le repo.
 
-> **Recommandation** : la migration doit **basculer la prod sur le pattern Letta Code** (blocs commités et modifiables localement). Le pattern "uploader vers Letta Cloud" n'est plus viable — il faut s'appuyer sur Letta Code + qmd (corpus local) pour la prochaine itération.
+> **Recommandation (post-archive)** : la migration doit **basculer la prod sur le pattern Letta Code + memfs** (mémoire par-agent, versionnée via Letta Cloud). Le pattern "uploader vers Letta Cloud" n'est plus viable pour les prompts/blocs (gel) — il faut s'appuyer sur Letta Code + qmd (corpus local) pour la prochaine itération. Pour la mémoire agent, memfs remplace le pattern repo.
 
 ---
 
@@ -333,12 +320,12 @@ Le setup Letta Code a 5 blocs (cf. Section B.2) — **tous commités dans le rep
 | -- | ---------- | ---------------------------------------------------------------------- |
 | 02 | RI-1259    | Le corpus `documentation/agent-migration/agent-knowledge/` doit héberger les futurs skills versionnés. |
 | 03 | RI-1260    | Exporter les 3 prompts Letta Cloud (`metadata_schema`, `compliance`, `doublons`) en Markdown versionné. Note : ces sources ne sont plus jamais pushables en prod (gel) — la valeur du PR est de **basculer le pattern de mise à jour** (commits git au lieu d'upload dashboard). |
-| 04 | RI-1261    | Extraire les 5 fichiers `.agents/memory/system/*.md` dans le corpus, avec qmd. |
+| 04 | RI-1261    | ~~Extraire les 5 fichiers `.agents/memory/system/*.md` dans le corpus, avec qmd~~ — **rendu obsolète par l'archive du 15 juin 2026**. Le pattern « mémoire partagée du repo » est remplacé par memfs (par-agent). |
 | 05 | RI-1262    | Indexer le corpus dans qmd.                                             |
-| 06 | RI-1263    | Convertir `.commands/*.md` (RCO XML) en skills — **conserver tels quels** pour la future reprise RCO. La migration ajoute **en parallèle** une famille de skills "markdown" pour la prod. |
+| 06 | RI-1263    | ~~Convertir `.commands/*.md` (RCO XML) en skills — conserver tels quels pour la future reprise RCO~~ — **rendu obsolète par l'archive du 15 juin 2026**. La migration ajoute une famille de skills « markdown » pour la prod (et rien pour RCO, qui est hors-scope). |
 | 09 | RI-1264    | Skill `audit` (markdown) : reprendre les prompts `compliance.md` + `duplicates.md` + tool `search_ri_duplicate_dispositifs` réécrit en requête Supabase (PR 20). |
 | 10 | RI-1265    | Skill `redaction` (markdown) : reprendre le slash command `/redaction`. |
-| 11 | RI-1266    | Skill `metadata` (markdown) : reprendre la logique de `.skills/metadata/` (réécrit pour frontmatter YAML au lieu de XML) + tool `validate_metadata_ri` (PR 18). |
+| 11 | RI-1266    | Skill `metadata` (markdown) : **réimplémenter** la logique déterministe de mapping (XML→frontmatter, jadis dans `.skills/metadata/scripts/map-metadata.ts` archivé) adaptée au nouveau format d'entrée markdown. Pattern de référence : Annexe B.6 archivée pour la structure. + tool `validate_metadata_ri` (PR 18). |
 | 13 | RI-1268    | Skill `translation` multilingue : reprendre les **5 agents** `ar/uk/ru/ps/ti` (considérer 1 agent multilingue vs 5). `ps` et `ti` ont déjà la persona Letta Code standard — probablement un pré-déploiement. |
 | 18 | RI-1274    | Tool `validate_metadata_ri` (déjà HTTP route Next.js) — le réexposer en tool Letta Code. |
 | 20 | RI-1276    | Tool `search_ri_duplicate_dispositifs` — **ne pas** se contenter d'extraire le client karfur : réécrire comme requête Supabase déterministe sur la table `dispositifs` (matching fuzzy + sémantique). |
@@ -370,12 +357,12 @@ Le setup Letta Code a 5 blocs (cf. Section B.2) — **tous commités dans le rep
 - `apps/frontend/src/app/api/agents/metadata/stream/route.ts`
 - `scripts/{list-agents,register-metadata-validator-tool,update-metadata-schema-block}.ts`
 
-### Expérimental (Letta Code)
-- `.agents/memory/system/{persona,project,luis,jeremie,mcp_servers}.md`
-- `.commands/{audit,redaction,metadata,pipeline}.md`
-- `.skills/metadata/SKILL.md`
-- `.skills/metadata/scripts/map-metadata.ts`
-- `packages/rco/src/{lheo,lheo-types}.ts`
+### Expérimental (Letta Code) — 🗄️ **archivé le 15 juin 2026** (cf. Annexe C)
+- ~~`.agents/memory/system/{persona,project,luis,jeremie,mcp_servers}.md`~~
+- ~~`.commands/{audit,redaction,metadata,pipeline}.md`~~
+- ~~`.skills/metadata/SKILL.md`~~
+- ~~`.skills/metadata/scripts/map-metadata.ts`~~
+- `packages/rco/src/{lheo,lheo-types}.ts` (helper, conservé pour la future reprise RCO)
 
 ### Documentation produite
 - `documentation/agent-migration/README.md`
@@ -468,4 +455,57 @@ Le setup Letta Code a 5 blocs (cf. Section B.2) — **tous commités dans le rep
 
 ---
 
-_Dernière mise à jour : 2026-06-15 — par l'agent Letta Code, sur la base d'un audit du repo à la révision `9aa3bda` + d'un audit live de l'organisation Playground sur `api.letta.com`._
+## Annexe C — Archive des assets RCO XML (`.agents/`, `.commands/`, `.skills/`) — 15 juin 2026
+
+> Décision actée le 15 juin 2026 par Luis, dans le cadre de la migration Letta Cloud → Letta Code SDK + corpus `qmd`.
+
+### C.1 Ce qui a été retiré
+
+| Dossier | Fichiers | Date création | Date dernier commit |
+|---------|----------|---------------|---------------------|
+| `.agents/memory/system/` | 5 (persona, project, luis, jeremie, mcp_servers) | antérieure | `bd84587` |
+| `.commands/` | 4 (audit, metadata, pipeline, redaction) | antérieure | 16 mars 2025 |
+| `.skills/metadata/` | 2 (SKILL.md, scripts/map-metadata.ts) | antérieure | antérieure |
+| **Total** | **11 fichiers** | — | — |
+
+Tous supprimés via `git rm -rf`. **Aucune perte d'historique** : les fichiers restent accessibles via `git log` (commits antérieurs au merge de l'archive) si jamais RCO redevient pertinent.
+
+### C.2 Pourquoi
+
+1. **Pattern obsolète** : l'agent Letta Code utilise désormais **memfs** (`~/.letta/agents/{agent_id}/memory/`, git-backed par le serveur Letta) pour la mémoire, et des **skills/commands** (gérés par le runtime Letta Code) pour les capacités. Le pattern « mémoire partagée dans le repo via `.agents/` » était une relique d'une architecture plus ancienne. Avec memfs, la mémoire est **par-agent** (et c'est mieux : pas de pollution entre agents).
+2. **Confusion** : la présence de `.commands/*.md` (RCO XML) et `.skills/metadata/` (RCO XML) dans la racine du repo pouvait suggérer qu'ils étaient actifs ou liés à la prod. Or, ils ciblent **uniquement** RCO XML, qui n'est plus utilisé en production (la prod utilise markdown depuis l'API Data Inclusion). Conserver ces assets = risque que quelqu'un (humain ou IA) les réactive par erreur.
+3. **Format RCO non maintenu** : RCO n'est plus une source d'ingestion active. Conserver ses assets est de la dette technique. Mieux vaut les archiver (git history) que de les laisser pourrir dans la racine.
+4. **Faire place nette pour la migration** : les nouveaux skills/commands/mémoire de la prod (markdown) seront créés à des endroits propres (probablement `documentation/agent-migration/agent-knowledge/` et `packages/agents/skills/`). Pas de mélange avec d'anciens assets RCO.
+
+### C.3 Ce qui n'a PAS été archivé
+
+- **`packages/rco/src/{lheo,lheo-types}.ts`** — helpers XML Lhéo, conservés. Le pattern RCO peut être réactivé et réutilisera ces helpers.
+- **Les 3 blocs mémoire du projet `project-pZvdCSjhJ7Fgmi66gqgy`** sur Letta Cloud (cf. Annexe B.4) — non touchés, car ils sont côté Letta Cloud (pas le repo). À nettoyer séparément (suivi suggéré : nouvelle issue Linear).
+- **La référence à `ressources_metadatas/base-connaissance.md`** dans la SKILL.md archivée — la référence est partie avec le fichier. Plus de question à se poser.
+
+### C.4 Implications pour la planification
+
+PR rendus **obsolètes** par l'archive (à retirer du plan de migration) :
+- **PR-04 (RI-1261)** : « Extraire les 5 fichiers `.agents/memory/system/*.md` dans le corpus, avec qmd » — le pattern est remplacé par memfs. Pas d'extraction nécessaire.
+- **PR-06 (RI-1263)** : « Convertir `.commands/*.md` (RCO XML) en skills — conserver tels quels » — les `.commands/*.md` n'existent plus. RCO hors-scope, la conversion aussi.
+
+PR **modifiés** :
+- **PR-11 (RI-1266)** : « Skill `metadata` (markdown) » — ne reprend plus la logique de `.skills/metadata/` (archivé), mais doit **réimplémenter** la même logique de transformation déterministe XML → frontmatter, adaptée au format d'entrée markdown (frontmatter YAML). Le pattern est documenté dans l'Annexe B archivée de la SKILL.md si jamais.
+
+### C.5 Comment réactiver RCO le jour où
+
+Si RCO redevient pertinent (par ex. Lhéo est de nouveau une source d'ingestion) :
+
+```bash
+# Restaurer les assets archivés (depuis le dernier commit avant l'archive)
+git log --oneline --all -- .agents/ .commands/ .skills/ | head
+git checkout <commit-hash> -- .agents/ .commands/ .skills/
+
+# Référencer aussi `packages/rco/src/lheo.ts` (toujours présent)
+```
+
+Ou plus simple : cloner une version du repo d'avant l'archive. Le `git log` rend l'opération triviale.
+
+---
+
+_Dernière mise à jour : 2026-06-15 — par l'agent Letta Code, sur la base d'un audit du repo à la révision `9aa3bda` + d'un audit live de l'organisation Playground sur `api.letta.com` + d'une décision d'archive actée par Luis le 15 juin 2026._
