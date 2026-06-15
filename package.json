@@ -41,6 +41,7 @@
     "validate:corpus": "tsx scripts/validate-corpus.ts",
     "validate": "pnpm validate:docs && pnpm validate:corpus && pnpm knip",
     "convert:dispositifs": "tsx scripts/convert-dispositifs.ts",
+    "export:letta-cloud-blocks": "tsx scripts/export-letta-cloud-blocks.ts",
     "list:agents": "tsx scripts/list-agents.ts",
     "register:metadata-validator": "tsx scripts/register-metadata-validator-tool.ts",
     "update:metadata-schema": "tsx scripts/update-metadata-schema-block.ts",
