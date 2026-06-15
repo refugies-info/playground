@@ -37,3 +37,15 @@ UPDATE workflows SET editorial_record_id = 'e3829880-d457-49d3-9d9d-88456f843a61
 UPDATE workflows SET editorial_record_id = 'c59742a1-54f3-4be7-ba0b-8ef52450c975' WHERE id = '26c0e650-0e85-4819-b64b-013f8a972dad';
 UPDATE workflows SET editorial_record_id = '4871cf64-ee7f-4f25-b650-634fab9a0440' WHERE id = 'f4def384-fdce-44cd-840e-3fa936a02fc7';
 UPDATE workflows SET editorial_record_id = '214e653f-718a-45e3-b8ff-6864de056b50' WHERE id = '18fc7d09-52ec-4b16-b732-2e5e5d37f0a1';
+
+-- Backfill workflows.assignee_id (moved from editorial_records — RI-1340), keyed by editorial_record_id
+UPDATE workflows SET assignee_id = '7cd263de-3991-4c49-86dc-d37fcfb371ea' WHERE editorial_record_id = 'e3829880-d457-49d3-9d9d-88456f843a61';
+UPDATE workflows SET assignee_id = '7cd263de-3991-4c49-86dc-d37fcfb371ea' WHERE editorial_record_id = 'a8437368-c018-481c-959f-9fbc3661a2f5';
+UPDATE workflows SET assignee_id = 'b1bb04e3-c07b-4e22-a7eb-fea7db0a2b1c' WHERE editorial_record_id = 'abc82ce8-a10a-4e8a-a529-116ce026d26a';
+UPDATE workflows SET assignee_id = 'b1bb04e3-c07b-4e22-a7eb-fea7db0a2b1c' WHERE editorial_record_id = 'c59742a1-54f3-4be7-ba0b-8ef52450c975';
+UPDATE workflows SET assignee_id = '7cd263de-3991-4c49-86dc-d37fcfb371ea' WHERE editorial_record_id = 'c084aa80-83ad-4354-8d7e-5a68749c94ee';
+UPDATE workflows SET assignee_id = 'd6378d34-3386-41bf-9698-98a8ffea6871' WHERE editorial_record_id = '214e653f-718a-45e3-b8ff-6864de056b50';
+UPDATE workflows SET assignee_id = '7cd263de-3991-4c49-86dc-d37fcfb371ea' WHERE editorial_record_id = 'e86f4b2f-670c-4c1b-a2be-97ee9a7ad22f';
+UPDATE workflows SET assignee_id = 'e13d33b5-a7aa-4af4-b8e4-cfa559a62e6d' WHERE editorial_record_id = '4871cf64-ee7f-4f25-b650-634fab9a0440';
+UPDATE workflows SET assignee_id = '7cd263de-3991-4c49-86dc-d37fcfb371ea' WHERE editorial_record_id = '1b4fe5e4-baf8-40b9-b7b2-1b957f4ec920';
+UPDATE workflows SET assignee_id = 'e13d33b5-a7aa-4af4-b8e4-cfa559a62e6d' WHERE editorial_record_id = '8a013f57-34f6-49fb-b929-1e1aba31536c';

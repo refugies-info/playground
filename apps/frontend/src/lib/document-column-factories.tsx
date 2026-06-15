@@ -131,7 +131,7 @@ export const createAssigneeColumn = (
   ),
   cell: ({ row }) => (
     <AssigneeDropdown
-      editorialRecordId={row.original.editorialRecordId}
+      workflowId={row.original.id}
       currentEmail={row.original.assigneeEmail}
       editors={editors}
       onOptimisticUpdate={(email) => onOptimisticUpdate(row.original.id, email)}
