@@ -12,7 +12,7 @@
 | **Agents**      | 6      | default project `97c52a94-…`    | `/v1/agents`   | ✅ Identique à l'inventaire A.2 |
 | **Tools**       | 50     | default project `97c52a94-…`    | `/v1/tools/`   | ✅ Identique à l'inventaire B.3 (12 custom + 38 GitHub MCP) |
 | **Memory blocks** | 50+ | orphelin `project-pZvdCSjhJ7Fgmi66gqgy` + workspace templates | `/v1/blocks` | ⚠️ **Étendu** : 3 blocs "gelés" (PR-03) + 30+ orphelins (à nettoyer) + ~50+ templates workspace |
-| **Filesystem folders** | 10 (visibles UI) | default project `97c52a94-…` | `/v1/folders/` | 🚫 **API dépréciée côté serveur** — pas d'export programmatique possible |
+| **Filesystem folders** | 10 (visibles UI) | default project `97c52a94-…` | **agent-level export** (cf. §4) | ✅ **RÉSOLU** : 13 fichiers exportés via `GET /v1/agents/{id}/export` (cf. `scripts/export-letta-agent-knowledge.ts`, porté de karfur PR #3788) |
 
 ## 1. Agents (6)
 
@@ -85,7 +85,7 @@
 
 → Certains de ces templates (comme `system/compétence_métadonnées_di`) **pourraient être pertinents** à exporter dans la corpus. **À investiguer dans un PR ultérieur.**
 
-## 4. Filesystem folders (10 visibles dans l'UI) — 🚫 BLOQUANT
+## 4. Filesystem folders (10 visibles dans l'UI) — ⚠️ RÉSOLU via l'export agent
 
 L'UI Letta Cloud (URL : `app.letta.com/projects/default-project/data-sources`) affiche 10 dossiers de données :
 
@@ -102,15 +102,17 @@ L'UI Letta Cloud (URL : `app.letta.com/projects/default-project/data-sources`) a
 | `ressources_traduction_ru`             | 1               |
 | `Fiches étalon FR - RU`                | 1               |
 
-**Problème** : l'API `/v1/folders/`, `/v1/folders/{id}`, `/v1/folders/{id}/files`, `/v1/agents/{id}/folders` retourne toutes **400 "This API route is deprecated and no longer supported on the Letta API"**. Le SDK `@letta-ai/letta-client@1.10.2` appelle exactement ces endpoints et échoue.
+**Problème initial** : l'API `/v1/folders/`, `/v1/folders/{id}`, `/v1/folders/{id}/files`, `/v1/agents/{id}/folders` retournent toutes **400 "This API route is deprecated and no longer supported on the Letta API"**. Le SDK `@letta-ai/letta-client@1.10.2` appelle ces endpoints et échoue.
 
-**Conséquence** : le contenu de ces 10 dossiers **ne peut pas être exporté programmatiquement** avec la version actuelle de l'API Letta Cloud. Le SDK et l'API sont en retard sur l'UI (l'UI affiche les dossiers mais l'API a déprécié l'accès). C'est probablement un changement de version côté serveur Letta Cloud (l'UI est en "Beta").
+**Solution trouvée** : l'endpoint **`GET /v1/agents/{agent_id}/export`** (équivalent SDK `client.agents.exportFile(agentId)`) fonctionne et **expose tout le contenu attaché à l'agent** (fichiers + chunks + métadonnées), contournant complètement l'API folders dépréciée. L'export est sérialisé en JSON, puis normalisé en corpus versionné par `scripts/export-letta-agent-knowledge.ts` (porté de la PR #3788 du repo karfur, commit `ec219d8c7ff8c5c91e2cab517eea5f123147dc63`).
 
-**Options** :
-1. **Attendre une mise à jour du SDK** quand Letta publiera la nouvelle API folders
-2. **Exporter manuellement** via l'UI (clic-clic, copier-coller des fichiers)
-3. **Contacter le support Letta** pour demander l'accès programmatique aux folders
-4. **Changer de stratégie** : accepter que les folders ne peuvent pas être migrés automatiquement et les laisser sur Letta Cloud (l'agent Letta Code + corpus qmd se passera de ces ressources, ou les re-créera localement)
+**État de l'export (2026-06-08, depuis la PR karfur 3788)** : 13 fichiers normalisés écrits dans le corpus :
+- `langage-clair/` — 8 fichiers (charte, lexique, lexique DITP, cas éditoriaux, schéma fiche, guide annotation, personas BPI, process)
+- `metadatas/` — 4 fichiers (mapping-data, mapping-data-di, base-connaissance, dispositif-letta)
+- `conformite-editoriale/` — 2 fichiers (jurisprudence, Formacode)
+- 6 fichiers exclus (qualité) — dont `ressources_exemples_redaction`
+- 1 408 chunks indexés au total
+- 0 alerte d'extraction faible
 
 ## 5. Implications pour la migration
 
@@ -118,12 +120,12 @@ L'UI Letta Cloud (URL : `app.letta.com/projects/default-project/data-sources`) a
 
 - ✅ **3 blocs mémoire "gelés" exportables** via `scripts/export-letta-cloud-blocks.ts` (testé OK le 2026-06-15 avec le `LETTA_API_KEY` de `playground/main/.env.local`)
 - ✅ Fichiers écrits dans `documentation/agent-migration/agent-knowledge/prompts/{metadata-schema,compliance,doublons}.md`
+- ✅ **13 fichiers de corpus exportés** via `scripts/export-letta-agent-knowledge.ts` (porté de karfur PR #3788) — résout la question des 10 filesystem folders en contournant l'API dépréciée via l'endpoint agent-level
 - ⏸️ **Suppression des fichiers locaux** (`packages/agents/prompts/compliance.md`, `packages/agents/prompts/duplicates.md`, `packages/agents/src/metadata-schema-spec.ts`) **conditionnée** au retour utilisateur sur l'ampleur du scope (3 blocs vs. tous les templates workspace).
 
 ### PRs à venir (à confirmer)
 
 - **PR-04+** : export des autres templates workspace (`system/compétence_métadonnées_di`, `system/processus_de_traduction`, etc.) — au cas par cas
-- **PR-??** : export du contenu des 10 filesystem folders — **BLOQUÉ par l'API dépréciée**, à débloquer avec Letta
 - **PR-??** : nettoyage des 30+ blocs orphelins dans `project-pZvdCSjhJ7Fgmi66gqgy` (à planifier après stabilisation de la migration)
 - **PR-??** : recréation de l'agent Agathe (le `PLAYGROUND_AGENT_ID` est un placeholder à remplacer) + import du system prompt dans Letta Code
 

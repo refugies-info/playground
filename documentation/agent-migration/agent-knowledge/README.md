@@ -102,3 +102,34 @@ Luis, 15 juin 2026 — ces choix sont pris par défaut pour ne pas bloquer le sc
 2. **Format des skills** : style Letta Code — un `SKILL.md` par skill, exemples inline ou dans un sous-dossier `examples/`
 3. **Sévérité de la validation** : erreurs de frontmatter = fail CI, liens cassés = warn (pour absorber le legacy)
 4. **Multilingue (skill `translate`)** : un seul skill `translate/` qui couvre les 5 langues (ar/uk/ru/ps/ti), avec exemples par langue dans `examples/translate/{ar,uk,ru,ps,ti}/`
+
+## Export Letta Cloud (PR-03 / RI-1260)
+
+Le script `pnpm agent-knowledge:export` (cf. `scripts/export-letta-agent-knowledge.ts`) récupère l'export complet de l'agent Agathe via l'endpoint fiable `GET /v1/agents/{agent_id}/export`. Cet endpoint contourne l'API folders/files dépréciée côté serveur en exposant le contenu attaché à l'agent (PDF convertis en Markdown, JSON/CSV conservés tels quels).
+
+```bash
+PLAYGROUND_LETTA_API_KEY=... PLAYGROUND_AGENT_ID=... pnpm agent-knowledge:export
+```
+
+**Variables d'environnement attendues** :
+
+- `PLAYGROUND_LETTA_API_KEY` — clé API Letta Cloud utilisée uniquement pour l'export
+- `PLAYGROUND_AGENT_ID` — identifiant de l'agent Agathe à exporter
+- `PLAYGROUND_LETTA_BASE_URL` (optionnel, défaut : `https://api.letta.com`)
+
+**Options** :
+
+- `--dry-run` — affiche le plan d'export sans écrire
+- `--from-file <path>` — utilise un export Letta Cloud pré-téléchargé (utile en CI)
+- `--output-dir <path>` — surcharge le dossier de sortie (défaut : `documentation/agent-migration/agent-knowledge`)
+
+**Normalisations appliquées** :
+
+- Les chemins logiques Letta Cloud (`ressources_langage_clair/*`, `ressources_metadatas/*`, etc.) sont renommés en `langage-clair/*`, `metadatas/*`, `conformite-editoriale/*`
+- Les PDF sont convertis en Markdown à partir du texte extrait par Letta Cloud
+- Les contenus JSON/CSV restent dans leur format natif
+- Les contacts non publics détectés (emails, téléphones) sont masqués
+- Un manifeste `_export-manifest.json` est généré avec traçabilité fichier-par-fichier (chunks, file_id, source_path, weak_extraction_reasons)
+- La source `ressources_exemples_redaction` est exclue par défaut après revue qualité
+
+**État actuel** : 13 fichiers exportés par [PR #3788 du repo karfur](https://github.com/refugies-info/karfur/pull/3788) le 2026-06-08, intégrés ici pour servir de base à l'indexation qmd. Le script peut être ré-exécuté pour rafraîchir le corpus après toute mise à jour côté Letta Cloud.
