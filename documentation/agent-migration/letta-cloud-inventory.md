@@ -289,9 +289,9 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 | Agent de traduction `ar/ru/uk`                              | Skill de traduction multilingue (RI-1270/PR 13–15)            | ⏳ à faire |
 | Bloc mémoire `metadata_schema`                              | `MEMORY.md` ou `SKILL.md` du skill metadata (RI-1259)          | ⏳ à faire |
 | Bloc mémoire `compliance` + `doublons`                      | Skill `audit` (RI-1264/PR 09)                                  | ⏳ à faire |
-| Slash command `/audit` (constante `AUDIT_SLASH_COMMAND`)     | `.commands/audit.md` (existe déjà) → à enrichir                 | 🟡 partiel |
-| Slash command `/redaction` (`REDACTION_SLASH_COMMAND`)      | `.commands/redaction.md` (existe déjà) → à enrichir             | 🟡 partiel |
-| Slash command `/metadata` (`METADATA_SLASH_COMMAND`)        | `.commands/metadata.md` (existe déjà) → à enrichir              | 🟡 partiel |
+| Slash command `/audit` (constante `AUDIT_SLASH_COMMAND`)     | **Skill `audit` (markdown, à créer)** — _les anciennes `.commands/audit.md` RCO XML ont été archivées_ | ⏳ à faire |
+| Slash command `/redaction` (`REDACTION_SLASH_COMMAND`)      | **Skill `redaction` (markdown, à créer)** — _idem_ | ⏳ à faire |
+| Slash command `/metadata` (`METADATA_SLASH_COMMAND`)        | **Skill `metadata` (markdown, à créer)** — _idem_ | ⏳ à faire |
 | Slash command `/translate` (`TRANSLATE_SLASH_COMMAND`)      | Skill de traduction multilingue (à créer)                      | ⏳ à faire |
 | Outil `validate_metadata_ri` (HTTP route)                   | Tool Letta Code (PR 18)                                        | ⏳ à faire |
 | Outil `search_ri_duplicate_dispositifs` (client API karfur) | Tool Letta Code **réécrit** comme requête Supabase (PR 20)     | ⏳ à faire |
@@ -301,20 +301,16 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 ### C.2 Format d'entrée : décision actée
 
 - **Flux de production (actuel)** : **markdown (YAML frontmatter + corps texte)**, issu de l'API Data Inclusion (structures + services). C'est ce que consomme `packages/agents/` et que les workflows envoient à l'agent Letta Cloud.
-- **Flux scaffoldé pour RCO (futur)** : **RCO XML (Lhéo)**, qui redeviendra pertinent à terme (cf. contrainte 2). Le setup Letta Code actuel dans `.commands/` et `.skills/metadata/` est taillé pour ce format.
+- **Flux RCO (futur)** : **RCO XML (Lhéo)**, qui redeviendra pertinent à terme. Les helpers `packages/rco/src/{lheo,lheo-types}.ts` sont conservés pour cette reprise ; les anciennes commands/skills RCO (`.commands/*.md`, `.skills/metadata/`) ont été **archivées** (cf. Annexe C) et devront être recréées le jour où RCO redevient actif.
 
-> **Décision** : la migration doit supporter **les deux formats** :
-> - Les nouveaux skills Letta Code de la prod (audit, redaction, metadata, translate) doivent consommer du **markdown** (et utiliser les helpers existants dans `packages/agents/`).
-> - Les skills scaffoldés pour RCO XML (`.commands/*.md`, `.skills/metadata/`) sont **conservés tels quels** pour la reprise future. Quand RCO redeviendra actif, on aura un agent Letta Code déjà pré-câblé pour ce format.
->
-> En pratique, cela veut dire que la migration ne "réécrit" pas la section B — elle l'enrichit avec une famille de skills "markdown" et conserve la famille "RCO XML" en l'état.
+> **Décision (post-archive, 15 juin 2026)** : la migration cible **uniquement le flux markdown**. Les nouveaux skills Letta Code de la prod (audit, redaction, metadata, translate) consommeront du **markdown** et utiliseront les helpers existants dans `packages/agents/`. La famille RCO XML est **hors-scope** et n'est plus maintenue dans le repo — elle pourra être réintroduite comme nouvelle famille le jour où RCO redevient pertinent (avec `git checkout` des fichiers archivés comme point de départ).
 
 ### C.3 Pattern de blocs mémoire
 
 Le projet `project-pZvdCSjhJ7Fgmi66gqgy` a 3 blocs uploadés (cf. Section A.4) — tous **gelés** depuis la dépréciation des "File" resources par Letta (contrainte 1). Les fichiers sources existent dans le repo mais ne peuvent plus être pushés vers l'agent en prod. ⚠️ **Ces 3 blocs sont orphelins** : 0 agent actif dans ce projet (cf. B.1). Les 6 agents de prod (dans `97c52a94-…`) ont **0 memory block attaché** et vivent uniquement de leur `system` prompt.
-Le setup Letta Code a 5 blocs (cf. Section B.2) — **tous commités dans le repo** et modifiables à volonté.
+Le setup Letta Code _historique_ avait 5 blocs (cf. Section B.2) — **archivés le 15 juin 2026**. La mémoire agent vit désormais dans **memfs** (par-agent, git-backed par le serveur Letta), pas dans le repo.
 
-> **Recommandation** : la migration doit **basculer la prod sur le pattern Letta Code** (blocs commités et modifiables localement). Le pattern "uploader vers Letta Cloud" n'est plus viable — il faut s'appuyer sur Letta Code + qmd (corpus local) pour la prochaine itération.
+> **Recommandation (post-archive)** : la migration doit **basculer la prod sur le pattern Letta Code + memfs** (mémoire par-agent, versionnée via Letta Cloud). Le pattern "uploader vers Letta Cloud" n'est plus viable pour les prompts/blocs (gel) — il faut s'appuyer sur Letta Code + qmd (corpus local) pour la prochaine itération. Pour la mémoire agent, memfs remplace le pattern repo.
 
 ---
 
@@ -329,7 +325,7 @@ Le setup Letta Code a 5 blocs (cf. Section B.2) — **tous commités dans le rep
 | 06 | RI-1263    | ~~Convertir `.commands/*.md` (RCO XML) en skills — conserver tels quels pour la future reprise RCO~~ — **rendu obsolète par l'archive du 15 juin 2026**. La migration ajoute une famille de skills « markdown » pour la prod (et rien pour RCO, qui est hors-scope). |
 | 09 | RI-1264    | Skill `audit` (markdown) : reprendre les prompts `compliance.md` + `duplicates.md` + tool `search_ri_duplicate_dispositifs` réécrit en requête Supabase (PR 20). |
 | 10 | RI-1265    | Skill `redaction` (markdown) : reprendre le slash command `/redaction`. |
-| 11 | RI-1266    | Skill `metadata` (markdown) : reprendre la **logique déterministe** de `.skills/metadata/scripts/map-metadata.ts` (réécrit pour frontmatter YAML au lieu de XML) + tool `validate_metadata_ri` (PR 18). |
+| 11 | RI-1266    | Skill `metadata` (markdown) : **réimplémenter** la logique déterministe de mapping (XML→frontmatter, jadis dans `.skills/metadata/scripts/map-metadata.ts` archivé) adaptée au nouveau format d'entrée markdown. Pattern de référence : Annexe B.6 archivée pour la structure. + tool `validate_metadata_ri` (PR 18). |
 | 13 | RI-1268    | Skill `translation` multilingue : reprendre les **5 agents** `ar/uk/ru/ps/ti` (considérer 1 agent multilingue vs 5). `ps` et `ti` ont déjà la persona Letta Code standard — probablement un pré-déploiement. |
 | 18 | RI-1274    | Tool `validate_metadata_ri` (déjà HTTP route Next.js) — le réexposer en tool Letta Code. |
 | 20 | RI-1276    | Tool `search_ri_duplicate_dispositifs` — **ne pas** se contenter d'extraire le client karfur : réécrire comme requête Supabase déterministe sur la table `dispositifs` (matching fuzzy + sémantique). |
