@@ -27,6 +27,7 @@ minimumReleaseAgeExclude:
   - "@vitest/*"
   - "@workflow/*"
   - "@rollup/*"
+  - "@esbuild/*"
   - next
   - vitest
   - vite
