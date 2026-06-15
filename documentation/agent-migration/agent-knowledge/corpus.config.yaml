@@ -1,0 +1,36 @@
+# Configuration qmd du corpus `agent-knowledge`
+# Lue par qmd lors de l'indexation (PR-05 / RI-1262)
+
+name: agent-knowledge
+version: 0.1.0
+owner: "Equipe RI <tech@refugies.info>"
+description: >-
+  Corpus local et versionné de prompts, skills, références et exemples
+  consommés par l'agent IA Letta Code du playground Refugies.info.
+  Remplace les ressources figées de Letta Cloud.
+
+source:
+  format: markdown
+  frontmatter: yaml
+  root: .
+
+indexing:
+  # qmd ira chercher tous les .md sous root/, en respectant SCHEMA.md
+  include:
+    - "**/*.md"
+  exclude:
+    - "CHANGELOG.md"   # Pas pertinent pour l'index qmd
+    - "node_modules/**"
+
+consumers:
+  # Qui lit ce corpus (humain + agent)
+  - role: agent
+    runtime: letta-code-sdk
+    spec: PR-23 / RI-1278
+  - role: human
+    purpose: "édition, revue, contribution"
+
+lifecycle:
+  status: scaffold
+  last-review: 2026-06-15
+  next-review: 2026-07-15

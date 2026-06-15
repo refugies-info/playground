@@ -1,0 +1,25 @@
+---
+description: Index qmd du corpus agent-knowledge (stub, construit en PR-05 / RI-1262)
+audience: [agent, human]
+status: stub
+last-reviewed: 2026-06-15
+---
+
+# `index.qmd` — stub
+
+> **Ce fichier est un stub.** La version complète de l'index qmd est construite par **PR-05 / RI-1262**.
+
+## Pourquoi un stub maintenant
+
+Le scaffold (PR-02 / RI-1259) crée la structure du corpus mais ne le remplit pas. L'index qmd a besoin du contenu pour être utile — il sera construit en même temps que les premiers prompts (PR-03) et les premières skills (PR-09+).
+
+## Ce que l'index final contiendra (PR-05)
+
+- **Table des matières** de tous les fichiers `.md` du corpus
+- **Index de recherche** : qui consomme quoi (skills ↔ prompts ↔ references)
+- **Métadonnées de fraîcheur** : `last-reviewed` par fichier, alertes sur le contenu périmé
+- **Liens** entre les fichiers (graphe de dépendances)
+
+## Stub pour l'instant
+
+Le stub contient uniquement le frontmatter minimal. PR-05 remplacera ce fichier par l'index complet.
