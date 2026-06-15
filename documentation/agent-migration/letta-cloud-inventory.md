@@ -74,7 +74,7 @@
 
 #### `validate_metadata_ri`
 
-- **Route HTTP** : `POST /api/tools/validate-metadata-ri` ([route.ts](../../../apps/frontend/src/app/api/tools/validate-metadata-ri/route.ts))
+- **Route HTTP** : `POST /api/tools/validate-metadata-ri` ([route.ts](../../apps/frontend/src/app/api/tools/validate-metadata-ri/route.ts))
 - **Schéma de validation** : `MetadataRiSchema` (depuis `@playground/shared-types`)
 - **Contrat** :
   - Entrée : `{ metadata_ri: object }`
@@ -129,11 +129,48 @@
 
 #### Étapes de workflows qui consomment l'agent
 
+##### Production fan-out (cron-driven, current path)
+
+Le cron d'ingestion DI fait tourner la chaîne complète **structures → services → records → fan-out N × single record**. C'est le chemin de production **actif** qui consomme l'agent Letta Cloud.
+
+```
+[CRON] → diIngestionWorkflow                        (pipelines/ingestion/di-ingestion.ts)
+  ├─ [1] ingestStructuresStep   → di_structures     (steps/ingestion/ingest-di.ts)
+  ├─ [2] ingestServicesStep     → di_services       (steps/ingestion/ingest-di.ts)
+  ├─ [3] processRecordsStep     → ingestion_records  (steps/ingestion/ingest-di.ts)
+  └─ [4] fanOutDiRecordsStep    → N × diSingleRecordWorkflow
+                                    │
+                                    ├─ diSingleAuditStep     → /audit      (generateIngestionReport)
+                                    └─ diSingleMetadataStep  → /metadata   (generateMetadataReport)
+```
+
+> Le metadata step n'est appelé **que si** l'audit retourne `compliant` — sinon l'appel LLM est économisé.
+
+| Composant                          | Rôle                                                                      | Source                                                                                  |
+| ---------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `diIngestionWorkflow`              | Pipeline parent (cron)                                                     | `packages/workflows/src/pipelines/ingestion/di-ingestion.ts`                            |
+| `fanOutDiRecordsStep`              | Claim & spawn N workflows enfants                                          | `packages/workflows/src/steps/ingestion/di-single-record-steps.ts`                      |
+| `diSingleRecordWorkflow`           | Workflow enfant par record (audit → metadata séquentiel)                  | `packages/workflows/src/pipelines/ingestion/di-single-record.ts`                        |
+| `diSingleAuditStep`                | Appelle `/audit` via `generateIngestionReport` + parse `IngestionMetadataSchema` | `packages/workflows/src/steps/ingestion/di-single-record-steps.ts`                  |
+| `diSingleMetadataStep`             | Appelle `/metadata` via `generateMetadataReport` + parse `MetadataMetadataSchema` | `packages/workflows/src/steps/ingestion/di-single-record-steps.ts`                 |
+| `ingestStructuresStep`             | (étape 1) — _n'appelle pas l'agent, ingestion DI brute_                    | `packages/workflows/src/steps/ingestion/ingest-di.ts`                                   |
+| `ingestServicesStep`               | (étape 2) — _n'appelle pas l'agent, ingestion DI brute_                    | `packages/workflows/src/steps/ingestion/ingest-di.ts`                                   |
+| `processRecordsStep`               | (étape 3) — _n'appelle pas l'agent, crée `ingestion_records`_              | `packages/workflows/src/steps/ingestion/ingest-di.ts`                                   |
+
+##### Force / backfill / per-document (legacy, toujours disponible)
+
+Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et restent utilisées pour forcer la régénération ou travailler sur un record précis. La migration doit les **convertir en wrappers** autour de `diSingleRecordWorkflow` (ou les déprécier).
+
 | Étape workflow                            | Slash command | Agent source                    | Source                                                                       |
 | ----------------------------------------- | ------------- | ------------------------------- | ---------------------------------------------------------------------------- |
 | `audit-di-step.ts`                        | `/audit`      | `PLAYGROUND_AGENT_ID`           | `packages/workflows/src/steps/ingestion/audit-di-step.ts`                    |
 | `metadata-di-step.ts`                     | `/metadata`   | `PLAYGROUND_AGENT_ID`           | `packages/workflows/src/steps/ingestion/metadata-di-step.ts`                 |
 | `force-editorial-step.ts`                 | `/redaction`  | `PLAYGROUND_AGENT_ID`           | `packages/workflows/src/steps/editorial/force-editorial-step.ts`             |
+
+##### Traduction (multilingue)
+
+| Étape workflow                            | Slash command | Agent source                    | Source                                                                       |
+| ----------------------------------------- | ------------- | ------------------------------- | ---------------------------------------------------------------------------- |
 | `generate-translation.ts`                 | `/translate`  | `LETTA_AGENTS_CONFIG[lang]`     | `packages/workflows/src/steps/translation/generate-translation.ts`           |
 | `get-available-translation-agents.ts`     | _n/a_         | _n/a_                           | `packages/workflows/src/steps/translation/get-available-translation-agents.ts` |
 
@@ -311,7 +348,11 @@ Le setup Letta Code a 5 blocs (cf. Section B.2) — **tous commités dans le rep
 - `packages/agents/samples/{dispositifs.json,dispositifs.yaml}`
 - `packages/agents/src/metadata-schema-spec.ts`
 - `packages/shared/src/constants/languages.ts`
-- `packages/workflows/src/steps/ingestion/{audit,metadata}-di-step.ts`
+- `packages/workflows/src/pipelines/ingestion/di-ingestion.ts` _(cron pipeline)_
+- `packages/workflows/src/pipelines/ingestion/di-single-record.ts` _(per-record child workflow)_
+- `packages/workflows/src/steps/ingestion/di-single-record-steps.ts` _(fan-out + `diSingleAuditStep` + `diSingleMetadataStep`)_
+- `packages/workflows/src/steps/ingestion/ingest-di.ts` _(steps 1–3, no LLM)_
+- `packages/workflows/src/steps/ingestion/{audit,metadata}-di-step.ts` _(legacy/force wrappers)_
 - `packages/workflows/src/steps/editorial/force-editorial-step.ts`
 - `packages/workflows/src/steps/translation/{generate-translation,get-available-translation-agents}.ts`
 - `apps/frontend/src/app/api/tools/validate-metadata-ri/route.ts`
