@@ -69,6 +69,15 @@ Letta Cloud integration documentation:
 
 ---
 
+## 🧬 Migration agent IA (Letta Code SDK + qmd)
+
+Project-specific documentation for the migration of the editorial AI agent from Letta Cloud to Letta Code SDK + qmd corpus. Tracked under Linear project [Migration agent IA — Letta Code SDK et qmd](https://linear.app/refugies-info/project/migration-agent-ia-letta-code-sdk-et-qmd-458608ee4f70).
+
+- **[Agent Migration Overview](./agent-migration/README.md)** — Project index, RI/PR mapping, scoping decision (15 June 2026)
+- **[Letta Cloud Inventory](./agent-migration/letta-cloud-inventory.md)** — Full inventory of the current Letta Cloud agent (prompts, memory blocks, custom tools, agent IDs, integration points) — _RI-1258 / PR 01_
+
+---
+
 ## 🔄 Workflows
 
 Feature-specific workflows and processes:
