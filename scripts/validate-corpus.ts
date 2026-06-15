@@ -113,6 +113,37 @@ function validateSkillFrontmatter(
   }
 }
 
+const ALLOWED_AUDIENCES = new Set(["agent", "human", "both"]);
+
+function validateAudience(
+  relPath: string,
+  data: Record<string, unknown>,
+  issues: Issue[],
+) {
+  if (!data.audience) {
+    issues.push({
+      severity: "fail",
+      file: relPath,
+      message:
+        "missing required frontmatter `audience` (use `agent`, `human`, or `both`)",
+    });
+    return;
+  }
+  const audiences = Array.isArray(data.audience)
+    ? data.audience
+    : [data.audience];
+  const invalid = audiences.filter(
+    (aud) => typeof aud !== "string" || !ALLOWED_AUDIENCES.has(aud),
+  );
+  if (invalid.length > 0) {
+    issues.push({
+      severity: "fail",
+      file: relPath,
+      message: `invalid audience value(s): ${invalid.join(", ")} (must be 'agent', 'human', or 'both')`,
+    });
+  }
+}
+
 function validateGenericFrontmatter(
   _file: string,
   relPath: string,
@@ -137,14 +168,7 @@ function validateGenericFrontmatter(
     });
   }
 
-  if (!data.audience) {
-    issues.push({
-      severity: "fail",
-      file: relPath,
-      message:
-        "missing required frontmatter `audience` (use `agent`, `human`, or `both`)",
-    });
-  }
+  validateAudience(relPath, data, issues);
 }
 
 function checkBrokenLinks(
@@ -153,8 +177,10 @@ function checkBrokenLinks(
   content: string,
   issues: Issue[],
 ) {
-  // Find all relative links of the form [text](path) or [text](./path)
-  // Skip http(s)://, mailto:, and #anchor-only
+  // Find all markdown links of the form [text](href)
+  // Skip external (http/https/mailto) and pure anchor (#…) — everything else
+  // is treated as a relative file target, including bare paths like
+  // `[SCHEMA.md](SCHEMA.md)` or `[audit](audit/SKILL.md)`.
   const linkRe = /\[[^\]]*\]\(([^)]+)\)/g;
   for (const m of content.matchAll(linkRe)) {
     const href = m[1].trim();
@@ -162,8 +188,7 @@ function checkBrokenLinks(
       href.startsWith("http://") ||
       href.startsWith("https://") ||
       href.startsWith("mailto:") ||
-      href.startsWith("#") ||
-      (href.startsWith("../") === false && !href.startsWith("./"))
+      href.startsWith("#")
     ) {
       continue;
     }
@@ -199,11 +224,24 @@ function main() {
     if (FOLDER_READMES_EXEMPT && isFolderReadme(relPath)) continue;
 
     const raw = fs.readFileSync(file, "utf-8");
-    const parsed = matter(raw);
+    let parsed: ReturnType<typeof matter>;
+    try {
+      parsed = matter(raw);
+    } catch (err) {
+      issues.push({
+        severity: "fail",
+        file: relPath,
+        message: `failed to parse frontmatter YAML: ${(err as Error).message}`,
+      });
+      continue;
+    }
     const data = parsed.data as Record<string, unknown>;
 
-    // Is this a SKILL.md? Apply skill-specific rules
+    // SKILL.md: apply BOTH generic (description, audience) and skill-specific
+    // (name, name==folder, kebab-case) rules. All other corpus files get
+    // the generic rules only.
     if (baseName === "SKILL.md") {
+      validateGenericFrontmatter(file, relPath, data, issues);
       validateSkillFrontmatter(file, relPath, data, issues);
     } else {
       validateGenericFrontmatter(file, relPath, data, issues);
@@ -217,6 +255,8 @@ function main() {
   const skillsDir = path.join(CORPUS_ROOT, "skills");
   if (fs.existsSync(skillsDir)) {
     for (const skill of fs.readdirSync(skillsDir)) {
+      // Skip hidden entries (e.g., .DS_Store on macOS)
+      if (skill.startsWith(".")) continue;
       const skillPath = path.join(skillsDir, skill);
       if (!fs.statSync(skillPath).isDirectory()) continue;
       const hasExamples = fs.existsSync(path.join(skillPath, "examples"));

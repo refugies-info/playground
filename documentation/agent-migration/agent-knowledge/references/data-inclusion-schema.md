@@ -57,7 +57,7 @@ Les deux sont consommés par la prod du playground sous forme de **fiches markdo
 
 - **Services sans structure** : rare mais possible (services en ligne). Dans ce cas, `structure_id` est `null` ou absent.
 - **Descriptions trop longues** : la prod tronque à 200 caractères. L'agent réécriture doit viser 150-180 caractères.
-- **Caractères spéciaux** : les fiches sont en markdown, pas en HTML. Pas de balises, juste des sauts de ligne et des liens `[texte](url)`.
+- **Caractères spéciaux** : les fiches sont en markdown, pas en HTML. Pas de balises, juste des sauts de ligne et des liens `` `[texte](url)` ``.
 
 ## Outils associés
 

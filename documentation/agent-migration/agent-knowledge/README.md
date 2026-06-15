@@ -92,7 +92,7 @@ Le script **fail** sur erreur de schéma, **warn** sur les liens cassés (pour n
 | 18    | RI-1274  | Référence au tool `validate_metadata_ri`                      |
 | 20    | RI-1276  | Référence au tool `search_ri_duplicate_dispositifs`           |
 
-Voir l'[inventaire Letta Cloud](../../letta-cloud-inventory.md) section D pour le plan complet.
+Voir l'[inventaire Letta Cloud](../letta-cloud-inventory.md) section D pour le plan complet.
 
 ## Décisions actées par défaut (PR-02)
 
