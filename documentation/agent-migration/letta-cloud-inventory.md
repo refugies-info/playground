@@ -35,15 +35,20 @@
 
 ### A.2 Agents configurés
 
-| Usage                                  | Variable d'env / constante                         | Agent ID                                              |
-| -------------------------------------- | -------------------------------------------------- | ----------------------------------------------------- |
-| **Agent multi-tâches** (audit + rédaction + metadata) | `PLAYGROUND_AGENT_ID`                 | _non figé dans le repo_ (résolu à l'exécution)        |
-| Traduction Arabe                       | `LETTA_AGENT_AR` (défaut)                          | `agent-c19d4b57-048c-48a7-8cdc-9609dab4b24b`          |
-| Traduction Ukrainien                   | `LETTA_AGENT_UK` (défaut)                          | `agent-add8dcc9-5d2e-4461-aa00-4bfcfe192b59`          |
-| Traduction Russe                       | `LETTA_AGENT_RU` (défaut)                          | `agent-4d7f539b-797b-4b5c-9755-cdffec5cc9f7`          |
+| Usage | Variable d'env / constante | Agent ID (réel, vérifié sur Letta Cloud le 2026-06-15) |
+|-------|----------------------------|--------------------------------------------------------|
+| **Agent multi-tâches** (audit + rédaction + metadata) | `PLAYGROUND_AGENT_ID` | `PLAYGROUND_AGENT_ID=<REDACTED>` ⚠️ **placeholder littéral** (voir note) |
+| Traduction Arabe | `LETTA_AGENT_AR` (défaut) | `agent-c19d4b57-048c-48a7-8cdc-9609dab4b24b` |
+| Traduction Ukrainien | `LETTA_AGENT_UK` (défaut) | `agent-add8dcc9-5d2e-4461-aa00-4bfcfe192b59` |
+| Traduction Russe | `LETTA_AGENT_RU` (défaut) | `agent-4d7f539b-797b-4b5c-9755-cdffec5cc9f7` |
+| Traduction **Pashto** (_ps_) | ⚠️ _non câblé par défaut_ | `agent-42fb380d-5920-437f-b2f3-57d02af4c6a7` |
+| Traduction **Tigrinya** (_ti_) | ⚠️ _non câblé par défaut_ | `agent-00b19760-f018-42a8-81d0-1c777b31bf7b` |
 
 > Constantes : `packages/shared/src/constants/languages.ts` → `LETTA_AGENTS_CONFIG`.
-> Les autres langues (`en`, `ps`, `fa`, `ti`) ne sont pas câblées à un agent — la traduction passe par les 3 agents listés ci-dessus.
+> Les 5 agents de traduction sont dans le **projet par défaut** `97c52a94-4e58-4226-9ac3-b000d1dcba78`, pas dans le projet de prod `project-pZvdCSjhJ7Fgmi66gqgy`.
+> Les langues `en` (anglais) et `fa` (persan) n'ont effectivement pas d'agent dédié.
+>
+> ⚠️ **Bug à investiguer** : l'ID littéral `PLAYGROUND_AGENT_ID=<REDACTED>` sur l'agent Agathe indique qu'une variable d'env n'a pas été résolue au moment de la création/listing. À vérifier — la migration Letta Code ne sera pas impactée (ID nouveau), mais c'est à corriger côté Letta Cloud si Agathe doit encore servir en prod.
 
 ### A.3 Slash commands (4)
 
@@ -56,8 +61,12 @@
 
 > Constantes : `packages/agents/src/prompts.ts` (`AUDIT_SLASH_COMMAND`, `REDACTION_SLASH_COMMAND`, `METADATA_SLASH_COMMAND`, `TRANSLATE_SLASH_COMMAND`).
 > Constante `@deprecated` à supprimer : `INGESTION_AGENT_HEADING` (`packages/agents/src/prompts.ts`).
+>
+> ⚠️ **Mécanisme d'injection (corrigé suite à l'audit live du 15 juin 2026)** : les **6 agents de prod** ont un `system` prompt réduit à un `base_instructions` quasi-générique (~1.7 ko pour les traducteurs, 4.1 ko pour Agathe qui ajoute une section MemFS) — **aucun** ne contient le prompt éditorial playground. La logique éditoriale est injectée à l'**appel** depuis le code de `packages/agents/src/{ingestion,simplification,metadata}.ts` via les constantes `*_SLASH_COMMAND` (envoyées comme premier message utilisateur avec tool calls), et depuis les **ressources fichiers gelées** (cf. A.4) pour les parties structurantes. Conséquence pour la migration : ces constantes TS doivent migrer telles quelles vers les skills/commands Letta Code, et la "vraie" personnalité de l'agent vit dans le code, pas dans le dashboard.
 
 ### A.4 Blocs mémoire de l'agent (côté Letta Cloud, promus depuis le repo)
+
+> **⚠️ Note projet (corrigé suite à l'audit live du 15 juin 2026)** : les 3 blocs ci-dessous sont dans le projet `project-pZvdCSjhJ7Fgmi66gqgy` — qui est **vide côté agents** (0 agent). Ils sont donc **orphelinés** dans le dashboard Letta Cloud. Les 6 agents actifs de prod (Agathe + 5 traducteurs) vivent dans le projet par défaut `97c52a94-…` et ont **0 memory block attaché** — c'est la version `système prompt` (cf. A.3) qui contient tout.
 
 | Bloc mémoire       | Contenu                                                  | Source dans le repo                                                | Script de synchro                                    | État de synchro |
 | ------------------ | -------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------- | --------------- |
@@ -311,7 +320,7 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 
 ### C.3 Pattern de blocs mémoire
 
-Le setup Letta Cloud a 3 blocs (cf. Section A.4) — tous **gelés** depuis la dépréciation des "File" resources par Letta (contrainte 1). Les fichiers sources existent dans le repo mais ne peuvent plus être pushés vers l'agent en prod.
+Le projet `project-pZvdCSjhJ7Fgmi66gqgy` a 3 blocs uploadés (cf. Section A.4) — tous **gelés** depuis la dépréciation des "File" resources par Letta (contrainte 1). Les fichiers sources existent dans le repo mais ne peuvent plus être pushés vers l'agent en prod. ⚠️ **Ces 3 blocs sont orphelins** : 0 agent actif dans ce projet (cf. B.1). Les 6 agents de prod (dans `97c52a94-…`) ont **0 memory block attaché** et vivent uniquement de leur `system` prompt.
 Le setup Letta Code a 5 blocs (cf. Section B.2) — **tous commités dans le repo** et modifiables à volonté.
 
 > **Recommandation** : la migration doit **basculer la prod sur le pattern Letta Code** (blocs commités et modifiables localement). Le pattern "uploader vers Letta Cloud" n'est plus viable — il faut s'appuyer sur Letta Code + qmd (corpus local) pour la prochaine itération.
@@ -330,7 +339,7 @@ Le setup Letta Code a 5 blocs (cf. Section B.2) — **tous commités dans le rep
 | 09 | RI-1264    | Skill `audit` (markdown) : reprendre les prompts `compliance.md` + `duplicates.md` + tool `search_ri_duplicate_dispositifs` réécrit en requête Supabase (PR 20). |
 | 10 | RI-1265    | Skill `redaction` (markdown) : reprendre le slash command `/redaction`. |
 | 11 | RI-1266    | Skill `metadata` (markdown) : reprendre la logique de `.skills/metadata/` (réécrit pour frontmatter YAML au lieu de XML) + tool `validate_metadata_ri` (PR 18). |
-| 13 | RI-1268    | Skill `translation` multilingue : reprendre les 3 agents `ar/ru/uk` (considérer 1 agent multilingue vs 3). |
+| 13 | RI-1268    | Skill `translation` multilingue : reprendre les **5 agents** `ar/uk/ru/ps/ti` (considérer 1 agent multilingue vs 5). `ps` et `ti` ont déjà la persona Letta Code standard — probablement un pré-déploiement. |
 | 18 | RI-1274    | Tool `validate_metadata_ri` (déjà HTTP route Next.js) — le réexposer en tool Letta Code. |
 | 20 | RI-1276    | Tool `search_ri_duplicate_dispositifs` — **ne pas** se contenter d'extraire le client karfur : réécrire comme requête Supabase déterministe sur la table `dispositifs` (matching fuzzy + sémantique). |
 | 22 | RI-1278    | `scripts/update-metadata-schema-block.ts` devient obsolète (cf. gel). À supprimer ou transformer en script de validation locale. |
@@ -374,4 +383,89 @@ Le setup Letta Code a 5 blocs (cf. Section B.2) — **tous commités dans le rep
 
 ---
 
-_Dernière mise à jour : 2026-06-15 — par l'agent Letta Code, sur la base d'un audit du repo à la révision `9aa3bda`._
+## Annexe B — Audit live de l'organisation Playground (Letta Cloud, 2026-06-15)
+
+> Audit réalisé via `GET /v1/agents`, `/v1/agents/{id}`, `/v1/projects`, `/v1/tools`, `/v1/blocks` sur `https://api.letta.com` avec le `LETTA_API_KEY` de l'organisation.
+> **Read-only** : aucune modification n'a été faite.
+
+### B.1 Projets
+
+| ID | Nom | Rôle | Contenu |
+|----|-----|------|---------|
+| `97c52a94-4e58-4226-9ac3-b000d1dcba78` | Default Project | **Production agents** (Agathe + 5 traducteurs) + outils | 6 agents, 25+ tools, 0 blocks |
+| `project-pZvdCSjhJ7Fgmi66gqgy` | _(non nommé)_ | Orphelin : hébergeait des agents Letta Code archivés (Jasmine/Karfur ?) | **0 agents**, 30+ memory blocks orphelins |
+
+> ⚠️ L'env `LETTA_PROJECT_ID` (variable `project-pZvdCSjhJ7Fgmi66gqgy`) est en fait un projet **vide côté agents**. Les agents de prod actifs vivent dans le **default project** `97c52a94-…`. À investiguer.
+
+### B.2 Agents en production (6, tous dans `97c52a94-…`)
+
+| Nom | Agent ID | Modèle | Créé | Mis à jour | System prompt | Tools | Memory blocks |
+|-----|----------|--------|------|------------|---------------|-------|----------------|
+| **Agathe** (multi-tâches) | `PLAYGROUND_AGENT_ID=<REDACTED>` ⚠️ placeholder | `anthropic/claude-sonnet-4-6` | 2026-01-07 | 2026-06-15 | 4164 chars (base + section MemFS) | 0 | 0 |
+| `traducteur_ar` | `agent-c19d4b57-048c-48a7-8cdc-9609dab4b24b` | `anthropic/claude-haiku-4-5` | 2026-01-22 | 2026-06-02 | 1707 chars (base par défaut) | 0 | 0 |
+| `traducteur_uk` | `agent-add8dcc9-5d2e-4461-aa00-4bfcfe192b59` | `anthropic/claude-haiku-4-5` | 2026-01-26 | 2026-06-02 | 1707 chars (base par défaut) | 0 | 0 |
+| `traducteur_ru` | `agent-4d7f539b-797b-4b5c-9755-cdffec5cc9f7` | `anthropic/claude-haiku-4-5` | 2026-02-11 | 2026-06-02 | 1707 chars (base par défaut) | 0 | 0 |
+| `traducteur_ps` | `agent-42fb380d-5920-437f-b2f3-57d02af4c6a7` | `anthropic/claude-sonnet-4-6` | 2026-06-02 | 2026-06-02 | 9301 chars (persona Letta Code) | 0 | 0 |
+| `traducteur_ti` | `agent-00b19760-f018-42a8-81d0-1c777b31bf7b` | `anthropic/claude-sonnet-4-6` | 2026-06-02 | 2026-06-02 | 9301 chars (persona Letta Code) | 0 | 0 |
+
+**Observations importantes :**
+
+- **3 générations d'agents** sont visibles :
+  1. **ar/uk/ru** (jan-fév 2026) — créés avec `claude-haiku-4-5`, system prompt minimal, _anciens_
+  2. **Agathe** (jan 2026, mis à jour en juin) — base + section MemFS, _sert toujours_
+  3. **ps/ti** (2 juin 2026) — `claude-sonnet-4-6`, persona complète Letta Code, _réécriture récente_ (sans doute dans le cadre de la migration)
+- **Aucun agent n'a de tool attaché** — la logique applicative passe par le code `packages/agents/src/*` + les ressources fichiers gelées.
+- **Aucun agent n'a de memory block attaché** — la personnalité vit dans le `system` prompt.
+- Le modèle a changé entre générations : haiku-4-5 (vieux) → sonnet-4-6 (récent).
+
+### B.3 Outils disponibles dans `97c52a94-…` (25+, 0 attaché)
+
+| Outil | Type | Note migration |
+|-------|------|----------------|
+| `search_ri_duplicate_dispositifs` | **Custom RI** | ⚠️ Client karfur (cf. A.5, contrainte 3) — réécrire en PR 20 |
+| `validate_metadata_ri` | **Custom RI** | OK (route Next.js) — réexposer en tool Letta Code en PR 18 |
+| `ReadManyFiles` | Standard | — |
+| `WriteTodos` | Standard | — |
+| `SearchFileContent` | Standard | — |
+| `Replace` | Standard | — |
+| `WriteFileGemini` | Standard | — |
+| `ListDirectory` | Standard | — |
+| `ReadFileGemini` | Standard | — |
+| `GlobGemini` | Standard | — |
+| `RunShellCommand` | Standard | — |
+| `analyze_text` | Standard | — |
+| 13 outils GitHub MCP (`update_pull_request`, `merge_pull_request`, `search_code`, `pull_request_review_write`, etc.) | GitHub MCP | _probablement pour l'agent codex/gemini_ |
+
+> Les 13 outils GitHub MCP sont sans `project_id` (non scopés) — ce sont probablement des outils globaux au workspace.
+
+### B.4 Memory blocks orphelins dans `project-pZvdCSjhJ7Fgmi66gqgy` (30+)
+
+| Label | Taille | Hypothèse |
+|-------|--------|-----------|
+| `persona` × plusieurs (506 → 10 053 chars) | variable | Identités de différents agents Letta Code archivés |
+| `human` × plusieurs | variable | Profils humains des agents archivés |
+| `project` | 186 chars | Contexte projet partagé |
+| `skills` | 60 chars | Index des skills |
+| `research_citations` | 0 chars | (vide) |
+| `research_plan` | 0 chars | (vide) |
+| `Output Format` × plusieurs | 1 344 chars | Schéma de sortie des agents archivés |
+| `Persona` × plusieurs | 1 865 → 5 772 chars | Personas archivés |
+| `analyse_30_formations_lheo` | 16 025 chars | **Données runtime** issues d'une passe RCO XML (30 formations Lhéo) |
+| `deduplication_report_30_lheo` | 6 542 chars | **Données runtime** issues d'une passe de dédup RCO |
+| `xml_data_extracted` | 849 chars | Données extraites de RCO XML |
+| `mission` × plusieurs | 325 → 3 939 chars | Prompts mission des agents archivés |
+| `output_format` × plusieurs | 69 → 2 720 chars | Variantes de format de sortie |
+
+> **Hypothèse** : ce projet hébergeait les agents Letta Code archivés (probablement le `Jasmine - Karfur` vu dans le listing local, ou un Agathe-RCO qui a été décommissionné). Les blocs runtime `analyse_30_formations_lheo` et `deduplication_report_30_lheo` suggèrent qu'un **agent RCO XML a tourné sur 30 fichiers Lhéo en production** et laissé ses traces. **À nettoyer** quand la migration Letta Code sera stabilisée.
+
+### B.5 Conclusions de l'audit
+
+1. **La cible « Letta Code + qmd » est en cours de pré-déploiement** : les agents `traducteur_ps` et `traducteur_ti` (créés le 2 juin 2026) ont déjà la **persona Letta Code standard** (`You are Letta Code, a Letta agent…`). C'est cohérent avec le timing du projet de migration.
+2. **L'agent Agathe a été re-touché récemment** (updated_at = 2026-06-15) — sa system prompt inclut une section MemFS qu'il n'avait probablement pas avant. Probablement un autre préparatif de migration.
+3. **L'architecture est plus minimaliste que ce que je pensais** : aucun tool, aucun memory block, aucune identity block sur les 6 agents. Tout vit dans le `system` prompt + les ressources fichiers gelées + les slash command constants du code. C'est une excellente nouvelle pour la migration : la **surface de migration est petite** (juste 4 fichiers TS de prompts + 2 fichiers de prompts.md).
+4. **Le projet `project-pZvdCSjhJ7Fgmi66gqgy` est mort** : 0 agents, 30+ blocs orphelins. À vider une fois la migration validée.
+5. **Le bug d'ID `PLAYGROUND_AGENT_ID=<REDACTED>`** sur Agathe est réel — il faudra le recréer proprement pendant la migration (un nouvel ID sera attribué par l'API Letta Code).
+
+---
+
+_Dernière mise à jour : 2026-06-15 — par l'agent Letta Code, sur la base d'un audit du repo à la révision `9aa3bda` + d'un audit live de l'organisation Playground sur `api.letta.com`._
