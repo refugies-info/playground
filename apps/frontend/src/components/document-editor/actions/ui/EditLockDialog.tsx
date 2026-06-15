@@ -1,4 +1,12 @@
-import { FrAlertWarningFill } from "@playground/ui/icons";
+import { RiCheckLine, RiCloseLine } from "@playground/ui/icons";
+import {
+  Dialog,
+  DialogAction,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@playground/ui/overlays";
 import { Button } from "@playground/ui/primitives";
 
 interface EditLockDialogProps {
@@ -12,28 +20,58 @@ export function EditLockDialog({
   editorName,
   onBack,
 }: EditLockDialogProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="absolute inset-0 z-30 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-4 p-4 animate-in fade-in duration-200">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--background-contrast-warning)] text-[var(--text-default-warning)]">
-        <FrAlertWarningFill size={24} />
-      </div>
-      <div className="text-sm font-medium text-gray-900 text-center max-w-sm">
-        Cette fiche est en cours de modification
-        {editorName ? ` par ${editorName}` : " par un autre utilisateur"}.
-      </div>
-      <p className="text-xs text-gray-600 text-center max-w-sm">
-        Rafraîchissez la page pour vérifier si elle est de nouveau disponible.
-      </p>
-      <Button
-        onClick={onBack}
-        variant="secondaire"
-        size="sm"
-        className="h-8 text-xs"
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onBack();
+      }}
+    >
+      <DialogContent
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
       >
-        Retour
-      </Button>
-    </div>
+        <DialogClose asChild>
+          <Button
+            variant="quatrieme"
+            size="sm"
+            className="absolute right-4 top-4 text-[var(--text-action-high-blue-france)]"
+          >
+            <span>Fermer</span>
+            <RiCloseLine className="h-4 w-4" />
+          </Button>
+        </DialogClose>
+        <DialogTitle>Cette fiche est déjà en cours d'édition</DialogTitle>
+        <DialogDescription>
+          {editorName ? ` ${editorName}` : " Un autre utilisateur"} modifie
+          cette fiche actuellement, vous n'en avez pas le contrôle. Cliquez sur
+          Reprendre pour récupérer la main.
+        </DialogDescription>
+        <DialogDescription>
+          Attention, cela annulera les modifications de{" "}
+          {editorName ? ` ${editorName}` : " l'autre utilisateur"}.
+        </DialogDescription>
+        <DialogAction>
+          <Button
+            onClick={onBack}
+            variant="secondaire"
+            size="sm"
+            className="h-8 text-xs"
+            rightIcon={RiCloseLine}
+          >
+            Quitter
+          </Button>
+          <Button
+            onClick={onBack}
+            variant="primaire"
+            size="sm"
+            rightIcon={RiCheckLine}
+            className="h-8 text-xs"
+          >
+            Reprendre
+          </Button>
+        </DialogAction>
+      </DialogContent>
+    </Dialog>
   );
 }
