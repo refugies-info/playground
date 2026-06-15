@@ -1,7 +1,7 @@
 import { logger } from "@playground/shared-types";
 import { diIngestionWorkflow } from "@playground/workflows";
+import { start } from "@workflow/core/runtime";
 import { NextResponse } from "next/server";
-import { start } from "workflow/api";
 import { buildWorkflowDashboardUrl } from "@/lib/workflow-utils";
 
 export const runtime = "nodejs";

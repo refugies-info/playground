@@ -17,8 +17,9 @@ import {
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
-import { FatalError, getStepMetadata, RetryableError } from "workflow";
-import { start } from "workflow/api";
+import { getStepMetadata } from "@workflow/core";
+import { start } from "@workflow/core/runtime";
+import { FatalError, RetryableError } from "@workflow/errors";
 import { diSingleRecordWorkflow } from "../../pipelines/ingestion/di-single-record";
 import { fetchAllDiServiceIds, getSupabaseClient } from "./utils";
 
