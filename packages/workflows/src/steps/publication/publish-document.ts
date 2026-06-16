@@ -218,7 +218,7 @@ export async function publishDocumentStep(
 
     const { data: workflow, error: workflowError } = await db
       .from("workflows")
-      .select("editorial_record_id")
+      .select("editorial_record_id, assignee_id")
       .eq("id", workflowId)
       .maybeSingle();
 
@@ -234,21 +234,8 @@ export async function publishDocumentStep(
       return failStep(db, "Workflow not found");
     }
 
-    // 4. Fetch the assignee_id from the editorial record
-    let assignee_id: string | null = null;
-    if (workflow.editorial_record_id) {
-      const { data: edRecord, error: edError } = await db
-        .from("editorial_records")
-        .select("assignee_id")
-        .eq("id", workflow.editorial_record_id)
-        .maybeSingle();
-
-      if (edError) {
-        logger.error(edError, "Error fetching editorial record assignee");
-      } else if (edRecord) {
-        assignee_id = edRecord.assignee_id;
-      }
-    }
+    // 4. Assignee is now stored on the workflow itself (RI-1340)
+    const assignee_id: string | null = workflow.assignee_id ?? null;
 
     // Store or update publication record
 

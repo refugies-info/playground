@@ -128,7 +128,6 @@ export type Database = {
       editorial_records: {
         Row: {
           active_run_id: string | null
-          assignee_id: string | null
           content_report_id: string | null
           created_at: string
           id: string
@@ -142,7 +141,6 @@ export type Database = {
         }
         Insert: {
           active_run_id?: string | null
-          assignee_id?: string | null
           content_report_id?: string | null
           created_at?: string
           id?: string
@@ -156,7 +154,6 @@ export type Database = {
         }
         Update: {
           active_run_id?: string | null
-          assignee_id?: string | null
           content_report_id?: string | null
           created_at?: string
           id?: string
@@ -169,13 +166,6 @@ export type Database = {
           work_status?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "editorial_records_assignee_id_fkey"
-            columns: ["assignee_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "editorial_records_content_report_id_fkey"
             columns: ["content_report_id"]
@@ -664,6 +654,7 @@ export type Database = {
       }
       workflows: {
         Row: {
+          assignee_id: string | null
           conversation_id: string | null
           created_at: string
           editorial_record_id: string | null
@@ -675,6 +666,7 @@ export type Database = {
           vercel_workflow_id: string | null
         }
         Insert: {
+          assignee_id?: string | null
           conversation_id?: string | null
           created_at?: string
           editorial_record_id?: string | null
@@ -686,6 +678,7 @@ export type Database = {
           vercel_workflow_id?: string | null
         }
         Update: {
+          assignee_id?: string | null
           conversation_id?: string | null
           created_at?: string
           editorial_record_id?: string | null
@@ -697,6 +690,13 @@ export type Database = {
           vercel_workflow_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "workflows_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "status_editorial_record_id_fkey"
             columns: ["editorial_record_id"]
@@ -776,7 +776,6 @@ export type Database = {
           computed_online_status: string | null
           computed_work_status: string | null
           created_at: string | null
-          editorial_assignee_id: string | null
           editorial_markdown: string | null
           editorial_metadata: Json | null
           editorial_record_id: string | null
@@ -801,11 +800,12 @@ export type Database = {
           structure_name: string | null
           title: string | null
           updated_at: string | null
+          workflow_assignee_id: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "editorial_records_assignee_id_fkey"
-            columns: ["editorial_assignee_id"]
+            foreignKeyName: "workflows_assignee_id_fkey"
+            columns: ["workflow_assignee_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

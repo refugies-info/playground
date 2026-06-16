@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 
 export async function updateAssigneeAction(
-  editorialRecordId: string,
+  workflowId: string,
   profileId: string | null,
 ): Promise<{ success: boolean; error?: string }> {
   const cookieStore = await cookies();
@@ -34,9 +34,9 @@ export async function updateAssigneeAction(
   }
 
   const { error } = await supabase
-    .from("editorial_records")
+    .from("workflows")
     .update({ assignee_id: profileId })
-    .eq("id", editorialRecordId);
+    .eq("id", workflowId);
 
   if (error) {
     logger.error(error, "Error updating assignee");
