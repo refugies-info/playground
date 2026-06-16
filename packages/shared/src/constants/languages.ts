@@ -78,9 +78,15 @@ export const LANGUAGE_NAMES: Record<string, string> = Object.fromEntries(
  */
 export const LETTA_AGENTS_CONFIG: Record<string, string> = {
   ar:
-    process.env.LETTA_AGENT_AR || "agent-c19d4b57-048c-48a7-8cdc-9609dab4b24b",
+    process.env.LETTA_AGENT_AR || "agent-9b1e38aa-be9c-4f18-8ada-685d6ee1ce86",
   uk:
     process.env.LETTA_AGENT_UK || "agent-add8dcc9-5d2e-4461-aa00-4bfcfe192b59",
   ru:
     process.env.LETTA_AGENT_RU || "agent-4d7f539b-797b-4b5c-9755-cdffec5cc9f7",
+  fa:
+    process.env.LETTA_AGENT_FA || "agent-09f186f2-c964-48a0-b43a-cd9f5f9cff26",
+  ps:
+    process.env.LETTA_AGENT_PS || "agent-42fb380d-5920-437f-b2f3-57d02af4c6a7",
+  en:
+    process.env.LETTA_AGENT_EN || "agent-d70a6911-8bba-4254-9daa-c810f0e3986a",
 };
