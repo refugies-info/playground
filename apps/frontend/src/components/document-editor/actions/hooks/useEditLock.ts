@@ -3,7 +3,11 @@
 import { logger } from "@playground/shared-types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { claimEditLock, releaseEditLock } from "@/services/edit-lock-actions";
+import {
+  claimEditLock,
+  forceClaimEditLock,
+  releaseEditLock,
+} from "@/services/edit-lock-actions";
 
 interface LockTakenPayload {
   by: string;
@@ -95,7 +99,7 @@ export function useEditLock(
     // "Reprendre" : force-claim the lock for me and notify the current
     // holder live so their dialog opens immediately.
     takeOverRef.current = () => {
-      claimEditLock(editorialRecordId).then(({ success, error }) => {
+      forceClaimEditLock(editorialRecordId).then(({ success, error }) => {
         if (!success) {
           logger.error(error, "Error taking over edit lock");
           return;
