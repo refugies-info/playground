@@ -63,8 +63,7 @@ function CenterContent({
  */
 function EditLockOverlay({ from }: { from: string }) {
   const router = useRouter();
-  const { isLocked } = useDocumentActions();
-  const { document } = useDocument();
+  const { isLocked, editorName, takeOverEditLock } = useDocumentActions();
 
   const backHref = from
     ? `/documents?${decodeURIComponent(from)}`
@@ -73,8 +72,9 @@ function EditLockOverlay({ from }: { from: string }) {
   return (
     <EditLockDialog
       isOpen={isLocked}
-      editorName={document?.currentEditorName}
+      editorName={editorName}
       onBack={() => router.push(backHref)}
+      onTakeOver={takeOverEditLock}
     />
   );
 }

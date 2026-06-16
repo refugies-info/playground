@@ -34,6 +34,8 @@ interface DocumentData
   editorialRecordId?: string;
   /** ID of the currently logged-in user — used by the edit-lock feature */
   currentUserId?: string;
+  /** Display name of the currently logged-in user — broadcast on takeover so the previous editor sees who took over */
+  currentUserName?: string | null;
   /** Display name of the user currently holding the edit lock — shown in EditLockDialog */
   currentEditorName?: string | null;
   /** True while an AI metadata generation is in progress — drives MetadataView spinner */

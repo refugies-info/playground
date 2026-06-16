@@ -41,6 +41,10 @@ export default async function Layout({
   // Display name of the user currently holding the edit lock (if any)
   const currentEditor = editors.find((e) => e.id === document.currentEditorId);
 
+  // Display name of the logged-in user — broadcast on takeover so the
+  // previous editor's dialog can show who took over
+  const currentUser = editors.find((e) => e.id === user?.id);
+
   // Prepare initial data for the editor
   const initialData = {
     id: document.id,
@@ -67,6 +71,7 @@ export default async function Layout({
     currentEditorId: document.currentEditorId,
     currentEditorName: currentEditor?.displayName ?? null,
     currentUserId: user?.id,
+    currentUserName: currentUser?.displayName ?? null,
   };
 
   return (

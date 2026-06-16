@@ -2,7 +2,6 @@ import { RiCheckLine, RiCloseLine } from "@playground/ui/icons";
 import {
   Dialog,
   DialogAction,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
@@ -13,12 +12,14 @@ interface EditLockDialogProps {
   isOpen: boolean;
   editorName?: string | null;
   onBack: () => void;
+  onTakeOver: () => void;
 }
 
 export function EditLockDialog({
   isOpen,
   editorName,
   onBack,
+  onTakeOver,
 }: EditLockDialogProps) {
   return (
     <Dialog
@@ -31,16 +32,17 @@ export function EditLockDialog({
         onEscapeKeyDown={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
       >
-        <DialogClose asChild>
+        <DialogAction>
           <Button
             variant="quatrieme"
             size="sm"
-            className="absolute right-4 top-4 text-[var(--text-action-high-blue-france)]"
+            className="text-[var(--text-action-high-blue-france)] "
+            onClick={onBack}
           >
             <span>Fermer</span>
             <RiCloseLine className="h-4 w-4" />
           </Button>
-        </DialogClose>
+        </DialogAction>
         <DialogTitle>Cette fiche est déjà en cours d'édition</DialogTitle>
         <DialogDescription>
           {editorName ? ` ${editorName}` : " Un autre utilisateur"} modifie
@@ -51,22 +53,20 @@ export function EditLockDialog({
           Attention, cela annulera les modifications de{" "}
           {editorName ? ` ${editorName}` : " l'autre utilisateur"}.
         </DialogDescription>
-        <DialogAction>
+        <DialogAction className="pt-8 pb-4 pr-4 pl-4">
           <Button
             onClick={onBack}
             variant="secondaire"
-            size="sm"
-            className="h-8 text-xs"
+            size="md"
             rightIcon={RiCloseLine}
           >
             Quitter
           </Button>
           <Button
-            onClick={onBack}
+            onClick={onTakeOver}
             variant="primaire"
-            size="sm"
+            size="md"
             rightIcon={RiCheckLine}
-            className="h-8 text-xs"
           >
             Reprendre
           </Button>

@@ -68,6 +68,8 @@ interface DocumentActionsContextValue {
 
   // Edit lock
   isLocked: boolean;
+  editorName: string | null;
+  takeOverEditLock: () => void;
 }
 
 // =============================================================================
@@ -209,10 +211,12 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
 
   useAutosave(isDirty, saveDocument);
 
-  const { isLocked } = useEditLock(
+  const { isLocked, editorName, takeOver } = useEditLock(
     document?.editorialRecordId,
     document?.currentUserId,
+    document?.currentUserName,
     document?.currentEditorId,
+    document?.currentEditorName,
   );
 
   // =============================================================================
@@ -324,6 +328,8 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
     archiveDocument,
     isArchiving,
     isLocked,
+    editorName,
+    takeOverEditLock: takeOver,
   };
 
   return (

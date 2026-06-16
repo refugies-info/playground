@@ -7,7 +7,6 @@ import { cn } from "../utils/cn";
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogPortal = DialogPrimitive.Portal;
-const DialogClose = DialogPrimitive.Close;
 
 const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
@@ -35,11 +34,11 @@ const DialogContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={ref}
         className={cn(
-          "relative z-101 w-[520px] outline-none p-6",
+          "relative z-101 w-[520px] outline-none p-4",
           "bg-white rounded-[2px]",
           "border border-[var(--border-default-blue-france,#6a6af4)]",
           "shadow-[0px_2px_6px_0px_rgba(0,0,18,0.16)]",
-          "flex flex-col items-center gap-4",
+          "flex flex-col flex-start gap-4",
           className,
         )}
         {...props}
@@ -58,7 +57,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-2xl font-bold text-gray-900 text-left max-w-sm",
+      "text-2xl font-bold text-gray-900 text-left pr-4 pl-4",
       className,
     )}
     {...props}
@@ -72,7 +71,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-s text-gray-600 text-left max-w-sm", className)}
+    className={cn("text-s text-gray-600 text-left pr-4 pl-4", className)}
     {...props}
   />
 ));
@@ -99,5 +98,4 @@ export {
   DialogTitle,
   DialogDescription,
   DialogAction,
-  DialogClose,
 };
