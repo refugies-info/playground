@@ -4,7 +4,7 @@
 -- tab disconnects), this lets a second editor be warned and take over once
 -- the first one leaves the page.
 
-ALTER TABLE editorial_records ADD COLUMN current_editor_id uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+ALTER TABLE editorial_records ADD COLUMN IF NOT EXISTS current_editor_id uuid REFERENCES auth.users(id) ON DELETE SET NULL;
 
 COMMENT ON COLUMN editorial_records.current_editor_id IS
   'User currently editing this fiche. NULL when no one holds the edit lock.';
