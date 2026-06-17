@@ -16,7 +16,7 @@ interface LockTakenPayload {
 
 /**
  * Edit lock for a fiche, backed by `editorial_records.current_editor_id` and
- * kept live via Supabase Realtime Presence + Broadcast on
+ * kept live via Supabase Realtime Presence + Broadcast on the channel called
  * `editorial-lock-${editorialRecordId}`:
  *
  * - `join` (my own key, lock free) -> write `current_editor_id = me`
@@ -32,7 +32,7 @@ interface LockTakenPayload {
  */
 export function useEditLock(
   editorialRecordId: string | undefined,
-  currentUserId: string | undefined,
+  currentUserId: string | null | undefined,
   currentUserName: string | null | undefined,
   initialEditorId: string | null | undefined,
   initialEditorName: string | null | undefined,
