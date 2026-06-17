@@ -83,6 +83,8 @@ export interface Document {
   activeRunId?: string;
   /** User ID currently holding the edit lock on this fiche (NULL if free) */
   currentEditorId?: string | null;
+  /** Display name of the user currently holding the edit lock on this fiche (NULL if free) */
+  currentEditorName?: string | null;
 }
 
 export interface RiMetadata {

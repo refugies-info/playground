@@ -2,7 +2,7 @@ import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { DocumentLayout } from "@/components/document-editor/shared";
-import { getAuthUser } from "@/lib/auth";
+import { getAuthUser, getUserProfile } from "@/lib/auth";
 import { getDocumentById, getEditorsList } from "@/services/documents";
 import { fetchRiReferenceData } from "@/services/ri-reference-data";
 
@@ -33,17 +33,12 @@ export default async function Layout({
     getEditorsList(),
   ]);
 
+  const userProfile = await getUserProfile(supabase, user.id);
+
   // If document not found, show 404
   if (!document) {
     notFound();
   }
-
-  // Display name of the user currently holding the edit lock (if any)
-  const currentEditor = editors.find((e) => e.id === document.currentEditorId);
-
-  // Display name of the logged-in user — broadcast on takeover so the
-  // previous editor's dialog can show who took over
-  const currentUser = editors.find((e) => e.id === user?.id);
 
   // Prepare initial data for the editor
   const initialData = {
@@ -69,9 +64,9 @@ export default async function Layout({
     activeRunId: document.activeRunId,
     assigneeEmail: document.assigneeEmail,
     currentEditorId: document.currentEditorId,
-    currentEditorName: currentEditor?.displayName ?? null,
-    currentUserId: user?.id,
-    currentUserName: currentUser?.displayName ?? null,
+    currentEditorName: document.currentEditorName,
+    currentUserId: user.id,
+    currentUserName: userProfile.username,
   };
 
   return (
