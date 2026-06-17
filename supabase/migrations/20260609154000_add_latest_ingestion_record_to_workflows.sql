@@ -235,7 +235,7 @@ SELECT
     -- Content sources: active ingestion is the source of truth for the current UI.
     er.markdown as editorial_markdown,
     er.metadata as editorial_metadata,
-    er.assignee_id as editorial_assignee_id,
+    NULL::uuid as editorial_assignee_id,
     active_ir.markdown as ingestion_markdown,
     active_ir.metadata as ingestion_metadata,
     active_ir.created_at as ingestion_created_at,
@@ -260,13 +260,8 @@ SELECT
         ORDER BY pr.updated_at DESC NULLS LAST, pr.created_at DESC NULLS LAST
         LIMIT 1
     ) as latest_publication,
-    -- Assignee: dedicated text column for sort + filter (RI-1146)
-    -- LEFT JOIN replaces the previous correlated subquery for better performance
-    p.email as assignee_email,
-    CASE
-        WHEN p.id IS NOT NULL THEN jsonb_build_object('email', p.email, 'role', p.role)
-        ELSE NULL
-    END as assignee_profile,
+    NULL::text as assignee_email,
+    NULL::jsonb as assignee_profile,
     -- Location (commune): editorial override first, active ingestion fallback (RI-1146)
     -- Root-level key in RCO ingestion metadata, e.g. "Blois", "Mantes-la-Jolie"
     COALESCE(
@@ -314,7 +309,6 @@ FROM workflows w
 LEFT JOIN editorial_records er ON er.id = w.editorial_record_id
 LEFT JOIN ingestion_records active_ir ON active_ir.id = w.ingestion_record_id
 LEFT JOIN ingestion_records latest_ir ON latest_ir.id = COALESCE(w.latest_ingestion_record_id, w.ingestion_record_id)
-LEFT JOIN profiles p ON p.id = er.assignee_id
 LEFT JOIN di_structures ds_struct ON ds_struct.id = active_ir.di_structure_id
 LEFT JOIN di_services ds_service ON ds_service.id = active_ir.di_service_id
 LEFT JOIN LATERAL (
