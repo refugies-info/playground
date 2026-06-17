@@ -194,15 +194,29 @@ BEGIN
     ir.id,
     ir.markdown,
     w.id AS workflow_id,
-    (
-      w.latest_ingestion_record_id = ir.id
-      AND w.ingestion_record_id IS DISTINCT FROM w.latest_ingestion_record_id
-    ) AS is_pending_update
+    w.is_pending_update
   FROM public.ingestion_records ir
   INNER JOIN claimed cl ON cl.ingestion_record_id = ir.id
-  INNER JOIN public.workflows w
-    ON w.ingestion_record_id = ir.id
-    OR w.latest_ingestion_record_id = ir.id;
+  INNER JOIN LATERAL (
+    SELECT
+      matched_w.id,
+      (
+        matched_w.latest_ingestion_record_id = ir.id
+        AND matched_w.ingestion_record_id IS DISTINCT FROM matched_w.latest_ingestion_record_id
+      ) AS is_pending_update
+    FROM public.workflows matched_w
+    WHERE matched_w.ingestion_record_id = ir.id
+       OR matched_w.latest_ingestion_record_id = ir.id
+    ORDER BY
+      (
+        matched_w.latest_ingestion_record_id = ir.id
+        AND matched_w.ingestion_record_id IS DISTINCT FROM matched_w.latest_ingestion_record_id
+      ) DESC,
+      (matched_w.ingestion_record_id = ir.id) DESC,
+      matched_w.updated_at DESC NULLS LAST,
+      matched_w.id DESC
+    LIMIT 1
+  ) w ON true;
 END;
 $$;
 
