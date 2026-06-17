@@ -24,8 +24,6 @@ interface LockTakenPayload {
  *   NULL. `leave` is detected server-side (websocket heartbeat), so this
  *   also covers crashes/hard tab closes, as long as another client is
  *   subscribed to react to it.
- * - `sync` (on connect) -> if the recorded holder isn't actually present
- *   anymore, the lock is stale -> reset it immediately.
  * - `lock-taken` (broadcast, sent by `takeOver`) -> the lock was forcibly
  *   reclaimed by another client; update `isLocked`/`editorName` live so the
  *   previous holder sees the warning dialog without reloading.
