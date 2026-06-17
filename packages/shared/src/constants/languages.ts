@@ -89,4 +89,6 @@ export const LETTA_AGENTS_CONFIG: Record<string, string> = {
     process.env.LETTA_AGENT_PS || "agent-42fb380d-5920-437f-b2f3-57d02af4c6a7",
   en:
     process.env.LETTA_AGENT_EN || "agent-d70a6911-8bba-4254-9daa-c810f0e3986a",
+  ti:
+    process.env.LETTA_AGENT_TI || "agent-6d7756b8-854a-45d3-bc49-8bfb412a5861",
 };
