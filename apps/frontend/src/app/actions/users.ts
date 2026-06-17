@@ -51,27 +51,22 @@ async function assertAdmin() {
 // User Schemas
 const createUserSchema = z.object({
   email: z.string().email(),
-  username: z.string().min(2).max(50).optional(),
+  username: z.string().min(2).max(50),
   role: z.enum(["admin", "editor", "translator"]),
   language: z.string().optional(),
 });
 
 const updateUserSchema = z.object({
   id: z.string().uuid(),
-  username: z.string().min(2).max(50).optional(),
+  username: z.string().min(2).max(50),
   role: z.enum(["admin", "editor", "translator"]),
   language: z.string().optional(),
 });
 
-export type CreateUserState = {
-  message?: string;
-  error?: string;
-};
-
 // Create User
 export async function createUser(data: {
   email: string;
-  username?: string;
+  username: string;
   role: string;
   language?: string;
 }) {
@@ -111,7 +106,10 @@ export async function createUser(data: {
     // on auth.users INSERT, but upsert is safer if the trigger hasn't fired yet.
     const { error: profileError } = await adminClient
       .from("profiles")
-      .upsert({ id: inviteData.user.id, role, language }, { onConflict: "id" });
+      .upsert(
+        { id: inviteData.user.id, role, language, username },
+        { onConflict: "id" },
+      );
 
     if (profileError) {
       logger.error(
@@ -136,7 +134,7 @@ export async function createUser(data: {
 // Update User
 export async function updateUser(data: {
   id: string;
-  username?: string;
+  username: string;
   role: string;
   language?: string;
 }) {
@@ -173,7 +171,7 @@ export async function updateUser(data: {
     // role and language → profiles (source of truth for RBAC)
     const { error: profileError } = await adminClient
       .from("profiles")
-      .update({ role, language })
+      .update({ role, language, username })
       .eq("id", id);
 
     if (profileError) {

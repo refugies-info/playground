@@ -29,13 +29,32 @@ export async function extractTitleFromMarkdown(
     for (const node of tree.children) {
       if (node.type === "heading" && (node as Heading).depth === 1) {
         const heading = node as Heading;
-        // Extract text from heading children
-        const text = heading.children
-          .filter((child) => child.type === "text")
-          .map((child) => ("value" in child ? child.value : ""))
-          .join("")
-          .trim();
-
+        // Extract text from heading children recursively (handles **bold**, _em_, etc.)
+        const extractText = (
+          nodes: { type: string; value?: string; children?: unknown[] }[],
+        ): string =>
+          nodes
+            .map((n) =>
+              "value" in n && n.value
+                ? n.value
+                : n.children
+                  ? extractText(
+                      n.children as {
+                        type: string;
+                        value?: string;
+                        children?: unknown[];
+                      }[],
+                    )
+                  : "",
+            )
+            .join("");
+        const text = extractText(
+          heading.children as {
+            type: string;
+            value?: string;
+            children?: unknown[];
+          }[],
+        ).trim();
         if (text) {
           return text;
         }

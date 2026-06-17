@@ -46,7 +46,18 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
   const handleExit = useCallback(() => {
     setIsEditing(false);
     if (localPois.length > 0) {
-      const poisToSave = localPois.map(({ _poiId, ...poi }) => poi);
+      const poisToSave = localPois.map(({ _poiId, ...poi }) => {
+        const result = { ...poi };
+        if (result.lat !== undefined && result.lat !== "") {
+          const parsed = parseFloat(String(result.lat));
+          if (!isNaN(parsed)) result.lat = parsed;
+        }
+        if (result.lng !== undefined && result.lng !== "") {
+          const parsed = parseFloat(String(result.lng));
+          if (!isNaN(parsed)) result.lng = parsed;
+        }
+        return result;
+      });
       updateField(fieldKey, poisToSave);
     }
   }, [fieldKey, updateField, localPois]);

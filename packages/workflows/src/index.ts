@@ -8,8 +8,6 @@ export type { PersistEditorialWorkflowResult } from "./pipelines/editorial/persi
 export { persistEditorialWorkflow } from "./pipelines/editorial/persist-editorial";
 export type { PersistMetadataWorkflowResult } from "./pipelines/editorial/persist-metadata";
 export { persistMetadataWorkflow } from "./pipelines/editorial/persist-metadata";
-export type { SaveWorkflowResult } from "./pipelines/editorial/save";
-export { saveWorkflow } from "./pipelines/editorial/save";
 export type { ToggleStatusResult } from "./pipelines/editorial/toggle-status";
 export { toggleStatusWorkflow } from "./pipelines/editorial/toggle-status";
 // =============================================================================
