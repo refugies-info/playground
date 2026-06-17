@@ -206,6 +206,7 @@ export type Database = {
           ingestion_report_id: string | null
           markdown: string
           metadata: Json
+          metadata_report_id: string | null
           origin: string
           rco_record_id: string | null
           updated_at: string
@@ -220,6 +221,7 @@ export type Database = {
           ingestion_report_id?: string | null
           markdown: string
           metadata: Json
+          metadata_report_id?: string | null
           origin?: string
           rco_record_id?: string | null
           updated_at?: string
@@ -234,6 +236,7 @@ export type Database = {
           ingestion_report_id?: string | null
           markdown?: string
           metadata?: Json
+          metadata_report_id?: string | null
           origin?: string
           rco_record_id?: string | null
           updated_at?: string
@@ -271,6 +274,13 @@ export type Database = {
           {
             foreignKeyName: "ingestion_records_ingestion_report_id_fkey"
             columns: ["ingestion_report_id"]
+            isOneToOne: false
+            referencedRelation: "letta_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ingestion_records_metadata_report_id_fkey"
+            columns: ["metadata_report_id"]
             isOneToOne: false
             referencedRelation: "letta_reports"
             referencedColumns: ["id"]
@@ -573,6 +583,7 @@ export type Database = {
           metadata: Json | null
           metadata_report_id: string | null
           online_status: string | null
+          priority: string | null
           updated_at: string
           work_status: string | null
           workflow_id: string | null
@@ -588,6 +599,7 @@ export type Database = {
           metadata?: Json | null
           metadata_report_id?: string | null
           online_status?: string | null
+          priority?: string | null
           updated_at?: string
           work_status?: string | null
           workflow_id?: string | null
@@ -603,6 +615,7 @@ export type Database = {
           metadata?: Json | null
           metadata_report_id?: string | null
           online_status?: string | null
+          priority?: string | null
           updated_at?: string
           work_status?: string | null
           workflow_id?: string | null
@@ -660,6 +673,7 @@ export type Database = {
           editorial_record_id: string | null
           id: string
           ingestion_record_id: string | null
+          latest_ingestion_record_id: string | null
           rco_record_id: string | null
           updated_at: string
           vercel_hook_token: string | null
@@ -672,6 +686,7 @@ export type Database = {
           editorial_record_id?: string | null
           id?: string
           ingestion_record_id?: string | null
+          latest_ingestion_record_id?: string | null
           rco_record_id?: string | null
           updated_at?: string
           vercel_hook_token?: string | null
@@ -684,6 +699,7 @@ export type Database = {
           editorial_record_id?: string | null
           id?: string
           ingestion_record_id?: string | null
+          latest_ingestion_record_id?: string | null
           rco_record_id?: string | null
           updated_at?: string
           vercel_hook_token?: string | null
@@ -716,6 +732,13 @@ export type Database = {
             columns: ["rco_record_id"]
             isOneToOne: false
             referencedRelation: "rco_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflows_latest_ingestion_record_id_fkey"
+            columns: ["latest_ingestion_record_id"]
+            isOneToOne: false
+            referencedRelation: "ingestion_records"
             referencedColumns: ["id"]
           },
         ]
@@ -769,6 +792,7 @@ export type Database = {
       }
       workflows_enriched: {
         Row: {
+          active_ingestion_version: number | null
           assignee_email: string | null
           assignee_profile: Json | null
           commune: string | null
@@ -780,6 +804,7 @@ export type Database = {
           editorial_metadata: Json | null
           editorial_record_id: string | null
           external_id: string | null
+          has_pending_ingestion_update: boolean | null
           has_publication_history: boolean | null
           id: string | null
           ingestion_created_at: string | null
@@ -788,6 +813,7 @@ export type Database = {
           ingestion_record_id: string | null
           ingestion_report_id: string | null
           ingestion_word_count: number | null
+          latest_ingestion_version: number | null
           latest_publication: Json | null
           modalites_entrees_sorties: string | null
           quality_score: number | null
@@ -850,6 +876,7 @@ export type Database = {
         }
         Returns: {
           id: string
+          is_pending_update: boolean
           markdown: string
           workflow_id: string
         }[]
@@ -1150,6 +1177,7 @@ export type Database = {
           id: string
           in_progress_size: number
           key: string
+          metadata: Json | null
           owner_id: string | null
           upload_signature: string
           user_metadata: Json | null
@@ -1161,6 +1189,7 @@ export type Database = {
           id: string
           in_progress_size?: number
           key: string
+          metadata?: Json | null
           owner_id?: string | null
           upload_signature: string
           user_metadata?: Json | null
@@ -1172,6 +1201,7 @@ export type Database = {
           id?: string
           in_progress_size?: number
           key?: string
+          metadata?: Json | null
           owner_id?: string | null
           upload_signature?: string
           user_metadata?: Json | null
@@ -1290,6 +1320,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      allow_any_operation: {
+        Args: { expected_operations: string[] }
+        Returns: boolean
+      }
+      allow_only_operation: {
+        Args: { expected_operation: string }
+        Returns: boolean
+      }
       can_insert_object: {
         Args: { bucketid: string; metadata: Json; name: string; owner: string }
         Returns: undefined

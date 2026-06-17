@@ -120,6 +120,9 @@ export function DocumentProvider({
     initialData?.activeRunId,
     initialData?.onlineStatus,
     initialData?.assigneeEmail,
+    initialData?.activeIngestionVersion,
+    initialData?.latestIngestionVersion,
+    initialData?.hasPendingIngestionUpdate,
   ]);
 
   // Update content and mark as dirty (only if content actually changed)
