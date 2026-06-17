@@ -15,22 +15,30 @@
 --   - action           : machine-readable event type, used for filtering/stats.
 --   - activity         : free-form JSONB payload (before/after snapshots, extra
 --                        metadata). Kept open for future event shapes.
---   - token_cost       : dedicated column (not buried in JSONB) so cost can be
---     model_name         aggregated cheaply — SUM/AVG per document or globally —
---                        without JSONB casts. NULL for non-AI actions.
+--   - letta_report_id  : optional link to the letta_reports row that produced
+--                        this action. letta_reports is the table holding every
+--                        LLM interaction, so AI cost/model metadata (token_cost,
+--                        model_name — added below) live there, not on the log.
+--                        Join activity_logs -> letta_reports on this FK to read
+--                        them. NULL for non-AI actions.
 
 create table public.activity_logs (
   id uuid not null default gen_random_uuid(),
   author_id uuid,
   target_profile_id uuid,
   workflow_id uuid,
+  letta_report_id uuid,
   action varchar(200) not null,
   activity jsonb not null default '{}'::jsonb,
-  token_cost integer,
-  model_name varchar(200),
   created_at timestamptz not null default now(),
   primary key (id)
 );
+
+-- AI cost/model metadata belongs on letta_reports (the LLM-interaction table),
+-- so it can be aggregated per report regardless of how many log rows reference it.
+alter table public.letta_reports
+  add column token_cost integer,
+  add column model varchar(200);
 
 -- Foreign keys (all SET NULL: preserve the log row when a referenced entity is deleted)
 alter table public.activity_logs
@@ -48,11 +56,17 @@ alter table public.activity_logs
   foreign key (workflow_id) references public.workflows(id)
   on update cascade on delete set null;
 
+alter table public.activity_logs
+  add constraint activity_logs_letta_report_id_fkey
+  foreign key (letta_report_id) references public.letta_reports(id)
+  on update cascade on delete set null;
+
 -- Indexes for the common access paths: per-document timeline, per-actor history,
 -- target lookups (assignations), and event-type filtering for stats.
 create index activity_logs_workflow_id_idx on public.activity_logs (workflow_id);
 create index activity_logs_author_id_idx on public.activity_logs (author_id);
 create index activity_logs_target_profile_id_idx on public.activity_logs (target_profile_id);
+create index activity_logs_letta_report_id_idx on public.activity_logs (letta_report_id);
 create index activity_logs_action_idx on public.activity_logs (action);
 create index activity_logs_created_at_idx on public.activity_logs (created_at desc);
 -- GIN index for querying inside the JSONB payload when stats need it.
