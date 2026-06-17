@@ -409,7 +409,6 @@ INSERT INTO public.editorial_records (
   ingestion_record_id,
   markdown,
   metadata,
-  assignee_id,
   online_status,
   work_status
 )
@@ -421,7 +420,6 @@ VALUES
     '12420000-0000-4000-8000-000000001301',
     '# RI-1242 - pending éditorialisé\n\n## Scénario de test visible côté admin\n\nCette fiche éditoriale est volontairement basée sur la source DI v1.\n\nUne version DI v2 existe aussi, mais elle doit rester en mise à jour en attente tant qu’elle n’est pas acceptée explicitement.\n\nComportement attendu :\n\n- le contenu actif affiché dans l’éditeur reste ce contenu éditorial v1 ;\n- le workflow affiche active v1 / latest v2 ;\n- le label de version attendu est 1/2 ;\n- les rapports metadata v2 ne doivent pas remplacer les metadata actives v1.',
     '{"title":"RI-1242 - pending éditorialisé"}'::jsonb,
-    'b1bb04e3-c07b-4e22-a7eb-fea7db0a2b1c',
     NULL,
     'draft'
   )
@@ -472,7 +470,6 @@ INSERT INTO public.editorial_records (
   ingestion_record_id,
   markdown,
   metadata,
-  assignee_id,
   online_status,
   work_status
 )
@@ -483,11 +480,17 @@ VALUES (
   '12420000-0000-4000-8000-000000001401',
   '# RI-1242 - pending unaudited éditorialisé\n\n## Scénario de test visible côté admin\n\nCette fiche éditoriale est basée sur la source DI v1.\n\nUne version DI v2 existe, mais elle n’a pas encore de rapport d’audit ni de rapport metadata.\n\nComportement attendu :\n\n- le workflow affiche active v1 / latest v2 ;\n- le label de version attendu est 1/2 ;\n- la v2 doit être retournée par claim_di_audit_targets ;\n- is_pending_update doit valoir true dans le résultat de claim.',
   '{"title":"RI-1242 - pending unaudited éditorialisé"}'::jsonb,
-  'b1bb04e3-c07b-4e22-a7eb-fea7db0a2b1c',
   NULL,
   'draft'
 )
 ON CONFLICT DO NOTHING;
+
+UPDATE public.workflows
+SET assignee_id = 'b1bb04e3-c07b-4e22-a7eb-fea7db0a2b1c'
+WHERE editorial_record_id IN (
+  '12420000-0000-4000-8000-000000003301',
+  '12420000-0000-4000-8000-000000003401'
+);
 
 INSERT INTO public.ingestion_records (
   id,

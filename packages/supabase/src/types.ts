@@ -707,13 +707,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "workflows_assignee_id_fkey"
-            columns: ["assignee_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "status_editorial_record_id_fkey"
             columns: ["editorial_record_id"]
             isOneToOne: false
@@ -732,6 +725,13 @@ export type Database = {
             columns: ["rco_record_id"]
             isOneToOne: false
             referencedRelation: "rco_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflows_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -830,13 +830,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "workflows_assignee_id_fkey"
-            columns: ["workflow_assignee_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "ingestion_records_ingestion_report_id_fkey"
             columns: ["ingestion_report_id"]
             isOneToOne: false
@@ -862,6 +855,13 @@ export type Database = {
             columns: ["rco_record_id"]
             isOneToOne: false
             referencedRelation: "rco_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflows_assignee_id_fkey"
+            columns: ["workflow_assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
