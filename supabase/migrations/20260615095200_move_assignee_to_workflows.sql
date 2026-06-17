@@ -43,6 +43,13 @@ SELECT
     w.editorial_record_id,
     w.ingestion_record_id,
     w.created_at,
+    ir.version as active_ingestion_version,
+    latest_ir.version as latest_ingestion_version,
+    CASE
+        WHEN w.latest_ingestion_record_id IS NULL THEN false
+        ELSE w.ingestion_record_id IS DISTINCT FROM w.latest_ingestion_record_id
+            AND COALESCE(latest_ir.version, 0) > COALESCE(ir.version, 0)
+    END as has_pending_ingestion_update,
     -- Computed work_status: editorial_record.work_status OR fallback logic
     CASE
         WHEN er.work_status IS NOT NULL THEN er.work_status
@@ -133,6 +140,7 @@ SELECT
 FROM workflows w
 LEFT JOIN editorial_records er ON er.id = w.editorial_record_id
 LEFT JOIN ingestion_records ir ON ir.id = w.ingestion_record_id
+LEFT JOIN ingestion_records latest_ir ON latest_ir.id = COALESCE(w.latest_ingestion_record_id, w.ingestion_record_id)
 LEFT JOIN profiles p ON p.id = w.assignee_id
 LEFT JOIN di_structures ds_struct ON ds_struct.id = ir.di_structure_id
 LEFT JOIN di_services ds_service ON ds_service.id = ir.di_service_id
