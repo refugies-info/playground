@@ -6,17 +6,26 @@
  * paid agents by accident. Requires local mode (LETTA_BASE_URL set, or
  * LETTA_ENVIRONMENT=local).
  *
- * Usage:
- *   docker compose -f docker-compose.letta.yml up -d
- *   docker compose -f docker-compose.letta.yml exec ollama ollama pull qwen2.5:7b
- *   docker compose -f docker-compose.letta.yml exec ollama ollama pull nomic-embed-text
+ * Usage (one shot):
+ *   pnpm letta:init
+ *
+ * Or manually:
+ *   pnpm letta:up
+ *   pnpm letta:pull            # pulls qwen2.5:0.5b + nomic-embed-text
+ *   pnpm letta:sync            # restart Letta so it discovers the new models
  *   LETTA_BASE_URL=http://localhost:8283 pnpm agents:create-local
  *
- * Optional env overrides:
- *   LOCAL_LLM_MODEL        — model handle (default: ollama/qwen2.5:7b)
- *   LOCAL_EMBEDDING_MODEL  — embedding handle (default: ollama/nomic-embed-text)
+ * Letta agents require a tool-capable model: gemma3:1b has no `tools`
+ * capability and is silently dropped ("Synced 0 LLM models"). qwen2.5:0.5b
+ * is the smallest tool-capable option. Letta only syncs Ollama models at
+ * startup, so always restart Letta after pulling a new model.
  *
- * See packages/agents/LOCAL_DEV.md.
+ * Optional env overrides:
+ *   LOCAL_LLM_MODEL        — model handle (default: ollama/qwen2.5:0.5b,
+ *                            or letta/letta-free for the free cloud endpoint)
+ *   LOCAL_EMBEDDING_MODEL  — embedding handle (default: ollama/nomic-embed-text:latest)
+ *
+ * See documentation/ai/local-letta-dev.md.
  */
 import "dotenv/config";
 import { logger } from "@playground/shared-types";
@@ -26,9 +35,18 @@ const isLocal =
   process.env.LETTA_ENVIRONMENT === "local" ||
   Boolean(process.env.LETTA_BASE_URL);
 
-const MODEL = process.env.LOCAL_LLM_MODEL ?? "ollama/gemma3:1b";
+// Default: local Ollama model. This is the only zero-cost option that actually
+// runs inference on the self-hosted server — letta/letta-free creates fine but
+// 401s at inference time (it routes to inference.letta.com and needs Letta
+// Cloud auth the self-hosted server doesn't have).
+//
+// Letta agents need a tool-capable model:
+// qwen2.5:0.5b (~400MB) is the smallest tool-capable option; quality is low but
+// fine for plumbing/dev. For real quality, use Letta Cloud (api.letta.com) with
+// a valid LETTA_API_KEY + the letta/letta-free model there.
+const MODEL = process.env.LOCAL_LLM_MODEL ?? "ollama/qwen2.5:0.5b";
 const EMBEDDING =
-  process.env.LOCAL_EMBEDDING_MODEL ?? "ollama/nomic-embed-text";
+  process.env.LOCAL_EMBEDDING_MODEL ?? "ollama/nomic-embed-text:latest";
 
 // One agent per flow. envVar is what to set in .env to point the app at it.
 const AGENTS = [

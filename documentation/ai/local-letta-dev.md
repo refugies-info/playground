@@ -35,11 +35,12 @@ Helper scripts:
 | Command                  | Does                                              |
 | ------------------------ | ------------------------------------------------- |
 | `pnpm letta:up`          | start Letta + Ollama (detached)                   |
-| `pnpm letta:pull`        | pull `gemma3:1b` + `nomic-embed-text`             |
+| `pnpm letta:pull`        | pull `qwen2.5:0.5b` + `nomic-embed-text`          |
+| `pnpm letta:sync`        | restart Letta so it discovers newly pulled models |
 | `pnpm letta:logs`        | tail server logs                                  |
 | `pnpm letta:down`        | stop the stack                                    |
 | `pnpm agents:create-local` | create local agents, print their IDs            |
-| `pnpm letta:init`        | up + pull + create-local (all of the above)       |
+| `pnpm letta:init`        | up + pull + sync + create-local (all of the above)|
 
 ## Manual setup
 
@@ -51,11 +52,28 @@ pnpm letta:up
 
 ### 2. Pull a local model
 
-`gemma3:1b` is the default — tiny, runs on modest hardware. Use a larger model
-(`qwen2.5:7b`, `llama3.1:8b`, …) for better quality.
+`qwen2.5:0.5b` is the default — ~400MB, runs on modest hardware. Use a larger
+model (`qwen2.5:3b`, `qwen2.5:7b`, `llama3.1:8b`, …) for better quality.
 
 ```bash
 pnpm letta:pull
+```
+
+> ⚠️ Letta agents need a **tool-capable** model (function calling). `gemma3:1b`
+> has no `tools` capability and is silently dropped — you'll see
+> `Synced 0 LLM models` in the logs and `Handle ... not found, must be one of []`
+> when creating agents. Check a model with `ollama show <model>` → `Capabilities`.
+
+> ⚠️ **Do not use `letta/letta-free` on the self-hosted server.** For free *and* prod-grade
+> quality, use **Letta Cloud** (`LETTA_BASE_URL=https://api.letta.com`) with a
+> valid `LETTA_API_KEY` and the `letta/letta-free` model there. On self-hosted,
+> Ollama is the only zero-cost option that actually runs.
+
+Letta only discovers Ollama models **at startup**. After pulling a new model,
+restart it so the model registers:
+
+```bash
+pnpm letta:sync
 ```
 
 ### 3. Point the app at the local server
@@ -98,6 +116,12 @@ pnpm tsx scripts/list-agents.ts
 
 Comment out / remove `LETTA_BASE_URL` in `.env`. Cloud mode resumes and uses
 `LETTA_API_KEY` + `LETTA_PROJECT_ID` again.
+
+## Which `.env`?
+
+- **Root `/.env`** — backend, agents, scripts (`createLettaClient`, `pnpm agents:create-local`).
+  This is where `LETTA_*` and `*_AGENT_ID` live.
+- **`apps/frontend/.env`** — Next.js frontend only (`NEXT_PUBLIC_*`).
 
 ## Notes
 

@@ -6,7 +6,9 @@
 # Letta UI / API: http://localhost:8283  (set LETTA_BASE_URL=http://localhost:8283 in .env)
 # Stop:    docker compose -f docker-compose.letta.yml down
 #
-# See packages/agents/LOCAL_DEV.md for the full walkthrough.
+# See documentation/ai/local-letta-dev.md for the full walkthrough.
+
+name: content-playground
 
 services:
   ollama:
@@ -17,14 +19,6 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     restart: unless-stopped
-    # For NVIDIA GPU, uncomment:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
 
   letta:
     image: letta/letta:latest
