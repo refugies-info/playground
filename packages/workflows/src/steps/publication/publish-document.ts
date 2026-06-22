@@ -1,6 +1,7 @@
 import { extractTitleFromMarkdown, logger } from "@playground/shared-types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { StepResult } from "../../types";
+import { recordActivity } from "../common/activity-log";
 import { getSupabaseClient } from "../common/supabase";
 import { getPublisherAdapter } from "./adapters/refugies-info";
 
@@ -365,6 +366,14 @@ export async function publishDocumentStep(
       { workflowId, remoteId, publishedUrl },
       "Document published successfully",
     );
+
+    // Append-only audit trail: record the publication event.
+    await recordActivity({
+      action: "publication",
+      authorId: userId,
+      workflowId,
+      activity: { publicationRecordId, remoteId, publishedUrl },
+    });
 
     return {
       success: true,
