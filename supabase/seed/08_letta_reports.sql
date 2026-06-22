@@ -1193,6 +1193,98 @@ Au début de la formation, vous passez un test. Ce test permet de connaître vot
 **Soft skills** : Compétences personnelles comme la communication, le travail en équipe, l'organisation.
 
 **AFPA** : Agence nationale pour la Formation Professionnelle des Adultes. C'est un organisme public qui propose des formations pour les adultes.$seed$, $seed$f411d731-ba70-42d7-85da-e05dc79f951b$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$b8611875-ecd7-4141-a08e-020f0846f998$seed$, $seed$2026-02-25 15:52:49.160481+00$seed$, $seed$2026-02-25 15:52:49.160481$seed$, $seed$ingestion$seed$, $seed$---
+compliant: true
+duplicate: false
+carif_oref_url: >-
+  https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242984_SE_0001611012.html
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-02-25T15:52:49.065Z'
+---
+
+# Rapport de traitement DI
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale:** Fiche acceptée ✅
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (primo-arrivant), `81042` (réfugié) | ✅ Accepté |
+| 4. Type dispositif | ASL complémentaire CIR – Formation de droit commun utile aux réfugiés | ✅ Accepté |
+| 5. Durée | 271 jours (29/09/2025 → 26/06/2026) | ✅ Accepté |
+| 6. Volume horaire | 120h | ✅ Accepté |
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision:** `duplicate: false` 🆗 — Nouveau dispositif
+
+### Analyse comparative
+
+| Axe | Fiche DI | Dispositifs existants |
+|-----|----------|----------------------|
+| 📍 Localisation | **77 - Seine-et-Marne** (Pontault-Combault) | Aucun dispositif ASL trouvé à Pontault-Combault |
+| 🏢 Structure | **Association animation centre social** | Structure non référencée dans la base |
+| 📝 Contenu | ASL complémentaires CIR + Compétences Pro | Dispositifs ASL similaires dans d'autres départements (10 - Aube, 42 - Loire) mais pas en 77 |
+
+### Justification
+Aucun dispositif existant ne correspond à cette combinaison :
+- La structure "Association animation centre social" n'apparaît pas dans la base RI
+- Aucun dispositif ASL n'est référencé pour Pontault-Combault (77)
+- Les dispositifs similaires (ASL Pôle Social Le Corbusier, Centre Alpha Choisy) couvrent d'autres territoires
+
+**→ Cette fiche peut être créée comme nouveau dispositif.**
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-02-25T15:52:49.065Z"}, "compliant": true, "duplicate": false, "carif_oref_url": "https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242984_SE_0001611012.html"}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
+compliant: true
+duplicate: false
+carif_oref_url: https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242984_SE_0001611012.html
+---
+
+# Rapport de traitement DI
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale:** Fiche acceptée ✅
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (primo-arrivant), `81042` (réfugié) | ✅ Accepté |
+| 4. Type dispositif | ASL complémentaire CIR – Formation de droit commun utile aux réfugiés | ✅ Accepté |
+| 5. Durée | 271 jours (29/09/2025 → 26/06/2026) | ✅ Accepté |
+| 6. Volume horaire | 120h | ✅ Accepté |
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision:** `duplicate: false` 🆗 — Nouveau dispositif
+
+### Analyse comparative
+
+| Axe | Fiche DI | Dispositifs existants |
+|-----|----------|----------------------|
+| 📍 Localisation | **77 - Seine-et-Marne** (Pontault-Combault) | Aucun dispositif ASL trouvé à Pontault-Combault |
+| 🏢 Structure | **Association animation centre social** | Structure non référencée dans la base |
+| 📝 Contenu | ASL complémentaires CIR + Compétences Pro | Dispositifs ASL similaires dans d'autres départements (10 - Aube, 42 - Loire) mais pas en 77 |
+
+### Justification
+Aucun dispositif existant ne correspond à cette combinaison :
+- La structure "Association animation centre social" n'apparaît pas dans la base RI
+- Aucun dispositif ASL n'est référencé pour Pontault-Combault (77)
+- Les dispositifs similaires (ASL Pôle Social Le Corbusier, Centre Alpha Choisy) couvrent d'autres territoires
+
+**→ Cette fiche peut être créée comme nouveau dispositif.**$seed$, $seed$3aa0a9ec-32ce-4f18-9d65-b2816cd6cffa$seed$) ON CONFLICT DO NOTHING;
 INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$615aa598-44ca-43a6-9e8c-d173b3b241f3$seed$, $seed$2026-02-25 15:58:20.967585+00$seed$, $seed$2026-02-25 15:58:20.967585$seed$, $seed$metadata$seed$, $seed$---
 metadata_ri:
   mainSponsor: Association animation centre social
@@ -1604,6 +1696,178 @@ provenance:
 | Public | Pas de public spécifique (famille, femmes, jeunes, etc.) | Laisser vide - dispositif ouvert à tous |
 | Âge | Non spécifié dans la fiche | Confirmer avec la structure si restriction d'âge |
 | Jours de présence | Créneaux non précisés | Contacter la structure pour horaires exacts |$seed$, $seed$3aa0a9ec-32ce-4f18-9d65-b2816cd6cffa$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$4582902b-94cd-425c-80ae-408334cf49bb$seed$, $seed$2026-02-26 02:25:06.030145+00$seed$, $seed$2026-02-26 02:25:06.030145$seed$, $seed$ingestion$seed$, $seed$---
+compliant: true
+duplicate: false
+carif_oref_url: >-
+  https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000241678_SE_0001597312.html
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-02-26T02:25:05.893Z'
+---
+
+# Rapport de traitement DI
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale:** Fiche acceptée ✅
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (primo-arrivant), `81042` (réfugié) | ✅ Accepté |
+| 4. Type dispositif | ASL complémentaires du CIR - Droit commun utile aux réfugiés, pas de restriction nationalité | ✅ Accepté |
+| 5. Durée | 57 jours (05/11/2026 → 31/12/2026) | ✅ Accepté |
+| 6. Volume horaire | 320 heures | ✅ Accepté |
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision:** `duplicate: false` 🆗 NOUVEAU
+
+### Analyse comparative
+
+| Axe | Critère | Résultat |
+|-----|---------|----------|
+| 📍 Localisation | 78 - Yvelines (Mantes-la-Jolie) | Aucune fiche ASL/CIR existante dans ce département pour cette structure |
+| 🏢 Structure | Institut de formation et de développement (Ifdev) | Non référencé dans la base |
+| 📝 Contenu | ASL complémentaires du CIR - Ateliers linguistiques du soir | Pas d'équivalent trouvé |
+
+**Justification:** La recherche sémantique a identifié plusieurs fiches ASL dans d'autres départements (39, 50, 76...) mais aucune correspondance pour Ifdev dans les Yvelines. Ce dispositif est nouveau pour Réfugiés.info.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-02-26T02:25:05.893Z"}, "compliant": true, "duplicate": false, "carif_oref_url": "https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000241678_SE_0001597312.html"}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$Je lance l'audit de conformité éditoriale DI et la détection de doublons en parallèle.---
+compliant: true
+duplicate: false
+carif_oref_url: https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000241678_SE_0001597312.html
+---
+
+# Rapport de traitement DI
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale:** Fiche acceptée ✅
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (primo-arrivant), `81042` (réfugié) | ✅ Accepté |
+| 4. Type dispositif | ASL complémentaires du CIR - Droit commun utile aux réfugiés, pas de restriction nationalité | ✅ Accepté |
+| 5. Durée | 57 jours (05/11/2026 → 31/12/2026) | ✅ Accepté |
+| 6. Volume horaire | 320 heures | ✅ Accepté |
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision:** `duplicate: false` 🆗 NOUVEAU
+
+### Analyse comparative
+
+| Axe | Critère | Résultat |
+|-----|---------|----------|
+| 📍 Localisation | 78 - Yvelines (Mantes-la-Jolie) | Aucune fiche ASL/CIR existante dans ce département pour cette structure |
+| 🏢 Structure | Institut de formation et de développement (Ifdev) | Non référencé dans la base |
+| 📝 Contenu | ASL complémentaires du CIR - Ateliers linguistiques du soir | Pas d'équivalent trouvé |
+
+**Justification:** La recherche sémantique a identifié plusieurs fiches ASL dans d'autres départements (39, 50, 76...) mais aucune correspondance pour Ifdev dans les Yvelines. Ce dispositif est nouveau pour Réfugiés.info.$seed$, $seed$e173e735-552e-46a6-9b4b-a56521d43ce0$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$d8f1ef1e-fc58-4ed0-a4ea-a4b245a758ae$seed$, $seed$2026-02-26 02:32:52.268107+00$seed$, $seed$2026-02-26 02:32:52.268107$seed$, $seed$ingestion$seed$, $seed$---
+compliant: true
+duplicate: false
+carif_oref_url: >-
+  https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242613_SE_0001608026.html
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-02-26T02:32:52.154Z'
+---
+
+# Rapport de traitement DI
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale:** Fiche acceptée ✅
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (primo-arrivant), `81042` (réfugié) + "demandeurs d'asile" | ✅ Accepté |
+| 4. Type dispositif | Formation ASL complémentaire CIR - Droit commun, pas de restriction nationalité | ✅ Accepté |
+| 5. Durée | 304 jours (01/10/2025 → 31/07/2026) | ✅ Accepté |
+| 6. Volume horaire | 110 heures | ✅ Accepté |
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision:** `duplicate: false` 🆗 NOUVEAU
+
+### Analyse
+
+| Axe | Fiche DI | Base RI | Correspondance |
+|-----|----------|---------|----------------|
+| 📍 Localisation | 93 - Seine-Saint-Denis (Saint-Denis) + IDF (75-95) | Plusieurs fiches IDF | ⚠️ Zone commune |
+| 🏢 Structure | **Association pour l'insertion des jeunes (APIJ)** | Aucune structure APIJ trouvée | ❌ Pas de match |
+| 📝 Contenu | ASL CIR - Parcours linguistique professionnel A1.1 | Fiches FLE/ASL similaires mais structures différentes | ❌ Pas de match exact |
+
+### Justification
+
+Aucun dispositif existant ne correspond à cette combinaison :
+- **Structure APIJ** non référencée dans la base RI
+- Bien que des formations similaires (ASL, FLE professionnel) existent en Île-de-France, elles sont portées par d'autres structures (Atellanes, FISPE, Le Picoulet, etc.)
+
+**→ Cette fiche peut être créée comme nouveau dispositif.**
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-02-26T02:32:52.154Z"}, "compliant": true, "duplicate": false, "carif_oref_url": "https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242613_SE_0001608026.html"}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$Je lance l'audit de cette fiche DI (conformité éditoriale + détection doublons).---
+compliant: true
+duplicate: false
+carif_oref_url: https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242613_SE_0001608026.html
+---
+
+# Rapport de traitement DI
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale:** Fiche acceptée ✅
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (primo-arrivant), `81042` (réfugié) + "demandeurs d'asile" | ✅ Accepté |
+| 4. Type dispositif | Formation ASL complémentaire CIR - Droit commun, pas de restriction nationalité | ✅ Accepté |
+| 5. Durée | 304 jours (01/10/2025 → 31/07/2026) | ✅ Accepté |
+| 6. Volume horaire | 110 heures | ✅ Accepté |
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision:** `duplicate: false` 🆗 NOUVEAU
+
+### Analyse
+
+| Axe | Fiche DI | Base RI | Correspondance |
+|-----|----------|---------|----------------|
+| 📍 Localisation | 93 - Seine-Saint-Denis (Saint-Denis) + IDF (75-95) | Plusieurs fiches IDF | ⚠️ Zone commune |
+| 🏢 Structure | **Association pour l'insertion des jeunes (APIJ)** | Aucune structure APIJ trouvée | ❌ Pas de match |
+| 📝 Contenu | ASL CIR - Parcours linguistique professionnel A1.1 | Fiches FLE/ASL similaires mais structures différentes | ❌ Pas de match exact |
+
+### Justification
+
+Aucun dispositif existant ne correspond à cette combinaison :
+- **Structure APIJ** non référencée dans la base RI
+- Bien que des formations similaires (ASL, FLE professionnel) existent en Île-de-France, elles sont portées par d'autres structures (Atellanes, FISPE, Le Picoulet, etc.)
+
+**→ Cette fiche peut être créée comme nouveau dispositif.**$seed$, $seed$26c0e650-0e85-4819-b64b-013f8a972dad$seed$) ON CONFLICT DO NOTHING;
 INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$506e7e33-ce03-4ba0-9e38-c2929497a1f8$seed$, $seed$2026-02-26 02:36:59.957773+00$seed$, $seed$2026-02-26 02:36:59.957773$seed$, $seed$metadata$seed$, $seed$---
 metadata_ri:
   mainSponsor: Institut de formation et de développement
@@ -2018,189 +2282,17 @@ provenance:
 | Logo | Donnée manquante | Chercher sur le site ifdevformations.fr |
 | Jours de présence | Non spécifiés (uniquement "ateliers du soir") | Contacter la structure pour préciser les jours |
 | Âge | Aucune condition d'âge mentionnée | À confirmer avec la structure |$seed$, $seed$e173e735-552e-46a6-9b4b-a56521d43ce0$seed$) ON CONFLICT DO NOTHING;
-INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$b8611875-ecd7-4141-a08e-020f0846f998$seed$, $seed$2026-02-25 15:52:49.160481+00$seed$, $seed$2026-02-25 15:52:49.160481$seed$, $seed$ingestion$seed$, $seed$---
-compliant: true
-duplicate: false
-carif_oref_url: >-
-  https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242984_SE_0001611012.html
-letta:
-  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
-  processed_at: '2026-02-25T15:52:49.065Z'
----
-
-# Rapport de traitement DI
-
-<hr id="audit">
-
-## 1. Analyse de Conformité Éditoriale
-
-**Décision finale:** Fiche acceptée ✅
-
-| Étape | Donnée trouvée | Décision |
-|-------|----------------|----------|
-| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
-| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
-| 3. Public visé | `81023` (primo-arrivant), `81042` (réfugié) | ✅ Accepté |
-| 4. Type dispositif | ASL complémentaire CIR – Formation de droit commun utile aux réfugiés | ✅ Accepté |
-| 5. Durée | 271 jours (29/09/2025 → 26/06/2026) | ✅ Accepté |
-| 6. Volume horaire | 120h | ✅ Accepté |
-
-<hr id="doublons">
-
-## 2. Détection de Doublons
-
-**Décision:** `duplicate: false` 🆗 — Nouveau dispositif
-
-### Analyse comparative
-
-| Axe | Fiche DI | Dispositifs existants |
-|-----|----------|----------------------|
-| 📍 Localisation | **77 - Seine-et-Marne** (Pontault-Combault) | Aucun dispositif ASL trouvé à Pontault-Combault |
-| 🏢 Structure | **Association animation centre social** | Structure non référencée dans la base |
-| 📝 Contenu | ASL complémentaires CIR + Compétences Pro | Dispositifs ASL similaires dans d'autres départements (10 - Aube, 42 - Loire) mais pas en 77 |
-
-### Justification
-Aucun dispositif existant ne correspond à cette combinaison :
-- La structure "Association animation centre social" n'apparaît pas dans la base RI
-- Aucun dispositif ASL n'est référencé pour Pontault-Combault (77)
-- Les dispositifs similaires (ASL Pôle Social Le Corbusier, Centre Alpha Choisy) couvrent d'autres territoires
-
-**→ Cette fiche peut être créée comme nouveau dispositif.**
-$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-02-25T15:52:49.065Z"}, "compliant": true, "duplicate": false, "carif_oref_url": "https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242984_SE_0001611012.html"}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
-compliant: true
-duplicate: false
-carif_oref_url: https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242984_SE_0001611012.html
----
-
-# Rapport de traitement DI
-
-<hr id="audit">
-
-## 1. Analyse de Conformité Éditoriale
-
-**Décision finale:** Fiche acceptée ✅
-
-| Étape | Donnée trouvée | Décision |
-|-------|----------------|----------|
-| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
-| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
-| 3. Public visé | `81023` (primo-arrivant), `81042` (réfugié) | ✅ Accepté |
-| 4. Type dispositif | ASL complémentaire CIR – Formation de droit commun utile aux réfugiés | ✅ Accepté |
-| 5. Durée | 271 jours (29/09/2025 → 26/06/2026) | ✅ Accepté |
-| 6. Volume horaire | 120h | ✅ Accepté |
-
-<hr id="doublons">
-
-## 2. Détection de Doublons
-
-**Décision:** `duplicate: false` 🆗 — Nouveau dispositif
-
-### Analyse comparative
-
-| Axe | Fiche DI | Dispositifs existants |
-|-----|----------|----------------------|
-| 📍 Localisation | **77 - Seine-et-Marne** (Pontault-Combault) | Aucun dispositif ASL trouvé à Pontault-Combault |
-| 🏢 Structure | **Association animation centre social** | Structure non référencée dans la base |
-| 📝 Contenu | ASL complémentaires CIR + Compétences Pro | Dispositifs ASL similaires dans d'autres départements (10 - Aube, 42 - Loire) mais pas en 77 |
-
-### Justification
-Aucun dispositif existant ne correspond à cette combinaison :
-- La structure "Association animation centre social" n'apparaît pas dans la base RI
-- Aucun dispositif ASL n'est référencé pour Pontault-Combault (77)
-- Les dispositifs similaires (ASL Pôle Social Le Corbusier, Centre Alpha Choisy) couvrent d'autres territoires
-
-**→ Cette fiche peut être créée comme nouveau dispositif.**$seed$, $seed$3aa0a9ec-32ce-4f18-9d65-b2816cd6cffa$seed$) ON CONFLICT DO NOTHING;
-INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$4582902b-94cd-425c-80ae-408334cf49bb$seed$, $seed$2026-02-26 02:25:06.030145+00$seed$, $seed$2026-02-26 02:25:06.030145$seed$, $seed$ingestion$seed$, $seed$---
-compliant: true
-duplicate: false
-carif_oref_url: >-
-  https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000241678_SE_0001597312.html
-letta:
-  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
-  processed_at: '2026-02-26T02:25:05.893Z'
----
-
-# Rapport de traitement DI
-
-<hr id="audit">
-
-## 1. Analyse de Conformité Éditoriale
-
-**Décision finale:** Fiche acceptée ✅
-
-| Étape | Donnée trouvée | Décision |
-|-------|----------------|----------|
-| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
-| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
-| 3. Public visé | `81023` (primo-arrivant), `81042` (réfugié) | ✅ Accepté |
-| 4. Type dispositif | ASL complémentaires du CIR - Droit commun utile aux réfugiés, pas de restriction nationalité | ✅ Accepté |
-| 5. Durée | 57 jours (05/11/2026 → 31/12/2026) | ✅ Accepté |
-| 6. Volume horaire | 320 heures | ✅ Accepté |
-
-<hr id="doublons">
-
-## 2. Détection de Doublons
-
-**Décision:** `duplicate: false` 🆗 NOUVEAU
-
-### Analyse comparative
-
-| Axe | Critère | Résultat |
-|-----|---------|----------|
-| 📍 Localisation | 78 - Yvelines (Mantes-la-Jolie) | Aucune fiche ASL/CIR existante dans ce département pour cette structure |
-| 🏢 Structure | Institut de formation et de développement (Ifdev) | Non référencé dans la base |
-| 📝 Contenu | ASL complémentaires du CIR - Ateliers linguistiques du soir | Pas d'équivalent trouvé |
-
-**Justification:** La recherche sémantique a identifié plusieurs fiches ASL dans d'autres départements (39, 50, 76...) mais aucune correspondance pour Ifdev dans les Yvelines. Ce dispositif est nouveau pour Réfugiés.info.
-$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-02-26T02:25:05.893Z"}, "compliant": true, "duplicate": false, "carif_oref_url": "https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000241678_SE_0001597312.html"}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$Je lance l'audit de conformité éditoriale DI et la détection de doublons en parallèle.---
-compliant: true
-duplicate: false
-carif_oref_url: https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000241678_SE_0001597312.html
----
-
-# Rapport de traitement DI
-
-<hr id="audit">
-
-## 1. Analyse de Conformité Éditoriale
-
-**Décision finale:** Fiche acceptée ✅
-
-| Étape | Donnée trouvée | Décision |
-|-------|----------------|----------|
-| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
-| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
-| 3. Public visé | `81023` (primo-arrivant), `81042` (réfugié) | ✅ Accepté |
-| 4. Type dispositif | ASL complémentaires du CIR - Droit commun utile aux réfugiés, pas de restriction nationalité | ✅ Accepté |
-| 5. Durée | 57 jours (05/11/2026 → 31/12/2026) | ✅ Accepté |
-| 6. Volume horaire | 320 heures | ✅ Accepté |
-
-<hr id="doublons">
-
-## 2. Détection de Doublons
-
-**Décision:** `duplicate: false` 🆗 NOUVEAU
-
-### Analyse comparative
-
-| Axe | Critère | Résultat |
-|-----|---------|----------|
-| 📍 Localisation | 78 - Yvelines (Mantes-la-Jolie) | Aucune fiche ASL/CIR existante dans ce département pour cette structure |
-| 🏢 Structure | Institut de formation et de développement (Ifdev) | Non référencé dans la base |
-| 📝 Contenu | ASL complémentaires du CIR - Ateliers linguistiques du soir | Pas d'équivalent trouvé |
-
-**Justification:** La recherche sémantique a identifié plusieurs fiches ASL dans d'autres départements (39, 50, 76...) mais aucune correspondance pour Ifdev dans les Yvelines. Ce dispositif est nouveau pour Réfugiés.info.$seed$, $seed$e173e735-552e-46a6-9b4b-a56521d43ce0$seed$) ON CONFLICT DO NOTHING;
-INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$d8f1ef1e-fc58-4ed0-a4ea-a4b245a758ae$seed$, $seed$2026-02-26 02:32:52.268107+00$seed$, $seed$2026-02-26 02:32:52.268107$seed$, $seed$ingestion$seed$, $seed$---
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$485bc041-ad80-4f13-adce-e8b5b632975c$seed$, $seed$2026-03-02 13:30:08.403023+00$seed$, $seed$2026-03-02 13:30:08.403023$seed$, $seed$ingestion$seed$, $seed$---
 compliant: true
 duplicate: false
 carif_oref_url: >-
   https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242613_SE_0001608026.html
 letta:
   agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
-  processed_at: '2026-02-26T02:32:52.154Z'
+  processed_at: '2026-03-02T13:30:07.984Z'
 ---
 
-# Rapport de traitement DI
+# Rapport d'audit DI
 
 <hr id="audit">
 
@@ -2212,39 +2304,42 @@ letta:
 |-------|----------------|----------|
 | 1. Conventionnement | `1` (Oui) | ✅ Accepté |
 | 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
-| 3. Public visé | `81023` (primo-arrivant), `81042` (réfugié) + "demandeurs d'asile" | ✅ Accepté |
-| 4. Type dispositif | Formation ASL complémentaire CIR - Droit commun, pas de restriction nationalité | ✅ Accepté |
-| 5. Durée | 304 jours (01/10/2025 → 31/07/2026) | ✅ Accepté |
+| 3. Public visé | `81023` (primo-arrivant) + `81042` (réfugié) | ✅ Accepté |
+| 4. Type dispositif | Formation ASL complémentaire CIR - Droit commun utile aux réfugiés | ✅ Accepté |
+| 5. Durée | 303 jours (01/10/2025 → 31/07/2026) | ✅ Accepté |
 | 6. Volume horaire | 110 heures | ✅ Accepté |
+
+**Remarque:** Formation conventionnée BOP 104 (programme régional IDF ASL 2025-2026), financée par le Ministère de l'Intérieur, ciblant explicitement les primo-arrivants et réfugiés (+ demandeurs d'asile selon `info-public-vise`).
 
 <hr id="doublons">
 
 ## 2. Détection de Doublons
 
-**Décision:** `duplicate: false` 🆗 NOUVEAU
+**Décision:** Nouveau dispositif 🆗
 
-### Analyse
+### Analyse comparative
 
-| Axe | Fiche DI | Base RI | Correspondance |
-|-----|----------|---------|----------------|
-| 📍 Localisation | 93 - Seine-Saint-Denis (Saint-Denis) + IDF (75-95) | Plusieurs fiches IDF | ⚠️ Zone commune |
-| 🏢 Structure | **Association pour l'insertion des jeunes (APIJ)** | Aucune structure APIJ trouvée | ❌ Pas de match |
-| 📝 Contenu | ASL CIR - Parcours linguistique professionnel A1.1 | Fiches FLE/ASL similaires mais structures différentes | ❌ Pas de match exact |
+| Critère | Fiche candidate | Correspondances trouvées |
+|---------|-----------------|--------------------------|
+| **Structure** | Association pour l'insertion des jeunes (APIJ) | Aucune fiche APIJ dans la base |
+| **Localisation** | 93 - Seine-Saint-Denis + IDF (75, 77, 78, 91, 92, 94, 95) | — |
+| **Type** | ASL complémentaires CIR - Parcours linguistique professionnel | — |
 
-### Justification
+### Fiches proches (non-doublons)
 
-Aucun dispositif existant ne correspond à cette combinaison :
-- **Structure APIJ** non référencée dans la base RI
-- Bien que des formations similaires (ASL, FLE professionnel) existent en Île-de-France, elles sont portées par d'autres structures (Atellanes, FISPE, Le Picoulet, etc.)
+| ID | Titre | Structure | Raison de non-doublon |
+|----|-------|-----------|----------------------|
+| `62e7ce1f95963ed3053e1d67` | Faire une formation en français de niveau A2 ou B1 | FIDE | Structure différente |
+| `6818e223d377d621f0d652be` | Apprendre le français et être autonome | Association Accion Artistica | Structure différente, Saint-Denis mais autre organisme |
 
-**→ Cette fiche peut être créée comme nouveau dispositif.**
-$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-02-26T02:32:52.154Z"}, "compliant": true, "duplicate": false, "carif_oref_url": "https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242613_SE_0001608026.html"}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$Je lance l'audit de cette fiche DI (conformité éditoriale + détection doublons).---
+**Conclusion:** Aucun doublon détecté. La structure APIJ (Association pour l'insertion des jeunes) n'a pas de fiche existante sur Réfugiés.info. Cette fiche peut être créée comme nouveau dispositif.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-03-02T13:30:07.984Z"}, "compliant": true, "duplicate": false, "carif_oref_url": "https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242613_SE_0001608026.html"}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
 compliant: true
 duplicate: false
 carif_oref_url: https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242613_SE_0001608026.html
 ---
 
-# Rapport de traitement DI
+# Rapport d'audit DI
 
 <hr id="audit">
 
@@ -2256,32 +2351,35 @@ carif_oref_url: https://www.intercariforef.org/formations/formations-intitule-fo
 |-------|----------------|----------|
 | 1. Conventionnement | `1` (Oui) | ✅ Accepté |
 | 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
-| 3. Public visé | `81023` (primo-arrivant), `81042` (réfugié) + "demandeurs d'asile" | ✅ Accepté |
-| 4. Type dispositif | Formation ASL complémentaire CIR - Droit commun, pas de restriction nationalité | ✅ Accepté |
-| 5. Durée | 304 jours (01/10/2025 → 31/07/2026) | ✅ Accepté |
+| 3. Public visé | `81023` (primo-arrivant) + `81042` (réfugié) | ✅ Accepté |
+| 4. Type dispositif | Formation ASL complémentaire CIR - Droit commun utile aux réfugiés | ✅ Accepté |
+| 5. Durée | 303 jours (01/10/2025 → 31/07/2026) | ✅ Accepté |
 | 6. Volume horaire | 110 heures | ✅ Accepté |
+
+**Remarque:** Formation conventionnée BOP 104 (programme régional IDF ASL 2025-2026), financée par le Ministère de l'Intérieur, ciblant explicitement les primo-arrivants et réfugiés (+ demandeurs d'asile selon `info-public-vise`).
 
 <hr id="doublons">
 
 ## 2. Détection de Doublons
 
-**Décision:** `duplicate: false` 🆗 NOUVEAU
+**Décision:** Nouveau dispositif 🆗
 
-### Analyse
+### Analyse comparative
 
-| Axe | Fiche DI | Base RI | Correspondance |
-|-----|----------|---------|----------------|
-| 📍 Localisation | 93 - Seine-Saint-Denis (Saint-Denis) + IDF (75-95) | Plusieurs fiches IDF | ⚠️ Zone commune |
-| 🏢 Structure | **Association pour l'insertion des jeunes (APIJ)** | Aucune structure APIJ trouvée | ❌ Pas de match |
-| 📝 Contenu | ASL CIR - Parcours linguistique professionnel A1.1 | Fiches FLE/ASL similaires mais structures différentes | ❌ Pas de match exact |
+| Critère | Fiche candidate | Correspondances trouvées |
+|---------|-----------------|--------------------------|
+| **Structure** | Association pour l'insertion des jeunes (APIJ) | Aucune fiche APIJ dans la base |
+| **Localisation** | 93 - Seine-Saint-Denis + IDF (75, 77, 78, 91, 92, 94, 95) | — |
+| **Type** | ASL complémentaires CIR - Parcours linguistique professionnel | — |
 
-### Justification
+### Fiches proches (non-doublons)
 
-Aucun dispositif existant ne correspond à cette combinaison :
-- **Structure APIJ** non référencée dans la base RI
-- Bien que des formations similaires (ASL, FLE professionnel) existent en Île-de-France, elles sont portées par d'autres structures (Atellanes, FISPE, Le Picoulet, etc.)
+| ID | Titre | Structure | Raison de non-doublon |
+|----|-------|-----------|----------------------|
+| `62e7ce1f95963ed3053e1d67` | Faire une formation en français de niveau A2 ou B1 | FIDE | Structure différente |
+| `6818e223d377d621f0d652be` | Apprendre le français et être autonome | Association Accion Artistica | Structure différente, Saint-Denis mais autre organisme |
 
-**→ Cette fiche peut être créée comme nouveau dispositif.**$seed$, $seed$26c0e650-0e85-4819-b64b-013f8a972dad$seed$) ON CONFLICT DO NOTHING;
+**Conclusion:** Aucun doublon détecté. La structure APIJ (Association pour l'insertion des jeunes) n'a pas de fiche existante sur Réfugiés.info. Cette fiche peut être créée comme nouveau dispositif.$seed$, $seed$26c0e650-0e85-4819-b64b-013f8a972dad$seed$) ON CONFLICT DO NOTHING;
 INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$b86d4059-934c-471a-b89e-cb29c46db8cc$seed$, $seed$2026-03-02 13:30:48.933122+00$seed$, $seed$2026-03-02 13:30:48.933122$seed$, $seed$metadata$seed$, $seed$---
 metadata_ri:
   mainSponsor: Association pour l'insertion des jeunes
@@ -2668,101 +2766,1550 @@ provenance:
 | Public | Pas de mention famille/femmes/jeunes/séniors | Vérifier si public spécifique visé |
 | Âge | Donnée manquante | Vérifier s'il y a des restrictions d'âge |
 ```$seed$, $seed$26c0e650-0e85-4819-b64b-013f8a972dad$seed$) ON CONFLICT DO NOTHING;
-INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$485bc041-ad80-4f13-adce-e8b5b632975c$seed$, $seed$2026-03-02 13:30:08.403023+00$seed$, $seed$2026-03-02 13:30:08.403023$seed$, $seed$ingestion$seed$, $seed$---
-compliant: true
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$29310d9e-516a-4e54-aea3-bb7caed530ba$seed$, $seed$2026-06-17 14:11:26.014096+00$seed$, $seed$2026-06-17 14:11:26.014096$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
 duplicate: false
-carif_oref_url: >-
-  https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242613_SE_0001608026.html
 letta:
   agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
-  processed_at: '2026-03-02T13:30:07.984Z'
+  processed_at: '2026-06-17T14:11:25.943Z'
 ---
 
-# Rapport d'audit DI
+# Rapport de traitement
 
 <hr id="audit">
 
 ## 1. Analyse de Conformité Éditoriale
 
-**Décision finale:** Fiche acceptée ✅
+**Décision finale : Fiche refusée ❌**
 
 | Étape | Donnée trouvée | Décision |
 |-------|----------------|----------|
 | 1. Conventionnement | `1` (Oui) | ✅ Accepté |
 | 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
-| 3. Public visé | `81023` (primo-arrivant) + `81042` (réfugié) | ✅ Accepté |
-| 4. Type dispositif | Formation ASL complémentaire CIR - Droit commun utile aux réfugiés | ✅ Accepté |
-| 5. Durée | 303 jours (01/10/2025 → 31/07/2026) | ✅ Accepté |
-| 6. Volume horaire | 110 heures | ✅ Accepté |
+| 3. Public visé | `81022` (Public immigré) | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** — Ouvrir l'École aux Parents pour la Réussite des Enfants | ❌ Refusé |
+| 5. Durée | — (non évaluée) | — |
+| 6. Volume horaire | — (non évaluée) | — |
 
-**Remarque:** Formation conventionnée BOP 104 (programme régional IDF ASL 2025-2026), financée par le Ministère de l'Intérieur, ciblant explicitement les primo-arrivants et réfugiés (+ demandeurs d'asile selon `info-public-vise`).
+**Motif d'arrêt — Étape 4 :**
+Le dispositif est explicitement un **OEPRE** (sigle présent dans le titre même). Ce type de dispositif est **catégoriquement refusé** par la jurisprudence RI, indépendamment de son contenu, de son financement ou de son public. L'OEPRE s'adresse aux **parents d'élèves** dans le cadre de la scolarité de leurs enfants — il cible l'implication parentale scolaire, et non l'intégration directe du public réfugié au sens RI.
 
 <hr id="doublons">
 
 ## 2. Détection de Doublons
 
-**Décision:** Nouveau dispositif 🆗
+**Décision : NOUVEAU 🆗**
 
-### Analyse comparative
+Recherche effectuée via l'API RI fraîche avec les paramètres suivants :
+- Titre : *Ouvrir l'école aux parents pour la réussite des enfants - OEPRE*
+- Structure : Collège Théodore Monod
+- Commune : Bron (69)
 
-| Critère | Fiche candidate | Correspondances trouvées |
-|---------|-----------------|--------------------------|
-| **Structure** | Association pour l'insertion des jeunes (APIJ) | Aucune fiche APIJ dans la base |
-| **Localisation** | 93 - Seine-Saint-Denis + IDF (75, 77, 78, 91, 92, 94, 95) | — |
-| **Type** | ASL complémentaires CIR - Parcours linguistique professionnel | — |
+**Résultat :** Aucun candidat retourné. Ce dispositif n'est pas répertorié sur Réfugiés.info — ce qui est cohérent avec la règle d'exclusion OEPRE : ces fiches ne sont jamais publiées sur la plateforme.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:11:25.943Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$Je lance les deux analyses en parallèle.Aucun candidat doublon. Je compile le rapport complet.
 
-### Fiches proches (non-doublons)
+---
+compliant: false
+duplicate: false
+---
 
-| ID | Titre | Structure | Raison de non-doublon |
-|----|-------|-----------|----------------------|
-| `62e7ce1f95963ed3053e1d67` | Faire une formation en français de niveau A2 ou B1 | FIDE | Structure différente |
-| `6818e223d377d621f0d652be` | Apprendre le français et être autonome | Association Accion Artistica | Structure différente, Saint-Denis mais autre organisme |
+# Rapport de traitement
 
-**Conclusion:** Aucun doublon détecté. La structure APIJ (Association pour l'insertion des jeunes) n'a pas de fiche existante sur Réfugiés.info. Cette fiche peut être créée comme nouveau dispositif.
-$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-03-02T13:30:07.984Z"}, "compliant": true, "duplicate": false, "carif_oref_url": "https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242613_SE_0001608026.html"}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81022` (Public immigré) | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** — Ouvrir l'École aux Parents pour la Réussite des Enfants | ❌ Refusé |
+| 5. Durée | — (non évaluée) | — |
+| 6. Volume horaire | — (non évaluée) | — |
+
+**Motif d'arrêt — Étape 4 :**
+Le dispositif est explicitement un **OEPRE** (sigle présent dans le titre même). Ce type de dispositif est **catégoriquement refusé** par la jurisprudence RI, indépendamment de son contenu, de son financement ou de son public. L'OEPRE s'adresse aux **parents d'élèves** dans le cadre de la scolarité de leurs enfants — il cible l'implication parentale scolaire, et non l'intégration directe du public réfugié au sens RI.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche avec les paramètres suivants :
+- Titre : *Ouvrir l'école aux parents pour la réussite des enfants - OEPRE*
+- Structure : Collège Théodore Monod
+- Commune : Bron (69)
+
+**Résultat :** Aucun candidat retourné. Ce dispositif n'est pas répertorié sur Réfugiés.info — ce qui est cohérent avec la règle d'exclusion OEPRE : ces fiches ne sont jamais publiées sur la plateforme.$seed$, $seed$ef7a8315-f3e6-4274-bd31-11af28ce12b3$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$65a33e3b-9652-43e9-b171-5dd981c1f7af$seed$, $seed$2026-06-17 14:36:52.446359+00$seed$, $seed$2026-06-17 14:36:52.446359$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:36:52.417Z'
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` → Oui | ✅ Accepté |
+| 2. Financeur | `"12"` (Min. Éducation nationale) + `"19"` (Min. Intérieur) | ✅ Accepté |
+| 3. Public visé | `"81023"` (Primo-arrivant) dans `organisme-financeur[].extras` | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** — dispositif explicitement exclu du périmètre RI | ❌ Refusé |
+| 5. Durée | *(non évalué — arrêt à l'étape 4)* | — |
+| 6. Volume horaire | *(non évalué — arrêt à l'étape 4)* | — |
+
+**Motif de refus :** Le dispositif « Ouvrir l'école aux parents pour la réussite des enfants (OEPRE) » est explicitement identifié comme hors périmètre RI dans `jurisprudence.md` (Étape 4 — Type de dispositif). Ce programme cible l'implication parentale dans la scolarité, non l'accompagnement direct des réfugiés et primo-arrivants dans leurs démarches d'intégration personnelle. L'arrêt est immédiat, conformément à la règle d'or de l'arbre de décision.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`). Les 10 candidats retournés présentent tous un score de correspondance faible (4-5), basé uniquement sur la localisation IDF partagée et des mots-clés génériques issus du titre (« école », « parents »). Aucun ne correspond à l'OEPRE :
+
+| Candidat RI | Sponsor | Localisation | Raison du non-match |
+|-------------|---------|--------------|---------------------|
+| "Apprendre le français et découvrir le monde du travail" | Association Aurore | IDF | Titre et contenu sans rapport |
+| "Découvrir la société française" | FTDA | IDF / Rouen | Sponsor et contenu différents |
+| "Connaître vos droits..." | Ecole des Actes | 93/75/95 | Contenu sans rapport |
+| *(7 autres candidats)* | Divers | IDF | Aucun lien thématique ou structurel |
+
+**Axes comparatifs :**
+- 📍 **Localisation :** IDF partagée (Axe A partiel), mais structure `Commune d'Ivry-sur-Seine` absente de tous les résultats.
+- 🏢 **Structure :** Aucun sponsor correspondant à `Commune d'Ivry-sur-Seine` dans la shortlist.
+- 📝 **Contenu :** Programme OEPRE (implication parentale + scolarité + valeurs républicaines) → aucun équivalent sémantique détecté.
+
+La fiche est nouvelle sur RI — mais elle reste **refusée pour non-conformité éditoriale** (étape 4), ce qui rend la question du doublon sans objet opérationnel.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:36:52.417Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
+compliant: false
+duplicate: false
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` → Oui | ✅ Accepté |
+| 2. Financeur | `"12"` (Min. Éducation nationale) + `"19"` (Min. Intérieur) | ✅ Accepté |
+| 3. Public visé | `"81023"` (Primo-arrivant) dans `organisme-financeur[].extras` | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** — dispositif explicitement exclu du périmètre RI | ❌ Refusé |
+| 5. Durée | *(non évalué — arrêt à l'étape 4)* | — |
+| 6. Volume horaire | *(non évalué — arrêt à l'étape 4)* | — |
+
+**Motif de refus :** Le dispositif « Ouvrir l'école aux parents pour la réussite des enfants (OEPRE) » est explicitement identifié comme hors périmètre RI dans `jurisprudence.md` (Étape 4 — Type de dispositif). Ce programme cible l'implication parentale dans la scolarité, non l'accompagnement direct des réfugiés et primo-arrivants dans leurs démarches d'intégration personnelle. L'arrêt est immédiat, conformément à la règle d'or de l'arbre de décision.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`). Les 10 candidats retournés présentent tous un score de correspondance faible (4-5), basé uniquement sur la localisation IDF partagée et des mots-clés génériques issus du titre (« école », « parents »). Aucun ne correspond à l'OEPRE :
+
+| Candidat RI | Sponsor | Localisation | Raison du non-match |
+|-------------|---------|--------------|---------------------|
+| "Apprendre le français et découvrir le monde du travail" | Association Aurore | IDF | Titre et contenu sans rapport |
+| "Découvrir la société française" | FTDA | IDF / Rouen | Sponsor et contenu différents |
+| "Connaître vos droits..." | Ecole des Actes | 93/75/95 | Contenu sans rapport |
+| *(7 autres candidats)* | Divers | IDF | Aucun lien thématique ou structurel |
+
+**Axes comparatifs :**
+- 📍 **Localisation :** IDF partagée (Axe A partiel), mais structure `Commune d'Ivry-sur-Seine` absente de tous les résultats.
+- 🏢 **Structure :** Aucun sponsor correspondant à `Commune d'Ivry-sur-Seine` dans la shortlist.
+- 📝 **Contenu :** Programme OEPRE (implication parentale + scolarité + valeurs républicaines) → aucun équivalent sémantique détecté.
+
+La fiche est nouvelle sur RI — mais elle reste **refusée pour non-conformité éditoriale** (étape 4), ce qui rend la question du doublon sans objet opérationnel.$seed$, $seed$8833fcfc-763e-4a14-87bc-947cdcff9757$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$9f1dd9c1-55f7-4b17-acdd-c898f742cd7d$seed$, $seed$2026-06-17 14:36:57.32269+00$seed$, $seed$2026-06-17 14:36:57.32269$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:36:57.313Z'
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État – Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (Primo-arrivant) via `extra.organisme-financeur[0].extras[0].extra` | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** – explicitement exclu du périmètre RI | ❌ **Refusé** |
+| 5. Durée | — (arrêt à l'étape 4) | — |
+| 6. Volume horaire | — (arrêt à l'étape 4) | — |
+
+**Motif de refus — Étape 4 :** Le nom du dispositif et son contenu identifient sans ambiguïté un programme **OEPRE** (*Ouvrir l'École aux Parents pour la Réussite des Enfants*). Ce type est explicitement classé ❌ Refusé dans `jurisprudence.md` (Section 4 – Périmètre dispositif), car il cible les **parents** dans leur rôle de soutien scolaire, et non directement les personnes exilées dans leur parcours d'intégration ou d'accès à l'emploi/formation personnelle.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche. Aucun candidat retourné pour ce titre, cette structure et ce département (68 – Haut-Rhin).
+
+> Aucun doublon détecté sur Réfugiés.info. Cette fiche est nouvelle, mais son refus éditorial (OEPRE) reste définitif indépendamment du résultat doublon.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:36:57.313Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
+compliant: false
+duplicate: false
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État – Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (Primo-arrivant) via `extra.organisme-financeur[0].extras[0].extra` | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** – explicitement exclu du périmètre RI | ❌ **Refusé** |
+| 5. Durée | — (arrêt à l'étape 4) | — |
+| 6. Volume horaire | — (arrêt à l'étape 4) | — |
+
+**Motif de refus — Étape 4 :** Le nom du dispositif et son contenu identifient sans ambiguïté un programme **OEPRE** (*Ouvrir l'École aux Parents pour la Réussite des Enfants*). Ce type est explicitement classé ❌ Refusé dans `jurisprudence.md` (Section 4 – Périmètre dispositif), car il cible les **parents** dans leur rôle de soutien scolaire, et non directement les personnes exilées dans leur parcours d'intégration ou d'accès à l'emploi/formation personnelle.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche. Aucun candidat retourné pour ce titre, cette structure et ce département (68 – Haut-Rhin).
+
+> Aucun doublon détecté sur Réfugiés.info. Cette fiche est nouvelle, mais son refus éditorial (OEPRE) reste définitif indépendamment du résultat doublon.$seed$, $seed$30a529ae-2f3d-417f-9dfe-77eb81c19dc4$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$91ee6a65-1b9b-4122-8074-4020d9dc39d5$seed$, $seed$2026-06-17 14:36:58.615221+00$seed$, $seed$2026-06-17 14:36:58.615221$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:36:58.597Z'
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` (Oui) | ✅ Accepté |
+| 2. Financeur | `"2"` (Conseil régional) | ✅ Accepté |
+| 3. Public visé | `80006` + analyse sémantique | ❌ Refusé |
+| 4. Type dispositif | *(non évalué)* | — |
+| 5. Durée | *(non évaluée)* | — |
+| 6. Volume horaire | *(non évalué)* | — |
+
+### Détail — Étape 3 : Public visé
+
+**Codes directs :** Le seul `code-public-vise` présent dans le JSON est `80006` (issu du bloc `organisme-financeur.extras`), qui n'est **pas** dans la liste des codes acceptés (`81021`, `81043`, `81019`, `81022`, `81042`, `82060`, `81023`).
+
+**Rattrapage sémantique :** Aucun indice permettant de conclure que le dispositif cible le public RI :
+- `publics: ["demandeurs-emploi"]` → hors périmètre RI
+- La description présente le DAEU comme un diplôme généraliste accessible à toute personne ayant interrompu ses études, sans référence aux réfugiés, primo-arrivants, BPI, CIR, OFII ou allophonie
+- La mention *"les personnes de nationalité étrangère doivent être titulaires d'un permis de séjour"* dans `conditions_acces` est une **condition légale d'accès**, pas un indicateur de ciblage du public RI
+- Aucun terme de rattrapage détecté : pas de « réfugié », « asile », « CIR », « primo-arrivant », « BPI », « OFII », « allophone »
+
+→ Le dispositif est un diplôme de droit commun destiné au grand public, sans ciblage RI identifiable. **Arrêt à l'Étape 3.**
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Résultat : Nouveau 🆗**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`) avec les paramètres : titre, description, structure (*Université de Haute Alsace SERFA*), commune (*Mulhouse*), département `68`.
+
+**Aucun candidat retourné.** Le dispositif n'existe pas encore sur Réfugiés.info — ce qui est cohérent avec la non-conformité éditoriale (le DAEU est hors périmètre RI et ne devrait pas y être publié).
+
+| Axe | Résultat |
+|-----|---------|
+| 📍 Localisation | Aucun candidat à comparer |
+| 🏢 Structure | Aucun candidat à comparer |
+| 📝 Contenu | Aucun candidat à comparer |
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:36:58.597Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
+compliant: false
+duplicate: false
+
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` (Oui) | ✅ Accepté |
+| 2. Financeur | `"2"` (Conseil régional) | ✅ Accepté |
+| 3. Public visé | `80006` + analyse sémantique | ❌ Refusé |
+| 4. Type dispositif | *(non évalué)* | — |
+| 5. Durée | *(non évaluée)* | — |
+| 6. Volume horaire | *(non évalué)* | — |
+
+### Détail — Étape 3 : Public visé
+
+**Codes directs :** Le seul `code-public-vise` présent dans le JSON est `80006` (issu du bloc `organisme-financeur.extras`), qui n'est **pas** dans la liste des codes acceptés (`81021`, `81043`, `81019`, `81022`, `81042`, `82060`, `81023`).
+
+**Rattrapage sémantique :** Aucun indice permettant de conclure que le dispositif cible le public RI :
+- `publics: ["demandeurs-emploi"]` → hors périmètre RI
+- La description présente le DAEU comme un diplôme généraliste accessible à toute personne ayant interrompu ses études, sans référence aux réfugiés, primo-arrivants, BPI, CIR, OFII ou allophonie
+- La mention *"les personnes de nationalité étrangère doivent être titulaires d'un permis de séjour"* dans `conditions_acces` est une **condition légale d'accès**, pas un indicateur de ciblage du public RI
+- Aucun terme de rattrapage détecté : pas de « réfugié », « asile », « CIR », « primo-arrivant », « BPI », « OFII », « allophone »
+
+→ Le dispositif est un diplôme de droit commun destiné au grand public, sans ciblage RI identifiable. **Arrêt à l'Étape 3.**
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Résultat : Nouveau 🆗**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`) avec les paramètres : titre, description, structure (*Université de Haute Alsace SERFA*), commune (*Mulhouse*), département `68`.
+
+**Aucun candidat retourné.** Le dispositif n'existe pas encore sur Réfugiés.info — ce qui est cohérent avec la non-conformité éditoriale (le DAEU est hors périmètre RI et ne devrait pas y être publié).
+
+| Axe | Résultat |
+|-----|---------|
+| 📍 Localisation | Aucun candidat à comparer |
+| 🏢 Structure | Aucun candidat à comparer |
+| 📝 Contenu | Aucun candidat à comparer |$seed$, $seed$f5f26418-c1e0-4356-ab3c-bcfda45a972a$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$3846bd60-2132-4277-ab35-da376fe85a40$seed$, $seed$2026-06-17 14:37:01.76841+00$seed$, $seed$2026-06-17 14:37:01.76841$seed$, $seed$ingestion$seed$, $seed$$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:01.757Z"}, "parse_error": "unidentified alias \"*Décision\" at line 3, column 11:\n    **Décision finale:** Fiche refusée ❌\n              ^"}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$error$seed$, $seed$Je lance les deux analyses en parallèle.---
+
+**Décision finale:** Fiche refusée ❌
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` (Oui) | ✅ Accepté |
+| 2. Financeur | `"2"` (Conseil régional) | ✅ Accepté |
+| 3. Public visé | `80006` (hors liste) + analyse sémantique → public général sans ancrage RI | ❌ Refusé |
+| 4. Type dispositif | — (arrêt étape 3) | — |
+| 5. Durée | — | — |
+| 6. Volume horaire | — | — |
+
+---
+
+```yaml
+---
+compliant: false
+duplicate: false
+---
+```
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+### Étape 1 — Conventionnement ✅
+`extra.conventionnement` = `"1"` → Conventionné. Accepté.
+
+### Étape 2 — Financeur ✅
+`extra.organisme-financeur[0].code-financeur` = `"2"` → Collectivité territoriale - Conseil régional. Accepté.
+
+### Étape 3 — Public visé ❌ → ARRÊT
+
+**Codes détectés :** Le seul `code-public-vise` présent dans la fiche est `80006`, logé dans `extra.organisme-financeur[].extras[].extra[]` (champ interne au financeur). Ce code n'est pas dans la liste des codes acceptés par RI.
+
+**Analyse sémantique de rattrapage :**
+
+Aucun des marqueurs RI n'est présent dans l'ensemble du JSON :
+- ❌ Pas de mention : primo-arrivant, réfugié, BPI, protection subsidiaire, allophone, OFII, CIR, parcours d'intégration, signataire du CIR
+- Le champ `publics` contient uniquement `demandeurs-emploi` (public généraliste)
+- Les conditions d'accès ciblent toute personne de 20 ans sans baccalauréat ayant interrompu ses études depuis 2 ans — public extrêmement large, sans ancrage spécifique aux exilés
+- Les thématiques (`maitriser-le-francais`, `maitriser-le-calcul`) sont des compétences de base générales, non ciblées RI
+- Le `mobilisable_par` indique `professionnels`, renforçant le caractère de droit commun non ciblé
+
+**Conclusion :** Le DAEU est un diplôme universitaire destiné au grand public adulte sans bac. Il n'existe aucun indice sémantique indiquant un ciblage spécifique du public réfugié ou primo-arrivant.
+
+→ **❌ Refusé à l'étape 3. Arrêt de l'analyse.**
+
+---
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Résultat : Nouveau 🆗**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`). Aucun candidat retourné pour le titre *"DAEU diplôme d'accès aux études universitaires option A"*, structure UNISTRA SFC, département 67.
+
+> **Note :** La fiche étant non conforme (refusée à l'étape 3), l'absence de doublon est cohérente — ce type de dispositif n'est pas dans le périmètre éditorial de Réfugiés.info.$seed$, $seed$d3074eae-288d-4762-8b0d-cc8e52cc06f7$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$f0fc7756-6240-4efe-b8ae-412597c09337$seed$, $seed$2026-06-17 14:37:02.12512+00$seed$, $seed$2026-06-17 14:37:02.12512$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:37:02.106Z'
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` — Oui | ✅ Accepté |
+| 2. Financeur | `"19"` — État, Ministère de l'intérieur | ✅ Accepté |
+| 3. Public visé | `"81023"` (Primo-arrivant) dans `code-public-vise` | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** — Programme explicitement hors périmètre RI | ❌ **Refusé** |
+| 5. Durée | — | ⛔ Non évalué |
+| 6. Volume horaire | — | ⛔ Non évalué |
+
+**Motif de refus (Étape 4) :** Le dispositif est un programme **OEPRE** (*Ouvrir l'École aux Parents pour la Réussite des Enfants*), explicitement référencé comme type de dispositif **hors périmètre éditorial** Réfugiés.info. La règle s'applique quelle que soit la qualité du contenu ou le public visé — l'OEPRE est exclu par nature, sans exception.
+
+---
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : Nouveau dispositif 🆗** — aucun doublon détecté.
+
+> Recherche effectuée via l'API RI fraîche.
+
+| Candidat RI | Localisation | Structure | Score | Raisons |
+|---|---|---|---|---|
+| [Apprendre le français pour la vie scolaire des enfants](https://refugies.info/dispositif/69899745fbe46944f6c55cb5) | 67 - Bas-Rhin | Association Contact et Promotion | 7 | même département, mots-clés titre/description |
+
+**Analyse comparative :**
+
+- **Axe A — Localisation :** Le candidat est bien en `67 - Bas-Rhin`, cohérent avec Strasbourg. ✅ Même zone.
+- **Axe B — Structure :** La structure RI est *Association Contact et Promotion*, la fiche DI est portée par un *Établissement scolaire* (SIRET `21670482501686`). Les deux structures sont **distinctes** — pas de correspondance. ❌
+- **Axe C — Contenu :** Le candidat RI est un cours de français pour parents dans un cadre scolaire, thématique proche, mais porté par une association différente et sans lien programmatique OEPRE établi. ⚠️ Similarité thématique uniquement.
+
+Axe B ne valide pas → **pas de doublon**. La fiche DI est un nouveau dispositif dans la base, mais reste **non conforme** pour publication sur RI.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:02.106Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
+compliant: false
+duplicate: false
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` — Oui | ✅ Accepté |
+| 2. Financeur | `"19"` — État, Ministère de l'intérieur | ✅ Accepté |
+| 3. Public visé | `"81023"` (Primo-arrivant) dans `code-public-vise` | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** — Programme explicitement hors périmètre RI | ❌ **Refusé** |
+| 5. Durée | — | ⛔ Non évalué |
+| 6. Volume horaire | — | ⛔ Non évalué |
+
+**Motif de refus (Étape 4) :** Le dispositif est un programme **OEPRE** (*Ouvrir l'École aux Parents pour la Réussite des Enfants*), explicitement référencé comme type de dispositif **hors périmètre éditorial** Réfugiés.info. La règle s'applique quelle que soit la qualité du contenu ou le public visé — l'OEPRE est exclu par nature, sans exception.
+
+---
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : Nouveau dispositif 🆗** — aucun doublon détecté.
+
+> Recherche effectuée via l'API RI fraîche.
+
+| Candidat RI | Localisation | Structure | Score | Raisons |
+|---|---|---|---|---|
+| [Apprendre le français pour la vie scolaire des enfants](https://refugies.info/dispositif/69899745fbe46944f6c55cb5) | 67 - Bas-Rhin | Association Contact et Promotion | 7 | même département, mots-clés titre/description |
+
+**Analyse comparative :**
+
+- **Axe A — Localisation :** Le candidat est bien en `67 - Bas-Rhin`, cohérent avec Strasbourg. ✅ Même zone.
+- **Axe B — Structure :** La structure RI est *Association Contact et Promotion*, la fiche DI est portée par un *Établissement scolaire* (SIRET `21670482501686`). Les deux structures sont **distinctes** — pas de correspondance. ❌
+- **Axe C — Contenu :** Le candidat RI est un cours de français pour parents dans un cadre scolaire, thématique proche, mais porté par une association différente et sans lien programmatique OEPRE établi. ⚠️ Similarité thématique uniquement.
+
+Axe B ne valide pas → **pas de doublon**. La fiche DI est un nouveau dispositif dans la base, mais reste **non conforme** pour publication sur RI.$seed$, $seed$f16e8573-a279-4775-8612-93a67cb1dc32$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$ea65a775-0122-4991-802a-e12d1f2e9399$seed$, $seed$2026-06-17 14:37:03.738907+00$seed$, $seed$2026-06-17 14:37:03.738907$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:37:03.737Z'
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (Primo-arrivant) via `extra.organisme-financeur[0].extras[0].extra` | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** — Ouvrir l'école aux parents pour la réussite des enfants | ❌ Refusé |
+| 5. Durée | — (arrêt étape 4) | — |
+| 6. Volume horaire | — (arrêt étape 4) | — |
+
+**Motif de refus — Étape 4 :**
+Le dispositif est explicitement identifié comme **OEPRE** (Ouvrir l'école aux parents pour la réussite des enfants), à la fois dans l'intitulé (`nom`) et dans le champ `extra.organisme-financeur[0].extras[0].extra[1].$` (`"programme-financeur": "OEPRE"`). Ce type de dispositif est **explicitement refusé** par la jurisprudence RI (règle de périmètre dispositif — hors périmètre éditorial).
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche. 1 candidat retourné.
+
+| Critère | Fiche DI | Candidat RI |
+|---------|----------|-------------|
+| **Titre** | Ouvrir l'école aux parents pour la réussite des enfants - OEPRE | Apprendre le français pour la vie scolaire des enfants |
+| **Structure** | Ecole primaire Les Sources | Association Contact et Promotion |
+| **Localisation** | 67 - Bas-Rhin (Saverne) | 67 - Bas-Rhin |
+| **Score API** | — | 8/10 |
+| **Raisons API** | — | same department, shared keywords |
+
+**Analyse :**
+- **Axe A (Localisation) :** Même département 67 ✅
+- **Axe B (Structure) :** Structures totalement différentes — *Ecole primaire Les Sources* (établissement scolaire public) ≠ *Association Contact et Promotion* ❌
+- **Axe C (Contenu) :** Thématique proche (français + vie scolaire des parents), mais porteurs distincts, dispositifs indépendants.
+
+→ L'Axe B étant éliminatoire, le candidat est rejeté. Il n'existe aucun doublon de cette fiche sur Réfugiés.info.
+
+---
+
+> ⚠️ **Note édito :** Cette fiche est refusée pour type OEPRE (règle ferme). La détection doublon est fournie à titre documentaire uniquement.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:03.737Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
+compliant: false
+duplicate: false
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (Primo-arrivant) via `extra.organisme-financeur[0].extras[0].extra` | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** — Ouvrir l'école aux parents pour la réussite des enfants | ❌ Refusé |
+| 5. Durée | — (arrêt étape 4) | — |
+| 6. Volume horaire | — (arrêt étape 4) | — |
+
+**Motif de refus — Étape 4 :**
+Le dispositif est explicitement identifié comme **OEPRE** (Ouvrir l'école aux parents pour la réussite des enfants), à la fois dans l'intitulé (`nom`) et dans le champ `extra.organisme-financeur[0].extras[0].extra[1].$` (`"programme-financeur": "OEPRE"`). Ce type de dispositif est **explicitement refusé** par la jurisprudence RI (règle de périmètre dispositif — hors périmètre éditorial).
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche. 1 candidat retourné.
+
+| Critère | Fiche DI | Candidat RI |
+|---------|----------|-------------|
+| **Titre** | Ouvrir l'école aux parents pour la réussite des enfants - OEPRE | Apprendre le français pour la vie scolaire des enfants |
+| **Structure** | Ecole primaire Les Sources | Association Contact et Promotion |
+| **Localisation** | 67 - Bas-Rhin (Saverne) | 67 - Bas-Rhin |
+| **Score API** | — | 8/10 |
+| **Raisons API** | — | same department, shared keywords |
+
+**Analyse :**
+- **Axe A (Localisation) :** Même département 67 ✅
+- **Axe B (Structure) :** Structures totalement différentes — *Ecole primaire Les Sources* (établissement scolaire public) ≠ *Association Contact et Promotion* ❌
+- **Axe C (Contenu) :** Thématique proche (français + vie scolaire des parents), mais porteurs distincts, dispositifs indépendants.
+
+→ L'Axe B étant éliminatoire, le candidat est rejeté. Il n'existe aucun doublon de cette fiche sur Réfugiés.info.
+
+---
+
+> ⚠️ **Note édito :** Cette fiche est refusée pour type OEPRE (règle ferme). La détection doublon est fournie à titre documentaire uniquement.$seed$, $seed$e8ada180-8d03-461a-ab1c-b93663558f79$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$50a9f79b-9186-4972-99fe-d61ade21ce24$seed$, $seed$2026-06-17 14:37:04.111697+00$seed$, $seed$2026-06-17 14:37:04.111697$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:37:04.109Z'
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` — État, Ministère de l'Intérieur | ✅ Accepté |
+| 3. Public visé | `81021` (analphabète), `81022` (immigré), `81023` (primo-arrivant), `81042` (réfugié) | ✅ Accepté |
+| 4. Type de dispositif | Ateliers socio-linguistiques FLE + alphabétisation — droit commun, ouvert à tous les migrants | ✅ Accepté |
+| 5.1 Dispositif terminé ? | `fin` = **20260612** (12 juin 2026) — audit au 17 juin 2026 → **expiré depuis 5 jours** | ❌ **Refusé** |
+| 5.2 Durée ≥ 20 jours | Non calculé (arrêt à l'étape 5.1) | — |
+| 6. Volume ≥ 20 heures | Non calculé (arrêt à l'étape 5.1) | — |
+
+**Motif de refus :** La date de fin de session (`20260612` = 12 juin 2026) est antérieure à la date d'audit (17 juin 2026). Le dispositif est expiré. La fiche ne peut pas être publiée en l'état — elle devra être soumise à nouveau avec une session 2026-2027 à jour.
+
+---
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗** (`duplicate: false`)
+
+Recherche effectuée via l'API RI fraîche. 3 candidats retournés pour Strasbourg / département 67.
+
+| Candidat RI | Structure | Ville | Axe A 📍 | Axe B 🏢 | Axe C 📝 | Verdict |
+|-------------|-----------|-------|----------|----------|----------|---------|
+| [Apprendre le français pour le travail](https://refugies.info/dispositif/69088d50ae09294d36443702) | Centre social et culturel Victor Schoelcher | Strasbourg | ✅ | ✅ (même structure) | ❌ Contenu différent : français **professionnel** vs ateliers FLE **généraux** (A1.1–A2) + alphabétisation | ❌ Non-doublon |
+| [Prendre des cours de chant en français](https://refugies.info/dispositif/659e43319ab2e432e02d7d53) | Ballade | Strasbourg | ✅ | ❌ Structure différente | ❌ Contenu sans rapport | ❌ Non-doublon |
+| [Apprendre le français et préparer le DELF](https://refugies.info/dispositif/68beacdeaf94eed3e0db1d80) | Léo Lagrange Animation | Schiltigheim | ⚠️ Ville différente | ❌ Structure différente | ❌ Non-doublon |
+
+**Conclusion :** Aucun doublon détecté. Le CSC Victor Schoelcher a bien une fiche existante sur RI (`69088d50ae09294d36443702`), mais elle concerne le **français professionnel**, pas les ateliers FLE généraux avec alphabétisation. Il s'agit de deux dispositifs distincts de la même structure.
+
+> ℹ️ **Note édito :** La fiche existante du CSC Victor Schoelcher pourrait être mise à jour si la session 2025-2026 des ateliers FLE avait déjà été publiée sous un autre intitulé — à vérifier manuellement.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:04.109Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$Je lance les deux analyses en parallèle.---
+compliant: false
+duplicate: false
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` — État, Ministère de l'Intérieur | ✅ Accepté |
+| 3. Public visé | `81021` (analphabète), `81022` (immigré), `81023` (primo-arrivant), `81042` (réfugié) | ✅ Accepté |
+| 4. Type de dispositif | Ateliers socio-linguistiques FLE + alphabétisation — droit commun, ouvert à tous les migrants | ✅ Accepté |
+| 5.1 Dispositif terminé ? | `fin` = **20260612** (12 juin 2026) — audit au 17 juin 2026 → **expiré depuis 5 jours** | ❌ **Refusé** |
+| 5.2 Durée ≥ 20 jours | Non calculé (arrêt à l'étape 5.1) | — |
+| 6. Volume ≥ 20 heures | Non calculé (arrêt à l'étape 5.1) | — |
+
+**Motif de refus :** La date de fin de session (`20260612` = 12 juin 2026) est antérieure à la date d'audit (17 juin 2026). Le dispositif est expiré. La fiche ne peut pas être publiée en l'état — elle devra être soumise à nouveau avec une session 2026-2027 à jour.
+
+---
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗** (`duplicate: false`)
+
+Recherche effectuée via l'API RI fraîche. 3 candidats retournés pour Strasbourg / département 67.
+
+| Candidat RI | Structure | Ville | Axe A 📍 | Axe B 🏢 | Axe C 📝 | Verdict |
+|-------------|-----------|-------|----------|----------|----------|---------|
+| [Apprendre le français pour le travail](https://refugies.info/dispositif/69088d50ae09294d36443702) | Centre social et culturel Victor Schoelcher | Strasbourg | ✅ | ✅ (même structure) | ❌ Contenu différent : français **professionnel** vs ateliers FLE **généraux** (A1.1–A2) + alphabétisation | ❌ Non-doublon |
+| [Prendre des cours de chant en français](https://refugies.info/dispositif/659e43319ab2e432e02d7d53) | Ballade | Strasbourg | ✅ | ❌ Structure différente | ❌ Contenu sans rapport | ❌ Non-doublon |
+| [Apprendre le français et préparer le DELF](https://refugies.info/dispositif/68beacdeaf94eed3e0db1d80) | Léo Lagrange Animation | Schiltigheim | ⚠️ Ville différente | ❌ Structure différente | ❌ Non-doublon |
+
+**Conclusion :** Aucun doublon détecté. Le CSC Victor Schoelcher a bien une fiche existante sur RI (`69088d50ae09294d36443702`), mais elle concerne le **français professionnel**, pas les ateliers FLE généraux avec alphabétisation. Il s'agit de deux dispositifs distincts de la même structure.
+
+> ℹ️ **Note édito :** La fiche existante du CSC Victor Schoelcher pourrait être mise à jour si la session 2025-2026 des ateliers FLE avait déjà été publiée sous un autre intitulé — à vérifier manuellement.$seed$, $seed$19d8279a-6b9d-46ab-b782-c1a26cb74ec0$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$1b2a32ce-fd58-4095-ab33-909c3da83c84$seed$, $seed$2026-06-17 14:37:04.160697+00$seed$, $seed$2026-06-17 14:37:04.160697$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:37:04.158Z'
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (Primo-arrivant) | ✅ Accepté |
+| **4. Type de dispositif** | **OEPRE — programme explicitement exclu** | **❌ Refusé** |
+
+> **ARRÊT à l'étape 4.** Les étapes 5 (durée) et 6 (volume horaire) ne sont pas évaluées.
+
+**Motif du refus :** Le dispositif **OEPRE (Ouvrir l'École aux Parents pour la Réussite des Enfants)** est explicitement identifié comme un type de programme **hors périmètre Réfugiés.info**, quelle que soit sa qualité ou sa pertinence thématique. Il s'agit d'un dispositif destiné aux **parents** dans le cadre scolaire de leurs enfants, et non d'un service d'accompagnement direct pour le public réfugié ou primo-arrivant au sens RI.
+
+---
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`) avec les paramètres : titre complet, structure "Etablissement scolaire", commune Mulhouse, département 68.
+
+> **Résultat :** Aucun candidat retourné. Ce dispositif n'existe pas encore sur Réfugiés.info.
+
+| Axe | Résultat |
+|-----|----------|
+| 📍 Localisation (Mulhouse / 68) | Aucun candidat à comparer |
+| 🏢 Structure (Etablissement scolaire) | Aucun candidat à comparer |
+| 📝 Contenu (OEPRE) | Aucun candidat à comparer |
+
+---
+
+**Synthèse pour l'équipe édito :** La fiche est **refusée** en raison du type OEPRE (Étape 4), et il n'existe **aucun doublon** sur RI. Aucune action de publication ni de mise à jour n'est nécessaire.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:04.158Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
+compliant: false
+duplicate: false
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (Primo-arrivant) | ✅ Accepté |
+| **4. Type de dispositif** | **OEPRE — programme explicitement exclu** | **❌ Refusé** |
+
+> **ARRÊT à l'étape 4.** Les étapes 5 (durée) et 6 (volume horaire) ne sont pas évaluées.
+
+**Motif du refus :** Le dispositif **OEPRE (Ouvrir l'École aux Parents pour la Réussite des Enfants)** est explicitement identifié comme un type de programme **hors périmètre Réfugiés.info**, quelle que soit sa qualité ou sa pertinence thématique. Il s'agit d'un dispositif destiné aux **parents** dans le cadre scolaire de leurs enfants, et non d'un service d'accompagnement direct pour le public réfugié ou primo-arrivant au sens RI.
+
+---
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`) avec les paramètres : titre complet, structure "Etablissement scolaire", commune Mulhouse, département 68.
+
+> **Résultat :** Aucun candidat retourné. Ce dispositif n'existe pas encore sur Réfugiés.info.
+
+| Axe | Résultat |
+|-----|----------|
+| 📍 Localisation (Mulhouse / 68) | Aucun candidat à comparer |
+| 🏢 Structure (Etablissement scolaire) | Aucun candidat à comparer |
+| 📝 Contenu (OEPRE) | Aucun candidat à comparer |
+
+---
+
+**Synthèse pour l'équipe édito :** La fiche est **refusée** en raison du type OEPRE (Étape 4), et il n'existe **aucun doublon** sur RI. Aucune action de publication ni de mise à jour n'est nécessaire.$seed$, $seed$0c0f206f-9c91-44e1-a2ca-93e31aa80537$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$0fb57cb4-74ec-46cb-a13a-873ffb7007d3$seed$, $seed$2026-06-17 14:37:05.26211+00$seed$, $seed$2026-06-17 14:37:05.26211$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:37:05.258Z'
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` — Oui | ✅ Accepté |
+| 2. Financeur | `"19"` — État, Ministère de l'intérieur | ✅ Accepté |
+| 3. Public visé | `"81023"` (Primo-arrivant) dans `extra.organisme-financeur[].extras[].extra[]` | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** — Ouvrir l'école aux parents pour la réussite des enfants | ❌ **Refusé** |
+| 5. Durée | — | ⏹ Non évalué |
+| 6. Volume horaire | — | ⏹ Non évalué |
+
+**Motif de refus — Étape 4 :**
+Le dispositif est explicitement identifié comme **OEPRE** (« Ouvrir l'école aux parents pour la réussite des enfants »), tant dans le `nom` que dans le contenu. Ce programme figure dans la liste des types de dispositifs **explicitement refusés** par la jurisprudence RI (`jurisprudence.md`, §4 — Périmètre dispositif). Arrêt immédiat du traitement.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Résultat : Nouveau 🆗**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`) sur le titre, la structure, la commune (Saint-Louis) et le département 68.
+
+| Candidat | Structure | Localisation | Score | Verdict |
+|----------|-----------|--------------|-------|---------|
+| *(aucun résultat)* | — | — | — | — |
+
+Aucun candidat retourné. Ce dispositif n'existe pas encore sur Réfugiés.info — mais il **ne doit pas y être publié** en raison du refus de conformité (type OEPRE).
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:05.258Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
+compliant: false
+duplicate: false
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` — Oui | ✅ Accepté |
+| 2. Financeur | `"19"` — État, Ministère de l'intérieur | ✅ Accepté |
+| 3. Public visé | `"81023"` (Primo-arrivant) dans `extra.organisme-financeur[].extras[].extra[]` | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** — Ouvrir l'école aux parents pour la réussite des enfants | ❌ **Refusé** |
+| 5. Durée | — | ⏹ Non évalué |
+| 6. Volume horaire | — | ⏹ Non évalué |
+
+**Motif de refus — Étape 4 :**
+Le dispositif est explicitement identifié comme **OEPRE** (« Ouvrir l'école aux parents pour la réussite des enfants »), tant dans le `nom` que dans le contenu. Ce programme figure dans la liste des types de dispositifs **explicitement refusés** par la jurisprudence RI (`jurisprudence.md`, §4 — Périmètre dispositif). Arrêt immédiat du traitement.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Résultat : Nouveau 🆗**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`) sur le titre, la structure, la commune (Saint-Louis) et le département 68.
+
+| Candidat | Structure | Localisation | Score | Verdict |
+|----------|-----------|--------------|-------|---------|
+| *(aucun résultat)* | — | — | — | — |
+
+Aucun candidat retourné. Ce dispositif n'existe pas encore sur Réfugiés.info — mais il **ne doit pas y être publié** en raison du refus de conformité (type OEPRE).$seed$, $seed$fd77bbe8-83b2-483c-a942-d2641cc7f066$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$5f3ae3e1-9fe7-4f73-a501-1398c54d8b79$seed$, $seed$2026-06-17 14:37:05.587566+00$seed$, $seed$2026-06-17 14:37:05.587566$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:37:05.585Z'
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (Primo-arrivant) | ✅ Accepté |
+| **4. Type de dispositif** | **OEPRE — dispositif explicitement exclu** | **❌ Refusé** |
+| 5. Durée | *(non évaluée)* | — |
+| 6. Volume horaire | *(non évalué)* | — |
+
+**Motif de refus — Étape 4 :**
+Le nom du dispositif contient explicitement `OEPRE` (*Ouvrir l'école aux parents pour la réussite des enfants*). Ce programme est **nommément exclu** du périmètre éditorial de Réfugiés.info (jurisprudence, section 4 — Type de dispositif). L'OEPRE est un dispositif institutionnel scolaire destiné à accompagner la parentalité autour de la scolarité des enfants ; il ne s'inscrit pas dans les catégories acceptées (droit commun utile aux réfugiés, orientation, bénévolat…).
+
+L'analyse s'arrête à cette étape. Les étapes 5 (durée) et 6 (volume horaire) ne sont pas évaluées.
+
+---
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : Nouveau 🆗 — `duplicate: false`**
+
+Recherche effectuée via l'API RI fraîche. Aucun candidat retourné pour ce dispositif dans le département 68 (Haut-Rhin) avec la structure "Ecole élémentaire Les Jonquilles" et le titre OEPRE.
+
+> Ce dispositif n'existe pas encore sur Réfugiés.info — mais la question est sans objet compte tenu du **refus à l'étape 4** (type OEPRE exclu du périmètre).
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:05.585Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
+compliant: false
+duplicate: false
+
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (Primo-arrivant) | ✅ Accepté |
+| **4. Type de dispositif** | **OEPRE — dispositif explicitement exclu** | **❌ Refusé** |
+| 5. Durée | *(non évaluée)* | — |
+| 6. Volume horaire | *(non évalué)* | — |
+
+**Motif de refus — Étape 4 :**
+Le nom du dispositif contient explicitement `OEPRE` (*Ouvrir l'école aux parents pour la réussite des enfants*). Ce programme est **nommément exclu** du périmètre éditorial de Réfugiés.info (jurisprudence, section 4 — Type de dispositif). L'OEPRE est un dispositif institutionnel scolaire destiné à accompagner la parentalité autour de la scolarité des enfants ; il ne s'inscrit pas dans les catégories acceptées (droit commun utile aux réfugiés, orientation, bénévolat…).
+
+L'analyse s'arrête à cette étape. Les étapes 5 (durée) et 6 (volume horaire) ne sont pas évaluées.
+
+---
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : Nouveau 🆗 — `duplicate: false`**
+
+Recherche effectuée via l'API RI fraîche. Aucun candidat retourné pour ce dispositif dans le département 68 (Haut-Rhin) avec la structure "Ecole élémentaire Les Jonquilles" et le titre OEPRE.
+
+> Ce dispositif n'existe pas encore sur Réfugiés.info — mais la question est sans objet compte tenu du **refus à l'étape 4** (type OEPRE exclu du périmètre).$seed$, $seed$fb7bf964-c685-4030-ad99-b13366536e61$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$470fd5a7-0987-44e0-b084-a36eebbdaf07$seed$, $seed$2026-06-17 14:37:07.219838+00$seed$, $seed$2026-06-17 14:37:07.219838$seed$, $seed$ingestion$seed$, $seed$$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:07.216Z"}, "parse_error": "end of the stream or a document separator is expected at line 3, column 1:\n    ```yaml\n    ^"}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$error$seed$, $seed$Je lance les deux analyses en parallèle.---
+
+```yaml
+---
+compliant: false
+duplicate: false
+---
+```
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État – Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (Primo-arrivant) | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** – Ouvrir l'école aux parents pour la réussite des enfants | ❌ Refusé |
+| 5. Durée | — (non évalué) | — |
+| 6. Volume horaire | — (non évalué) | — |
+
+**Motif d'arrêt — Étape 4 :** Le dispositif est explicitement identifié comme **OEPRE** (acronyme présent dans le titre et le nom du programme financeur `"programme-financeur": "OEPRE"`). Ce type de dispositif est **exclu du périmètre éditorial de Réfugiés.info** sans exception, quelle que soit sa localisation ou son financeur. L'arrêt est immédiat à cette étape.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗** `duplicate: false`
+
+Recherche effectuée via l'API RI fraîche. Aucun candidat retourné pour la combinaison titre + structure + département 68 + commune Kingersheim. Ce dispositif OEPRE n'a pas de doublon existant sur Réfugiés.info — cohérent avec son exclusion systématique du périmètre éditorial.$seed$, $seed$07861226-432b-413b-af87-bdd42f0cc5b7$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$b4724527-5a3b-43cb-abe8-81a12e944ab3$seed$, $seed$2026-06-17 14:37:08.100224+00$seed$, $seed$2026-06-17 14:37:08.100224$seed$, $seed$ingestion$seed$, $seed$$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:08.095Z"}, "parse_error": "can not read a block mapping entry; a multiline key may not be an implicit key at line 9, column 1:\n    ## 1. Analyse de Conformité Édit ... \n    ^"}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$error$seed$, $seed$---
 compliant: true
 duplicate: false
-carif_oref_url: https://www.intercariforef.org/formations/formations-intitule-formation/formation-14_AF_0000242613_SE_0001608026.html
----
 
-# Rapport d'audit DI
+# Rapport de traitement
 
 <hr id="audit">
 
 ## 1. Analyse de Conformité Éditoriale
 
-**Décision finale:** Fiche acceptée ✅
+**Décision finale : Fiche acceptée ✅**
 
 | Étape | Donnée trouvée | Décision |
 |-------|----------------|----------|
 | 1. Conventionnement | `1` (Oui) | ✅ Accepté |
-| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
-| 3. Public visé | `81023` (primo-arrivant) + `81042` (réfugié) | ✅ Accepté |
-| 4. Type dispositif | Formation ASL complémentaire CIR - Droit commun utile aux réfugiés | ✅ Accepté |
-| 5. Durée | 303 jours (01/10/2025 → 31/07/2026) | ✅ Accepté |
-| 6. Volume horaire | 110 heures | ✅ Accepté |
+| 2. Financeur | `19` – État, Ministère de l'intérieur | ✅ Accepté |
+| 3. Public visé | `81022` (Public immigré) + `publics: personnes-exilees` | ✅ Accepté |
+| 4. Type de dispositif | Formation linguistique droit commun, ouverte à tous les primo-arrivants allophones, aucune exclusivité nationale | ✅ Accepté |
+| 5.1 Dispositif expiré ? | Fin : 20260703 → en cours | ✅ Accepté |
+| 5.2 Durée ≥ 20 jours ? | Du 02/09/2025 au 03/07/2026 → ~304 jours | ✅ Accepté |
+| 6. Volume horaire ≥ 20h | `nombre-heures-total: 100` → 100h | ✅ Accepté |
 
-**Remarque:** Formation conventionnée BOP 104 (programme régional IDF ASL 2025-2026), financée par le Ministère de l'Intérieur, ciblant explicitement les primo-arrivants et réfugiés (+ demandeurs d'asile selon `info-public-vise`).
+**Notes :**
+- **Étape 3 (rattrapage sémantique non nécessaire)** : Le code `81022` (Public immigré) est explicitement présent dans `organisme-financeur.extras.extra`, et `publics: ["personnes-exilees"]` confirme la cible. Passage direct par code.
+- **Étape 4** : Aucun signe d'exclusivité nationale, pas d'OEPRE, pas de plaidoyer. Dispositif sociolinguistique ancré dans la droit commun, directement utile aux réfugiés et primo-arrivants.
+- **Mention des 5€** : La cotisation annuelle de 5€ est signalée dans `frais: payant` et `modalites-inscription`. Elle est accessoire (adhésion associative) et ne remet pas en cause la conformité — le dispositif est financé par le Ministère de l'intérieur (code `19`).
 
 <hr id="doublons">
 
 ## 2. Détection de Doublons
 
-**Décision:** Nouveau dispositif 🆗
+**Résultat : NOUVEAU 🆗**
 
-### Analyse comparative
+Recherche effectuée via l'API RI fraîche avec les paramètres suivants :
+- Titre : *Cours de FLE - Accompagnement sociolinguistique des primo-arrivants allophones*
+- Structure : *Union Régionale des Francas du Grand Est*
+- Commune : *Frouard*
+- Département : `54`
 
-| Critère | Fiche candidate | Correspondances trouvées |
-|---------|-----------------|--------------------------|
-| **Structure** | Association pour l'insertion des jeunes (APIJ) | Aucune fiche APIJ dans la base |
-| **Localisation** | 93 - Seine-Saint-Denis + IDF (75, 77, 78, 91, 92, 94, 95) | — |
-| **Type** | ASL complémentaires CIR - Parcours linguistique professionnel | — |
+**L'API ne retourne aucun candidat.** Aucun dispositif existant sur Réfugiés.info ne correspond à cette fiche.
 
-### Fiches proches (non-doublons)
+| Axe | Analyse | Résultat |
+|-----|---------|---------|
+| 📍 Localisation | Frouard / 54 – aucun candidat dans ce périmètre | 🆗 Aucun match |
+| 🏢 Structure | Union Régionale des Francas du Grand Est / Les Francas 54 – absente de RI | 🆗 Aucun match |
+| 📝 Contenu | FLE sociolinguistique QPV Frouard – non référencé sur RI | 🆗 Aucun match |
 
-| ID | Titre | Structure | Raison de non-doublon |
-|----|-------|-----------|----------------------|
-| `62e7ce1f95963ed3053e1d67` | Faire une formation en français de niveau A2 ou B1 | FIDE | Structure différente |
-| `6818e223d377d621f0d652be` | Apprendre le français et être autonome | Association Accion Artistica | Structure différente, Saint-Denis mais autre organisme |
+Ce dispositif peut être traité comme une **nouvelle fiche** à créer sur Réfugiés.info.$seed$, $seed$5e1d4a4d-0492-402f-9a7a-76d5047cf4af$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$fcce9262-4423-49e7-8f2f-2362301c4886$seed$, $seed$2026-06-17 14:37:09.354106+00$seed$, $seed$2026-06-17 14:37:09.354106$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:37:09.343Z'
+---
 
-**Conclusion:** Aucun doublon détecté. La structure APIJ (Association pour l'insertion des jeunes) n'a pas de fiche existante sur Réfugiés.info. Cette fiche peut être créée comme nouveau dispositif.$seed$, $seed$26c0e650-0e85-4819-b64b-013f8a972dad$seed$) ON CONFLICT DO NOTHING;
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (Primo-arrivant) via `extra.organisme-financeur[0].extras[0].extra` | ✅ Accepté |
+| 4. Type dispositif | **OEPRE** — Ouvrir l'École aux Parents pour la Réussite des Enfants | ❌ Refusé |
+| 5. Durée | *(non évalué — arrêt à l'étape 4)* | — |
+| 6. Volume horaire | *(non évalué — arrêt à l'étape 4)* | — |
+
+**Motif de refus (Étape 4) :** Le dispositif OEPRE est explicitement exclu du périmètre éditorial de Réfugiés.info, quelle que soit sa conformité sur les autres critères. Cette règle est documentée dans `jurisprudence.md` comme un refus systématique, sans cas par cas possible.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Résultat : Nouveau dispositif 🆗**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`) avec les paramètres : titre, description, structure (Collège de Ferrette), commune (Ferrette), département 68.
+
+**Aucun candidat retourné.** Aucune fiche existante sur Réfugiés.info ne correspond à ce dispositif.
+
+> **Note édito :** Le résultat `duplicate: false` est sans objet pratique ici, la fiche étant refusée à l'étape 4 (OEPRE). Aucune action de mise à jour ou de création n'est à entreprendre.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:09.343Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$Je lance les deux analyses en parallèle. D'abord la détection de doublons via l'API fraîche.---
+compliant: false
+duplicate: false
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (Primo-arrivant) via `extra.organisme-financeur[0].extras[0].extra` | ✅ Accepté |
+| 4. Type dispositif | **OEPRE** — Ouvrir l'École aux Parents pour la Réussite des Enfants | ❌ Refusé |
+| 5. Durée | *(non évalué — arrêt à l'étape 4)* | — |
+| 6. Volume horaire | *(non évalué — arrêt à l'étape 4)* | — |
+
+**Motif de refus (Étape 4) :** Le dispositif OEPRE est explicitement exclu du périmètre éditorial de Réfugiés.info, quelle que soit sa conformité sur les autres critères. Cette règle est documentée dans `jurisprudence.md` comme un refus systématique, sans cas par cas possible.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Résultat : Nouveau dispositif 🆗**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`) avec les paramètres : titre, description, structure (Collège de Ferrette), commune (Ferrette), département 68.
+
+**Aucun candidat retourné.** Aucune fiche existante sur Réfugiés.info ne correspond à ce dispositif.
+
+> **Note édito :** Le résultat `duplicate: false` est sans objet pratique ici, la fiche étant refusée à l'étape 4 (OEPRE). Aucune action de mise à jour ou de création n'est à entreprendre.$seed$, $seed$7de8daf5-4464-4b29-9997-eb4bc577d446$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$55f3aa80-9363-4dcf-a7d9-6c42bd1e7618$seed$, $seed$2026-06-17 14:37:09.62583+00$seed$, $seed$2026-06-17 14:37:09.62583$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:37:09.624Z'
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` (Oui) | ✅ Accepté |
+| 2. Financeur | `"2"` — Conseil régional | ✅ Accepté |
+| 3. Public visé | `80006` (hors périmètre) + analyse sémantique → public général | ❌ **Refusé** |
+| 4. Type dispositif | — (non atteint) | — |
+| 5. Durée | — (non atteint) | — |
+| 6. Volume horaire | — (non atteint) | — |
+
+### Détail de l'étape bloquante — Étape 3 : Public visé
+
+**Code détecté :** Le seul `code-public-vise` présent dans le JSON est `80006`, extrait du bloc `extra.organisme-financeur[0].extras[0].extra`. Ce code n'apparaît pas dans la liste des codes acceptés par RI (`81021`, `81043`, `81019`, `81022`, `81042`, `82060`, `81023`). Le champ `extra.info-public-vise` est `null`, et `publics` (racine) contient uniquement `demandeurs-emploi`, également hors périmètre.
+
+**Analyse sémantique de rattrapage :** Aucun indicateur RI détecté dans l'ensemble du JSON.
+- La `description` présente le DAEU comme un diplôme ouvert aux **adultes ayant interrompu leurs études**, sans ciblage réfugié/immigré/primo-arrivant.
+- La `conditions_acces` mentionne que *"les personnes de nationalité étrangère doivent être titulaires d'un permis de séjour"* — c'est une **condition d'accès**, non un ciblage du public RI.
+- La `mobilisation_precisions` liste des critères d'âge et d'expérience professionnelle, sans aucune référence à CIR, BPI, OFII, protection subsidiaire, ni allophone.
+- Absence totale de signaux sémantiques RI : pas de "primo-arrivant", "réfugié", "demandeur d'asile", "signataire du CIR", "parcours d'intégration", "allophone".
+
+**Conclusion :** Le DAEU option B est un diplôme de droit commun visant le **grand public adulte** sans ciblage du public RI. Le rattrapage sémantique ne permet pas de valider l'étape 3. Refus confirmé.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`) avec les paramètres : titre, structure (Université de Haute Alsace SERFA), commune (Mulhouse), département 68.
+
+**Résultat :** Aucun candidat retourné. Ce dispositif n'a pas d'équivalent publié sur Réfugiés.info.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:09.624Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$Je lance les deux analyses en parallèle.---
+compliant: false
+duplicate: false
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` (Oui) | ✅ Accepté |
+| 2. Financeur | `"2"` — Conseil régional | ✅ Accepté |
+| 3. Public visé | `80006` (hors périmètre) + analyse sémantique → public général | ❌ **Refusé** |
+| 4. Type dispositif | — (non atteint) | — |
+| 5. Durée | — (non atteint) | — |
+| 6. Volume horaire | — (non atteint) | — |
+
+### Détail de l'étape bloquante — Étape 3 : Public visé
+
+**Code détecté :** Le seul `code-public-vise` présent dans le JSON est `80006`, extrait du bloc `extra.organisme-financeur[0].extras[0].extra`. Ce code n'apparaît pas dans la liste des codes acceptés par RI (`81021`, `81043`, `81019`, `81022`, `81042`, `82060`, `81023`). Le champ `extra.info-public-vise` est `null`, et `publics` (racine) contient uniquement `demandeurs-emploi`, également hors périmètre.
+
+**Analyse sémantique de rattrapage :** Aucun indicateur RI détecté dans l'ensemble du JSON.
+- La `description` présente le DAEU comme un diplôme ouvert aux **adultes ayant interrompu leurs études**, sans ciblage réfugié/immigré/primo-arrivant.
+- La `conditions_acces` mentionne que *"les personnes de nationalité étrangère doivent être titulaires d'un permis de séjour"* — c'est une **condition d'accès**, non un ciblage du public RI.
+- La `mobilisation_precisions` liste des critères d'âge et d'expérience professionnelle, sans aucune référence à CIR, BPI, OFII, protection subsidiaire, ni allophone.
+- Absence totale de signaux sémantiques RI : pas de "primo-arrivant", "réfugié", "demandeur d'asile", "signataire du CIR", "parcours d'intégration", "allophone".
+
+**Conclusion :** Le DAEU option B est un diplôme de droit commun visant le **grand public adulte** sans ciblage du public RI. Le rattrapage sémantique ne permet pas de valider l'étape 3. Refus confirmé.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`) avec les paramètres : titre, structure (Université de Haute Alsace SERFA), commune (Mulhouse), département 68.
+
+**Résultat :** Aucun candidat retourné. Ce dispositif n'a pas d'équivalent publié sur Réfugiés.info.$seed$, $seed$670a2120-c0bc-4a93-ae06-3a0deab2c834$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$b8117907-bf7a-4762-9ddc-ac150f1a0142$seed$, $seed$2026-06-17 14:37:09.916792+00$seed$, $seed$2026-06-17 14:37:09.916792$seed$, $seed$ingestion$seed$, $seed$$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:09.914Z"}, "parse_error": "unidentified alias \"*Analyse\" at line 3, column 10:\n    **Analyse conformité et doublons complète ... \n             ^"}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$error$seed$, $seed$Je lance les deux analyses en parallèle.---
+
+**Analyse conformité et doublons complètes. Voici le rapport.**
+
+---
+compliant: false
+duplicate: false
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌** *(sous réserve — voir Étape 6)*
+
+| Étape | Donnée trouvée | Décision |
+|---|---|---|
+| 1. Conventionnement | `"1"` → Oui | ✅ Accepté |
+| 2. Financeur | `"19"` → État - Ministère de l'intérieur (BOP 104) | ✅ Accepté |
+| 3. Public visé | `81022` (immigré), `81023` (primo-arrivant), `81042` (réfugié) | ✅ Accepté |
+| 4. Type de dispositif | Cours FLI droit commun, multi-niveaux (A1→B1 + alpha), utile aux réfugiés | ✅ Accepté |
+| 5.1 Dispositif terminé ? | Fin : `20261218` → pas encore expiré (audit : juin 2026) | ✅ Accepté |
+| 5.2 Durée ≥ 20 jours ? | 2024-01-01 → 2026-12-18 = **1082 jours** | ✅ Accepté |
+| 6. Volume ≥ 20 heures | `nombre-heures-total` : `null` / `duree-indicative` : `null` | ⚠️ Indéterminé |
+
+### Détail Étape 6 — Volume horaire
+
+Les deux champs sources sont absents :
+- `extra.action.nombre-heures-total` : `null`
+- `extra.action.duree-indicative` : `null`
+
+Aucun volume horaire total ne peut être calculé automatiquement. La fiche est un cours hebdomadaire récurrent (entrées/sorties permanentes, `modalites-entrees-sorties: "1"`), mais le nombre total d'heures n'est pas renseigné dans le JSON.
+
+> **→ Recommandation édito :** Contacter le Centre socio-culturel de Saint-Louis pour obtenir le volume horaire annuel ou par session (ex. "X heures/semaine × Y semaines"). Si ≥ 20h → la fiche passe. Sans cette donnée, la publication ne peut pas être validée automatiquement.
+
+---
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+*Recherche effectuée via l'API RI fraîche (juin 2026).*
+
+**Décision : NOUVEAU 🆗** — Aucun doublon détecté.
+
+| Candidat RI | Localisation | Structure | Score | Verdict |
+|---|---|---|---|---|
+| "Etre accompagné pour trouver un cours de français" (`6516d5440b6a276d177cb6ca`) | 13 - Bouches-du-Rhône (Istres…) | Centre Social la Farandole | 7 | ❌ Axe A échoue (68 ≠ 13) |
+| "Apprendre le français pour l'insertion professionnelle" (`6273e50668507dc8cd5cc1c2`) | 93/75 - Paris | ASLC | 5 | ❌ Axe A échoue (68 ≠ 75/93) |
+
+**Analyse :**
+- **Axe A (Localisation) :** Les deux candidats sont respectivement dans les Bouches-du-Rhône (13) et Paris (75/93). La fiche cible est à Saint-Louis (68 - Haut-Rhin). Divergence géographique majeure → non-match immédiat pour les deux.
+- **Axes B & C :** Non évalués (éliminés dès l'Axe A).
+
+Aucune fiche existante sur RI ne correspond au Centre socio-culturel de Saint-Louis (68) pour ce dispositif FLI.$seed$, $seed$b7a46605-0c2f-447f-853e-ce9aa2c391d4$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$82ede78b-b97a-4580-bf36-c7243f0b304a$seed$, $seed$2026-06-17 14:37:09.917494+00$seed$, $seed$2026-06-17 14:37:09.917494$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:37:09.916Z'
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` (Oui) | ✅ Accepté |
+| 2. Financeur | `"19"` (État – Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `"81023"` (Primo-arrivant) | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** – dispositif explicitement refusé par la jurisprudence | ❌ **Refusé** |
+
+> **Motif d'arrêt – Étape 4 :** Le nom et le contenu de la fiche identifient sans ambiguïté le programme **OEPRE (Ouvrir l'École aux Parents pour la Réussite des Enfants)**. Ce dispositif figure nommément dans `jurisprudence.md` comme **refusé**, indépendamment de ses autres caractéristiques (conventionnement, financeur, public).
+
+Les étapes 5 et 6 ne sont pas évaluées (arrêt sur décision définitive à l'étape 4).
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Résultat : Nouveau 🆗 — aucun doublon détecté**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`) avec les paramètres suivants :
+- Titre : *Ouvrir l'école aux parents pour la réussite des enfants - OEPRE*
+- Structure : *Ecole élémentaire Marcel Pagnol*
+- Commune : *Huningue* | Département : `68`
+
+L'API n'a retourné **aucun candidat**. Aucun dispositif équivalent n'est actuellement publié sur Réfugiés.info pour cette structure et cette localisation.
+
+> **Note édito :** La fiche est inédite sur RI, mais reste **non conforme** (OEPRE refusé à l'étape 4). Aucune action de publication n'est recommandée.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:09.916Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
+compliant: false
+duplicate: false
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` (Oui) | ✅ Accepté |
+| 2. Financeur | `"19"` (État – Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `"81023"` (Primo-arrivant) | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** – dispositif explicitement refusé par la jurisprudence | ❌ **Refusé** |
+
+> **Motif d'arrêt – Étape 4 :** Le nom et le contenu de la fiche identifient sans ambiguïté le programme **OEPRE (Ouvrir l'École aux Parents pour la Réussite des Enfants)**. Ce dispositif figure nommément dans `jurisprudence.md` comme **refusé**, indépendamment de ses autres caractéristiques (conventionnement, financeur, public).
+
+Les étapes 5 et 6 ne sont pas évaluées (arrêt sur décision définitive à l'étape 4).
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Résultat : Nouveau 🆗 — aucun doublon détecté**
+
+Recherche effectuée via l'API RI fraîche (`search_ri_duplicate_dispositifs`) avec les paramètres suivants :
+- Titre : *Ouvrir l'école aux parents pour la réussite des enfants - OEPRE*
+- Structure : *Ecole élémentaire Marcel Pagnol*
+- Commune : *Huningue* | Département : `68`
+
+L'API n'a retourné **aucun candidat**. Aucun dispositif équivalent n'est actuellement publié sur Réfugiés.info pour cette structure et cette localisation.
+
+> **Note édito :** La fiche est inédite sur RI, mais reste **non conforme** (OEPRE refusé à l'étape 4). Aucune action de publication n'est recommandée.$seed$, $seed$56390355-a608-4538-a454-02b3fcfad46b$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$3ab50c34-655c-4b50-b191-04808b1f8081$seed$, $seed$2026-06-17 14:37:11.729882+00$seed$, $seed$2026-06-17 14:37:11.729882$seed$, $seed$ingestion$seed$, $seed$---
+compliant: true
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:37:11.722Z'
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche acceptée ✅**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `2` — Collectivité territoriale - Conseil régional | ✅ Accepté |
+| 3. Public visé | `80006` (hors liste) → rattrapage sémantique : "La lutte contre l'illettrisme" → équivalent `81019` | ✅ Accepté |
+| 4. Type de dispositif | Formation droit commun (compétences de base / CléA) utile aux réfugiés | ✅ Accepté |
+| 5.1 Dispositif expiré ? | `fin` = 20261031 — non expiré à la date d'audit | ✅ Accepté |
+| 5.2 Durée ≥ 20 jours ? | 20250115 → 20261031 = **655 jours** | ✅ Accepté |
+| 6. Volume horaire ≥ 20h | `nombre-heures-total` = **300 heures** | ✅ Accepté |
+
+**Note — Étape 3 (rattrapage sémantique) :** le seul `code-public-vise` renseigné est `80006`, qui n'est pas dans la liste des codes acceptés. Cependant, la description mentionne explicitement **"La lutte contre l'illettrisme"**, ce qui correspond sémantiquement au code `81019` (Public en situation d'illettrisme), accepté dans le périmètre RI. Le dispositif cible également les personnes souhaitant acquérir les savoirs de base (lire/écrire/calculer), profil directement pertinent pour le public RI allophone.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche avec les paramètres suivants :
+- Titre : *Objectif compétences de base*
+- Structure : *Association pour la Réadaptation et la Formation Professionnelle*
+- Commune : Mulhouse
+- Département : 68
+
+**Aucun candidat retourné.** Ce dispositif n'est pas encore référencé sur Réfugiés.info.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:11.722Z"}, "compliant": true, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
+compliant: true
+duplicate: false
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche acceptée ✅**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `2` — Collectivité territoriale - Conseil régional | ✅ Accepté |
+| 3. Public visé | `80006` (hors liste) → rattrapage sémantique : "La lutte contre l'illettrisme" → équivalent `81019` | ✅ Accepté |
+| 4. Type de dispositif | Formation droit commun (compétences de base / CléA) utile aux réfugiés | ✅ Accepté |
+| 5.1 Dispositif expiré ? | `fin` = 20261031 — non expiré à la date d'audit | ✅ Accepté |
+| 5.2 Durée ≥ 20 jours ? | 20250115 → 20261031 = **655 jours** | ✅ Accepté |
+| 6. Volume horaire ≥ 20h | `nombre-heures-total` = **300 heures** | ✅ Accepté |
+
+**Note — Étape 3 (rattrapage sémantique) :** le seul `code-public-vise` renseigné est `80006`, qui n'est pas dans la liste des codes acceptés. Cependant, la description mentionne explicitement **"La lutte contre l'illettrisme"**, ce qui correspond sémantiquement au code `81019` (Public en situation d'illettrisme), accepté dans le périmètre RI. Le dispositif cible également les personnes souhaitant acquérir les savoirs de base (lire/écrire/calculer), profil directement pertinent pour le public RI allophone.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche avec les paramètres suivants :
+- Titre : *Objectif compétences de base*
+- Structure : *Association pour la Réadaptation et la Formation Professionnelle*
+- Commune : Mulhouse
+- Département : 68
+
+**Aucun candidat retourné.** Ce dispositif n'est pas encore référencé sur Réfugiés.info.$seed$, $seed$7162abd8-aa0a-4194-a416-47311f0162c7$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$aec80dec-0cc9-4a7e-a119-531bec5cc477$seed$, $seed$2026-06-17 14:37:12.219942+00$seed$, $seed$2026-06-17 14:37:12.219942$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:37:12.215Z'
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` (Oui) | ✅ Accepté |
+| 2. Financeur | `"19"` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `"81023"` (Primo-arrivant) + `personnes-exilees` | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** — type explicitement exclu | ❌ Refusé |
+| 5. Durée | — (arrêt étape 4) | — |
+| 6. Volume horaire | — (arrêt étape 4) | — |
+
+**Motif de refus :** Le dispositif est un **OEPRE** (Ouvrir l'école aux parents pour la réussite des enfants), type explicitement exclu du périmètre éditorial de Réfugiés.info. Ce programme est destiné aux parents pour soutenir la scolarité de leurs enfants ; il ne s'adresse pas directement aux réfugiés/primo-arrivants en tant que bénéficiaires principaux d'un parcours d'intégration. Arrêt immédiat à l'étape 4.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Résultat : Nouveau 🆗**
+
+Recherche effectuée via l'API RI fraîche — aucun candidat retourné pour ce dispositif (titre "OEPRE", structure "Collège Jacques Callot", département 54 - Meurthe-et-Moselle).
+
+**Conclusion :** Aucun doublon détecté sur Réfugiés.info. La fiche est inédite, mais ce constat est sans incidence sur la décision de conformité : la fiche reste **refusée** en raison du type OEPRE.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:12.215Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
+compliant: false
+duplicate: false
+
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `"1"` (Oui) | ✅ Accepté |
+| 2. Financeur | `"19"` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `"81023"` (Primo-arrivant) + `personnes-exilees` | ✅ Accepté |
+| 4. Type de dispositif | **OEPRE** — type explicitement exclu | ❌ Refusé |
+| 5. Durée | — (arrêt étape 4) | — |
+| 6. Volume horaire | — (arrêt étape 4) | — |
+
+**Motif de refus :** Le dispositif est un **OEPRE** (Ouvrir l'école aux parents pour la réussite des enfants), type explicitement exclu du périmètre éditorial de Réfugiés.info. Ce programme est destiné aux parents pour soutenir la scolarité de leurs enfants ; il ne s'adresse pas directement aux réfugiés/primo-arrivants en tant que bénéficiaires principaux d'un parcours d'intégration. Arrêt immédiat à l'étape 4.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Résultat : Nouveau 🆗**
+
+Recherche effectuée via l'API RI fraîche — aucun candidat retourné pour ce dispositif (titre "OEPRE", structure "Collège Jacques Callot", département 54 - Meurthe-et-Moselle).
+
+**Conclusion :** Aucun doublon détecté sur Réfugiés.info. La fiche est inédite, mais ce constat est sans incidence sur la décision de conformité : la fiche reste **refusée** en raison du type OEPRE.$seed$, $seed$9d31fc18-564d-4fcf-978a-22a5fc63006f$seed$) ON CONFLICT DO NOTHING;
+INSERT INTO letta_reports ("id", "created_at", "updated_at", "report_type", "markdown", "metadata", "agent_id", "status", "raw_response", "workflow_id") VALUES ($seed$a8fc4e01-43a0-440d-8115-d6de4e5fbca9$seed$, $seed$2026-06-17 14:37:14.668244+00$seed$, $seed$2026-06-17 14:37:14.668244$seed$, $seed$ingestion$seed$, $seed$---
+compliant: false
+duplicate: false
+letta:
+  agent_id: agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af
+  processed_at: '2026-06-17T14:37:14.649Z'
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (Primo-arrivant) | ✅ Accepté |
+| 4. Type dispositif | **OEPRE** — dispositif explicitement exclu | ❌ Refusé |
+| 5. Durée | *(non évalué)* | — |
+| 6. Volume horaire | *(non évalué)* | — |
+
+**Motif d'arrêt à l'étape 4 :** Le nom du dispositif contient explicitement `OEPRE` (Ouvrir l'École aux Parents pour la Réussite des Enfants), qui est un type de dispositif classé **hors périmètre RI** dans `jurisprudence.md`. La règle s'applique sans exception : OEPRE → ❌ Refusé.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche. Aucun candidat retourné pour ce dispositif (structure "Ecole maternelle Saint Exupéry", commune Mulhouse, département 68).
+
+> **Note :** L'absence de doublon est cohérente avec le refus éditorial — les fiches OEPRE ne sont pas publiées sur Réfugiés.info, donc aucune correspondance n'est attendue dans la base.
+$seed$, $seed${"letta": {"agent_id": "agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af", "processed_at": "2026-06-17T14:37:14.649Z"}, "compliant": false, "duplicate": false}$seed$, $seed$agent-bd542fe1-c8d9-4f3d-bcbb-cfc2f750c9af$seed$, $seed$complete$seed$, $seed$---
+compliant: false
+duplicate: false
+
+---
+
+# Rapport de traitement
+
+<hr id="audit">
+
+## 1. Analyse de Conformité Éditoriale
+
+**Décision finale : Fiche refusée ❌**
+
+| Étape | Donnée trouvée | Décision |
+|-------|----------------|----------|
+| 1. Conventionnement | `1` (Oui) | ✅ Accepté |
+| 2. Financeur | `19` (État - Ministère de l'intérieur) | ✅ Accepté |
+| 3. Public visé | `81023` (Primo-arrivant) | ✅ Accepté |
+| 4. Type dispositif | **OEPRE** — dispositif explicitement exclu | ❌ Refusé |
+| 5. Durée | *(non évalué)* | — |
+| 6. Volume horaire | *(non évalué)* | — |
+
+**Motif d'arrêt à l'étape 4 :** Le nom du dispositif contient explicitement `OEPRE` (Ouvrir l'École aux Parents pour la Réussite des Enfants), qui est un type de dispositif classé **hors périmètre RI** dans `jurisprudence.md`. La règle s'applique sans exception : OEPRE → ❌ Refusé.
+
+<hr id="doublons">
+
+## 2. Détection de Doublons
+
+**Décision : NOUVEAU 🆗**
+
+Recherche effectuée via l'API RI fraîche. Aucun candidat retourné pour ce dispositif (structure "Ecole maternelle Saint Exupéry", commune Mulhouse, département 68).
+
+> **Note :** L'absence de doublon est cohérente avec le refus éditorial — les fiches OEPRE ne sont pas publiées sur Réfugiés.info, donc aucune correspondance n'est attendue dans la base.$seed$, $seed$473ca94d-d883-46c1-a046-e7360c389091$seed$) ON CONFLICT DO NOTHING;
+
