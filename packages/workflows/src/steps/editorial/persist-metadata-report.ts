@@ -14,12 +14,14 @@ export interface PersistMetadataReportResult {
 }
 
 /**
- * Persists a metadata agent response to letta_reports and links it to the editorial_record.
+ * Persists a metadata agent response to letta_reports and links it to the
+ * editorial_record and its active ingestion_record.
  *
  * This step:
  * 1. Parses the raw agent response (expects frontmatter with metadata scores)
  * 2. Inserts a record into `letta_reports` table
  * 3. Links the report to the `editorial_record` via `metadata_report_id`
+ * 4. Links the report to the active `ingestion_record` via `metadata_report_id`
  *
  * The report is always stored for debugging purposes, even if linking fails.
  *
@@ -176,6 +178,33 @@ export async function persistMetadataReportStep(
           editorialRecordId: editorialRecordId,
         },
       };
+    }
+
+    if (workflow.ingestion_record_id) {
+      const { error: linkIngestionError } = await supabase
+        .from("ingestion_records")
+        .update({ metadata_report_id: report.id })
+        .eq("id", workflow.ingestion_record_id);
+
+      if (linkIngestionError) {
+        logger.error(
+          {
+            error: linkIngestionError,
+            reportId: report.id,
+            ingestionRecordId: workflow.ingestion_record_id,
+          },
+          "Failed to link metadata report to ingestion_record",
+        );
+        return {
+          success: false,
+          error: `Ingestion link failed: ${linkIngestionError.message}`,
+          data: {
+            reportId: report.id,
+            linked: false,
+            editorialRecordId: editorialRecordId,
+          },
+        };
+      }
     }
 
     logger.info(

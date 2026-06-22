@@ -38,6 +38,54 @@ Un record est `compliant` ssi :
 
 La valeur `compliance_status` est stockée sur `ingestion_records` (pas sur `workflows`).
 
+## Versioning DI : source active vs dernière source disponible
+
+Le workflow distingue deux notions pour les fiches issues de Data Inclusion :
+
+| Colonne | Signification |
+|---|---|
+| `workflows.ingestion_record_id` | **Source active / acceptée** utilisée par la fiche et par l'UI courante. |
+| `workflows.latest_ingestion_record_id` | **Dernière source DI disponible** pour ce même service DI stable. |
+
+Cette séparation évite qu'une fiche éditorialisée change automatiquement de source lorsqu'une nouvelle version DI arrive. La fiche continue d'utiliser sa source active, tandis que la dernière version disponible reste visible comme mise à jour en attente.
+
+### Règle métier
+
+Quand un nouvel `ingestion_record` DI est créé :
+
+1. **Première version DI**
+   - `ingestion_record_id = latest_ingestion_record_id = nouvelle version`
+   - un nouveau workflow est créé.
+
+2. **Nouvelle version DI, sans `editorial_record`**
+   - la fiche n'a pas encore de travail éditorial ; elle suit automatiquement la dernière source.
+   - `ingestion_record_id = latest_ingestion_record_id = nouvelle version`.
+
+3. **Nouvelle version DI, avec `editorial_record` existant**
+   - la fiche a déjà une base éditoriale ; la nouvelle source n'est pas acceptée automatiquement.
+   - `ingestion_record_id` reste inchangé.
+   - `latest_ingestion_record_id` pointe vers la nouvelle version.
+
+`workflows_enriched` expose les champs utiles à l'affichage des versions :
+
+| Champ de vue | Exemple | Rôle |
+|---|---:|---|
+| `active_ingestion_version` | `1` | Version active / acceptée. |
+| `latest_ingestion_version` | `4` | Dernière version disponible. |
+| `has_pending_ingestion_update` | `true` | Indique qu'une version plus récente existe. |
+
+Toutes les données principales de `workflows_enriched` (`ingestion_markdown`, `ingestion_metadata`, `compliance_status`, `ingestion_report_id`, dates de session, nombre de mots) restent basées sur la **source active** (`workflows.ingestion_record_id`). `latest_ingestion_record_id` sert uniquement à détecter et afficher une version plus récente tant qu'elle n'est pas acceptée.
+
+### Audit des versions en attente
+
+Une version en attente peut être auditée même si elle n'est pas encore la source active du workflow. Si elle est conforme, ses métadonnées sont générées comme pour une version active. Les rapports sont liés à l'`ingestion_record` concerné via `ingestion_report_id` et `metadata_report_id`, ce qui permet de garder les rapports d'une version en attente séparés de ceux de la source active.
+
+### Métadonnées par version d'ingestion
+
+Pour les contenus DI, la source cible des métadonnées générées par l'ingestion est `ingestion_records.metadata_report_id`. Chaque version d'ingestion porte ainsi son propre rapport metadata, qu'elle soit active ou en attente.
+
+`editorial_records.metadata_report_id` reste un lien historique / éditorial. Il peut servir à préserver les métadonnées déjà associées à une fiche éditorialisée, mais il ne doit pas être utilisé comme source principale pour déterminer les métadonnées d'une version DI. La lecture de la fiche privilégie les métadonnées éditoriales lorsqu'elles existent, puis retombe sur le rapport metadata de la source active.
+
 ## Retry
 
 Chaque step de la paire `diSingleAuditStep` / `diSingleMetadataStep` a :

@@ -40,6 +40,7 @@ export default async function WorkflowPage(props: PageProps) {
     sortBy: "date_added",
     sortOrder: "asc",
     searchId,
+    includePreviewFields: true,
   });
 
   return (

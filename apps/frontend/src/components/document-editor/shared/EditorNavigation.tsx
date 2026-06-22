@@ -27,6 +27,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { formatIngestionVersion } from "@/lib/format-ingestion-version";
 import { useDocumentActions } from "../actions";
 import { useDocument } from "../DocumentContext";
 import { useMetadata } from "../metadata/MetadataContext";
@@ -70,6 +71,12 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
   const isActivityLogActive = pathname === `${baseUrl}/activity-logs`;
   const isComplianceActive = pathname === `${baseUrl}/compliance`;
 
+  const ingestionVersion = formatIngestionVersion({
+    activeVersion: document.activeIngestionVersion,
+    latestVersion: document.latestIngestionVersion,
+  });
+  const hasIngestionVersion = ingestionVersion !== "—";
+
   const isPublished = document.onlineStatus === "published";
   const canArchive = document.onlineStatus !== "archived";
   const archiveConfirmationMessage = isPublished
@@ -87,7 +94,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
   };
 
   return (
-    <div className="sticky top-20 self-start h-[calc(100vh-5rem)] flex-shrink-0 w-65 flex flex-col justify-between py-12 px-10">
+    <div className="sticky top-20 self-start h-[calc(100vh-5rem)] flex-shrink-0 w-65 flex flex-col py-12 px-10">
       {/* Partie supérieure — gap 56px (Figma) */}
       <div className="flex flex-col gap-14">
         {/* Contenu — gap 24px (Figma) */}
@@ -223,7 +230,11 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
         )}
       </div>
 
-      {/* (futur) Compteur de tokens */}
+      {hasIngestionVersion ? (
+        <div className="mt-auto px-2 text-sm leading-6 text-[var(--text-mention-grey)] whitespace-nowrap">
+          Version : {ingestionVersion}
+        </div>
+      ) : null}
     </div>
   );
 }
