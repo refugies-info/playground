@@ -13,61 +13,79 @@ export interface ActivityLogTypeMeta {
   display: string;
 }
 
+export const TYPE_COMPLIANCE_IA = "compliance_ia";
+export const TYPE_COMPLIANCE_HUMAN = "compliance_human";
+export const TYPE_PUBLICATION = "publication";
+export const TYPE_PUBLICATION_LANGUE = "publication_langue";
+export const TYPE_ARCHIVAGE = "archivage";
+export const TYPE_UPDATE = "update";
+export const TYPE_UPDATE_COMPLIANCE = "update_compliance";
+export const TYPE_CLEAR_LANGUAGE = "clear_language";
+export const TYPE_TRANSLATION = "translation";
+export const TYPE_TRANSLATION_ERROR = "translation_error";
+export const TYPE_TRANSLATION_PRIORITY = "translation_priority";
+export const TYPE_ASSIGNMENT = "assignment";
+export const TYPE_NOTE = "note";
+
 export const ACTIVITY_LOG_TYPES = [
   {
-    value: "compliance_ia",
+    value: TYPE_COMPLIANCE_IA,
     label: "Arbitrage de PapaIA",
     display: "PapaIA a jugé cette fiche %s",
   },
   {
-    value: "compliance_human",
+    value: TYPE_COMPLIANCE_HUMAN,
     label: "Changement de conformité",
     display: "%s a changé la conformité de cette fiche en %s",
   },
   {
-    value: "publication",
+    value: TYPE_PUBLICATION,
     label: "Publication",
     display: "%s a publié la fiche",
   },
   {
-    value: "publication_langue",
+    value: TYPE_PUBLICATION_LANGUE,
     label: "Publication en Langue",
     display: "%s a publié la fiche en %s",
   },
-  { value: "archivage", label: "Archivage", display: "%s a archivé la fiche" },
   {
-    value: "update",
+    value: TYPE_ARCHIVAGE,
+    label: "Archivage",
+    display: "%s a archivé la fiche",
+  },
+  {
+    value: TYPE_UPDATE,
     label: "Mise à jour",
     display: "%s a récupéré une nouvelle version pour cette fiche",
   },
   {
-    value: "update_compliance",
+    value: TYPE_UPDATE_COMPLIANCE,
     label: "Mise à jour avec conformité",
     display:
       "%s a récupéré une nouvelle version pour cette fiche et a jugé cette fiche %s",
   },
   {
-    value: "clear_language",
+    value: TYPE_CLEAR_LANGUAGE,
     label: "Langage clair",
     display: "%s a rédigé la fiche en langage clair",
   },
   {
-    value: "translation",
+    value: TYPE_TRANSLATION,
     label: "Traduction",
     display: "%s a traduit cette fiche",
   },
   {
-    value: "translation_error",
+    value: TYPE_TRANSLATION_ERROR,
     label: "Erreur de traduction",
     display: "La traduction en %s n'a pas fonctionné",
   },
   {
-    value: "translation_priority",
+    value: TYPE_TRANSLATION_PRIORITY,
     label: "Priorité de traduction urgente",
     display: "%s a définit une priorité de traduction urgente",
   },
-  { value: "assignment", label: "Assignation", display: "%s a assigné %s" },
-  { value: "note", label: "Note", display: "%s : %s" },
+  { value: TYPE_ASSIGNMENT, label: "Assignation", display: "%s a assigné %s" },
+  { value: TYPE_NOTE, label: "Note", display: "%s : %s" },
 ] as const satisfies readonly ActivityLogTypeMeta[];
 
 /** Union of all valid activity-log type values. */
