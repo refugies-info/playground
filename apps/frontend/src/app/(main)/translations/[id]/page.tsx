@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from "@playground/supabase";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { TranslationLayout } from "@/components/translation-editor/TranslationLayout";
 import { getAuthUser } from "@/lib/auth";
 import { getTranslationById } from "@/services/translations";
@@ -25,11 +25,7 @@ export default async function TranslationPage(props: PageProps) {
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
-  const user = await getAuthUser(supabase);
-
-  if (!user) {
-    redirect("/login");
-  }
+  await getAuthUser(supabase);
 
   // Fetch data
   const translation = await getTranslationById(id);
