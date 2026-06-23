@@ -56,6 +56,9 @@ export default async function Layout({
     referenceData, // Themes & needs ID→name lookups from RI
     publishedUrl: document.publishedUrl,
     publicationRemoteId: document.publicationRemoteId,
+    activeIngestionVersion: document.activeIngestionVersion,
+    latestIngestionVersion: document.latestIngestionVersion,
+    hasPendingIngestionUpdate: document.hasPendingIngestionUpdate,
     activeRunId: document.activeRunId,
     assigneeEmail: document.assigneeEmail,
   };

@@ -43,7 +43,6 @@ export function SourcePanel() {
   }, [isSourceOpen, setSidebarCollapsed]);
 
   const lienSource = document?.metadata?.lien_source as string | undefined;
-
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleClose = useCallback(() => {

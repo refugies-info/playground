@@ -110,9 +110,9 @@ type DiMetadataTarget = {
 /**
  * Fetches ingestion records that are eligible for metadata generation.
  *
- * Eligibility: the record is compliant and has no existing `letta_report` of
- * type 'metadata' linked to its workflow. Scoped to DI records via an `!inner`
- * join on `di_services` (same pool as the audit step).
+ * Eligibility: the record is a compliant audited DI ingestion record without a
+ * metadata report linked to the exact ingestion version. The workflow may point
+ * to this record through either active or latest ingestion source.
  *
  * @returns An object containing the list of eligible targets.
  */
@@ -121,19 +121,21 @@ async function fetchDiMetadataTargets(): Promise<{
 }> {
   const supabase = getSupabaseClient();
 
-  // Fetch ingestion records scoped to DI via !inner join on di_services,
-  // with their linked workflow ID.
+  // Fetch compliant audited DI records that do not yet have metadata for this
+  // exact ingestion version. Non-compliant records should not get metadata, and
+  // pending updates must not be skipped merely because their workflow already has
+  // a metadata report for the active source.
   const { data: records, error } = await supabase
     .from("ingestion_records")
     .select(
       `
       id,
       markdown,
-      di_services!inner ( id ),
-      workflows!inner ( id )
+      di_services!inner ( id )
     `,
     )
     .not("ingestion_report_id", "is", null)
+    .is("metadata_report_id", null)
     .eq("compliance_status", "compliant")
     .order("created_at", { ascending: false })
     .limit(MAX_EDITORIAL_BACKLOG);
@@ -148,39 +150,51 @@ async function fetchDiMetadataTargets(): Promise<{
     return { targets: [] };
   }
 
-  // Extract workflow IDs from the joined data
-  const candidateWorkflowIds = records
-    .map((r) => {
-      const w = Array.isArray(r.workflows) ? r.workflows[0] : r.workflows;
-      return w?.id;
-    })
-    .filter(Boolean) as string[];
+  const recordIds = records.map((record) => record.id as string);
+  const recordIdsFilter = recordIds.join(",");
 
-  // Exclude candidates that already have a successful metadata report.
-  // Records with status='error' are NOT excluded so they can be retried.
-  const { data: existingReports } = await supabase
-    .from("letta_reports")
-    .select("workflow_id")
-    .in("workflow_id", candidateWorkflowIds)
-    .eq("report_type", "metadata")
-    .eq("status", "success");
+  const { data: workflows, error: workflowError } = await supabase
+    .from("workflows")
+    .select("id, ingestion_record_id, latest_ingestion_record_id")
+    .or(
+      `ingestion_record_id.in.(${recordIdsFilter}),latest_ingestion_record_id.in.(${recordIdsFilter})`,
+    );
 
-  const existingWorkflowIds = new Set(
-    existingReports?.map((r) => r.workflow_id) ?? [],
-  );
+  if (workflowError) {
+    throw new Error(
+      `Failed to fetch workflows for metadata candidates: ${JSON.stringify(workflowError)}`,
+    );
+  }
+
+  const workflowByRecordId = new Map<string, string>();
+  for (const workflow of workflows ?? []) {
+    if (workflow.ingestion_record_id) {
+      workflowByRecordId.set(workflow.ingestion_record_id, workflow.id);
+    }
+    if (workflow.latest_ingestion_record_id) {
+      workflowByRecordId.set(workflow.latest_ingestion_record_id, workflow.id);
+    }
+  }
 
   const targets: DiMetadataTarget[] = records
-    .map((r) => {
-      const w = Array.isArray(r.workflows) ? r.workflows[0] : r.workflows;
-      const workflowId = w?.id;
-      if (!workflowId || existingWorkflowIds.has(workflowId)) return null;
+    .map((record) => {
+      const recordId = record.id as string;
+      const workflowId = workflowByRecordId.get(recordId);
+      if (!workflowId) return null;
       return {
-        id: r.id as string,
-        markdown: r.markdown as string,
-        workflow_id: workflowId as string,
+        id: recordId,
+        markdown: record.markdown as string,
+        workflow_id: workflowId,
       };
     })
-    .filter(Boolean) as DiMetadataTarget[];
+    .filter((target): target is DiMetadataTarget => target !== null);
+
+  if (targets.length < records.length) {
+    logger.warn(
+      { orphanCount: records.length - targets.length },
+      "Some metadata candidates were skipped because no workflow references them",
+    );
+  }
 
   return { targets };
 }
@@ -286,7 +300,7 @@ export async function generateDiMetadataReportsStep(runId: string) {
         MetadataMetadataSchema,
       );
 
-      const { error: reportError } = await supabase
+      const { data: report, error: reportError } = await supabase
         .from("letta_reports")
         .insert({
           agent_id: agentId,
@@ -296,11 +310,24 @@ export async function generateDiMetadataReportsStep(runId: string) {
           status: parsed.status,
           raw_response: parsed.rawResponse ?? null,
           workflow_id: target.workflow_id,
-        });
+        })
+        .select("id")
+        .single();
 
-      if (reportError) {
+      if (reportError || !report) {
         throw new Error(
-          `Failed to insert letta_report: ${reportError.message}`,
+          `Failed to insert letta_report: ${reportError?.message ?? "unknown error"}`,
+        );
+      }
+
+      const { error: linkError } = await supabase
+        .from("ingestion_records")
+        .update({ metadata_report_id: report.id })
+        .eq("id", target.id);
+
+      if (linkError) {
+        throw new Error(
+          `Failed to set metadata_report_id on record: ${linkError.message}`,
         );
       }
 
@@ -308,6 +335,7 @@ export async function generateDiMetadataReportsStep(runId: string) {
         {
           workflowId: target.workflow_id,
           ingestionRecordId: target.id,
+          reportId: report.id,
           reportStatus: parsed.status,
         },
         `✔ Metadata report stored (status: ${parsed.status})`,
@@ -538,6 +566,17 @@ export async function forceMetadataReportStep(workflowId: string) {
     if (reportError || !report) {
       throw new Error(
         `Failed to update letta_report: ${reportError?.message ?? "unknown error"}`,
+      );
+    }
+
+    const { error: linkIngestionError } = await supabase
+      .from("ingestion_records")
+      .update({ metadata_report_id: report.id })
+      .eq("id", ingestionRecordId);
+
+    if (linkIngestionError) {
+      throw new Error(
+        `Failed to set metadata_report_id on record: ${linkIngestionError.message}`,
       );
     }
 
