@@ -4,6 +4,7 @@ import { cn } from "@playground/ui";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import type { Profile } from "@/lib/profile-name";
 import { DocumentActionsProvider } from "../actions";
 import { DocumentProvider, useDocument } from "../DocumentContext";
 import { MetadataProvider } from "../metadata/MetadataContext";
@@ -62,7 +63,7 @@ interface DocumentLayoutProps {
   initialData?: any; // Replace with proper type
   children: React.ReactNode;
   /** Liste des éditeurs/admins pour le dropdown d'assignation */
-  editors?: { id: string; email: string; displayName: string }[];
+  editors?: Profile[];
 }
 
 export function DocumentLayout(props: DocumentLayoutProps) {

@@ -3,6 +3,7 @@
 import {
   ACTIVITY_LOG_TYPES,
   type ActivityLogType,
+  dayKey,
   LANGUAGES,
   TYPE_ARCHIVAGE,
   TYPE_ASSIGNMENT,
@@ -18,7 +19,15 @@ import {
   TYPE_UPDATE,
   TYPE_UPDATE_COMPLIANCE,
 } from "@playground/shared-types";
-import { Avatar, BoutonFiltre } from "@playground/ui/primitives";
+import {
+  Avatar,
+  BADGE_ERROR,
+  BADGE_INFO,
+  BADGE_SUCCESS,
+  type BadgeColors,
+  BoutonFiltre,
+  IconBadge,
+} from "@playground/ui/primitives";
 import {
   type RemixiconComponentType,
   RiAuctionLine,
@@ -31,13 +40,8 @@ import {
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import type { Profile } from "@/lib/profile-name";
 import type { ActivityLogEntry } from "@/services/activity-logs";
-
-interface Profile {
-  id: string;
-  email: string;
-  displayName: string;
-}
 
 interface ActivityLogsFilters extends Record<string, string> {
   type: string;
@@ -58,32 +62,11 @@ const LANGUAGE_LABELS = new Map<string, string>(
   LANGUAGES.map((l) => [l.code, l.label]),
 );
 
-interface BadgeColors {
-  bg: string;
-  fg: string;
-}
-
+// Mapping métier : type de log → icône + couleurs (tokens DSFR du design system).
 interface TypeBadge {
   icon: RemixiconComponentType;
   colors?: BadgeColors;
 }
-
-const GREY: BadgeColors = {
-  bg: "bg-(--background-contrast-grey)",
-  fg: "text-(--text-default-grey)",
-};
-const SUCCESS: BadgeColors = {
-  bg: "bg-(--background-flat-success)",
-  fg: "text-(--text-inverted-grey)",
-};
-const ERROR: BadgeColors = {
-  bg: "bg-(--background-flat-error)",
-  fg: "text-(--text-inverted-grey)",
-};
-const INFO: BadgeColors = {
-  bg: "bg-(--background-flat-info)",
-  fg: "text-(--text-inverted-grey)",
-};
 
 const TYPE_BADGE: Record<ActivityLogType, TypeBadge> = {
   [TYPE_COMPLIANCE_IA]: { icon: RiAuctionLine },
@@ -95,26 +78,18 @@ const TYPE_BADGE: Record<ActivityLogType, TypeBadge> = {
   [TYPE_TRANSLATION]: { icon: RiTranslate2 },
   [TYPE_TRANSLATION_PRIORITY]: { icon: RiTranslate2 },
   [TYPE_TRANSLATION_ERROR]: { icon: RiTranslate2 },
-  [TYPE_UPDATE]: { icon: RiGlobalLine, colors: INFO },
-  [TYPE_PUBLICATION]: { icon: RiGlobalLine, colors: SUCCESS },
-  [TYPE_PUBLICATION_LANGUE]: { icon: RiGlobalLine, colors: SUCCESS },
-  [TYPE_ARCHIVAGE]: { icon: RiGlobalLine, colors: ERROR },
+  [TYPE_UPDATE]: { icon: RiGlobalLine, colors: BADGE_INFO },
+  [TYPE_PUBLICATION]: { icon: RiGlobalLine, colors: BADGE_SUCCESS },
+  [TYPE_PUBLICATION_LANGUE]: { icon: RiGlobalLine, colors: BADGE_SUCCESS },
+  [TYPE_ARCHIVAGE]: { icon: RiGlobalLine, colors: BADGE_ERROR },
 };
 
 const DEFAULT_BADGE: TypeBadge = { icon: RiFileTextLine };
 
 function ActivityTypeIcon({ action }: { action: ActivityLogType }) {
   const label = TYPE_META.get(action)?.label ?? action;
-  const { icon: Icon, colors } = TYPE_BADGE[action] ?? DEFAULT_BADGE;
-  const { bg, fg } = colors ?? GREY;
-  return (
-    <div
-      className={`flex size-6 shrink-0 items-center justify-center rounded-full border-[0.6px] border-(--border-default-grey) ${bg} ${fg}`}
-      title={label}
-    >
-      <Icon size={12} color="currentColor" />
-    </div>
-  );
+  const { icon, colors } = TYPE_BADGE[action] ?? DEFAULT_BADGE;
+  return <IconBadge icon={icon} colors={colors} title={label} />;
 }
 
 function formatActivityText(entry: ActivityLogEntry): string {
@@ -133,13 +108,6 @@ function formatActivityText(entry: ActivityLogEntry): string {
 
   let i = 0;
   return meta.display.replace(/%s/g, () => values[i++] ?? "");
-}
-
-function dayKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
 }
 
 export function ActivityLogsView({

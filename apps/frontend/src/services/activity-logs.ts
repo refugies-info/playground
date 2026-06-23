@@ -1,7 +1,7 @@
 import { type ActivityLogType, logger } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
-import { displayName } from "@/lib/profile-name";
+import { displayName, type NameableProfile } from "@/lib/profile-name";
 
 /**
  * A single activity-log entry, shaped for the activity journal UI.
@@ -21,14 +21,6 @@ export interface ActivityLogEntry {
   targetName: string | null;
   /** Optional language code carried in the payload (publication_langue). */
   language: string | null;
-}
-
-/** Minimal profile shape returned by the Supabase join. */
-interface JoinedProfile {
-  email: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  username: string | null;
 }
 
 /**
@@ -68,8 +60,8 @@ export async function getActivityLogs(
   }
 
   return (data ?? []).map((row) => {
-    const author = (row.author ?? null) as JoinedProfile | null;
-    const target = (row.target ?? null) as JoinedProfile | null;
+    const author = (row.author ?? null) as NameableProfile | null;
+    const target = (row.target ?? null) as NameableProfile | null;
     const activity = (row.activity ?? {}) as Record<string, unknown>;
     const language =
       typeof activity.language === "string" ? activity.language : null;

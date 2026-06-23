@@ -10,7 +10,7 @@ import { injectFrontmatterContent, logger } from "@playground/shared-types";
 import type { Database, Json } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
-import { displayName } from "@/lib/profile-name";
+import { displayName, type Profile } from "@/lib/profile-name";
 import { extractAuthorProfile } from "./helpers";
 
 /**
@@ -584,9 +584,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
  * Returns the list of editors and admins for the author filter dropdown.
  * Translators are excluded (they work on translations, not editorial content).
  */
-export async function getEditorsList(): Promise<
-  { id: string; email: string; displayName: string }[]
-> {
+export async function getEditorsList(): Promise<Profile[]> {
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 

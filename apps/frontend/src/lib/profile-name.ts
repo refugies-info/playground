@@ -7,6 +7,17 @@ export interface NameableProfile {
 }
 
 /**
+ * A profile whose display name has already been resolved (via {@link displayName}).
+ * Single source of truth for the shape passed to UI lists, dropdowns and filters
+ * (editors list, assignee dropdown, activity journal, …).
+ */
+export interface Profile {
+  id: string;
+  email: string;
+  displayName: string;
+}
+
+/**
  * Derive a human-readable name from a profile.
  * Priority: "Prénom Nom" > username > email prefix (capitalized).
  * Returns null when nothing usable is available (e.g. system/PapaIA).
