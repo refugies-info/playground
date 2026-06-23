@@ -411,7 +411,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       item.editorial_record_id
         ? supabase
             .from("editorial_records")
-            .select("active_run_id, current_editor_id, profiles(username)")
+            .select("active_run_id, current_editor_id")
             .eq("id", item.editorial_record_id)
             .single()
         : Promise.resolve({ data: null, error: null }),
@@ -424,7 +424,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const activeRunData = {
     activeRunId: activeRunResult.data?.active_run_id ?? undefined,
     currentEditorId: activeRunResult.data?.current_editor_id ?? undefined,
-    currentEditorName: activeRunResult.data?.profiles?.username ?? undefined,
+    currentEditorName: undefined,
   };
 
   const metadataReportId = ingestionRecord?.metadata_report_id ?? null;
