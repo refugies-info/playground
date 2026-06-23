@@ -130,7 +130,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
                 icon={RiNewspaperLine}
                 label="Journal d'activités"
                 active={isActivityLogActive}
-                className={cn("w-full", hasMetadataErrors && "relative")}
+                className="w-full"
               />
             </Link>
 

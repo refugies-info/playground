@@ -82,7 +82,7 @@ export const ACTIVITY_LOG_TYPES = [
   {
     value: TYPE_TRANSLATION_PRIORITY,
     label: "Priorité de traduction urgente",
-    display: "%s a définit une priorité de traduction urgente",
+    display: "%s a défini une priorité de traduction urgente",
   },
   { value: TYPE_ASSIGNMENT, label: "Assignation", display: "%s a assigné %s" },
   { value: TYPE_NOTE, label: "Note", display: "%s : %s" },

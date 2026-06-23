@@ -36,7 +36,7 @@ export type Database = {
     Tables: {
       activity_logs: {
         Row: {
-          action: string
+          action: Database["public"]["Enums"]["activity_log_action"]
           activity: Json
           author_id: string | null
           created_at: string
@@ -46,7 +46,7 @@ export type Database = {
           workflow_id: string | null
         }
         Insert: {
-          action: string
+          action: Database["public"]["Enums"]["activity_log_action"]
           activity?: Json
           author_id?: string | null
           created_at?: string
@@ -56,7 +56,7 @@ export type Database = {
           workflow_id?: string | null
         }
         Update: {
-          action?: string
+          action?: Database["public"]["Enums"]["activity_log_action"]
           activity?: Json
           author_id?: string | null
           created_at?: string
@@ -975,7 +975,20 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      activity_log_action:
+        | "compliance_ia"
+        | "compliance_human"
+        | "publication"
+        | "publication_langue"
+        | "archivage"
+        | "update"
+        | "update_compliance"
+        | "clear_language"
+        | "translation"
+        | "translation_error"
+        | "translation_priority"
+        | "assignment"
+        | "note"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1650,7 +1663,23 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      activity_log_action: [
+        "compliance_ia",
+        "compliance_human",
+        "publication",
+        "publication_langue",
+        "archivage",
+        "update",
+        "update_compliance",
+        "clear_language",
+        "translation",
+        "translation_error",
+        "translation_priority",
+        "assignment",
+        "note",
+      ],
+    },
   },
   storage: {
     Enums: {

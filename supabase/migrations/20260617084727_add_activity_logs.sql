@@ -22,13 +22,32 @@
 --                        Join activity_logs -> letta_reports on this FK to read
 --                        them. NULL for non-AI actions.
 
+-- Enum of every machine-readable event type. Kept in lockstep with
+-- ACTIVITY_LOG_TYPES in packages/shared/src/types/activity-log.ts — add a new
+-- value here (alter type ... add value) whenever a new log type is introduced.
+create type public.activity_log_action as enum (
+  'compliance_ia',
+  'compliance_human',
+  'publication',
+  'publication_langue',
+  'archivage',
+  'update',
+  'update_compliance',
+  'clear_language',
+  'translation',
+  'translation_error',
+  'translation_priority',
+  'assignment',
+  'note'
+);
+
 create table public.activity_logs (
   id uuid not null default gen_random_uuid(),
   author_id uuid,
   target_profile_id uuid,
   workflow_id uuid,
   letta_report_id uuid,
-  action varchar(200) not null,
+  action public.activity_log_action not null,
   activity jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   primary key (id)
@@ -37,8 +56,8 @@ create table public.activity_logs (
 -- AI cost/model metadata belongs on letta_reports (the LLM-interaction table),
 -- so it can be aggregated per report regardless of how many log rows reference it.
 alter table public.letta_reports
-  add column token_cost integer,
-  add column model varchar(200);
+  add column IF NOT EXISTS token_cost integer,
+  add column IF NOT EXISTS model varchar(200);
 
 -- Foreign keys (all SET NULL: preserve the log row when a referenced entity is deleted)
 alter table public.activity_logs
@@ -80,8 +99,10 @@ create policy "Activity logs are viewable by authenticated users"
   on public.activity_logs
   for select
   to authenticated
-  using (true);
+ using (
+ (select public.get_my_role()) in ('admin', 'editor', 'translator')
+ );
 
 -- Writes go through the server (service_role) only — the log is not client-writable.
-grant select, insert, update, delete on public.activity_logs to service_role;
+grant select, insert on public.activity_logs to service_role;
 grant select on public.activity_logs to authenticated;
