@@ -411,7 +411,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       item.editorial_record_id
         ? supabase
             .from("editorial_records")
-            .select("active_run_id")
+            .select("active_run_id, current_editor_id, profiles(username)")
             .eq("id", item.editorial_record_id)
             .single()
         : Promise.resolve({ data: null, error: null }),
@@ -421,9 +421,11 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     ingestionRecord = ingestionResult.data as unknown as IngestionWithReports;
   }
 
-  const activeRunData = activeRunResult.data as {
-    active_run_id: string | null;
-  } | null;
+  const activeRunData = {
+    activeRunId: activeRunResult.data?.active_run_id ?? undefined,
+    currentEditorId: activeRunResult.data?.current_editor_id ?? undefined,
+    currentEditorName: activeRunResult.data?.profiles?.username ?? undefined,
+  };
 
   const metadataReportId = ingestionRecord?.metadata_report_id ?? null;
 
@@ -575,19 +577,9 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     latestIngestionVersion: item.latest_ingestion_version ?? null,
     hasPendingIngestionUpdate: item.has_pending_ingestion_update ?? false,
     // AI editorial rewrite — runId for resume via GET /api/editorial-rewrite/[runId]
-    ...(() => {
-      type ActiveRunRow = {
-        active_run_id: string | null;
-        current_editor_id: string | null;
-        profiles: { username: string | null } | null;
-      };
-      const row = activeRunResult.data as ActiveRunRow | null;
-      return {
-        activeRunId: row?.active_run_id ?? undefined,
-        currentEditorId: row?.current_editor_id ?? null,
-        currentEditorName: row?.profiles?.username ?? null,
-      };
-    })(),
+    activeRunId: activeRunData.activeRunId,
+    currentEditorId: activeRunData.currentEditorId,
+    currentEditorName: activeRunData.currentEditorName,
   };
 }
 
