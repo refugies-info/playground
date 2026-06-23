@@ -424,8 +424,18 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const activeRunData = {
     activeRunId: activeRunResult.data?.active_run_id ?? undefined,
     currentEditorId: activeRunResult.data?.current_editor_id ?? undefined,
-    currentEditorName: undefined,
   };
+
+  let currentEditorName: string | undefined;
+
+  if (activeRunData.currentEditorId) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username, email")
+      .eq("id", activeRunData.currentEditorId)
+      .maybeSingle();
+    currentEditorName = profile?.username ?? profile?.email ?? undefined;
+  }
 
   const metadataReportId = ingestionRecord?.metadata_report_id ?? null;
 
@@ -579,7 +589,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     // AI editorial rewrite — runId for resume via GET /api/editorial-rewrite/[runId]
     activeRunId: activeRunData.activeRunId,
     currentEditorId: activeRunData.currentEditorId,
-    currentEditorName: activeRunData.currentEditorName,
+    currentEditorName: currentEditorName,
   };
 }
 
