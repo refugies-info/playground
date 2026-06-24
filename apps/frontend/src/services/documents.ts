@@ -200,6 +200,7 @@ export async function getDocuments(params: GetDocumentsParams) {
     commune: "commune",
     modalitesEntreesSorties: "modalites_entrees_sorties",
     wordCount: "ingestion_word_count",
+    activeIngestionVersion: "active_ingestion_version",
   };
 
   const dbColumn = sortFieldMap[sortBy];

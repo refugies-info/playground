@@ -22,7 +22,8 @@ export type DocumentSortField =
   | "assigneeEmail"
   | "commune"
   | "modalitesEntreesSorties"
-  | "wordCount";
+  | "wordCount"
+  | "activeIngestionVersion";
 
 export interface Document {
   id: string;
