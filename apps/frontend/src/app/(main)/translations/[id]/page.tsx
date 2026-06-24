@@ -1,39 +1,12 @@
-import { createSupabaseServerClient } from "@playground/supabase";
-import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { notFound } from "next/navigation";
-import { TranslationLayout } from "@/components/translation-editor/TranslationLayout";
-import { getAuthUser } from "@/lib/auth";
-import { getTranslationById } from "@/services/translations";
+import { SourcePane } from "@/components/translation-editor/SourcePane";
+import { TranslationEditorPane } from "@/components/translation-editor/TranslationEditorPane";
 
-interface PageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
-export const metadata: Metadata = {
-  title: "Éditeur de traduction | Content Playground",
-  description: "Traduisez et publiez votre contenu",
-};
-
-export default async function TranslationPage(props: PageProps) {
-  const params = await props.params;
-  const { id } = params;
-
-  // Auth check
-  const cookieStore = await cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
-
-  await getAuthUser(supabase);
-
-  // Fetch data
-  const translation = await getTranslationById(id);
-
-  if (!translation) {
-    notFound();
-  }
-
-  // Pass to client layout
-  return <TranslationLayout initialData={translation} />;
+export default function TranslationContentPage() {
+  return (
+    <>
+      <SourcePane />
+      <div className="w-px bg-gray-200" />
+      <TranslationEditorPane />
+    </>
+  );
 }
