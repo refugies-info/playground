@@ -153,8 +153,8 @@ export const createWordCountColumn = (): ColumnDef<Document> => ({
 });
 
 export const createIngestionVersionColumn = (): ColumnDef<Document> => ({
-  id: "ingestionVersion",
-  enableSorting: false,
+  accessorKey: "activeIngestionVersion",
+  sortDescFirst: true,
   header: ({ column }) => (
     <DataTableColumnHeader column={column} title="Version" />
   ),
