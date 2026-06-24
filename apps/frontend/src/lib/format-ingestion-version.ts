@@ -8,15 +8,11 @@ export function formatIngestionVersion({
   latestVersion,
 }: FormatIngestionVersionParams): string {
   if (activeVersion != null && latestVersion != null) {
-    if (activeVersion === latestVersion) {
-      return `${activeVersion}`;
-    }
-
     return `${activeVersion}/${latestVersion}`;
   }
 
   if (activeVersion != null) {
-    return `${activeVersion}`;
+    return `${activeVersion}/${activeVersion}`;
   }
 
   if (latestVersion != null) {
