@@ -282,6 +282,51 @@ export async function publishTranslation(
 }
 
 /**
+ * Archives a translation record.
+ *
+ * Sets `online_status` to 'archived' and clears `work_status`.
+ *
+ * @param id - The translation record ID.
+ */
+export async function archiveTranslation(
+  id: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const auth = await getAuthorizedTranslationSession({
+      action: "save",
+      translationId: id,
+      allowTranslator: false,
+    });
+    if (auth.errorResponse) return auth.errorResponse;
+    const { supabase } = auth;
+
+    const { error } = await supabase
+      .from("translation_records")
+      .update({
+        online_status: "archived",
+        work_status: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) {
+      logger.error(error, "Error archiving translation record");
+      return {
+        success: false,
+        error: "Erreur lors de l'archivage de la traduction",
+      };
+    }
+
+    revalidatePath("/translations");
+
+    return { success: true };
+  } catch (error) {
+    logger.error(error, "Unexpected error archiving translation");
+    return { success: false, error: "Erreur inattendue lors de l'archivage" };
+  }
+}
+
+/**
  * Retries the translation generation for a specific translation record.
  *
  * Note: We call `start()` directly here instead of using `triggerTranslationWorkflowStep`

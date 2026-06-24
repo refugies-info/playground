@@ -13,6 +13,7 @@ import {
 import { submitTranslationPreview } from "@/lib/preview-utils";
 import { createClient } from "@/lib/supabase/client";
 import {
+  archiveTranslation,
   publishTranslation,
   saveTranslation,
 } from "@/services/translation-actions";
@@ -37,9 +38,11 @@ export interface TranslationContextType {
   updateContent: (content: string) => void;
   saveTranslation: () => Promise<{ success: boolean; error?: string }>;
   publishTranslation: () => Promise<{ success: boolean; error?: string }>;
+  archiveTranslation: () => Promise<{ success: boolean; error?: string }>;
   isDirty: boolean;
   isSaving: boolean;
   isPublishing: boolean;
+  isArchiving: boolean;
   previewTranslation: () => Promise<void>;
   canPreview: boolean; // Whether preview is available (source must be published)
   publicationUrl?: string;
@@ -63,6 +66,7 @@ export function TranslationProvider({
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
 
   // ── Realtime: publication result (success or failure via publication_records INSERT)
   const handlePublicationSuccess = useCallback((publishedUrl: string) => {
@@ -230,6 +234,31 @@ export function TranslationProvider({
     }
   };
 
+  const activeArchiveTranslation = async () => {
+    if (!translation) return { success: false, error: "No translation" };
+    setIsArchiving(true);
+    try {
+      const result = await archiveTranslation(translation.id);
+      if (result.success) {
+        setTranslation((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            onlineStatus: "archived" as OnlineStatus,
+            workStatus: null,
+            status: "archived",
+          };
+        });
+      }
+      return result;
+    } catch (e) {
+      logger.error(e, "Error archiving translation");
+      return { success: false, error: "Erreur inattendue lors de l'archivage" };
+    } finally {
+      setIsArchiving(false);
+    }
+  };
+
   const previewTranslation = async () => {
     if (!translation) return;
 
@@ -280,9 +309,11 @@ export function TranslationProvider({
         updateContent,
         saveTranslation: activeSaveTranslation,
         publishTranslation: activePublishTranslation,
+        archiveTranslation: activeArchiveTranslation,
         isDirty,
         isSaving,
         isPublishing,
+        isArchiving,
         previewTranslation,
         canPreview,
         publicationUrl: translation?.publicationUrl,

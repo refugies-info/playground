@@ -20,12 +20,23 @@ import { useState } from "react";
 import { useTranslation } from "./TranslationContext";
 
 export function TranslationSidebar() {
-  const { translation } = useTranslation();
+  const { translation, archiveTranslation, isArchiving } = useTranslation();
   const pathname = usePathname();
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
 
   if (!translation) return null;
+
+  const handleArchive = async () => {
+    setArchiveError(null);
+    const result = await archiveTranslation();
+    if (result.success) {
+      setIsConfirmOpen(false);
+    } else {
+      setArchiveError(result.error || "Échec de l'archivage");
+    }
+  };
 
   const baseUrl = `/translations/${translation.id}`;
   const isContentActive = pathname === baseUrl;
@@ -67,6 +78,7 @@ export function TranslationSidebar() {
                   icon={RiDeleteBinLine}
                   label="Archiver"
                   variant="error"
+                  disabled={isArchiving}
                   onClick={() => setIsConfirmOpen(true)}
                   className="w-full"
                 />
@@ -78,18 +90,26 @@ export function TranslationSidebar() {
                 <p className="text-base leading-6 text-[var(--text-default-grey,#3a3a3a)]">
                   Êtes-vous sûr de vouloir archiver cette traduction ?
                 </p>
+                {archiveError && (
+                  <p className="text-xs text-[var(--text-default-error)]">
+                    {archiveError}
+                  </p>
+                )}
                 <div className="flex justify-end items-center gap-4">
                   <PopoverClose asChild>
-                    <Button variant="tertiaire" rightIcon={RiCloseLine}>
+                    <Button
+                      variant="tertiaire"
+                      rightIcon={RiCloseLine}
+                      disabled={isArchiving}
+                    >
                       Annuler
                     </Button>
                   </PopoverClose>
                   <Button
                     variant="primaire"
                     rightIcon={RiCheckLine}
-                    onClick={() => {
-                      setIsConfirmOpen(false);
-                    }}
+                    isLoading={isArchiving}
+                    onClick={handleArchive}
                   >
                     Archiver
                   </Button>
