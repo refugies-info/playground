@@ -37,6 +37,8 @@ export function DataTableColumnHeader<TData, TValue>({
   className,
 }: DataTableColumnHeaderProps<TData, TValue>) {
   const sorted = column.getIsSorted();
+  const isNextSortDescending =
+    sorted === "asc" || (!sorted && column.columnDef.sortDescFirst === true);
 
   if (!column.getCanSort()) {
     return (
@@ -62,7 +64,7 @@ export function DataTableColumnHeader<TData, TValue>({
           : "text-[var(--text-title-blue-france,#000091)]",
         className,
       )}
-      onClick={() => column.toggleSorting(sorted === "asc")}
+      onClick={() => column.toggleSorting(isNextSortDescending)}
     >
       {title}
       {sorted === "asc" ? (

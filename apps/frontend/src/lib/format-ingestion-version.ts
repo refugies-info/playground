@@ -7,21 +7,9 @@ export function formatIngestionVersion({
   activeVersion,
   latestVersion,
 }: FormatIngestionVersionParams): string {
-  if (activeVersion != null && latestVersion != null) {
-    if (activeVersion === latestVersion) {
-      return `${activeVersion}`;
-    }
-
-    return `${activeVersion}/${latestVersion}`;
+  if (activeVersion == null) {
+    return latestVersion == null ? "—" : `—/${latestVersion}`;
   }
 
-  if (activeVersion != null) {
-    return `${activeVersion}`;
-  }
-
-  if (latestVersion != null) {
-    return `—/${latestVersion}`;
-  }
-
-  return "—";
+  return `${activeVersion}/${latestVersion ?? activeVersion}`;
 }
