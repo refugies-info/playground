@@ -58,7 +58,17 @@ jobs:
         with:
           letta_api_key: ${{ secrets.LETTA_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          # NOTE: `agent_id` is only honored by the action's "tag" mode
+          # (@letta-code mention / label, no prompt). Because this workflow
+          # always passes `prompt:` below, the action runs in "agent" mode,
+          # which IGNORES agent_id and creates a brand-new agent on every run
+          # (that is what produced ~80 orphan agents on Letta Cloud).
+          # To force agent reuse in agent mode we pass `--agent` through
+          # letta_args, which the CLI builder reads (run-letta.ts extracts
+          # --agent from custom args). This reuses the same agent and only
+          # spins a fresh conversation per run.
           agent_id: ${{ vars.LETTA_AGENT_ID }}
+          letta_args: --agent ${{ vars.LETTA_AGENT_ID }}
           # "auto" lets the Letta platform pick the best model for the task
           # instead of pinning opus/sonnet/haiku in CI.
           model: auto
