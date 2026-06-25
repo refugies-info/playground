@@ -17,7 +17,7 @@ export const TYPE_COMPLIANCE_IA = "compliance_ia";
 export const TYPE_COMPLIANCE_HUMAN = "compliance_human";
 export const TYPE_PUBLICATION = "publication";
 export const TYPE_PUBLICATION_LANGUE = "publication_langue";
-export const TYPE_ARCHIVAGE = "archivage";
+export const TYPE_ARCHIVE = "archive";
 export const TYPE_UPDATE = "update";
 export const TYPE_UPDATE_COMPLIANCE = "update_compliance";
 export const TYPE_CLEAR_LANGUAGE = "clear_language";
@@ -49,7 +49,7 @@ export const ACTIVITY_LOG_TYPES = [
     display: "%s a publié la fiche en %s",
   },
   {
-    value: TYPE_ARCHIVAGE,
+    value: TYPE_ARCHIVE,
     label: "Archivage",
     display: "%s a archivé la fiche",
   },
