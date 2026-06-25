@@ -3,7 +3,6 @@
 import {
   RiCheckLine,
   RiCloseLine,
-  RiDatabaseLine,
   RiDeleteBinLine,
   RiFileTextLine,
 } from "@playground/ui/icons";
@@ -40,8 +39,6 @@ export function TranslationSidebar() {
 
   const baseUrl = `/translations/${translation.id}`;
   const isContentActive = pathname === baseUrl;
-  const isMetadataActive = pathname === `${baseUrl}/metadata`;
-
   const canArchive = translation.onlineStatus !== "archived";
 
   return (
@@ -57,15 +54,6 @@ export function TranslationSidebar() {
                 icon={RiFileTextLine}
                 label="Contenu"
                 active={isContentActive}
-                className="w-full"
-              />
-            </Link>
-
-            <Link href={`${baseUrl}/metadata`} className="w-full">
-              <BoutonMenu
-                icon={RiDatabaseLine}
-                label="Métadonnées"
-                active={isMetadataActive}
                 className="w-full"
               />
             </Link>
