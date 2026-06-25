@@ -62,6 +62,10 @@ jobs:
           # "auto" lets the Letta platform pick the best model for the task
           # instead of pinning opus/sonnet/haiku in CI.
           model: auto
+          # Temporary: surface the full Letta CLI output so we can diagnose
+          # the exit-code-1 failure (the runner otherwise hides it "for
+          # security"). Remove once the underlying failure is fixed.
+          show_full_output: true
           path_to_letta_executable: ${{ steps.letta-bin.outputs.path }}
           # Auto-review prompt. The agent is shared with karfur and therefore
           # karfur-tuned, so this prompt focuses the review on playground's
