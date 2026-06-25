@@ -47,6 +47,8 @@ export interface TranslationContextType {
   canPreview: boolean; // Whether preview is available (source must be published)
   publicationUrl?: string;
   publicationUrlError?: string | null;
+  isRawMarkdownMode: boolean;
+  setIsRawMarkdownMode: (value: boolean) => void;
 }
 
 const TranslationContext = createContext<TranslationContextType | undefined>(
@@ -67,6 +69,7 @@ export function TranslationProvider({
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
+  const [isRawMarkdownMode, setIsRawMarkdownMode] = useState(false);
 
   // ── Realtime: publication result (success or failure via publication_records INSERT)
   const handlePublicationSuccess = useCallback((publishedUrl: string) => {
@@ -318,6 +321,8 @@ export function TranslationProvider({
         canPreview,
         publicationUrl: translation?.publicationUrl,
         publicationUrlError: publicationRealtime.error,
+        isRawMarkdownMode,
+        setIsRawMarkdownMode,
       }}
     >
       {children}

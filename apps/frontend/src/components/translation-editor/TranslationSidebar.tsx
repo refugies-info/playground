@@ -3,8 +3,10 @@
 import {
   RiCheckLine,
   RiCloseLine,
+  RiCodeSSlashLine,
   RiDeleteBinLine,
   RiFileTextLine,
+  RiPencilLine,
 } from "@playground/ui/icons";
 import {
   Popover,
@@ -12,14 +14,29 @@ import {
   PopoverClose,
   PopoverContent,
 } from "@playground/ui/overlays";
-import { BoutonMenu, Button } from "@playground/ui/primitives";
+import {
+  BoutonMenu,
+  Button,
+  SegmentedControl,
+} from "@playground/ui/primitives";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useTranslation } from "./TranslationContext";
 
+const EDITOR_MODES = [
+  { value: "visual" as const, icon: RiPencilLine, label: "Visuel" },
+  { value: "raw" as const, icon: RiCodeSSlashLine, label: "Markdown" },
+];
+
 export function TranslationSidebar() {
-  const { translation, archiveTranslation, isArchiving } = useTranslation();
+  const {
+    translation,
+    archiveTranslation,
+    isArchiving,
+    isRawMarkdownMode,
+    setIsRawMarkdownMode,
+  } = useTranslation();
   const pathname = usePathname();
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -106,6 +123,17 @@ export function TranslationSidebar() {
             </Popover>
           )}
         </div>
+
+        {isContentActive && (
+          <div className="px-2">
+            <SegmentedControl
+              options={EDITOR_MODES}
+              value={isRawMarkdownMode ? "raw" : "visual"}
+              onChange={(v) => setIsRawMarkdownMode(v === "raw")}
+              aria-label="Mode d'édition"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

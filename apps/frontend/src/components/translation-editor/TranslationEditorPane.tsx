@@ -16,7 +16,7 @@ import {
 import { useTranslation } from "./TranslationContext";
 
 export function TranslationEditorPane() {
-  const { translation, updateContent } = useTranslation();
+  const { translation, updateContent, isRawMarkdownMode } = useTranslation();
   const [editor, setEditor] = useState<CustomEditor | null>(null);
 
   // To avoid circular updates
@@ -127,13 +127,22 @@ export function TranslationEditorPane() {
         dir={isRtlLanguage(translation?.language) ? "rtl" : "ltr"}
       >
         <div className="max-w-3xl mx-auto">
-          <BlockNoteView
-            className="[&_.bn-editor]:!px-10"
-            editor={editor}
-            theme="light"
-            editable={true} // Always editable for translation
-            slashMenu={false} // Disable slash menu for now, or use custom one if needed
-          />
+          {isRawMarkdownMode ? (
+            <textarea
+              value={translation?.translationMarkdown || ""}
+              onChange={(e) => updateContent(e.target.value)}
+              className="w-full min-h-[60vh] p-4 font-mono text-sm leading-relaxed resize-none focus:outline-none"
+              spellCheck={false}
+            />
+          ) : (
+            <BlockNoteView
+              className="[&_.bn-editor]:!px-10"
+              editor={editor}
+              theme="light"
+              editable={true}
+              slashMenu={false}
+            />
+          )}
         </div>
       </div>
     </div>
