@@ -17,13 +17,8 @@ export default async function MainPage() {
   const supabase = createSupabaseServerClient(cookieStore);
 
   const user = await getAuthUser(supabase);
-
-  if (!user) {
-    redirect("/login");
-  }
-
   const profile = await getUserProfile(supabase, user.id);
-  const role = profile?.role;
+  const role = profile.role;
 
   if (role === "translator") {
     redirect("/translations");

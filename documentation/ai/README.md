@@ -524,4 +524,5 @@ Before providing Letta solutions, verify:
 
 ## **9. Quick Links**
 
+- [Local Letta dev (free, self-hosted Ollama)](./local-letta-dev.md)
 - [Project README](../../README.md)

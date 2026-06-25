@@ -130,6 +130,7 @@ export type Database = {
           active_run_id: string | null
           content_report_id: string | null
           created_at: string
+          current_editor_id: string | null
           id: string
           ingestion_record_id: string
           markdown: string | null
@@ -143,6 +144,7 @@ export type Database = {
           active_run_id?: string | null
           content_report_id?: string | null
           created_at?: string
+          current_editor_id?: string | null
           id?: string
           ingestion_record_id: string
           markdown?: string | null
@@ -156,6 +158,7 @@ export type Database = {
           active_run_id?: string | null
           content_report_id?: string | null
           created_at?: string
+          current_editor_id?: string | null
           id?: string
           ingestion_record_id?: string
           markdown?: string | null
@@ -171,6 +174,13 @@ export type Database = {
             columns: ["content_report_id"]
             isOneToOne: false
             referencedRelation: "letta_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "editorial_records_current_editor_id_fkey"
+            columns: ["current_editor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
