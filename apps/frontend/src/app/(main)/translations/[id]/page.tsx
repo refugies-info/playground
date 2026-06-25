@@ -5,7 +5,6 @@ export default function TranslationContentPage() {
   return (
     <>
       <SourcePane />
-      <div className="w-px bg-gray-200" />
       <TranslationEditorPane />
     </>
   );

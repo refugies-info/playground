@@ -103,7 +103,7 @@ export function TranslationEditorPane() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-white relative">
+    <div className="flex flex-col h-full bg-white relative">
       <div className="sticky top-0 z-10 p-10 pb-4 flex items-center justify-between">
         <h3 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
           <span className="flex items-center gap-2">
@@ -123,7 +123,7 @@ export function TranslationEditorPane() {
       </div>
 
       <div
-        className="flex-1 overflow-y-auto p-0 tablet:p-8"
+        className="flex-1 overflow-y-auto p-10 tablet:p-8"
         dir={isRtlLanguage(translation?.language) ? "rtl" : "ltr"}
       >
         <div className="max-w-3xl mx-auto">
@@ -136,7 +136,7 @@ export function TranslationEditorPane() {
             />
           ) : (
             <BlockNoteView
-              className="[&_.bn-editor]:!px-10"
+              className="[&_.bn-editor]:!px-0"
               editor={editor}
               theme="light"
               editable={true}
