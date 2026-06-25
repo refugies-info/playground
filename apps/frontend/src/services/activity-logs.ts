@@ -21,6 +21,8 @@ export interface ActivityLogEntry {
   targetName: string | null;
   /** Optional language code carried in the payload (publication_langue). */
   language: string | null;
+  /** Compliance verdict carried in the payload (compliance/update_compliance). */
+  complianceStatus: string | null;
 }
 
 /**
@@ -65,6 +67,10 @@ export async function getActivityLogs(
     const activity = (row.activity ?? {}) as Record<string, unknown>;
     const language =
       typeof activity.language === "string" ? activity.language : null;
+    const complianceStatus =
+      typeof activity.complianceStatus === "string"
+        ? activity.complianceStatus
+        : null;
 
     return {
       id: row.id,
@@ -74,6 +80,7 @@ export async function getActivityLogs(
       authorName: displayName(author),
       targetName: displayName(target),
       language,
+      complianceStatus,
     };
   });
 }

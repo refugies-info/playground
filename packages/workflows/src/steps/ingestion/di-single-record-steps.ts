@@ -15,11 +15,17 @@ import {
   parseAgentResponse,
   parseIngestionResponse,
 } from "@playground/agents";
-import { logger } from "@playground/shared-types";
+import {
+  logger,
+  TYPE_COMPLIANCE_IA,
+  TYPE_UPDATE,
+  TYPE_UPDATE_COMPLIANCE,
+} from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
 import { FatalError, getStepMetadata, RetryableError } from "workflow";
 import { start } from "workflow/api";
 import { diSingleRecordWorkflow } from "../../pipelines/ingestion/di-single-record";
+import { recordActivity } from "../common/activity-log";
 import { fetchAllDiServiceIds, getSupabaseClient } from "./utils";
 
 // =============================================================================
@@ -63,11 +69,14 @@ type DiAuditTarget = {
  * @param ingestionRecordId - The ID of the ingestion record to audit.
  * @param workflowId - The ID of the associated workflow.
  * @param markdown - The markdown content to audit.
+ * @param isPendingUpdate - True when this record is a new version pulled in for
+ *   an already-existing fiche (drives the TYPE_UPDATE activity log).
  */
 export async function diSingleAuditStep(
   ingestionRecordId: string,
   workflowId: string,
   markdown: string,
+  isPendingUpdate = false,
 ) {
   "use step";
 
@@ -194,6 +203,19 @@ export async function diSingleAuditStep(
     { ingestionRecordId, workflowId, reportId: report.id, complianceStatus },
     `✔ Single audit done (${complianceStatus})`,
   );
+
+  // Compliance verdict with PapaIA
+  await recordActivity({
+    action: isPendingUpdate ? TYPE_UPDATE_COMPLIANCE : TYPE_COMPLIANCE_IA,
+    workflowId,
+    lettaReportId: report.id,
+    activity: {
+      complianceStatus,
+      ingestionRecordId,
+      compliant: Boolean(parsed.metadata.compliant),
+      duplicate: Boolean(parsed.metadata.duplicate),
+    },
+  });
 
   return { reportId: report.id, complianceStatus };
 }
@@ -448,6 +470,16 @@ export async function fanOutDiRecordsStep(runId: string) {
   );
 
   for (const target of claimResult.targets) {
+    // Log the "new version pulled in" event at ingestion time, before the
+    // arbitration step records PapaIA's verdict (TYPE_UPDATE_COMPLIANCE).
+    if (target.is_pending_update) {
+      await recordActivity({
+        action: TYPE_UPDATE,
+        workflowId: target.workflow_id,
+        activity: { ingestionRecordId: target.id },
+      });
+    }
+
     await start(diSingleRecordWorkflow, [
       target.id,
       target.workflow_id,

@@ -30,6 +30,7 @@ export async function diSingleRecordWorkflow(
     ingestionRecordId,
     workflowId,
     markdown,
+    isPendingUpdate,
   );
 
   // Generate metadata for every compliant record, including pending updates.

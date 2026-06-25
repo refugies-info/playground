@@ -86,6 +86,13 @@ const TYPE_BADGE: Record<ActivityLogType, TypeBadge> = {
 
 const DEFAULT_BADGE: TypeBadge = { icon: RiFileTextLine };
 
+// Compliance verdict → human label, fills the "%s" in the jugement templates.
+const COMPLIANCE_LABELS: Record<string, string> = {
+  compliant: "conforme",
+  non_compliant: "non conforme",
+  error: "en erreur",
+};
+
 function ActivityTypeIcon({ action }: { action: ActivityLogType }) {
   const label = TYPE_META.get(action)?.label ?? action;
   const { icon, colors } = TYPE_BADGE[action] ?? DEFAULT_BADGE;
@@ -97,10 +104,34 @@ function formatActivityText(entry: ActivityLogEntry): string {
   if (!meta) return entry.action;
 
   const author = entry.authorName ?? "PapaIA";
+  const langLabel = entry.language
+    ? (LANGUAGE_LABELS.get(entry.language) ?? entry.language)
+    : "";
+  const verdict = entry.complianceStatus
+    ? (COMPLIANCE_LABELS[entry.complianceStatus] ?? entry.complianceStatus)
+    : "";
+
   let values: string[];
   switch (entry.action) {
     case TYPE_ASSIGNMENT:
       values = [author, entry.targetName ?? "personne"];
+      break;
+    case TYPE_COMPLIANCE_IA:
+      // "PapaIA a jugé cette fiche %s"
+      values = [verdict];
+      break;
+    case TYPE_COMPLIANCE_HUMAN:
+    case TYPE_UPDATE_COMPLIANCE:
+      // "%s a … jugé cette fiche %s"
+      values = [author, verdict];
+      break;
+    case TYPE_PUBLICATION_LANGUE:
+      // "%s a publié la fiche en %s"
+      values = [author, langLabel];
+      break;
+    case TYPE_TRANSLATION_ERROR:
+      // "La traduction en %s n'a pas fonctionné"
+      values = [langLabel];
       break;
     default:
       values = [author];

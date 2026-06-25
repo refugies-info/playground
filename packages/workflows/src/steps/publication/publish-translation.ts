@@ -1,6 +1,11 @@
-import { extractTitleFromMarkdown, logger } from "@playground/shared-types";
+import {
+  extractTitleFromMarkdown,
+  logger,
+  TYPE_PUBLICATION_LANGUE,
+} from "@playground/shared-types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { StepResult } from "../../types";
+import { recordActivity } from "../common/activity-log";
 import { getSupabaseClient } from "../common/supabase";
 import { getPublisherAdapter } from "./adapters/refugies-info";
 
@@ -246,6 +251,18 @@ export async function publishTranslationStep(
       { translationId, remoteId, publishedUrl },
       "Translation published successfully",
     );
+
+    await recordActivity({
+      action: TYPE_PUBLICATION_LANGUE,
+      authorId: userId,
+      workflowId: translation.workflow_id,
+      activity: {
+        language: translation.language,
+        translationId,
+        remoteId,
+        publishedUrl,
+      },
+    });
 
     return {
       success: true,

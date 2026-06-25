@@ -4,8 +4,14 @@ import {
   sendMessageToConversation,
   TRANSLATE_SLASH_COMMAND,
 } from "@playground/agents";
-import { LETTA_AGENTS_CONFIG, logger } from "@playground/shared-types";
+import {
+  LETTA_AGENTS_CONFIG,
+  logger,
+  TYPE_TRANSLATION,
+  TYPE_TRANSLATION_ERROR,
+} from "@playground/shared-types";
 import type { StepResult } from "../../types";
+import { recordActivity } from "../common/activity-log";
 import { getSupabaseClient } from "../common/supabase";
 
 /**
@@ -185,6 +191,13 @@ ${sanitizedContent}
         { agentError, agentId, language, conversationId },
         "Letta agent call failed",
       );
+      await recordActivity({
+        action: TYPE_TRANSLATION_ERROR,
+        workflowId,
+        activity: {
+          language,
+        },
+      });
       return {
         success: false,
         error: `Letta agent call failed for language ${language}`,
@@ -196,6 +209,11 @@ ${sanitizedContent}
         { agentId, language, conversationId },
         "Received empty response from Letta agent",
       );
+      await recordActivity({
+        action: TYPE_TRANSLATION_ERROR,
+        workflowId,
+        activity: { language, error: "Empty response from AI agent" },
+      });
       return { success: false, error: "Empty response from AI agent" };
     }
 
@@ -218,6 +236,12 @@ ${sanitizedContent}
       { translationRecordId: translationRecord.id, language },
       "Successfully generated and saved translation",
     );
+
+    await recordActivity({
+      action: TYPE_TRANSLATION,
+      workflowId,
+      activity: { language, translationRecordId: translationRecord.id },
+    });
 
     return {
       success: true,
