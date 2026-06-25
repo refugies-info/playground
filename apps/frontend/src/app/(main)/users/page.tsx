@@ -16,13 +16,8 @@ export default async function UsersPage() {
   const supabase = createSupabaseServerClient(cookieStore);
 
   const user = await getAuthUser(supabase);
-
-  if (!user) {
-    redirect("/login");
-  }
-
   const currentUserProfile = await getUserProfile(supabase, user.id);
-  if (currentUserProfile?.role !== "admin") {
+  if (currentUserProfile.role !== "admin") {
     redirect("/");
   }
 

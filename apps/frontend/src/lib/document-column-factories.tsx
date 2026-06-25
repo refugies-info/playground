@@ -10,6 +10,7 @@ import {
 import {
   ComplianceStatusCell,
   ExternalIdCell,
+  IngestionVersionCell,
   ModalitesEntreesSortiesCell,
   OnlineStatusCell,
   QualityScoreCell,
@@ -149,6 +150,20 @@ export const createWordCountColumn = (): ColumnDef<Document> => ({
     if (count == null) return <span className="text-gray-400">—</span>;
     return <span className="text-sm tabular-nums">{count}</span>;
   },
+});
+
+export const createIngestionVersionColumn = (): ColumnDef<Document> => ({
+  accessorKey: "activeIngestionVersion",
+  sortDescFirst: true,
+  header: ({ column }) => (
+    <DataTableColumnHeader column={column} title="Version" />
+  ),
+  cell: ({ row }) => (
+    <IngestionVersionCell
+      activeVersion={row.original.activeIngestionVersion}
+      latestVersion={row.original.latestIngestionVersion}
+    />
+  ),
 });
 
 export const createSessionPeriodColumn = (): ColumnDef<Document> => ({
