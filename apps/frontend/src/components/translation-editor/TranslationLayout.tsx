@@ -17,7 +17,7 @@ export function TranslationLayout({
 }: TranslationLayoutProps) {
   return (
     <TranslationProvider initialData={initialData}>
-      <div className="flex flex-col flex-1 overflow-hidden bg-white">
+      <div className="flex flex-1 flex-col flex-1 overflow-hidden bg-white">
         <TranslationTopBar />
 
         <div className="flex flex-1 overflow-hidden">
