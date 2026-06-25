@@ -7,7 +7,7 @@ import "@blocknote/mantine/style.css";
 import { isRtlLanguage } from "@playground/shared-types";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { getLanguageFlag } from "@/lib/document-labels";
+import { getLanguageFlag, getLanguageName } from "@/lib/document-labels";
 import { blocksToDirectiveMarkdown, markdownToBlocks } from "@/lib/markdown";
 import {
   type CustomEditor,
@@ -104,7 +104,7 @@ export function TranslationEditorPane() {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-white relative">
-      <div className="sticky top-0 z-10 bg-white border-b px-4 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-10 p-10 pb-4 flex items-center justify-between">
         <h3 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
           <span className="flex items-center gap-2">
             {translation?.language ? (
@@ -114,20 +114,21 @@ export function TranslationEditorPane() {
             ) : (
               <span className="text-lg">🏳️</span>
             )}
-            Traduction
+            Traduction en{" "}
+            {translation?.language
+              ? getLanguageName(translation.language)
+              : "langue inconnue"}
           </span>
         </h3>
-        <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded">
-          Éditable
-        </span>
       </div>
 
       <div
-        className="flex-1 overflow-y-auto p-4 tablet:p-8"
+        className="flex-1 overflow-y-auto p-0 tablet:p-8"
         dir={isRtlLanguage(translation?.language) ? "rtl" : "ltr"}
       >
         <div className="max-w-3xl mx-auto">
           <BlockNoteView
+            className="[&_.bn-editor]:!px-10"
             editor={editor}
             theme="light"
             editable={true} // Always editable for translation
