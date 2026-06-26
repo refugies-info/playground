@@ -8,7 +8,7 @@ export function SourcePane() {
 
   return (
     <div className="w-[35%] shrink-0 flex flex-col h-full border rounded-2xl">
-      <div className="sticky top-0 z-10  p-10 pb-4 flex items-center justify-between">
+      <div className="sticky top-4 z-10  p-10 pb-4 flex items-center justify-between">
         <h3 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
           <span className="flex items-center gap-2">
             <span className="fi fi-fr " />
