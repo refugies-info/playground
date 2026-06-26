@@ -26,6 +26,7 @@ export default async function TranslationsPage(props: PageProps) {
   const language = searchParams.language;
   const priority = searchParams.priority;
   const authorId = searchParams.authorId;
+  const search = searchParams.search;
   const sortBy = searchParams.sortBy;
   const sortOrder = searchParams.sortOrder;
 
@@ -75,6 +76,7 @@ export default async function TranslationsPage(props: PageProps) {
     onlineStatus: typeof onlineStatus === "string" ? onlineStatus : undefined,
     priority: typeof priority === "string" ? priority : undefined,
     authorId: typeof authorId === "string" ? authorId : undefined,
+    search: typeof search === "string" && search ? search : undefined,
     status: typeof status === "string" ? status : undefined, // Deprecated: backward compatibility
     language: effectiveLanguage,
     sortBy: typeof sortBy === "string" ? sortBy : undefined,

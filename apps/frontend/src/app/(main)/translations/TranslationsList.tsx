@@ -4,7 +4,7 @@ import { DataTable } from "@playground/ui/composites";
 import { RiSearchLine } from "@playground/ui/icons";
 import { BoutonFiltre, Switch } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppPaginationControls } from "@/components/common/app-pagination";
 import { createClient } from "@/lib/supabase/client";
 import type { TranslationItem } from "@/services/translations";
@@ -56,7 +56,13 @@ export function TranslationsList({
 }: TranslationsListProps) {
   const router = useRouter();
   const [filters, setFilters] = useState(initialFilters);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(
+    () =>
+      new URLSearchParams(
+        typeof window !== "undefined" ? window.location.search : "",
+      ).get("search") ?? "",
+  );
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Supabase Realtime: refresh when a translation_record is updated
   const hasPending = initialTranslations.some(
@@ -121,6 +127,18 @@ export function TranslationsList({
     pushParams(newFilters);
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+      params.set("page", "1");
+      if (value) params.set("search", value);
+      else params.delete("search");
+      router.push(`/translations?${params.toString()}`, { scroll: false });
+    }, 400);
+  };
+
   const handleSortChange = (sortBy: string, sortOrder: "asc" | "desc") => {
     const params = new URLSearchParams(window.location.search);
     params.set("sortBy", sortBy);
@@ -149,7 +167,7 @@ export function TranslationsList({
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Titre, ID, structure, etc."
               className="text-sm text-[var(--text-disabled-grey,#929292)] placeholder:text-[var(--text-disabled-grey,#929292)] bg-transparent outline-none min-w-[180px]"
             />

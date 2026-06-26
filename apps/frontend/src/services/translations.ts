@@ -59,6 +59,7 @@ export interface GetTranslationsParams {
   onlineStatus?: string;
   priority?: string;
   authorId?: string; // Filter by author (profile id)
+  search?: string; // Full-text search on title (metadata fields)
   status?: string; // Deprecated: for backward compatibility
   sortBy?: string;
   sortOrder?: "asc" | "desc";
@@ -101,6 +102,7 @@ export async function getTranslations(params: GetTranslationsParams) {
     onlineStatus,
     priority,
     authorId,
+    search,
     status, // Deprecated: for backward compatibility
     sortBy = "updated_at",
     sortOrder = "desc",
@@ -155,6 +157,22 @@ export async function getTranslations(params: GetTranslationsParams) {
   // Filter by author
   if (authorId) {
     query = query.eq("author_id", authorId);
+  }
+
+  // Search by title: titles live in editorial_records.metadata, not in translation_records.
+  // Two-step: find matching editorial_record IDs, then restrict to those.
+  if (search) {
+    const term = `%${search}%`;
+    const { data: matchingEditorial } = await supabase
+      .from("editorial_records")
+      .select("id")
+      .or(`metadata->>title.ilike.${term},metadata->>nom.ilike.${term}`);
+
+    const editorialIds = (matchingEditorial ?? []).map((r) => r.id);
+    if (editorialIds.length === 0) {
+      return { data: [], total: 0, page, pageSize, totalPages: 0 };
+    }
+    query = query.in("editorial_record_id", editorialIds);
   }
 
   // Filter by online_status
