@@ -54,14 +54,32 @@ type TranslationWithRelations =
 export interface GetTranslationsParams {
   page?: number;
   pageSize?: number;
-  language?: string; // Filter by specific language
-  workStatus?: string; // Filter by work_status
-  onlineStatus?: string; // Filter by online_status
-  priority?: string; // Filter by priority ('urgent')
+  language?: string;
+  workStatus?: string;
+  onlineStatus?: string;
+  priority?: string;
+  authorId?: string; // Filter by author (profile id)
   status?: string; // Deprecated: for backward compatibility
   sortBy?: string;
   sortOrder?: "asc" | "desc";
-  userRole?: string; // User role for permission-based filtering
+  userRole?: string;
+}
+
+export async function getAllTranslationAuthors(): Promise<
+  { value: string; label: string }[]
+> {
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("id, email")
+    .not("email", "is", null)
+    .order("email");
+
+  return (data ?? [])
+    .filter((p): p is { id: string; email: string } => !!p.id && !!p.email)
+    .map((p) => ({ value: p.id, label: p.email }));
 }
 
 /**
@@ -82,6 +100,7 @@ export async function getTranslations(params: GetTranslationsParams) {
     workStatus,
     onlineStatus,
     priority,
+    authorId,
     status, // Deprecated: for backward compatibility
     sortBy = "updated_at",
     sortOrder = "desc",
@@ -131,6 +150,11 @@ export async function getTranslations(params: GetTranslationsParams) {
   // Filter by priority
   if (priority) {
     query = query.eq("priority", priority);
+  }
+
+  // Filter by author
+  if (authorId) {
+    query = query.eq("author_id", authorId);
   }
 
   // Filter by online_status

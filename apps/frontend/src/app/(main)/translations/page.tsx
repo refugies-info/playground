@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { getAuthUser, getUserProfile } from "@/lib/auth";
 import {
   type GetTranslationsParams,
+  getAllTranslationAuthors,
   getTranslations,
 } from "@/services/translations";
 import { TranslationsList } from "./TranslationsList";
@@ -24,6 +25,7 @@ export default async function TranslationsPage(props: PageProps) {
   const status = searchParams.status; // Deprecated: for backward compatibility
   const language = searchParams.language;
   const priority = searchParams.priority;
+  const authorId = searchParams.authorId;
   const sortBy = searchParams.sortBy;
   const sortOrder = searchParams.sortOrder;
 
@@ -72,6 +74,7 @@ export default async function TranslationsPage(props: PageProps) {
     workStatus: typeof workStatus === "string" ? workStatus : undefined,
     onlineStatus: typeof onlineStatus === "string" ? onlineStatus : undefined,
     priority: typeof priority === "string" ? priority : undefined,
+    authorId: typeof authorId === "string" ? authorId : undefined,
     status: typeof status === "string" ? status : undefined, // Deprecated: backward compatibility
     language: effectiveLanguage,
     sortBy: typeof sortBy === "string" ? sortBy : undefined,
@@ -80,28 +83,27 @@ export default async function TranslationsPage(props: PageProps) {
     userRole: role,
   };
 
-  const {
-    data: translations,
-    total,
-    totalPages,
-  } = await getTranslations(serviceParams);
+  const [{ data: translations, total, totalPages }, authors] =
+    await Promise.all([
+      getTranslations(serviceParams),
+      getAllTranslationAuthors(),
+    ]);
 
   const initialFilters = {
     workStatus: typeof workStatus === "string" ? workStatus : "",
     onlineStatus: typeof onlineStatus === "string" ? onlineStatus : "",
     language: typeof language === "string" ? language : "",
     priority: typeof priority === "string" ? priority : "",
+    authorId: typeof authorId === "string" ? authorId : "",
   };
 
-  const title =
-    role === "translator" ? "Traductions" : "Toutes les traductions";
   const showLanguageFilter = role !== "translator";
 
   return (
     <TranslationsList
       initialTranslations={translations}
       initialFilters={initialFilters}
-      title={title}
+      authors={authors}
       currentPage={page}
       totalPages={totalPages}
       totalCount={total}
