@@ -43,11 +43,13 @@ export {
   generateTranslationWorkflowUk,
 } from "./pipelines/translation/generate-translation";
 export { LANGUAGE_WORKFLOWS } from "./pipelines/workflow-registry";
-export type { GetEditorialRecordIdResult } from "./steps/common/get-editorial-record-id";
-export { getEditorialRecordIdStep } from "./steps/common/get-editorial-record-id";
 // =============================================================================
 // Common Utilities
 // =============================================================================
+export type { RecordActivityParams } from "./steps/common/activity-log";
+export { recordActivity } from "./steps/common/activity-log";
+export type { GetEditorialRecordIdResult } from "./steps/common/get-editorial-record-id";
+export { getEditorialRecordIdStep } from "./steps/common/get-editorial-record-id";
 export { getSupabaseClient } from "./steps/common/supabase";
 export type { ForceEditorialStepResult } from "./steps/editorial/force-editorial-step";
 export type { PersistEditorialReportResult } from "./steps/editorial/persist-editorial-report";

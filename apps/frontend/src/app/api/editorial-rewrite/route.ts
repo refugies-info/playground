@@ -35,9 +35,9 @@
 import { logger } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { forceEditorialWorkflow } from "@playground/workflows";
+import { start } from "@workflow/core/runtime";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
-import { start } from "workflow/api";
 import { z } from "zod";
 import { getUserProfile } from "@/lib/auth";
 import { verifyWorkflowPermission } from "@/services/permission-helper";
@@ -189,7 +189,10 @@ export async function POST(request: NextRequest) {
 
     // ─── 4. Démarrer le workflow ──────────────────────────────────────────
     // biome-ignore lint/suspicious/noExplicitAny: workflow typing
-    const result = await start(forceEditorialWorkflow as any, [workflowId]);
+    const result = await start(forceEditorialWorkflow as any, [
+      workflowId,
+      userId,
+    ]);
 
     // ─── 5. Persister le runId dans editorial_records ─────────────────────
     // Synchrone et garanti : editorial_record existe depuis l'étape 3

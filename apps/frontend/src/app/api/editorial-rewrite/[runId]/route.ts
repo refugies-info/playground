@@ -52,9 +52,9 @@
 import { logger } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import type { ForceEditorialWorkflowResult } from "@playground/workflows";
+import { getRun } from "@workflow/core/runtime";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
-import { getRun } from "workflow/api";
 import { getUserProfile } from "@/lib/auth";
 import { verifyWorkflowPermission } from "@/services/permission-helper";
 

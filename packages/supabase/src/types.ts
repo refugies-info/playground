@@ -34,6 +34,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: Database["public"]["Enums"]["activity_log_action"]
+          activity: Json
+          author_id: string | null
+          created_at: string
+          id: string
+          letta_report_id: string | null
+          target_profile_id: string | null
+          workflow_id: string | null
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["activity_log_action"]
+          activity?: Json
+          author_id?: string | null
+          created_at?: string
+          id?: string
+          letta_report_id?: string | null
+          target_profile_id?: string | null
+          workflow_id?: string | null
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["activity_log_action"]
+          activity?: Json
+          author_id?: string | null
+          created_at?: string
+          id?: string
+          letta_report_id?: string | null
+          target_profile_id?: string | null
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_letta_report_id_fkey"
+            columns: ["letta_report_id"]
+            isOneToOne: false
+            referencedRelation: "letta_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_target_profile_id_fkey"
+            columns: ["target_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows_enriched"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       di_services: {
         Row: {
           content_hash: string | null
@@ -359,9 +428,11 @@ export type Database = {
           id: string
           markdown: string
           metadata: Json
+          model: string | null
           raw_response: string | null
           report_type: string
           status: string
+          token_cost: number | null
           updated_at: string
           workflow_id: string | null
         }
@@ -371,9 +442,11 @@ export type Database = {
           id?: string
           markdown: string
           metadata: Json
+          model?: string | null
           raw_response?: string | null
           report_type: string
           status?: string
+          token_cost?: number | null
           updated_at?: string
           workflow_id?: string | null
         }
@@ -383,9 +456,11 @@ export type Database = {
           id?: string
           markdown?: string
           metadata?: Json
+          model?: string | null
           raw_response?: string | null
           report_type?: string
           status?: string
+          token_cost?: number | null
           updated_at?: string
           workflow_id?: string | null
         }
@@ -910,7 +985,20 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      activity_log_action:
+        | "compliance_ia"
+        | "compliance_human"
+        | "publication"
+        | "publication_langue"
+        | "archivage"
+        | "update"
+        | "update_compliance"
+        | "clear_language"
+        | "translation"
+        | "translation_error"
+        | "translation_priority"
+        | "assignment"
+        | "note"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1585,7 +1673,23 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      activity_log_action: [
+        "compliance_ia",
+        "compliance_human",
+        "publication",
+        "publication_langue",
+        "archivage",
+        "update",
+        "update_compliance",
+        "clear_language",
+        "translation",
+        "translation_error",
+        "translation_priority",
+        "assignment",
+        "note",
+      ],
+    },
   },
   storage: {
     Enums: {

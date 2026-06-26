@@ -10,6 +10,7 @@ import { injectFrontmatterContent, logger } from "@playground/shared-types";
 import type { Database, Json } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
+import { displayName, type Profile } from "@/lib/profile-name";
 import { extractAuthorProfile } from "./helpers";
 
 /**
@@ -200,6 +201,7 @@ export async function getDocuments(params: GetDocumentsParams) {
     commune: "commune",
     modalitesEntreesSorties: "modalites_entrees_sorties",
     wordCount: "ingestion_word_count",
+    activeIngestionVersion: "active_ingestion_version",
   };
 
   const dbColumn = sortFieldMap[sortBy];
@@ -597,9 +599,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
  * Returns the list of editors and admins for the author filter dropdown.
  * Translators are excluded (they work on translations, not editorial content).
  */
-export async function getEditorsList(): Promise<
-  { id: string; email: string; displayName: string }[]
-> {
+export async function getEditorsList(): Promise<Profile[]> {
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
@@ -614,22 +614,9 @@ export async function getEditorsList(): Promise<
     return [];
   }
 
-  return (data ?? []).map((p) => {
-    const first = p.first_name?.trim();
-    const last = p.last_name?.trim();
-    // Priority: "Prénom Nom" > username > email prefix (capitalize first letter)
-    let displayName: string;
-    if (first && last) {
-      displayName = `${first} ${last}`;
-    } else if (first || last) {
-      displayName = (first || last) as string;
-    } else if (p.username) {
-      displayName = p.username.charAt(0).toUpperCase() + p.username.slice(1);
-    } else {
-      // Derive from email: "alice@refugies.info" → "Alice"
-      const prefix = (p.email ?? "").split("@")[0];
-      displayName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-    }
-    return { id: p.id, email: p.email ?? "", displayName };
-  });
+  return (data ?? []).map((p) => ({
+    id: p.id,
+    email: p.email ?? "",
+    displayName: displayName(p) ?? "",
+  }));
 }

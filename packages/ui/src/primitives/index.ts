@@ -8,6 +8,7 @@ export * from "./card";
 export * from "./conformite";
 export * from "./error";
 export * from "./icon";
+export * from "./icon-badge";
 export * from "./indication-conformite";
 export * from "./indication-sauvegarde";
 export * from "./input";

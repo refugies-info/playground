@@ -3,10 +3,7 @@
 import type { Document } from "@playground/shared-types";
 import { DataTableColumnHeader } from "@playground/ui/composites";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  AssigneeDropdown,
-  type AssigneeEditor,
-} from "@/components/common/assignee-dropdown";
+import { AssigneeDropdown } from "@/components/common/assignee-dropdown";
 import {
   ComplianceStatusCell,
   ExternalIdCell,
@@ -18,6 +15,7 @@ import {
   WorkStatusCell,
   type WorkStatusCellProps,
 } from "@/components/documents/cells";
+import type { Profile } from "@/lib/profile-name";
 
 /**
  * Domain-specific column factories for the Document type.
@@ -122,7 +120,7 @@ export const createWorkStatusColumn = <
 });
 
 export const createAssigneeColumn = (
-  editors: AssigneeEditor[],
+  editors: Profile[],
   onOptimisticUpdate: (docId: string, email: string | null) => void,
 ): ColumnDef<Document> => ({
   // accessorKey matches DocumentSortField for correct sort key
@@ -153,8 +151,8 @@ export const createWordCountColumn = (): ColumnDef<Document> => ({
 });
 
 export const createIngestionVersionColumn = (): ColumnDef<Document> => ({
-  id: "ingestionVersion",
-  enableSorting: false,
+  accessorKey: "activeIngestionVersion",
+  sortDescFirst: true,
   header: ({ column }) => (
     <DataTableColumnHeader column={column} title="Version" />
   ),

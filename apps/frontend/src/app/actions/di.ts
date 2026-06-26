@@ -6,8 +6,8 @@ import {
   diIngestionWorkflow,
   forceArbitrationWorkflow,
 } from "@playground/workflows";
+import { start } from "@workflow/core/runtime";
 import { cookies } from "next/headers";
-import { start } from "workflow/api";
 import { buildWorkflowDashboardUrl } from "@/lib/workflow-utils";
 
 export async function triggerDiIngestionAction() {

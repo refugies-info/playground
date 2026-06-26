@@ -16,9 +16,10 @@
  */
 
 import { createLettaClient, simplifyContentSync } from "@playground/agents";
-import { logger } from "@playground/shared-types";
+import { logger, TYPE_CLEAR_LANGUAGE } from "@playground/shared-types";
+import { FatalError } from "@workflow/errors";
 import matter from "gray-matter";
-import { FatalError } from "workflow";
+import { recordActivity } from "../common/activity-log";
 import { getSupabaseClient } from "../common/supabase";
 import {
   type PersistEditorialReportResult,
@@ -45,9 +46,11 @@ export interface ForceEditorialStepResult {
  * - Always persists the result, even if the client disconnects
  *
  * @param workflowId - The workflow (document) ID
+ * @param userId - The profile id of the human who triggered the rewrite
  */
 export async function forceEditorialStep(
   workflowId: string,
+  userId: string,
 ): Promise<ForceEditorialStepResult> {
   "use step";
 
@@ -214,6 +217,16 @@ export async function forceEditorialStep(
     },
     "[forceEditorialStep] Editorial report persisted",
   );
+
+  await recordActivity({
+    action: TYPE_CLEAR_LANGUAGE,
+    authorId: userId,
+    workflowId,
+    activity: {
+      reportId: persistResult.data.reportId,
+      editorialRecordId: persistResult.data.editorialRecordId,
+    },
+  });
 
   return {
     content: finalContent,

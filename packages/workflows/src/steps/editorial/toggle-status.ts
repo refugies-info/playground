@@ -1,5 +1,6 @@
-import { logger } from "@playground/shared-types";
+import { logger, TYPE_COMPLIANCE_HUMAN } from "@playground/shared-types";
 import type { StepResult } from "../../types";
+import { recordActivity } from "../common/activity-log";
 import { getSupabaseClient } from "../common/supabase";
 
 /**
@@ -21,11 +22,13 @@ export interface ToggleStatusResult {
  *
  * @param workflowId - The workflow ID to update
  * @param currentStatus - The current compliance status of the workflow
+ * @param userId - The profile id of the human triggering the toggle
  * @returns Result with new statuses
  */
 export async function toggleStatusStep(
   workflowId: string,
   currentStatus: string,
+  userId: string,
 ): Promise<StepResult<ToggleStatusResult>> {
   "use step";
 
@@ -144,6 +147,16 @@ export async function toggleStatusStep(
       },
       "Workflow status toggled successfully",
     );
+
+    await recordActivity({
+      action: TYPE_COMPLIANCE_HUMAN,
+      authorId: userId,
+      workflowId,
+      activity: {
+        oldStatus: currentStatus,
+        complianceStatus: newComplianceStatus,
+      },
+    });
 
     return {
       success: true,

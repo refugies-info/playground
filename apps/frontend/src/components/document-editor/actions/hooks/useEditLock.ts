@@ -62,6 +62,19 @@ export function useEditLock(
       });
     };
 
+    const releaseLockBeacon = () => {
+      if (!locked) {
+        navigator.sendBeacon(
+          "/api/release-edit-lock",
+          new Blob([JSON.stringify({ editorialRecordId })], {
+            type: "application/json",
+          }),
+        );
+      }
+    };
+
+    window.addEventListener("beforeunload", releaseLockBeacon);
+
     const channel = supabase
       .channel(`editorial-lock-${editorialRecordId}`, {
         config: { presence: { key: currentUserId } },
@@ -117,6 +130,7 @@ export function useEditLock(
     };
 
     return () => {
+      window.removeEventListener("beforeunload", releaseLockBeacon);
       supabase.removeChannel(channel);
       takeOverRef.current = () => {};
 
