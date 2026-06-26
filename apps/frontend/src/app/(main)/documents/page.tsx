@@ -60,6 +60,7 @@ export default async function DocumentsPage(props: PageProps) {
     "commune",
     "modalitesEntreesSorties",
     "wordCount",
+    "activeIngestionVersion",
   ];
   const sortBy =
     sortByParam && validSortFields.includes(sortByParam as DocumentSortField)

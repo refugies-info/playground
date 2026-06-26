@@ -6,12 +6,11 @@
  * nouvelles données immédiatement.
  */
 
-import { logger, TYPE_ARCHIVAGE } from "@playground/shared-types";
+import { logger } from "@playground/shared-types";
 import {
   createSupabaseServerClient,
   type Database,
 } from "@playground/supabase";
-import { recordActivity } from "@playground/workflows";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -257,13 +256,6 @@ export async function POST(request: NextRequest) {
         "[archive-document] Update translation_records failed",
       );
     }
-
-    await recordActivity({
-      action: TYPE_ARCHIVAGE,
-      authorId: user.id,
-      workflowId,
-      activity: { editorialRecordId, remoteId },
-    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

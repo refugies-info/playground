@@ -1,4 +1,4 @@
-import { logger, TYPE_ARCHIVAGE } from "@playground/shared-types";
+import { logger, TYPE_ARCHIVE } from "@playground/shared-types";
 import type { StepResult } from "../../types";
 import { recordActivity } from "../common/activity-log";
 import { getSupabaseClient } from "../common/supabase";
@@ -195,7 +195,7 @@ export async function archiveDocumentStep(
     logger.info({ workflowId, remoteId }, "Document archived successfully");
 
     await recordActivity({
-      action: TYPE_ARCHIVAGE,
+      action: TYPE_ARCHIVE,
       authorId: userId,
       workflowId,
       activity: { publicationRecordId: newRecordId, remoteId },

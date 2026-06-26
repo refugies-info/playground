@@ -17,8 +17,8 @@
 
 import { createLettaClient, simplifyContentSync } from "@playground/agents";
 import { logger, TYPE_CLEAR_LANGUAGE } from "@playground/shared-types";
+import { FatalError } from "@workflow/errors";
 import matter from "gray-matter";
-import { FatalError } from "workflow";
 import { recordActivity } from "../common/activity-log";
 import { getSupabaseClient } from "../common/supabase";
 import {

@@ -5,7 +5,7 @@ import {
   type ActivityLogType,
   dayKey,
   LANGUAGES,
-  TYPE_ARCHIVAGE,
+  TYPE_ARCHIVE,
   TYPE_ASSIGNMENT,
   TYPE_CLEAR_LANGUAGE,
   TYPE_COMPLIANCE_HUMAN,
@@ -81,7 +81,7 @@ const TYPE_BADGE: Record<ActivityLogType, TypeBadge> = {
   [TYPE_UPDATE]: { icon: RiGlobalLine, colors: BADGE_INFO },
   [TYPE_PUBLICATION]: { icon: RiGlobalLine, colors: BADGE_SUCCESS },
   [TYPE_PUBLICATION_LANGUE]: { icon: RiGlobalLine, colors: BADGE_SUCCESS },
-  [TYPE_ARCHIVAGE]: { icon: RiGlobalLine, colors: BADGE_ERROR },
+  [TYPE_ARCHIVE]: { icon: RiGlobalLine, colors: BADGE_ERROR },
 };
 
 const DEFAULT_BADGE: TypeBadge = { icon: RiFileTextLine };
@@ -244,31 +244,43 @@ export function ActivityLogsView({
                     <section key={key} className="flex flex-col gap-4">
                       <h2 className="fr-h6">{dateLabel}</h2>
 
-                      {/* "liste des logs" — gap 8px */}
-                      <div className="flex flex-col gap-2">
-                        {entries.map((entry) => {
-                          const time = new Date(
-                            entry.createdAt,
-                          ).toLocaleTimeString("fr-FR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          });
+                      {/* "liste des logs" */}
+                      <div className="flex flex-col">
+                        {entries.map((entry, idx) => {
+                          const time = new Date(entry.createdAt)
+                            .toLocaleTimeString("fr-FR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                            .replace(":", "h");
                           return (
                             <div
                               key={entry.id}
-                              className="flex items-center gap-3"
+                              className="flex items-start gap-3 min-h-10"
                             >
-                              <div className="flex items-center gap-3">
-                                <span className="fr-text--xs text-(--text-disabled-grey)">
+                              <div className="flex shrink-0 items-center gap-3 self-stretch">
+                                <span className="fr-text--xs text-(--text-disabled-grey) w-[38px] tabular-nums">
                                   {time}
                                 </span>
-                                <ActivityTypeIcon action={entry.action} />
+                                <div className="flex flex-col items-center self-stretch">
+                                  <span className="flex flex-1 w-full flex-col items-center justify-end">
+                                    <span
+                                      className={`w-[0.5px] bg-(--border-default-grey) ${idx === 0 ? "h-1" : "flex-1"}`}
+                                    />
+                                  </span>
+                                  <ActivityTypeIcon action={entry.action} />
+                                  <span className="flex flex-1 w-full flex-col items-center justify-start">
+                                    <span
+                                      className={`w-[0.5px] bg-(--border-default-grey) ${idx === entries.length - 1 ? "h-1" : "flex-1"}`}
+                                    />
+                                  </span>
+                                </div>
                               </div>
                               {/* "Description du log" — avatar + text */}
-                              <div className="flex flex-1 items-center gap-3 px-2">
+                              <div className="flex flex-1 items-start gap-3 p-2">
                                 <Avatar
                                   email={entry.authorEmail}
-                                  className="size-6"
+                                  className="size-6 shrink-0"
                                 />
                                 <p className="fr-text--md text-(--text-default-grey)">
                                   {formatActivityText(entry)}

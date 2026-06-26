@@ -22,8 +22,9 @@ import {
   TYPE_UPDATE_COMPLIANCE,
 } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
-import { FatalError, getStepMetadata, RetryableError } from "workflow";
-import { start } from "workflow/api";
+import { getStepMetadata } from "@workflow/core";
+import { start } from "@workflow/core/runtime";
+import { FatalError, RetryableError } from "@workflow/errors";
 import { diSingleRecordWorkflow } from "../../pipelines/ingestion/di-single-record";
 import { recordActivity } from "../common/activity-log";
 import { fetchAllDiServiceIds, getSupabaseClient } from "./utils";
@@ -69,14 +70,14 @@ type DiAuditTarget = {
  * @param ingestionRecordId - The ID of the ingestion record to audit.
  * @param workflowId - The ID of the associated workflow.
  * @param markdown - The markdown content to audit.
- * @param isPendingUpdate - True when this record is a new version pulled in for
+ * @param hasPreviousVersion - True when this record is a new version pulled in for
  *   an already-existing fiche (drives the TYPE_UPDATE activity log).
  */
 export async function diSingleAuditStep(
   ingestionRecordId: string,
   workflowId: string,
   markdown: string,
-  isPendingUpdate = false,
+  hasPreviousVersion = false,
 ) {
   "use step";
 
@@ -206,7 +207,7 @@ export async function diSingleAuditStep(
 
   // Compliance verdict with PapaIA
   await recordActivity({
-    action: isPendingUpdate ? TYPE_UPDATE_COMPLIANCE : TYPE_COMPLIANCE_IA,
+    action: hasPreviousVersion ? TYPE_UPDATE_COMPLIANCE : TYPE_COMPLIANCE_IA,
     workflowId,
     lettaReportId: report.id,
     activity: {

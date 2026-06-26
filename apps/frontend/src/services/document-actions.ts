@@ -15,9 +15,9 @@ import {
   saveDocumentStep,
   toggleStatusWorkflow,
 } from "@playground/workflows";
+import { getRun, start } from "@workflow/core/runtime";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { getRun, start } from "workflow/api";
 import { getUserProfile } from "../lib/auth";
 import { normalizeMarkdown } from "../lib/markdown/normalizeMarkdown";
 import { verifyWorkflowPermission } from "./permission-helper";
