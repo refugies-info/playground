@@ -5,18 +5,13 @@ import { Avatar } from "@playground/ui/primitives";
 import { RiCheckLine } from "@remixicon/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import type { Profile } from "@/lib/profile-name";
 import { updateAssigneeAction } from "@/services/assignee-actions";
-
-export interface AssigneeEditor {
-  id: string;
-  email: string;
-  displayName: string;
-}
 
 interface AssigneeDropdownProps {
   workflowId?: string;
   currentEmail?: string;
-  editors: AssigneeEditor[];
+  editors: Profile[];
   onOptimisticUpdate?: (email: string | null) => void;
 }
 
@@ -37,7 +32,7 @@ export function AssigneeDropdown({
     );
   }
 
-  const handleSelect = async (editor: AssigneeEditor) => {
+  const handleSelect = async (editor: Profile) => {
     if (editor.email === currentEmail || pending) return;
     setPending(true);
     onOptimisticUpdate?.(editor.email);

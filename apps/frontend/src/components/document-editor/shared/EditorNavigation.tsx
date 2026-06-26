@@ -9,6 +9,7 @@ import {
   RiDeleteBinLine,
   RiFileTextLine,
   RiHammerLine,
+  RiNewspaperLine,
   RiPencilLine,
 } from "@playground/ui/icons";
 import {
@@ -67,6 +68,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
   const baseUrl = `/documents/${document.id}`;
   const isFicheActive = pathname === baseUrl;
   const isMetadataActive = pathname === `${baseUrl}/metadata`;
+  const isActivityLogActive = pathname === `${baseUrl}/activity-logs`;
   const isComplianceActive = pathname === `${baseUrl}/compliance`;
 
   const ingestionVersion = formatIngestionVersion({
@@ -92,7 +94,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
   };
 
   return (
-    <div className="sticky top-20 self-start h-[calc(100vh-5rem)] flex-shrink-0 w-63 flex flex-col py-12 px-10">
+    <div className="sticky top-20 self-start h-[calc(100vh-5rem)] flex-shrink-0 w-65 flex flex-col py-12 px-10">
       {/* Partie supérieure — gap 56px (Figma) */}
       <div className="flex flex-col gap-14">
         {/* Contenu — gap 24px (Figma) */}
@@ -117,6 +119,18 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
                 label="Métadonnées"
                 active={isMetadataActive}
                 className={cn("w-full", hasMetadataErrors && "relative")}
+              />
+            </Link>
+
+            <Link
+              href={`${baseUrl}/activity-logs${fromSuffix}`}
+              className="w-full"
+            >
+              <BoutonMenu
+                icon={RiNewspaperLine}
+                label="Journal d'activités"
+                active={isActivityLogActive}
+                className="w-full"
               />
             </Link>
 

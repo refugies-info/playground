@@ -16,10 +16,8 @@ import { Button } from "@playground/ui/primitives";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-  AssigneeDropdown,
-  type AssigneeEditor,
-} from "@/components/common/assignee-dropdown";
+import { AssigneeDropdown } from "@/components/common/assignee-dropdown";
+import type { Profile } from "@/lib/profile-name";
 import { useDocumentActions } from "../actions/DocumentActionsContext";
 import { usePublicationRealtime } from "../actions/hooks/usePublicationRealtime";
 import { useDocument } from "../DocumentContext";
@@ -29,7 +27,7 @@ import { useDocumentStatusRealtime } from "./hooks/useDocumentStatusRealtime";
 
 interface HeaderFicheConnectedProps {
   from?: string;
-  editors?: AssigneeEditor[];
+  editors?: Profile[];
 }
 
 /**

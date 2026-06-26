@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppPaginationControls } from "@/components/common/app-pagination";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import type { Profile } from "@/lib/profile-name";
 import { createClient } from "@/lib/supabase/client";
 import { getColumns } from "./columns";
 
@@ -36,7 +37,7 @@ interface DocumentsListProps {
     search: string;
     modalitesEntreesSorties?: string;
   };
-  initialAuthors: { id: string; email: string; displayName: string }[];
+  initialAuthors: Profile[];
 }
 
 export function DocumentsList({

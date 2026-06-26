@@ -1,7 +1,8 @@
 "use server";
 
-import { logger } from "@playground/shared-types";
+import { logger, TYPE_ASSIGNMENT } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
+import { recordActivity } from "@playground/workflows";
 import { cookies } from "next/headers";
 
 export async function updateAssigneeAction(
@@ -42,5 +43,13 @@ export async function updateAssigneeAction(
     logger.error(error, "Error updating assignee");
     return { success: false, error: error.message };
   }
+
+  await recordActivity({
+    action: TYPE_ASSIGNMENT,
+    authorId: user.id,
+    targetProfileId: profileId,
+    workflowId,
+  });
+
   return { success: true };
 }

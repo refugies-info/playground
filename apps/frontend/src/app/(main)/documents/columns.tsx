@@ -2,7 +2,6 @@
 
 import type { Document } from "@playground/shared-types";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { AssigneeEditor } from "@/components/common/assignee-dropdown";
 import { createDateColumn, createTextColumn } from "@/lib/column-factories";
 import {
   createAssigneeColumn,
@@ -17,6 +16,7 @@ import {
   createWordCountColumn,
   createWorkStatusColumn,
 } from "@/lib/document-column-factories";
+import type { Profile } from "@/lib/profile-name";
 
 /**
  * Colonnes de la table Fiches.
@@ -29,7 +29,7 @@ import {
  *   Date d'arbitrage=121 | Conformité=149 | ID=80
  */
 export function getColumns(
-  editors: AssigneeEditor[],
+  editors: Profile[],
   onOptimisticUpdate: (docId: string, email: string | null) => void,
 ): ColumnDef<Document>[] {
   return [
