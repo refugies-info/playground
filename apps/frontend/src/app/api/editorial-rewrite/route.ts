@@ -189,7 +189,10 @@ export async function POST(request: NextRequest) {
 
     // ─── 4. Démarrer le workflow ──────────────────────────────────────────
     // biome-ignore lint/suspicious/noExplicitAny: workflow typing
-    const result = await start(forceEditorialWorkflow as any, [workflowId]);
+    const result = await start(forceEditorialWorkflow as any, [
+      workflowId,
+      userId,
+    ]);
 
     // ─── 5. Persister le runId dans editorial_records ─────────────────────
     // Synchrone et garanti : editorial_record existe depuis l'étape 3

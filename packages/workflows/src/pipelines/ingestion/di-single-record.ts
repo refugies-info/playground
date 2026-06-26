@@ -16,7 +16,7 @@ export async function diSingleRecordWorkflow(
   ingestionRecordId: string,
   workflowId: string,
   markdown: string,
-  isPendingUpdate = false,
+  hasPreviousVersion = false,
 ) {
   "use workflow";
 
@@ -30,6 +30,7 @@ export async function diSingleRecordWorkflow(
     ingestionRecordId,
     workflowId,
     markdown,
+    hasPreviousVersion,
   );
 
   // Generate metadata for every compliant record, including pending updates.
@@ -40,7 +41,7 @@ export async function diSingleRecordWorkflow(
   } else {
     // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
     console.log(
-      `↷ Skipping metadata for record ${ingestionRecordId} (${auditResult.complianceStatus}${isPendingUpdate ? ", pending update" : ""})`,
+      `↷ Skipping metadata for record ${ingestionRecordId} (${auditResult.complianceStatus}${hasPreviousVersion ? ", pending update / has previous update" : ""})`,
     );
   }
 
@@ -52,7 +53,7 @@ export async function diSingleRecordWorkflow(
   return {
     ingestionRecordId,
     workflowId,
-    isPendingUpdate,
+    hasPreviousVersion,
     complianceStatus: auditResult.complianceStatus,
   };
 }

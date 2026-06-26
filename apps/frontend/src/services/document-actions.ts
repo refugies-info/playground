@@ -151,7 +151,7 @@ export async function toggleWorkflowStatus(
 
     const auth = await getAuthorizedSession(workflowId, "modify");
     if (auth.errorResponse) return auth.errorResponse;
-    const { supabase } = auth;
+    const { supabase, user } = auth;
 
     // Verify document state (prevent arbitration on already processed docs)
     // We need to check editorial statuses now
@@ -196,6 +196,7 @@ export async function toggleWorkflowStatus(
     const result = await start(toggleStatusWorkflow, [
       workflowId,
       currentStatus,
+      user.id,
     ]);
 
     logger.info(

@@ -23,9 +23,10 @@ export interface ForceEditorialWorkflowResult {
 
 export async function forceEditorialWorkflow(
   workflowId: string,
+  userId: string,
 ): Promise<ForceEditorialWorkflowResult> {
   "use workflow";
 
-  const { content } = await forceEditorialStep(workflowId);
+  const { content } = await forceEditorialStep(workflowId, userId);
   return { content };
 }

@@ -1,5 +1,10 @@
-import { LANGUAGES, logger } from "@playground/shared-types";
+import {
+  LANGUAGES,
+  logger,
+  TYPE_TRANSLATION_PRIORITY,
+} from "@playground/shared-types";
 import type { StepResult } from "../../types";
+import { recordActivity } from "../common/activity-log";
 import { getSupabaseClient } from "../common/supabase";
 
 /**
@@ -78,6 +83,11 @@ export async function createTranslationRecordsStep(
           updateError,
           "Error updating priority on existing translation records",
         );
+      } else if (isUrgent) {
+        await recordActivity({
+          action: TYPE_TRANSLATION_PRIORITY,
+          workflowId,
+        });
       }
     }
 
