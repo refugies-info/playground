@@ -7,9 +7,9 @@ import {
   LANGUAGE_WORKFLOWS,
   translationPublicationWorkflow,
 } from "@playground/workflows";
+import { start } from "@workflow/core/runtime";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { start } from "workflow/api";
 
 // ─── Auth Helper ────────────────────────────────────────────────────────────
 

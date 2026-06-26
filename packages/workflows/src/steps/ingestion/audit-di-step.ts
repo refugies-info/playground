@@ -50,7 +50,8 @@ import {
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
-import { FatalError, getStepMetadata } from "workflow";
+import { getStepMetadata } from "@workflow/core";
+import { FatalError } from "@workflow/errors";
 import { z } from "zod";
 import {
   fetchAllDiServiceIds,
@@ -62,18 +63,31 @@ import {
 // Config
 // =============================================================================
 
-const envVal = Number(process.env.MAX_EDITORIAL_BACKLOG);
+const envMaxEditorialBacklog = Number(process.env.MAX_EDITORIAL_BACKLOG);
 
 /**
- * Maximum number of records claimed per cron run. Defaults to 50.
+ * Maximum number of records claimed per cron run. Defaults to 1.
+ * Prod 50
  */
-const MAX_EDITORIAL_BACKLOG = Number.isNaN(envVal) || envVal <= 0 ? 50 : envVal;
+const MAX_EDITORIAL_BACKLOG =
+  Number.isNaN(envMaxEditorialBacklog) || envMaxEditorialBacklog < 0
+    ? 1
+    : envMaxEditorialBacklog > 50
+      ? 50
+      : envMaxEditorialBacklog; // 50 is the max possible
 
+const envMaxAuditConcurrency = Number(process.env.MAX_AUDIT_CONCURRENCY);
 /**
  * Maximum number of audit LLM calls running in parallel.
  * Each concurrent call uses its own Letta conversation to avoid context mixing.
+ * Prod 5
  */
-const AUDIT_CONCURRENCY = 5;
+const AUDIT_CONCURRENCY =
+  Number.isNaN(envMaxAuditConcurrency) || envMaxAuditConcurrency < 0
+    ? 1
+    : envMaxAuditConcurrency > 5
+      ? 5
+      : envMaxAuditConcurrency; // 5 is the max possible
 
 // =============================================================================
 // Schema

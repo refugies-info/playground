@@ -23,7 +23,7 @@
       "@playground/ui/*": ["../../packages/ui/src/*"],
       "@playground/ui": ["../../packages/ui/src/index.ts"]
     },
-    "types": ["workflow"]
+    "types": ["@workflow/next"]
   },
   "include": [
     "next-env.d.ts",
