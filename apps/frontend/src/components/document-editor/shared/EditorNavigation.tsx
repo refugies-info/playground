@@ -147,7 +147,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
           {/* Archiver — toujours dans le DOM pour permettre la transition CSS. */}
           <div
             className={cn(
-              "flex flex-col gap-1 overflow-hidden transition-all duration-300 ease-in-out",
+              "flex flex-col gap-1 transition-all duration-300 ease-in-out",
               canArchive
                 ? "max-h-20 opacity-100"
                 : "max-h-0 opacity-0 pointer-events-none",

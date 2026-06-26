@@ -17,10 +17,10 @@ export function TranslationLayout({
 }: TranslationLayoutProps) {
   return (
     <TranslationProvider initialData={initialData}>
-      <div className="flex flex-1 flex-col flex-1 overflow-hidden bg-white">
+      <div className="flex flex-1 flex-col bg-white">
         <TranslationTopBar />
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 min-w-0">
           <TranslationSidebar />
           {children}
         </div>

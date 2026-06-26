@@ -103,7 +103,7 @@ export function TranslationEditorPane() {
   }
 
   return (
-    <div className="flex flex-1 flex-col h-full bg-white relative">
+    <div className="flex flex-col flex-1 min-w-0 h-full bg-white relative">
       <div className="sticky top-0 z-10 p-10 pb-4 flex items-center justify-between">
         <h3 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
           <span className="flex items-center gap-2">
