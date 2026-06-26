@@ -72,6 +72,12 @@ export const columns: ColumnDef<TranslationItem>[] = [
             | "archived"
             | undefined
         }
+        publishedUrl={row.original.publicationUrl}
+        publishedDate={
+          row.original.onlineStatus === "published"
+            ? row.original.updatedAt
+            : null
+        }
       />
     ),
   },
