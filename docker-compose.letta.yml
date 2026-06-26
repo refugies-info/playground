@@ -1,0 +1,42 @@
+# Local Letta dev stack — free agent runtime backed by a local LLM (Ollama).
+#
+# Start:   docker compose -f docker-compose.letta.yml up -d
+# Pull models (first run):  pnpm letta:pull
+#          (or: docker compose -f docker-compose.letta.yml exec ollama ollama pull gemma3:1b)
+# Letta UI / API: http://localhost:8283  (set LETTA_BASE_URL=http://localhost:8283 in .env)
+# Stop:    docker compose -f docker-compose.letta.yml down
+#
+# See documentation/ai/local-letta-dev.md for the full walkthrough.
+
+name: content-playground
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: letta-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  letta:
+    image: letta/letta:latest
+    container_name: letta-server
+    depends_on:
+      - ollama
+    ports:
+      - "8283:8283"
+    environment:
+      # Point Letta at the local Ollama instance (reachable via the compose network)
+      OLLAMA_BASE_URL: http://ollama:11434
+      # No external LLM/embedding keys needed for local-only mode.
+      # SECURE=false leaves the server auth-less (fine for localhost dev).
+      SECURE: "false"
+    volumes:
+      - letta_data:/root/.letta
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+  letta_data:

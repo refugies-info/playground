@@ -103,6 +103,8 @@ type DiAuditTarget = {
   markdown: string;
   /** UUID of the associated workflow entry */
   workflow_id: string;
+  /** True when the record is the workflow's latest source but not active yet */
+  is_pending_update: boolean;
 };
 
 // =============================================================================

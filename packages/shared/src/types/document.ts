@@ -22,7 +22,8 @@ export type DocumentSortField =
   | "assigneeEmail"
   | "commune"
   | "modalitesEntreesSorties"
-  | "wordCount";
+  | "wordCount"
+  | "activeIngestionVersion";
 
 export interface Document {
   id: string;
@@ -73,8 +74,18 @@ export interface Document {
   externalId?: string | null;
   /** Word count from ingestion markdown (frontmatter excluded) */
   wordCount?: number | null;
+  /** Active/accepted ingestion version used by the workflow */
+  activeIngestionVersion?: number | null;
+  /** Latest available ingestion version for the workflow */
+  latestIngestionVersion?: number | null;
+  /** True when a newer ingestion version exists but is not active yet */
+  hasPendingIngestionUpdate?: boolean;
   /** Vercel Workflow runId when an AI editorial rewrite is in progress or waiting for user decision */
   activeRunId?: string;
+  /** User ID currently holding the edit lock on this fiche (NULL if free) */
+  currentEditorId?: string | null;
+  /** Display name of the user currently holding the edit lock on this fiche (NULL if free) */
+  currentEditorName?: string | null;
 }
 
 export interface RiMetadata {

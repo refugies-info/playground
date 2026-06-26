@@ -1,0 +1,129 @@
+name: Letta Code
+# Two complementary trigger modes on the same agent (vars.LETTA_AGENT_ID, shared
+# with karfur):
+#   1. Mention/label: users trigger the agent with `@letta-code` or the
+#      `letta-code` label, and the same conversation is resumed for follow-ups.
+#   2. Automated review: the `prompt:` input below auto-fires the agent on
+#      PR open / new commits / reopen, no mention required.
+# See https://github.com/letta-ai/letta-code-action#automated-workflows
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, ready_for_review]
+  pull_request_review_comment:
+    types: [created]
+
+concurrency:
+  group: letta-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  letta:
+    # Skip Dependabot auto-bumps only. We deliberately do NOT use
+    # `github.event.sender.type != 'Bot'` because that would also exclude
+    # release-please, future automation bots, and the action's own
+    # github-actions identity, all of which may legitimately need a review.
+    if: github.event.sender.login != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # Install the Letta Code CLI from npm. The action's bundled binary can
+      # lag behind @letta-ai/letta-code on npm, so we install explicitly and
+      # pass the resolved path via path_to_letta_executable. We deliberately
+      # use `@latest`: getting the freshest CLI is the whole point of this
+      # step (the action is published as v0 with no semver discipline on the
+      # bundled binary). Supply-chain risk is accepted as a trade-off — if
+      # the npm package were ever compromised, the agent has access to the
+      # repo via `contents: write`, so this is a known and intentional
+      # trust boundary. Mitigation lives upstream (Letta's npm publishing
+      # process) rather than in pin/version policy.
+      # https://github.com/letta-ai/letta-code-action#using-the-latest-cli
+      - name: Install Letta Code CLI
+        id: letta-bin
+        run: |
+          npm install -g @letta-ai/letta-code@latest
+          echo "path=$(command -v letta)" >> "$GITHUB_OUTPUT"
+
+      - uses: letta-ai/letta-code-action@v0
+        with:
+          letta_api_key: ${{ secrets.LETTA_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # `agent_id` is only read in "tag" mode (@letta-code mention). This
+          # workflow always sets `prompt:`, so it runs in "agent" mode, which
+          # ignores agent_id and creates a new agent per run. We force reuse by
+          # passing `--agent` through letta_args (read by the CLI builder).
+          agent_id: ${{ vars.LETTA_AGENT_ID }}
+          letta_args: --agent ${{ vars.LETTA_AGENT_ID }}
+          # "auto" lets the Letta platform pick the best model for the task.
+          model: auto
+          path_to_letta_executable: ${{ steps.letta-bin.outputs.path }}
+          # Auto-review prompt. The agent is shared with karfur and therefore
+          # karfur-tuned, so this prompt focuses the review on playground's
+          # own stack, conventions, and gotchas. Review comments target the
+          # French-speaking team; code suggestions stay in English.
+          prompt: |
+            You are reviewing a pull request on the Réfugiés.info Content
+            Playground monorepo (apps/frontend on Next.js 16, packages/*
+            workspaces, Supabase, Vercel Workflow, Letta Cloud, Biome, pnpm).
+            The agent is shared with karfur, so you do NOT have playground
+            memory loaded — read AGENTS.md and the relevant docs under
+            `documentation/` for context.
+
+            Follow AGENTS.md and the playground conventions. Write your review
+            comments in French (the team is French-speaking); keep code
+            suggestions and identifiers in English.
+
+            Focus areas — only flag what blocks merge or risks a production
+            incident:
+            1. Supabase safety: raw SQL (no ORM), RLS policies, migrations
+               created via `pnpm supabase migration new` (never via dashboard
+               alone), trigger functions updated in the same migration that
+               drops the column they reference, zero-downtime pattern when
+               moving data between columns.
+            2. Workflow / orchestration: Vercel Workflow 4.x patterns, atomic
+               updates when persisting `vercel_workflow_id` after `start()`,
+               webhook-vs-poll decisions tracked in
+               `documentation/architecture/gotchas/workflow-questions.md`.
+            3. Letta Cloud: agent/tool versioning, Python type hints limited to
+               JSON-schema primitives (str/int/float/bool/None), secrets stored
+               on the agent and read via `os.getenv()` rather than hardcoded
+               in tool source, paginated `client.agents.blocks.list()` is NOT
+               an array (use try/catch on the update call). See
+               `documentation/architecture/gotchas/letta-sdk.md`.
+            4. Markdown pipeline: `normalizeMarkdown` (fence-length strategy)
+               is load-bearing; do not change it without coordination with
+               Jérémie — see `documentation/architecture/gotchas/markdown.md`.
+            5. Monorepo hygiene: pnpm only (no npm/yarn/npx — use `pnpx` for
+               one-off CLI tools), `pnpm add <pkg> --filter <workspace>` for
+               new deps, raw SQL for Supabase (no ORM), Biome for lint/format
+               (not ESLint/Prettier), no class-based patterns when a pure
+               function will do.
+            6. Pre-push quality gates: PRs that don't pass `pnpm lint`,
+               `pnpm check:types`, and `pnpm test` locally should not enter
+               review — call this out for the author.
+            7. Worktree discipline: never commit directly to `main`; PRs
+               should originate from `wt switch --create feat/...` or
+               `name/ri-XXXX-...` branches.
+            8. Conventional Commits: PR title follows `type(scope):` format;
+               this is the squash-merge message consumed on main.
+            9. Documentation: AGENTS.md and the docs under `documentation/`
+               are the source of truth for conventions — if a PR contradicts
+               them, either the PR is wrong or the doc needs updating; flag
+               both, do not silently let them drift.
+
+            Be surgical. Do not block the PR for stylistic nits or refactoring
+            opportunities — call those out as suggestion comments only. If the
+            PR is clean for its stated scope, say so briefly and approve.
+
+            Reply in the same conversation when the author responds — do not
+            start a new review pass unless new commits land.

@@ -48,6 +48,7 @@ type DiAuditTarget = {
   id: string;
   markdown: string;
   workflow_id: string;
+  is_pending_update: boolean;
 };
 
 // =============================================================================
@@ -296,24 +297,44 @@ export async function diSingleMetadataStep(
     MetadataMetadataSchema,
   );
 
-  const { error: reportError } = await supabase.from("letta_reports").insert({
-    agent_id: agentId,
-    report_type: "metadata",
-    markdown: parsed.content,
-    metadata: parsed.metadata as Json,
-    status: parsed.status,
-    raw_response: parsed.rawResponse ?? null,
-    workflow_id: workflowId,
-  });
+  const { data: report, error: reportError } = await supabase
+    .from("letta_reports")
+    .insert({
+      agent_id: agentId,
+      report_type: "metadata",
+      markdown: parsed.content,
+      metadata: parsed.metadata as Json,
+      status: parsed.status,
+      raw_response: parsed.rawResponse ?? null,
+      workflow_id: workflowId,
+    })
+    .select("id")
+    .single();
 
-  if (reportError) {
+  if (reportError || !report) {
     throw new Error(
-      `Failed to insert metadata letta_report: ${reportError.message}`,
+      `Failed to insert metadata letta_report: ${reportError?.message ?? "unknown error"}`,
+    );
+  }
+
+  const { error: linkError } = await supabase
+    .from("ingestion_records")
+    .update({ metadata_report_id: report.id })
+    .eq("id", ingestionRecordId);
+
+  if (linkError) {
+    throw new Error(
+      `Failed to set metadata_report_id on record: ${linkError.message}`,
     );
   }
 
   logger.info(
-    { ingestionRecordId, workflowId, reportStatus: parsed.status },
+    {
+      ingestionRecordId,
+      workflowId,
+      reportId: report.id,
+      reportStatus: parsed.status,
+    },
     `✔ Single metadata done (${parsed.status})`,
   );
 }
@@ -379,8 +400,15 @@ export async function claimDiAuditTargetsStep(runId: string) {
       "No records to process in this fan-out run",
     );
   } else {
+    const pendingUpdates = targets.filter((target) => target.is_pending_update);
     logger.info(
-      { runId, claimed: targets.length, totalCandidates, skipped },
+      {
+        runId,
+        claimed: targets.length,
+        pendingUpdates: pendingUpdates.length,
+        totalCandidates,
+        skipped,
+      },
       `▶ Claimed ${targets.length} record(s) for audit+metadata (${skipped} skipped / ${totalCandidates} total)`,
     );
   }
@@ -425,6 +453,7 @@ export async function fanOutDiRecordsStep(runId: string) {
       target.id,
       target.workflow_id,
       target.markdown,
+      target.is_pending_update,
     ]);
     await new Promise((resolve) => setTimeout(resolve, SPAWN_DELAY_MS));
   }

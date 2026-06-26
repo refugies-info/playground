@@ -2,7 +2,7 @@ import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { DocumentLayout } from "@/components/document-editor/shared";
-import { getAuthUser } from "@/lib/auth";
+import { getAuthUser, getUserProfile } from "@/lib/auth";
 import { getDocumentById, getEditorsList } from "@/services/documents";
 import { fetchRiReferenceData } from "@/services/ri-reference-data";
 
@@ -26,12 +26,14 @@ export default async function Layout({
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
 
-  const [_user, document, referenceData, editors] = await Promise.all([
+  const [user, document, referenceData, editors] = await Promise.all([
     getAuthUser(supabase),
     getDocumentById(id),
     fetchRiReferenceData(),
     getEditorsList(),
   ]);
+
+  const userProfile = await getUserProfile(supabase, user.id);
 
   // If document not found, show 404
   if (!document) {
@@ -56,8 +58,15 @@ export default async function Layout({
     referenceData, // Themes & needs ID→name lookups from RI
     publishedUrl: document.publishedUrl,
     publicationRemoteId: document.publicationRemoteId,
+    activeIngestionVersion: document.activeIngestionVersion,
+    latestIngestionVersion: document.latestIngestionVersion,
+    hasPendingIngestionUpdate: document.hasPendingIngestionUpdate,
     activeRunId: document.activeRunId,
     assigneeEmail: document.assigneeEmail,
+    currentEditorId: document.currentEditorId,
+    currentEditorName: document.currentEditorName,
+    currentUserId: user.id,
+    currentUserName: userProfile.username,
   };
 
   return (
