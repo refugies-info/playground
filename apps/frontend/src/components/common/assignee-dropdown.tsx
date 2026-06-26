@@ -14,14 +14,14 @@ export interface AssigneeEditor {
 }
 
 interface AssigneeDropdownProps {
-  editorialRecordId?: string;
+  workflowId?: string;
   currentEmail?: string;
   editors: AssigneeEditor[];
   onOptimisticUpdate?: (email: string | null) => void;
 }
 
 export function AssigneeDropdown({
-  editorialRecordId,
+  workflowId,
   currentEmail,
   editors,
   onOptimisticUpdate,
@@ -29,7 +29,7 @@ export function AssigneeDropdown({
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
-  if (!editorialRecordId) {
+  if (!workflowId) {
     return currentEmail ? (
       <Avatar email={currentEmail} />
     ) : (
@@ -42,7 +42,7 @@ export function AssigneeDropdown({
     setPending(true);
     onOptimisticUpdate?.(editor.email);
 
-    const result = await updateAssigneeAction(editorialRecordId, editor.id);
+    const result = await updateAssigneeAction(workflowId, editor.id);
     setPending(false);
 
     if (result.success) {

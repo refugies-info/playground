@@ -6,6 +6,7 @@ import { createDateColumn } from "@/lib/column-factories";
 import {
   createComplianceStatusColumn,
   createExternalIdRawColumn,
+  createIngestionVersionColumn,
   createQualityScoreColumn,
   createSessionPeriodColumn,
   createStructureNameColumn,
@@ -16,6 +17,7 @@ import {
 export const inProgressColumns: ColumnDef<Document>[] = [
   createExternalIdRawColumn(),
   createComplianceStatusColumn(),
+  { ...createIngestionVersionColumn(), size: 80 },
   createQualityScoreColumn(),
   createWordCountColumn(),
   createTitleColumn(),

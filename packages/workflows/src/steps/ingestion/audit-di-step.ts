@@ -50,7 +50,8 @@ import {
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
-import { FatalError, getStepMetadata } from "workflow";
+import { getStepMetadata } from "@workflow/core";
+import { FatalError } from "@workflow/errors";
 import { z } from "zod";
 import {
   fetchAllDiServiceIds,
@@ -102,6 +103,8 @@ type DiAuditTarget = {
   markdown: string;
   /** UUID of the associated workflow entry */
   workflow_id: string;
+  /** True when the record is the workflow's latest source but not active yet */
+  is_pending_update: boolean;
 };
 
 // =============================================================================

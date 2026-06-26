@@ -32,6 +32,12 @@ interface DocumentData
   editorialMetadata?: Record<string, unknown>;
   /** ID of the editorial_record — used for Realtime status subscription */
   editorialRecordId?: string;
+  /** ID of the currently logged-in user — used by the edit-lock feature */
+  currentUserId?: string;
+  /** Display name of the currently logged-in user — broadcast on takeover so the previous editor sees who took over */
+  currentUserName?: string | null;
+  /** Display name of the user currently holding the edit lock — shown in EditLockDialog */
+  currentEditorName?: string | null;
   /** True while an AI metadata generation is in progress — drives MetadataView spinner */
   isMetadataGenerating?: boolean;
   referenceData?: {
@@ -120,6 +126,9 @@ export function DocumentProvider({
     initialData?.activeRunId,
     initialData?.onlineStatus,
     initialData?.assigneeEmail,
+    initialData?.activeIngestionVersion,
+    initialData?.latestIngestionVersion,
+    initialData?.hasPendingIngestionUpdate,
   ]);
 
   // Update content and mark as dirty (only if content actually changed)

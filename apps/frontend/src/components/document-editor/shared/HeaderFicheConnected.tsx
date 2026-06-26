@@ -184,7 +184,7 @@ export function HeaderFicheConnected({
           ) : null}
           <DocumentStatus />
           <AssigneeDropdown
-            editorialRecordId={document?.editorialRecordId}
+            workflowId={document?.id}
             currentEmail={document?.assigneeEmail}
             editors={editors}
           />
