@@ -1,5 +1,5 @@
 import { logger } from "@playground/shared-types";
-import { start } from "workflow/api";
+import { start } from "@workflow/core/runtime";
 import {
   generateTranslationWorkflow,
   LANGUAGE_WORKFLOWS,

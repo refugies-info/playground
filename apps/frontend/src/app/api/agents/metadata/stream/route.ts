@@ -2,9 +2,9 @@ import { createLettaClient, generateMetadataReport } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
 import { persistMetadataWorkflow } from "@playground/workflows";
+import { start } from "@workflow/core/runtime";
 import matter from "gray-matter";
 import type { NextRequest } from "next/server";
-import { start } from "workflow/api";
 import { z } from "zod";
 
 export const runtime = "nodejs";
