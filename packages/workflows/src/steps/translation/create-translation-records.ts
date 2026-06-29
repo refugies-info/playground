@@ -95,7 +95,7 @@ export async function createTranslationRecordsStep(
     const newRecords = targetLanguages.map((lang) => ({
       editorial_record_id: editorialRecordId,
       language: lang.code,
-      work_status: "to_process",
+      work_status: "pending",
       workflow_id: workflowId,
       priority,
     }));

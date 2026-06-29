@@ -17,7 +17,7 @@ import {
   WorkStatusCell,
 } from "@/components/documents/cells";
 import { createTextColumn } from "@/lib/column-factories";
-import { getFlagClass, getLanguageName } from "@/lib/document-labels";
+import { getFlagClass } from "@/lib/document-labels";
 import { retryTranslationGeneration } from "@/services/translation-actions";
 import type { TranslationItem } from "@/services/translations";
 
@@ -42,7 +42,7 @@ export const columns: ColumnDef<TranslationItem>[] = [
       return (
         <LanguageCell
           flagClass={getFlagClass(lang)}
-          name={getLanguageName(lang)}
+          name={lang.toUpperCase()}
           size="sm"
         />
       );
