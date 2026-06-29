@@ -11,7 +11,11 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { RotateCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { OnlineStatusCell, WorkStatusCell } from "@/components/documents/cells";
+import {
+  ExternalIdCell,
+  OnlineStatusCell,
+  WorkStatusCell,
+} from "@/components/documents/cells";
 import { createTextColumn } from "@/lib/column-factories";
 import { getFlagClass, getLanguageName } from "@/lib/document-labels";
 import { retryTranslationGeneration } from "@/services/translation-actions";
@@ -143,6 +147,16 @@ export const columns: ColumnDef<TranslationItem>[] = [
     getValue: (row) => row.commune,
     className: "text-sm",
   }),
+
+  // 9 — ID
+  {
+    id: "id",
+    size: 80,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="ID" />
+    ),
+    cell: ({ row }) => <ExternalIdCell externalId={row.original.id} />,
+  },
 ];
 
 // =============================================================================
