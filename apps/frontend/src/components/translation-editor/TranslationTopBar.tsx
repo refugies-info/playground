@@ -1,7 +1,7 @@
 "use client";
 
 import { extractTitleFromMarkdown } from "@playground/shared-types";
-import { IndicationSauvegarde } from "@playground/ui";
+import { SaveIndicator } from "@playground/ui";
 import { HeaderFiche } from "@playground/ui/composites";
 import {
   RiArrowLeftSLine,
@@ -105,7 +105,7 @@ export function TranslationTopBar() {
               <RiArrowLeftSLine className="w-4 h-4" />
             </Button>
           </Link>
-          <IndicationSauvegarde status={saveStatus} onSave={handleSave} />
+          <SaveIndicator status={saveStatus} onSave={handleSave} />
           <TranslationStatus />
         </>
       }

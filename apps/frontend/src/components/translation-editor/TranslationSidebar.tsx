@@ -22,7 +22,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { useTranslation } from "./TranslationContext";
+import { ARCHIVE_STATUS, useTranslation } from "./TranslationContext";
 
 const EDITOR_MODES = [
   { value: "visual" as const, icon: RiPencilLine, label: "Visuel" },
@@ -56,7 +56,7 @@ export function TranslationSidebar() {
 
   const baseUrl = `/translations/${translation.id}`;
   const isContentActive = pathname === baseUrl;
-  const canArchive = translation.onlineStatus !== "archived";
+  const canArchive = translation.onlineStatus !== ARCHIVE_STATUS;
 
   return (
     <div className="sticky top-20 self-start h-[calc(100vh-5rem)] flex-shrink-0 w-63 flex flex-col py-12 px-10">
@@ -92,11 +92,11 @@ export function TranslationSidebar() {
                 side="right"
                 className="w-[388px] flex flex-col gap-7"
               >
-                <p className="text-base leading-6 text-[var(--text-default-grey,#3a3a3a)]">
+                <p className="text-base leading-6 text-(--text-default-grey)">
                   Êtes-vous sûr de vouloir archiver cette traduction ?
                 </p>
                 {archiveError && (
-                  <p className="text-xs text-[var(--text-default-error)]">
+                  <p className="text-xs text-(--text-default-error)">
                     {archiveError}
                   </p>
                 )}

@@ -5,7 +5,7 @@ import { Avatar } from "../../primitives/avatar";
 import { Badge } from "../../primitives/badge/Badge";
 import { Button } from "../../primitives/button/Button";
 import { Conformite } from "../../primitives/conformite/Conformite";
-import { IndicationSauvegarde } from "../../primitives/indication-sauvegarde/IndicationSauvegarde";
+import { SaveIndicator } from "../../primitives/indication-sauvegarde/IndicationSauvegarde";
 import { Tag } from "../../primitives/tag/Tag";
 import {
   PublishPanel,
@@ -123,7 +123,7 @@ export const Brouillon: Story = {
     left: (
       <>
         <BoutonRetour />
-        <IndicationSauvegarde status="unsaved" onSave={() => {}} />
+        <SaveIndicator status="unsaved" onSave={() => {}} />
         <Tag status="en-cours" />
         <Avatar email="alice@refugies.info" className="size-6" />
       </>
@@ -139,7 +139,7 @@ export const Publiee: Story = {
     left: (
       <>
         <BoutonRetour />
-        <IndicationSauvegarde status="saved" />
+        <SaveIndicator status="saved" />
         <Tag status="publie" />
         <Avatar email="alice@refugies.info" className="size-6" />
       </>
@@ -200,7 +200,7 @@ export const TitreLong: Story = {
     left: (
       <>
         <BoutonRetour />
-        <IndicationSauvegarde status="saved" />
+        <SaveIndicator status="saved" />
         <Tag status="en-cours" />
         <Avatar email="alice@refugies.info" className="size-6" />
       </>

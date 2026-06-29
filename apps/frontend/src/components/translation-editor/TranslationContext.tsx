@@ -19,6 +19,8 @@ import {
 } from "@/services/translation-actions";
 import { useTranslationPublicationRealtime } from "./hooks/useTranslationPublicationRealtime";
 
+export const ARCHIVE_STATUS = "archived";
+
 interface TranslationData {
   id: string;
   workflowId?: string;
@@ -247,9 +249,9 @@ export function TranslationProvider({
           if (!prev) return prev;
           return {
             ...prev,
-            onlineStatus: "archived" as OnlineStatus,
+            onlineStatus: ARCHIVE_STATUS,
             workStatus: null,
-            status: "archived",
+            status: ARCHIVE_STATUS,
           };
         });
       }

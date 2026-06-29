@@ -25,7 +25,7 @@ export function TranslationStatus() {
           href={publicationUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[var(--text-action-high-blue-france,#000091)] hover:opacity-75 transition-opacity"
+          className="text-(--text-action-high-blue-france) hover:opacity-75 transition-opacity"
           title="Voir la fiche publiée"
         >
           <RiExternalLinkLine className="w-4 h-4" />

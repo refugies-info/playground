@@ -10,6 +10,7 @@ import {
 import { start } from "@workflow/core/runtime";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { ARCHIVE_STATUS } from "@/components/translation-editor/TranslationContext";
 
 // ─── Auth Helper ────────────────────────────────────────────────────────────
 
@@ -303,7 +304,7 @@ export async function archiveTranslation(
     const { error } = await supabase
       .from("translation_records")
       .update({
-        online_status: "archived",
+        online_status: ARCHIVE_STATUS,
         work_status: null,
         updated_at: new Date().toISOString(),
       })
