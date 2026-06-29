@@ -1,28 +1,14 @@
 "use client";
 
 import {
-  RiCheckLine,
-  RiCloseLine,
   RiCodeSSlashLine,
-  RiDeleteBinLine,
   RiFileTextLine,
   RiPencilLine,
 } from "@playground/ui/icons";
-import {
-  Popover,
-  PopoverAnchor,
-  PopoverClose,
-  PopoverContent,
-} from "@playground/ui/overlays";
-import {
-  BoutonMenu,
-  Button,
-  SegmentedControl,
-} from "@playground/ui/primitives";
+import { BoutonMenu, SegmentedControl } from "@playground/ui/primitives";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { ARCHIVE_STATUS, useTranslation } from "./TranslationContext";
+import { useTranslation } from "./TranslationContext";
 
 const EDITOR_MODES = [
   { value: "visual" as const, icon: RiPencilLine, label: "Visuel" },
@@ -30,99 +16,31 @@ const EDITOR_MODES = [
 ];
 
 export function TranslationSidebar() {
-  const {
-    translation,
-    archiveTranslation,
-    isArchiving,
-    isRawMarkdownMode,
-    setIsRawMarkdownMode,
-  } = useTranslation();
+  const { translation, isRawMarkdownMode, setIsRawMarkdownMode } =
+    useTranslation();
   const pathname = usePathname();
-
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [archiveError, setArchiveError] = useState<string | null>(null);
 
   if (!translation) return null;
 
-  const handleArchive = async () => {
-    setArchiveError(null);
-    const result = await archiveTranslation();
-    if (result.success) {
-      setIsConfirmOpen(false);
-    } else {
-      setArchiveError(result.error || "Échec de l'archivage");
-    }
-  };
-
   const baseUrl = `/translations/${translation.id}`;
   const isContentActive = pathname === baseUrl;
-  const canArchive = translation.onlineStatus !== ARCHIVE_STATUS;
 
   return (
     <div className="sticky top-20 self-start h-[calc(100vh-5rem)] flex-shrink-0 w-63 flex flex-col py-12 px-10">
       <div className="flex flex-col gap-14">
-        <div className="flex flex-col gap-6">
-          <nav
-            className="flex flex-col gap-2"
-            aria-label="Navigation de la traduction"
-          >
-            <Link href={baseUrl} className="w-full">
-              <BoutonMenu
-                icon={RiFileTextLine}
-                label="Contenu"
-                active={isContentActive}
-                className="w-full"
-              />
-            </Link>
-          </nav>
-
-          {canArchive && (
-            <Popover open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-              <PopoverAnchor asChild>
-                <BoutonMenu
-                  icon={RiDeleteBinLine}
-                  label="Archiver"
-                  variant="error"
-                  disabled={isArchiving}
-                  onClick={() => setIsConfirmOpen(true)}
-                  className="w-full"
-                />
-              </PopoverAnchor>
-              <PopoverContent
-                side="right"
-                className="w-[388px] flex flex-col gap-7"
-              >
-                <p className="text-base leading-6 text-(--text-default-grey)">
-                  Êtes-vous sûr de vouloir archiver cette traduction ?
-                </p>
-                {archiveError && (
-                  <p className="text-xs text-(--text-default-error)">
-                    {archiveError}
-                  </p>
-                )}
-                <div className="flex justify-end items-center gap-4">
-                  <PopoverClose asChild>
-                    <Button
-                      variant="tertiaire"
-                      rightIcon={RiCloseLine}
-                      disabled={isArchiving}
-                    >
-                      Annuler
-                    </Button>
-                  </PopoverClose>
-                  <Button
-                    variant="primaire"
-                    rightIcon={RiCheckLine}
-                    isLoading={isArchiving}
-                    onClick={handleArchive}
-                  >
-                    Archiver
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
-          )}
-        </div>
+        <nav
+          className="flex flex-col gap-2"
+          aria-label="Navigation de la traduction"
+        >
+          <Link href={baseUrl} className="w-full">
+            <BoutonMenu
+              icon={RiFileTextLine}
+              label="Contenu"
+              active={isContentActive}
+              className="w-full"
+            />
+          </Link>
+        </nav>
 
         {isContentActive && (
           <div className="px-2">
