@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@playground/supabase";
 import {
   generateTranslationWorkflow,
   LANGUAGE_WORKFLOWS,
+  publishTranslation as publishTranslationInline,
   translationPublicationWorkflow,
 } from "@playground/workflows";
 import { start } from "@workflow/core/runtime";
@@ -250,19 +251,45 @@ export async function publishTranslation(
       };
     }
 
+    const publishInput = {
+      translationId: id,
+      userId: user.id,
+      userEmail: user.email ?? "",
+      platform: "refugies.info" as const,
+    };
+
+    // Vercel Workflows dispatch steps to the PRODUCTION deployment regardless
+    // of which deployment started the run, so a durable workflow started from a
+    // preview deployment would publish with PRODUCTION env (real refugies.info +
+    // prod DB) instead of this branch's preview env. To keep preview publishes
+    // pointed at staging.refugies.info with this branch's dynamic Supabase DB,
+    // run the publication INLINE on the preview deployment. Production keeps the
+    // durable workflow for retries/observability.
+    if (process.env.VERCEL_ENV !== "production") {
+      logger.info(
+        { translationId: id, vercelEnv: process.env.VERCEL_ENV },
+        "Publishing translation inline (non-production deployment)",
+      );
+
+      const inlineResult = await publishTranslationInline(publishInput);
+
+      if (!inlineResult.success) {
+        return {
+          success: false,
+          error: inlineResult.error ?? "Échec de la publication",
+        };
+      }
+
+      revalidatePath("/translations");
+      return { success: true };
+    }
+
     if (!translationPublicationWorkflow) {
       logger.error("translationPublicationWorkflow is undefined");
       return { success: false, error: "Workflow non configuré" };
     }
 
-    const result = await start(translationPublicationWorkflow, [
-      {
-        translationId: id,
-        userId: user.id,
-        userEmail: user.email ?? "",
-        platform: "refugies.info",
-      },
-    ]);
+    const result = await start(translationPublicationWorkflow, [publishInput]);
 
     logger.info(
       { workflowRunId: result.runId, translationId: id },

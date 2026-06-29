@@ -62,9 +62,36 @@ export interface PublishTranslationInput {
 }
 
 /**
+ * Durable Vercel Workflow step wrapper around {@link publishTranslation}.
+ *
+ * IMPORTANT: Workflow steps are dispatched by the durable queue to the
+ * PRODUCTION deployment regardless of which deployment started the run, so
+ * this always resolves production credentials (RI_BASE_URL, RI_WEBHOOK_SECRET,
+ * Supabase). Use this only for the production publication path.
+ *
+ * For preview/staging, call {@link publishTranslation} INLINE from the
+ * triggering server action instead — it runs on the preview deployment and
+ * picks up that branch's env (staging RI + branch Supabase DB) automatically.
+ *
+ * @param input - Publication input with translation ID and user context
+ * @returns Result with publication details
+ */
+export async function publishTranslationStep(
+  input: PublishTranslationInput,
+): Promise<StepResult<PublishTranslationResult>> {
+  "use step";
+  return publishTranslation(input);
+}
+
+/**
  * Publishes a translation to the target platform via webhook.
  *
- * This step:
+ * Plain function (no "use step"): runs wherever it is called, using that
+ * deployment's environment. Called by {@link publishTranslationStep} for the
+ * durable production path, or directly/inline by the triggering server action
+ * for preview/staging publishes.
+ *
+ * Steps:
  * 1. Fetches the translation record and linked editorial record
  * 2. Finds the latest publication record for the editorial record to get the remote_id
  * 3. Extracts the title from the translation markdown (first H1)
@@ -75,11 +102,9 @@ export interface PublishTranslationInput {
  * @param input - Publication input with translation ID and user context
  * @returns Result with publication details
  */
-export async function publishTranslationStep(
+export async function publishTranslation(
   input: PublishTranslationInput,
 ): Promise<StepResult<PublishTranslationResult>> {
-  "use step";
-
   const {
     translationId,
     userId,
