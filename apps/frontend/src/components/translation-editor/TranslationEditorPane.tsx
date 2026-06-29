@@ -69,19 +69,17 @@ export function TranslationEditorPane() {
     return unsubscribe;
   }, [editor, updateContent]);
 
-  // External updates (e.g. if we had external ways to change content, mostly init here)
+  // Sync raw markdown edits back into the BlockNote editor when switching to visual mode
   useEffect(() => {
     if (!editor || isUpdating.current) return;
+    if (isRawMarkdownMode) return;
 
     const currentContent = translation?.translationMarkdown || "";
     if (currentContent === lastSyncedContent.current) return;
 
-    // Logic to update editor content if context changes externally
-    // For now mostly useful if we load data asynchronously later or revert changes
-    const _updateEditor = async () => {
+    const updateEditor = async () => {
       isUpdating.current = true;
       try {
-        // Basic implementation: replace blocks
         const blocks = await markdownToBlocks(currentContent);
         editor.replaceBlocks(editor.document, blocks);
         lastSyncedContent.current = currentContent;
@@ -90,9 +88,8 @@ export function TranslationEditorPane() {
       }
     };
 
-    // If needed uncomment: updateEditor();
-    // Commented out to avoid aggressive overwrites while typing if delays happen
-  }, [translation?.translationMarkdown, editor]);
+    updateEditor();
+  }, [translation?.translationMarkdown, editor, isRawMarkdownMode]);
 
   if (!editor) {
     return (
