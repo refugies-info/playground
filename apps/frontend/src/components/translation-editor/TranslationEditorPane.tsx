@@ -2,6 +2,7 @@
 
 import { BlockNoteEditor } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
+import { SuggestionMenuController } from "@blocknote/react";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { isRtlLanguage } from "@playground/shared-types";
@@ -13,6 +14,7 @@ import {
   type CustomEditor,
   customSchema,
 } from "../document-editor/editor/blocks/custom-schema";
+import { getCustomSlashMenuItems } from "../document-editor/editor/slash-menu-config";
 import { useTranslation } from "./TranslationContext";
 
 export function TranslationEditorPane() {
@@ -138,7 +140,14 @@ export function TranslationEditorPane() {
               theme="light"
               editable={true}
               slashMenu={false}
-            />
+            >
+              <SuggestionMenuController
+                triggerCharacter={"/"}
+                getItems={async (query) =>
+                  getCustomSlashMenuItems(editor, query)
+                }
+              />
+            </BlockNoteView>
           )}
         </div>
       </div>
