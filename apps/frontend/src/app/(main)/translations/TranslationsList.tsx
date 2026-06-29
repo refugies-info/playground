@@ -157,9 +157,9 @@ export function TranslationsList({
       {/* Barre de recherche + filtres */}
       <div className="flex items-center gap-4 flex-wrap">
         {/* Recherche */}
-        <div className="flex items-center border border-[var(--border-default-grey,#dddddd)] rounded-[4px] bg-white overflow-hidden cursor-text">
-          <div className="flex items-center gap-1 pl-3 pr-2 py-[6px] border-r border-[var(--border-default-grey,#dddddd)]">
-            <span className="text-sm font-medium text-[var(--text-default-grey,#3a3a3a)] whitespace-nowrap">
+        <div className="flex items-center border border-(--border-default-grey) rounded-[4px] bg-white overflow-hidden cursor-text">
+          <div className="flex items-center gap-1 pl-3 pr-2 py-[6px] border-r border-(--border-default-grey)">
+            <span className="text-sm font-medium text-(--text-default-grey) whitespace-nowrap">
               Rechercher par
             </span>
           </div>
@@ -169,9 +169,9 @@ export function TranslationsList({
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Titre, ID, structure, etc."
-              className="text-sm text-[var(--text-disabled-grey,#929292)] placeholder:text-[var(--text-disabled-grey,#929292)] bg-transparent outline-none min-w-[180px]"
+              className="text-sm text-(--text-disabled-grey) placeholder:text-(--text-disabled-grey) bg-transparent outline-none min-w-[180px]"
             />
-            <RiSearchLine className="w-4 h-4 text-[var(--text-disabled-grey,#929292)] shrink-0" />
+            <RiSearchLine className="w-4 h-4 text-(--text-disabled-grey) shrink-0" />
           </div>
         </div>
 
@@ -231,7 +231,7 @@ export function TranslationsList({
 
         {/* Toggle Traductions prioritaires */}
         <div className="flex items-center gap-3 ml-auto">
-          <span className="text-sm font-medium text-[var(--text-default-grey,#3a3a3a)] whitespace-nowrap">
+          <span className="text-sm font-medium text-(--text-default-grey) whitespace-nowrap">
             Traductions prioritaires
           </span>
           <Switch

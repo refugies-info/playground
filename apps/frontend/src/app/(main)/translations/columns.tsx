@@ -108,7 +108,7 @@ export const columns: ColumnDef<TranslationItem>[] = [
     cell: ({ row }) =>
       row.original.priority === "urgent" ? (
         <RiErrorWarningFill
-          className="w-4 h-4 text-[var(--text-default-warning,#b34000)]"
+          className="w-4 h-4 text-(--text-default-warning)"
           aria-label="Urgent"
         />
       ) : (
