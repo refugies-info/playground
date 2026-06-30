@@ -66,23 +66,6 @@ export interface GetTranslationsParams {
   userRole?: string;
 }
 
-export async function getAllTranslationAuthors(): Promise<
-  { value: string; label: string }[]
-> {
-  const cookieStore = await cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
-
-  const { data } = await supabase
-    .from("profiles")
-    .select("id, email")
-    .not("email", "is", null)
-    .order("email");
-
-  return (data ?? [])
-    .filter((p): p is { id: string; email: string } => !!p.id && !!p.email)
-    .map((p) => ({ value: p.id, label: p.email }));
-}
-
 /**
  * Simple word count estimation from markdown
  */

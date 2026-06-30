@@ -2,9 +2,9 @@ import { createSupabaseServerClient } from "@playground/supabase";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { getAuthUser, getUserProfile } from "@/lib/auth";
+import { getProfilesByRoles } from "@/services/profiles";
 import {
   type GetTranslationsParams,
-  getAllTranslationAuthors,
   getTranslations,
 } from "@/services/translations";
 import { TranslationsList } from "./TranslationsList";
@@ -85,11 +85,13 @@ export default async function TranslationsPage(props: PageProps) {
     userRole: role,
   };
 
-  const [{ data: translations, total, totalPages }, authors] =
+  const [{ data: translations, total, totalPages }, profiles] =
     await Promise.all([
       getTranslations(serviceParams),
-      getAllTranslationAuthors(),
+      getProfilesByRoles(["translator"]),
     ]);
+
+  const authors = profiles.map((p) => ({ value: p.id, label: p.displayName }));
 
   const initialFilters = {
     workStatus: typeof workStatus === "string" ? workStatus : "",
