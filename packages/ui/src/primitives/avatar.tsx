@@ -14,17 +14,21 @@ import { cn } from "../utils/cn";
  */
 
 export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Email utilisateur — dérive les initiales et détermine le variant */
-  email?: string | null;
   /** Affichage forcé comme IA (si false/absent et email présent → user) */
   isAI?: boolean;
+  displayName?: string;
 }
 
-export function Avatar({ email, isAI, className, ...props }: AvatarProps) {
-  const showAsAI = isAI || !email;
+export function Avatar({
+  displayName,
+  isAI,
+  className,
+  ...props
+}: AvatarProps) {
+  const showAsAI = isAI || !displayName;
 
   // Initiales : 2 premiers caractères de l'email (avant l'@), en majuscules
-  const initials = email ? email.split("@")[0].slice(0, 2).toUpperCase() : null;
+  const initials = displayName ? displayName.slice(0, 2).toUpperCase() : null;
 
   if (showAsAI) {
     return (
@@ -68,7 +72,7 @@ export function Avatar({ email, isAI, className, ...props }: AvatarProps) {
         "border-[0.5px] border-[var(--border-default-grey,#DDDDDD)]",
         className,
       )}
-      title={email ?? undefined}
+      title={displayName ?? undefined}
       {...props}
     >
       <span

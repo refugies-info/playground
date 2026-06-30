@@ -26,7 +26,7 @@ export function AssigneeDropdown({
 
   if (!workflowId) {
     return currentEmail ? (
-      <Avatar email={currentEmail} />
+      <Avatar displayName={currentEmail} />
     ) : (
       <Avatar isAI={true} />
     );
@@ -54,7 +54,11 @@ export function AssigneeDropdown({
       disabled={pending}
       aria-label="Assigner à…"
     >
-      {currentEmail ? <Avatar email={currentEmail} /> : <Avatar isAI={true} />}
+      {currentEmail ? (
+        <Avatar displayName={currentEmail} />
+      ) : (
+        <Avatar isAI={true} />
+      )}
     </button>
   );
 
@@ -78,7 +82,7 @@ export function AssigneeDropdown({
               onClick={() => handleSelect(editor)}
               className="flex items-center gap-3 rounded px-2 py-1.5 hover:bg-(--background-action-low-blue-france,#E3E3FD) text-left text-sm w-full transition-colors"
             >
-              <Avatar email={editor.email} className="size-6 shrink-0" />
+              <Avatar displayName={editor.email} className="size-6 shrink-0" />
               <span className="flex-1 truncate">{editor.displayName}</span>
               {editor.email === currentEmail && (
                 <RiCheckLine className="w-4 h-4 text-(--text-title-blue-france,#000091) shrink-0" />

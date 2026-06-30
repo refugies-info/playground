@@ -125,7 +125,7 @@ export const Brouillon: Story = {
         <BoutonRetour />
         <SaveIndicator status="unsaved" onSave={() => {}} />
         <Tag status="en-cours" />
-        <Avatar email="alice@refugies.info" className="size-6" />
+        <Avatar displayName="Alice" className="size-6" />
       </>
     ),
     center: "Formation langue française — Alliance Française de Paris",
@@ -141,7 +141,7 @@ export const Publiee: Story = {
         <BoutonRetour />
         <SaveIndicator status="saved" />
         <Tag status="publie" />
-        <Avatar email="alice@refugies.info" className="size-6" />
+        <Avatar displayName="Alice" className="size-6" />
       </>
     ),
     center: "Formation langue française — Alliance Française de Paris",
@@ -156,7 +156,7 @@ export const Archivee: Story = {
       <>
         <BoutonRetour />
         <Tag status="archive" />
-        <Avatar email="xavier@refugies.info" className="size-6" />
+        <Avatar displayName="Alice" className="size-6" />
       </>
     ),
     center: "Aide juridique — Mission locale",
@@ -171,7 +171,7 @@ export const NonConforme: Story = {
       <>
         <BoutonRetour />
         <Conformite value="non-conforme" />
-        <Avatar email="xavier@refugies.info" className="size-6" />
+        <Avatar displayName="Alice" className="size-6" />
       </>
     ),
     center: "Aide juridique — Mission locale",
@@ -186,7 +186,7 @@ export const ArbitrageEnCours: Story = {
       <>
         <BoutonRetour />
         <Badge variant="neutral">En cours d&apos;arbitrage</Badge>
-        <Avatar email="claudia@refugies.info" className="size-6" />
+        <Avatar displayName="Alice" className="size-6" />
       </>
     ),
     center: "Hébergement d'urgence — Croix-Rouge française",
@@ -202,7 +202,7 @@ export const TitreLong: Story = {
         <BoutonRetour />
         <SaveIndicator status="saved" />
         <Tag status="en-cours" />
-        <Avatar email="alice@refugies.info" className="size-6" />
+        <Avatar displayName="Alice" className="size-6" />
       </>
     ),
     center:
