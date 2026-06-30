@@ -26,7 +26,8 @@ export async function assignTranslatorStep(
       .select("id")
       .eq("role", "translator")
       .eq("language", language)
-      .maybeSingle();
+      .limit(1)
+      .single();
 
     logger.info(
       { language, translator: translator },
