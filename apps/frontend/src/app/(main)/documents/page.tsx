@@ -1,8 +1,6 @@
 import type { DocumentSortField } from "@playground/shared-types";
-import { createSupabaseServerClient } from "@playground/supabase";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getAuthUser, getUserProfile } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { type GetDocumentsParams, getDocuments } from "@/services/documents";
 import { getProfilesByRoles } from "@/services/profiles";
 import { DocumentsList } from "./documents-list";
@@ -17,12 +15,8 @@ const MAX_PAGE_SIZE = 100;
 
 export default async function DocumentsPage(props: PageProps) {
   // Translators must not access /documents — redirect to /translations
-  const cookieStore = await cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
-  const user = await getAuthUser(supabase);
-  if (!user) redirect("/login");
-  const profile = await getUserProfile(supabase, user.id);
-  if (profile?.role === "translator") redirect("/translations");
+  const currentUser = await getCurrentUser();
+  if (currentUser.role === "translator") redirect("/translations");
   const searchParams = await props.searchParams;
 
   const currentPage =

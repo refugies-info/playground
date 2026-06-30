@@ -1,54 +1,54 @@
 import type { Database } from "@playground/supabase";
+import { createSupabaseServerClient } from "@playground/supabase";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { isConnectionError } from "./errors";
 
-/**
- * Fetches the authenticated user's profile (role, language) from public.profiles.
- *
- * Use this in server components and server actions instead of reading
- * user.app_metadata or user.user_metadata — profiles is the single source of
- * truth for authorization data (role, language).
- *
- * Wrapped in React.cache() to deduplicate within the same server request:
- * layout.tsx and page.tsx both call getUserProfile() but only one DB query runs.
- */
-export const getUserProfile = cache(
-  async (
-    supabase: SupabaseClient<Database>,
-    userId: string,
-  ): Promise<{
-    role: string | null;
-    language: string | null;
-    username: string | null;
-  }> => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("role, language, username")
-      .eq("id", userId)
-      .single();
-
-    if (error || !data) {
-      redirect("/service-unavailable");
-    }
-
-    return data;
-  },
-);
+export interface CurrentUser {
+  id: string;
+  email: string | null;
+  role: string | null;
+  language: string | null;
+  username: string | null;
+}
 
 /**
- * Server-side helper to get the authenticated user.
+ * The single entry point for auth in server components and server actions.
  *
- * - If Supabase is unreachable → redirects to /service-unavailable (never returns)
- * - If no session → redirects to /login (never returns)
- * - If authenticated → returns the User object
+ * Creates the Supabase client, authenticates the user, and fetches their
+ * profile in one cached call — deduplicated across all callers in the same
+ * server request (layout + page + actions all share the same result).
  *
- * Wrapped in React.cache() to deduplicate within the same server request:
- * (main)/layout.tsx et documents/[id]/layout.tsx s'exécutent tous les deux
- * pour les pages éditeur — un seul appel Supabase est effectué.
+ * Redirects to /service-unavailable if Supabase is unreachable,
+ * or to /login if there is no active session.
  */
-export const getAuthUser = cache(
+export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+  const user = await getAuthUser(supabase);
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("role, language, username")
+    .eq("id", user.id)
+    .single();
+
+  if (error || !data) {
+    redirect("/service-unavailable");
+  }
+
+  return {
+    id: user.id,
+    email: user.email ?? null,
+    role: data.role,
+    language: data.language,
+    username: data.username,
+  };
+});
+
+const getAuthUser = cache(
   async (supabase: SupabaseClient<Database>): Promise<User> => {
     const {
       data: { user },

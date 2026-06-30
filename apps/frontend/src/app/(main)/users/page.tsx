@@ -6,21 +6,21 @@ import type {
 } from "@playground/ui/composites/user-card/UserCard";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getAuthUser, getUserProfile } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { UserGrid } from "./user-grid";
 
 export const dynamic = "force-dynamic";
 
 export default async function UsersPage() {
-  const cookieStore = await cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
-
-  const user = await getAuthUser(supabase);
-  const currentUserProfile = await getUserProfile(supabase, user.id);
-  if (currentUserProfile.role !== "admin") {
+  const [currentUser, cookieStore] = await Promise.all([
+    getCurrentUser(),
+    cookies(),
+  ]);
+  if (currentUser.role !== "admin") {
     redirect("/");
   }
 
+  const supabase = createSupabaseServerClient(cookieStore);
   const profilesResult = await supabase
     .from("profiles")
     .select("id, role, language, username, email, created_at")

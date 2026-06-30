@@ -18,7 +18,7 @@ import {
 import { getRun, start } from "@workflow/core/runtime";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { getUserProfile } from "../lib/auth";
+import { getCurrentUser } from "../lib/auth";
 import { normalizeMarkdown } from "../lib/markdown/normalizeMarkdown";
 import { verifyWorkflowPermission } from "./permission-helper";
 
@@ -38,32 +38,22 @@ async function getAuthorizedSession(
   workflowId: string,
   action: "modify" | "publish" | "archive",
 ) {
-  const cookieStore = await cookies();
+  const [currentUser, cookieStore] = await Promise.all([
+    getCurrentUser(),
+    cookies(),
+  ]);
   const supabase = createSupabaseServerClient(cookieStore);
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user || !user.email) {
-    logger.error(userError, `Error getting user for ${action}`);
-    return {
-      errorResponse: { success: false, error: "Utilisateur non authentifié" },
-    };
-  }
-
-  const profile = await getUserProfile(supabase, user.id);
   const hasPermission = await verifyWorkflowPermission(
     supabase,
     workflowId,
-    user.id,
-    profile?.role ?? undefined,
+    currentUser.id,
+    currentUser.role ?? undefined,
   );
 
   if (!hasPermission) {
     logger.warn(
-      { userId: user.id, workflowId },
+      { userId: currentUser.id, workflowId },
       `Unauthorized attempt to ${action}`,
     );
     const errorMessages = {
@@ -74,7 +64,7 @@ async function getAuthorizedSession(
     return { errorResponse: { success: false, error: errorMessages[action] } };
   }
 
-  return { user, supabase };
+  return { user: currentUser, supabase };
 }
 
 /**
