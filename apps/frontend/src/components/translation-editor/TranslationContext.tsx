@@ -10,6 +10,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { useAutosave } from "@/hooks/useAutosave";
 import { submitTranslationPreview } from "@/lib/preview-utils";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -44,6 +45,8 @@ export interface TranslationContextType {
   canPreview: boolean; // Whether preview is available (source must be published)
   publicationUrl?: string;
   publicationUrlError?: string | null;
+  isRawMarkdownMode: boolean;
+  setIsRawMarkdownMode: (value: boolean) => void;
 }
 
 const TranslationContext = createContext<TranslationContextType | undefined>(
@@ -63,6 +66,7 @@ export function TranslationProvider({
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isRawMarkdownMode, setIsRawMarkdownMode] = useState(false);
 
   // ── Realtime: publication result (success or failure via publication_records INSERT)
   const handlePublicationSuccess = useCallback((publishedUrl: string) => {
@@ -264,6 +268,8 @@ export function TranslationProvider({
     }
   };
 
+  useAutosave(isDirty, activeSaveTranslation);
+
   const handleSetTranslation: typeof setTranslation = (value) => {
     setTranslation(value);
   };
@@ -287,6 +293,8 @@ export function TranslationProvider({
         canPreview,
         publicationUrl: translation?.publicationUrl,
         publicationUrlError: publicationRealtime.error,
+        isRawMarkdownMode,
+        setIsRawMarkdownMode,
       }}
     >
       {children}

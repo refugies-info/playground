@@ -1,4 +1,5 @@
 import { addTradToAirtableStep } from "../../steps/translation/add-trad-to-airtable";
+import { assignTranslatorStep } from "../../steps/translation/assign-translator";
 import {
   type GenerateTranslationResult,
   generateTranslationStep,
@@ -39,6 +40,7 @@ export async function generateTranslationWorkflow(
       language,
       "to_process",
     );
+    await assignTranslatorStep(result.data.translationRecordId, language);
     await addTradToAirtableStep(editorialRecordId, language, userId);
 
     return result.data;

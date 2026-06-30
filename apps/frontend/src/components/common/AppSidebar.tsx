@@ -54,7 +54,7 @@ export function AppSidebar({ userRole, userEmail }: AppSidebarProps) {
           aria-label="Menu utilisateur"
           className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-action-high-blue-france)]"
         >
-          <Avatar email={userEmail} className="size-12" />
+          <Avatar displayName={userEmail ?? undefined} className="size-12" />
         </button>
       </PopoverTrigger>
       <PopoverContent

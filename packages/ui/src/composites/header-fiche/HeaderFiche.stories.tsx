@@ -5,7 +5,7 @@ import { Avatar } from "../../primitives/avatar";
 import { Badge } from "../../primitives/badge/Badge";
 import { Button } from "../../primitives/button/Button";
 import { Conformite } from "../../primitives/conformite/Conformite";
-import { IndicationSauvegarde } from "../../primitives/indication-sauvegarde/IndicationSauvegarde";
+import { SaveIndicator } from "../../primitives/indication-sauvegarde/IndicationSauvegarde";
 import { Tag } from "../../primitives/tag/Tag";
 import {
   PublishPanel,
@@ -123,9 +123,9 @@ export const Brouillon: Story = {
     left: (
       <>
         <BoutonRetour />
-        <IndicationSauvegarde status="unsaved" onSave={() => {}} />
+        <SaveIndicator status="unsaved" onSave={() => {}} />
         <Tag status="en-cours" />
-        <Avatar email="alice@refugies.info" className="size-6" />
+        <Avatar displayName="Alice" className="size-6" />
       </>
     ),
     center: "Formation langue française — Alliance Française de Paris",
@@ -139,9 +139,9 @@ export const Publiee: Story = {
     left: (
       <>
         <BoutonRetour />
-        <IndicationSauvegarde status="saved" />
+        <SaveIndicator status="saved" />
         <Tag status="publie" />
-        <Avatar email="alice@refugies.info" className="size-6" />
+        <Avatar displayName="Alice" className="size-6" />
       </>
     ),
     center: "Formation langue française — Alliance Française de Paris",
@@ -156,7 +156,7 @@ export const Archivee: Story = {
       <>
         <BoutonRetour />
         <Tag status="archive" />
-        <Avatar email="xavier@refugies.info" className="size-6" />
+        <Avatar displayName="Alice" className="size-6" />
       </>
     ),
     center: "Aide juridique — Mission locale",
@@ -171,7 +171,7 @@ export const NonConforme: Story = {
       <>
         <BoutonRetour />
         <Conformite value="non-conforme" />
-        <Avatar email="xavier@refugies.info" className="size-6" />
+        <Avatar displayName="Alice" className="size-6" />
       </>
     ),
     center: "Aide juridique — Mission locale",
@@ -186,7 +186,7 @@ export const ArbitrageEnCours: Story = {
       <>
         <BoutonRetour />
         <Badge variant="neutral">En cours d&apos;arbitrage</Badge>
-        <Avatar email="claudia@refugies.info" className="size-6" />
+        <Avatar displayName="Alice" className="size-6" />
       </>
     ),
     center: "Hébergement d'urgence — Croix-Rouge française",
@@ -200,9 +200,9 @@ export const TitreLong: Story = {
     left: (
       <>
         <BoutonRetour />
-        <IndicationSauvegarde status="saved" />
+        <SaveIndicator status="saved" />
         <Tag status="en-cours" />
-        <Avatar email="alice@refugies.info" className="size-6" />
+        <Avatar displayName="Alice" className="size-6" />
       </>
     ),
     center:

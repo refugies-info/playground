@@ -10,6 +10,7 @@ import {
   type Database,
 } from "@playground/supabase";
 import { cookies } from "next/headers";
+import { displayName, type Profile } from "@/lib/profile-name";
 import { buildPublicationUrl } from "@/lib/url-builder";
 import { extractAuthorProfile } from "./helpers";
 
@@ -25,9 +26,10 @@ export interface TranslationItem {
   updatedAt: string;
   publicationUrl?: string;
   sourceMarkdown?: string; // from editorial_record
-  author: string;
+  author: Profile | null;
   authorRole: string;
   priority?: string | null; // 'urgent' | null
+  structureName?: string | null;
   commune?: string | null;
 }
 
@@ -48,20 +50,28 @@ type TranslationWithRelations =
           >[];
         })
       | null;
-    profiles: { email: string; role: string } | null;
+    profiles: {
+      email: string;
+      role: string;
+      username: string | null;
+      first_name: string | null;
+      last_name: string | null;
+    } | null;
   };
 
 export interface GetTranslationsParams {
   page?: number;
   pageSize?: number;
-  language?: string; // Filter by specific language
-  workStatus?: string; // Filter by work_status
-  onlineStatus?: string; // Filter by online_status
-  priority?: string; // Filter by priority ('urgent')
+  language?: string;
+  workStatus?: string;
+  onlineStatus?: string;
+  priority?: string;
+  authorId?: string; // Filter by author (profile id)
+  search?: string; // Full-text search on title (metadata fields)
   status?: string; // Deprecated: for backward compatibility
   sortBy?: string;
   sortOrder?: "asc" | "desc";
-  userRole?: string; // User role for permission-based filtering
+  userRole?: string;
 }
 
 /**
@@ -82,6 +92,8 @@ export async function getTranslations(params: GetTranslationsParams) {
     workStatus,
     onlineStatus,
     priority,
+    authorId,
+    search,
     status, // Deprecated: for backward compatibility
     sortBy = "updated_at",
     sortOrder = "desc",
@@ -109,7 +121,10 @@ export async function getTranslations(params: GetTranslationsParams) {
       ),
       profiles (
         email,
-        role
+        role,
+        username,
+        first_name,
+        last_name
       )
     `,
     { count: "exact" },
@@ -131,6 +146,27 @@ export async function getTranslations(params: GetTranslationsParams) {
   // Filter by priority
   if (priority) {
     query = query.eq("priority", priority);
+  }
+
+  // Filter by author
+  if (authorId) {
+    query = query.eq("author_id", authorId);
+  }
+
+  // Search by title: titles live in editorial_records.metadata, not in translation_records.
+  // Two-step: find matching editorial_record IDs, then restrict to those.
+  if (search) {
+    const term = `%${search}%`;
+    const { data: matchingEditorial } = await supabase
+      .from("editorial_records")
+      .select("id")
+      .or(`metadata->>title.ilike.${term},metadata->>nom.ilike.${term}`);
+
+    const editorialIds = (matchingEditorial ?? []).map((r) => r.id);
+    if (editorialIds.length === 0) {
+      return { data: [], total: 0, page, pageSize, totalPages: 0 };
+    }
+    query = query.in("editorial_record_id", editorialIds);
   }
 
   // Filter by online_status
@@ -182,12 +218,15 @@ export async function getTranslations(params: GetTranslationsParams) {
     .map((r) => r.workflow_id)
     .filter((id): id is string => typeof id === "string");
 
-  const enrichedMap = new Map<string, { commune: string | null }>();
+  const enrichedMap = new Map<
+    string,
+    { structureName: string | null; commune: string | null }
+  >();
 
   if (workflowIds.length > 0) {
     const { data: enrichedData, error: enrichedError } = await supabase
       .from("workflows_enriched")
-      .select("id, commune")
+      .select("id, structure_name, commune")
       .in("id", workflowIds);
 
     if (enrichedError) {
@@ -196,7 +235,10 @@ export async function getTranslations(params: GetTranslationsParams) {
 
     for (const row of enrichedData ?? []) {
       if (!row.id) continue;
-      enrichedMap.set(row.id, { commune: row.commune ?? null });
+      enrichedMap.set(row.id, {
+        structureName: row.structure_name ?? null,
+        commune: row.commune ?? null,
+      });
     }
   }
 
@@ -244,6 +286,16 @@ export async function getTranslations(params: GetTranslationsParams) {
       const { email: authorEmail, role: authorRole } = extractAuthorProfile(
         row.profiles,
       );
+      const rawProfile = Array.isArray(row.profiles)
+        ? row.profiles[0]
+        : row.profiles;
+      const author: Profile | null = authorEmail
+        ? {
+            id: row.author_id ?? "",
+            email: authorEmail,
+            displayName: displayName(rawProfile) ?? authorEmail,
+          }
+        : null;
 
       return {
         id: row.id,
@@ -265,7 +317,7 @@ export async function getTranslations(params: GetTranslationsParams) {
         updatedAt: row.updated_at,
         publicationUrl,
         sourceMarkdown,
-        author: authorEmail || "",
+        author,
         authorRole: authorRole || "",
         priority: row.priority ?? null,
         ...(row.workflow_id ? (enrichedMap.get(row.workflow_id) ?? {}) : {}),

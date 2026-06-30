@@ -1,7 +1,7 @@
 "use client";
 
 import { logger } from "@playground/shared-types";
-import { IndicationSauvegarde } from "@playground/ui";
+import { SaveIndicator } from "@playground/ui";
 import {
   HeaderFiche,
   PublishPanel,
@@ -178,7 +178,7 @@ export function HeaderFicheConnected({
             </Button>
           </Link>
           {showSaveIndicator ? (
-            <IndicationSauvegarde status={saveStatus} onSave={handleSave} />
+            <SaveIndicator status={saveStatus} onSave={handleSave} />
           ) : null}
           <DocumentStatus />
           <AssigneeDropdown

@@ -1,44 +1,57 @@
 "use client";
 
-import { cn } from "@playground/ui";
-import { Button } from "@playground/ui/primitives";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
-import { TranslationActions } from "./TranslationActions";
+import {
+  RiCodeSSlashLine,
+  RiFileTextLine,
+  RiPencilLine,
+} from "@playground/ui/icons";
+import { BoutonMenu, SegmentedControl } from "@playground/ui/primitives";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useTranslation } from "./TranslationContext";
+
+const EDITOR_MODES = [
+  { value: "visual" as const, icon: RiPencilLine, label: "Visuel" },
+  { value: "raw" as const, icon: RiCodeSSlashLine, label: "Markdown" },
+];
 
 export function TranslationSidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { translation, isRawMarkdownMode, setIsRawMarkdownMode } =
+    useTranslation();
+  const pathname = usePathname();
+
+  if (!translation) return null;
+
+  const baseUrl = `/translations/${translation.id}`;
+  const isContentActive = pathname === baseUrl;
 
   return (
-    <div
-      className={cn(
-        "flex flex-col border-r bg-gray-50 transition-all duration-300 ease-in-out h-full overflow-hidden",
-        isCollapsed ? "w-16" : "w-64",
-      )}
-    >
-      {/* Header with collapse toggle */}
-      <div className="flex items-center p-4 border-b bg-white justify-between">
-        {!isCollapsed && <span className="font-semibold text-sm">Actions</span>}
-        <Button
-          variant="quatrieme"
-          size="sm"
-          className="h-8 w-8 px-0"
-          onClick={() => setIsCollapsed(!isCollapsed)}
+    <div className="sticky top-20 self-start h-[calc(100vh-5rem)] flex-shrink-0 w-63 flex flex-col py-12 px-10">
+      <div className="flex flex-col gap-14">
+        <nav
+          className="flex flex-col gap-2"
+          aria-label="Navigation de la traduction"
         >
-          {isCollapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <ChevronLeft className="w-4 h-4" />
-          )}
-        </Button>
-      </div>
+          <Link href={baseUrl} className="w-full">
+            <BoutonMenu
+              icon={RiFileTextLine}
+              label="Contenu"
+              active={isContentActive}
+              className="w-full"
+            />
+          </Link>
+        </nav>
 
-      {/* Empty flex space */}
-      <div className="flex-1" />
-
-      {/* Action Buttons - Sticky Bottom */}
-      <div className="sticky bottom-0 mt-auto">
-        <TranslationActions isCollapsed={isCollapsed} />
+        {isContentActive && (
+          <div className="px-2">
+            <SegmentedControl
+              options={EDITOR_MODES}
+              value={isRawMarkdownMode ? "raw" : "visual"}
+              onChange={(v) => setIsRawMarkdownMode(v === "raw")}
+              aria-label="Mode d'édition"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

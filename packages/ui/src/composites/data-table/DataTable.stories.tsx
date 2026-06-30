@@ -287,7 +287,7 @@ const columns: ColumnDef<FicheDemo>[] = [
     ),
     cell: ({ row }) => (
       <Avatar
-        email={row.original.assigneeEmail}
+        displayName={row.original.assigneeEmail}
         isAI={!row.original.assigneeEmail}
       />
     ),

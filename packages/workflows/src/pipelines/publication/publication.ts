@@ -56,6 +56,7 @@ export async function publicationWorkflow(
     ) {
       const editorialRecordId = editorialRecordResult.data.editorialRecordId;
 
+      // Create translation records for missing ones
       const translationResult = await createTranslationRecordsStep(
         editorialRecordId,
         input.workflowId,

@@ -1,10 +1,11 @@
 "use client";
 
+import { RiExternalLinkLine } from "@playground/ui/icons";
 import { Tag } from "@playground/ui/primitives";
 import { useTranslation } from "./TranslationContext";
 
 export function TranslationStatus() {
-  const { translation } = useTranslation();
+  const { translation, publicationUrl } = useTranslation();
 
   if (!translation) return null;
 
@@ -18,6 +19,18 @@ export function TranslationStatus() {
       {onlineStatus === "published" && <Tag status="publie" />}
       {onlineStatus === "archived" && <Tag status="archive" />}
       {onlineStatus === "unpublished" && <Tag status="na">Non publié</Tag>}
+
+      {onlineStatus === "published" && publicationUrl && (
+        <a
+          href={publicationUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#27A658] hover:opacity-75 transition-opacity"
+          title="Voir la fiche publiée"
+        >
+          <RiExternalLinkLine className="w-4 h-4" />
+        </a>
+      )}
     </div>
   );
 }

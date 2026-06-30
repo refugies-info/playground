@@ -289,7 +289,7 @@ export function ActivityLogsView({
                               {/* "Description du log" — avatar + text */}
                               <div className="flex flex-1 items-start gap-3 p-2">
                                 <Avatar
-                                  email={entry.authorEmail}
+                                  displayName={entry.authorName ?? undefined}
                                   className="size-6 shrink-0"
                                 />
                                 <p className="fr-text--md text-(--text-default-grey)">

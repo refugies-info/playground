@@ -52,7 +52,7 @@ export function Sidebar({
     <aside
       className={cn(
         "flex flex-col h-full bg-[var(--background-alt-blue-france)]",
-        "transition-all duration-300 ease-in-out overflow-hidden",
+        "transition-all duration-300 ease-in-out",
         isCollapsed ? "w-20" : "w-[240px]",
         className,
       )}
