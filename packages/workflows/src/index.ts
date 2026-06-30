@@ -102,10 +102,7 @@ export type {
   PublishTranslationInput,
   PublishTranslationResult,
 } from "./steps/publication/publish-translation";
-export {
-  publishTranslation,
-  publishTranslationStep,
-} from "./steps/publication/publish-translation";
+export { publishTranslationStep } from "./steps/publication/publish-translation";
 // =============================================================================
 // Steps - Translation
 // =============================================================================

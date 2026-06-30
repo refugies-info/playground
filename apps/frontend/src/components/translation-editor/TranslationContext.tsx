@@ -218,7 +218,14 @@ export function TranslationProvider({
         console.error(result.error);
         return result;
       }
-      // Workflow started — activate Realtime listener and keep spinner
+      if (!result.workflowRunId) {
+        // Inline publication (preview/staging): it ran synchronously, so the
+        // publication_records INSERT already fired and the Realtime listener
+        // would miss it — finalize immediately instead of waiting.
+        handlePublicationSuccess(result.publishedUrl ?? "");
+        return result;
+      }
+      // Durable workflow started — activate Realtime listener and keep spinner
       // until publication_records INSERT fires (success or failure)
       publicationRealtime.startListening();
       return result;

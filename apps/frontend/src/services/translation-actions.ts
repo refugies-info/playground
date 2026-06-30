@@ -5,12 +5,12 @@ import { createSupabaseServerClient } from "@playground/supabase";
 import {
   generateTranslationWorkflow,
   LANGUAGE_WORKFLOWS,
-  publishTranslation as publishTranslationInline,
   translationPublicationWorkflow,
 } from "@playground/workflows";
 import { start } from "@workflow/core/runtime";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { publishTranslationInline } from "./publish-translation-inline";
 
 // ─── Auth Helper ────────────────────────────────────────────────────────────
 
@@ -221,6 +221,7 @@ export async function publishTranslation(
 ): Promise<{
   success: boolean;
   workflowRunId?: string;
+  publishedUrl?: string;
   error?: string;
 }> {
   try {
@@ -281,7 +282,9 @@ export async function publishTranslation(
       }
 
       revalidatePath("/translations");
-      return { success: true };
+      // No workflowRunId: the publication already happened synchronously, so the
+      // caller must finalize immediately instead of waiting on a Realtime event.
+      return { success: true, publishedUrl: inlineResult.data.publishedUrl };
     }
 
     if (!translationPublicationWorkflow) {
