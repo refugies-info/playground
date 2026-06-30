@@ -56,8 +56,10 @@ export const columns: ColumnDef<TranslationItem>[] = [
       <DataTableColumnHeader column={column} title="Auteur" />
     ),
     cell: ({ row }) => {
-      const email = row.original.author;
-      return <Avatar email={email} isAI={!email} />;
+      const author = row.original.author;
+      return (
+        <Avatar displayName={author?.displayName ?? undefined} isAI={!author} />
+      );
     },
   },
 

@@ -10,6 +10,7 @@ import {
   type Database,
 } from "@playground/supabase";
 import { cookies } from "next/headers";
+import { displayName, type Profile } from "@/lib/profile-name";
 import { buildPublicationUrl } from "@/lib/url-builder";
 import { extractAuthorProfile } from "./helpers";
 
@@ -25,7 +26,7 @@ export interface TranslationItem {
   updatedAt: string;
   publicationUrl?: string;
   sourceMarkdown?: string; // from editorial_record
-  author: string;
+  author: Profile | null;
   authorRole: string;
   priority?: string | null; // 'urgent' | null
   structureName?: string | null;
@@ -49,7 +50,13 @@ type TranslationWithRelations =
           >[];
         })
       | null;
-    profiles: { email: string; role: string } | null;
+    profiles: {
+      email: string;
+      role: string;
+      username: string | null;
+      first_name: string | null;
+      last_name: string | null;
+    } | null;
   };
 
 export interface GetTranslationsParams {
@@ -114,7 +121,10 @@ export async function getTranslations(params: GetTranslationsParams) {
       ),
       profiles (
         email,
-        role
+        role,
+        username,
+        first_name,
+        last_name
       )
     `,
     { count: "exact" },
@@ -276,6 +286,16 @@ export async function getTranslations(params: GetTranslationsParams) {
       const { email: authorEmail, role: authorRole } = extractAuthorProfile(
         row.profiles,
       );
+      const rawProfile = Array.isArray(row.profiles)
+        ? row.profiles[0]
+        : row.profiles;
+      const author: Profile | null = authorEmail
+        ? {
+            id: row.author_id ?? "",
+            email: authorEmail,
+            displayName: displayName(rawProfile) ?? authorEmail,
+          }
+        : null;
 
       return {
         id: row.id,
@@ -297,7 +317,7 @@ export async function getTranslations(params: GetTranslationsParams) {
         updatedAt: row.updated_at,
         publicationUrl,
         sourceMarkdown,
-        author: authorEmail || "",
+        author,
         authorRole: authorRole || "",
         priority: row.priority ?? null,
         ...(row.workflow_id ? (enrichedMap.get(row.workflow_id) ?? {}) : {}),
