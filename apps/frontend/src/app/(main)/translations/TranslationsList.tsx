@@ -52,7 +52,6 @@ export function TranslationsList({
   pageSize,
   showLanguageFilter,
   initialSorting,
-  userRole,
 }: TranslationsListProps) {
   const router = useRouter();
   const [filters, setFilters] = useState(initialFilters);
@@ -201,10 +200,7 @@ export function TranslationsList({
           label="Statut de publication"
           options={[
             { label: "Publié", value: "published" },
-            { label: "Non publié", value: "unpublished" },
-            ...(userRole !== "translator"
-              ? [{ label: "Archivé", value: "archived" }]
-              : []),
+            { label: "Archivé", value: "archived" },
           ]}
           value={filters.onlineStatus}
           onChange={(value) =>
@@ -217,20 +213,15 @@ export function TranslationsList({
           label="État de traitement"
           options={[
             { label: "À traiter", value: "to_process" },
-            { label: "Brouillon", value: "draft" },
-            ...(userRole !== "translator"
-              ? [
-                  { label: "Traduction IA en cours", value: "pending" },
-                  { label: "Erreur de traduction IA", value: "error" },
-                ]
-              : []),
+            { label: "En cours", value: "draft" },
+            { label: "En erreur", value: "error" },
           ]}
           value={filters.workStatus}
           onChange={(value) => updateFilters({ ...filters, workStatus: value })}
         />
 
         {/* Toggle Traductions prioritaires */}
-        <div className="flex items-center gap-3 ml-auto">
+        <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-(--text-default-grey) whitespace-nowrap">
             Traductions prioritaires
           </span>
