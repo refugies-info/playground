@@ -170,6 +170,10 @@ export function ActivityLogsView({
     value: l.code,
   }));
 
+  const hasActiveFilters = Boolean(
+    filters.type || filters.profile || filters.language,
+  );
+
   // Group filtered logs by day, preserving the newest-first order of `logs`.
   const groups = useMemo(() => {
     const filtered = logs.filter((log) => {
@@ -235,7 +239,9 @@ export function ActivityLogsView({
                   priority
                 />
                 <p className="fr-h6 text-center text-(--text-default-grey)">
-                  Oups ! Il n'y a aucun résultat avec les filtres appliqués.
+                  {hasActiveFilters
+                    ? "Oups ! Il n'y a aucun résultat avec les filtres appliqués."
+                    : "Aucune activité n'a encore été enregistrée pour cette fiche."}
                 </p>
               </div>
             ) : (
