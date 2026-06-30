@@ -11,9 +11,13 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { RotateCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { OnlineStatusCell, WorkStatusCell } from "@/components/documents/cells";
+import {
+  ExternalIdCell,
+  OnlineStatusCell,
+  WorkStatusCell,
+} from "@/components/documents/cells";
 import { createTextColumn } from "@/lib/column-factories";
-import { getFlagClass, getLanguageName } from "@/lib/document-labels";
+import { getFlagClass } from "@/lib/document-labels";
 import { retryTranslationGeneration } from "@/services/translation-actions";
 import type { TranslationItem } from "@/services/translations";
 
@@ -38,7 +42,7 @@ export const columns: ColumnDef<TranslationItem>[] = [
       return (
         <LanguageCell
           flagClass={getFlagClass(lang)}
-          name={getLanguageName(lang)}
+          name={lang.toUpperCase()}
           size="sm"
         />
       );
@@ -72,6 +76,12 @@ export const columns: ColumnDef<TranslationItem>[] = [
             | "archived"
             | undefined
         }
+        publishedUrl={row.original.publicationUrl}
+        publishedDate={
+          row.original.onlineStatus === "published"
+            ? row.original.updatedAt
+            : null
+        }
       />
     ),
   },
@@ -98,7 +108,7 @@ export const columns: ColumnDef<TranslationItem>[] = [
     cell: ({ row }) =>
       row.original.priority === "urgent" ? (
         <RiErrorWarningFill
-          className="w-4 h-4 text-[var(--text-default-warning,#b34000)]"
+          className="w-4 h-4 text-(--text-default-warning)"
           aria-label="Urgent"
         />
       ) : (
@@ -130,13 +140,31 @@ export const columns: ColumnDef<TranslationItem>[] = [
     ),
   },
 
-  // 8 — Ville (réutilise createTextColumn générique)
+  // 8 — Structure
+  createTextColumn<TranslationItem>({
+    accessorKey: "structureName",
+    title: "Structure",
+    getValue: (row) => row.structureName,
+    className: "text-sm",
+  }),
+
+  // 9 — Ville
   createTextColumn<TranslationItem>({
     accessorKey: "commune",
     title: "Ville",
     getValue: (row) => row.commune,
     className: "text-sm",
   }),
+
+  // 10 — ID
+  {
+    id: "id",
+    size: 80,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="ID" />
+    ),
+    cell: ({ row }) => <ExternalIdCell externalId={row.original.id} />,
+  },
 ];
 
 // =============================================================================
