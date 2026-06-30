@@ -17,6 +17,14 @@ export interface Profile {
   displayName: string;
 }
 
+export interface AdminProfile extends NameableProfile {
+  id: string;
+  email: string;
+  role: string | null;
+  language: string | null;
+  created_at: string | null;
+}
+
 /**
  * Derive a human-readable name from a profile.
  * Priority: "Prénom Nom" > username > email prefix (capitalized).
