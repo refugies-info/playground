@@ -34,7 +34,7 @@ export const OnlineStatusCell = ({
         <div className="flex flex-col gap-0.5">
           <Tag status="publie" />
           {formattedDate && (
-            <span className="text-[12px] leading-5 text-[var(--text-disabled-grey,#929292)]">
+            <span className="text-[12px] leading-5 text-(--text-disabled-grey)">
               {formattedDate}
             </span>
           )}
