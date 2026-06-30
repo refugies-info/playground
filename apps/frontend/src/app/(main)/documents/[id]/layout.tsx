@@ -3,7 +3,8 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { DocumentLayout } from "@/components/document-editor/shared";
 import { getAuthUser, getUserProfile } from "@/lib/auth";
-import { getDocumentById, getEditorsList } from "@/services/documents";
+import { getDocumentById } from "@/services/documents";
+import { getProfilesByRoles } from "@/services/profiles";
 import { fetchRiReferenceData } from "@/services/ri-reference-data";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +31,7 @@ export default async function Layout({
     getAuthUser(supabase),
     getDocumentById(id),
     fetchRiReferenceData(),
-    getEditorsList(),
+    getProfilesByRoles(["admin", "editor"]),
   ]);
 
   const userProfile = await getUserProfile(supabase, user.id);

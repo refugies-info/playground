@@ -3,11 +3,8 @@ import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getAuthUser, getUserProfile } from "@/lib/auth";
-import {
-  type GetDocumentsParams,
-  getDocuments,
-  getEditorsList,
-} from "@/services/documents";
+import { type GetDocumentsParams, getDocuments } from "@/services/documents";
+import { getProfilesByRoles } from "@/services/profiles";
 import { DocumentsList } from "./documents-list";
 
 interface PageProps {
@@ -113,7 +110,7 @@ export default async function DocumentsPage(props: PageProps) {
 
   const [result, editorsList] = await Promise.all([
     getDocuments(serviceParams),
-    getEditorsList(),
+    getProfilesByRoles(["admin", "editor"]),
   ]);
 
   const initialFilters = {
