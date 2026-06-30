@@ -202,7 +202,7 @@ const TextZone = ({ status }: { status: IndicationSauvegardeStatus }) => (
 // Component
 // ---------------------------------------------------------------------------
 
-export function IndicationSauvegarde({
+export function SaveIndicator({
   status,
   onSave,
   className,

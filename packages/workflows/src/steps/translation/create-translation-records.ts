@@ -53,25 +53,9 @@ export async function createTranslationRecordsStep(
       existingTranslations?.map((t) => t.language) || [],
     );
 
-    // 2. Determine which languages are missing (exclude 'fr' - source language)
-    const targetLanguages = LANGUAGES.filter(
-      (lang) => !existingLanguages.has(lang.code) && lang.code !== "fr",
-    );
-
-    if (targetLanguages.length === 0) {
-      logger.info(
-        { editorialRecordId },
-        "All translation records already exist",
-      );
-      return {
-        success: true,
-        data: { created: 0, languages: [] },
-      };
-    }
-
     const priority = isUrgent ? "urgent" : null;
 
-    // 3a. Update priority on existing records (re-publication)
+    // 2. Update priority on all existing records (covers re-publication with no new languages)
     if (existingTranslations && existingTranslations.length > 0) {
       const { error: updateError } = await supabase
         .from("translation_records")
@@ -91,11 +75,27 @@ export async function createTranslationRecordsStep(
       }
     }
 
-    // 3b. Create missing translation records
+    // 3. Determine which languages are missing (exclude 'fr' - source language)
+    const targetLanguages = LANGUAGES.filter(
+      (lang) => !existingLanguages.has(lang.code) && lang.code !== "fr",
+    );
+
+    if (targetLanguages.length === 0) {
+      logger.info(
+        { editorialRecordId },
+        "All translation records already exist",
+      );
+      return {
+        success: true,
+        data: { created: 0, languages: [] },
+      };
+    }
+
+    // 4. Create missing translation records
     const newRecords = targetLanguages.map((lang) => ({
       editorial_record_id: editorialRecordId,
       language: lang.code,
-      work_status: "to_process",
+      work_status: "pending",
       workflow_id: workflowId,
       priority,
     }));

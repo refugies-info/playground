@@ -10,7 +10,6 @@ import { injectFrontmatterContent, logger } from "@playground/shared-types";
 import type { Database, Json } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
-import { displayName, type Profile } from "@/lib/profile-name";
 import { extractAuthorProfile } from "./helpers";
 
 /**
@@ -593,30 +592,4 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     currentEditorId: activeRunData.currentEditorId,
     currentEditorName: currentEditorName,
   };
-}
-
-/**
- * Returns the list of editors and admins for the author filter dropdown.
- * Translators are excluded (they work on translations, not editorial content).
- */
-export async function getEditorsList(): Promise<Profile[]> {
-  const cookieStore = await cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, email, first_name, last_name, username")
-    .in("role", ["admin", "editor"])
-    .order("email", { ascending: true });
-
-  if (error) {
-    logger.error(error, "Error fetching editors list");
-    return [];
-  }
-
-  return (data ?? []).map((p) => ({
-    id: p.id,
-    email: p.email ?? "",
-    displayName: displayName(p) ?? "",
-  }));
 }

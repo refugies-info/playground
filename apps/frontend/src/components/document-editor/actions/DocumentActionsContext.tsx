@@ -22,6 +22,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useAutosave } from "@/hooks/useAutosave";
 import { buildDispositifPayload } from "@/lib/payload-builder";
 import { submitPreview } from "@/lib/preview-utils";
 import { sanitizeRiMetadata } from "@/lib/sanitize-ri-metadata";
@@ -31,7 +32,6 @@ import {
 } from "@/services/document-actions";
 import { useDocument } from "../DocumentContext";
 import { useMetadata } from "../metadata/MetadataContext";
-import { useAutosave } from "./hooks/useAutosave";
 import { useEditLock } from "./hooks/useEditLock";
 
 // =============================================================================

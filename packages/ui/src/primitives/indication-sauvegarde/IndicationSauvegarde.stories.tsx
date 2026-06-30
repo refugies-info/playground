@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-import { IndicationSauvegarde } from "./IndicationSauvegarde";
+import { SaveIndicator } from "./IndicationSauvegarde";
 
 /**
  * IndicationSauvegarde — Indicateur d'état de sauvegarde cliquable.
@@ -12,9 +12,9 @@ import { IndicationSauvegarde } from "./IndicationSauvegarde";
  * - `unsaved` → dot orange + "À enregistrer" (cliquable)
  * - `error`   → dot rouge + "Erreur" (cliquable → réessai)
  */
-const meta: Meta<typeof IndicationSauvegarde> = {
+const meta: Meta<typeof SaveIndicator> = {
   title: "Primitives/IndicationSauvegarde",
-  component: IndicationSauvegarde,
+  component: SaveIndicator,
   tags: ["autodocs"],
   parameters: { layout: "centered" },
 };
@@ -71,7 +71,7 @@ export const CycleComplet: Story = {
 
     return (
       <div className="flex flex-col items-center gap-4">
-        <IndicationSauvegarde status={status} onSave={() => handleSave(true)} />
+        <SaveIndicator status={status} onSave={() => handleSave(true)} />
         <div className="flex gap-2">
           <button
             type="button"
@@ -98,10 +98,10 @@ export const TousLesEtats: Story = {
   name: "Tous les états",
   render: () => (
     <div className="flex items-center gap-8 p-4 bg-white border rounded">
-      <IndicationSauvegarde status="saved" />
-      <IndicationSauvegarde status="saving" />
-      <IndicationSauvegarde status="unsaved" onSave={() => {}} />
-      <IndicationSauvegarde status="error" onSave={() => {}} />
+      <SaveIndicator status="saved" />
+      <SaveIndicator status="saving" />
+      <SaveIndicator status="unsaved" onSave={() => {}} />
+      <SaveIndicator status="error" onSave={() => {}} />
     </div>
   ),
 };

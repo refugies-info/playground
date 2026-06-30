@@ -21,9 +21,9 @@ export default async function MainLayout({
 
   return (
     <SidebarProvider initialCollapsed={sidebarCollapsed}>
-      <div className="flex h-screen w-full overflow-hidden bg-[var(--background-alt-blue-france,#f5f5fe)]">
+      <div className="flex h-screen w-full bg-[var(--background-alt-blue-france,#f5f5fe)]">
         <AppSidebar userRole={profile.role} userEmail={user.email ?? null} />
-        <main className="flex flex-col flex-1 overflow-y-auto bg-white rounded-tl-[16px] rounded-bl-[16px] border-l border-t border-b border-[#dddddd]">
+        <main className="flex flex-1 flex-col overflow-y-auto bg-white rounded-tl-[16px] rounded-bl-[16px] border-l border-t border-b border-[#dddddd]">
           {/* Suspense requis : usePathname() dans PageShell provoque un CSR bailout sans boundary */}
           <Suspense fallback={null}>
             <PageShell>{children}</PageShell>

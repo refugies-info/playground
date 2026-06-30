@@ -2,21 +2,23 @@
 
 import { BlockNoteEditor } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
+import { SuggestionMenuController } from "@blocknote/react";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { isRtlLanguage } from "@playground/shared-types";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { getLanguageFlag } from "@/lib/document-labels";
+import { getLanguageFlag, getLanguageName } from "@/lib/document-labels";
 import { blocksToDirectiveMarkdown, markdownToBlocks } from "@/lib/markdown";
 import {
   type CustomEditor,
   customSchema,
 } from "../document-editor/editor/blocks/custom-schema";
+import { getCustomSlashMenuItems } from "../document-editor/editor/slash-menu-config";
 import { useTranslation } from "./TranslationContext";
 
 export function TranslationEditorPane() {
-  const { translation, updateContent } = useTranslation();
+  const { translation, updateContent, isRawMarkdownMode } = useTranslation();
   const [editor, setEditor] = useState<CustomEditor | null>(null);
 
   // To avoid circular updates
@@ -69,19 +71,17 @@ export function TranslationEditorPane() {
     return unsubscribe;
   }, [editor, updateContent]);
 
-  // External updates (e.g. if we had external ways to change content, mostly init here)
+  // Sync raw markdown edits back into the BlockNote editor when switching to visual mode
   useEffect(() => {
     if (!editor || isUpdating.current) return;
+    if (isRawMarkdownMode) return;
 
     const currentContent = translation?.translationMarkdown || "";
     if (currentContent === lastSyncedContent.current) return;
 
-    // Logic to update editor content if context changes externally
-    // For now mostly useful if we load data asynchronously later or revert changes
-    const _updateEditor = async () => {
+    const updateEditor = async () => {
       isUpdating.current = true;
       try {
-        // Basic implementation: replace blocks
         const blocks = await markdownToBlocks(currentContent);
         editor.replaceBlocks(editor.document, blocks);
         lastSyncedContent.current = currentContent;
@@ -90,9 +90,8 @@ export function TranslationEditorPane() {
       }
     };
 
-    // If needed uncomment: updateEditor();
-    // Commented out to avoid aggressive overwrites while typing if delays happen
-  }, [translation?.translationMarkdown, editor]);
+    updateEditor();
+  }, [translation?.translationMarkdown, editor, isRawMarkdownMode]);
 
   if (!editor) {
     return (
@@ -103,8 +102,8 @@ export function TranslationEditorPane() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-white relative">
-      <div className="sticky top-0 z-10 bg-white border-b px-4 py-3 flex items-center justify-between">
+    <div className="flex flex-col flex-1 min-w-0 h-full bg-white relative">
+      <div className="p-10 pb-4 flex items-center justify-between">
         <h3 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
           <span className="flex items-center gap-2">
             {translation?.language ? (
@@ -114,25 +113,42 @@ export function TranslationEditorPane() {
             ) : (
               <span className="text-lg">🏳️</span>
             )}
-            Traduction
+            Traduction en{" "}
+            {translation?.language
+              ? getLanguageName(translation.language)
+              : "langue inconnue"}
           </span>
         </h3>
-        <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded">
-          Éditable
-        </span>
       </div>
 
       <div
-        className="flex-1 overflow-y-auto p-4 tablet:p-8"
+        className="flex-1 overflow-y-auto p-10 tablet:p-8"
         dir={isRtlLanguage(translation?.language) ? "rtl" : "ltr"}
       >
         <div className="max-w-3xl mx-auto">
-          <BlockNoteView
-            editor={editor}
-            theme="light"
-            editable={true} // Always editable for translation
-            slashMenu={false} // Disable slash menu for now, or use custom one if needed
-          />
+          {isRawMarkdownMode ? (
+            <textarea
+              value={translation?.translationMarkdown || ""}
+              onChange={(e) => updateContent(e.target.value)}
+              className="w-full min-h-[60vh] p-4 font-mono text-sm leading-relaxed resize-none focus:outline-none"
+              spellCheck={false}
+            />
+          ) : (
+            <BlockNoteView
+              className="[&_.bn-editor]:!px-0"
+              editor={editor}
+              theme="light"
+              editable={true}
+              slashMenu={false}
+            >
+              <SuggestionMenuController
+                triggerCharacter={"/"}
+                getItems={async (query) =>
+                  getCustomSlashMenuItems(editor, query)
+                }
+              />
+            </BlockNoteView>
+          )}
         </div>
       </div>
     </div>

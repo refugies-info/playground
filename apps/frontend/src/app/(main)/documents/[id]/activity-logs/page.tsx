@@ -1,6 +1,6 @@
 import { ActivityLogsView } from "@/components/document-editor/activity-logs";
 import { getActivityLogs } from "@/services/activity-logs";
-import { getEditorsList } from "@/services/documents";
+import { getProfilesByRoles } from "@/services/profiles";
 
 interface ActivityLogsPageProps {
   params: Promise<{ id: string }>;
@@ -20,7 +20,7 @@ export default async function ActivityLogsPage({
 
   const [logs, profiles] = await Promise.all([
     getActivityLogs(id),
-    getEditorsList(),
+    getProfilesByRoles(["admin", "editor"]),
   ]);
 
   const initialFilters = {
