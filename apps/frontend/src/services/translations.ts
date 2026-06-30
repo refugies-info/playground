@@ -28,6 +28,7 @@ export interface TranslationItem {
   author: string;
   authorRole: string;
   priority?: string | null; // 'urgent' | null
+  structureName?: string | null;
   commune?: string | null;
 }
 
@@ -207,12 +208,15 @@ export async function getTranslations(params: GetTranslationsParams) {
     .map((r) => r.workflow_id)
     .filter((id): id is string => typeof id === "string");
 
-  const enrichedMap = new Map<string, { commune: string | null }>();
+  const enrichedMap = new Map<
+    string,
+    { structureName: string | null; commune: string | null }
+  >();
 
   if (workflowIds.length > 0) {
     const { data: enrichedData, error: enrichedError } = await supabase
       .from("workflows_enriched")
-      .select("id, commune")
+      .select("id, structure_name, commune")
       .in("id", workflowIds);
 
     if (enrichedError) {
@@ -221,7 +225,10 @@ export async function getTranslations(params: GetTranslationsParams) {
 
     for (const row of enrichedData ?? []) {
       if (!row.id) continue;
-      enrichedMap.set(row.id, { commune: row.commune ?? null });
+      enrichedMap.set(row.id, {
+        structureName: row.structure_name ?? null,
+        commune: row.commune ?? null,
+      });
     }
   }
 

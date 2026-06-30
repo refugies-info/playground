@@ -140,7 +140,15 @@ export const columns: ColumnDef<TranslationItem>[] = [
     ),
   },
 
-  // 8 — Ville (réutilise createTextColumn générique)
+  // 8 — Structure
+  createTextColumn<TranslationItem>({
+    accessorKey: "structureName",
+    title: "Structure",
+    getValue: (row) => row.structureName,
+    className: "text-sm",
+  }),
+
+  // 9 — Ville
   createTextColumn<TranslationItem>({
     accessorKey: "commune",
     title: "Ville",
@@ -148,7 +156,7 @@ export const columns: ColumnDef<TranslationItem>[] = [
     className: "text-sm",
   }),
 
-  // 9 — ID
+  // 10 — ID
   {
     id: "id",
     size: 80,

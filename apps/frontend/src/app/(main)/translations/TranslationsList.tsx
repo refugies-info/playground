@@ -52,6 +52,7 @@ export function TranslationsList({
   pageSize,
   showLanguageFilter,
   initialSorting,
+  userRole,
 }: TranslationsListProps) {
   const router = useRouter();
   const [filters, setFilters] = useState(initialFilters);
@@ -62,6 +63,15 @@ export function TranslationsList({
       ).get("search") ?? "",
   );
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const visibleColumns =
+    userRole === "translator"
+      ? columns.filter((col) => {
+          const key =
+            "accessorKey" in col ? col.accessorKey : "id" in col ? col.id : "";
+          return key !== "language" && key !== "author";
+        })
+      : columns;
 
   // Supabase Realtime: refresh when a translation_record is updated
   const hasPending = initialTranslations.some(
@@ -238,7 +248,7 @@ export function TranslationsList({
       {/* Table */}
       <div>
         <DataTable
-          columns={columns}
+          columns={visibleColumns}
           data={initialTranslations}
           pageSize={pageSize}
           onRowClick={(row) => {
