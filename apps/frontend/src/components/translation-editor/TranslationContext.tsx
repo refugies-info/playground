@@ -10,6 +10,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { useAutosave } from "@/hooks/useAutosave";
 import { submitTranslationPreview } from "@/lib/preview-utils";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -266,6 +267,8 @@ export function TranslationProvider({
       );
     }
   };
+
+  useAutosave(isDirty, activeSaveTranslation);
 
   const handleSetTranslation: typeof setTranslation = (value) => {
     setTranslation(value);
