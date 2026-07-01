@@ -3,12 +3,7 @@
 import { logger } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
-import {
-  type CurrentUser,
-  displayName,
-  type Profile,
-  type UserRole,
-} from "@/lib/profile";
+import { mapProfileDto, type Profile } from "@/lib/profile";
 
 export async function getAllProfilesForAdmin(): Promise<Profile[]> {
   const cookieStore = await cookies();
@@ -27,17 +22,7 @@ export async function getAllProfilesForAdmin(): Promise<Profile[]> {
   }
 
   return (data ?? []).map((p) => {
-    const user: CurrentUser = {
-      id: p.id,
-      email: p.email as string,
-      username: p.username,
-      role: p.role as UserRole,
-      language: p.language as string,
-      createdAt: p.created_at as string,
-      firstName: p.first_name,
-      lastName: p.last_name,
-    };
-    return { ...user, displayName: displayName(user) };
+    return mapProfileDto(p);
   });
 }
 
@@ -65,16 +50,6 @@ export async function getProfilesByRoles(roles?: string[]): Promise<Profile[]> {
   }
 
   return (data ?? []).map((p) => {
-    const user: CurrentUser = {
-      id: p.id,
-      email: p.email as string,
-      username: p.username,
-      role: p.role as UserRole,
-      language: p.language,
-      createdAt: p.created_at,
-      firstName: p.first_name,
-      lastName: p.last_name,
-    };
-    return { ...user, displayName: displayName(user) };
+    return mapProfileDto(p);
   });
 }

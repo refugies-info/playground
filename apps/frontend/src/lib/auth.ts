@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { isConnectionError } from "./errors";
-import { displayName, type Profile } from "./profile";
+import { mapProfileDto, type Profile } from "./profile";
 
 /**
  * The single entry point for auth in server components and server actions.
@@ -42,10 +42,7 @@ export const getCurrentUser = cache(async (): Promise<Profile> => {
     createdAt: data.created_at,
   };
 
-  return {
-    ...currentUser,
-    displayName: displayName(currentUser),
-  };
+  return mapProfileDto(currentUser);
 });
 
 const getAuthUser = cache(
