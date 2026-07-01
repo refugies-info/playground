@@ -48,7 +48,7 @@ type TranslationWithRelations =
           >[];
         })
       | null;
-    profile: Profile | null;
+    profile?: Profile;
   };
 
 export interface GetTranslationsParams {
@@ -111,7 +111,8 @@ export async function getTranslations(params: GetTranslationsParams) {
           payload
         )
       ),
-      profile (
+      profiles (
+        id,
         email,
         role,
         username,
@@ -205,8 +206,10 @@ export async function getTranslations(params: GetTranslationsParams) {
   }
 
   const rows: TranslationWithRelations[] = data.map((row) => {
-    const profile = Array.isArray(row.profile) ? row.profile[0] : row.profile;
-    return { ...row, profile: mapProfileDto(profile) };
+    const profile = Array.isArray(row.profiles)
+      ? row.profiles[0]
+      : row.profiles;
+    return { ...row, profile: profile ? mapProfileDto(profile) : undefined };
   });
 
   // Second query: enrich with structure_name, commune, external_id from workflows_enriched

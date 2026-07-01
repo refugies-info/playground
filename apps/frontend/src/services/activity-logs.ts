@@ -62,8 +62,8 @@ export async function getActivityLogs(
   }
 
   return (data ?? []).map((row) => {
-    const author = mapProfileDto(row.author);
-    const target = mapProfileDto(row.target);
+    const author = row.author ? mapProfileDto(row.author) : undefined;
+    const target = row.target ? mapProfileDto(row.target) : undefined;
 
     const activity = (row.activity ?? {}) as Record<string, unknown>;
     const language =

@@ -29,29 +29,20 @@ export interface Profile extends CurrentUser {
  * (editors list, activity journal, …).
  */
 
-export const mapProfileDto = ({
-  id,
-  email,
-  role,
-  language,
-  username,
-  first_name,
-  last_name,
-  created_at,
-}: any): Profile => ({
-  id,
-  email,
-  role,
-  language,
-  username,
-  firstName: first_name,
-  lastName: last_name,
-  createdAt: created_at,
+export const mapProfileDto = (user: any): Profile => ({
+  id: user.id,
+  email: user.email,
+  role: user.role,
+  language: user.language,
+  username: user.username,
+  firstName: user.first_name,
+  lastName: user.last_name,
+  createdAt: user.created_at,
   displayName: displayName({
-    email,
-    username,
-    firstName: first_name,
-    lastName: last_name,
+    email: user.email,
+    username: user.username,
+    firstName: user.first_name,
+    lastName: user.last_name,
   }),
 });
 
