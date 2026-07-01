@@ -15,7 +15,7 @@ import { recordActivity } from "@playground/workflows";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getUserProfile } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { verifyWorkflowPermission } from "@/services/permission-helper";
 
 const PostBodySchema = z.object({
@@ -45,27 +45,17 @@ export async function POST(request: NextRequest) {
 
     const { workflowId, markdown } = parsed.data;
 
-    const cookieStore = await cookies();
+    const [currentUser, cookieStore] = await Promise.all([
+      getCurrentUser(),
+      cookies(),
+    ]);
     const supabase = createSupabaseServerClient(cookieStore);
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: "Utilisateur non authentifié" },
-        { status: 401 },
-      );
-    }
-
-    const profile = await getUserProfile(supabase, user.id);
     const hasPermission = await verifyWorkflowPermission(
       supabase,
       workflowId,
-      user.id,
-      profile?.role ?? undefined,
+      currentUser.id,
+      currentUser.role ?? undefined,
     );
 
     if (!hasPermission) {
@@ -118,7 +108,7 @@ export async function POST(request: NextRequest) {
       }
 
       const webhookPayload = {
-        email: user.email ?? "",
+        email: currentUser.email ?? "",
         dispositif: { _id: remoteId },
       };
 
@@ -155,7 +145,7 @@ export async function POST(request: NextRequest) {
           status: "archived",
           mode: "archive",
           payload: webhookPayload,
-          published_by: user.id,
+          published_by: currentUser.id,
         });
 
       if (insertError) {
@@ -260,7 +250,7 @@ export async function POST(request: NextRequest) {
 
     await recordActivity({
       action: TYPE_ARCHIVE,
-      authorId: user.id,
+      authorId: currentUser.id,
       workflowId,
       activity: { editorialRecordId, remoteId },
     });

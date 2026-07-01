@@ -1,8 +1,6 @@
-import { createSupabaseServerClient } from "@playground/supabase";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { DocumentLayout } from "@/components/document-editor/shared";
-import { getAuthUser, getUserProfile } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { getDocumentById } from "@/services/documents";
 import { getProfilesByRoles } from "@/services/profiles";
 import { fetchRiReferenceData } from "@/services/ri-reference-data";
@@ -23,18 +21,12 @@ export default async function Layout({
 }: DocumentLayoutProps) {
   const { id } = await params;
 
-  // Auth (user email pour l'Avatar dans le header) + document + référentiels en parallèle
-  const cookieStore = await cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
-
-  const [user, document, referenceData, editors] = await Promise.all([
-    getAuthUser(supabase),
+  const [currentUser, document, referenceData, editors] = await Promise.all([
+    getCurrentUser(),
     getDocumentById(id),
     fetchRiReferenceData(),
     getProfilesByRoles(["admin", "editor"]),
   ]);
-
-  const userProfile = await getUserProfile(supabase, user.id);
 
   // If document not found, show 404
   if (!document) {
@@ -66,8 +58,8 @@ export default async function Layout({
     assigneeEmail: document.assigneeEmail,
     currentEditorId: document.currentEditorId,
     currentEditorName: document.currentEditorName,
-    currentUserId: user.id,
-    currentUserName: userProfile.username,
+    currentUserId: currentUser.id,
+    currentUserName: currentUser.username,
   };
 
   return (

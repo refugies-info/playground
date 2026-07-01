@@ -1,7 +1,5 @@
-import { createSupabaseServerClient } from "@playground/supabase";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { getAuthUser, getUserProfile } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { getProfilesByRoles } from "@/services/profiles";
 import {
   type GetTranslationsParams,
@@ -39,14 +37,9 @@ export default async function TranslationsPage(props: PageProps) {
       ? Number.parseInt(searchParams.pageSize, 10) || 50
       : 50;
 
-  // Get user to identify language
-  const cookieStore = await cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
-
-  const user = await getAuthUser(supabase);
-  const profile = await getUserProfile(supabase, user.id);
-  const userLanguage = profile.language ?? undefined;
-  const role = profile.role ?? undefined;
+  const currentUser = await getCurrentUser();
+  const userLanguage = currentUser.language ?? undefined;
+  const role = currentUser.role ?? undefined;
 
   // If a specific language filter is applied, use it.
   // Otherwise, default to user's assigned language if they have one (and they are a translator).
@@ -91,7 +84,10 @@ export default async function TranslationsPage(props: PageProps) {
       getProfilesByRoles(["translator"]),
     ]);
 
-  const authors = profiles.map((p) => ({ value: p.id, label: p.displayName }));
+  const authors = profiles.map((p) => ({
+    value: p.id,
+    label: p.displayName ?? p.email,
+  }));
 
   const initialFilters = {
     workStatus: typeof workStatus === "string" ? workStatus : "",
