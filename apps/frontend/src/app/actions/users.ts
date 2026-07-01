@@ -38,8 +38,8 @@ const updateUserSchema = z.object({
 // Create User
 export async function createUser(data: {
   email: string;
-  username: string;
-  role: string;
+  username?: string;
+  role?: string;
   language?: string;
 }) {
   await assertAdmin();

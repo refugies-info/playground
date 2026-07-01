@@ -9,6 +9,17 @@ import { useState } from "react";
 import { Button } from "../../primitives/button";
 import { cn } from "../../utils/cn";
 
+export interface User {
+  id: string;
+  email: string;
+  role: UserRole;
+  language: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  createdAt: string;
+}
+
 // CVA configurations
 const cardVariants = cva(
   "group relative flex flex-col h-80 p-6 rounded-xl border transition-all shadow-sm hover:shadow-md",
@@ -44,18 +55,9 @@ const avatarVariants = cva(
 
 export type UserRole = "admin" | "editor" | "translator";
 
-export interface UserData {
-  id?: string;
-  email: string;
-  username: string;
-  role: UserRole;
-  language?: string;
-  created_at?: string;
-}
-
 interface UserCardProps {
-  user?: UserData;
-  onSave: (data: UserData) => Promise<void>;
+  user?: User;
+  onSave: (data: User) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
   onCancel?: () => void;
   isNew?: boolean;
@@ -89,13 +91,18 @@ export function UserCard({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [formData, setFormData] = useState<UserData>({
-    id: user?.id,
-    email: user?.email || "",
-    username: user?.username || "",
-    role: user?.role || "editor",
-    language: user?.language || "",
-  });
+  const [formData, setFormData] = useState<User>(
+    user ?? {
+      id: "",
+      email: "",
+      role: "editor",
+      language: "",
+      username: "",
+      firstName: "",
+      lastName: "",
+      createdAt: "",
+    },
+  );
 
   const [error, setError] = useState<string | null>(null);
 
@@ -172,7 +179,6 @@ export function UserCard({
           {error && <p className="text-xs text-red-600">{error}</p>}
         </div>
       )}
-
       {/* EDIT STATE */}
       {isEditing && !isDeleting && (
         <>
@@ -306,7 +312,6 @@ export function UserCard({
           </div>
         </>
       )}
-
       {/* VIEW STATE */}
       {!isEditing && !isDeleting && (
         <>
@@ -339,7 +344,11 @@ export function UserCard({
           <div className="flex-1 flex flex-col justify-center items-center text-center space-y-4">
             <div className="relative">
               <div className={cn(avatarVariants({ role: formData.role }))}>
-                {(formData.username?.[0] || formData.email[0]).toUpperCase()}
+                {(
+                  formData.username[0] ||
+                  formData.email[0] ||
+                  ""
+                ).toUpperCase()}
               </div>
               <div className="absolute -bottom-1 -right-1 bg-white p-1 rounded-full shadow-sm">
                 {formData.role === "admin" && (
@@ -404,8 +413,8 @@ export function UserCard({
 
           <div className="mt-4 pt-4 border-t border-gray-50 flex justify-center">
             <span className="text-[10px] text-gray-400">
-              {user?.created_at
-                ? `Créé le ${format(new Date(user.created_at), "dd MMM yyyy", { locale: fr })}`
+              {user?.createdAt
+                ? `Créé le ${format(new Date(user.createdAt), "dd MMM yyyy", { locale: fr })}`
                 : "Nouveau"}
             </span>
           </div>

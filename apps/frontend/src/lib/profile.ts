@@ -2,10 +2,10 @@ export interface CurrentUser {
   id: string;
   email: string;
   role: UserRole;
-  language: string | null;
-  username: string | null;
-  firstName: string | null;
-  lastName: string | null;
+  language?: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
   createdAt: string | null;
 }
 
@@ -28,6 +28,33 @@ export interface Profile extends CurrentUser {
  * Single source of truth so names stay consistent across the UI
  * (editors list, activity journal, …).
  */
+
+export const mapProfileDto = ({
+  id,
+  email,
+  role,
+  language,
+  username,
+  first_name,
+  last_name,
+  created_at,
+}: any): Profile => ({
+  id,
+  email,
+  role,
+  language,
+  username,
+  firstName: first_name,
+  lastName: last_name,
+  createdAt: created_at,
+  displayName: displayName({
+    email,
+    username,
+    firstName: first_name,
+    lastName: last_name,
+  }),
+});
+
 export function displayName(
   profile:
     | Partial<

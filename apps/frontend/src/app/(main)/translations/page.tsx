@@ -84,7 +84,10 @@ export default async function TranslationsPage(props: PageProps) {
       getProfilesByRoles(["translator"]),
     ]);
 
-  const authors = profiles.map((p) => ({ value: p.id, label: p.displayName }));
+  const authors = profiles.map((p) => ({
+    value: p.id,
+    label: p.displayName ?? p.email,
+  }));
 
   const initialFilters = {
     workStatus: typeof workStatus === "string" ? workStatus : "",

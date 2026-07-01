@@ -1,21 +1,19 @@
 "use client";
 
 import { AddUserCard } from "@playground/ui/composites/user-card/AddUserCard";
-import {
-  UserCard,
-  type UserData,
-} from "@playground/ui/composites/user-card/UserCard";
+import { UserCard } from "@playground/ui/composites/user-card/UserCard";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createUser, deleteUser, updateUser } from "@/app/actions/users";
+import type { Profile } from "@/lib/profile";
 
 interface UserGridProps {
-  initialUsers: UserData[];
+  initialUsers: Profile[];
 }
 
 export function UserGrid({ initialUsers }: UserGridProps) {
   const router = useRouter();
-  const [users, setUsers] = useState<UserData[]>(initialUsers);
+  const [users, setUsers] = useState<Profile[]>(initialUsers);
   const [isCreating, setIsCreating] = useState(false);
 
   // Sync state with server data on revalidation
@@ -24,7 +22,9 @@ export function UserGrid({ initialUsers }: UserGridProps) {
   }, [initialUsers]);
 
   // Create
-  const handleCreate = async (data: UserData) => {
+  const handleCreate = async (
+    data: Pick<Profile, "email" | "username" | "role" | "language">,
+  ) => {
     try {
       const res = await createUser({
         email: data.email,
@@ -47,7 +47,12 @@ export function UserGrid({ initialUsers }: UserGridProps) {
   };
 
   // Update
-  const handleUpdate = async (data: UserData) => {
+  const handleUpdate = async (data: {
+    id: string;
+    username: string;
+    role: string;
+    language?: string;
+  }) => {
     if (!data.id) return;
     try {
       await updateUser({
@@ -63,7 +68,7 @@ export function UserGrid({ initialUsers }: UserGridProps) {
             ? {
                 ...u,
                 username: data.username,
-                role: data.role,
+                role: data.role as Profile["role"],
                 language: data.language,
               }
             : u,
@@ -95,7 +100,6 @@ export function UserGrid({ initialUsers }: UserGridProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
       {/* Add Card acts as first element */}
       {!isCreating && <AddUserCard onClick={() => setIsCreating(true)} />}
-
       {/* Wrapper for New User Card flow */}
       {isCreating && (
         <UserCard
@@ -106,10 +110,15 @@ export function UserGrid({ initialUsers }: UserGridProps) {
       )}
 
       {/* Explicitly sort or just map. Assuming input is sorted */}
-      {users.map((user) => (
+      {users.map((profile) => (
         <UserCard
-          key={user.id}
-          user={user}
+          key={profile.id}
+          user={{
+            ...profile,
+            language: profile.language ?? "",
+            username: profile.username ?? "",
+            createdAt: profile.createdAt ?? "",
+          }}
           onSave={handleUpdate}
           onDelete={handleDelete}
         />
