@@ -1,4 +1,5 @@
 import { logger, TYPE_COMPLIANCE_HUMAN } from "@playground/shared-types";
+import { revalidatePath } from "next/cache";
 import type { StepResult } from "../../types";
 import { recordActivity } from "../common/activity-log";
 import { getSupabaseClient } from "../common/supabase";
@@ -158,6 +159,8 @@ export async function toggleStatusStep(
         complianceStatus: newComplianceStatus,
       },
     });
+
+    revalidatePath("/documents/[id]/activity-logs", "page");
 
     return {
       success: true,
