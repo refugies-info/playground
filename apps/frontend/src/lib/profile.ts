@@ -1,28 +1,23 @@
-/** Minimal profile fields needed to derive a display name. */
-export interface NameableProfile {
-  first_name?: string | null;
-  last_name?: string | null;
-  username?: string | null;
-  email?: string | null;
+export interface CurrentUser {
+  id: string;
+  email: string;
+  role: UserRole;
+  language: string | null;
+  username: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  createdAt: string | null;
 }
+
+export type UserRole = "admin" | "editor" | "translator";
 
 /**
  * A profile whose display name has already been resolved (via {@link displayName}).
  * Single source of truth for the shape passed to UI lists, dropdowns and filters
  * (editors list, assignee dropdown, activity journal, …).
  */
-export interface Profile {
-  id: string;
-  email: string;
-  displayName: string;
-}
-
-export interface AdminProfile extends NameableProfile {
-  id: string;
-  email: string;
-  role: string | null;
-  language: string | null;
-  created_at: string | null;
+export interface Profile extends CurrentUser {
+  displayName?: string;
 }
 
 /**
@@ -34,16 +29,21 @@ export interface AdminProfile extends NameableProfile {
  * (editors list, activity journal, …).
  */
 export function displayName(
-  profile: NameableProfile | null | undefined,
-): string | null {
-  if (!profile) return null;
-  const first = profile.first_name?.trim();
-  const last = profile.last_name?.trim();
+  profile:
+    | Partial<
+        Pick<CurrentUser, "firstName" | "lastName" | "username" | "email">
+      >
+    | null
+    | undefined,
+): string | undefined {
+  if (!profile) return undefined;
+  const first = profile.firstName?.trim();
+  const last = profile.lastName?.trim();
   if (first && last) return `${first} ${last}`;
   if (first || last) return (first || last) as string;
   if (profile.username) {
     return profile.username.charAt(0).toUpperCase() + profile.username.slice(1);
   }
   const prefix = (profile.email ?? "").split("@")[0];
-  return prefix ? prefix.charAt(0).toUpperCase() + prefix.slice(1) : null;
+  return prefix ? prefix.charAt(0).toUpperCase() + prefix.slice(1) : undefined;
 }

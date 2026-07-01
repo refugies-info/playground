@@ -5,14 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { isConnectionError } from "./errors";
-
-export interface CurrentUser {
-  id: string;
-  email: string | null;
-  role: string | null;
-  language: string | null;
-  username: string | null;
-}
+import { displayName, type Profile } from "./profile";
 
 /**
  * The single entry point for auth in server components and server actions.
@@ -24,27 +17,34 @@ export interface CurrentUser {
  * Redirects to /service-unavailable if Supabase is unreachable,
  * or to /login if there is no active session.
  */
-export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
+export const getCurrentUser = cache(async (): Promise<Profile> => {
   const cookieStore = await cookies();
   const supabase = createSupabaseServerClient(cookieStore);
   const user = await getAuthUser(supabase);
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("role, language, username")
+    .select("role, language, username, first_name, last_name, created_at")
     .eq("id", user.id)
     .single();
 
   if (error || !data) {
     redirect("/service-unavailable");
   }
-
-  return {
+  const currentUser = {
     id: user.id,
-    email: user.email ?? null,
-    role: data.role,
+    email: user.email as string,
+    role: data.role as Profile["role"],
     language: data.language,
     username: data.username,
+    firstName: data.first_name,
+    lastName: data.last_name,
+    createdAt: data.created_at,
+  };
+
+  return {
+    ...currentUser,
+    displayName: displayName(currentUser),
   };
 });
 

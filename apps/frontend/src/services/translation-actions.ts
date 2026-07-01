@@ -10,6 +10,7 @@ import {
 import { start } from "@workflow/core/runtime";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { getCurrentUser } from "@/lib/auth";
 
 // ─── Auth Helper ────────────────────────────────────────────────────────────
 
@@ -31,40 +32,22 @@ async function getAuthorizedTranslationSession({
   translationId?: string;
   allowTranslator: boolean;
 }) {
-  const cookieStore = await cookies();
+  const [currentUser, cookieStore] = await Promise.all([
+    getCurrentUser(),
+    cookies(),
+  ]);
   const supabase = createSupabaseServerClient(cookieStore);
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user || !user.email) {
-    logger.error(userError, "Error getting user for translation action");
-    return {
-      errorResponse: {
-        success: false as const,
-        error: "Utilisateur non authentifié",
-      },
-    };
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, language")
-    .eq("id", user.id)
-    .single();
-
-  const role = profile?.role;
+  const role = currentUser.role;
 
   if (role === "admin" || role === "editor") {
-    return { user, supabase };
+    return { currentUser, supabase };
   }
 
   if (role === "translator") {
     if (!allowTranslator) {
       logger.warn(
-        { userId: user.id, action, translationId },
+        { userId: currentUser.id, action, translationId },
         "Unauthorized attempt to perform translation action",
       );
       return {
@@ -77,7 +60,7 @@ async function getAuthorizedTranslationSession({
 
     if (!translationId) {
       logger.error(
-        { userId: user.id, action },
+        { userId: currentUser.id, action },
         "Missing translationId for translation action",
       );
       return {
@@ -107,10 +90,10 @@ async function getAuthorizedTranslationSession({
       };
     }
 
-    const userLanguage = profile?.language;
+    const userLanguage = currentUser.language;
     if (!userLanguage) {
       logger.warn(
-        { userId: user.id, translationId },
+        { userId: currentUser.id, translationId },
         "Translator has no language configured",
       );
       return {
@@ -124,7 +107,7 @@ async function getAuthorizedTranslationSession({
     if (translation.language !== userLanguage) {
       logger.warn(
         {
-          userId: user.id,
+          userId: currentUser.id,
           translationId,
           translationLanguage: translation.language,
           userLanguage,
@@ -139,11 +122,11 @@ async function getAuthorizedTranslationSession({
       };
     }
 
-    return { user, supabase };
+    return { currentUser, supabase };
   }
 
   logger.warn(
-    { userId: user.id, role, action, translationId },
+    { userId: currentUser.id, role, action, translationId },
     "Unauthorized attempt to perform translation action",
   );
   return {
@@ -173,14 +156,14 @@ export async function saveTranslation(
       allowTranslator: true,
     });
     if (auth.errorResponse) return auth.errorResponse;
-    const { user, supabase } = auth;
+    const { currentUser, supabase } = auth;
 
     const { error } = await supabase
       .from("translation_records")
       .update({
         markdown,
         work_status: "draft",
-        author_id: user.id,
+        author_id: currentUser.id,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);
@@ -229,7 +212,7 @@ export async function publishTranslation(
       allowTranslator: true,
     });
     if (auth.errorResponse) return auth.errorResponse;
-    const { user, supabase } = auth;
+    const { currentUser, supabase } = auth;
 
     // Save content + claim authorship + mark as draft before launching workflow
     const { error: saveError } = await supabase
@@ -237,7 +220,7 @@ export async function publishTranslation(
       .update({
         markdown,
         work_status: "draft",
-        author_id: user.id,
+        author_id: currentUser.id,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);
@@ -258,8 +241,8 @@ export async function publishTranslation(
     const result = await start(translationPublicationWorkflow, [
       {
         translationId: id,
-        userId: user.id,
-        userEmail: user.email ?? "",
+        userId: currentUser.id,
+        userEmail: currentUser.email ?? "",
         platform: "refugies.info",
       },
     ]);
@@ -298,7 +281,7 @@ export async function retryTranslationGeneration(translationId: string) {
       allowTranslator: false,
     });
     if (auth.errorResponse) return auth.errorResponse;
-    const { user, supabase } = auth;
+    const { currentUser, supabase } = auth;
 
     // 1. Fetch translation record to get context
     const { data: translationRecord, error } = await supabase
@@ -342,12 +325,12 @@ export async function retryTranslationGeneration(translationId: string) {
         editorialRecordId: translationRecord.editorial_record_id,
         language: translationRecord.language,
         parentWorkflowId: translationRecord.workflow_id || "manual-retry",
-        userId: user.id,
+        userId: currentUser.id,
       },
     ]);
 
     logger.info(
-      { translationId, userId: user.id },
+      { translationId, userId: currentUser.id },
       "Retried translation generation manually",
     );
 
