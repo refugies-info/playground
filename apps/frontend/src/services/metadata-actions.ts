@@ -63,7 +63,6 @@ async function getOrCreateEditorialRecord(
     .from("editorial_records")
     .insert({
       ingestion_record_id: workflow.ingestion_record_id,
-      work_status: "draft",
     })
     .select("id")
     .single();
