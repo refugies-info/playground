@@ -48,10 +48,7 @@ export async function toggleStatusStep(
     if (newComplianceStatus === "compliant") {
       // Becoming compliant: ready to process
       // Rule: compliant docs default to unpublished and need processing.
-      // "unpublished" is represented as NULL in DB (online_status CHECK allows
-      // only NULL | 'published' | 'archived'); writing the literal string
-      // violates the constraint, fails the editorial update, and silently skips
-      // the activity log. See editorial_records_online_status_check.
+      // "unpublished" is represented as NULL in DB
       newOnlineStatus = null;
       newWorkStatus = "to_process";
     } else {
