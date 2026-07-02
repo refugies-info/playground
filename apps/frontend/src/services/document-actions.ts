@@ -213,6 +213,7 @@ export async function toggleWorkflowStatus(
     // We proceed to return optimistic values for UI update.
 
     revalidatePath("/documents/[id]", "page");
+    revalidatePath("/documents/[id]/activity-logs", "page");
 
     return {
       success: true,
