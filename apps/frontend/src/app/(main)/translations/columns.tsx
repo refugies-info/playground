@@ -178,7 +178,9 @@ const ErrorWithRetry = ({ row }: { row: { original: TranslationItem } }) => {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const handleRetry = () => {
+  const handleRetry = (e: React.MouseEvent) => {
+    // Ne pas laisser le clic remonter à la ligne (qui ouvre la traduction).
+    e.stopPropagation();
     startTransition(async () => {
       await retryTranslationGeneration(row.original.id);
       router.refresh();
