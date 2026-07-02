@@ -16,7 +16,7 @@ import {
   createWordCountColumn,
   createWorkStatusColumn,
 } from "@/lib/document-column-factories";
-import type { Profile } from "@/lib/profile-name";
+import type { Profile } from "@/lib/profile";
 
 /**
  * Colonnes de la table Fiches.

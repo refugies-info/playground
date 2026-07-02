@@ -4,7 +4,7 @@ import { cn } from "@playground/ui";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import type { Profile } from "@/lib/profile-name";
+import type { Profile } from "@/lib/profile";
 import { DocumentActionsProvider, useDocumentActions } from "../actions";
 import { EditLockDialog } from "../actions/ui/EditLockDialog";
 import { DocumentProvider, useDocument } from "../DocumentContext";

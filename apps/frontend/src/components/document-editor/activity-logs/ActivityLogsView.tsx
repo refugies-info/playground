@@ -41,7 +41,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
-import type { Profile } from "@/lib/profile-name";
+import type { Profile } from "@/lib/profile";
 import type { ActivityLogEntry } from "@/services/activity-logs";
 
 interface ActivityLogsFilters extends Record<string, string> {
@@ -162,7 +162,10 @@ export function ActivityLogsView({
 
   const profileOptions = [
     { label: "PapaIA", value: UNASSIGNED },
-    ...profiles.map((p) => ({ label: p.displayName, value: p.email })),
+    ...profiles.map((p) => ({
+      label: p.displayName ?? p.email,
+      value: p.email,
+    })),
   ];
 
   const languageOptions = LANGUAGES.map((l) => ({

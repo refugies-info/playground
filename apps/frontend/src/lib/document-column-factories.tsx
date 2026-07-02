@@ -15,7 +15,7 @@ import {
   WorkStatusCell,
   type WorkStatusCellProps,
 } from "@/components/documents/cells";
-import type { Profile } from "@/lib/profile-name";
+import type { Profile } from "@/lib/profile";
 
 /**
  * Domain-specific column factories for the Document type.

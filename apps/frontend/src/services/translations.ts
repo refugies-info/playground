@@ -10,9 +10,8 @@ import {
   type Database,
 } from "@playground/supabase";
 import { cookies } from "next/headers";
-import { displayName, type Profile } from "@/lib/profile-name";
+import { mapProfileDto, type Profile } from "@/lib/profile";
 import { buildPublicationUrl } from "@/lib/url-builder";
-import { extractAuthorProfile } from "./helpers";
 
 // Define the shape of a translation item for the frontend
 export interface TranslationItem {
@@ -27,7 +26,6 @@ export interface TranslationItem {
   publicationUrl?: string;
   sourceMarkdown?: string; // from editorial_record
   author: Profile | null;
-  authorRole: string;
   priority?: string | null; // 'urgent' | null
   structureName?: string | null;
   commune?: string | null;
@@ -50,13 +48,7 @@ type TranslationWithRelations =
           >[];
         })
       | null;
-    profiles: {
-      email: string;
-      role: string;
-      username: string | null;
-      first_name: string | null;
-      last_name: string | null;
-    } | null;
+    profile?: Profile;
   };
 
 export interface GetTranslationsParams {
@@ -120,11 +112,13 @@ export async function getTranslations(params: GetTranslationsParams) {
         )
       ),
       profiles (
+        id,
         email,
         role,
         username,
         first_name,
-        last_name
+        last_name,
+        created_at
       )
     `,
     { count: "exact" },
@@ -211,7 +205,12 @@ export async function getTranslations(params: GetTranslationsParams) {
     throw new Error(`Failed to fetch translations: ${error.message}`);
   }
 
-  const rows = data as unknown as TranslationWithRelations[];
+  const rows: TranslationWithRelations[] = data.map((row) => {
+    const profile = Array.isArray(row.profiles)
+      ? row.profiles[0]
+      : row.profiles;
+    return { ...row, profile: profile ? mapProfileDto(profile) : undefined };
+  });
 
   // Second query: enrich with structure_name, commune, external_id from workflows_enriched
   const workflowIds = rows
@@ -282,20 +281,7 @@ export async function getTranslations(params: GetTranslationsParams) {
         publicationUrl = `${cleanBaseUrl}/dispositif/${pubRecord.remote_id}`;
       }
 
-      // Extract author info
-      const { email: authorEmail, role: authorRole } = extractAuthorProfile(
-        row.profiles,
-      );
-      const rawProfile = Array.isArray(row.profiles)
-        ? row.profiles[0]
-        : row.profiles;
-      const author: Profile | null = authorEmail
-        ? {
-            id: row.author_id ?? "",
-            email: authorEmail,
-            displayName: displayName(rawProfile) ?? authorEmail,
-          }
-        : null;
+      const author = row.profile;
 
       return {
         id: row.id,
@@ -318,7 +304,6 @@ export async function getTranslations(params: GetTranslationsParams) {
         publicationUrl,
         sourceMarkdown,
         author,
-        authorRole: authorRole || "",
         priority: row.priority ?? null,
         ...(row.workflow_id ? (enrichedMap.get(row.workflow_id) ?? {}) : {}),
       } as TranslationItem;

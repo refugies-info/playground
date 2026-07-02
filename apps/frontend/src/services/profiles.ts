@@ -3,7 +3,28 @@
 import { logger } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
-import { displayName, type Profile } from "@/lib/profile-name";
+import { mapProfileDto, type Profile } from "@/lib/profile";
+
+export async function getAllProfilesForAdmin(): Promise<Profile[]> {
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(
+      "id, email, username, role, language, created_at, first_name, last_name",
+    )
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    logger.error(error, "Error fetching profiles for admin");
+    return [];
+  }
+
+  return (data ?? []).map((p) => {
+    return mapProfileDto(p);
+  });
+}
 
 export async function getProfilesByRoles(roles?: string[]): Promise<Profile[]> {
   const cookieStore = await cookies();
@@ -11,7 +32,9 @@ export async function getProfilesByRoles(roles?: string[]): Promise<Profile[]> {
 
   let query = supabase
     .from("profiles")
-    .select("id, email, first_name, last_name, username")
+    .select(
+      "id, email, username, role, language, created_at, first_name, last_name",
+    )
     .not("email", "is", null)
     .order("email");
 
@@ -26,13 +49,7 @@ export async function getProfilesByRoles(roles?: string[]): Promise<Profile[]> {
     return [];
   }
 
-  return (data ?? [])
-    .filter(
-      (p): p is typeof p & { id: string; email: string } => !!p.id && !!p.email,
-    )
-    .map((p) => ({
-      id: p.id,
-      email: p.email,
-      displayName: displayName(p) ?? p.email,
-    }));
+  return (data ?? []).map((p) => {
+    return mapProfileDto(p);
+  });
 }
