@@ -31,6 +31,7 @@ export default async function ActivityLogsPage({
 
   return (
     <ActivityLogsView
+      workflowId={id}
       logs={logs}
       profiles={profiles}
       initialFilters={initialFilters}
