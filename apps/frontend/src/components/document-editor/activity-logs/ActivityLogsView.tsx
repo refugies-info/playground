@@ -37,10 +37,11 @@ import {
   RiTranslate2,
   RiUserLine,
 } from "@remixicon/react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
-import type { Profile } from "@/lib/profile-name";
+import type { Profile } from "@/lib/profile";
 import type { ActivityLogEntry } from "@/services/activity-logs";
 
 interface ActivityLogsFilters extends Record<string, string> {
@@ -161,13 +162,20 @@ export function ActivityLogsView({
 
   const profileOptions = [
     { label: "PapaIA", value: UNASSIGNED },
-    ...profiles.map((p) => ({ label: p.displayName, value: p.email })),
+    ...profiles.map((p) => ({
+      label: p.displayName ?? p.email,
+      value: p.email,
+    })),
   ];
 
   const languageOptions = LANGUAGES.map((l) => ({
     label: l.label,
     value: l.code,
   }));
+
+  const hasActiveFilters = Boolean(
+    filters.type || filters.profile || filters.language,
+  );
 
   // Group filtered logs by day, preserving the newest-first order of `logs`.
   const groups = useMemo(() => {
@@ -225,9 +233,20 @@ export function ActivityLogsView({
             </div>
 
             {groups.length === 0 ? (
-              <p className="fr-text--xs text-(--text-disabled-grey)">
-                Aucune activité pour le moment.
-              </p>
+              <div className="flex flex-col items-center gap-8 py-16">
+                <Image
+                  src="/empty-state-no-result.svg"
+                  alt=""
+                  width={179}
+                  height={122}
+                  priority
+                />
+                <p className="fr-h6 text-center text-(--text-default-grey)">
+                  {hasActiveFilters
+                    ? "Oups ! Il n'y a aucun résultat avec les filtres appliqués."
+                    : "Aucune activité n'a encore été enregistrée pour cette fiche."}
+                </p>
+              </div>
             ) : (
               // "logs" — gap 56px between day groups
               <div className="flex flex-col gap-14">
@@ -245,7 +264,7 @@ export function ActivityLogsView({
                       <h2 className="fr-h6">{dateLabel}</h2>
 
                       {/* "liste des logs" */}
-                      <div className="flex flex-col">
+                      <div className="flex flex-col gap-2">
                         {entries.map((entry, idx) => {
                           const time = new Date(entry.createdAt)
                             .toLocaleTimeString("fr-FR", {
@@ -271,7 +290,7 @@ export function ActivityLogsView({
                                   <ActivityTypeIcon action={entry.action} />
                                   <span className="flex flex-1 w-full flex-col items-center justify-start">
                                     <span
-                                      className={`w-[0.5px] bg-(--border-default-grey) ${idx === entries.length - 1 ? "h-1" : "flex-1"}`}
+                                      className={`w-[0.5px] bg-(--border-default-grey) ${idx === entries.length - 1 ? "h-1" : "flex-1 -mb-2"}`}
                                     />
                                   </span>
                                 </div>

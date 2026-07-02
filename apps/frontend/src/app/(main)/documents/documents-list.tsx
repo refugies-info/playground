@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppPaginationControls } from "@/components/common/app-pagination";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
-import type { Profile } from "@/lib/profile-name";
+import type { Profile } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/client";
 import { getColumns } from "./columns";
 
@@ -179,7 +179,7 @@ export function DocumentsList({
           options={[
             { label: "PapaIA", value: "__unassigned__" },
             ...initialAuthors.map((a) => ({
-              label: a.displayName,
+              label: a.displayName ?? a.email,
               value: a.email,
             })),
           ]}

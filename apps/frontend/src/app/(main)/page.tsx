@@ -1,7 +1,5 @@
-import { createSupabaseServerClient } from "@playground/supabase";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getAuthUser, getUserProfile } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 
 /**
  * Root route for authenticated users.
@@ -13,12 +11,7 @@ import { getAuthUser, getUserProfile } from "@/lib/auth";
  * Role is read from profiles (source of truth for RBAC).
  */
 export default async function MainPage() {
-  const cookieStore = await cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
-
-  const user = await getAuthUser(supabase);
-  const profile = await getUserProfile(supabase, user.id);
-  const role = profile.role;
+  const { role } = await getCurrentUser();
 
   if (role === "translator") {
     redirect("/translations");

@@ -47,8 +47,9 @@ export async function toggleStatusStep(
 
     if (newComplianceStatus === "compliant") {
       // Becoming compliant: ready to process
-      // Rule: compliant docs default to unpublished and need processing
-      newOnlineStatus = "unpublished";
+      // Rule: compliant docs default to unpublished and need processing.
+      // "unpublished" is represented as NULL in DB
+      newOnlineStatus = null;
       newWorkStatus = "to_process";
     } else {
       // Becoming non-compliant: usually archived
