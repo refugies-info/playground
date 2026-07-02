@@ -1,3 +1,4 @@
+import { getQueryParam } from "@/lib/search-params";
 import { getDocuments } from "@/services/documents";
 import { WorkflowClient } from "./workflow-client";
 
@@ -24,10 +25,9 @@ export default async function WorkflowPage(props: PageProps) {
     MAX_PAGE_SIZE,
   );
 
-  const searchId =
-    typeof searchParams.searchId === "string"
-      ? searchParams.searchId
-      : undefined;
+  const search = getQueryParam(searchParams.search);
+  const sessionStart = getQueryParam(searchParams.sessionStart);
+  const sessionEnd = getQueryParam(searchParams.sessionEnd);
 
   const {
     data: inProgressDocuments,
@@ -39,7 +39,10 @@ export default async function WorkflowPage(props: PageProps) {
     complianceStatus: ["pending", "error", null], // Include pending, error, and NULL (unevaluated)
     sortBy: "date_added",
     sortOrder: "asc",
-    searchId,
+    search,
+    searchInContent: true, // texte étendu : titre, structure, commune, id + markdown
+    sessionStart,
+    sessionEnd,
     includePreviewFields: true,
   });
 
@@ -50,7 +53,11 @@ export default async function WorkflowPage(props: PageProps) {
       currentPage={page}
       totalPages={totalPages}
       pageSize={pageSize}
-      initialSearchId={searchId}
+      initialFilters={{
+        search,
+        sessionStart,
+        sessionEnd,
+      }}
     />
   );
 }
