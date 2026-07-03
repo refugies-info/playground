@@ -1,12 +1,13 @@
 "use client";
 
 import { type Document, logger } from "@playground/shared-types";
-import { Button, SearchInput } from "@playground/ui";
+import { BoutonFiltreDate, Button, SearchInput } from "@playground/ui";
 import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { triggerDiIngestionAction } from "@/app/actions/di";
 import { AppPaginationControls } from "@/components/common/app-pagination";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { createClient } from "@/lib/supabase/client";
 import { inProgressColumns } from "./columns";
 import { DocumentPreviewDrawer } from "./document-preview-drawer";
@@ -15,13 +16,19 @@ import { DocumentPreviewDrawer } from "./document-preview-drawer";
 const HIGHLIGHT_ANIMATION_DURATION_MS = 1000;
 const REALTIME_REFRESH_THROTTLE_MS = 2000;
 
+interface WorkflowFilters extends Record<string, string> {
+  search: string;
+  sessionStart: string;
+  sessionEnd: string;
+}
+
 interface WorkflowClientProps {
   inProgressDocuments: Document[];
   totalCount: number;
   currentPage: number;
   totalPages: number;
   pageSize: number;
-  initialSearchId?: string;
+  initialFilters: WorkflowFilters;
 }
 
 export function WorkflowClient(props: WorkflowClientProps) {
@@ -31,7 +38,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
     currentPage,
     totalPages,
     pageSize,
-    initialSearchId,
+    initialFilters,
   } = props;
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -48,8 +55,11 @@ export function WorkflowClient(props: WorkflowClientProps) {
   );
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Search state
-  const [searchId, setSearchId] = useState(initialSearchId || "");
+  // Filters synced with URL (reuse shared hook)
+  const { filters, updateFilter } = useUrlFilters<WorkflowFilters>({
+    basePath: "/workflow",
+    initialFilters,
+  });
 
   // Track documents locally to detect changes for animation
   const [documents, setDocuments] = useState(inProgressDocuments);
@@ -188,17 +198,10 @@ export function WorkflowClient(props: WorkflowClientProps) {
     };
   }, [scheduleRealtimeRefresh]);
 
-  const handleSearchChange = (value: string) => {
-    setSearchId(value);
+  // Any filter change is a navigation → skip the row-change animation.
+  const handleFilterChange = (key: keyof WorkflowFilters, value: string) => {
     skipHighlightRef.current = true;
-    const params = new URLSearchParams(window.location.search);
-    if (value) {
-      params.set("searchId", value);
-    } else {
-      params.delete("searchId");
-    }
-    params.set("page", "1");
-    router.push(`/workflow?${params.toString()}`, { scroll: false });
+    updateFilter(key, value);
   };
 
   const handleOpenDrawer = (doc: Document) => {
@@ -459,14 +462,35 @@ export function WorkflowClient(props: WorkflowClientProps) {
       </div>
 
       <div>
-        <div className="mb-6 flex items-end gap-4">
+        <div className="mb-6 flex flex-wrap items-end gap-4">
           <SearchInput
-            value={searchId}
-            onChange={handleSearchChange}
-            placeholder="Ex: carif-oref--10_396692S"
+            value={filters.search}
+            onChange={(value) => handleFilterChange("search", value)}
+            placeholder="Rechercher par titre, ID, structure, commune, contenu…"
             wrapperClassName="max-w-[330px] w-full"
-            aria-label="Rechercher par ID Carif-Oref"
+            aria-label="Rechercher (titre, ID, structure, commune, contenu)"
           />
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-[var(--text-default-grey,#3A3A3A)]">
+              Date de session
+            </span>
+            <BoutonFiltreDate
+              value={filters.sessionStart}
+              onChange={(value) => handleFilterChange("sessionStart", value)}
+            />
+          </div>
+
+          {/* Fin de session : session_end_date <= date */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-[var(--text-default-grey,#3A3A3A)]">
+              à
+            </span>
+            <BoutonFiltreDate
+              value={filters.sessionEnd}
+              onChange={(value) => handleFilterChange("sessionEnd", value)}
+            />
+          </div>
 
           {/* Bouton aligné à droite dans le même conteneur que la recherche */}
           <Button

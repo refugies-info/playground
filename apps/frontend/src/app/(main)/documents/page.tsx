@@ -1,6 +1,7 @@
 import type { DocumentSortField } from "@playground/shared-types";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { getQueryParam } from "@/lib/search-params";
 import { type GetDocumentsParams, getDocuments } from "@/services/documents";
 import { getProfilesByRoles } from "@/services/profiles";
 import { DocumentsList } from "./documents-list";
@@ -34,8 +35,7 @@ export default async function DocumentsPage(props: PageProps) {
   );
 
   // Parse and validate sort parameters
-  const sortByParam =
-    typeof searchParams.sortBy === "string" ? searchParams.sortBy : undefined;
+  const sortByParam = getQueryParam(searchParams.sortBy);
   const validSortFields: DocumentSortField[] = [
     "title",
     "date_added",
@@ -58,22 +58,15 @@ export default async function DocumentsPage(props: PageProps) {
       ? (sortByParam as DocumentSortField)
       : "arbitrationDate";
 
-  const sortOrderParam =
-    typeof searchParams.sortOrder === "string"
-      ? searchParams.sortOrder
-      : undefined;
+  const sortOrderParam = getQueryParam(searchParams.sortOrder);
   const sortOrder =
     sortOrderParam === "asc" || sortOrderParam === "desc"
       ? sortOrderParam
       : "desc";
 
-  const assigneeEmailParam =
-    typeof searchParams.assigneeEmail === "string"
-      ? searchParams.assigneeEmail
-      : undefined;
+  const assigneeEmailParam = getQueryParam(searchParams.assigneeEmail);
 
-  const searchParam =
-    typeof searchParams.search === "string" ? searchParams.search : undefined;
+  const searchParam = getQueryParam(searchParams.search);
 
   const serviceParams: GetDocumentsParams = {
     page: currentPage,
@@ -86,20 +79,15 @@ export default async function DocumentsPage(props: PageProps) {
       : searchParams.status
         ? (searchParams.status as string).split(",")
         : undefined,
-    workStatus: searchParams.workStatus as string | undefined,
-    onlineStatus: searchParams.onlineStatus as string | undefined,
-    dateFrom:
-      typeof searchParams.dateFrom === "string"
-        ? searchParams.dateFrom
-        : undefined,
-    dateTo:
-      typeof searchParams.dateTo === "string" ? searchParams.dateTo : undefined,
+    workStatus: getQueryParam(searchParams.workStatus),
+    onlineStatus: getQueryParam(searchParams.onlineStatus),
+    sessionStart: getQueryParam(searchParams.sessionStart),
+    sessionEnd: getQueryParam(searchParams.sessionEnd),
     assigneeEmail: assigneeEmailParam,
     search: searchParam,
-    modalitesEntreesSorties:
-      typeof searchParams.modalitesEntreesSorties === "string"
-        ? searchParams.modalitesEntreesSorties
-        : undefined,
+    modalitesEntreesSorties: getQueryParam(
+      searchParams.modalitesEntreesSorties,
+    ),
   };
 
   const [result, editorsList] = await Promise.all([
@@ -109,28 +97,17 @@ export default async function DocumentsPage(props: PageProps) {
 
   const initialFilters = {
     complianceStatus:
-      typeof searchParams.complianceStatus === "string"
-        ? searchParams.complianceStatus
-        : typeof searchParams.status === "string"
-          ? searchParams.status
-          : "",
-    workStatus:
-      typeof searchParams.workStatus === "string"
-        ? searchParams.workStatus
-        : "",
-    onlineStatus:
-      typeof searchParams.onlineStatus === "string"
-        ? searchParams.onlineStatus
-        : "",
-    dateFrom:
-      typeof searchParams.dateFrom === "string" ? searchParams.dateFrom : "",
-    dateTo: typeof searchParams.dateTo === "string" ? searchParams.dateTo : "",
-    assigneeEmail: assigneeEmailParam ?? "",
-    search: searchParam ?? "",
-    modalitesEntreesSorties:
-      typeof searchParams.modalitesEntreesSorties === "string"
-        ? searchParams.modalitesEntreesSorties
-        : "",
+      getQueryParam(searchParams.complianceStatus) ||
+      getQueryParam(searchParams.status),
+    workStatus: getQueryParam(searchParams.workStatus),
+    onlineStatus: getQueryParam(searchParams.onlineStatus),
+    sessionStart: getQueryParam(searchParams.sessionStart),
+    sessionEnd: getQueryParam(searchParams.sessionEnd),
+    assigneeEmail: assigneeEmailParam,
+    search: searchParam,
+    modalitesEntreesSorties: getQueryParam(
+      searchParams.modalitesEntreesSorties,
+    ),
   };
 
   return (
