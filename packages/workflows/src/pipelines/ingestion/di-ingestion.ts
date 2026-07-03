@@ -10,7 +10,7 @@
  *   [4] fanOutDiRecordsStep    → N × diSingleRecordWorkflow (fan-out)
  */
 
-import { fanOutDiRecordsStep } from "../../steps/ingestion/di-single-record-steps";
+// import { fanOutDiRecordsStep } from "../../steps/ingestion/di-single-record-steps";
 import {
   ingestServicesStep,
   ingestStructuresStep,
@@ -44,18 +44,19 @@ export async function diIngestionWorkflow() {
     );
   }
 
+  //Skip Letta working
   // 4. Fan-out — always run to process pending records
   // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
-  console.log(
-    "▶ [4/4] Fan-out: claiming records and spawning child workflows...",
-  );
-  const fanOutResult = await fanOutDiRecordsStep(
-    servicesResult.runId ?? "no-new-data",
-  );
-  // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
-  console.log(
-    `✔ [4/4] Fan-out complete — ${fanOutResult.spawned} child workflow(s) spawned`,
-  );
+  // console.log(
+  //   "▶ [4/4] Fan-out: claiming records and spawning child workflows...",
+  // );
+  // const fanOutResult = await fanOutDiRecordsStep(
+  //   servicesResult.runId ?? "no-new-data",
+  // );
+  // // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
+  // console.log(
+  //   `✔ [4/4] Fan-out complete — ${fanOutResult.spawned} child workflow(s) spawned`,
+  // );
 
   const durationMs = Date.now() - startedAt;
   // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
@@ -74,20 +75,22 @@ export async function diIngestionWorkflow() {
         hasNewData: !!servicesResult.runId,
         errors: servicesResult.errors.length,
       },
-      fanOut: {
-        spawned: fanOutResult.spawned,
-        totalCandidates: fanOutResult.totalCandidates,
-        skipped: fanOutResult.skipped ?? 0,
-      },
+      //Skip Letta working
+      // fanOut: {
+      //   spawned: fanOutResult.spawned,
+      //   totalCandidates: fanOutResult.totalCandidates,
+      //   skipped: fanOutResult.skipped ?? 0,
+      // },
     }),
   );
 
   return {
     structures: structuresResult,
     services: servicesResult,
-    fanOut: {
-      spawned: fanOutResult.spawned,
-      totalCandidates: fanOutResult.totalCandidates,
-    },
+    //Skip Letta working
+    // fanOut: {
+    //   spawned: fanOutResult.spawned,
+    //   totalCandidates: fanOutResult.totalCandidates,
+    // },
   };
 }

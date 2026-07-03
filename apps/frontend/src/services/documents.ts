@@ -60,12 +60,15 @@ export interface GetDocumentsParams {
   complianceStatus?: (string | null)[] | string | null;
   workStatus?: string | null;
   onlineStatus?: string | null;
-  dateFrom?: string;
-  dateTo?: string;
-  searchId?: string;
+  /** Début de session — session_start_date >= sessionStart (YYYY-MM-DD) */
+  sessionStart?: string;
+  /** Fin de session — session_end_date <= sessionEnd (YYYY-MM-DD) */
+  sessionEnd?: string;
   assigneeEmail?: string;
   /** Multi-column text search (title, external_id, structure_name, commune) */
   search?: string;
+  /** When true, extend `search` to editorial/ingestion markdown content - usefull to know if we are in "Importer du contenu" ou "Fiches" */
+  searchInContent?: boolean;
   /** Filter by entry type: "0" (dates fixes) or "1" (entrées permanentes) */
   modalitesEntreesSorties?: string | null;
   /** Include large markdown/json fields. Used by /workflow preview drawer only. */
@@ -81,11 +84,11 @@ export async function getDocuments(params: GetDocumentsParams) {
     complianceStatus,
     workStatus,
     onlineStatus,
-    dateFrom,
-    dateTo,
-    searchId,
+    sessionStart,
+    sessionEnd,
     assigneeEmail,
     search,
+    searchInContent = false,
     modalitesEntreesSorties,
     includePreviewFields = false,
   } = params;
@@ -147,19 +150,13 @@ export async function getDocuments(params: GetDocumentsParams) {
     }
   }
 
-  // Date filters use session_start_date (date de début de session — "Date de session" dans le Figma)
-  // session_start_date est une date simple (date, pas timestamptz) → comparaison directe YYYY-MM-DD.
-  if (dateFrom) {
-    query = query.gte("session_start_date", dateFrom);
+  // Début de session : session_start_date >= sessionStart
+  if (sessionStart) {
+    query = query.gte("session_start_date", sessionStart);
   }
-
-  if (dateTo) {
-    query = query.lte("session_start_date", dateTo);
-  }
-
-  // Filter by Carif-Oref ID (external_id is already extracted in the view)
-  if (searchId) {
-    query = query.ilike("external_id", `%${searchId}%`);
+  // Fin de session : session_end_date <= sessionEnd
+  if (sessionEnd) {
+    query = query.lte("session_end_date", sessionEnd);
   }
 
   // Filter by assignee email (editors/admins only — translators excluded from dropdown)
@@ -174,13 +171,19 @@ export async function getDocuments(params: GetDocumentsParams) {
     query = query.eq("modalites_entrees_sorties", modalitesEntreesSorties);
   }
 
-  // Multi-column text search (title, external_id, structure_name, commune)
-  // Uses ilike for case-insensitive substring matching
+  // Multi-column text search (title, external_id, structure_name, commune).
+  // When searchInContent, also match editorial/ingestion markdown (heavier scan).
+  // Uses ilike for case-insensitive substring matching.
   if (search) {
     const term = `%${search}%`;
-    query = query.or(
-      `title.ilike.${term},external_id.ilike.${term},structure_name.ilike.${term},commune.ilike.${term}`,
-    );
+    const columns = [
+      "title",
+      "external_id",
+      "structure_name",
+      "commune",
+      ...(searchInContent ? ["editorial_markdown", "ingestion_markdown"] : []),
+    ];
+    query = query.or(columns.map((col) => `${col}.ilike.${term}`).join(","));
   }
 
   // Apply sorting
