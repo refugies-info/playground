@@ -23,6 +23,8 @@ export interface ActivityLogEntry {
   language: string | null;
   /** Compliance verdict carried in the payload (compliance/update_compliance). */
   complianceStatus: string | null;
+  /** Free-form note text carried in the payload (note). */
+  note: string | null;
 }
 
 /**
@@ -72,6 +74,7 @@ export async function getActivityLogs(
       typeof activity.complianceStatus === "string"
         ? activity.complianceStatus
         : null;
+    const note = typeof activity.note === "string" ? activity.note : null;
 
     return {
       id: row.id,
@@ -82,6 +85,7 @@ export async function getActivityLogs(
       targetName: target?.displayName,
       language,
       complianceStatus,
+      note,
     };
   });
 }
