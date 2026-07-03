@@ -39,7 +39,7 @@ import { start } from "@workflow/core/runtime";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getUserProfile } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { verifyWorkflowPermission } from "@/services/permission-helper";
 
 const PostBodySchema = z.object({
@@ -62,33 +62,24 @@ export async function POST(request: NextRequest) {
     const { workflowId } = parsed.data;
 
     // ─── 2. Auth ──────────────────────────────────────────────────────────
-    const cookieStore = await cookies();
+    const [currentUser, cookieStore] = await Promise.all([
+      getCurrentUser(),
+      cookies(),
+    ]);
     const supabase = createSupabaseServerClient(cookieStore);
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      logger.warn({ userError }, "[editorial-rewrite] Unauthenticated");
-      return NextResponse.json(
-        { error: "Utilisateur non authentifié" },
-        { status: 401 },
-      );
-    }
-
-    const userId = user.id;
-    const profile = await getUserProfile(supabase, userId);
     const hasPermission = await verifyWorkflowPermission(
       supabase,
       workflowId,
-      userId,
-      profile?.role ?? undefined,
+      currentUser.id,
+      currentUser.role ?? undefined,
     );
 
     if (!hasPermission) {
-      logger.warn({ userId, workflowId }, "[editorial-rewrite] Unauthorized");
+      logger.warn(
+        { userId: currentUser.id, workflowId },
+        "[editorial-rewrite] Unauthorized",
+      );
       return NextResponse.json(
         { error: "Vous n'avez pas la permission de modifier ce document" },
         { status: 403 },
@@ -191,7 +182,7 @@ export async function POST(request: NextRequest) {
     // biome-ignore lint/suspicious/noExplicitAny: workflow typing
     const result = await start(forceEditorialWorkflow as any, [
       workflowId,
-      userId,
+      currentUser.id,
     ]);
 
     // ─── 5. Persister le runId dans editorial_records ─────────────────────

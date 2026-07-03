@@ -5,7 +5,7 @@ import { Avatar } from "@playground/ui/primitives";
 import { RiCheckLine } from "@remixicon/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { Profile } from "@/lib/profile-name";
+import type { Profile } from "@/lib/profile";
 import { updateAssigneeAction } from "@/services/assignee-actions";
 
 interface AssigneeDropdownProps {

@@ -55,7 +55,7 @@ import type { ForceEditorialWorkflowResult } from "@playground/workflows";
 import { getRun } from "@workflow/core/runtime";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
-import { getUserProfile } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { verifyWorkflowPermission } from "@/services/permission-helper";
 
 // Couvre les appels Letta les plus longs (1-3 min typiquement).
@@ -88,22 +88,10 @@ async function authorizeRunId(
   | { ok: true; supabase: Awaited<ReturnType<typeof getSupabase>> }
   | { ok: false; response: NextResponse }
 > {
-  const supabase = await getSupabase();
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    return {
-      ok: false,
-      response: NextResponse.json(
-        { error: "Utilisateur non authentifié" },
-        { status: 401 },
-      ),
-    };
-  }
+  const [currentUser, supabase] = await Promise.all([
+    getCurrentUser(),
+    getSupabase(),
+  ]);
 
   // Trouver le workflow_id via l'editorial_record qui a ce active_run_id.
   const { data: record } = await supabase
@@ -140,17 +128,16 @@ async function authorizeRunId(
     };
   }
 
-  const profile = await getUserProfile(supabase, user.id);
   const hasPermission = await verifyWorkflowPermission(
     supabase,
     workflow.id,
-    user.id,
-    profile?.role ?? undefined,
+    currentUser.id,
+    currentUser.role ?? undefined,
   );
 
   if (!hasPermission) {
     logger.warn(
-      { userId: user.id, runId, workflowId: workflow.id },
+      { userId: currentUser.id, runId, workflowId: workflow.id },
       "[editorial-rewrite] Unauthorized access to runId",
     );
     return {

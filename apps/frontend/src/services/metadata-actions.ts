@@ -5,7 +5,7 @@ import { createSupabaseServerClient, type Json } from "@playground/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { getUserProfile } from "../lib/auth";
+import { getCurrentUser } from "../lib/auth";
 import { verifyWorkflowPermission } from "./permission-helper";
 
 // =============================================================================
@@ -122,31 +122,23 @@ export async function saveMetadataFieldAction(
   }
 
   // 3. Authenticate user
-  const cookieStore = await cookies();
+  const [currentUser, cookieStore] = await Promise.all([
+    getCurrentUser(),
+    cookies(),
+  ]);
   const supabase = createSupabaseServerClient(cookieStore);
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user || !user.email) {
-    logger.error(userError, "Error getting user for metadata save");
-    return { success: false, error: "Utilisateur non authentifié" };
-  }
-
   // 4. Verify permission
-  const profile = await getUserProfile(supabase, user.id);
   const hasPermission = await verifyWorkflowPermission(
     supabase,
     workflowId,
-    user.id,
-    profile?.role ?? undefined,
+    currentUser.id,
+    currentUser.role ?? undefined,
   );
 
   if (!hasPermission) {
     logger.warn(
-      { userId: user.id, workflowId },
+      { userId: currentUser.id, workflowId },
       "Unauthorized attempt to modify metadata",
     );
     return {
@@ -159,7 +151,7 @@ export async function saveMetadataFieldAction(
   const recordResult = await getOrCreateEditorialRecord(
     supabase,
     workflowId,
-    user.id,
+    currentUser.id,
   );
 
   if (!recordResult.success) {
@@ -218,31 +210,23 @@ export async function saveMetadataFieldsAction(
   }
 
   // 3. Authenticate user
-  const cookieStore = await cookies();
+  const [currentUser, cookieStore] = await Promise.all([
+    getCurrentUser(),
+    cookies(),
+  ]);
   const supabase = createSupabaseServerClient(cookieStore);
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user || !user.email) {
-    logger.error(userError, "Error getting user for metadata save");
-    return { success: false, error: "Utilisateur non authentifié" };
-  }
-
   // 4. Verify permission
-  const profile = await getUserProfile(supabase, user.id);
   const hasPermission = await verifyWorkflowPermission(
     supabase,
     workflowId,
-    user.id,
-    profile?.role ?? undefined,
+    currentUser.id,
+    currentUser.role ?? undefined,
   );
 
   if (!hasPermission) {
     logger.warn(
-      { userId: user.id, workflowId },
+      { userId: currentUser.id, workflowId },
       "Unauthorized attempt to modify metadata",
     );
     return {
@@ -255,7 +239,7 @@ export async function saveMetadataFieldsAction(
   const recordResult = await getOrCreateEditorialRecord(
     supabase,
     workflowId,
-    user.id,
+    currentUser.id,
   );
 
   if (!recordResult.success) {

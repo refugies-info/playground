@@ -2,46 +2,18 @@
 
 import { logger } from "@playground/shared-types";
 
-import {
-  createSupabaseServerClient,
-  getSupabaseAdmin,
-} from "@playground/supabase";
+import { getSupabaseAdmin } from "@playground/supabase";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
 import { z } from "zod";
+import { getCurrentUser } from "@/lib/auth";
 
 // Security Check Helper
 async function assertAdmin() {
-  const cookieStore = await cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
+  const currentUser = await getCurrentUser();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    throw new Error("Non authentifié.");
-  }
-
-  // Read role from profiles (source of truth), not from JWT claims.
-  // Server actions use the admin client to bypass RLS and get a fresh value.
-  const adminClient = getSupabaseAdmin();
-  const { data: profile, error: profileError } = await adminClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError) {
-    logger.error(
-      { userId: user.id, err: profileError },
-      "Failed to fetch profile for admin check",
-    );
-    throw new Error("Non autorisé : Droits d'administrateur requis.");
-  }
-
-  if (profile?.role !== "admin") {
+  if (currentUser.role !== "admin") {
     logger.warn(
-      { userId: user.id, role: profile?.role ?? null },
+      { userId: currentUser.id, role: currentUser.role },
       "Unauthorized attempt to access admin action",
     );
     throw new Error("Non autorisé : Droits d'administrateur requis.");
@@ -66,8 +38,8 @@ const updateUserSchema = z.object({
 // Create User
 export async function createUser(data: {
   email: string;
-  username: string;
-  role: string;
+  username?: string;
+  role?: string;
   language?: string;
 }) {
   await assertAdmin();

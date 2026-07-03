@@ -17,7 +17,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AssigneeDropdown } from "@/components/common/assignee-dropdown";
-import type { Profile } from "@/lib/profile-name";
+import type { Profile } from "@/lib/profile";
 import { useDocumentActions } from "../actions/DocumentActionsContext";
 import { usePublicationRealtime } from "../actions/hooks/usePublicationRealtime";
 import { useDocument } from "../DocumentContext";
