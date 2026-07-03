@@ -3,6 +3,7 @@
 import {
   RiCodeSSlashLine,
   RiFileTextLine,
+  RiNewspaperLine,
   RiPencilLine,
 } from "@playground/ui/icons";
 import { BoutonMenu, SegmentedControl } from "@playground/ui/primitives";
@@ -24,6 +25,7 @@ export function TranslationSidebar() {
 
   const baseUrl = `/translations/${translation.id}`;
   const isContentActive = pathname === baseUrl;
+  const isActivityLogActive = pathname === `${baseUrl}/activity-logs`;
 
   return (
     <div className="sticky top-20 self-start h-[calc(100vh-5rem)] flex-shrink-0 w-63 flex flex-col py-12 px-10">
@@ -37,6 +39,15 @@ export function TranslationSidebar() {
               icon={RiFileTextLine}
               label="Contenu"
               active={isContentActive}
+              className="w-full"
+            />
+          </Link>
+
+          <Link href={`${baseUrl}/activity-logs`} className="w-full">
+            <BoutonMenu
+              icon={RiNewspaperLine}
+              label="Journal d'activités"
+              active={isActivityLogActive}
               className="w-full"
             />
           </Link>
