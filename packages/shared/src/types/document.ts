@@ -3,7 +3,7 @@ export type ComplianceStatus =
   | "non_compliant"
   | "error"
   | "pending";
-export type WorkStatus = "to_process" | "draft";
+export type WorkStatus = "to_process" | "draft" | "to_review";
 export type OnlineStatus = "published" | "unpublished" | "archived";
 
 // Derived state for backward compatibility or UI logic
