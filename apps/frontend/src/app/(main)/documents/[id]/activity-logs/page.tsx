@@ -1,4 +1,5 @@
 import { ActivityLogsView } from "@/components/document-editor/activity-logs";
+import { getQueryParam } from "@/lib/search-params";
 import { getActivityLogs } from "@/services/activity-logs";
 import { getProfilesByRoles } from "@/services/profiles";
 
@@ -6,9 +7,6 @@ interface ActivityLogsPageProps {
   params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
-
-const first = (value: string | string[] | undefined): string =>
-  Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 
 export default async function ActivityLogsPage({
   params,
@@ -24,9 +22,9 @@ export default async function ActivityLogsPage({
   ]);
 
   const initialFilters = {
-    type: first(sp.type),
-    profile: first(sp.profile),
-    language: first(sp.language),
+    type: getQueryParam(sp.type),
+    profile: getQueryParam(sp.profile),
+    language: getQueryParam(sp.language),
   };
 
   return (
