@@ -46,9 +46,11 @@ import {
   createLettaClient,
   findOrCreateConversation,
   generateIngestionReport,
+  getRunUsage,
+  type LettaUsage,
   parseIngestionResponse,
 } from "@playground/agents";
-import { logger } from "@playground/shared-types";
+import { LETTA_MODEL_NAME, logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
 import { getStepMetadata } from "@workflow/core";
 import { FatalError } from "@workflow/errors";
@@ -270,12 +272,20 @@ export async function generateDiAuditReportsStep(runId: string) {
       );
 
       let finalContent = "";
+      let usage: LettaUsage | undefined;
+      let chunkRunId: string | undefined;
 
       for await (const chunk of generateIngestionReport(
         lettaClient,
         target.markdown,
         conversationId,
       )) {
+        if (!chunkRunId && chunk.run_id) {
+          chunkRunId = chunk.run_id;
+        }
+        if (chunk.usage) {
+          usage = chunk.usage;
+        }
         if (chunk.message_type === "assistant_message") {
           if (typeof chunk.content !== "string") {
             throw new Error(
@@ -290,6 +300,10 @@ export async function generateDiAuditReportsStep(runId: string) {
         throw new Error("No assistant response received for ingestion report");
       }
 
+      if (!usage && chunkRunId) {
+        usage = await getRunUsage(lettaClient, chunkRunId);
+      }
+
       const parsed = parseIngestionResponse(finalContent, agentId);
 
       const { data: report, error: reportError } = await supabase
@@ -302,6 +316,8 @@ export async function generateDiAuditReportsStep(runId: string) {
           status: parsed.status,
           raw_response: parsed.rawResponse ?? null,
           workflow_id: target.workflow_id,
+          token_cost: usage?.total_tokens ?? null,
+          model: LETTA_MODEL_NAME,
         })
         .select("id")
         .single();
@@ -455,6 +471,8 @@ export async function forceAuditReportStep(workflowId: string) {
   );
 
   let finalContent = "";
+  let usage: LettaUsage | undefined;
+  let chunkRunId: string | undefined;
 
   try {
     for await (const chunk of generateIngestionReport(
@@ -462,6 +480,12 @@ export async function forceAuditReportStep(workflowId: string) {
       record.markdown,
       conversationId,
     )) {
+      if (!chunkRunId && chunk.run_id) {
+        chunkRunId = chunk.run_id;
+      }
+      if (chunk.usage) {
+        usage = chunk.usage;
+      }
       if (chunk.message_type === "assistant_message") {
         if (typeof chunk.content !== "string") {
           throw new Error(
@@ -474,6 +498,10 @@ export async function forceAuditReportStep(workflowId: string) {
 
     if (!finalContent) {
       throw new Error("No assistant response received for ingestion report");
+    }
+
+    if (!usage && chunkRunId) {
+      usage = await getRunUsage(lettaClient, chunkRunId);
     }
 
     const parsed = parseIngestionResponse(finalContent, agentId);
@@ -489,6 +517,8 @@ export async function forceAuditReportStep(workflowId: string) {
         status: parsed.status,
         raw_response: parsed.rawResponse ?? null,
         workflow_id: workflowId,
+        token_cost: usage?.total_tokens ?? null,
+        model: LETTA_MODEL_NAME,
       })
       .select("id")
       .single();

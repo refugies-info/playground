@@ -1,4 +1,8 @@
-import { createLettaClient, generateMetadataReport } from "@playground/agents";
+import {
+  createLettaClient,
+  generateMetadataReport,
+  type LettaUsage,
+} from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
 import { persistMetadataWorkflow } from "@playground/workflows";
@@ -9,6 +13,32 @@ import { z } from "zod";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/**
+ * Fetches usage statistics from Letta API for a given run ID.
+ */
+async function getRunUsage(
+  client: ReturnType<typeof createLettaClient>,
+  runId: string,
+): Promise<LettaUsage | undefined> {
+  try {
+    // biome-ignore lint/suspicious/noExplicitAny: Letta SDK work-around
+    const usageData = await (client.runs.usage.retrieve(runId) as any);
+    if (usageData && typeof usageData === "object") {
+      return {
+        prompt_tokens: usageData.prompt_tokens,
+        completion_tokens: usageData.completion_tokens,
+        total_tokens: usageData.total_tokens,
+      };
+    }
+  } catch (err) {
+    logger.error(
+      { runId, error: err instanceof Error ? err.message : String(err) },
+      "[getRunUsage] Failed to fetch run usage",
+    );
+  }
+  return undefined;
+}
 
 /**
  * Request body schema for the metadata stream endpoint.
@@ -137,6 +167,8 @@ export async function POST(request: NextRequest) {
 
   // Track the final assistant response for persistence
   let finalAssistantContent = "";
+  let usage: LettaUsage | undefined;
+  let runId: string | undefined;
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -148,15 +180,29 @@ export async function POST(request: NextRequest) {
           fullContent,
           conversationId,
         )) {
+          // Capture run_id from chunk metadata
+          if (!runId && chunk.run_id) {
+            runId = chunk.run_id;
+          }
+
           // Capture assistant message content for persistence
           if (chunk.message_type === "assistant_message") {
             if (typeof chunk.content === "string") {
               finalAssistantContent = chunk.content;
             }
+            // Extract usage from assistant message chunk if available
+            if (chunk.usage) {
+              usage = chunk.usage;
+            }
           }
 
           const data = `data: ${JSON.stringify(chunk)}\n\n`;
           controller.enqueue(encoder.encode(data));
+        }
+
+        // If we didn't get usage from chunk metadata, try to fetch from API using run_id
+        if (!usage && runId) {
+          usage = await getRunUsage(client, runId);
         }
 
         /**
@@ -168,6 +214,7 @@ export async function POST(request: NextRequest) {
               flowId,
               agentId,
               finalAssistantContent,
+              usage,
             ]);
             logger.info({ flowId }, "Triggered persistMetadataWorkflow");
           } catch (persistError) {

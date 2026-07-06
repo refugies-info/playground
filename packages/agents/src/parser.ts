@@ -1,6 +1,6 @@
 import matter from "gray-matter";
 import type { ZodSchema, ZodVoid } from "zod";
-import type { LettaMetadata, LettaReportResult } from "./types";
+import type { LettaMetadata, LettaReportResult, LettaUsage } from "./types";
 
 /**
  * Checks if the content contains valid YAML frontmatter.
@@ -47,11 +47,7 @@ export function parseAgentResponse(
   agentResponse: string,
   agentId: string,
   schema?: ZodSchema,
-  usage?: {
-    prompt_tokens?: number;
-    completion_tokens?: number;
-    total_tokens?: number;
-  },
+  usage?: LettaUsage,
 ): LettaReportResult {
   const lettaMetadata: LettaMetadata = {
     agent_id: agentId,

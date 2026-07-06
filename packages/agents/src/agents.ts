@@ -55,6 +55,7 @@ export const sendMessageToConversation = async (
 ): Promise<{
   content: string;
   usage?: Record<string, unknown>;
+  runId?: string;
 }> => {
   const stream = await client.conversations.messages.create(conversationId, {
     messages: [
@@ -66,8 +67,13 @@ export const sendMessageToConversation = async (
   });
 
   let finalContent = "";
+  let runId: string | undefined;
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
   for await (const chunk of stream as AsyncIterable<any>) {
+    // Capture run_id from chunks (available in response headers/chunks)
+    if (!runId && chunk.run_id) {
+      runId = chunk.run_id;
+    }
     if (chunk.message_type === "assistant_message") {
       if (typeof chunk.content === "string") {
         finalContent += chunk.content;
@@ -81,10 +87,22 @@ export const sendMessageToConversation = async (
     throw new Error("No message with content found in response");
   }
 
+  let usage: Record<string, unknown> | undefined;
+  if (runId) {
+    try {
+      // Fetch usage stats from Letta API for this run
+      // biome-ignore lint/suspicious/noExplicitAny: Letta SDK work-around
+      usage = await (client.runs.usage.retrieve(runId) as any);
+    } catch (err) {
+      // Silently fail usage fetch — content is still valid
+      console.error("Failed to fetch run usage:", err);
+    }
+  }
+
   return {
     content: finalContent,
-    // Usage might not be easily available in stream chunks without aggregation
-    usage: undefined,
+    usage,
+    runId,
   };
 };
 

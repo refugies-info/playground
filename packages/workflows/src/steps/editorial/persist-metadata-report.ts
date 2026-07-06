@@ -1,5 +1,9 @@
-import { MetadataMetadataSchema, parseAgentResponse } from "@playground/agents";
-import { logger } from "@playground/shared-types";
+import {
+  type LettaUsage,
+  MetadataMetadataSchema,
+  parseAgentResponse,
+} from "@playground/agents";
+import { LETTA_MODEL_NAME, logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
 import type { LettaReportType, StepResult } from "../../types";
 import { getSupabaseClient } from "../common/supabase";
@@ -28,12 +32,14 @@ export interface PersistMetadataReportResult {
  * @param flowId - The workflow ID to associate with this report
  * @param agentId - The Letta agent ID that generated the response
  * @param responseContent - The raw response content from the agent
+ * @param usage - Optional usage statistics (tokens)
  * @returns Result with report ID and linking status
  */
 export async function persistMetadataReportStep(
   flowId: string,
   agentId: string,
   responseContent: string,
+  usage?: LettaUsage,
 ): Promise<StepResult<PersistMetadataReportResult>> {
   "use step";
 
@@ -47,6 +53,7 @@ export async function persistMetadataReportStep(
       responseContent,
       agentId,
       MetadataMetadataSchema,
+      usage,
     );
 
     // 1. Insert the letta_report first (always, for debugging)
@@ -60,6 +67,8 @@ export async function persistMetadataReportStep(
         status: result.status,
         raw_response: result.rawResponse,
         workflow_id: flowId,
+        token_cost: usage?.total_tokens ?? null,
+        model: LETTA_MODEL_NAME,
       })
       .select("id")
       .single();
