@@ -202,6 +202,7 @@ export function DocumentsList({
           options={[
             { label: "En cours", value: "draft" },
             { label: "À traiter", value: "to_process" },
+            { label: "À relire", value: "to_review" },
           ]}
           value={filters.workStatus || ""}
           onChange={(value) => updateFilter("workStatus", value)}

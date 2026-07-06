@@ -8,12 +8,12 @@ import type { TagStatus } from "@playground/ui/primitives";
  * Chaque statut mappe vers un variant du composant <Tag /> (couleurs DSFR) :
  *   to_process → a-traiter  (bleu France clair  #E3E3FD)
  *   draft      → en-cours   (jaune tournesol    #FEECC2)
- *   to_review  → a-revoir   (violet glycine     #FDDBFA)
+ *   to_review  → a-relire   (violet glycine     #FDDBFA)
  */
 export const WORK_STATUS_TO_TAG: Record<WorkStatus, TagStatus> = {
   to_process: "a-traiter",
   draft: "en-cours",
-  to_review: "a-revoir",
+  to_review: "a-relire",
 };
 
 /** Statuts sélectionnables manuellement, dans l'ordre d'affichage du popup. */
