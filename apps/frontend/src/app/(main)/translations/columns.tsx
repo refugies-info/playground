@@ -84,6 +84,7 @@ export const columns: ColumnDef<TranslationItem>[] = [
             ? row.original.updatedAt
             : null
         }
+        archivedDate={row.original.archivedAt}
       />
     ),
   },
