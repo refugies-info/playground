@@ -43,6 +43,7 @@ import { useMemo } from "react";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import type { Profile } from "@/lib/profile";
 import type { ActivityLogEntry } from "@/services/activity-logs";
+import { NoteComposer } from "./NoteComposer";
 
 interface ActivityLogsFilters extends Record<string, string> {
   type: string;
@@ -51,6 +52,7 @@ interface ActivityLogsFilters extends Record<string, string> {
 }
 
 interface ActivityLogsViewProps {
+  workflowId: string;
   logs: ActivityLogEntry[];
   profiles: Profile[];
   initialFilters: ActivityLogsFilters;
@@ -134,6 +136,10 @@ function formatActivityText(entry: ActivityLogEntry): string {
       // "La traduction en %s n'a pas fonctionné"
       values = [langLabel];
       break;
+    case TYPE_NOTE:
+      // "%s : %s"
+      values = [author, entry.note ?? ""];
+      break;
     default:
       values = [author];
   }
@@ -157,6 +163,7 @@ function formatAiConsumption(entry: ActivityLogEntry): string | null {
 }
 
 export function ActivityLogsView({
+  workflowId,
   logs,
   profiles,
   initialFilters,
@@ -222,7 +229,7 @@ export function ActivityLogsView({
   return (
     <div className="flex-1 flex flex-col h-full bg-white overflow-hidden">
       <div className="flex-1 overflow-auto">
-        <div className="mx-auto space-y-6">
+        <div className="mx-auto max-w-[800px] space-y-6">
           <div className="w-full flex flex-col gap-8">
             <h1 className="fr-h1">Journal d'activités</h1>
             <div className="flex flex-wrap items-center gap-4">
@@ -245,6 +252,8 @@ export function ActivityLogsView({
                 onChange={(value) => updateFilter("language", value)}
               />
             </div>
+
+            <NoteComposer workflowId={workflowId} />
 
             {groups.length === 0 ? (
               <div className="flex flex-col items-center gap-8 py-16">
@@ -309,8 +318,15 @@ export function ActivityLogsView({
                                   </span>
                                 </div>
                               </div>
-                              {/* "Description du log" — avatar + text */}
-                              <div className="flex flex-1 items-start gap-3 p-2">
+                              {/* "Description du log" — avatar + text.
+                                  Les notes sont mises en avant : fond alt-blue-france. */}
+                              <div
+                                className={`flex flex-1 items-start gap-3 p-2 ${
+                                  entry.action === TYPE_NOTE
+                                    ? "bg-(--background-alt-blue-france) border border-(--border-open-blue-france)"
+                                    : ""
+                                }`}
+                              >
                                 <Avatar
                                   displayName={entry.authorName ?? undefined}
                                   className="size-6 shrink-0"

@@ -31,8 +31,8 @@ interface DocumentsListProps {
     complianceStatus?: string;
     workStatus?: string;
     onlineStatus?: string;
-    dateFrom: string;
-    dateTo: string;
+    sessionStart: string;
+    sessionEnd: string;
     assigneeEmail: string;
     search: string;
     modalitesEntreesSorties?: string;
@@ -207,21 +207,23 @@ export function DocumentsList({
           onChange={(value) => updateFilter("workStatus", value)}
         />
 
-        {/* Groupe date : label + De + à + À */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-[var(--text-default-grey,#3A3A3A)]">
             Date de session
           </span>
           <BoutonFiltreDate
-            value={filters.dateFrom}
-            onChange={(value) => updateFilter("dateFrom", value)}
+            value={filters.sessionStart}
+            onChange={(value) => updateFilter("sessionStart", value)}
           />
-          <span className="text-sm text-[var(--text-default-grey,#3A3A3A)]">
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-[var(--text-default-grey,#3A3A3A)]">
             à
           </span>
           <BoutonFiltreDate
-            value={filters.dateTo}
-            onChange={(value) => updateFilter("dateTo", value)}
+            value={filters.sessionEnd}
+            onChange={(value) => updateFilter("sessionEnd", value)}
           />
         </div>
 

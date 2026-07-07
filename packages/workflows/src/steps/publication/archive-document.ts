@@ -168,12 +168,12 @@ export async function archiveDocumentStep(
         return { success: false, error: "Failed to update workflow status" };
       }
 
-      // Archive all associated translation_records
+      // Archive all associated translation_records and clear their priority
       // TODO: move to state machine logic
       // This cascade archive logic should be moved to a centralized state machine
       const { error: translationUpdateError } = await supabase
         .from("translation_records")
-        .update({ online_status: "archived" })
+        .update({ online_status: "archived", priority: null })
         .eq("editorial_record_id", workflow.editorial_record_id);
 
       if (translationUpdateError) {

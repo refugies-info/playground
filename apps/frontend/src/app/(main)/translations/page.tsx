@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getCurrentUser } from "@/lib/auth";
+import { getQueryParam } from "@/lib/search-params";
 import { getProfilesByRoles } from "@/services/profiles";
 import {
   type GetTranslationsParams,
@@ -58,21 +59,20 @@ export default async function TranslationsPage(props: PageProps) {
   const isTranslator = role === "translator";
   const effectiveLanguage = isTranslator
     ? userLanguage
-    : typeof language === "string"
-      ? language
-      : undefined;
+    : getQueryParam(language);
 
   const serviceParams: GetTranslationsParams = {
     page,
     pageSize,
-    workStatus: typeof workStatus === "string" ? workStatus : undefined,
-    onlineStatus: typeof onlineStatus === "string" ? onlineStatus : undefined,
-    priority: typeof priority === "string" ? priority : undefined,
-    authorId: typeof authorId === "string" ? authorId : undefined,
-    search: typeof search === "string" ? search : undefined,
-    status: typeof status === "string" ? status : undefined, // Deprecated: backward compatibility
+    workStatus: getQueryParam(workStatus),
+    onlineStatus: getQueryParam(onlineStatus),
+    priority: getQueryParam(priority),
+    authorId: getQueryParam(authorId),
+    search: getQueryParam(search),
+    status: getQueryParam(status), // Deprecated: backward compatibility
     language: effectiveLanguage,
-    sortBy: typeof sortBy === "string" ? sortBy : undefined,
+    // `|| undefined` lets the service's default `sortBy = "updated_at"` fire.
+    sortBy: getQueryParam(sortBy) || undefined,
     sortOrder:
       sortOrder === "asc" || sortOrder === "desc" ? sortOrder : undefined,
     userRole: role,
@@ -90,11 +90,11 @@ export default async function TranslationsPage(props: PageProps) {
   }));
 
   const initialFilters = {
-    workStatus: typeof workStatus === "string" ? workStatus : "",
-    onlineStatus: typeof onlineStatus === "string" ? onlineStatus : "",
-    language: typeof language === "string" ? language : "",
-    priority: typeof priority === "string" ? priority : "",
-    authorId: typeof authorId === "string" ? authorId : "",
+    workStatus: getQueryParam(workStatus),
+    onlineStatus: getQueryParam(onlineStatus),
+    language: getQueryParam(language),
+    priority: getQueryParam(priority),
+    authorId: getQueryParam(authorId),
   };
 
   const showLanguageFilter = role !== "translator";
@@ -110,7 +110,7 @@ export default async function TranslationsPage(props: PageProps) {
       pageSize={pageSize}
       showLanguageFilter={showLanguageFilter}
       initialSorting={{
-        sortBy: typeof sortBy === "string" ? sortBy : "updated_at",
+        sortBy: getQueryParam(sortBy) || "updated_at",
         sortOrder:
           sortOrder === "asc" || sortOrder === "desc" ? sortOrder : "desc",
       }}
