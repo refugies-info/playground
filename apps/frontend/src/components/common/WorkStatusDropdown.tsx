@@ -44,15 +44,15 @@ export function WorkStatusDropdown({
     return <Tag status={currentTag} />;
   }
 
-  const handleSelect = async (next: WorkStatus) => {
-    if (pending || next === currentWorkStatus) return;
+  const handleSelect = async (newStatus: WorkStatus) => {
+    if (pending || newStatus === currentWorkStatus) return;
     setPending(true);
     onPendingChange?.(true);
 
     const previous = currentWorkStatus ?? null;
-    onOptimisticUpdate?.(next);
+    onOptimisticUpdate?.(newStatus);
 
-    const result = await updateWorkStatusAction(workflowId, next);
+    const result = await updateWorkStatusAction(workflowId, newStatus);
     setPending(false);
     onPendingChange?.(false);
 

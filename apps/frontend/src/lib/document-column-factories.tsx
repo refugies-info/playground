@@ -3,7 +3,7 @@
 import type { Document, WorkStatus } from "@playground/shared-types";
 import { DataTableColumnHeader } from "@playground/ui/composites";
 import type { ColumnDef } from "@tanstack/react-table";
-import { AssigneeDropdown } from "@/components/common/assignee-dropdown";
+import { AssigneeDropdown } from "@/components/common/AssigneeDropdown";
 import { WorkStatusDropdown } from "@/components/common/WorkStatusDropdown";
 import {
   ComplianceStatusCell,

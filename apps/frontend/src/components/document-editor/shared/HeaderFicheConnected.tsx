@@ -16,7 +16,7 @@ import { Button } from "@playground/ui/primitives";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { AssigneeDropdown } from "@/components/common/assignee-dropdown";
+import { AssigneeDropdown } from "@/components/common/AssigneeDropdown";
 import { WorkStatusDropdown } from "@/components/common/WorkStatusDropdown";
 import type { Profile } from "@/lib/profile";
 import { useDocumentActions } from "../actions/DocumentActionsContext";
