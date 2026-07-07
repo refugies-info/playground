@@ -326,7 +326,7 @@ export async function generateDiMetadataReportsStep(runId: string) {
           status: parsed.status,
           raw_response: parsed.rawResponse ?? null,
           workflow_id: target.workflow_id,
-          token_cost: usage?.total_tokens ?? null,
+          token_cost: usage?.totalTokens ?? null,
           model: LETTA_MODEL_NAME,
         })
         .select("id")
@@ -591,7 +591,7 @@ export async function forceMetadataReportStep(workflowId: string) {
         metadata: parsed.metadata as Json,
         status: parsed.status,
         raw_response: parsed.rawResponse ?? null,
-        token_cost: usage?.total_tokens ?? null,
+        token_cost: usage?.totalTokens ?? null,
       })
       .eq("id", generatingReportId)
       .select("id")

@@ -1,6 +1,7 @@
 import {
   createLettaClient,
   generateMetadataReport,
+  getRunUsage,
   type LettaUsage,
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
@@ -13,32 +14,6 @@ import { z } from "zod";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-/**
- * Fetches usage statistics from Letta API for a given run ID.
- */
-async function getRunUsage(
-  client: ReturnType<typeof createLettaClient>,
-  runId: string,
-): Promise<LettaUsage | undefined> {
-  try {
-    // biome-ignore lint/suspicious/noExplicitAny: Letta SDK work-around
-    const usageData = await (client.runs.usage.retrieve(runId) as any);
-    if (usageData && typeof usageData === "object") {
-      return {
-        prompt_tokens: usageData.prompt_tokens,
-        completion_tokens: usageData.completion_tokens,
-        total_tokens: usageData.total_tokens,
-      };
-    }
-  } catch (err) {
-    logger.error(
-      { runId, error: err instanceof Error ? err.message : String(err) },
-      "[getRunUsage] Failed to fetch run usage",
-    );
-  }
-  return undefined;
-}
 
 /**
  * Request body schema for the metadata stream endpoint.

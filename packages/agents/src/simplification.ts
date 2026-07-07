@@ -20,9 +20,9 @@ export async function getRunUsage(
     const usageData = await (client.runs.usage.retrieve(runId) as any);
     if (usageData && typeof usageData === "object") {
       return {
-        prompt_tokens: usageData.prompt_tokens,
-        completion_tokens: usageData.completion_tokens,
-        total_tokens: usageData.total_tokens,
+        promptTokens: usageData.prompt_tokens,
+        completionTokens: usageData.completion_tokens,
+        totalTokens: usageData.total_tokens,
       };
     }
   } catch (err) {

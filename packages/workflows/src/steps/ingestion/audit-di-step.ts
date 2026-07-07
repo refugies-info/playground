@@ -316,7 +316,7 @@ export async function generateDiAuditReportsStep(runId: string) {
           status: parsed.status,
           raw_response: parsed.rawResponse ?? null,
           workflow_id: target.workflow_id,
-          token_cost: usage?.total_tokens ?? null,
+          token_cost: usage?.totalTokens ?? null,
           model: LETTA_MODEL_NAME,
         })
         .select("id")
@@ -517,7 +517,7 @@ export async function forceAuditReportStep(workflowId: string) {
         status: parsed.status,
         raw_response: parsed.rawResponse ?? null,
         workflow_id: workflowId,
-        token_cost: usage?.total_tokens ?? null,
+        token_cost: usage?.totalTokens ?? null,
         model: LETTA_MODEL_NAME,
       })
       .select("id")

@@ -6,17 +6,17 @@ export interface ReasoningStep {
 }
 
 export interface LettaUsage {
-  prompt_tokens?: number;
-  completion_tokens?: number;
-  total_tokens?: number;
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
 }
 
 export interface LettaMetadata {
-  agent_id: string;
-  processed_at: string;
-  prompt_tokens?: number;
-  completion_tokens?: number;
-  total_tokens?: number;
+  agentId: string;
+  processedAt: string;
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
   model?: string;
 }
 

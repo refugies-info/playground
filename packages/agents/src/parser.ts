@@ -50,17 +50,17 @@ export function parseAgentResponse(
   usage?: LettaUsage,
 ): LettaReportResult {
   const lettaMetadata: LettaMetadata = {
-    agent_id: agentId,
-    processed_at: new Date().toISOString(),
+    agentId: agentId,
+    processedAt: new Date().toISOString(),
   };
 
   if (usage) {
-    if (typeof usage.prompt_tokens === "number")
-      lettaMetadata.prompt_tokens = usage.prompt_tokens;
-    if (typeof usage.completion_tokens === "number")
-      lettaMetadata.completion_tokens = usage.completion_tokens;
-    if (typeof usage.total_tokens === "number")
-      lettaMetadata.total_tokens = usage.total_tokens;
+    if (typeof usage.promptTokens === "number")
+      lettaMetadata.promptTokens = usage.promptTokens;
+    if (typeof usage.completionTokens === "number")
+      lettaMetadata.completionTokens = usage.completionTokens;
+    if (typeof usage.totalTokens === "number")
+      lettaMetadata.totalTokens = usage.totalTokens;
   }
 
   // Check if frontmatter is required based on schema type

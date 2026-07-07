@@ -67,7 +67,7 @@ export async function persistMetadataReportStep(
         status: result.status,
         raw_response: result.rawResponse,
         workflow_id: flowId,
-        token_cost: usage?.total_tokens ?? null,
+        token_cost: usage?.totalTokens ?? null,
         model: LETTA_MODEL_NAME,
       })
       .select("id")
