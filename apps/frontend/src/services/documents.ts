@@ -29,6 +29,7 @@ const DOCUMENT_LIST_SELECT = `
   computed_work_status,
   computed_online_status,
   latest_publication,
+  archived_at,
   structure_name,
   session_start_date,
   session_end_date,
@@ -309,6 +310,9 @@ export async function getDocuments(params: GetDocumentsParams) {
         publishedUrl,
         publicationStatus: latestPublication?.status,
         publicationRemoteId: latestPublication?.remote_id,
+        // publication_records est append-only : created_at = date de l'action de publication
+        publishedAt: latestPublication?.created_at ?? null,
+        archivedAt: item.archived_at ?? null,
         structureName: item.structure_name ?? undefined,
         sessionStartDate: item.session_start_date ?? undefined,
         sessionEndDate: item.session_end_date ?? null,
@@ -496,6 +500,8 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const latestPublication = item.latest_publication as {
     remote_id?: string;
     status?: string;
+    updated_at?: string;
+    created_at?: string;
   } | null;
   const publishedUrl =
     latestPublication?.remote_id && cleanBaseUrl
@@ -578,6 +584,9 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     publishedUrl,
     publicationStatus: latestPublication?.status,
     publicationRemoteId: latestPublication?.remote_id,
+    // publication_records est append-only : created_at = date de l'action de publication
+    publishedAt: latestPublication?.created_at ?? null,
+    archivedAt: item.archived_at ?? null,
     structureName: item.structure_name ?? undefined,
     sessionStartDate: item.session_start_date ?? undefined,
     sessionEndDate: item.session_end_date ?? null,
