@@ -8,6 +8,7 @@ import {
 } from "@playground/ui";
 import { Plus, Trash2 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
+import { formatDateFr } from "@/lib/format-date";
 import { useMetadata } from "../MetadataContext";
 
 interface Session {
@@ -76,15 +77,9 @@ export function SessionField({ fieldKey }: { fieldKey: string }) {
     });
   }, [fieldKey, updateField, localModalites, localSessions]);
 
-  // Format date for display
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return "—";
-    try {
-      return new Date(dateStr).toLocaleDateString("fr-FR");
-    } catch {
-      return dateStr;
-    }
-  };
+  // Format date for display (fallback : valeur brute si non parsable, "—" si vide)
+  const formatDate = (dateStr?: string) =>
+    dateStr ? (formatDateFr(dateStr) ?? dateStr) : "—";
 
   // Format display value
   const hasContent = sessions.length > 0 || canonicalModalites !== null;

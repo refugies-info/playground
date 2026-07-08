@@ -4,6 +4,7 @@ import type { OnlineStatus } from "@playground/shared-types";
 import { EmptyDash } from "@playground/ui/composites";
 import { Tag } from "@playground/ui/primitives";
 import { RiExternalLinkLine } from "@remixicon/react";
+import { formatDateFr } from "@/lib/format-date";
 
 export interface OnlineStatusCellProps {
   status: OnlineStatus | undefined;
@@ -15,15 +16,6 @@ export interface OnlineStatusCellProps {
   archivedDate?: string | null;
 }
 
-const formatDate = (date: string | null | undefined): string | null =>
-  date
-    ? new Date(date).toLocaleDateString("fr-FR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      })
-    : null;
-
 export const OnlineStatusCell = ({
   status,
   publishedUrl,
@@ -33,7 +25,7 @@ export const OnlineStatusCell = ({
   if (!status) return <EmptyDash />;
 
   if (status === "published") {
-    const formattedDate = formatDate(publishedDate);
+    const formattedDate = formatDateFr(publishedDate);
 
     return (
       <div className="flex items-start gap-2">
@@ -65,7 +57,7 @@ export const OnlineStatusCell = ({
   }
 
   if (status === "archived") {
-    const formattedDate = formatDate(archivedDate);
+    const formattedDate = formatDateFr(archivedDate);
 
     return (
       <div className="flex flex-col gap-0.5">
