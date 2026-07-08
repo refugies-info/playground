@@ -310,10 +310,8 @@ export async function getDocuments(params: GetDocumentsParams) {
         publishedUrl,
         publicationStatus: latestPublication?.status,
         publicationRemoteId: latestPublication?.remote_id,
-        publishedAt:
-          latestPublication?.updated_at ??
-          latestPublication?.created_at ??
-          null,
+        // publication_records est append-only : created_at = date de l'action de publication
+        publishedAt: latestPublication?.created_at ?? null,
         archivedAt: item.archived_at ?? null,
         structureName: item.structure_name ?? undefined,
         sessionStartDate: item.session_start_date ?? undefined,
@@ -586,8 +584,8 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     publishedUrl,
     publicationStatus: latestPublication?.status,
     publicationRemoteId: latestPublication?.remote_id,
-    publishedAt:
-      latestPublication?.updated_at ?? latestPublication?.created_at ?? null,
+    // publication_records est append-only : created_at = date de l'action de publication
+    publishedAt: latestPublication?.created_at ?? null,
     archivedAt: item.archived_at ?? null,
     structureName: item.structure_name ?? undefined,
     sessionStartDate: item.session_start_date ?? undefined,
