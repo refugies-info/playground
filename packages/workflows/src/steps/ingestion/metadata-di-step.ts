@@ -288,9 +288,6 @@ export async function generateDiMetadataReportsStep(runId: string) {
         if (!chunkRunId && chunk.run_id) {
           chunkRunId = chunk.run_id;
         }
-        if (chunk.usage) {
-          usage = chunk.usage;
-        }
         if (chunk.message_type === "assistant_message") {
           if (typeof chunk.content !== "string") {
             throw new Error(
@@ -305,7 +302,7 @@ export async function generateDiMetadataReportsStep(runId: string) {
         throw new Error("No assistant response received for metadata report");
       }
 
-      if (!usage && chunkRunId) {
+      if (chunkRunId) {
         usage = await getRunUsage(lettaClient, chunkRunId);
       }
 
@@ -554,9 +551,6 @@ export async function forceMetadataReportStep(workflowId: string) {
       if (!chunkRunId && chunk.run_id) {
         chunkRunId = chunk.run_id;
       }
-      if (chunk.usage) {
-        usage = chunk.usage;
-      }
       if (chunk.message_type === "assistant_message") {
         if (typeof chunk.content !== "string") {
           throw new Error(
@@ -571,7 +565,7 @@ export async function forceMetadataReportStep(workflowId: string) {
       throw new Error("No assistant response received for metadata report");
     }
 
-    if (!usage && chunkRunId) {
+    if (chunkRunId) {
       usage = await getRunUsage(lettaClient, chunkRunId);
     }
 

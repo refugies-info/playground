@@ -1,6 +1,8 @@
 import type { Letta } from "@letta-ai/letta-client";
 import type { AssistantMessage } from "@letta-ai/letta-client/resources/agents";
 import type { ConversationCreateParams } from "@letta-ai/letta-client/resources/conversations";
+import { getRunUsage } from "./simplification";
+import type { LettaUsage } from "./types";
 
 export const listAgents = async (client: Letta) => {
   return client.agents.list();
@@ -54,7 +56,7 @@ export const sendMessageToConversation = async (
   content: string,
 ): Promise<{
   content: string;
-  usage?: Record<string, unknown>;
+  usage?: LettaUsage;
   runId?: string;
 }> => {
   const stream = await client.conversations.messages.create(conversationId, {
@@ -87,17 +89,7 @@ export const sendMessageToConversation = async (
     throw new Error("No message with content found in response");
   }
 
-  let usage: Record<string, unknown> | undefined;
-  if (runId) {
-    try {
-      // Fetch usage stats from Letta API for this run
-      // biome-ignore lint/suspicious/noExplicitAny: Letta SDK work-around
-      usage = await (client.runs.usage.retrieve(runId) as any);
-    } catch (err) {
-      // Silently fail usage fetch — content is still valid
-      console.error("Failed to fetch run usage:", err);
-    }
-  }
+  const usage = runId ? await getRunUsage(client, runId) : undefined;
 
   return {
     content: finalContent,

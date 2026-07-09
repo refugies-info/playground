@@ -165,18 +165,14 @@ export async function POST(request: NextRequest) {
             if (typeof chunk.content === "string") {
               finalAssistantContent = chunk.content;
             }
-            // Extract usage from assistant message chunk if available
-            if (chunk.usage) {
-              usage = chunk.usage;
-            }
           }
 
           const data = `data: ${JSON.stringify(chunk)}\n\n`;
           controller.enqueue(encoder.encode(data));
         }
 
-        // If we didn't get usage from chunk metadata, try to fetch from API using run_id
-        if (!usage && runId) {
+        // Fetch usage from the Letta API using run_id
+        if (runId) {
           usage = await getRunUsage(client, runId);
         }
 

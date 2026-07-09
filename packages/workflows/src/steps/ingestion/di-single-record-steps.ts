@@ -124,9 +124,6 @@ export async function diSingleAuditStep(
       if (!runId && chunk.run_id) {
         runId = chunk.run_id;
       }
-      if (chunk.usage) {
-        usage = chunk.usage;
-      }
       if (chunk.message_type === "assistant_message") {
         if (typeof chunk.content !== "string") {
           throw new Error(
@@ -159,7 +156,7 @@ export async function diSingleAuditStep(
     throw new Error("No assistant response received for audit");
   }
 
-  if (!usage && runId) {
+  if (runId) {
     usage = await getRunUsage(lettaClient, runId);
   }
 
@@ -303,9 +300,6 @@ export async function diSingleMetadataStep(
       if (!runId && chunk.run_id) {
         runId = chunk.run_id;
       }
-      if (chunk.usage) {
-        usage = chunk.usage;
-      }
       if (chunk.message_type === "assistant_message") {
         if (typeof chunk.content !== "string") {
           throw new Error(
@@ -338,7 +332,7 @@ export async function diSingleMetadataStep(
     throw new Error("No assistant response received for metadata");
   }
 
-  if (!usage && runId) {
+  if (runId) {
     usage = await getRunUsage(lettaClient, runId);
   }
 

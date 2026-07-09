@@ -283,9 +283,6 @@ export async function generateDiAuditReportsStep(runId: string) {
         if (!chunkRunId && chunk.run_id) {
           chunkRunId = chunk.run_id;
         }
-        if (chunk.usage) {
-          usage = chunk.usage;
-        }
         if (chunk.message_type === "assistant_message") {
           if (typeof chunk.content !== "string") {
             throw new Error(
@@ -300,7 +297,7 @@ export async function generateDiAuditReportsStep(runId: string) {
         throw new Error("No assistant response received for ingestion report");
       }
 
-      if (!usage && chunkRunId) {
+      if (chunkRunId) {
         usage = await getRunUsage(lettaClient, chunkRunId);
       }
 
@@ -483,9 +480,6 @@ export async function forceAuditReportStep(workflowId: string) {
       if (!chunkRunId && chunk.run_id) {
         chunkRunId = chunk.run_id;
       }
-      if (chunk.usage) {
-        usage = chunk.usage;
-      }
       if (chunk.message_type === "assistant_message") {
         if (typeof chunk.content !== "string") {
           throw new Error(
@@ -500,7 +494,7 @@ export async function forceAuditReportStep(workflowId: string) {
       throw new Error("No assistant response received for ingestion report");
     }
 
-    if (!usage && chunkRunId) {
+    if (chunkRunId) {
       usage = await getRunUsage(lettaClient, chunkRunId);
     }
 
