@@ -29,6 +29,8 @@ export interface TranslationItem {
   priority?: string | null; // 'urgent' | null
   structureName?: string | null;
   commune?: string | null;
+  /** Date d'archivage de la fiche FR source (editorial_records.archived_at) */
+  archivedAt?: string | null;
 }
 
 // Extended helper type including profiles
@@ -38,7 +40,7 @@ type TranslationWithRelations =
     priority?: string | null;
     editorial_records: Pick<
       Database["public"]["Tables"]["editorial_records"]["Row"],
-      "markdown" | "metadata"
+      "markdown" | "metadata" | "archived_at"
     > | null;
     workflows:
       | (Pick<Database["public"]["Tables"]["workflows"]["Row"], "id"> & {
@@ -101,7 +103,8 @@ export async function getTranslations(params: GetTranslationsParams) {
       *,
       editorial_records (
         markdown,
-        metadata
+        metadata,
+        archived_at
       ),
       workflows (
         id,
@@ -305,6 +308,7 @@ export async function getTranslations(params: GetTranslationsParams) {
         sourceMarkdown,
         author,
         priority: row.priority ?? null,
+        archivedAt: row.editorial_records?.archived_at ?? null,
         ...(row.workflow_id ? (enrichedMap.get(row.workflow_id) ?? {}) : {}),
       } as TranslationItem;
     }),

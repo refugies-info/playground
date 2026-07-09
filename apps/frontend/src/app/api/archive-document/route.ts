@@ -167,6 +167,7 @@ export async function POST(request: NextRequest) {
         markdown,
         online_status: "archived",
         work_status: null,
+        archived_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
@@ -198,6 +199,7 @@ export async function POST(request: NextRequest) {
         markdown,
         online_status: "archived",
         work_status: null,
+        archived_at: new Date().toISOString(),
       };
 
       const { data: newRecord, error: insertError } = await supabase
@@ -236,9 +238,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Archive les traductions associées et vide leur priorité de traduction
     const { error: translationUpdateError } = await supabase
       .from("translation_records")
-      .update({ online_status: "archived" })
+      .update({ online_status: "archived", priority: null })
       .eq("editorial_record_id", editorialRecordId);
 
     if (translationUpdateError) {

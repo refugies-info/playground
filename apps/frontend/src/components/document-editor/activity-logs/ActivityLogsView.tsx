@@ -41,6 +41,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { formatDateFr } from "@/lib/format-date";
 import type { Profile } from "@/lib/profile";
 import type { ActivityLogEntry } from "@/services/activity-logs";
 import { NoteComposer } from "./NoteComposer";
@@ -274,9 +275,7 @@ export function ActivityLogsView({
               // "logs" — gap 56px between day groups
               <div className="flex flex-col gap-14">
                 {groups.map(([key, entries]) => {
-                  const dateLabel = new Date(
-                    entries[0].createdAt,
-                  ).toLocaleDateString("fr-FR", {
+                  const dateLabel = formatDateFr(entries[0].createdAt, {
                     day: "numeric",
                     month: "long",
                     year: "numeric",

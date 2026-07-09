@@ -94,6 +94,9 @@ export async function toggleStatusStep(
       const updatePayload = {
         work_status: newWorkStatus,
         online_status: newOnlineStatus,
+        // Archive date follows the online_status transition
+        archived_at:
+          newOnlineStatus === "archived" ? new Date().toISOString() : null,
       };
 
       const { error: edError } = await supabase
