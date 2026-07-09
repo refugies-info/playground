@@ -48,11 +48,16 @@ import {
   generateIngestionReport,
   parseIngestionResponse,
 } from "@playground/agents";
-import { logger } from "@playground/shared-types";
+import {
+  logger,
+  TYPE_COMPLIANCE_IA,
+  TYPE_UPDATE_COMPLIANCE,
+} from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
 import { getStepMetadata } from "@workflow/core";
 import { FatalError } from "@workflow/errors";
 import { z } from "zod";
+import { recordActivity } from "../common/activity-log";
 import {
   fetchAllDiServiceIds,
   getSupabaseClient,
@@ -342,6 +347,21 @@ export async function generateDiAuditReportsStep(runId: string) {
           "Failed to update ingestion_record compliance status",
         );
       }
+
+      // Compliance verdict with PapaIA
+      await recordActivity({
+        action: target.is_pending_update
+          ? TYPE_UPDATE_COMPLIANCE
+          : TYPE_COMPLIANCE_IA,
+        workflowId: target.workflow_id,
+        lettaReportId: report.id,
+        activity: {
+          complianceStatus,
+          ingestionRecordId: target.id,
+          compliant: Boolean(parsed.metadata.compliant),
+          duplicate: Boolean(parsed.metadata.duplicate),
+        },
+      });
     }),
     AUDIT_CONCURRENCY,
   );
@@ -402,7 +422,7 @@ export async function forceAuditReportStep(workflowId: string) {
   // 1. Fetch workflow to get ingestion_record_id
   const { data: workflow, error: workflowError } = await supabase
     .from("workflows")
-    .select("ingestion_record_id")
+    .select("ingestion_record_id, latest_ingestion_record_id")
     .eq("id", workflowId)
     .single();
 
@@ -415,6 +435,13 @@ export async function forceAuditReportStep(workflowId: string) {
   }
 
   const ingestionRecordId = workflow.ingestion_record_id;
+
+  // A previous version exists when the workflow's latest source differs from
+  // its active one — the forced audit then records an update verdict rather
+  // than a first-time compliance verdict.
+  const hasPreviousVersion =
+    workflow.latest_ingestion_record_id != null &&
+    workflow.latest_ingestion_record_id !== ingestionRecordId;
 
   // Set compliance status to pending on ingestion_records (RI-1093)
   // Include updated_at to ensure zombie reclamation works correctly
@@ -533,6 +560,19 @@ export async function forceAuditReportStep(workflowId: string) {
         `Failed to update compliance status: ${finalStatusError.message}`,
       );
     }
+
+    // Compliance verdict with PapaIA (update if a previous version exists)
+    await recordActivity({
+      action: hasPreviousVersion ? TYPE_UPDATE_COMPLIANCE : TYPE_COMPLIANCE_IA,
+      workflowId,
+      lettaReportId: report.id,
+      activity: {
+        complianceStatus: finalComplianceStatus,
+        ingestionRecordId,
+        compliant: Boolean(parsed.metadata.compliant),
+        duplicate: Boolean(parsed.metadata.duplicate),
+      },
+    });
 
     logger.info(
       {
