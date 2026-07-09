@@ -33,7 +33,7 @@ interface HeaderFicheConnectedProps {
 /**
  * HeaderFicheConnected — Câblage métier du composite HeaderFiche.
  *
- * Slot left  : bouton retour + IndicationSauvegarde + DocumentStatus + Avatar
+ * Slot left  : bouton retour + IndicationSauvegarde + WorkStatusDropdown + Avatar
  * Slot center: titre du document
  * Slot right : Prévisualiser + PublishPanel
  *

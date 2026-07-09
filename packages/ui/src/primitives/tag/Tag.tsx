@@ -12,7 +12,7 @@ import { cn } from "../../utils";
  *   a-traiter   → Bleu France clair  (background-action-low-blue-france)
  *   en-cours    → Jaune tournesol    (yellow-tournesol-950-100)
  *   archive     → Gris désactivé     (background-disabled-grey)
- *   a-revoir    → Violet glycine     (purple-glycine-925-125)
+ *   a-relire    → Violet glycine     (purple-glycine-925-125)
  *   publie      → Vert succès plein  (background-flat-success)
  *   na          → Tiret gris         (pas de fond)
  *
