@@ -277,7 +277,11 @@ export async function publishDocumentStep(
       // when implementing the state machine refactoring with Luis.
       const { error: updateError } = await db
         .from("editorial_records")
-        .update({ online_status: "published", work_status: null })
+        .update({
+          online_status: "published",
+          work_status: null,
+          archived_at: null,
+        })
         .eq("id", workflow.editorial_record_id);
 
       if (updateError) {

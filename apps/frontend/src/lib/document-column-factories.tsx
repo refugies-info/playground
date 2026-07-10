@@ -102,6 +102,8 @@ export const createOnlineStatusColumn = (): ColumnDef<Document> => ({
     <OnlineStatusCell
       status={row.original.onlineStatus}
       publishedUrl={row.original.publishedUrl}
+      publishedDate={row.original.publishedAt}
+      archivedDate={row.original.archivedAt}
     />
   ),
 });

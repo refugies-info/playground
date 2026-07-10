@@ -1,17 +1,12 @@
 "use client";
 
 import { EmptyDash } from "@playground/ui/composites";
+import { formatDateFr } from "@/lib/format-date";
 
 interface SessionPeriodCellProps {
   startDate: string | null | undefined;
   endDate: string | null | undefined;
 }
-
-const formatDate = (value: string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString("fr-FR");
-};
 
 export const SessionPeriodCell = ({
   startDate,
@@ -19,10 +14,10 @@ export const SessionPeriodCell = ({
 }: SessionPeriodCellProps) => {
   if (!startDate) return <EmptyDash />;
 
-  const formattedStartDate = formatDate(startDate);
+  const formattedStartDate = formatDateFr(startDate);
   if (!formattedStartDate) return <EmptyDash />;
 
-  const formattedEndDate = endDate ? formatDate(endDate) : null;
+  const formattedEndDate = formatDateFr(endDate);
 
   return (
     <div className="text-sm tabular-nums whitespace-nowrap">

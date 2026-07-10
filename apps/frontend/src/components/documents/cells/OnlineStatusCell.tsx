@@ -4,6 +4,7 @@ import type { OnlineStatus } from "@playground/shared-types";
 import { EmptyDash } from "@playground/ui/composites";
 import { Tag } from "@playground/ui/primitives";
 import { RiExternalLinkLine } from "@remixicon/react";
+import { formatDateFr } from "@/lib/format-date";
 
 export interface OnlineStatusCellProps {
   status: OnlineStatus | undefined;
@@ -11,23 +12,20 @@ export interface OnlineStatusCellProps {
   publishedUrl?: string | null;
   /** Date à afficher sous le badge quand le statut est "published" */
   publishedDate?: string | null;
+  /** Date à afficher sous le badge quand le statut est "archived" */
+  archivedDate?: string | null;
 }
 
 export const OnlineStatusCell = ({
   status,
   publishedUrl,
   publishedDate,
+  archivedDate,
 }: OnlineStatusCellProps) => {
   if (!status) return <EmptyDash />;
 
   if (status === "published") {
-    const formattedDate = publishedDate
-      ? new Date(publishedDate).toLocaleDateString("fr-FR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        })
-      : null;
+    const formattedDate = formatDateFr(publishedDate);
 
     return (
       <div className="flex items-start gap-2">
@@ -58,7 +56,20 @@ export const OnlineStatusCell = ({
     );
   }
 
-  if (status === "archived") return <Tag status="archive" />;
+  if (status === "archived") {
+    const formattedDate = formatDateFr(archivedDate);
+
+    return (
+      <div className="flex flex-col gap-0.5">
+        <Tag status="archive" />
+        {formattedDate && (
+          <span className="text-[12px] leading-5 text-(--text-disabled-grey)">
+            {formattedDate}
+          </span>
+        )}
+      </div>
+    );
+  }
 
   // unpublished — pas de variant Tag dédié
   return <Tag status="na">Non publié</Tag>;

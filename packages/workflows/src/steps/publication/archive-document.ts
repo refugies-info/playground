@@ -157,7 +157,11 @@ export async function archiveDocumentStep(
       // This status transition logic should be moved to a centralized state machine
       const { error: updateError } = await supabase
         .from("editorial_records")
-        .update({ online_status: "archived", work_status: null })
+        .update({
+          online_status: "archived",
+          work_status: null,
+          archived_at: new Date().toISOString(),
+        })
         .eq("id", workflow.editorial_record_id);
 
       if (updateError) {
