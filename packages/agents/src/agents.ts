@@ -1,6 +1,8 @@
 import type { Letta } from "@letta-ai/letta-client";
 import type { AssistantMessage } from "@letta-ai/letta-client/resources/agents";
 import type { ConversationCreateParams } from "@letta-ai/letta-client/resources/conversations";
+import { getRunUsage } from "./simplification";
+import type { LettaUsage } from "./types";
 
 export const listAgents = async (client: Letta) => {
   return client.agents.list();
@@ -54,7 +56,8 @@ export const sendMessageToConversation = async (
   content: string,
 ): Promise<{
   content: string;
-  usage?: Record<string, unknown>;
+  usage?: LettaUsage;
+  runId?: string;
 }> => {
   const stream = await client.conversations.messages.create(conversationId, {
     messages: [
@@ -66,8 +69,13 @@ export const sendMessageToConversation = async (
   });
 
   let finalContent = "";
+  let runId: string | undefined;
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
   for await (const chunk of stream as AsyncIterable<any>) {
+    // Capture run_id from chunks (available in response headers/chunks)
+    if (!runId && chunk.run_id) {
+      runId = chunk.run_id;
+    }
     if (chunk.message_type === "assistant_message") {
       if (typeof chunk.content === "string") {
         finalContent += chunk.content;
@@ -81,10 +89,12 @@ export const sendMessageToConversation = async (
     throw new Error("No message with content found in response");
   }
 
+  const usage = runId ? await getRunUsage(client, runId) : undefined;
+
   return {
     content: finalContent,
-    // Usage might not be easily available in stream chunks without aggregation
-    usage: undefined,
+    usage,
+    runId,
   };
 };
 

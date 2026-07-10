@@ -4,6 +4,7 @@
  */
 
 export * from "./constants/languages";
+export * from "./constants/model";
 export * from "./lib/markdown";
 export * from "./lib/metadata";
 export * from "./lib/metadata-autofix";

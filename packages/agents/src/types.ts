@@ -5,12 +5,18 @@ export interface ReasoningStep {
   type: "thinking" | "function_call" | "response";
 }
 
+export interface LettaUsage {
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+}
+
 export interface LettaMetadata {
-  agent_id: string;
-  processed_at: string;
-  prompt_tokens?: number;
-  completion_tokens?: number;
-  total_tokens?: number;
+  agentId: string;
+  processedAt: string;
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
   model?: string;
 }
 

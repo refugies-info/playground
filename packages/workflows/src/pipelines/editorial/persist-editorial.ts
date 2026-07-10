@@ -1,3 +1,4 @@
+import type { LettaUsage } from "@playground/agents";
 import { persistEditorialReportStep } from "../../steps/editorial/persist-editorial-report";
 
 export interface PersistEditorialWorkflowResult {
@@ -9,6 +10,7 @@ export async function persistEditorialWorkflow(
   workflowId: string,
   agentId: string,
   responseContent: string,
+  usage?: LettaUsage,
 ): Promise<PersistEditorialWorkflowResult> {
   "use workflow";
 
@@ -16,6 +18,7 @@ export async function persistEditorialWorkflow(
     workflowId,
     agentId,
     responseContent,
+    usage,
   );
 
   if (

@@ -43,10 +43,12 @@ import {
   createLettaClient,
   findOrCreateConversation,
   generateMetadataReport,
+  getRunUsage,
+  type LettaUsage,
   MetadataMetadataSchema,
   parseAgentResponse,
 } from "@playground/agents";
-import { logger } from "@playground/shared-types";
+import { LETTA_MODEL_NAME, logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
 import { getStepMetadata } from "@workflow/core";
 import { FatalError } from "@workflow/errors";
@@ -275,12 +277,17 @@ export async function generateDiMetadataReportsStep(runId: string) {
       );
 
       let finalContent = "";
+      let usage: LettaUsage | undefined;
+      let chunkRunId: string | undefined;
 
       for await (const chunk of generateMetadataReport(
         lettaClient,
         target.markdown,
         conversationId,
       )) {
+        if (!chunkRunId && chunk.run_id) {
+          chunkRunId = chunk.run_id;
+        }
         if (chunk.message_type === "assistant_message") {
           if (typeof chunk.content !== "string") {
             throw new Error(
@@ -295,10 +302,15 @@ export async function generateDiMetadataReportsStep(runId: string) {
         throw new Error("No assistant response received for metadata report");
       }
 
+      if (chunkRunId) {
+        usage = await getRunUsage(lettaClient, chunkRunId);
+      }
+
       const parsed = parseAgentResponse(
         finalContent,
         agentId,
         MetadataMetadataSchema,
+        usage,
       );
 
       const { data: report, error: reportError } = await supabase
@@ -311,6 +323,8 @@ export async function generateDiMetadataReportsStep(runId: string) {
           status: parsed.status,
           raw_response: parsed.rawResponse ?? null,
           workflow_id: target.workflow_id,
+          token_cost: usage?.totalTokens ?? null,
+          model: LETTA_MODEL_NAME,
         })
         .select("id")
         .single();
@@ -392,6 +406,7 @@ export async function generateDiMetadataReportsStep(runId: string) {
           status: "error",
           raw_response: error instanceof Error ? error.message : String(error),
           workflow_id: target.workflow_id,
+          model: LETTA_MODEL_NAME,
         });
       } catch (dbError) {
         logger.error(
@@ -464,6 +479,7 @@ export async function forceMetadataReportStep(workflowId: string) {
         markdown: "",
         metadata: {} as Json,
         workflow_id: workflowId,
+        model: LETTA_MODEL_NAME,
       })
       .select("id")
       .single();
@@ -524,12 +540,17 @@ export async function forceMetadataReportStep(workflowId: string) {
     );
 
     let finalContent = "";
+    let usage: LettaUsage | undefined;
+    let chunkRunId: string | undefined;
 
     for await (const chunk of generateMetadataReport(
       lettaClient,
       record.markdown,
       conversationId,
     )) {
+      if (!chunkRunId && chunk.run_id) {
+        chunkRunId = chunk.run_id;
+      }
       if (chunk.message_type === "assistant_message") {
         if (typeof chunk.content !== "string") {
           throw new Error(
@@ -544,10 +565,15 @@ export async function forceMetadataReportStep(workflowId: string) {
       throw new Error("No assistant response received for metadata report");
     }
 
+    if (chunkRunId) {
+      usage = await getRunUsage(lettaClient, chunkRunId);
+    }
+
     const parsed = parseAgentResponse(
       finalContent,
       agentId,
       MetadataMetadataSchema,
+      usage,
     );
 
     // UPDATE the "generating" report with the final result.
@@ -559,6 +585,7 @@ export async function forceMetadataReportStep(workflowId: string) {
         metadata: parsed.metadata as Json,
         status: parsed.status,
         raw_response: parsed.rawResponse ?? null,
+        token_cost: usage?.totalTokens ?? null,
       })
       .eq("id", generatingReportId)
       .select("id")
