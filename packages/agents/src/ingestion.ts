@@ -2,7 +2,7 @@ import type { Letta } from "@letta-ai/letta-client";
 import { parseAgentResponse } from "./parser";
 import { AUDIT_SLASH_COMMAND } from "./prompts";
 import { IngestionMetadataSchema } from "./schemas";
-import type { LettaReportResult } from "./types";
+import type { LettaReportResult, LettaUsage } from "./types";
 
 /**
  * Result of an ingestion report generation.
@@ -70,11 +70,7 @@ ${sanitizedContent}
 export function parseIngestionResponse(
   agentResponse: string,
   agentId: string,
-  usage?: {
-    prompt_tokens?: number;
-    completion_tokens?: number;
-    total_tokens?: number;
-  },
+  usage?: LettaUsage,
 ): IngestionReportResult {
   return parseAgentResponse(
     agentResponse,

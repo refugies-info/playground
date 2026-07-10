@@ -1,6 +1,6 @@
 import matter from "gray-matter";
 import type { ZodSchema, ZodVoid } from "zod";
-import type { LettaMetadata, LettaReportResult } from "./types";
+import type { LettaMetadata, LettaReportResult, LettaUsage } from "./types";
 
 /**
  * Checks if the content contains valid YAML frontmatter.
@@ -47,24 +47,20 @@ export function parseAgentResponse(
   agentResponse: string,
   agentId: string,
   schema?: ZodSchema,
-  usage?: {
-    prompt_tokens?: number;
-    completion_tokens?: number;
-    total_tokens?: number;
-  },
+  usage?: LettaUsage,
 ): LettaReportResult {
   const lettaMetadata: LettaMetadata = {
-    agent_id: agentId,
-    processed_at: new Date().toISOString(),
+    agentId: agentId,
+    processedAt: new Date().toISOString(),
   };
 
   if (usage) {
-    if (typeof usage.prompt_tokens === "number")
-      lettaMetadata.prompt_tokens = usage.prompt_tokens;
-    if (typeof usage.completion_tokens === "number")
-      lettaMetadata.completion_tokens = usage.completion_tokens;
-    if (typeof usage.total_tokens === "number")
-      lettaMetadata.total_tokens = usage.total_tokens;
+    if (typeof usage.promptTokens === "number")
+      lettaMetadata.promptTokens = usage.promptTokens;
+    if (typeof usage.completionTokens === "number")
+      lettaMetadata.completionTokens = usage.completionTokens;
+    if (typeof usage.totalTokens === "number")
+      lettaMetadata.totalTokens = usage.totalTokens;
   }
 
   // Check if frontmatter is required based on schema type
