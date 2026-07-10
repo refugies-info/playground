@@ -1,9 +1,10 @@
 "use client";
 
-import type { Document } from "@playground/shared-types";
+import type { Document, WorkStatus } from "@playground/shared-types";
 import { DataTableColumnHeader } from "@playground/ui/composites";
 import type { ColumnDef } from "@tanstack/react-table";
-import { AssigneeDropdown } from "@/components/common/assignee-dropdown";
+import { AssigneeDropdown } from "@/components/common/AssigneeDropdown";
+import { WorkStatusDropdown } from "@/components/common/WorkStatusDropdown";
 import {
   ComplianceStatusCell,
   ExternalIdCell,
@@ -12,8 +13,6 @@ import {
   OnlineStatusCell,
   QualityScoreCell,
   SessionPeriodCell,
-  WorkStatusCell,
-  type WorkStatusCellProps,
 } from "@/components/documents/cells";
 import type { Profile } from "@/lib/profile";
 
@@ -110,7 +109,7 @@ export const createOnlineStatusColumn = (): ColumnDef<Document> => ({
 });
 
 export const createWorkStatusColumn = <
-  T extends { workStatus: WorkStatusCellProps["status"] },
+  T extends { id: string; workStatus: WorkStatus | null },
 >(
   title: string = "État",
 ): ColumnDef<T> => ({
@@ -118,7 +117,12 @@ export const createWorkStatusColumn = <
   header: ({ column }) => (
     <DataTableColumnHeader column={column} title={title} />
   ),
-  cell: ({ row }) => <WorkStatusCell status={row.original.workStatus} />,
+  cell: ({ row }) => (
+    <WorkStatusDropdown
+      workflowId={row.original.id}
+      currentWorkStatus={row.original.workStatus}
+    />
+  ),
 });
 
 export const createAssigneeColumn = (

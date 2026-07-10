@@ -12,7 +12,7 @@ import { cn } from "../../utils";
  *   a-traiter   → Bleu France clair  (background-action-low-blue-france)
  *   en-cours    → Jaune tournesol    (yellow-tournesol-950-100)
  *   archive     → Gris désactivé     (background-disabled-grey)
- *   a-revoir    → Violet glycine     (purple-glycine-925-125)
+ *   a-relire    → Violet glycine     (purple-glycine-925-125)
  *   publie      → Vert succès plein  (background-flat-success)
  *   na          → Tiret gris         (pas de fond)
  *
@@ -47,7 +47,7 @@ const tagVariants = cva(
 
         // Figma : purple-glycine-925-125 + purple-glycine-sun-319-moon-630
         // borderRadius: 12px (pas pill — différent des autres)
-        "a-revoir": [
+        "a-relire": [
           "bg-[var(--purple-glycine-925-125)]",
           "text-[var(--purple-glycine-sun-319-moon-630)]",
           "rounded-xl px-3 h-6 text-xs",
@@ -81,7 +81,7 @@ export const TAG_LABELS: Record<TagStatus, string> = {
   "a-traiter": "À traiter",
   "en-cours": "En cours",
   archive: "Archivé",
-  "a-revoir": "À revoir",
+  "a-relire": "À relire",
   publie: "Publié",
   na: "—",
 };

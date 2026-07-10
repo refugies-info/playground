@@ -27,8 +27,9 @@ export const WorkStatusCell = ({ status }: WorkStatusCellProps) => {
 
   if (!status) return <EmptyDash />;
 
-  // to_process → À traiter, draft → En cours (édition en cours)
+  // to_process → À traiter, draft → En cours, to_review → À relire
   if (status === "to_process") return <Tag status="a-traiter" />;
   if (status === "draft") return <Tag status="en-cours" />;
+  if (status === "to_review") return <Tag status="a-relire" />;
 };
 WorkStatusCell.displayName = "WorkStatusCell";

@@ -228,6 +228,9 @@ interface MetadataContextValue {
   /** Whether there are unsaved changes */
   isDirty: boolean;
 
+  /** True while at least one metadata field is being saved */
+  isSavingMetadata: boolean;
+
   /** Update and save a field value */
   updateField: (key: string, value: unknown) => Promise<void>;
 
@@ -705,6 +708,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       overrides: state.overrides,
       dirtyFields,
       isDirty,
+      isSavingMetadata: state.savingFields.size > 0,
       updateField,
       resetField,
       clearField,
@@ -728,6 +732,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       state.overrides,
       dirtyFields,
       isDirty,
+      state.savingFields,
       updateField,
       resetField,
       clearField,

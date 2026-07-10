@@ -33,7 +33,8 @@ const meta = {
         "a-traiter",
         "en-cours",
         "archive",
-        "a-revoir",
+
+        "a-relire",
         "publie",
         "na",
       ] satisfies TagStatus[],
@@ -55,7 +56,7 @@ export const TousLesStatuts: Story = {
       <Tag status="a-traiter" />
       <Tag status="en-cours" />
       <Tag status="archive" />
-      <Tag status="a-revoir" />
+      <Tag status="a-relire" />
       <Tag status="publie" />
       <Tag status="na" />
     </div>
@@ -88,9 +89,9 @@ export const Archive: Story = {
 };
 
 /** Fiche signalée pour relecture */
-export const ARevoir: Story = {
-  name: "À revoir",
-  args: { status: "a-revoir" },
+export const ARelire: Story = {
+  name: "À relire",
+  args: { status: "a-relire" },
 };
 
 /** Fiche visible sur refugies.info */
@@ -113,7 +114,7 @@ const ALL_STATUSES: TagStatus[] = [
   "a-traiter",
   "en-cours",
   "archive",
-  "a-revoir",
+  "a-relire",
   "publie",
   "na",
 ];

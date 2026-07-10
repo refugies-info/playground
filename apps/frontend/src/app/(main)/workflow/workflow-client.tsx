@@ -6,7 +6,7 @@ import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { triggerDiIngestionAction } from "@/app/actions/di";
-import { AppPaginationControls } from "@/components/common/app-pagination";
+import { AppPaginationControls } from "@/components/common/AppPagination";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { createClient } from "@/lib/supabase/client";
 import { inProgressColumns } from "./columns";
