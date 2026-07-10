@@ -164,25 +164,6 @@ export async function toggleWorkflowStatus(
       return { success: false, error: "Workflow non trouvé" };
     }
 
-    // Safely access nested editorial record
-    // Supabase returns an array or single object depending on the relationship.
-    const editorialRecords = workflow.editorial_records;
-    const editorialRecord = Array.isArray(editorialRecords)
-      ? editorialRecords[0]
-      : editorialRecords;
-
-    // Check if we can modify
-    if (
-      editorialRecord?.work_status === "draft" ||
-      editorialRecord?.online_status === "published"
-    ) {
-      return {
-        success: false,
-        error:
-          "Impossible de changer l'arbitrage d'un document en cours de traitement",
-      };
-    }
-
     const result = await start(toggleStatusWorkflow, [
       workflowId,
       currentStatus,
