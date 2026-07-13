@@ -8,3 +8,4 @@ export * from "./content";
 export * from "./date";
 export * from "./document";
 export * from "./metadata-ri";
+export * from "./search";
