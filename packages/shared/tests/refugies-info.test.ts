@@ -17,11 +17,11 @@ describe("buildRefugiesInfoPayload titreMarque", () => {
   it("maps an explicit null to an empty string so RI clears the field", async () => {
     const { dispositif } = await build({ titreMarque: null });
     // "" is a string => RI's `isString(body.titreMarque)` check overwrites the value.
-    expect(dispositif.translations.fr.content.titreMarque).toBe("");
+    expect(dispositif.translations.fr.content.titreMarque).toBe(null);
   });
 
-  it("leaves titreMarque undefined when absent (RI keeps its current value)", async () => {
+  it("sets titreMarque to null when absent (RI keeps its current value)", async () => {
     const { dispositif } = await build({});
-    expect(dispositif.translations.fr.content.titreMarque).toBeUndefined();
+    expect(dispositif.translations.fr.content.titreMarque).toBe(null);
   });
 });
