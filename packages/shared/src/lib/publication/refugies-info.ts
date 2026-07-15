@@ -122,7 +122,12 @@ export async function buildRefugiesInfoPayload(
 
   const secondaryThemes = (metadata.secondaryThemes as unknown[]) || [];
   const needs = (metadata.needs as unknown[]) || [];
-  const titreMarque = (metadata.titreMarque as string) || title;
+  // Explicit editorial `undefined` clears the field on RI: null value overrides
+  // the existing value (RI only updates titreMarque when it receives a string),
+  // whereas an absent value stays undefined and is omitted so RI keeps its value.
+  const titreMarque = (
+    metadata.titreMarque === undefined ? null : metadata.titreMarque
+  ) as string;
   const abstract = (metadata.abstract as string) || "";
 
   // Sponsors at root level
