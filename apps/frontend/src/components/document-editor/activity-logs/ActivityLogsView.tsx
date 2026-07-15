@@ -149,6 +149,20 @@ function formatActivityText(entry: ActivityLogEntry): string {
   return meta.display.replace(/%s/g, () => values[i++] ?? "");
 }
 
+function formatAiConsumption(entry: ActivityLogEntry): string | null {
+  const report = entry.lettaReport;
+  if (!report) return null;
+
+  const model = report.model?.trim();
+  const tokenCost = report.tokenCost?.toLocaleString("fr-FR");
+
+  if (!model && tokenCost == null) return null;
+  if (!model) return `${tokenCost} tokens`;
+  if (tokenCost == null) return model;
+
+  return `${model} (${tokenCost} tokens)`;
+}
+
 export function ActivityLogsView({
   workflowId,
   logs,
@@ -316,9 +330,16 @@ export function ActivityLogsView({
                                   displayName={entry.authorName ?? undefined}
                                   className="size-6 shrink-0"
                                 />
-                                <p className="fr-text--md text-(--text-default-grey)">
-                                  {formatActivityText(entry)}
-                                </p>
+                                <div className="flex min-w-0 flex-1 flex-row gap-2">
+                                  <p className="fr-text--md text-(--text-default-grey)">
+                                    {formatActivityText(entry)}
+                                  </p>
+                                  {formatAiConsumption(entry) ? (
+                                    <span className="inline-flex w-fit items-center justify-center rounded-full bg-[#EEEEEE] px-3 py-0.5 text-xs font-normal leading-5 text-[#929292]">
+                                      {formatAiConsumption(entry)}
+                                    </span>
+                                  ) : null}
+                                </div>
                               </div>
                             </div>
                           );

@@ -192,7 +192,7 @@ export async function forceEditorialStep(
     conversationId,
   );
 
-  if (!finalContent) {
+  if (!finalContent.content) {
     throw new Error("No assistant response received from Letta agent");
   }
 
@@ -200,7 +200,8 @@ export async function forceEditorialStep(
   const persistResult = await persistEditorialReportStep(
     workflowId,
     agentId,
-    finalContent,
+    finalContent.content,
+    finalContent.usage,
   );
 
   if (!persistResult.success || !persistResult.data) {
@@ -222,6 +223,7 @@ export async function forceEditorialStep(
     action: TYPE_CLEAR_LANGUAGE,
     authorId: userId,
     workflowId,
+    lettaReportId: persistResult.data.reportId,
     activity: {
       reportId: persistResult.data.reportId,
       editorialRecordId: persistResult.data.editorialRecordId,
@@ -229,7 +231,7 @@ export async function forceEditorialStep(
   });
 
   return {
-    content: finalContent,
+    content: finalContent.content,
     persistResult: persistResult.data,
   };
 }

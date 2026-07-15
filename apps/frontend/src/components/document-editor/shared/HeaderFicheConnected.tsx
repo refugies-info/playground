@@ -16,13 +16,13 @@ import { Button } from "@playground/ui/primitives";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { AssigneeDropdown } from "@/components/common/assignee-dropdown";
+import { AssigneeDropdown } from "@/components/common/AssigneeDropdown";
+import { WorkStatusDropdown } from "@/components/common/WorkStatusDropdown";
 import type { Profile } from "@/lib/profile";
 import { useDocumentActions } from "../actions/DocumentActionsContext";
 import { usePublicationRealtime } from "../actions/hooks/usePublicationRealtime";
 import { useDocument } from "../DocumentContext";
 import { useMetadata } from "../metadata/MetadataContext";
-import { DocumentStatus } from "./DocumentStatus";
 import { useDocumentStatusRealtime } from "./hooks/useDocumentStatusRealtime";
 
 interface HeaderFicheConnectedProps {
@@ -33,7 +33,7 @@ interface HeaderFicheConnectedProps {
 /**
  * HeaderFicheConnected — Câblage métier du composite HeaderFiche.
  *
- * Slot left  : bouton retour + IndicationSauvegarde + DocumentStatus + Avatar
+ * Slot left  : bouton retour + IndicationSauvegarde + WorkStatusDropdown + Avatar
  * Slot center: titre du document
  * Slot right : Prévisualiser + PublishPanel
  *
@@ -49,7 +49,7 @@ export function HeaderFicheConnected({
 }: HeaderFicheConnectedProps) {
   const router = useRouter();
   const { document, setDocument, isDirty } = useDocument();
-  const { errorFieldKeys } = useMetadata();
+  const { errorFieldKeys, isSavingMetadata } = useMetadata();
   const {
     saveDocument,
     isSaving,
@@ -62,6 +62,7 @@ export function HeaderFicheConnected({
   useDocumentStatusRealtime();
 
   const [saveError, setSaveError] = useState(false);
+  const [isWorkStatusSaving, setIsWorkStatusSaving] = useState(false);
 
   const handleSave = async () => {
     setSaveError(false);
@@ -101,13 +102,14 @@ export function HeaderFicheConnected({
   const backHref = from
     ? `/documents?${decodeURIComponent(from)}`
     : "/documents";
-  const saveStatus = isSaving
-    ? "saving"
-    : saveError
-      ? "error"
-      : isDirty
-        ? "unsaved"
-        : "saved";
+  const saveStatus =
+    isSaving || isWorkStatusSaving || isSavingMetadata
+      ? "saving"
+      : saveError
+        ? "error"
+        : isDirty
+          ? "unsaved"
+          : "saved";
   const isCompliant = document?.complianceStatus === "compliant";
   const showSaveIndicator =
     document?.complianceStatus !== "non_compliant" &&
@@ -180,7 +182,14 @@ export function HeaderFicheConnected({
           {showSaveIndicator ? (
             <SaveIndicator status={saveStatus} onSave={handleSave} />
           ) : null}
-          <DocumentStatus />
+          <WorkStatusDropdown
+            workflowId={document?.id}
+            currentWorkStatus={document?.workStatus}
+            onOptimisticUpdate={(workStatus) =>
+              setDocument((prev) => (prev ? { ...prev, workStatus } : prev))
+            }
+            onPendingChange={setIsWorkStatusSaving}
+          />
           <AssigneeDropdown
             workflowId={document?.id}
             currentEmail={document?.assigneeEmail}

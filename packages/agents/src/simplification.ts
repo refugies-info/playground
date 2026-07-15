@@ -3,6 +3,44 @@ import type { Letta } from "@letta-ai/letta-client";
 import { logger } from "@playground/shared-types";
 import matter from "gray-matter";
 import { REDACTION_SLASH_COMMAND } from "./prompts";
+import type { LettaUsage } from "./types";
+
+/**
+ * Fetches usage statistics from Letta API for a given run ID.
+ * @param client - Letta client instance
+ * @param runId - The run ID to fetch usage for
+ * @returns Usage object with token counts
+ */
+export async function getRunUsage(
+  client: Letta,
+  runId: string,
+): Promise<LettaUsage | undefined> {
+  try {
+    // biome-ignore lint/suspicious/noExplicitAny: Letta SDK work-around
+    const usageData = await (client.runs.usage.retrieve(runId) as any);
+    if (usageData && typeof usageData === "object") {
+      return {
+        promptTokens: usageData.prompt_tokens,
+        completionTokens: usageData.completion_tokens,
+        totalTokens: usageData.total_tokens,
+      };
+    }
+  } catch (err) {
+    logger.error(
+      { runId, error: err instanceof Error ? err.message : String(err) },
+      "[getRunUsage] Failed to fetch run usage",
+    );
+  }
+  return undefined;
+}
+
+/**
+ * Result of simplifying content with usage metadata.
+ */
+export interface SimplifyContentResult {
+  content: string;
+  usage?: LettaUsage;
+}
 
 /**
  * Simplifies/transforms content using the Letta agent with the /redaction command.
@@ -113,7 +151,7 @@ export async function simplifyContentSync(
   client: Letta,
   markdownContent: string,
   conversationId: string,
-): Promise<string> {
+): Promise<SimplifyContentResult> {
   const startTime = Date.now();
 
   logger.info(
@@ -125,12 +163,19 @@ export async function simplifyContentSync(
   // We reuse the existing generator but exit as soon as we have the
   // assistant message — no need to wait for pings to stop.
   let assistantContent = "";
+  let usage: SimplifyContentResult["usage"];
+  let runId: string | undefined;
 
   for await (const chunk of simplifyContent(
     client,
     markdownContent,
     conversationId,
   )) {
+    // Capture run_id from chunk metadata
+    if (!runId && chunk.run_id) {
+      runId = chunk.run_id;
+    }
+
     if (
       chunk.message_type === "assistant_message" &&
       typeof chunk.content === "string" &&
@@ -156,7 +201,14 @@ export async function simplifyContentSync(
     throw new Error("No assistant message in Letta response");
   }
 
-  return assistantContent;
+  if (runId) {
+    usage = await getRunUsage(client, runId);
+  }
+
+  return {
+    content: assistantContent,
+    usage,
+  };
 }
 
 /**

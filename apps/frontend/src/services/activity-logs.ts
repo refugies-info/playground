@@ -25,6 +25,11 @@ export interface ActivityLogEntry {
   complianceStatus: string | null;
   /** Free-form note text carried in the payload (note). */
   note: string | null;
+  /** Optional AI report linked to the activity log. */
+  lettaReport?: {
+    tokenCost: number | null;
+    model: string | null;
+  };
 }
 
 /**
@@ -47,6 +52,10 @@ export async function getActivityLogs(
       action,
       created_at,
       activity,
+      letta_report:letta_reports!activity_logs_letta_report_id_fkey (
+        token_cost,
+        model
+      ),
       author:profiles!activity_logs_author_id_fkey (
         email, first_name, last_name, username, created_at, role, language
       ),
@@ -75,6 +84,19 @@ export async function getActivityLogs(
         ? activity.complianceStatus
         : null;
     const note = typeof activity.note === "string" ? activity.note : null;
+    const lettaReport =
+      row.letta_report && typeof row.letta_report === "object"
+        ? {
+            tokenCost:
+              typeof row.letta_report.token_cost === "number"
+                ? row.letta_report.token_cost
+                : null,
+            model:
+              typeof row.letta_report.model === "string"
+                ? row.letta_report.model
+                : null,
+          }
+        : undefined;
 
     return {
       id: row.id,
@@ -86,6 +108,7 @@ export async function getActivityLogs(
       language,
       complianceStatus,
       note,
+      lettaReport,
     };
   });
 }
