@@ -1,4 +1,7 @@
-import type { DocumentSortField } from "@playground/shared-types";
+import {
+  type DocumentSortField,
+  parseSearchField,
+} from "@playground/shared-types";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getQueryParam } from "@/lib/search-params";
@@ -67,6 +70,7 @@ export default async function DocumentsPage(props: PageProps) {
   const assigneeEmailParam = getQueryParam(searchParams.assigneeEmail);
 
   const searchParam = getQueryParam(searchParams.search);
+  const searchField = parseSearchField(getQueryParam(searchParams.searchField));
 
   const serviceParams: GetDocumentsParams = {
     page: currentPage,
@@ -85,6 +89,7 @@ export default async function DocumentsPage(props: PageProps) {
     sessionEnd: getQueryParam(searchParams.sessionEnd),
     assigneeEmail: assigneeEmailParam,
     search: searchParam,
+    searchField,
     modalitesEntreesSorties: getQueryParam(
       searchParams.modalitesEntreesSorties,
     ),
@@ -105,6 +110,7 @@ export default async function DocumentsPage(props: PageProps) {
     sessionEnd: getQueryParam(searchParams.sessionEnd),
     assigneeEmail: assigneeEmailParam,
     search: searchParam,
+    searchField: searchField ?? "",
     modalitesEntreesSorties: getQueryParam(
       searchParams.modalitesEntreesSorties,
     ),

@@ -1,3 +1,7 @@
+import {
+  type DocumentSortField,
+  parseSearchField,
+} from "@playground/shared-types";
 import { getQueryParam } from "@/lib/search-params";
 import { getDocuments } from "@/services/documents";
 import { WorkflowClient } from "./workflow-client";
@@ -26,8 +30,31 @@ export default async function WorkflowPage(props: PageProps) {
   );
 
   const search = getQueryParam(searchParams.search);
+  const searchField = parseSearchField(getQueryParam(searchParams.searchField));
   const sessionStart = getQueryParam(searchParams.sessionStart);
   const sessionEnd = getQueryParam(searchParams.sessionEnd);
+
+  // Parse and validate sort parameters (server-side sort).
+  const sortByParam = getQueryParam(searchParams.sortBy);
+  const validSortFields: DocumentSortField[] = [
+    "date_added",
+    "compliance_status",
+    "qualityScore",
+    "wordCount",
+    "title",
+    "structureName",
+    "sessionStartDate",
+    "activeIngestionVersion",
+  ];
+  const sortBy =
+    sortByParam && validSortFields.includes(sortByParam as DocumentSortField)
+      ? (sortByParam as DocumentSortField)
+      : "date_added";
+  const sortOrderParam = getQueryParam(searchParams.sortOrder);
+  const sortOrder =
+    sortOrderParam === "asc" || sortOrderParam === "desc"
+      ? sortOrderParam
+      : "asc";
 
   const {
     data: inProgressDocuments,
@@ -37,9 +64,10 @@ export default async function WorkflowPage(props: PageProps) {
     page,
     pageSize,
     complianceStatus: ["pending", "error", null], // Include pending, error, and NULL (unevaluated)
-    sortBy: "date_added",
-    sortOrder: "asc",
+    sortBy,
+    sortOrder,
     search,
+    searchField,
     searchInContent: true, // texte étendu : titre, structure, commune, id + markdown
     sessionStart,
     sessionEnd,
@@ -53,8 +81,11 @@ export default async function WorkflowPage(props: PageProps) {
       currentPage={page}
       totalPages={totalPages}
       pageSize={pageSize}
+      sortBy={sortBy}
+      sortOrder={sortOrder}
       initialFilters={{
         search,
+        searchField: searchField ?? "",
         sessionStart,
         sessionEnd,
       }}

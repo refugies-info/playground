@@ -1,3 +1,4 @@
+import { parseSearchField } from "@playground/shared-types";
 import type { Metadata } from "next";
 import { getCurrentUser } from "@/lib/auth";
 import { getQueryParam } from "@/lib/search-params";
@@ -26,6 +27,7 @@ export default async function TranslationsPage(props: PageProps) {
   const priority = searchParams.priority;
   const authorId = searchParams.authorId;
   const search = searchParams.search;
+  const searchField = searchParams.searchField;
   const sortBy = searchParams.sortBy;
   const sortOrder = searchParams.sortOrder;
 
@@ -69,6 +71,7 @@ export default async function TranslationsPage(props: PageProps) {
     priority: getQueryParam(priority),
     authorId: getQueryParam(authorId),
     search: getQueryParam(search),
+    searchField: parseSearchField(getQueryParam(searchField)),
     status: getQueryParam(status), // Deprecated: backward compatibility
     language: effectiveLanguage,
     // `|| undefined` lets the service's default `sortBy = "updated_at"` fire.
@@ -103,6 +106,8 @@ export default async function TranslationsPage(props: PageProps) {
     <TranslationsList
       initialTranslations={translations}
       initialFilters={initialFilters}
+      initialSearch={getQueryParam(search)}
+      initialSearchField={parseSearchField(getQueryParam(searchField)) ?? ""}
       authors={authors}
       currentPage={page}
       totalPages={totalPages}
