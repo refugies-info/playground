@@ -205,10 +205,8 @@ export function MetadataRow({
           )}
         </div>
       </td>
-      <td className="align-top">
-        <div className="px-4 py-3">
-          <SourceDisplay source={prov?.source} diMetadata={diMetadata} />
-        </div>
+      <td className="h-px align-top">
+        <SourceDisplay source={prov?.source} diMetadata={diMetadata} />
       </td>
       <td className="w-[80px] align-middle">
         <div className="flex justify-center px-4 py-3">
