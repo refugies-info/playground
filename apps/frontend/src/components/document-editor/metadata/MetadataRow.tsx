@@ -290,7 +290,7 @@ function ValueActionButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex size-8 cursor-pointer items-center justify-center text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900 ${className}`}
+      className={`flex size-8 cursor-pointer items-center justify-center text-gray-500 transition-colors hover:bg-[#f5f5fe] hover:text-[#000091] ${className}`}
       title={title}
     >
       <Icon className="h-4 w-4" />
