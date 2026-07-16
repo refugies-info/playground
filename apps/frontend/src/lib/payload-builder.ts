@@ -84,7 +84,7 @@ export interface TranslationPreviewInput {
 type TranslationContent = {
   content: {
     titreInformatif: string;
-    titreMarque: string;
+    titreMarque: string | null;
     abstract: string;
     markdown: string;
   };
@@ -98,7 +98,7 @@ type TranslationContent = {
 export interface TranslationPreviewPayload {
   dispositif: Omit<RefugiesInfoDispositif, "translations"> & {
     titreInformatif: string;
-    titreMarque: string;
+    titreMarque: string | null;
     abstract: string;
     translations: Record<string, TranslationContent>;
   };

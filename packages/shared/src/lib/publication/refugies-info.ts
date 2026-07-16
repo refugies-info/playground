@@ -31,7 +31,7 @@ export type RefugiesInfoDispositif = {
     fr: {
       content: {
         titreInformatif: string;
-        titreMarque: string;
+        titreMarque: string | null;
         abstract: string;
         markdown: string;
       };
@@ -124,10 +124,10 @@ export async function buildRefugiesInfoPayload(
   const needs = (metadata.needs as unknown[]) || [];
   // Explicit editorial `undefined` clears the field on RI: null value overrides
   // the existing value (RI only updates titreMarque when it receives a string),
-  // whereas an absent value stays undefined and is omitted so RI keeps its value.
+  // whereas an absent value is convert to undefined and is omitted so RI keeps its value.
   const titreMarque = (
     metadata.titreMarque === undefined ? null : metadata.titreMarque
-  ) as string;
+  ) as string | null;
   const abstract = (metadata.abstract as string) || "";
 
   // Sponsors at root level
