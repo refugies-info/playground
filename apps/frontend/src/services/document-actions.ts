@@ -168,6 +168,7 @@ export async function toggleWorkflowStatus(
       workflowId,
       currentStatus,
       user.id,
+      user.email ?? "",
     ]);
 
     logger.info(
