@@ -1,8 +1,8 @@
 "use client";
 
+import { SEARCH_SCOPE_OPTIONS } from "@playground/shared-types";
 import { DataTable } from "@playground/ui/composites";
-import { RiSearchLine } from "@playground/ui/icons";
-import { BoutonFiltre, Switch } from "@playground/ui/primitives";
+import { BoutonFiltre, SearchInput, Switch } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AppPaginationControls } from "@/components/common/AppPagination";
@@ -29,6 +29,10 @@ interface TranslationsListProps {
     priority: string;
     authorId: string;
   };
+  /** Current search keyword from the URL (server-seeded, kept in sync on nav). */
+  initialSearch: string;
+  /** Current search scope from the URL ("" = all sources). */
+  initialSearchField: string;
   authors: { value: string; label: string }[];
   currentPage: number;
   totalPages: number;
@@ -45,6 +49,8 @@ interface TranslationsListProps {
 export function TranslationsList({
   initialTranslations,
   initialFilters,
+  initialSearch,
+  initialSearchField,
   authors,
   currentPage,
   totalPages: _totalPages,
@@ -56,13 +62,16 @@ export function TranslationsList({
 }: TranslationsListProps) {
   const router = useRouter();
   const [filters, setFilters] = useState(initialFilters);
-  const [search, setSearch] = useState(
-    () =>
-      new URLSearchParams(
-        typeof window !== "undefined" ? window.location.search : "",
-      ).get("search") ?? "",
-  );
+  const [search, setSearch] = useState(initialSearch);
+  const [searchField, setSearchField] = useState(initialSearchField);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Keep local search state in sync with the URL on soft navigation
+  // (back/forward re-renders the server component with fresh initial values).
+  useEffect(() => {
+    setSearch(initialSearch);
+    setSearchField(initialSearchField);
+  }, [initialSearch, initialSearchField]);
 
   const visibleColumns =
     userRole === "translator"
@@ -148,6 +157,20 @@ export function TranslationsList({
     }, 400);
   };
 
+  const handleScopeChange = (value: string) => {
+    setSearchField(value);
+    // Cancel any pending keyword debounce so it can't fire a stale follow-up push.
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const params = new URLSearchParams(window.location.search);
+    params.set("page", "1");
+    if (value) params.set("searchField", value);
+    else params.delete("searchField");
+    // Apply the latest typed keyword (the debounce may not have flushed yet).
+    if (search) params.set("search", search);
+    else params.delete("search");
+    router.push(`/translations?${params.toString()}`, { scroll: false });
+  };
+
   const handleSortChange = (sortBy: string, sortOrder: "asc" | "desc") => {
     const params = new URLSearchParams(window.location.search);
     params.set("sortBy", sortBy);
@@ -166,23 +189,16 @@ export function TranslationsList({
       {/* Barre de recherche + filtres */}
       <div className="flex items-center gap-4 flex-wrap">
         {/* Recherche */}
-        <div className="flex items-center border border-(--border-default-grey) rounded-[4px] bg-white overflow-hidden cursor-text">
-          <div className="flex items-center gap-1 pl-3 pr-2 py-[6px] border-r border-(--border-default-grey)">
-            <span className="text-sm font-medium text-(--text-default-grey) whitespace-nowrap">
-              Rechercher par
-            </span>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-[6px]">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Titre, ID, structure, etc."
-              className="text-sm text-(--text-disabled-grey) placeholder:text-(--text-disabled-grey) bg-transparent outline-none min-w-[180px]"
-            />
-            <RiSearchLine className="w-4 h-4 text-(--text-disabled-grey) shrink-0" />
-          </div>
-        </div>
+        <SearchInput
+          value={search}
+          onChange={handleSearchChange}
+          debounceMs={0}
+          placeholder="Titre, ID, structure, etc."
+          wrapperClassName="max-w-[420px] w-full"
+          scopeOptions={SEARCH_SCOPE_OPTIONS}
+          scope={searchField}
+          onScopeChange={handleScopeChange}
+        />
 
         {/* Filtre Langue */}
         {showLanguageFilter && (

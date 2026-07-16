@@ -4,6 +4,7 @@ import type {
   DocumentSortField,
   Metadata,
   OnlineStatus,
+  SearchField,
   WorkStatus,
 } from "@playground/shared-types";
 import { injectFrontmatterContent, logger } from "@playground/shared-types";
@@ -68,6 +69,8 @@ export interface GetDocumentsParams {
   assigneeEmail?: string;
   /** Multi-column text search (title, external_id, structure_name, commune) */
   search?: string;
+  /** Scope search to a single field. Unset = search across all default columns. */
+  searchField?: SearchField;
   /** When true, extend `search` to editorial/ingestion markdown content - usefull to know if we are in "Importer du contenu" ou "Fiches" */
   searchInContent?: boolean;
   /** Filter by entry type: "0" (dates fixes) or "1" (entrées permanentes) */
@@ -89,6 +92,7 @@ export async function getDocuments(params: GetDocumentsParams) {
     sessionEnd,
     assigneeEmail,
     search,
+    searchField,
     searchInContent = false,
     modalitesEntreesSorties,
     includePreviewFields = false,
@@ -177,14 +181,27 @@ export async function getDocuments(params: GetDocumentsParams) {
   // Uses ilike for case-insensitive substring matching.
   if (search) {
     const term = `%${search}%`;
-    const columns = [
-      "title",
-      "external_id",
-      "structure_name",
-      "commune",
-      ...(searchInContent ? ["editorial_markdown", "ingestion_markdown"] : []),
-    ];
-    query = query.or(columns.map((col) => `${col}.ilike.${term}`).join(","));
+    if (searchField) {
+      // Scoped: match only the selected column.
+      query = query.ilike(searchField, term);
+    } else {
+      // Search-all (default): title, external_id, structure_name, commune.
+      const columns = [
+        "title",
+        "external_id",
+        "structure_name",
+        "commune",
+        ...(searchInContent
+          ? ["editorial_markdown", "ingestion_markdown"]
+          : []),
+      ];
+      // Quote the value so reserved chars (, ( )) in the term are treated
+      // literally by PostgREST's .or() parser instead of breaking it.
+      const orTerm = `"${term.replace(/"/g, '\\"')}"`;
+      query = query.or(
+        columns.map((col) => `${col}.ilike.${orTerm}`).join(","),
+      );
+    }
   }
 
   // Apply sorting

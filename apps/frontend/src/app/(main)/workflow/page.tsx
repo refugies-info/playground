@@ -1,4 +1,7 @@
-import type { DocumentSortField } from "@playground/shared-types";
+import {
+  type DocumentSortField,
+  parseSearchField,
+} from "@playground/shared-types";
 import { getQueryParam } from "@/lib/search-params";
 import { getDocuments } from "@/services/documents";
 import { WorkflowClient } from "./workflow-client";
@@ -27,6 +30,7 @@ export default async function WorkflowPage(props: PageProps) {
   );
 
   const search = getQueryParam(searchParams.search);
+  const searchField = parseSearchField(getQueryParam(searchParams.searchField));
   const sessionStart = getQueryParam(searchParams.sessionStart);
   const sessionEnd = getQueryParam(searchParams.sessionEnd);
 
@@ -63,6 +67,7 @@ export default async function WorkflowPage(props: PageProps) {
     sortBy,
     sortOrder,
     search,
+    searchField,
     searchInContent: true, // texte étendu : titre, structure, commune, id + markdown
     sessionStart,
     sessionEnd,
@@ -80,6 +85,7 @@ export default async function WorkflowPage(props: PageProps) {
       sortOrder={sortOrder}
       initialFilters={{
         search,
+        searchField: searchField ?? "",
         sessionStart,
         sessionEnd,
       }}

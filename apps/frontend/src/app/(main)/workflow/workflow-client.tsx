@@ -4,6 +4,7 @@ import {
   type Document,
   type DocumentSortField,
   logger,
+  SEARCH_SCOPE_OPTIONS,
 } from "@playground/shared-types";
 import { BoutonFiltreDate, Button, SearchInput } from "@playground/ui";
 import { DataTable } from "@playground/ui/composites";
@@ -22,6 +23,7 @@ const REALTIME_REFRESH_THROTTLE_MS = 2000;
 
 interface WorkflowFilters extends Record<string, string> {
   search: string;
+  searchField: string;
   sessionStart: string;
   sessionEnd: string;
 }
@@ -474,9 +476,11 @@ export function WorkflowClient(props: WorkflowClientProps) {
           <SearchInput
             value={filters.search}
             onChange={(value) => handleFilterChange("search", value)}
-            placeholder="Rechercher par titre, ID, structure, commune, contenu…"
-            wrapperClassName="max-w-[330px] w-full"
-            aria-label="Rechercher (titre, ID, structure, commune, contenu)"
+            placeholder="Titre, ID, structure, etc."
+            wrapperClassName="max-w-[420px] w-full"
+            scopeOptions={SEARCH_SCOPE_OPTIONS}
+            scope={filters.searchField}
+            onScopeChange={(value) => handleFilterChange("searchField", value)}
           />
 
           <div className="flex items-center gap-2">
