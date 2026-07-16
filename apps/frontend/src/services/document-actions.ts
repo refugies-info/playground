@@ -143,19 +143,10 @@ export async function toggleWorkflowStatus(
     if (auth.errorResponse) return auth.errorResponse;
     const { supabase, user } = auth;
 
-    // Verify document state (prevent arbitration on already processed docs)
-    // We need to check editorial statuses now
+    // Verify the workflow exists before starting the toggle workflow.
     const { data: workflow, error: workflowError } = await supabase
       .from("workflows")
-      .select(
-        `
-        editorial_record_id,
-        editorial_records (
-          work_status,
-          online_status
-        )
-      `,
-      )
+      .select("id")
       .eq("id", workflowId)
       .single();
 
