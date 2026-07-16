@@ -7,7 +7,6 @@ import {
 import {
   LETTA_AGENTS_CONFIG,
   logger,
-  TYPE_TRANSLATION,
   TYPE_TRANSLATION_ERROR,
 } from "@playground/shared-types";
 import type { StepResult } from "../../types";
@@ -236,12 +235,6 @@ ${sanitizedContent}
       { translationRecordId: translationRecord.id, language },
       "Successfully generated and saved translation",
     );
-
-    await recordActivity({
-      action: TYPE_TRANSLATION,
-      workflowId,
-      activity: { language, translationRecordId: translationRecord.id },
-    });
 
     return {
       success: true,

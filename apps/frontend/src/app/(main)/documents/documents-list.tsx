@@ -1,6 +1,7 @@
 "use client";
 
 import type { Document, DocumentSortField } from "@playground/shared-types";
+import { SEARCH_SCOPE_OPTIONS } from "@playground/shared-types";
 import {
   BoutonFiltre,
   BoutonFiltreDate,
@@ -35,6 +36,7 @@ interface DocumentsListProps {
     sessionEnd: string;
     assigneeEmail: string;
     search: string;
+    searchField: string;
     modalitesEntreesSorties?: string;
   };
   initialAuthors: Profile[];
@@ -170,8 +172,11 @@ export function DocumentsList({
         <SearchInput
           value={filters.search}
           onChange={(value) => updateFilter("search", value)}
-          placeholder="Rechercher par titre, ID, structure, etc."
-          wrapperClassName="max-w-[330px] w-full"
+          placeholder="Titre, ID, structure, etc."
+          wrapperClassName="max-w-[420px] w-full"
+          scopeOptions={SEARCH_SCOPE_OPTIONS}
+          scope={filters.searchField}
+          onScopeChange={(value) => updateFilter("searchField", value)}
         />
 
         <BoutonFiltre

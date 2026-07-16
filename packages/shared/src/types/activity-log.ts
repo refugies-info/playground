@@ -67,7 +67,7 @@ export const ACTIVITY_LOG_TYPES = [
   {
     value: TYPE_CLEAR_LANGUAGE,
     label: "Langage clair",
-    display: "%s a rédigé la fiche en langage clair",
+    display: "%s a actionné le langage clair",
   },
   {
     value: TYPE_TRANSLATION,
