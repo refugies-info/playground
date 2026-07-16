@@ -91,17 +91,26 @@ export function MetadataView() {
   // Metadata report exists → show table + regenerate button
   return (
     <div className="flex-1 bg-white overflow-y-auto">
-      <MetadataTable
-        report={document.metadataReport}
-        diMetadata={document.metadata ?? {}}
-        ref={
-          document.referenceData ?? { themes: {}, needs: {}, needsByTheme: {} }
-        }
-        fields={METADATA_FIELDS_RI}
-      />
+      <div className="px-10 py-6">
+        <h1 className="mb-8 text-[40px] font-bold leading-[48px] text-[#161616]">
+          Métadonnées
+        </h1>
+        <MetadataTable
+          report={document.metadataReport}
+          diMetadata={document.metadata ?? {}}
+          ref={
+            document.referenceData ?? {
+              themes: {},
+              needs: {},
+              needsByTheme: {},
+            }
+          }
+          fields={METADATA_FIELDS_RI}
+        />
+      </div>
 
       {/* Regenerate button — visible only when a report already exists */}
-      <div className="px-6 py-3 border-t flex items-center gap-3 bg-gray-50">
+      <div className="px-10 py-3 border-t flex items-center gap-3 bg-gray-50">
         <div className="flex items-center gap-3">
           <Button size="sm" onClick={handleGenerate}>
             Régénérer les métadonnées

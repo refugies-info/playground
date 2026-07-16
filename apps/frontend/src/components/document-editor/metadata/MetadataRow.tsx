@@ -10,9 +10,31 @@ import {
   TooltipTrigger,
 } from "@playground/ui";
 import type { LucideIcon } from "lucide-react";
-import { HelpCircle, RotateCcw, Trash2 } from "lucide-react";
+import {
+  AlignLeft,
+  Bot,
+  Building2,
+  Cake,
+  CalendarClock,
+  CalendarDays,
+  Clock,
+  Euro,
+  HelpCircle,
+  Image,
+  Languages,
+  ListChecks,
+  Map as MapIcon,
+  MapPin,
+  Repeat,
+  RotateCcw,
+  Tag,
+  Target,
+  Trash2,
+  Type,
+  User,
+  Users,
+} from "lucide-react";
 import { useCallback } from "react";
-import { FieldBadge } from "./FieldBadge";
 import { useMetadata } from "./MetadataContext";
 import { getDisplayComponent } from "./publication-targets/refugies-info";
 import { SourceDisplay } from "./SourceDisplay";
@@ -48,10 +70,18 @@ export function MetadataRow({
   const fieldError = getFieldError(field.riKey);
   const fieldFixInfo = getFieldFixInfo(field.riKey);
 
-  const hasOriginalValue = rawValue !== undefined && rawValue !== null;
   const isModified = [field.riKey, ...(field.relatedKeys ?? [])].some((key) =>
     dirtyFields.has(key),
   );
+
+  // - empty  → red cell (AI couldn't fill, or field was cleared)
+  // - filled → normal cell, blue on hover
+  const isEmpty = isEmptyValue(mergedValue);
+
+  const canReset = isModified;
+
+  const canClear = !isEmpty;
+  const showActions = canReset || canClear;
 
   // Reset field and all related fields
   const handleReset = useCallback(() => {
@@ -72,18 +102,13 @@ export function MetadataRow({
   }, [field.riKey, field.relatedKeys, clearField]);
 
   return (
-    <tr className="hover:bg-gray-50 text-sm">
-      <td className="px-6 py-4">
-        <label htmlFor={field.riKey} className="text-md mb-2 block font-bold">
-          {field.label}
-        </label>
-        <div className="flex items-center gap-2">
-          <FieldBadge
-            status={fieldStatus}
-            error={fieldError}
-            isModified={isModified}
-            hasOriginalValue={hasOriginalValue}
-          />
+    <tr className="border-b border-[#ddd] text-sm">
+      <td className="align-top">
+        <div className="flex items-center gap-2 px-4 py-3">
+          <FieldIcon riKey={field.riKey} />
+          <span id={field.riKey} className="text-sm font-medium text-[#161616]">
+            {field.label}
+          </span>
 
           {fieldStatus === "fixed" && fieldFixInfo ? (
             <TooltipProvider>
@@ -146,61 +171,128 @@ export function MetadataRow({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          ) : (
-            <>
-              {isModified && (
-                <ActionButton
+          ) : null}
+        </div>
+      </td>
+      <td className="h-px align-top">
+        <div
+          className={`group relative h-full px-4 py-3 transition-colors ${
+            isEmpty
+              ? "border border-dashed border-red-400/70 bg-red-50"
+              : "hover:bg-[#f5f5fe]"
+          }`}
+        >
+          {getDisplayComponent(field, mergedValue)}
+
+          {showActions && (
+            <div className="absolute right-2 top-2 hidden overflow-hidden border border-[#ddd] bg-white group-hover:flex">
+              {canReset && (
+                <ValueActionButton
                   icon={RotateCcw}
                   onClick={handleReset}
                   title="Réinitialiser (revenir à la version IA)"
-                  hoverColor="blue"
                 />
               )}
-              {!isModified && hasOriginalValue && (
-                <ActionButton
+              {canClear && (
+                <ValueActionButton
                   icon={Trash2}
                   onClick={handleClear}
-                  title="Supprimer (vider la donnée)"
-                  hoverColor="red"
+                  title="Vider la donnée"
+                  className={canReset ? "border-l border-[#ddd]" : ""}
                 />
               )}
-            </>
+            </div>
           )}
         </div>
       </td>
-      <td className="px-6 py-4">{getDisplayComponent(field, mergedValue)}</td>
-      <td className="px-6 py-4">
-        <SourceDisplay source={prov?.source} diMetadata={diMetadata} />
+      <td className="align-top">
+        <div className="px-4 py-3">
+          <SourceDisplay source={prov?.source} diMetadata={diMetadata} />
+        </div>
+      </td>
+      <td className="w-[80px] align-middle">
+        <div className="flex justify-center px-4 py-3">
+          {!isModified && <AuthorBadge />}
+        </div>
       </td>
     </tr>
   );
 }
 
 // =============================================================================
-// Action Button
+// Field icon (leading icon in the "Métadonnée" column)
 // =============================================================================
 
-function ActionButton({
+const FIELD_ICONS: Record<string, LucideIcon> = {
+  titreMarque: Type,
+  mainSponsor: Building2,
+  logo: Image,
+  abstract: AlignLeft,
+  theme: Tag,
+  needs: Target,
+  publicStatus: Users,
+  public: User,
+  frequency: Repeat,
+  frenchLevel: Languages,
+  age: Cake,
+  price: Euro,
+  commitment: Clock,
+  periode: CalendarDays,
+  timeSlots: CalendarClock,
+  location: MapPin,
+  conditions: ListChecks,
+  map: MapIcon,
+};
+
+function FieldIcon({ riKey }: { riKey: string }) {
+  const Icon = FIELD_ICONS[riKey] ?? Tag;
+  return <Icon className="h-4 w-4 shrink-0 text-[#161616]" aria-hidden />;
+}
+
+function AuthorBadge() {
+  return (
+    <div
+      title="Rempli par l'IA"
+      className="flex size-8 items-center justify-center rounded-full border-[0.5px] border-[#ddd] bg-[#eee] text-gray-600"
+    >
+      <Bot className="h-4 w-4" aria-hidden />
+    </div>
+  );
+}
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+/** A metadata value counts as "empty" when the IA couldn't fill it or it was cleared. */
+function isEmptyValue(value: unknown): boolean {
+  if (value === undefined || value === null || value === "") return true;
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === "object")
+    return Object.keys(value as object).length === 0;
+  return false;
+}
+
+// =============================================================================
+// Value Action Button (inline box in the value cell)
+// =============================================================================
+
+function ValueActionButton({
   icon: Icon,
   onClick,
   title,
-  hoverColor,
+  className = "",
 }: {
   icon: LucideIcon;
   onClick: () => void;
   title: string;
-  hoverColor: "blue" | "red";
+  className?: string;
 }) {
-  const hoverClasses =
-    hoverColor === "blue"
-      ? "hover:text-blue-600 hover:bg-blue-50"
-      : "hover:text-red-600 hover:bg-red-50";
-
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`cursor-pointer rounded p-1 text-gray-400 ${hoverClasses}`}
+      className={`flex size-8 cursor-pointer items-center justify-center text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900 ${className}`}
       title={title}
     >
       <Icon className="h-4 w-4" />
