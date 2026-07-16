@@ -2,6 +2,7 @@
 
 import {
   type Document,
+  type DocumentSortField,
   logger,
   SEARCH_SCOPE_OPTIONS,
 } from "@playground/shared-types";
@@ -33,6 +34,8 @@ interface WorkflowClientProps {
   currentPage: number;
   totalPages: number;
   pageSize: number;
+  sortBy: DocumentSortField;
+  sortOrder: "asc" | "desc";
   initialFilters: WorkflowFilters;
 }
 
@@ -43,6 +46,8 @@ export function WorkflowClient(props: WorkflowClientProps) {
     currentPage,
     totalPages,
     pageSize,
+    sortBy,
+    sortOrder,
     initialFilters,
   } = props;
   const router = useRouter();
@@ -530,6 +535,20 @@ export function WorkflowClient(props: WorkflowClientProps) {
               pageSize={pageSize}
               onRowClick={(row) => router.push(`/documents/${row.id}`)}
               manualPagination
+              manualSorting
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSortChange={(newSortBy, newSortOrder) => {
+                // Sort change is a navigation → skip the row-change animation.
+                skipHighlightRef.current = true;
+                const params = new URLSearchParams(window.location.search);
+                params.set("sortBy", newSortBy);
+                params.set("sortOrder", newSortOrder);
+                params.set("page", "1");
+                router.push(`/workflow?${params.toString()}`, {
+                  scroll: false,
+                });
+              }}
               getRowClassName={(row) =>
                 highlightedIds.has(row.id)
                   ? "animate-highlight bg-yellow-50 transition-colors duration-1000"
