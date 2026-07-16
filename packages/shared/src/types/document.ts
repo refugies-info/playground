@@ -3,7 +3,7 @@ export type ComplianceStatus =
   | "non_compliant"
   | "error"
   | "pending";
-export type WorkStatus = "to_process" | "draft";
+export type WorkStatus = "to_process" | "draft" | "to_review";
 export type OnlineStatus = "published" | "unpublished" | "archived";
 
 // Derived state for backward compatibility or UI logic
@@ -58,6 +58,10 @@ export interface Document {
   publishedUrl?: string;
   publicationStatus?: string;
   publicationRemoteId?: string;
+  /** Date de la dernière publication — affichée sous le tag "Publié" */
+  publishedAt?: string | null;
+  /** Date d'archivage (editorial_records.archived_at) — affichée sous le tag "Archivé" */
+  archivedAt?: string | null;
   structureName?: string;
   sessionStartDate?: string;
   sessionEndDate?: string | null;

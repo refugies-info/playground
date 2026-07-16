@@ -5,7 +5,7 @@ import { RiSearchLine } from "@playground/ui/icons";
 import { BoutonFiltre, Switch } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { AppPaginationControls } from "@/components/common/app-pagination";
+import { AppPaginationControls } from "@/components/common/AppPagination";
 import { createClient } from "@/lib/supabase/client";
 import type { TranslationItem } from "@/services/translations";
 import { columns } from "./columns";

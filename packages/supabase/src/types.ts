@@ -197,6 +197,7 @@ export type Database = {
       editorial_records: {
         Row: {
           active_run_id: string | null
+          archived_at: string | null
           content_report_id: string | null
           created_at: string
           current_editor_id: string | null
@@ -211,6 +212,7 @@ export type Database = {
         }
         Insert: {
           active_run_id?: string | null
+          archived_at?: string | null
           content_report_id?: string | null
           created_at?: string
           current_editor_id?: string | null
@@ -225,6 +227,7 @@ export type Database = {
         }
         Update: {
           active_run_id?: string | null
+          archived_at?: string | null
           content_report_id?: string | null
           created_at?: string
           current_editor_id?: string | null
@@ -878,6 +881,7 @@ export type Database = {
       workflows_enriched: {
         Row: {
           active_ingestion_version: number | null
+          archived_at: string | null
           assignee_email: string | null
           assignee_profile: Json | null
           commune: string | null

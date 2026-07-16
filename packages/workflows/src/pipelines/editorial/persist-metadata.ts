@@ -1,3 +1,4 @@
+import type { LettaUsage } from "@playground/agents";
 import { persistMetadataReportStep } from "../../steps/editorial/persist-metadata-report";
 
 export interface PersistMetadataWorkflowResult {
@@ -9,6 +10,7 @@ export async function persistMetadataWorkflow(
   workflowId: string,
   agentId: string,
   responseContent: string,
+  usage?: LettaUsage,
 ): Promise<PersistMetadataWorkflowResult> {
   "use workflow";
 
@@ -16,6 +18,7 @@ export async function persistMetadataWorkflow(
     workflowId,
     agentId,
     responseContent,
+    usage,
   );
 
   if (

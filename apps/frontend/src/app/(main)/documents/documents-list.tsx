@@ -10,7 +10,7 @@ import {
 import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AppPaginationControls } from "@/components/common/app-pagination";
+import { AppPaginationControls } from "@/components/common/AppPagination";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import type { Profile } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/client";
@@ -202,6 +202,7 @@ export function DocumentsList({
           options={[
             { label: "En cours", value: "draft" },
             { label: "À traiter", value: "to_process" },
+            { label: "À relire", value: "to_review" },
           ]}
           value={filters.workStatus || ""}
           onChange={(value) => updateFilter("workStatus", value)}
