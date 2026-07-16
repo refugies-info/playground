@@ -3,6 +3,7 @@ import {
   extractTitleFromMetadata,
   logger,
   type Metadata,
+  type SearchField,
   type WorkStatus,
 } from "@playground/shared-types";
 import {
@@ -12,6 +13,9 @@ import {
 import { cookies } from "next/headers";
 import { mapProfileDto, type Profile } from "@/lib/profile";
 import { buildPublicationUrl } from "@/lib/url-builder";
+
+// Limit of security if we have a lot of rows returns
+const SEARCH_ID_MATCH_LIMIT = 2000;
 
 // Define the shape of a translation item for the frontend
 export interface TranslationItem {
@@ -62,6 +66,8 @@ export interface GetTranslationsParams {
   priority?: string;
   authorId?: string; // Filter by author (profile id)
   search?: string; // Full-text search on title (metadata fields)
+  /** Scope search: title (metadata), structure_name/commune (via workflow), or all. */
+  searchField?: SearchField;
   status?: string; // Deprecated: for backward compatibility
   sortBy?: string;
   sortOrder?: "asc" | "desc";
@@ -88,6 +94,7 @@ export async function getTranslations(params: GetTranslationsParams) {
     priority,
     authorId,
     search,
+    searchField,
     status, // Deprecated: for backward compatibility
     sortBy = "updated_at",
     sortOrder = "desc",
@@ -154,16 +161,65 @@ export async function getTranslations(params: GetTranslationsParams) {
   // Two-step: find matching editorial_record IDs, then restrict to those.
   if (search) {
     const term = `%${search}%`;
-    const { data: matchingEditorial } = await supabase
-      .from("editorial_records")
-      .select("id")
-      .or(`metadata->>title.ilike.${term},metadata->>nom.ilike.${term}`);
+    // Quote the value so reserved chars (, ( )) in the term are treated
+    // literally by PostgREST's .or() parser instead of breaking it.
+    const orTerm = `"${term.replace(/"/g, '\\"')}"`;
+    const empty = { data: [], total: 0, page, pageSize, totalPages: 0 };
 
-    const editorialIds = (matchingEditorial ?? []).map((r) => r.id);
-    if (editorialIds.length === 0) {
-      return { data: [], total: 0, page, pageSize, totalPages: 0 };
+    if (searchField === "title") {
+      // Titles live in editorial_records.metadata (title/nom).
+      const { data: matchingEditorial } = await supabase
+        .from("editorial_records")
+        .select("id")
+        .or(`metadata->>title.ilike.${orTerm},metadata->>nom.ilike.${orTerm}`)
+        .limit(SEARCH_ID_MATCH_LIMIT);
+      const editorialIds = (matchingEditorial ?? []).map((r) => r.id);
+      if (editorialIds.length === 0) return empty;
+      query = query.in("editorial_record_id", editorialIds);
+    } else if (searchField === "structure_name" || searchField === "commune") {
+      // structure_name/commune live on workflows_enriched — match, then restrict by workflow_id.
+      const { data: matchingWf } = await supabase
+        .from("workflows_enriched")
+        .select("id")
+        .ilike(searchField, term)
+        .limit(SEARCH_ID_MATCH_LIMIT);
+      const workflowIds = (matchingWf ?? [])
+        .map((r) => r.id)
+        .filter((id): id is string => typeof id === "string");
+      if (workflowIds.length === 0) return empty;
+      query = query.in("workflow_id", workflowIds);
+    } else {
+      // No scope → search all sources: title (metadata) OR structure_name OR commune.
+      const [{ data: matchingEditorial }, { data: matchingWf }] =
+        await Promise.all([
+          supabase
+            .from("editorial_records")
+            .select("id")
+            .or(
+              `metadata->>title.ilike.${orTerm},metadata->>nom.ilike.${orTerm}`,
+            )
+            .limit(SEARCH_ID_MATCH_LIMIT),
+          supabase
+            .from("workflows_enriched")
+            .select("id")
+            .or(`structure_name.ilike.${orTerm},commune.ilike.${orTerm}`)
+            .limit(SEARCH_ID_MATCH_LIMIT),
+        ]);
+      const editorialIds = (matchingEditorial ?? []).map((r) => r.id);
+      const workflowIds = (matchingWf ?? [])
+        .map((r) => r.id)
+        .filter((id): id is string => typeof id === "string");
+      if (editorialIds.length === 0 && workflowIds.length === 0) return empty;
+
+      const orParts: string[] = [];
+      if (editorialIds.length > 0) {
+        orParts.push(`editorial_record_id.in.(${editorialIds.join(",")})`);
+      }
+      if (workflowIds.length > 0) {
+        orParts.push(`workflow_id.in.(${workflowIds.join(",")})`);
+      }
+      query = query.or(orParts.join(","));
     }
-    query = query.in("editorial_record_id", editorialIds);
   }
 
   // Filter by online_status

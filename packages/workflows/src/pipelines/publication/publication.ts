@@ -1,3 +1,5 @@
+import { TYPE_TRANSLATION } from "@playground/shared-types";
+import { recordActivity } from "../../steps/common/activity-log";
 import { getEditorialRecordIdStep } from "../../steps/common/get-editorial-record-id";
 import {
   type PublishDocumentInput,
@@ -15,6 +17,20 @@ import { triggerTranslationWorkflowStep } from "../../steps/translation/trigger-
 async function sleepStep(ms: number): Promise<void> {
   "use step";
   await new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Records the single "PapaIA a traduit cette fiche" activity, optimistically,
+ * once per publication — before the per-language fan-out. Individual language
+ * failures still surface their own TYPE_TRANSLATION_ERROR entries, so a global
+ * success log up-front avoids one identical row per language.
+ */
+async function recordTranslationStartedStep(workflowId: string): Promise<void> {
+  "use step";
+  await recordActivity({
+    action: TYPE_TRANSLATION,
+    workflowId,
+  });
 }
 
 export interface PublicationWorkflowResult {
@@ -74,6 +90,9 @@ export async function publicationWorkflow(
           : [];
 
       if (languages.length > 0) {
+        // Optimistic: log the translation once up-front (not per language).
+        await recordTranslationStartedStep(input.workflowId);
+
         // Séquentiel avec délai entre chaque langue pour éviter
         // le rate limiting Letta (429 requests/tokens per minute).
         for (const lang of languages) {
