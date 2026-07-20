@@ -53,7 +53,7 @@ export function SourceDisplay({ source, diMetadata }: SourceDisplayProps) {
             : "Déplier la source"
           : undefined
       }
-      className={`flex h-full w-full items-start gap-1 px-4 py-3 text-left ${
+      className={`flex w-full items-start gap-1 px-4 py-3 text-left ${
         isOverflowing ? "cursor-pointer" : "cursor-default"
       }`}
     >

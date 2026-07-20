@@ -174,38 +174,36 @@ export function MetadataRow({
           ) : null}
         </div>
       </td>
-      <td className="h-px align-top">
-        <div
-          className={`group relative h-full px-4 py-3 transition-colors ${
-            isEmpty
-              ? "border border-dashed border-red-400/70 bg-red-50"
-              : "hover:bg-[#f5f5fe]"
-          }`}
-        >
-          {getDisplayComponent(field, mergedValue)}
+      <td
+        className={`group relative align-top px-4 py-3 transition-colors ${
+          isEmpty
+            ? "border border-dashed border-red-400/70 bg-red-50"
+            : "hover:bg-[#f5f5fe]"
+        }`}
+      >
+        {getDisplayComponent(field, mergedValue)}
 
-          {showActions && (
-            <div className="absolute right-2 top-2 hidden overflow-hidden border border-[#ddd] bg-white group-hover:flex">
-              {canReset && (
-                <ValueActionButton
-                  icon={RotateCcw}
-                  onClick={handleReset}
-                  title="Réinitialiser (revenir à la version IA)"
-                />
-              )}
-              {canClear && (
-                <ValueActionButton
-                  icon={Trash2}
-                  onClick={handleClear}
-                  title="Vider la donnée"
-                  className={canReset ? "border-l border-[#ddd]" : ""}
-                />
-              )}
-            </div>
-          )}
-        </div>
+        {showActions && (
+          <div className="absolute right-2 top-2 hidden overflow-hidden border border-[#ddd] bg-white group-hover:flex">
+            {canReset && (
+              <ValueActionButton
+                icon={RotateCcw}
+                onClick={handleReset}
+                title="Réinitialiser (revenir à la version IA)"
+              />
+            )}
+            {canClear && (
+              <ValueActionButton
+                icon={Trash2}
+                onClick={handleClear}
+                title="Vider la donnée"
+                className={canReset ? "border-l border-[#ddd]" : ""}
+              />
+            )}
+          </div>
+        )}
       </td>
-      <td className="h-px align-top">
+      <td className="align-top">
         <SourceDisplay source={prov?.source} diMetadata={diMetadata} />
       </td>
       <td className="w-[80px] align-middle">
