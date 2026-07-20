@@ -38,6 +38,7 @@ export { FrMentalDisabilitiesFill } from "./FrMentalDisabilitiesFill";
 export { FrMentalDisabilitiesLine } from "./FrMentalDisabilitiesLine";
 export { FrQuoteFill } from "./FrQuoteFill";
 export { FrQuoteLine } from "./FrQuoteLine";
+export { FrRefreshLine2 } from "./FrRefreshLine2";
 export { FrSignLanguageFill } from "./FrSignLanguageFill";
 export { FrSignLanguageLine } from "./FrSignLanguageLine";
 export { FrSubmersionFill } from "./FrSubmersionFill";

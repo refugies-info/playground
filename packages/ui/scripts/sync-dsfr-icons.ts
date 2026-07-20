@@ -73,6 +73,27 @@ const toJsxAttrs = (svgContent: string): string => {
   return result;
 };
 
+/**
+ * Rend une icône monochrome héritable via `currentColor`.
+ *
+ * Les SVGs DSFR codent en dur `fill="#hex"` sur les paths, ce qui écrase le
+ * `fill={color}` porté par le <svg>. Résultat : l'icône reste de sa couleur
+ * source (ex. bleu #000091) au lieu de suivre la couleur du texte parent.
+ *
+ * On strip les `fill="#hex"` UNIQUEMENT si l'icône n'utilise qu'une seule
+ * couleur — les icônes multicolores (drapeaux : bleu/blanc/rouge) doivent
+ * garder leurs fills explicites.
+ */
+const stripMonochromeFills = (inner: string): string => {
+  const colorFills = [
+    ...inner.matchAll(/fill="(#[0-9a-fA-F]{3,8}|rgb[^"]*)"/g),
+  ];
+  const distinct = new Set(colorFills.map((m) => m[1].toLowerCase()));
+  if (distinct.size > 1) return inner; // multicolore : on ne touche pas
+  // monochrome : les paths héritent alors du fill={color} du <svg>
+  return inner.replace(/\s*fill="(#[0-9a-fA-F]{3,8}|rgb[^"]*)"/g, "");
+};
+
 interface IconEntry {
   base: string;
   category: string;
@@ -136,6 +157,7 @@ for (const { base, svg } of missing) {
     .replace(/<\/svg>/, "")
     .trim();
   inner = toJsxAttrs(inner);
+  inner = stripMonochromeFills(inner);
 
   const content = [
     `// AUTO-GENERE — ne pas editer (sync-dsfr-icons.ts)`,

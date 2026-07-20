@@ -84,7 +84,7 @@ export const Loading: Story = {
 // Phase 2 & 3 — Résultat
 // ---------------------------------------------------------------------------
 
-/** Publication réussie — URL copiable */
+/** Publication réussie — badge Succès + copie du lien + Consulter */
 export const Succes: Story = {
   name: "Succès",
   args: {
@@ -92,11 +92,26 @@ export const Succes: Story = {
       type: "success",
       publishedUrl: "https://refugies.info/dispositif/6507c1a2b3f4e5d6c7a8b9c0",
     },
+    onCopy: () => {},
     onOpenLink: () => {},
   },
 };
 
-/** Échec — message d'erreur + Réessayer */
+/** Succès — lien copié (icône check) */
+export const SuccesCopie: Story = {
+  name: "Succès — lien copié",
+  args: {
+    result: {
+      type: "success",
+      publishedUrl: "https://refugies.info/dispositif/6507c1a2b3f4e5d6c7a8b9c0",
+    },
+    hasCopied: true,
+    onCopy: () => {},
+    onOpenLink: () => {},
+  },
+};
+
+/** Échec — badge Erreur + Réessayer */
 export const Erreur: Story = {
   args: {
     result: {
@@ -104,6 +119,20 @@ export const Erreur: Story = {
       error:
         "Le serveur de publication est injoignable. Vérifiez votre connexion ou réessayez dans quelques instants.",
     },
+    onRetry: () => {},
+  },
+};
+
+/** Échec — réessai en cours (bouton Publication + loader) */
+export const ErreurReessai: Story = {
+  name: "Erreur — réessai en cours",
+  args: {
+    result: {
+      type: "error",
+      error:
+        "Le serveur de publication est injoignable. Vérifiez votre connexion ou réessayez dans quelques instants.",
+    },
+    isPublishing: true,
     onRetry: () => {},
   },
 };
