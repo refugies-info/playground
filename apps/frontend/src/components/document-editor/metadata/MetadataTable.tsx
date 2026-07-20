@@ -49,10 +49,10 @@ export function MetadataTable({
   const provenanceByKey = new Map(provenance?.map((p) => [p.key, p]) ?? []);
 
   return (
-    <div className="border border-[#ddd] bg-white">
+    <div className="border border-[var(--border-default-grey)] bg-white">
       <table className="w-full table-fixed border-collapse">
         <thead>
-          <tr className="bg-[#e3e3fd]">
+          <tr className="bg-[var(--background-action-low-blue-france)]">
             <th className="w-[180px] px-4 py-3 text-left text-xs font-bold text-[#000091]">
               Métadonnée
             </th>

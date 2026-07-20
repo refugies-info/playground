@@ -92,7 +92,7 @@ export function MetadataView() {
   return (
     <div className="flex-1 bg-white overflow-y-auto">
       <div className="px-10 py-6">
-        <h1 className="mb-8 text-[40px] font-bold leading-[48px] text-[#161616]">
+        <h1 className="mb-8 text-[40px] font-bold leading-[48px] text-[var(--text-title-grey)]">
           Métadonnées
         </h1>
         <MetadataTable

@@ -38,6 +38,7 @@ import { useCallback } from "react";
 import { useMetadata } from "./MetadataContext";
 import { getDisplayComponent } from "./publication-targets/refugies-info";
 import { SourceDisplay } from "./SourceDisplay";
+import { isEmptyValue } from "./shared";
 import type { MetadataFieldDef } from "./types";
 
 interface MetadataRowProps {
@@ -78,10 +79,7 @@ export function MetadataRow({
   // - filled → normal cell, blue on hover
   const isEmpty = isEmptyValue(mergedValue);
 
-  const canReset = isModified;
-
-  const canClear = !isEmpty;
-  const showActions = canReset || canClear;
+  const showActions = isModified || !isEmpty;
 
   // Reset field and all related fields
   const handleReset = useCallback(() => {
@@ -102,11 +100,14 @@ export function MetadataRow({
   }, [field.riKey, field.relatedKeys, clearField]);
 
   return (
-    <tr className="border-b border-[#ddd] text-sm">
+    <tr className="border-b border-[var(--border-default-grey)] text-sm">
       <td className="align-top">
         <div className="flex items-center gap-2 px-4 py-3">
           <FieldIcon riKey={field.riKey} />
-          <span id={field.riKey} className="text-sm font-medium text-[#161616]">
+          <span
+            id={field.riKey}
+            className="text-sm font-medium text-[var(--text-label-grey)]"
+          >
             {field.label}
           </span>
 
@@ -178,26 +179,30 @@ export function MetadataRow({
         className={`group relative align-top px-4 py-3 transition-colors ${
           isEmpty
             ? "border border-dashed border-red-400/70 bg-red-50"
-            : "hover:bg-[#f5f5fe]"
+            : "hover:bg-[var(--background-alt-blue-france)]"
         }`}
       >
         {getDisplayComponent(field, mergedValue)}
 
         {showActions && (
-          <div className="absolute right-2 top-2 hidden overflow-hidden border border-[#ddd] bg-white group-hover:flex">
-            {canReset && (
+          <div className="absolute right-2 top-2 hidden overflow-hidden border border-[var(--border-default-grey)] bg-white group-hover:flex">
+            {isModified && (
               <ValueActionButton
                 icon={RotateCcw}
                 onClick={handleReset}
                 title="Réinitialiser (revenir à la version IA)"
               />
             )}
-            {canClear && (
+            {!isEmpty && (
               <ValueActionButton
                 icon={Trash2}
                 onClick={handleClear}
                 title="Vider la donnée"
-                className={canReset ? "border-l border-[#ddd]" : ""}
+                className={
+                  isModified
+                    ? "border-l border-[var(--border-default-grey)]"
+                    : ""
+                }
               />
             )}
           </div>
@@ -242,31 +247,23 @@ const FIELD_ICONS: Record<string, LucideIcon> = {
 
 function FieldIcon({ riKey }: { riKey: string }) {
   const Icon = FIELD_ICONS[riKey] ?? Tag;
-  return <Icon className="h-4 w-4 shrink-0 text-[#161616]" aria-hidden />;
+  return (
+    <Icon
+      className="h-4 w-4 shrink-0 text-[var(--text-label-grey)]"
+      aria-hidden
+    />
+  );
 }
 
 function AuthorBadge() {
   return (
     <div
       title="Rempli par l'IA"
-      className="flex size-8 items-center justify-center rounded-full border-[0.5px] border-[#ddd] bg-[#eee] text-gray-600"
+      className="flex size-8 items-center justify-center rounded-full border-[0.5px] border-[var(--border-default-grey)] bg-[var(--background-contrast-grey)] text-gray-600"
     >
       <Bot className="h-4 w-4" aria-hidden />
     </div>
   );
-}
-
-// =============================================================================
-// Helpers
-// =============================================================================
-
-/** A metadata value counts as "empty" when the IA couldn't fill it or it was cleared. */
-function isEmptyValue(value: unknown): boolean {
-  if (value === undefined || value === null || value === "") return true;
-  if (Array.isArray(value)) return value.length === 0;
-  if (typeof value === "object")
-    return Object.keys(value as object).length === 0;
-  return false;
 }
 
 // =============================================================================
@@ -288,7 +285,7 @@ function ValueActionButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex size-8 cursor-pointer items-center justify-center text-gray-500 transition-colors hover:bg-[#f5f5fe] hover:text-[#000091] ${className}`}
+      className={`flex size-8 cursor-pointer items-center justify-center text-gray-500 transition-colors hover:bg-[var(--background-alt-blue-france)] hover:text-[#000091] ${className}`}
       title={title}
     >
       <Icon className="h-4 w-4" />
