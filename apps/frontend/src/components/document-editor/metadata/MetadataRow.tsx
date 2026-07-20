@@ -4,6 +4,7 @@
  */
 
 import {
+  Avatar,
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -12,7 +13,6 @@ import {
 import type { LucideIcon } from "lucide-react";
 import {
   AlignLeft,
-  Bot,
   Building2,
   Cake,
   CalendarClock,
@@ -213,7 +213,7 @@ export function MetadataRow({
       </td>
       <td className="w-[80px] align-middle">
         <div className="flex justify-center px-4 py-3">
-          {!isModified && <AuthorBadge />}
+          {!isModified && <Avatar isAI title="Rempli par l'IA" />}
         </div>
       </td>
     </tr>
@@ -252,17 +252,6 @@ function FieldIcon({ riKey }: { riKey: string }) {
       className="h-4 w-4 shrink-0 text-[var(--text-label-grey)]"
       aria-hidden
     />
-  );
-}
-
-function AuthorBadge() {
-  return (
-    <div
-      title="Rempli par l'IA"
-      className="flex size-8 items-center justify-center rounded-full border-[0.5px] border-[var(--border-default-grey)] bg-[var(--background-contrast-grey)] text-gray-600"
-    >
-      <Bot className="h-4 w-4" aria-hidden />
-    </div>
   );
 }
 
