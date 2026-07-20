@@ -148,6 +148,59 @@ provenance:
     expect(provenance[0].key).toBe("mainSponsor");
   });
 
+  it("should recover when the agent forgets the closing frontmatter delimiter", () => {
+    // Real Agathe failure mode: valid metadata_ri + provenance YAML, then the
+    // markdown body starts WITHOUT a closing `---`. Previously js-yaml tried to
+    // parse the tables as YAML and threw, producing an `error` report.
+    const rawResponse = `---
+metadata_ri:
+  titreMarque: "APP Mulhouse"
+  mainSponsor: "ARFP"
+  price:
+    values: [0]
+  location: "68 - Haut-Rhin"
+provenance:
+  - key: "map"
+    label: "Carte"
+    value: "APP Mulhouse"
+    status: "valid"
+    source:
+      - field: "longitude"
+        rawValue: "7.33195"
+
+## Métadonnées mappées
+
+| Métadonnée | Valeur(s) renseignée(s) | Source |
+|---|---|---|
+| Titre marque | APP Mulhouse | \`structure.nom\` |
+
+## ⚠️ Métadonnées incomplètes
+
+| Métadonnée | Problème | Suggestion |
+|---|---|---|
+| Âge | Non mentionné | Non applicable |`;
+
+    const result = parseAgentResponse(
+      rawResponse,
+      agentId,
+      MetadataMetadataSchema,
+    );
+
+    expect(result.status).toBe("complete");
+    expect(result.content).toContain("Métadonnées mappées");
+
+    const metadataRi = result.metadata.metadata_ri as Record<string, unknown>;
+    expect(metadataRi).toBeDefined();
+    expect(metadataRi.titreMarque).toBe("APP Mulhouse");
+    expect(metadataRi.location).toBe("68 - Haut-Rhin");
+
+    const provenance = result.metadata.provenance as Array<
+      Record<string, unknown>
+    >;
+    expect(provenance).toHaveLength(1);
+    expect(provenance[0].key).toBe("map");
+  });
+
   it("should accept metadata_ri with unexpected field shapes", () => {
     // AI might return weird shapes — passthrough should accept all
     const rawResponse = `---
