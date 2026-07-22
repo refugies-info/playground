@@ -86,7 +86,7 @@ export const SessionsFieldSchema = z.object({
   modalitesEntreesSorties: z
     .union([z.literal(0), z.literal(1)], {
       message:
-        "modalitesEntreesSorties doit être 0 (dates fixes), 1 (entrées permanentes), ou null",
+        "modalitesEntreesSorties doit être 0 (dates fixes), 1 (a tout moment), ou null",
     })
     .nullish(),
   items: z

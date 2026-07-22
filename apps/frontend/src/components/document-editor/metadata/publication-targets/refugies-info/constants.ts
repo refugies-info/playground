@@ -128,15 +128,15 @@ export const PRICE_DETAILS_OPTIONS: readonly {
   value: RiPriceDetails;
   label: string;
 }[] = [
-  { value: "once", label: "une fois" },
-  { value: "eachTime", label: "à chaque fois" },
-  { value: "hour", label: "par heure" },
-  { value: "day", label: "par jour" },
-  { value: "week", label: "par semaine" },
-  { value: "month", label: "par mois" },
-  { value: "trimester", label: "par trimestre" },
-  { value: "semester", label: "par semestre" },
-  { value: "year", label: "par an" },
+  { value: "once", label: "Une seule fois" },
+  { value: "eachTime", label: "A chaque fois" },
+  { value: "hour", label: "Par heure" },
+  { value: "day", label: "Par jour" },
+  { value: "week", label: "Par semaine" },
+  { value: "month", label: "Par mois" },
+  { value: "trimester", label: "Par trimestre" },
+  { value: "semester", label: "Par semestre" },
+  { value: "year", label: "Par an" },
 ];
 
 /** Multi-enum field options mapping */

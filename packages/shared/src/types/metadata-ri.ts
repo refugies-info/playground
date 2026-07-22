@@ -125,11 +125,11 @@ export interface RiSession {
 /**
  * Sessions field structure (Karfur webhook v2).
  *
- * - `modalitesEntreesSorties`: `0` = dates fixes, `1` = entrées permanentes, `null` = non défini
+ * - `modalitesEntreesSorties`: `0` = dates fixes, `1` = a tout moment, `null` = non défini
  * - `items`: list of sessions (same structure as before)
  *
  * The two fields are independent: `modalitesEntreesSorties` can be set without `items`
- * (e.g., "entrées permanentes" with no fixed dates).
+ * (e.g., "a tout moment" with no fixed dates).
  */
 export interface RiSessionsField {
   modalitesEntreesSorties?: 0 | 1 | null;

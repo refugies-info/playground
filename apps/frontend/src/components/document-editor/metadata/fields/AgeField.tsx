@@ -1,6 +1,6 @@
 "use client";
 
-import { EditableField, NumberInput, RadioGroup } from "@playground/ui";
+import { EditableField, NumberInput, SelectRow } from "@playground/ui";
 import { useCallback, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 
@@ -19,7 +19,7 @@ interface AgeFieldProps {
 const AGE_TYPE_OPTIONS = [
   { value: "lessThan", label: "Moins de" },
   { value: "moreThan", label: "Plus de" },
-  { value: "between", label: "Entre" },
+  { value: "between", label: "Fourchette" },
 ];
 
 /**
@@ -99,39 +99,47 @@ export function AgeField({ fieldKey, label }: AgeFieldProps) {
       onExit={handleExit}
       placeholder="Cliquer pour modifier"
       renderEdit={() => (
-        <div className="flex flex-wrap items-center gap-2 p-1">
-          <RadioGroup
-            name={`${fieldKey}-age-type`}
+        <div className="flex w-full flex-col gap-2 rounded-[2px] border border-[var(--border-default-grey)] bg-white p-2 shadow-md">
+          <SelectRow
+            label="Format de l'âge"
             options={AGE_TYPE_OPTIONS}
             value={localType}
-            onChange={(val) => val && handleTypeChange(val)}
-            direction="vertical"
+            onChange={handleTypeChange}
           />
 
-          <NumberInput
-            value={localAges[0] ?? null}
-            onChange={(val) => handleAgeChange(0, val)}
-            min={0}
-            max={150}
-            className="w-14"
-            aria-label={`${label} - âge`}
-          />
-
-          {localType === "between" && (
-            <>
-              <span className="text-xs text-gray-500">et</span>
+          <div className="flex items-center gap-2 px-2">
+            <div className="flex-1">
               <NumberInput
-                value={localAges[1] ?? null}
-                onChange={(val) => handleAgeChange(1, val)}
+                variant="dsfr"
+                value={localAges[0] ?? null}
+                onChange={(val) => handleAgeChange(0, val)}
                 min={0}
                 max={150}
-                className="w-14"
-                aria-label={`${label} - âge max`}
+                autoFocus
+                className="w-full"
+                aria-label={`${label} - âge`}
               />
-            </>
-          )}
+            </div>
 
-          <span className="text-xs text-gray-500">ans</span>
+            {localType === "between" && (
+              <>
+                <span className="text-[14px] leading-[24px] text-[var(--text-default-grey)]">
+                  et
+                </span>
+                <div className="flex-1">
+                  <NumberInput
+                    variant="dsfr"
+                    value={localAges[1] ?? null}
+                    onChange={(val) => handleAgeChange(1, val)}
+                    min={0}
+                    max={150}
+                    className="w-full"
+                    aria-label={`${label} - âge max`}
+                  />
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
     >
