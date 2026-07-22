@@ -88,6 +88,8 @@ export function ThemeSelectField({ fieldKey }: { fieldKey: string }) {
       placeholder="Rechercher un thème..."
       firstBadgeLabel="thème principal"
       maxItems={3}
+      optionVariant="pill"
+      optionLayout="wrap"
     />
   );
 }

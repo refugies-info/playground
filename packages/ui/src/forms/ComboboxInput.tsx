@@ -1,7 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { Plus, X } from "lucide-react";
+import { Check, Plus, X } from "lucide-react";
 import * as React from "react";
-import { Badge } from "../primitives";
 import { cn } from "../utils";
 
 /**
@@ -53,9 +52,31 @@ export interface ComboboxInputProps
   /** Maximum number of items that can be selected */
   maxItems?: number;
 
+  /**
+   * How each option is rendered in the dropdown panel.
+   * - `checkbox` (default): DSFR checkbox rows (public, niveau, conditions…)
+   * - `pill`: rounded pill/chip (thèmes, besoins)
+   */
+  optionVariant?: "checkbox" | "pill";
+
+  /**
+   * Layout of the options list (only meaningful for `optionVariant="pill"`).
+   * - `list` (default): one item per row (besoins)
+   * - `wrap`: chips flowing on multiple rows (thèmes)
+   */
+  optionLayout?: "list" | "wrap";
+
+  /** Title shown at the top of the dropdown panel */
+  panelTitle?: string;
+
   /** Additional class names */
   className?: string;
 }
+
+// Uniform placeholder color for pills/chips.
+// TODO: couleur par thème — remplacer par un mapping themeId → couleur DSFR.
+const PILL_BASE =
+  "bg-[var(--background-action-low-blue-france)] text-[var(--text-default-grey)]";
 
 /**
  * ComboboxInput — A searchable multi-select component.
@@ -92,6 +113,9 @@ export function ComboboxInput({
   variant = "default",
   firstBadgeLabel,
   maxItems,
+  optionVariant = "checkbox",
+  optionLayout = "list",
+  panelTitle = "Sélectionne des options",
   className,
 }: ComboboxInputProps) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -171,15 +195,16 @@ export function ComboboxInput({
         )}
       >
         {value.map((val, index) => (
-          <Badge
+          <span
             key={val}
-            variant="info"
-            size="sm"
-            className="gap-1 items-center"
+            className={cn(
+              "inline-flex items-center gap-1 rounded-[12px] px-2 py-0.5 text-[12px] leading-[20px]",
+              PILL_BASE,
+            )}
           >
             {getLabel(val)}
             {firstBadgeLabel && index === 0 && (
-              <span className="bg-white text-black inline-block px-1 rounded-sm text-[10px]">
+              <span className="inline-block rounded-sm bg-[var(--background-default-grey)] px-1 text-[10px] text-[var(--text-default-grey)]">
                 {firstBadgeLabel}
               </span>
             )}
@@ -189,12 +214,12 @@ export function ComboboxInput({
                 e.stopPropagation();
                 removeValue(val);
               }}
-              className="hover:text-blue-600 cursor-pointer"
+              className="cursor-pointer hover:text-[var(--text-action-high-blue-france)]"
               disabled={disabled}
             >
               <X size={12} />
             </button>
-          </Badge>
+          </span>
         ))}
         {isAtMax ? (
           <span className="text-xs text-amber-500 px-1">{maxItems} max</span>
@@ -222,47 +247,74 @@ export function ComboboxInput({
         )}
       </div>
 
-      {/* Dropdown */}
+      {/* Dropdown panel — DSFR style */}
       {isOpen && !disabled && (
-        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
-          {filteredOptions.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-gray-500">
-              Aucun résultat
-            </div>
-          ) : (
-            filteredOptions.map((option) => {
-              const isSelected = value.includes(option.value);
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => toggleValue(option.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      toggleValue(option.value);
-                    }
-                  }}
-                  className={cn(
-                    "w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center gap-2",
-                    isSelected && "bg-blue-50",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "w-4 h-4 border rounded flex items-center justify-center",
-                      isSelected
-                        ? "bg-blue-500 border-blue-500 text-white"
-                        : "border-gray-300",
-                    )}
+        <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border border-[var(--border-default-grey)] bg-white shadow-lg">
+          <div className="border-b border-[var(--border-default-grey)] px-3 py-2 text-[14px] leading-[24px] text-[var(--text-mention-grey)]">
+            {panelTitle}
+          </div>
+          <div
+            className={cn(
+              "max-h-60 overflow-auto p-2",
+              optionVariant === "pill" &&
+                (optionLayout === "wrap"
+                  ? "flex flex-wrap gap-2"
+                  : "flex flex-col items-start gap-2"),
+            )}
+          >
+            {filteredOptions.length === 0 ? (
+              <div className="px-1 py-2 text-sm text-[var(--text-mention-grey)]">
+                Aucun résultat
+              </div>
+            ) : (
+              filteredOptions.map((option) => {
+                const isSelected = value.includes(option.value);
+
+                if (optionVariant === "pill") {
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => toggleValue(option.value)}
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-[12px] px-2 py-0.5 text-left text-[12px] leading-[20px] transition-shadow",
+                        PILL_BASE,
+                        isSelected
+                          ? "ring-2 ring-[var(--text-action-high-blue-france)]"
+                          : "opacity-70 hover:opacity-100",
+                      )}
+                    >
+                      {isSelected && <Check size={12} className="shrink-0" />}
+                      {option.label}
+                    </button>
+                  );
+                }
+
+                // Default: DSFR checkbox row
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => toggleValue(option.value)}
+                    className="flex w-full items-center gap-2 rounded py-2 pl-2.5 pr-2 text-left hover:bg-[var(--background-alt-grey)]"
                   >
-                    {isSelected && "✓"}
-                  </span>
-                  {option.label}
-                </button>
-              );
-            })
-          )}
+                    <span
+                      className={cn(
+                        "flex size-[18px] shrink-0 items-center justify-center rounded-[4px] border border-[var(--border-action-high-blue-france)]",
+                        isSelected &&
+                          "bg-[var(--background-action-high-blue-france)] text-[var(--text-inverted-grey)]",
+                      )}
+                    >
+                      {isSelected && <Check size={14} strokeWidth={3} />}
+                    </span>
+                    <span className="text-[14px] leading-[24px] text-[var(--text-default-grey)]">
+                      {option.label}
+                    </span>
+                  </button>
+                );
+              })
+            )}
+          </div>
         </div>
       )}
     </div>

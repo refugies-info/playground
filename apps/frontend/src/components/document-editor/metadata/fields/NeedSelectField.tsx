@@ -80,6 +80,8 @@ export function NeedSelectField({ fieldKey }: { fieldKey: string }) {
       value={value}
       onChange={handleChange}
       placeholder="Ajouter un besoin"
+      optionVariant="pill"
+      optionLayout="list"
     />
   );
 }
