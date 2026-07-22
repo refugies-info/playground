@@ -1,4 +1,8 @@
-// AUTO-GENERE — ne pas editer (sync-dsfr-icons.ts)
+// Icône custom maintenue à la main — absente de @gouvfr/dsfr ET @remixicon/react.
+// NE PAS placer dans custom-icons/dsfr/ : sync-dsfr-icons.ts y fait un rmSync
+// et régénère depuis la source DSFR, ce qui supprimerait cette icône.
+// API alignée sur les icônes DSFR générées (color / size) pour les slots
+// leftIcon/rightIcon des boutons.
 import type { ComponentType } from "react";
 
 type DsfrIconProps = { color?: string; size?: number | string };
