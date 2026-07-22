@@ -32,6 +32,7 @@ export function TranslationTopBar() {
     canPreview,
     publicationUrl,
     publicationUrlError,
+    isArchived,
   } = useTranslation();
 
   const [saveError, setSaveError] = useState(false);
@@ -60,6 +61,7 @@ export function TranslationTopBar() {
   }, [publicationUrl, popoverOpen]);
 
   const handleSave = async () => {
+    if (isArchived) return;
     setSaveError(false);
     const result = await saveTranslation();
     if (!result.success) setSaveError(true);
@@ -79,13 +81,16 @@ export function TranslationTopBar() {
     setPopoverOpen(open);
   };
 
-  const saveStatus = isSaving
-    ? "saving"
-    : saveError
-      ? "error"
-      : isDirty
-        ? "unsaved"
-        : "saved";
+  // Fiche archivée → aucune édition possible : l'indicateur reste non interactif.
+  const saveStatus = isArchived
+    ? "saved"
+    : isSaving
+      ? "saving"
+      : saveError
+        ? "error"
+        : isDirty
+          ? "unsaved"
+          : "saved";
 
   // Determine popover phase from context state
   const showError = popoverOpen && !isPublishing && !!publicationUrlError;
@@ -129,7 +134,7 @@ export function TranslationTopBar() {
                 variant="primaire"
                 size="sm"
                 className="gap-2"
-                disabled={isPublishing}
+                disabled={isPublishing || isArchived}
                 isLoading={isPublishing}
               >
                 Publier

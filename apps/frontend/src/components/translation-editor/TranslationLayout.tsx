@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { TranslationArchivedDialog } from "./TranslationArchivedDialog";
 import { TranslationProvider } from "./TranslationContext";
 import { TranslationSidebar } from "./TranslationSidebar";
 import { TranslationTopBar } from "./TranslationTopBar";
@@ -25,6 +26,7 @@ export function TranslationLayout({
           {children}
         </div>
       </div>
+      <TranslationArchivedDialog />
     </TranslationProvider>
   );
 }

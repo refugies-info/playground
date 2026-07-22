@@ -148,7 +148,7 @@ async function getAuthorizedTranslationSession({
 export async function saveTranslation(
   id: string,
   markdown: string,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; archived?: boolean }> {
   try {
     const auth = await getAuthorizedTranslationSession({
       action: "save",
@@ -158,11 +158,20 @@ export async function saveTranslation(
     if (auth.errorResponse) return auth.errorResponse;
     const { currentUser, supabase } = auth;
 
+    // Read current archive state before saving. We still persist the content
+    // (never lose the translator's work), but flag `archived` so the client can
+    // open the "fiche archivée" modal even if it hasn't received the cascade yet.
+    const { data: currentRecord } = await supabase
+      .from("translation_records")
+      .select("online_status")
+      .eq("id", id)
+      .single();
+    const archived = currentRecord?.online_status === "archived";
+
     const { error } = await supabase
       .from("translation_records")
       .update({
         markdown,
-        work_status: "draft",
         author_id: currentUser.id,
         updated_at: new Date().toISOString(),
       })
@@ -176,7 +185,7 @@ export async function saveTranslation(
       };
     }
 
-    return { success: true };
+    return { success: true, archived };
   } catch (error) {
     logger.error(error, "Unexpected error saving translation");
     return { success: false, error: "Erreur inattendue lors de la sauvegarde" };
