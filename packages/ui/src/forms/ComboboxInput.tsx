@@ -69,14 +69,21 @@ export interface ComboboxInputProps
   /** Title shown at the top of the dropdown panel */
   panelTitle?: string;
 
+  /**
+   * Optional per-option background colors (option value → CSS color).
+   * Used for `optionVariant="pill"` (thèmes/besoins colorés par thème).
+   * Falls back to the uniform pill color when a value has no entry.
+   */
+  optionColors?: Record<string, string>;
+
   /** Additional class names */
   className?: string;
 }
 
-// Uniform placeholder color for pills/chips.
-// TODO: couleur par thème — remplacer par un mapping themeId → couleur DSFR.
-const PILL_BASE =
-  "bg-[var(--background-action-low-blue-france)] text-[var(--text-default-grey)]";
+// Pill text color (always applied). Background is either a per-option color
+// (via `optionColors`) or this uniform fallback.
+const PILL_TEXT = "text-[var(--text-default-grey)]";
+const PILL_BG_UNIFORM = "bg-[var(--background-action-low-blue-france)]";
 
 /**
  * ComboboxInput — A searchable multi-select component.
@@ -116,6 +123,7 @@ export function ComboboxInput({
   optionVariant = "checkbox",
   optionLayout = "list",
   panelTitle = "Sélectionne des options",
+  optionColors,
   className,
 }: ComboboxInputProps) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -194,33 +202,38 @@ export function ComboboxInput({
           variant === "default" && "rounded-md",
         )}
       >
-        {value.map((val, index) => (
-          <span
-            key={val}
-            className={cn(
-              "inline-flex items-center gap-1 rounded-[12px] px-2 py-0.5 text-[12px] leading-[20px]",
-              PILL_BASE,
-            )}
-          >
-            {getLabel(val)}
-            {firstBadgeLabel && index === 0 && (
-              <span className="inline-block rounded-sm bg-[var(--background-default-grey)] px-1 text-[10px] text-[var(--text-default-grey)]">
-                {firstBadgeLabel}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                removeValue(val);
-              }}
-              className="cursor-pointer hover:text-[var(--text-action-high-blue-france)]"
-              disabled={disabled}
+        {value.map((val, index) => {
+          const tagColor = optionColors?.[val];
+          return (
+            <span
+              key={val}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-[12px] px-2 py-0.5 text-[12px] leading-[20px]",
+                PILL_TEXT,
+                !tagColor && PILL_BG_UNIFORM,
+              )}
+              style={tagColor ? { backgroundColor: tagColor } : undefined}
             >
-              <X size={12} />
-            </button>
-          </span>
-        ))}
+              {getLabel(val)}
+              {firstBadgeLabel && index === 0 && (
+                <span className="inline-block rounded-sm bg-[var(--background-default-grey)] px-1 text-[10px] text-[var(--text-default-grey)]">
+                  {firstBadgeLabel}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeValue(val);
+                }}
+                className="cursor-pointer hover:text-[var(--text-action-high-blue-france)]"
+                disabled={disabled}
+              >
+                <X size={12} />
+              </button>
+            </span>
+          );
+        })}
         {isAtMax ? (
           <span className="text-xs text-amber-500 px-1">{maxItems} max</span>
         ) : (
@@ -271,6 +284,7 @@ export function ComboboxInput({
                 const isSelected = value.includes(option.value);
 
                 if (optionVariant === "pill") {
+                  const pillColor = optionColors?.[option.value];
                   return (
                     <button
                       key={option.value}
@@ -278,11 +292,15 @@ export function ComboboxInput({
                       onClick={() => toggleValue(option.value)}
                       className={cn(
                         "inline-flex items-center gap-1 rounded-[12px] px-2 py-0.5 text-left text-[12px] leading-[20px] transition-shadow",
-                        PILL_BASE,
+                        PILL_TEXT,
+                        !pillColor && PILL_BG_UNIFORM,
                         isSelected
                           ? "ring-2 ring-[var(--text-action-high-blue-france)]"
                           : "opacity-70 hover:opacity-100",
                       )}
+                      style={
+                        pillColor ? { backgroundColor: pillColor } : undefined
+                      }
                     >
                       {isSelected && <Check size={12} className="shrink-0" />}
                       {option.label}

@@ -101,6 +101,7 @@ export function MetadataView() {
           ref={
             document.referenceData ?? {
               themes: {},
+              themeColors: {},
               needs: {},
               needsByTheme: {},
             }

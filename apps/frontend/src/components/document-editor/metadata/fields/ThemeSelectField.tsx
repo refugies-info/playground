@@ -19,6 +19,7 @@ export function ThemeSelectField({ fieldKey }: { fieldKey: string }) {
 
   // Get themes lookup from document reference data
   const themesLookup = document?.referenceData?.themes ?? {};
+  const themeColors = document?.referenceData?.themeColors ?? {};
 
   // Convert lookup to options for ComboboxInput
   const themeOptions = useMemo(() => {
@@ -90,6 +91,7 @@ export function ThemeSelectField({ fieldKey }: { fieldKey: string }) {
       maxItems={3}
       optionVariant="pill"
       optionLayout="wrap"
+      optionColors={themeColors}
     />
   );
 }
