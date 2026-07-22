@@ -20,8 +20,11 @@ export interface ArchiveDocumentResult {
  */
 export interface ArchiveDocumentInput {
   workflowId: string;
-  title: string;
-  markdown: string;
+  // title/markdown are not used by the archive payload (buildArchivePayload
+  // only needs the remote id + user email); kept optional for call-site parity
+  // with the publish inputs.
+  title?: string;
+  markdown?: string;
   metadata?: Record<string, unknown>;
   userId: string;
   userEmail: string;
