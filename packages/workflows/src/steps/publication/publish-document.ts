@@ -6,6 +6,10 @@ import {
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { StepResult } from "../../types";
 import { recordActivity } from "../common/activity-log";
+import {
+  notifyPublicationError,
+  notifyPublicationSuccess,
+} from "../common/slack";
 import { getSupabaseClient } from "../common/supabase";
 import { getPublisherAdapter } from "./adapters/refugies-info";
 
@@ -113,8 +117,10 @@ export async function publishDocumentStep(
   const failStep = async (
     supabase: ReturnType<typeof getSupabaseClient>,
     errorMessage: string,
+    errorCode: string,
     editorialRecordId?: string,
     remoteId?: string,
+    errorOrigin?: string,
   ): Promise<StepResult<PublishDocumentResult>> => {
     await createFailedPublicationRecord(supabase, {
       workflowId,
@@ -123,6 +129,16 @@ export async function publishDocumentStep(
       userId,
       remoteId,
     });
+
+    // Notifie #dev de l'échec (fire-and-forget)
+    await notifyPublicationError({
+      workflowId,
+      errorMessage,
+      errorCode,
+      errorOrigin,
+      userEmail,
+    });
+
     return { success: false, error: errorMessage };
   };
 
@@ -134,7 +150,11 @@ export async function publishDocumentStep(
     const webhookSecret = process.env.RI_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
-      return failStep(supabase, "Missing webhook secret configuration");
+      return failStep(
+        supabase,
+        "Missing webhook secret configuration",
+        "CONFIG_ERROR",
+      );
     }
 
     // Get base URL for target matching
@@ -204,7 +224,13 @@ export async function publishDocumentStep(
         error = `${error} — ${details}`;
       }
 
-      return failStep(supabase, error, undefined, existingRemoteId);
+      return failStep(
+        supabase,
+        error,
+        `WEBHOOK_${response.status}`,
+        undefined,
+        existingRemoteId,
+      );
     }
 
     const result = (await response.json()) as { id?: string };
@@ -212,7 +238,7 @@ export async function publishDocumentStep(
 
     if (!remoteId) {
       logger.error(result, "Publication webhook did not return an ID");
-      return failStep(supabase, "Publication ID not received");
+      return failStep(supabase, "Publication ID not received", "NO_REMOTE_ID");
     }
 
     // Re-create Supabase client after the (potentially long) webhook call
@@ -236,7 +262,7 @@ export async function publishDocumentStep(
 
     if (!workflow) {
       logger.error({ workflowId }, "Workflow not found in publishDocumentStep");
-      return failStep(db, "Workflow not found");
+      return failStep(db, "Workflow not found", "WORKFLOW_NOT_FOUND");
     }
 
     // 4. Assignee is now stored on the workflow itself (RI-1340)
@@ -375,6 +401,15 @@ export async function publishDocumentStep(
       "Document published successfully",
     );
 
+    // Notifie #logs-bomo de la publication réussie (fire-and-forget)
+    await notifyPublicationSuccess({
+      workflowId,
+      title: effectiveTitle,
+      publishedUrl,
+      userEmail,
+      isUpdate: Boolean(existingRemoteId),
+    });
+
     await recordActivity({
       action: TYPE_PUBLICATION,
       authorId: userId,
@@ -394,11 +429,34 @@ export async function publishDocumentStep(
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
 
+    // Code lisible depuis l'erreur : .code (ex. ECONNREFUSED, UND_ERR_*) ou
+    // .name (ex. TypeError sur "fetch failed"), sinon fallback générique.
+    const errorCode =
+      (error as { code?: string })?.code ||
+      (error instanceof Error ? error.name : undefined) ||
+      "UNEXPECTED_ERROR";
+
+    // 1re ligne de stack (hors "Error: message") = origine réelle de l'erreur.
+    const errorOrigin =
+      error instanceof Error
+        ? error.stack
+            ?.split("\n")
+            .map((l) => l.trim())
+            .find((l) => l.startsWith("at "))
+        : undefined;
+
     logger.error(error, "Unexpected error in publishDocumentStep");
 
     // Try to create a failed publication record so the error appears in the UI
     // Realtime will notify frontend via publication_records INSERT
     const supabase = getSupabaseClient();
-    return failStep(supabase, errorMsg);
+    return failStep(
+      supabase,
+      errorMsg,
+      errorCode,
+      undefined,
+      undefined,
+      errorOrigin,
+    );
   }
 }

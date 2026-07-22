@@ -117,6 +117,37 @@ Environment variables are configuration values that change between environments 
 
 ---
 
+## Slack Notifications
+
+Notifications Slack envoyées depuis le step de publication (`packages/workflows/src/steps/publication/publish-document.ts`) via des Incoming Webhooks. Fire-and-forget : un échec d'envoi ne casse jamais la publication.
+
+### `SLACK_WEBHOOK_LOGS_BOMO`
+
+- **Type**: String (URL)
+- **Required**: No (notification ignorée + warn si absente)
+- **Example**: `https://hooks.slack.com/services/T000/B000/xxxx`
+- **Description**: Incoming Webhook du channel `#logs-bomo`. Reçoit un message à chaque fiche RCO publiée avec succès (titre, URL publiée, auteur).
+- **Where to find**: Slack → App "Incoming Webhooks" → channel `#logs-bomo`
+- **Security**: Secret (never expose publicly)
+
+### `SLACK_WEBHOOK_DEV`
+
+- **Type**: String (URL)
+- **Required**: No (notification ignorée + warn si absente)
+- **Example**: `https://hooks.slack.com/services/T000/B000/yyyy`
+- **Description**: Incoming Webhook du channel `#dev`. Reçoit un message à chaque échec de publication (workflow id, auteur, message d'erreur).
+- **Where to find**: Slack → App "Incoming Webhooks" → channel `#dev`
+- **Security**: Secret (never expose publicly)
+
+### `BOMO_BASE_URL`
+
+- **Type**: String (URL)
+- **Required**: No (le lien direct est omis du message Slack si absente)
+- **Example**: `http://localhost:3001` (dev)
+- **Description**: URL de base de l'éditeur BOMO. Utilisée pour construire le lien direct `/documents/{workflowId}` inclus dans les notifications Slack de publication.
+
+---
+
 ## Application Configuration
 
 ### `NEXT_PUBLIC_APP_URL`
