@@ -7,7 +7,7 @@ import { cn } from "../utils/cn";
 /**
  * Popover — Wrapper Radix UI générique.
  *
- * Look fixe (Figma) : border bleue `--border-default-blue-france`, shadow sm,
+ * Look fixe (Figma) : border grise `--border-default-grey`, shadow sm,
  * fond blanc, radius 2px, `p-6` par défaut. Surcharger via `className` si besoin (`p-2`, `p-0`…).
  */
 
@@ -19,7 +19,7 @@ const PopoverClose = PopoverPrimitive.Close;
 const popoverContentBase = [
   "z-50 outline-none p-6",
   "bg-white rounded-[2px]",
-  "border border-[var(--border-default-blue-france,#6a6af4)]",
+  "border border-[var(--border-default-grey,#DDDDDD)]",
   "shadow-[0px_2px_6px_0px_rgba(0,0,18,0.16)]",
   "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
   "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",

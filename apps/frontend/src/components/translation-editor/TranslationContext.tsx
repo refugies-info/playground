@@ -47,6 +47,11 @@ export interface TranslationContextType {
   publicationUrlError?: string | null;
   isRawMarkdownMode: boolean;
   setIsRawMarkdownMode: (value: boolean) => void;
+  /** True quand la fiche a été archivée par l'équipe éditoriale (lecture seule) */
+  isArchived: boolean;
+  /** Ouverture de la pop-up "Cette fiche a été archivée" */
+  archivedModalOpen: boolean;
+  closeArchivedModal: () => void;
 }
 
 const TranslationContext = createContext<TranslationContextType | undefined>(
@@ -67,6 +72,20 @@ export function TranslationProvider({
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isRawMarkdownMode, setIsRawMarkdownMode] = useState(false);
+  const [archivedModalOpen, setArchivedModalOpen] = useState(false);
+
+  // La fiche est archivée dès que la traduction passe en online_status "archived"
+  // (cascade déclenchée par l'archivage de la fiche FR côté éditorial).
+  const isArchived = translation?.onlineStatus === "archived";
+
+  // Ouvre la pop-up dès que la fiche devient archivée. Couvre les deux scénarios :
+  // - ouverture d'une traduction déjà archivée (initialData)
+  // - archivage en direct pendant l'édition (UPDATE realtime sur translation_records)
+  useEffect(() => {
+    if (isArchived) setArchivedModalOpen(true);
+  }, [isArchived]);
+
+  const closeArchivedModal = useCallback(() => setArchivedModalOpen(false), []);
 
   // ── Realtime: publication result (success or failure via publication_records INSERT)
   const handlePublicationSuccess = useCallback((publishedUrl: string) => {
@@ -168,6 +187,10 @@ export function TranslationProvider({
         // biome-ignore lint/suspicious/noConsole: Error logging
         console.error(result.error);
       }
+      // La sauvegarde a bien lieu (on ne perd pas le travail du traducteur), mais
+      // si la fiche est archivée on ouvre la pop-up même si le client n'a pas
+      // encore reçu la cascade realtime.
+      if (result.archived) setArchivedModalOpen(true);
       return result;
     } catch (e) {
       // biome-ignore lint/suspicious/noConsole: Error logging
@@ -295,6 +318,9 @@ export function TranslationProvider({
         publicationUrlError: publicationRealtime.error,
         isRawMarkdownMode,
         setIsRawMarkdownMode,
+        isArchived,
+        archivedModalOpen,
+        closeArchivedModal,
       }}
     >
       {children}
