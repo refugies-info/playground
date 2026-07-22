@@ -296,7 +296,7 @@ export function ComboboxInput({
                     key={option.value}
                     type="button"
                     onClick={() => toggleValue(option.value)}
-                    className="flex w-full items-center gap-2 rounded py-2 pl-2.5 pr-2 text-left hover:bg-[var(--background-alt-grey)]"
+                    className="flex w-full items-center gap-2 py-2 pl-2.5 pr-2 text-left hover:bg-[var(--background-alt-grey)]"
                   >
                     <span
                       className={cn(

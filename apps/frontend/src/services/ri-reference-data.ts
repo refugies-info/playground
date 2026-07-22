@@ -8,6 +8,8 @@ import { unstable_cache } from "next/cache";
 interface RiTheme {
   id: string;
   name: string;
+  /** Libellé court du thème (name.short.fr côté RI), préféré pour l'affichage */
+  short?: string;
 }
 
 interface RiNeed {
@@ -87,7 +89,8 @@ export const fetchRiReferenceData = unstable_cache(
 
       const themesMap: Record<string, string> = {};
       for (const t of themes) {
-        themesMap[t.id] = t.name;
+        // Libellé court préféré ; repli sur le nom complet si absent
+        themesMap[t.id] = t.short || t.name;
       }
 
       const needsMap: Record<string, string> = {};
