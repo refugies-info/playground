@@ -1,7 +1,7 @@
 "use client";
 
-import { cn, EditableField, TextInput } from "@playground/ui";
-import { useCallback, useState } from "react";
+import { cn, EditableField, TextArea } from "@playground/ui";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 
 /**
@@ -23,8 +23,22 @@ export function TextareaField({
   const { getFieldValue, updateField } = useMetadata();
   const [isEditing, setIsEditing] = useState(false);
   const [localValue, setLocalValue] = useState<string>("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const value = getFieldValue(fieldKey) as string | undefined;
+
+  // Auto-grow the textarea so the edit box fills the cell like the read view
+  const autoResize = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, []);
+
+  // Resize once the textarea is mounted in edit mode
+  useLayoutEffect(() => {
+    if (isEditing) autoResize();
+  }, [isEditing, autoResize]);
 
   // Sync local value when entering edit mode
   const handleEdit = useCallback(() => {
@@ -45,8 +59,9 @@ export function TextareaField({
     (newValue: string) => {
       if (maxLength && newValue.length > maxLength) return;
       setLocalValue(newValue);
+      autoResize();
     },
-    [maxLength],
+    [maxLength, autoResize],
   );
 
   const charCount = isEditing ? localValue.length : (value?.length ?? 0);
@@ -62,15 +77,18 @@ export function TextareaField({
       placeholder={placeholder}
       renderEdit={({ onBlur, onKeyDown }) => (
         <div className="w-full">
-          <TextInput
+          <TextArea
+            ref={textareaRef}
             variant="inline"
             value={localValue}
             onChange={handleChange}
             onBlur={onBlur}
             onKeyDown={onKeyDown}
             maxLength={maxLength}
+            rows={1}
             autoFocus
             aria-label={label}
+            className="block resize-none overflow-hidden px-0 py-0"
           />
           {maxLength && (
             <div

@@ -1,7 +1,7 @@
 "use client";
 
-import { EditableField, TextInput } from "@playground/ui";
-import { useCallback, useState } from "react";
+import { EditableField, TextArea } from "@playground/ui";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 
 /**
@@ -21,8 +21,22 @@ export function TextField({
   const { getFieldValue, updateField } = useMetadata();
   const [isEditing, setIsEditing] = useState(false);
   const [localValue, setLocalValue] = useState<string>("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const value = getFieldValue(fieldKey) as string | undefined;
+
+  // Auto-grow the textarea so the edit box fills the cell like the read view
+  const autoResize = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, []);
+
+  // Resize once the textarea is mounted in edit mode
+  useLayoutEffect(() => {
+    if (isEditing) autoResize();
+  }, [isEditing, autoResize]);
 
   // Sync local value when entering edit mode
   const handleEdit = useCallback(() => {
@@ -39,9 +53,13 @@ export function TextField({
   }, [fieldKey, localValue, value, updateField]);
 
   // Local change (no save yet)
-  const handleChange = useCallback((newValue: string) => {
-    setLocalValue(newValue);
-  }, []);
+  const handleChange = useCallback(
+    (newValue: string) => {
+      setLocalValue(newValue);
+      autoResize();
+    },
+    [autoResize],
+  );
 
   return (
     <EditableField
@@ -51,14 +69,25 @@ export function TextField({
       disabled={disabled}
       placeholder={placeholder}
       renderEdit={({ onBlur, onKeyDown }) => (
-        <TextInput
+        <TextArea
+          ref={textareaRef}
           variant="inline"
           value={localValue}
           onChange={handleChange}
           onBlur={onBlur}
-          onKeyDown={onKeyDown}
+          // Single-line semantics: Enter commits instead of inserting a newline
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              textareaRef.current?.blur();
+              return;
+            }
+            onKeyDown(e);
+          }}
+          rows={1}
           autoFocus
           aria-label={label}
+          className="block resize-none overflow-hidden px-0 py-0"
         />
       )}
     >
