@@ -176,13 +176,15 @@ export function MetadataRow({
         </div>
       </td>
       <td
-        className={`group relative align-top px-4 py-3 transition-colors ${
+        className={`group relative h-px align-top transition-colors focus-within:!bg-[var(--background-default-grey)] ${
           isEmpty
             ? "border border-dashed border-red-400/70 bg-red-50"
             : "hover:bg-[var(--background-alt-blue-france)]"
         }`}
       >
-        {getDisplayComponent(field, mergedValue)}
+        <div className="flex h-full flex-col px-4 py-3">
+          {getDisplayComponent(field, mergedValue)}
+        </div>
 
         {showActions && (
           <div className="absolute right-2 top-2 hidden overflow-hidden border border-[var(--border-default-grey)] bg-white group-hover:flex">

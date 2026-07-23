@@ -11,7 +11,9 @@ const editableFieldVariants = cva(
   {
     variants: {
       mode: {
-        read: "cursor-pointer text-left hover:bg-gray-100 ",
+        // h-full + flex-1: le bouton lecture remplit toute la hauteur de la
+        // cellule (conteneur flex-col) → cliquer n'importe où dans la cellule édite
+        read: "h-full flex-1 cursor-pointer text-left hover:bg-gray-100 ",
         edit: "relative  bg-white",
       },
       isDisabled: {
@@ -51,6 +53,12 @@ export interface EditableFieldProps
 
   /** Placeholder text when value is empty */
   placeholder?: string;
+
+  /**
+   * Stretch the edit container to the full cell height (used for text fields so
+   * the input fills the cell like the read button does). Cards/pickers leave it off.
+   */
+  fillHeight?: boolean;
 
   /** Additional class names */
   className?: string;
@@ -92,6 +100,7 @@ export const EditableField = React.forwardRef<
       onExit,
       disabled = false,
       placeholder = "Cliquer pour modifier",
+      fillHeight = false,
       className,
     },
     ref,
@@ -148,6 +157,7 @@ export const EditableField = React.forwardRef<
           ref={containerRef}
           className={cn(
             editableFieldVariants({ mode: "edit", isDisabled: disabled }),
+            fillHeight && "h-full flex-1",
             className,
           )}
         >

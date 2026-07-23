@@ -68,6 +68,7 @@ export function TextField({
       onExit={handleExit}
       disabled={disabled}
       placeholder={placeholder}
+      fillHeight
       renderEdit={({ onBlur, onKeyDown }) => (
         <TextArea
           ref={textareaRef}
@@ -87,7 +88,7 @@ export function TextField({
           rows={1}
           autoFocus
           aria-label={label}
-          className="block resize-none overflow-hidden px-0 py-0"
+          className="block min-h-full resize-none overflow-hidden px-0 py-0"
         />
       )}
     >

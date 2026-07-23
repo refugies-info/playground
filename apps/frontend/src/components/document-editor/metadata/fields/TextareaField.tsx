@@ -75,8 +75,9 @@ export function TextareaField({
       onExit={handleExit}
       disabled={disabled}
       placeholder={placeholder}
+      fillHeight
       renderEdit={({ onBlur, onKeyDown }) => (
-        <div className="w-full">
+        <div className="flex h-full w-full flex-col">
           <TextArea
             ref={textareaRef}
             variant="inline"
@@ -88,7 +89,7 @@ export function TextareaField({
             rows={1}
             autoFocus
             aria-label={label}
-            className="block resize-none overflow-hidden px-0 py-0"
+            className="block min-h-0 flex-auto resize-none overflow-hidden px-0 py-0"
           />
           {maxLength && (
             <div
