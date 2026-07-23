@@ -10,3 +10,4 @@
  */
 export * from "@remixicon/react";
 export * from "./primitives/icon/custom-icons/dsfr";
+export * from "./primitives/icon/custom-icons/manual";
