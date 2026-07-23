@@ -75,9 +75,11 @@ export function MetadataRow({
     dirtyFields.has(key),
   );
 
-  // - empty  → red cell (AI couldn't fill, or field was cleared)
-  // - filled → normal cell, blue on hover
   const isEmpty = isEmptyValue(mergedValue);
+
+  // Rouge uniquement si vide ET non modifié par l'user → l'IA n'a rien trouvé.
+  // Un champ vidé par l'user est "dirty" (override null → isModified) : pas de rouge.
+  const showEmptyWarning = isEmpty && !isModified;
 
   const showActions = isModified || !isEmpty;
 
@@ -178,7 +180,7 @@ export function MetadataRow({
       <td className="group relative h-px align-top">
         <div
           className={`flex h-full flex-col px-4 py-3 transition-colors focus-within:!bg-[var(--background-default-grey)] ${
-            isEmpty
+            showEmptyWarning
               ? "border border-dashed border-red-400/70 bg-red-50"
               : "hover:bg-[var(--background-alt-blue-france)]"
           }`}
