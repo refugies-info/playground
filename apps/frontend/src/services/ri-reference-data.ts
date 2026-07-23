@@ -10,8 +10,8 @@ interface RiTheme {
   name: string;
   /** Libellé court du thème (name.short.fr côté RI), préféré pour l'affichage */
   short?: string;
-  /** Couleur de fond du thème (colors.color40 côté RI) */
-  color40?: string;
+  /** Couleur de fond du thème (colors.color40 côté RI, exposée sous `color`) */
+  color?: string;
 }
 
 interface RiNeed {
@@ -96,7 +96,7 @@ export const fetchRiReferenceData = unstable_cache(
       for (const t of themes) {
         // Libellé court préféré ; repli sur le nom complet si absent
         themesMap[t.id] = t.short || t.name;
-        if (t.color40) themeColorsMap[t.id] = t.color40;
+        if (t.color) themeColorsMap[t.id] = t.color;
       }
 
       const needsMap: Record<string, string> = {};
