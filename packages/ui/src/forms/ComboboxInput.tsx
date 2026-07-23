@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { Check, Plus, X } from "lucide-react";
+import { Check, Crown, Plus, X } from "lucide-react";
 import * as React from "react";
 import { cn } from "../utils";
 
@@ -143,6 +143,16 @@ export function ComboboxInput({
     );
   }, [options, search]);
 
+  // Pills: hide already-selected options from the dropdown (they show as tags).
+  // Checkbox rows keep selected options visible (with their checkmark).
+  const displayedOptions = React.useMemo(
+    () =>
+      optionVariant === "pill"
+        ? filteredOptions.filter((opt) => !value.includes(opt.value))
+        : filteredOptions,
+    [filteredOptions, optionVariant, value],
+  );
+
   // Close on outside click (but not when clicking inside dropdown)
   React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -216,8 +226,12 @@ export function ComboboxInput({
             >
               {getLabel(val)}
               {firstBadgeLabel && index === 0 && (
-                <span className="inline-block rounded-sm bg-[var(--background-default-grey)] px-1 text-[10px] text-[var(--text-default-grey)]">
+                <span className="inline-flex items-center gap-1 rounded-[16px] bg-[var(--background-default-grey)] px-1.5 text-[10px] leading-[16px] text-[var(--text-default-grey)]">
                   {firstBadgeLabel}
+                  <Crown
+                    size={12}
+                    className="shrink-0 fill-[#FABE30] text-[#FABE30]"
+                  />
                 </span>
               )}
               <button
@@ -275,12 +289,12 @@ export function ComboboxInput({
                   : "flex flex-col items-start gap-2"),
             )}
           >
-            {filteredOptions.length === 0 ? (
+            {displayedOptions.length === 0 ? (
               <div className="px-1 py-2 text-sm text-[var(--text-mention-grey)]">
                 Aucun résultat
               </div>
             ) : (
-              filteredOptions.map((option) => {
+              displayedOptions.map((option) => {
                 const isSelected = value.includes(option.value);
 
                 if (optionVariant === "pill") {
@@ -291,18 +305,14 @@ export function ComboboxInput({
                       type="button"
                       onClick={() => toggleValue(option.value)}
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-[12px] px-2 py-0.5 text-left text-[12px] leading-[20px] transition-shadow",
+                        "inline-flex items-center gap-1 rounded-[12px] px-2 py-0.5 text-left text-[12px] leading-[20px]",
                         PILL_TEXT,
                         !pillColor && PILL_BG_UNIFORM,
-                        isSelected
-                          ? "ring-2 ring-[var(--text-action-high-blue-france)]"
-                          : "opacity-70 hover:opacity-100",
                       )}
                       style={
                         pillColor ? { backgroundColor: pillColor } : undefined
                       }
                     >
-                      {isSelected && <Check size={12} className="shrink-0" />}
                       {option.label}
                     </button>
                   );
