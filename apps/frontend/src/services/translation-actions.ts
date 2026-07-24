@@ -7,7 +7,7 @@ import {
   LANGUAGE_WORKFLOWS,
   translationPublicationWorkflow,
 } from "@playground/workflows";
-import { start } from "@workflow/core/runtime";
+import { getRun, start } from "@workflow/core/runtime";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getCurrentUser } from "@/lib/auth";
@@ -21,7 +21,7 @@ import { getCurrentUser } from "@/lib/auth";
  *
  * @returns The user session and Supabase client, or an error response.
  */
-type TranslationAction = "save" | "publish" | "retry";
+type TranslationAction = "save" | "publish" | "retry" | "cancel";
 
 async function getAuthorizedTranslationSession({
   action,
@@ -287,7 +287,7 @@ export async function retryTranslationGeneration(translationId: string) {
     const auth = await getAuthorizedTranslationSession({
       action: "retry",
       translationId,
-      allowTranslator: false,
+      allowTranslator: true,
     });
     if (auth.errorResponse) return auth.errorResponse;
     const { currentUser, supabase } = auth;
@@ -329,7 +329,7 @@ export async function retryTranslationGeneration(translationId: string) {
     }
 
     // 4. Trigger workflow (async, runs in background)
-    await start(workflow, [
+    const run = await start(workflow, [
       {
         editorialRecordId: translationRecord.editorial_record_id,
         language: translationRecord.language,
@@ -339,17 +339,67 @@ export async function retryTranslationGeneration(translationId: string) {
     ]);
 
     logger.info(
-      { translationId, userId: currentUser.id },
+      { translationId, userId: currentUser.id, runId: run.runId },
       "Retried translation generation manually",
     );
 
     revalidatePath("/translations");
 
-    return { success: true };
+    return { success: true as const, runId: run.runId };
   } catch (error) {
     logger.error(error, "Error retrying translation generation");
     return {
       success: false,
+      error: error instanceof Error ? error.message : "Erreur inattendue",
+    };
+  }
+}
+
+/**
+ * Cancels an in-progress translation regeneration.
+ *
+ * Cancels the Vercel Workflow run (no-op if already finished) and resets the
+ * translation record's work_status back to "to_process" so the UI leaves its
+ * loading state. Called from the translation detail page (TranslationContext).
+ *
+ * @param translationId - The translation record ID.
+ * @param runId - The Vercel Workflow runId returned by retryTranslationGeneration.
+ */
+export async function cancelTranslationGeneration(
+  translationId: string,
+  runId: string,
+) {
+  try {
+    const auth = await getAuthorizedTranslationSession({
+      action: "cancel",
+      translationId,
+      allowTranslator: true,
+    });
+    if (auth.errorResponse) return auth.errorResponse;
+    const { supabase } = auth;
+
+    try {
+      await getRun(runId).cancel();
+    } catch (err) {
+      // Le workflow est peut-être déjà terminé — non bloquant.
+      logger.warn(
+        { runId, translationId, err },
+        "Cancel translation run failed (non-blocking)",
+      );
+    }
+
+    await supabase
+      .from("translation_records")
+      .update({ work_status: "to_process" })
+      .eq("id", translationId);
+
+    revalidatePath("/translations");
+
+    return { success: true as const };
+  } catch (error) {
+    logger.error(error, "Error cancelling translation generation");
+    return {
+      success: false as const,
       error: error instanceof Error ? error.message : "Erreur inattendue",
     };
   }
