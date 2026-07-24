@@ -127,7 +127,11 @@ export const createWorkStatusColumn = <
 
 export const createAssigneeColumn = (
   editors: Profile[],
-  onOptimisticUpdate: (docId: string, email: string | null) => void,
+  onOptimisticUpdate: (
+    docId: string,
+    email: string | null,
+    avatarUrl: string | null,
+  ) => void,
 ): ColumnDef<Document> => ({
   // accessorKey matches DocumentSortField for correct sort key
   accessorKey: "assigneeEmail",
@@ -138,8 +142,11 @@ export const createAssigneeColumn = (
     <AssigneeDropdown
       workflowId={row.original.id}
       currentEmail={row.original.assigneeEmail}
+      avatarUrl={row.original.assigneeAvatar}
       editors={editors}
-      onOptimisticUpdate={(email) => onOptimisticUpdate(row.original.id, email)}
+      onOptimisticUpdate={(email, avatarUrl) =>
+        onOptimisticUpdate(row.original.id, email, avatarUrl)
+      }
     />
   ),
 });

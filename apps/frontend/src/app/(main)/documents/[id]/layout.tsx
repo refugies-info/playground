@@ -56,6 +56,7 @@ export default async function Layout({
     hasPendingIngestionUpdate: document.hasPendingIngestionUpdate,
     activeRunId: document.activeRunId,
     assigneeEmail: document.assigneeEmail,
+    assigneeAvatar: document.assigneeAvatar,
     currentEditorId: document.currentEditorId,
     currentEditorName: document.currentEditorName,
     currentUserId: currentUser.id,

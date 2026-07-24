@@ -30,7 +30,11 @@ import type { Profile } from "@/lib/profile";
  */
 export function getColumns(
   editors: Profile[],
-  onOptimisticUpdate: (docId: string, email: string | null) => void,
+  onOptimisticUpdate: (
+    docId: string,
+    email: string | null,
+    avatarUrl: string | null,
+  ) => void,
 ): ColumnDef<Document>[] {
   return [
     { ...createAssigneeColumn(editors, onOptimisticUpdate), size: 80 },

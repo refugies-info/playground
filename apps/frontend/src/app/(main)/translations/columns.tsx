@@ -58,7 +58,11 @@ export const columns: ColumnDef<TranslationItem>[] = [
     cell: ({ row }) => {
       const author = row.original.author;
       return (
-        <Avatar displayName={author?.displayName ?? undefined} isAI={!author} />
+        <Avatar
+          displayName={author?.displayName ?? undefined}
+          isAI={!author}
+          avatarUrl={author?.avatarUrl}
+        />
       );
     },
   },

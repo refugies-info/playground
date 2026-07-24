@@ -35,6 +35,7 @@ interface DocumentsListProps {
     sessionStart: string;
     sessionEnd: string;
     assigneeEmail: string;
+    assigneeAvatar?: string;
     search: string;
     searchField: string;
     modalitesEntreesSorties?: string;
@@ -70,11 +71,15 @@ export function DocumentsList({
 
   const columns = useMemo(
     () =>
-      getColumns(initialAuthors, (docId, email) => {
+      getColumns(initialAuthors, (docId, email, avatarUrl) => {
         setDocuments((prev) =>
           prev.map((doc) =>
             doc.id === docId
-              ? { ...doc, assigneeEmail: email ?? undefined }
+              ? {
+                  ...doc,
+                  assigneeEmail: email ?? undefined,
+                  assigneeAvatar: avatarUrl ?? undefined,
+                }
               : doc,
           ),
         );

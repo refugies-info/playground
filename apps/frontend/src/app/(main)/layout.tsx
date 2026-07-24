@@ -16,11 +16,14 @@ export default async function MainLayout({
     cookies(),
   ]);
   const sidebarCollapsed = cookieStore.get(SIDEBAR_COOKIE)?.value === "true";
-
   return (
     <SidebarProvider initialCollapsed={sidebarCollapsed}>
       <div className="flex h-screen w-full bg-[var(--background-alt-blue-france,#f5f5fe)]">
-        <AppSidebar userRole={currentUser.role} userEmail={currentUser.email} />
+        <AppSidebar
+          userRole={currentUser.role}
+          userEmail={currentUser.email}
+          avatarUrl={currentUser.avatarUrl}
+        />
         <main className="flex flex-1 flex-col overflow-y-auto bg-white rounded-tl-[16px] rounded-bl-[16px] border-l border-t border-b border-[#dddddd]">
           {/* Suspense requis : usePathname() dans PageShell provoque un CSR bailout sans boundary */}
           <Suspense fallback={null}>

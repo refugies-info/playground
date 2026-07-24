@@ -69,6 +69,7 @@ export interface Document {
   sourceSystem: "RCO" | "DI";
   updated_at: string;
   assigneeEmail?: string;
+  assigneeAvatar?: string;
   assigneeRole?: string;
   /** Commune from metadata, e.g. "Blois", "Mantes-la-Jolie" */
   commune?: string | null;
