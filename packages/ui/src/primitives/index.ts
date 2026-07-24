@@ -9,6 +9,7 @@ export * from "./conformite";
 export * from "./error";
 export * from "./icon";
 export * from "./icon-badge";
+export * from "./image-upload";
 export * from "./indication-conformite";
 export * from "./indication-sauvegarde";
 export * from "./input";

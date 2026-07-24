@@ -4,6 +4,7 @@ export interface CurrentUser {
   role: UserRole;
   language?: string;
   username?: string;
+  avatarUrl?: string;
   firstName?: string;
   lastName?: string;
   createdAt: string | null;
@@ -35,6 +36,7 @@ export const mapProfileDto = (user: any): Profile => ({
   role: user.role,
   language: user.language,
   username: user.username,
+  avatarUrl: user.avatar_url ?? undefined,
   firstName: user.first_name,
   lastName: user.last_name,
   createdAt: user.created_at,

@@ -7,6 +7,7 @@ import { fr } from "date-fns/locale";
 import { Check, Edit2, Globe, Shield, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../primitives/button";
+import { ImageUpload } from "../../primitives/image-upload";
 import { cn } from "../../utils/cn";
 
 export interface User {
@@ -17,12 +18,13 @@ export interface User {
   username: string;
   firstName?: string;
   lastName?: string;
+  avatarUrl?: string;
   createdAt: string;
 }
 
 // CVA configurations
 const cardVariants = cva(
-  "group relative flex flex-col h-80 p-6 rounded-xl border transition-all shadow-sm hover:shadow-md",
+  "group relative flex flex-col h-96 p-6 rounded-xl border transition-all shadow-sm hover:shadow-md",
   {
     variants: {
       intent: {
@@ -60,6 +62,7 @@ interface UserCardProps {
   onSave: (data: User) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
   onCancel?: () => void;
+  onAvatarUpload?: (file: File) => Promise<string>;
   isNew?: boolean;
 }
 
@@ -85,6 +88,7 @@ export function UserCard({
   onSave,
   onDelete,
   onCancel,
+  onAvatarUpload,
   isNew = false,
 }: UserCardProps) {
   const [isEditing, setIsEditing] = useState(isNew);
@@ -100,6 +104,7 @@ export function UserCard({
       username: "",
       firstName: "",
       lastName: "",
+      avatarUrl: "",
       createdAt: "",
     },
   );
@@ -183,6 +188,20 @@ export function UserCard({
       {isEditing && !isDeleting && (
         <>
           <div className="flex-1 space-y-4">
+            {!isNew && onAvatarUpload && (
+              <div className="flex justify-center">
+                <ImageUpload
+                  shape="circle"
+                  value={formData.avatarUrl || null}
+                  onUpload={async (file) => {
+                    const url = await onAvatarUpload(file);
+                    setFormData((prev) => ({ ...prev, avatarUrl: url }));
+                    return url;
+                  }}
+                  label="Photo de profil"
+                />
+              </div>
+            )}
             <div>
               <label
                 htmlFor={emailId}
@@ -343,13 +362,22 @@ export function UserCard({
 
           <div className="flex-1 flex flex-col justify-center items-center text-center space-y-4">
             <div className="relative">
-              <div className={cn(avatarVariants({ role: formData.role }))}>
-                {(
-                  formData.username[0] ||
-                  formData.email[0] ||
-                  ""
-                ).toUpperCase()}
-              </div>
+              {formData.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={formData.avatarUrl}
+                  alt={formData.username || formData.email}
+                  className="w-16 h-16 rounded-full object-cover shadow-inner"
+                />
+              ) : (
+                <div className={cn(avatarVariants({ role: formData.role }))}>
+                  {(
+                    formData.username[0] ||
+                    formData.email[0] ||
+                    ""
+                  ).toUpperCase()}
+                </div>
+              )}
               <div className="absolute -bottom-1 -right-1 bg-white p-1 rounded-full shadow-sm">
                 {formData.role === "admin" && (
                   <Shield

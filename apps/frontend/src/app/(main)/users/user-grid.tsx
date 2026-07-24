@@ -4,6 +4,7 @@ import { AddUserCard } from "@playground/ui/composites/user-card/AddUserCard";
 import { UserCard } from "@playground/ui/composites/user-card/UserCard";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { uploadAvatar } from "@/app/actions/avatars";
 import { createUser, deleteUser, updateUser } from "@/app/actions/users";
 import type { Profile } from "@/lib/profile";
 
@@ -118,9 +119,21 @@ export function UserGrid({ initialUsers }: UserGridProps) {
             language: profile.language ?? "",
             username: profile.username ?? "",
             createdAt: profile.createdAt ?? "",
+            avatarUrl: profile.avatarUrl,
           }}
           onSave={handleUpdate}
           onDelete={handleDelete}
+          onAvatarUpload={async (file) => {
+            const fd = new FormData();
+            fd.set("file", file);
+            const { secureUrl } = await uploadAvatar(profile.id, fd);
+            setUsers((prev) =>
+              prev.map((u) =>
+                u.id === profile.id ? { ...u, avatarUrl: secureUrl } : u,
+              ),
+            );
+            return secureUrl;
+          }}
         />
       ))}
     </div>

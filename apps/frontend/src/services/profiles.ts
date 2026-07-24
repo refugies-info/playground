@@ -12,7 +12,7 @@ export async function getAllProfilesForAdmin(): Promise<Profile[]> {
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "id, email, username, role, language, created_at, first_name, last_name",
+      "id, email, username, role, language, created_at, first_name, last_name, avatar_url",
     )
     .order("created_at", { ascending: false });
 
@@ -33,7 +33,7 @@ export async function getProfilesByRoles(roles?: string[]): Promise<Profile[]> {
   let query = supabase
     .from("profiles")
     .select(
-      "id, email, username, role, language, created_at, first_name, last_name",
+      "id, email, username, role, language, created_at, first_name, last_name, avatar_url",
     )
     .not("email", "is", null)
     .order("email");
