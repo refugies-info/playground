@@ -34,7 +34,7 @@ describe("uploadImage", () => {
       const stream = {
         end: () =>
           cb(null, {
-            secure_url: "https://res.cloudinary.com/demo/image/upload/x.webp",
+            secure_url: "https://res.cloudinary.com/demo/image/upload/z.webp",
             public_id: "bomo_avatars/user-1",
             width: 400,
             height: 400,
