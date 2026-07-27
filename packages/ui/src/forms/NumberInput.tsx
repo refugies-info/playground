@@ -16,7 +16,7 @@ const numberInputVariants = cva(
         inline:
           "bg-transparent px-1 py-0.5 text-inherit focus:bg-white focus:ring-1 focus:ring-blue-300",
         // DSFR "Champ de saisie" — fond gris contrasté, bordure basse pleine
-        dsfr: "rounded-t-[4px] border-0 border-b-2 border-[var(--border-plain-grey)] bg-[var(--background-contrast-grey)] px-4 py-2 text-[16px] leading-[24px] text-[var(--text-default-grey)]",
+        dsfr: "rounded-t-[4px] border-0 border-b-2 border-[var(--border-plain-grey)] bg-[var(--background-contrast-grey)] px-4 py-2 text-[14px] leading-[24px] text-[var(--text-default-grey)]",
       },
       hasError: {
         true: "border-red-500 focus:border-red-500 focus:ring-red-500",

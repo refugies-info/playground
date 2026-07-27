@@ -2,7 +2,7 @@
 
 import type { RiPoi } from "@playground/shared-types";
 import { EditableField, TextInput } from "@playground/ui";
-import { Badge, Button } from "@playground/ui/primitives";
+import { Badge } from "@playground/ui/primitives";
 import { Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import { useMetadata } from "../MetadataContext";
@@ -225,6 +225,7 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
                     </div>
                   </Field>
                 </div>
+
                 <button
                   type="button"
                   onClick={() => handleRemove(index)}
@@ -237,10 +238,14 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
             </div>
           ))}
 
-          <Button type="button" onClick={handleAdd} size="sm">
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="flex items-center gap-1 text-[14px] leading-[24px] text-[var(--text-action-high-blue-france)] hover:underline"
+          >
             <Plus className="h-4 w-4" />
             Ajouter un point d'intérêt
-          </Button>
+          </button>
         </div>
       )}
     >

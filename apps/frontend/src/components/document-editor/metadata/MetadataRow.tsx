@@ -181,7 +181,7 @@ export function MetadataRow({
         <div
           className={`flex h-full flex-col px-4 py-3 transition-colors focus-within:!bg-[var(--background-default-grey)] ${
             showEmptyWarning
-              ? "border border-dashed border-red-400/70 bg-red-50"
+              ? "border border-dashed border-red-400/70 bg-(--background-contrast-warning) hover:bg-(--background-contrast-warning-hover)"
               : "hover:bg-[var(--background-alt-blue-france)]"
           }`}
         >

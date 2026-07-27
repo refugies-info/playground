@@ -72,7 +72,7 @@ export function DatePicker({
         disabled={disabled}
         className={cn(
           // DSFR "Champ de saisie" — fond gris contrasté, bordure basse pleine
-          "w-full rounded-t-[4px] border-0 border-b-2 border-[var(--border-plain-grey)] bg-[var(--background-contrast-grey)] px-4 py-2 text-left text-[16px] leading-[24px] disabled:cursor-not-allowed disabled:opacity-50",
+          "w-full rounded-t-[4px] border-0 border-b-2 border-[var(--border-plain-grey)] bg-[var(--background-contrast-grey)] px-4 py-2 text-left text-[14px] leading-[24px] disabled:cursor-not-allowed disabled:opacity-50",
           value
             ? "text-[var(--text-default-grey)]"
             : "text-[var(--text-disabled-grey)]",

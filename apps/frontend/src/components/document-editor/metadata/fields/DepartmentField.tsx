@@ -106,6 +106,8 @@ export function DepartmentField({ fieldKey }: { fieldKey: string }) {
             onChange={handleModeChange}
           />
 
+          <div className="border-t border-[var(--border-default-grey)]" />
+
           {localMode === "departments" && (
             <ComboboxInput
               variant="inline"
@@ -115,6 +117,7 @@ export function DepartmentField({ fieldKey }: { fieldKey: string }) {
               placeholder="Rechercher un département..."
               optionVariant="pill"
               optionLayout="wrap"
+              searchField
             />
           )}
         </div>

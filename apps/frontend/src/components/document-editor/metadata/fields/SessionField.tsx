@@ -142,8 +142,6 @@ export function SessionField({ fieldKey }: { fieldKey: string }) {
             placeholder="À définir"
           />
 
-          <div className="border-t border-[var(--border-default-grey)]" />
-
           {/* Sessions list */}
           <div className="flex flex-col gap-2 px-2">
             {localSessions.map((session, index) => (

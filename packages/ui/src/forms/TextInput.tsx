@@ -13,7 +13,7 @@ const textInputVariants = cva("w-full outline-none", {
         "rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500",
       inline: "bg-transparent  text-inherit",
       // DSFR "Champ de saisie" — fond gris contrasté, bordure basse pleine
-      dsfr: "rounded-t-[4px] border-0 border-b-2 border-[var(--border-plain-grey)] bg-[var(--background-contrast-grey)] px-4 py-2 text-[16px] leading-[24px] text-[var(--text-default-grey)]",
+      dsfr: "rounded-t-[4px] border-0 border-b-2 border-[var(--border-plain-grey)] bg-[var(--background-contrast-grey)] px-4 py-2 text-[14px] leading-[24px] text-[var(--text-default-grey)]",
     },
     hasError: {
       true: "border-red-500 focus:border-red-500 focus:ring-red-500",

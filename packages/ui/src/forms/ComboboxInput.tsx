@@ -1,12 +1,12 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { Check, Crown, Plus, X } from "lucide-react";
+import { Check, Crown, X } from "lucide-react";
 import * as React from "react";
 import { cn } from "../utils";
 
 /**
  * Variants for the ComboboxInput component.
  */
-const comboboxInputVariants = cva("w-full relative", {
+const comboboxInputVariants = cva("w-full h-full relative", {
   variants: {
     variant: {
       default: "rounded-md border border-gray-300 bg-white",
@@ -76,6 +76,14 @@ export interface ComboboxInputProps
    */
   optionColors?: Record<string, string>;
 
+  /**
+   * When true, render a prominent DSFR-styled search field (grey background,
+   * bottom border, always-visible placeholder) above the selected tags, instead
+   * of the compact transparent input that sits among the tags. Used by the
+   * departments picker.
+   */
+  searchField?: boolean;
+
   /** Additional class names */
   className?: string;
 }
@@ -124,11 +132,13 @@ export function ComboboxInput({
   optionLayout = "list",
   panelTitle = "Sélectionne des options",
   optionColors,
+  searchField = false,
   className,
 }: ComboboxInputProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   const isAtMax = maxItems !== undefined && value.length >= maxItems;
 
@@ -205,10 +215,38 @@ export function ComboboxInput({
         className,
       )}
     >
-      {/* Selected tags + search input */}
+      {/* Prominent DSFR search field (departments picker): a visible input above
+          the tags with an always-on placeholder, matching the mockup. */}
+      {searchField && !isAtMax && (
+        <input
+          ref={inputRef}
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onFocus={() => setIsOpen(true)}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="mb-2 w-full rounded-t-[4px] border-x-0 border-t-[1px] border-t-[color:var(--border-default-grey)] border-b-2 border-b-[color:var(--border-plain-grey)] bg-[var(--background-contrast-grey)] px-4 py-2 text-[14px] leading-[24px] text-[var(--text-default-grey)] outline-none placeholder:text-[var(--text-mention-grey)]"
+        />
+      )}
+
+      {/* Selected tags + inline search input. Clicking anywhere in this zone opens
+          the dropdown and focuses the input — not only the input itself. Clicks on
+          the tags' remove buttons are handled separately (stopPropagation).
+          A plain <div> is used (not <label>) because a label forwards clicks to
+          its first focusable descendant, which would trigger a tag's X button. */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: acts as the click target for the nested search input */}
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: keyboard users reach the nested input via Tab, whose onFocus opens the dropdown */}
       <div
+        onClick={() => {
+          if (disabled || isAtMax) return;
+          setIsOpen(true);
+          inputRef.current?.focus();
+        }}
         className={cn(
-          "flex flex-wrap gap-1 p-1 min-h-[2.5rem] items-center",
+          "flex flex-wrap content-start items-center gap-x-4 gap-y-3 p-1",
+          !searchField && "h-full min-h-[2.5rem]",
+          !disabled && !isAtMax && "cursor-text",
           variant === "default" && "rounded-md",
         )}
       >
@@ -250,34 +288,24 @@ export function ComboboxInput({
         })}
         {isAtMax ? (
           <span className="text-xs text-amber-500 px-1">{maxItems} max</span>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={() => !disabled && setIsOpen(!isOpen)}
-              disabled={disabled}
-              className="inline-flex cursor-pointer items-center justify-center w-6 h-6 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded text-lg font-bold"
-              aria-label="Ajouter"
-            >
-              <Plus size={14} />
-            </button>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onFocus={() => setIsOpen(true)}
-              placeholder={value.length === 0 ? placeholder : ""}
-              disabled={disabled}
-              className="flex-1 min-w-[80px] outline-none bg-transparent text-sm py-1"
-            />
-          </>
+        ) : searchField ? null : (
+          <input
+            ref={inputRef}
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onFocus={() => setIsOpen(true)}
+            placeholder={value.length === 0 ? placeholder : ""}
+            disabled={disabled}
+            className="flex-1 min-w-[80px] outline-none bg-transparent text-sm py-1"
+          />
         )}
       </div>
 
       {/* Dropdown panel — DSFR style */}
       {isOpen && !disabled && (
-        <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border border-[var(--border-default-grey)] bg-white shadow-lg">
-          <div className="border-b border-[var(--border-default-grey)] px-3 py-2 text-[14px] leading-[24px] text-[var(--text-mention-grey)]">
+        <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xs border border-[var(--border-default-grey)] bg-white shadow-lg">
+          <div className="border-[var(--border-default-grey)] px-3 py-2 text-[14px] font-medium leading-[24px] text-[var(--text-mention-grey)]">
             {panelTitle}
           </div>
           <div
@@ -285,8 +313,8 @@ export function ComboboxInput({
               "max-h-60 overflow-auto p-2",
               optionVariant === "pill" &&
                 (optionLayout === "wrap"
-                  ? "flex flex-wrap gap-2"
-                  : "flex flex-col items-start gap-2"),
+                  ? "flex flex-wrap gap-x-4 gap-y-3"
+                  : "flex flex-col items-start gap-x-4 gap-y-3"),
             )}
           >
             {displayedOptions.length === 0 ? (

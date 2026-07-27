@@ -17,18 +17,34 @@ export function SourceDisplay({ source, diMetadata }: SourceDisplayProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   // Whether the content overflows the collapsed height → the cell is expandable.
   const [isOverflowing, setIsOverflowing] = useState(false);
+  // Collapsed threshold: at least COLLAPSED_MAX_HEIGHT, but grows to the row's
+  // height when the row is taller (driven by the other columns) so the source
+  // content can fill the available height instead of being clipped to the fixed
+  // minimum.
+  const [collapsedMaxHeight, setCollapsedMaxHeight] =
+    useState(COLLAPSED_MAX_HEIGHT);
   const contentRef = useRef<HTMLDivElement>(null);
   const sourceEntries = normalizeSourceEntries(source, diMetadata);
 
-  // Measure overflow on mount and whenever the cell is resized (re-wrapping).
+  // Measure overflow on mount and whenever the cell/row is resized (re-wrapping).
   useEffect(() => {
     const el = contentRef.current;
     if (!el) return;
-    const measure = () =>
-      setIsOverflowing(el.scrollHeight > COLLAPSED_MAX_HEIGHT + 1);
+    const cell = el.closest("td");
+    const measure = () => {
+      // Height available in the row for the content = cell height minus the
+      // vertical padding. Never below the fixed minimum.
+      const rowContentHeight = cell
+        ? cell.clientHeight - CELL_VERTICAL_PADDING
+        : COLLAPSED_MAX_HEIGHT;
+      const threshold = Math.max(COLLAPSED_MAX_HEIGHT, rowContentHeight);
+      setCollapsedMaxHeight(threshold);
+      setIsOverflowing(el.scrollHeight > threshold + 1);
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(el);
+    if (cell) observer.observe(cell);
     return () => observer.disconnect();
   }, []);
 
@@ -71,7 +87,7 @@ export function SourceDisplay({ source, diMetadata }: SourceDisplayProps) {
       <div
         ref={contentRef}
         className="min-w-0 flex-1 space-y-1 overflow-hidden text-sm"
-        style={isExpanded ? undefined : { maxHeight: COLLAPSED_MAX_HEIGHT }}
+        style={isExpanded ? undefined : { maxHeight: collapsedMaxHeight }}
       >
         {sourceEntries.map(({ key, value }) => (
           <div key={`${key}-${value}`}>
