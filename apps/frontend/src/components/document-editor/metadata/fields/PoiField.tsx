@@ -109,6 +109,7 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
       const city = poi.city ?? "";
       const fullAddress = [address, city].filter(Boolean).join(", ");
       const title = poi.title ?? "";
+      const description = poi.description ?? "";
       const lat = poi.lat ?? "";
       const lng = poi.lng ?? "";
       const email = poi.email ?? "";
@@ -121,6 +122,7 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
         >
           {title && <strong className="text-gray-900">{title}</strong>}
           {fullAddress && <div className="text-gray-800">{fullAddress}</div>}
+          {description && <div className="text-gray-800">{description}</div>}
           {(lat || lng) && (
             <div className="text-gray-800 text-xs">
               {lat && <div>lat : {lat}</div>}
@@ -204,6 +206,18 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
                       onChange={(val) => handleUpdate(index, "email", val)}
                       className="w-full"
                       aria-label="Email de contact"
+                    />
+                  </Field>
+                  <Field label="Informations pratiques (optionnel)">
+                    <TextInput
+                      variant="dsfr"
+                      value={poi.description ?? ""}
+                      onChange={(val) =>
+                        handleUpdate(index, "description", val)
+                      }
+                      className="w-full"
+                      placeholder="Exemple : jours et horaires d'ouverture"
+                      aria-label="Informations pratiques"
                     />
                   </Field>
                   <Field label="Coordonnées GPS">
