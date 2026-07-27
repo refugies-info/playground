@@ -118,7 +118,7 @@ export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
       onExit={handleExit}
       placeholder="Cliquer pour modifier"
       renderEdit={() => (
-        <div className="flex w-full flex-col gap-2 rounded-[2px] border border-[var(--border-default-grey)] bg-white p-2 shadow-md">
+        <div className="flex w-full flex-col gap-2 rounded-[2px] border border-(--border-default-grey) bg-white p-2 shadow-md">
           <SelectRow
             label="Condition"
             options={COMMITMENT_DETAILS_OPTIONS}
@@ -141,7 +141,7 @@ export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
 
             {localAmountDetails === "between" && (
               <>
-                <span className="text-[14px] leading-[24px] text-[var(--text-default-grey)]">
+                <span className="text-[14px] leading-[24px] text-(--text-default-grey)">
                   et
                 </span>
                 <div className="flex-1">

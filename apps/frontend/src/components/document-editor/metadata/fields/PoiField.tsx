@@ -17,7 +17,7 @@ type PoiWithId = RiPoi & { _poiId: number };
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[14px] leading-[24px] text-[var(--text-default-grey)]">
+      <span className="text-[14px] leading-[24px] text-(--text-default-grey)">
         {label}
       </span>
       {children}
@@ -153,11 +153,11 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
       onExit={handleExit}
       placeholder="Aucun point d'intérêt"
       renderEdit={() => (
-        <div className="flex w-full flex-col gap-3 rounded-[2px] border border-[var(--border-default-grey)] bg-white p-2 shadow-md">
+        <div className="flex w-full flex-col gap-3 rounded-[2px] border border-(--border-default-grey) bg-white p-2 shadow-md">
           {localPois.map((poi, index) => (
             <div key={`poi-edit-${poi._poiId}`} className="flex flex-col gap-3">
               {index > 0 && (
-                <div className="border-t border-[var(--border-default-grey)]" />
+                <div className="border-t border-(--border-default-grey)" />
               )}
               <div className="flex items-start gap-2">
                 <div className="flex flex-1 flex-col gap-3">
@@ -228,7 +228,7 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
                 <button
                   type="button"
                   onClick={() => handleRemove(index)}
-                  className="mt-1 p-1 text-[var(--text-mention-grey)] hover:text-[var(--text-default-error)]"
+                  className="mt-1 p-1 text-(--text-mention-grey) hover:text-(--text-default-error)"
                   aria-label={`Supprimer ${poi.title || `POI ${index + 1}`}`}
                 >
                   <Trash2 className="h-4 w-4" />
