@@ -102,7 +102,10 @@ export function MetadataRow({
   }, [field.riKey, field.relatedKeys, clearField]);
 
   return (
-    <tr className="border-b border-[var(--border-default-grey)] text-sm">
+    <tr
+      className="border-b border-[var(--border-default-grey)] text-sm"
+      data-empty-warning={showEmptyWarning ? "" : undefined}
+    >
       <td className="align-top">
         <div className="flex items-center gap-2 px-4 py-3">
           <FieldIcon riKey={field.riKey} />
@@ -177,8 +180,9 @@ export function MetadataRow({
           ) : null}
         </div>
       </td>
-      <td className="group relative h-px align-top">
+      <td className="group relative h-px align-top" data-metadata-value>
         <div
+          data-empty-cell={showEmptyWarning ? "" : undefined}
           className={`flex h-full flex-col px-4 py-3 transition-colors focus-within:!bg-[var(--background-default-grey)] ${
             showEmptyWarning
               ? "border border-dashed border-red-400/70 bg-(--background-contrast-warning) hover:bg-(--background-contrast-warning-hover)"
