@@ -5,6 +5,7 @@ import { RiArrowDownSLine, RiCloseCircleFill } from "@remixicon/react";
 import * as React from "react";
 import { cn } from "../../utils";
 import { Icon } from "../icon/Icon";
+import { FilterOptionsList } from "./FilterOptionsList";
 import { triggerVariants } from "./variants";
 
 /**
@@ -88,39 +89,14 @@ function BoutonFiltre({
             "animate-in fade-in-0 zoom-in-95",
           )}
         >
-          <button
-            type="button"
-            onClick={() => {
-              onChange("");
+          <FilterOptionsList
+            options={options}
+            value={value}
+            onSelect={(next) => {
+              onChange(next);
               setOpen(false);
             }}
-            className={cn(
-              "block w-full text-left text-sm font-medium leading-6 px-2 py-1 rounded-sm",
-              "text-[var(--text-default-grey,#3A3A3A)]",
-              "hover:bg-[var(--background-alt-grey,#F6F6F6)]",
-              value === "" && "font-bold",
-            )}
-          >
-            Aucun
-          </button>
-          {options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => {
-                onChange(option.value);
-                setOpen(false);
-              }}
-              className={cn(
-                "block w-full text-left text-sm font-medium leading-6 px-2 py-1 rounded-sm",
-                "text-[var(--text-default-grey,#3A3A3A)]",
-                "hover:bg-[var(--background-alt-grey,#F6F6F6)]",
-                value === option.value && "font-bold",
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
+          />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

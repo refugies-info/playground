@@ -7,6 +7,7 @@ export * from "./callout";
 export * from "./card";
 export * from "./conformite";
 export * from "./error";
+export * from "./filtre-date";
 export * from "./icon";
 export * from "./icon-badge";
 export * from "./indication-conformite";
