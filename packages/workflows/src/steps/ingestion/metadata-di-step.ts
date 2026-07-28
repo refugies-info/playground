@@ -597,6 +597,18 @@ export async function forceMetadataReportStep(workflowId: string) {
       );
     }
 
+    // Only a successful report becomes the record's active metadata. Linking an
+    // `error` report would set metadata_report_id to a report the UI filters out
+    // (it requires status 'complete'), and would silently shadow a previously
+    // linked complete report — leaving the fiche with "Aucun rapport".
+    if (parsed.status !== "complete") {
+      logger.warn(
+        { workflowId, reportId: report.id, reportStatus: parsed.status },
+        "Metadata report not complete — leaving previous link and overrides untouched",
+      );
+      return { success: false, reportId: report.id, status: parsed.status };
+    }
+
     const { error: linkIngestionError } = await supabase
       .from("ingestion_records")
       .update({ metadata_report_id: report.id })
@@ -610,7 +622,8 @@ export async function forceMetadataReportStep(workflowId: string) {
 
     // 4. Clear editorial metadata overrides so the fresh AI report is used
     // as the new baseline — stale manual overrides from the previous version
-    // would otherwise silently shadow the regenerated values.
+    // would otherwise silently shadow the regenerated values. Only done for a
+    // complete report (guarded above) so a failed run never wipes overrides.
     // Best-effort: don't throw if this fails, the report was already persisted.
     if (editorialRecordId) {
       logger.info(

@@ -42,6 +42,7 @@ interface DocumentData
   isMetadataGenerating?: boolean;
   referenceData?: {
     themes: Record<string, string>;
+    themeColors: Record<string, string>;
     needs: Record<string, string>;
     needsByTheme: Record<string, string[]>;
   };

@@ -1,6 +1,6 @@
 "use client";
 
-import { EditableField, NumberInput, SelectInput } from "@playground/ui";
+import { EditableField, NumberInput, SelectRow } from "@playground/ui";
 import { useCallback, useMemo, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 import { TIME_UNIT_OPTIONS } from "../publication-targets/refugies-info";
@@ -118,42 +118,51 @@ export function CommitmentField({ fieldKey, label }: CommitmentFieldProps) {
       onExit={handleExit}
       placeholder="Cliquer pour modifier"
       renderEdit={() => (
-        <div className="flex flex-wrap items-center gap-2 p-1">
-          <SelectInput
+        <div className="flex w-full flex-col gap-2 rounded-[2px] border border-(--border-default-grey) bg-white p-2 shadow-md">
+          <SelectRow
+            label="Condition"
             options={COMMITMENT_DETAILS_OPTIONS}
             value={localAmountDetails}
             onChange={handleDetailsChange}
-            className="w-32"
-            aria-label={`${label} - type`}
           />
 
-          <NumberInput
-            value={localHours[0] ?? null}
-            onChange={(val) => handleHoursChange(0, val)}
-            min={0}
-            className="w-14"
-            aria-label={`${label} - quantité`}
-          />
-
-          {localAmountDetails === "between" && (
-            <>
-              <span className="text-xs text-gray-500">et</span>
+          <div className="flex items-center gap-2 px-2">
+            <div className="flex-1">
               <NumberInput
-                value={localHours[1] ?? null}
-                onChange={(val) => handleHoursChange(1, val)}
+                variant="dsfr"
+                value={localHours[0] ?? null}
+                onChange={(val) => handleHoursChange(0, val)}
                 min={0}
-                className="w-14"
-                aria-label={`${label} - quantité max`}
+                autoFocus
+                className="w-full"
+                aria-label={`${label} - quantité`}
               />
-            </>
-          )}
+            </div>
 
-          <SelectInput
+            {localAmountDetails === "between" && (
+              <>
+                <span className="text-[14px] leading-[24px] text-(--text-default-grey)">
+                  et
+                </span>
+                <div className="flex-1">
+                  <NumberInput
+                    variant="dsfr"
+                    value={localHours[1] ?? null}
+                    onChange={(val) => handleHoursChange(1, val)}
+                    min={0}
+                    className="w-full"
+                    aria-label={`${label} - quantité max`}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <SelectRow
+            label="Durée"
             options={TIME_UNIT_OPTIONS}
             value={localTimeUnit}
             onChange={setLocalTimeUnit}
-            className="w-24"
-            aria-label={`${label} - unité`}
           />
         </div>
       )}

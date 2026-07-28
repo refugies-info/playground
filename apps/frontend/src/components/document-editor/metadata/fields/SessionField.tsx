@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  DatePicker,
-  EditableField,
-  RadioGroup,
-  type RadioGroupOption,
-} from "@playground/ui";
+import { DatePicker, EditableField, SelectRow } from "@playground/ui";
 import { Plus, Trash2 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { formatDateFr } from "@/lib/format-date";
@@ -16,11 +11,11 @@ interface Session {
   endDate?: string;
 }
 
-// RadioGroup options for modalitesEntreesSorties
-const MODALITES_OPTIONS: readonly RadioGroupOption[] = [
+// "Type d'entrée" options for modalitesEntreesSorties
+const MODALITES_OPTIONS = [
   { value: "0", label: "Dates fixes" },
-  { value: "1", label: "Entrées permanentes" },
-];
+  { value: "1", label: "A tout moment" },
+] as const;
 
 /**
  * SessionField — An editable sessions field for metadata.
@@ -86,10 +81,14 @@ export function SessionField({ fieldKey }: { fieldKey: string }) {
   const displayValue = !hasContent ? null : (
     <div className="space-y-1">
       {canonicalModalites === 1 && (
-        <div className="text-xs text-blue-600">Entrées permanentes</div>
+        <div className="text-xs text-[var(--text-action-high-blue-france)]">
+          Entrées permanentes
+        </div>
       )}
       {canonicalModalites === 0 && (
-        <div className="text-xs text-gray-500">Dates fixes</div>
+        <div className="text-xs text-[var(--text-mention-grey)]">
+          Dates fixes
+        </div>
       )}
       {sessions.map((session, index) => (
         <div
@@ -133,70 +132,60 @@ export function SessionField({ fieldKey }: { fieldKey: string }) {
       onExit={handleExit}
       placeholder="Aucune session"
       renderEdit={() => (
-        <div className="space-y-3 p-1">
-          {/* Mode d'entrée selector */}
-          <fieldset className="border-0 p-0">
-            <legend className="text-xs font-medium text-gray-600 mb-1">
-              Mode d'entrée
-            </legend>
-            <RadioGroup
-              name="modalitesEntreesSorties"
-              options={MODALITES_OPTIONS}
-              value={localModalites !== null ? String(localModalites) : null}
-              onChange={(v) =>
-                setLocalModalites(v !== null ? (Number(v) as 0 | 1) : null)
-              }
-              nullable
-            />
-          </fieldset>
+        <div className="flex w-full flex-col gap-2 rounded-[2px] border border-[var(--border-default-grey)] bg-white p-2 shadow-md">
+          {/* Type d'entrée */}
+          <SelectRow
+            label="Type d'entrée"
+            options={MODALITES_OPTIONS}
+            value={localModalites !== null ? String(localModalites) : undefined}
+            onChange={(v) => setLocalModalites(Number(v) as 0 | 1)}
+            placeholder="À définir"
+          />
 
           {/* Sessions list */}
-          <div>
-            <div className="text-xs font-medium text-gray-600 mb-1">
-              Sessions
-            </div>
-            <div className="space-y-2">
-              {localSessions.map((session, index) => (
-                <div
-                  key={`session-${session.startDate || index}`}
-                  className="flex items-center gap-2"
+          <div className="flex flex-col gap-2 px-2">
+            {localSessions.map((session, index) => (
+              <div
+                key={`session-${session.startDate || index}`}
+                className="flex items-center gap-2"
+              >
+                <span className="text-[14px] leading-[24px] text-[var(--text-default-grey)]">
+                  Du
+                </span>
+                <DatePicker
+                  value={
+                    session.startDate ? new Date(session.startDate) : undefined
+                  }
+                  onChange={(date) => handleUpdate(index, "startDate", date)}
+                  placeholder="Début"
+                  className="w-32"
+                />
+                <span className="text-[14px] leading-[24px] text-[var(--text-default-grey)]">
+                  au
+                </span>
+                <DatePicker
+                  value={
+                    session.endDate ? new Date(session.endDate) : undefined
+                  }
+                  onChange={(date) => handleUpdate(index, "endDate", date)}
+                  placeholder="Fin"
+                  className="w-32"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemove(index)}
+                  className="p-1 text-[var(--text-mention-grey)] hover:text-[var(--text-default-error)]"
+                  aria-label={`Supprimer session ${index + 1}`}
                 >
-                  <span className="text-xs text-gray-500">Du</span>
-                  <DatePicker
-                    value={
-                      session.startDate
-                        ? new Date(session.startDate)
-                        : undefined
-                    }
-                    onChange={(date) => handleUpdate(index, "startDate", date)}
-                    placeholder="Début"
-                    className="w-32"
-                  />
-                  <span className="text-xs text-gray-500">au</span>
-                  <DatePicker
-                    value={
-                      session.endDate ? new Date(session.endDate) : undefined
-                    }
-                    onChange={(date) => handleUpdate(index, "endDate", date)}
-                    placeholder="Fin"
-                    className="w-32"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(index)}
-                    className="p-1 text-gray-400 hover:text-red-500"
-                    aria-label={`Supprimer session ${index + 1}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
 
             <button
               type="button"
               onClick={handleAdd}
-              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+              className="flex items-center gap-1 text-[14px] leading-[24px] text-[var(--text-action-high-blue-france)] hover:underline"
             >
               <Plus className="h-4 w-4" />
               Ajouter une session

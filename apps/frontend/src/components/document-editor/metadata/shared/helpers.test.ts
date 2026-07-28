@@ -1,5 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { normalizeSourceEntries } from "./helpers";
+import { isEmptyValue, normalizeSourceEntries } from "./helpers";
+
+describe("isEmptyValue", () => {
+  it("treats nullish and empty string as empty", () => {
+    expect(isEmptyValue(undefined)).toBe(true);
+    expect(isEmptyValue(null)).toBe(true);
+    expect(isEmptyValue("")).toBe(true);
+  });
+
+  it("treats empty arrays and objects as empty", () => {
+    expect(isEmptyValue([])).toBe(true);
+    expect(isEmptyValue({})).toBe(true);
+  });
+
+  it("treats non-empty values as filled", () => {
+    expect(isEmptyValue("text")).toBe(false);
+    expect(isEmptyValue(0)).toBe(false);
+    expect(isEmptyValue(false)).toBe(false);
+    expect(isEmptyValue([0])).toBe(false);
+    expect(isEmptyValue({ a: 1 })).toBe(false);
+  });
+});
 
 describe("normalizeSourceEntries", () => {
   it("resolves legacy string paths against DI metadata", () => {
