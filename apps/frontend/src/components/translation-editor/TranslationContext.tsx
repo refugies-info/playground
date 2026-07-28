@@ -8,16 +8,21 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { useAutosave } from "@/hooks/useAutosave";
 import { submitTranslationPreview } from "@/lib/preview-utils";
 import { createClient } from "@/lib/supabase/client";
 import {
+  cancelTranslationGeneration,
   publishTranslation,
+  retryTranslationGeneration,
   saveTranslation,
 } from "@/services/translation-actions";
 import { useTranslationPublicationRealtime } from "./hooks/useTranslationPublicationRealtime";
+
+type TranslationWorkStatus = WorkStatus | "pending" | "error";
 
 interface TranslationData {
   id: string;
@@ -25,7 +30,7 @@ interface TranslationData {
   language: string;
   status: string;
   onlineStatus?: OnlineStatus | null;
-  workStatus?: WorkStatus | null;
+  workStatus?: TranslationWorkStatus | null;
   translationMarkdown: string;
   sourceMarkdown: string;
   sourceMetadata?: Record<string, unknown>; // Metadata from source FR document
@@ -41,6 +46,12 @@ export interface TranslationContextType {
   isDirty: boolean;
   isSaving: boolean;
   isPublishing: boolean;
+  /** True quand une regénération IA est en cours (work_status === "pending"). */
+  isRegenerating: boolean;
+  /** Déclenche la regénération IA de la traduction. */
+  regenerate: () => Promise<void>;
+  /** Annule la regénération IA en cours (même session). */
+  cancelRegenerate: () => void;
   previewTranslation: () => Promise<void>;
   canPreview: boolean; // Whether preview is available (source must be published)
   publicationUrl?: string;
@@ -73,10 +84,33 @@ export function TranslationProvider({
   const [isPublishing, setIsPublishing] = useState(false);
   const [isRawMarkdownMode, setIsRawMarkdownMode] = useState(false);
   const [archivedModalOpen, setArchivedModalOpen] = useState(false);
+  // Singleton for supabase cause we have error with different stream supabase in console log
+  const [supabase] = useState(() => createClient());
+  // Local regeneration flag — set to true as soon as the user clicks, BEFORE the network request.
+  // In development, start() blocks until the workflow finishes: this flag keeps the loader
+  // visible for the entire duration. Cleared in finally, and also by the realtime completion event.
+  const [isRegenLocal, setIsRegenLocal] = useState(false);
 
   // La fiche est archivée dès que la traduction passe en online_status "archived"
   // (cascade déclenchée par l'archivage de la fiche FR côté éditorial).
   const isArchived = translation?.onlineStatus === "archived";
+
+  // Run ID of the current regeneration — kept in memory to support cancellation.
+  // It is lost on page refresh: loading then continues to be driven by `work_status`,
+  // but cancellation is no longer available until the workflow completes.
+  const regenRunIdRef = useRef<string | null>(null);
+  // Set by `cancelRegenerate()` while `regenerate()` is still waiting for `start()`.
+  // In development, `start()` blocks until the workflow completes: the `runId` is
+  // only available afterward, so cancellation cannot stop the workflow. However,
+  // this flag at least allows the UI to exit the loading state and prevents the
+  // refetch from overwriting the current content.
+  const regenCancelledRef = useRef(false);
+
+  // Regeneration is considered in progress if either the local flag is set
+  // (from the user click until the `start()` call completes) OR the translation's
+  // `work_status` is `"pending"` (the realtime handoff in production, where
+  // `start()` returns immediately).
+  const isRegenerating = isRegenLocal || translation?.workStatus === "pending";
 
   // Ouvre la pop-up dès que la fiche devient archivée. Couvre les deux scénarios :
   // - ouverture d'une traduction déjà archivée (initialData)
@@ -119,7 +153,6 @@ export function TranslationProvider({
   useEffect(() => {
     if (!initialData?.id) return;
 
-    const supabase = createClient();
     const channel = supabase
       .channel(`translation-status-${initialData.id}`)
       .on(
@@ -134,7 +167,7 @@ export function TranslationProvider({
           const updatedRecord = payload.new;
           setTranslation((prev) => {
             if (!prev) return prev;
-            return {
+            const next = {
               ...prev,
               status:
                 updatedRecord.online_status === "published"
@@ -143,6 +176,19 @@ export function TranslationProvider({
               onlineStatus: updatedRecord.online_status,
               workStatus: updatedRecord.work_status,
             };
+            // Regeneration completed: the workflow has written a new markdown.
+            // Push it into the editor WITHOUT marking `isDirty` (already persisted).
+            // A manual save writes the same markdown as the current state
+            // → no swap; only a regeneration (with different content) triggers
+            // the replacement.
+            if (
+              typeof updatedRecord.markdown === "string" &&
+              updatedRecord.markdown !== prev.translationMarkdown
+            ) {
+              next.translationMarkdown = updatedRecord.markdown;
+              regenRunIdRef.current = null;
+            }
+            return next;
           });
           // The publication_records Realtime hook handles setIsPublishing(false)
           // for both success and error cases. The UPDATE on translation_records
@@ -154,7 +200,7 @@ export function TranslationProvider({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [initialData.id]);
+  }, [initialData.id, supabase]);
 
   const updateContent = (content: string) => {
     if (!translation) return;
@@ -293,6 +339,83 @@ export function TranslationProvider({
 
   useAutosave(isDirty, activeSaveTranslation);
 
+  const regenerate = useCallback(async () => {
+    if (!translation) return;
+    // Instant loader (before the network call, which blocks in development).
+    regenCancelledRef.current = false;
+    setIsRegenLocal(true);
+    setTranslation((prev) =>
+      prev ? { ...prev, status: "pending", workStatus: "pending" } : prev,
+    );
+    try {
+      const res = await retryTranslationGeneration(translation.id);
+      if (regenCancelledRef.current) return; // Cancelled while waiting.
+      if (res.success && "runId" in res && res.runId) {
+        regenRunIdRef.current = res.runId;
+      } else if (!res.success) {
+        // Start failure → exit the loading state immediately.
+        setTranslation((prev) =>
+          prev
+            ? { ...prev, status: "to_process", workStatus: "to_process" }
+            : prev,
+        );
+        return;
+      }
+
+      // Deterministic refetch: in development, `start()` blocks until the workflow
+      // completes → the DB already contains the new markdown. Fetch it and replace
+      // the content WITHOUT marking `isDirty` (already persisted). Realtime remains
+      // the handoff mechanism in production (`start()` returns immediately there).
+      const { data: fresh } = await supabase
+        .from("translation_records")
+        .select("markdown, work_status, online_status")
+        .eq("id", translation.id)
+        .single();
+
+      if (regenCancelledRef.current) return; // annulé pendant le refetch
+      if (fresh) {
+        regenRunIdRef.current = null;
+        setTranslation((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            translationMarkdown: fresh.markdown ?? prev.translationMarkdown,
+            workStatus: fresh.work_status as TranslationWorkStatus | null,
+            onlineStatus: fresh.online_status as OnlineStatus | null,
+            status:
+              fresh.online_status === "published"
+                ? "published"
+                : fresh.work_status || "to_process",
+          };
+        });
+      }
+    } catch {
+      if (!regenCancelledRef.current) {
+        setTranslation((prev) =>
+          prev
+            ? { ...prev, status: "to_process", workStatus: "to_process" }
+            : prev,
+        );
+      }
+    } finally {
+      if (!regenCancelledRef.current) setIsRegenLocal(false);
+    }
+  }, [translation, supabase]);
+
+  const cancelRegenerate = useCallback(() => {
+    // Exit the loading state immediately, regardless of the state of `start()`.    regenCancelledRef.current = true;
+    setIsRegenLocal(false);
+    const runId = regenRunIdRef.current;
+    regenRunIdRef.current = null;
+    // Best-effort backend cancellation if the runId is already known (production).
+    if (translation && runId) {
+      cancelTranslationGeneration(translation.id, runId).catch(() => {});
+    }
+    setTranslation((prev) =>
+      prev ? { ...prev, status: "to_process", workStatus: "to_process" } : prev,
+    );
+  }, [translation]);
+
   const handleSetTranslation: typeof setTranslation = (value) => {
     setTranslation(value);
   };
@@ -312,6 +435,9 @@ export function TranslationProvider({
         isDirty,
         isSaving,
         isPublishing,
+        isRegenerating,
+        regenerate,
+        cancelRegenerate,
         previewTranslation,
         canPreview,
         publicationUrl: translation?.publicationUrl,

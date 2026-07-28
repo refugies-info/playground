@@ -18,8 +18,13 @@ import { getCustomSlashMenuItems } from "../document-editor/editor/slash-menu-co
 import { useTranslation } from "./TranslationContext";
 
 export function TranslationEditorPane() {
-  const { translation, updateContent, isRawMarkdownMode, isArchived } =
-    useTranslation();
+  const {
+    translation,
+    updateContent,
+    isRawMarkdownMode,
+    isArchived,
+    isRegenerating,
+  } = useTranslation();
   const [editor, setEditor] = useState<CustomEditor | null>(null);
 
   // To avoid circular updates
@@ -131,7 +136,7 @@ export function TranslationEditorPane() {
             <textarea
               value={translation?.translationMarkdown || ""}
               onChange={(e) => updateContent(e.target.value)}
-              readOnly={isArchived}
+              readOnly={isArchived || isRegenerating}
               className="w-full min-h-[60vh] p-4 font-mono text-sm leading-relaxed resize-none focus:outline-none"
               spellCheck={false}
             />
@@ -140,7 +145,7 @@ export function TranslationEditorPane() {
               className="[&_.bn-editor]:!px-0"
               editor={editor}
               theme="light"
-              editable={!isArchived}
+              editable={!isArchived && !isRegenerating}
               slashMenu={false}
             >
               <SuggestionMenuController
