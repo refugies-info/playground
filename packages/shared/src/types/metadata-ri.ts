@@ -174,6 +174,8 @@ export interface RiPoi {
   lng?: number | string;
   email?: string;
   phone?: string;
+  /** Practical information (e.g. opening days/hours) — shown as "Informations pratiques" */
+  description?: string;
 }
 
 // =============================================================================
