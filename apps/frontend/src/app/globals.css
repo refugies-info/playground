@@ -20,6 +20,21 @@
   animation: highlight-pulse 1s ease-in-out;
 }
 
+/* Métadonnées : deux cellules "vide" consécutives ne doivent afficher qu'un
+   seul liseré entre elles (bordure basse de celle du haut) au lieu de trois
+   (pointillé bas + séparateur de ligne + pointillé haut). */
+tr[data-empty-warning] + tr[data-empty-warning] [data-empty-cell] {
+  /* transparent plutôt que 0 : pas de décalage d'1px, et le fond warning
+     (background-clip: border-box) transparaît sous la bordure. */
+  border-top-color: transparent;
+}
+
+tr[data-empty-warning]:has(+ tr[data-empty-warning]) > td[data-metadata-value] {
+  /* `hidden` gagne sur la bordure de <tr> en border-collapse, contrairement à
+     une largeur 0 — les autres colonnes gardent leur séparateur gris. */
+  border-bottom-style: hidden;
+}
+
 /* BlockNote editor styles */
 .bn-container {
   a {

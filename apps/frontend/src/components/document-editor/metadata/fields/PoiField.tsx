@@ -2,9 +2,9 @@
 
 import type { RiPoi } from "@playground/shared-types";
 import { EditableField, TextInput } from "@playground/ui";
-import { Badge, Button } from "@playground/ui/primitives";
+import { Badge } from "@playground/ui/primitives";
 import { Plus, Trash2 } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 
 /**
@@ -12,6 +12,18 @@ import { useMetadata } from "../MetadataContext";
  * The _poiId is used as a stable key and removed before saving.
  */
 type PoiWithId = RiPoi & { _poiId: number };
+
+/** DSFR labeled field: label (Marianne 14px) above a control */
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-[14px] leading-[24px] text-(--text-default-grey)">
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
 
 /**
  * PoiField — An editable points of interest field for metadata.
@@ -97,6 +109,7 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
       const city = poi.city ?? "";
       const fullAddress = [address, city].filter(Boolean).join(", ");
       const title = poi.title ?? "";
+      const description = poi.description ?? "";
       const lat = poi.lat ?? "";
       const lng = poi.lng ?? "";
       const email = poi.email ?? "";
@@ -109,6 +122,7 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
         >
           {title && <strong className="text-gray-900">{title}</strong>}
           {fullAddress && <div className="text-gray-800">{fullAddress}</div>}
+          {description && <div className="text-gray-800">{description}</div>}
           {(lat || lng) && (
             <div className="text-gray-800 text-xs">
               {lat && <div>lat : {lat}</div>}
@@ -141,88 +155,111 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
       onExit={handleExit}
       placeholder="Aucun point d'intérêt"
       renderEdit={() => (
-        <div className="space-y-3 p-1">
+        <div className="flex w-full flex-col gap-3 rounded-[2px] border border-(--border-default-grey) bg-white p-2 shadow-md">
           {localPois.map((poi, index) => (
-            <div
-              key={`poi-edit-${poi._poiId}`}
-              className="flex items-start gap-2"
-            >
-              <div className="flex-1 space-y-2 p-2 last-of-type:border-b-0 border-b border-gray-200">
-                <TextInput
-                  value={poi.title ?? ""}
-                  onChange={(val) => handleUpdate(index, "title", val)}
-                  placeholder="Nom du lieu"
-                  className="font-medium"
-                  label="Nom du lieu"
-                  id={`poi-title-${index}`}
-                />
-                <TextInput
-                  value={poi.address ?? ""}
-                  onChange={(val) => handleUpdate(index, "address", val)}
-                  placeholder="Adresse"
-                  label="Adresse"
-                  id={`poi-address-${index}`}
-                />
-                <div className="flex gap-2">
-                  <TextInput
-                    value={poi.city ?? ""}
-                    onChange={(val) => handleUpdate(index, "city", val)}
-                    placeholder="Ville"
-                    className="flex-1"
-                    label="Ville"
-                    id={`poi-city-${index}`}
-                  />
-                  <TextInput
-                    value={poi.phone ?? ""}
-                    onChange={(val) => handleUpdate(index, "phone", val)}
-                    placeholder="Téléphone"
-                    label="Téléphone"
-                    id={`poi-phone-${index}`}
-                    className="w-32"
-                  />
+            <div key={`poi-edit-${poi._poiId}`} className="flex flex-col gap-3">
+              {index > 0 && (
+                <div className="border-t border-(--border-default-grey)" />
+              )}
+              <div className="flex items-start gap-2">
+                <div className="flex flex-1 flex-col gap-3">
+                  <Field label="Titre du lieu d'accueil">
+                    <TextInput
+                      variant="dsfr"
+                      value={poi.title ?? ""}
+                      onChange={(val) => handleUpdate(index, "title", val)}
+                      className="w-full"
+                      aria-label="Titre du lieu d'accueil"
+                    />
+                  </Field>
+                  <Field label="Adresse du lieu d'accueil">
+                    <TextInput
+                      variant="dsfr"
+                      value={poi.address ?? ""}
+                      onChange={(val) => handleUpdate(index, "address", val)}
+                      className="w-full"
+                      aria-label="Adresse du lieu d'accueil"
+                    />
+                  </Field>
+                  <Field label="Ville du lieu d'accueil">
+                    <TextInput
+                      variant="dsfr"
+                      value={poi.city ?? ""}
+                      onChange={(val) => handleUpdate(index, "city", val)}
+                      className="w-full"
+                      aria-label="Ville du lieu d'accueil"
+                    />
+                  </Field>
+                  <Field label="Téléphone (optionnel)">
+                    <TextInput
+                      variant="dsfr"
+                      value={poi.phone ?? ""}
+                      onChange={(val) => handleUpdate(index, "phone", val)}
+                      className="w-full"
+                      aria-label="Téléphone"
+                    />
+                  </Field>
+                  <Field label="Email de contact (optionnel)">
+                    <TextInput
+                      variant="dsfr"
+                      value={poi.email ?? ""}
+                      onChange={(val) => handleUpdate(index, "email", val)}
+                      className="w-full"
+                      aria-label="Email de contact"
+                    />
+                  </Field>
+                  <Field label="Informations pratiques (optionnel)">
+                    <TextInput
+                      variant="dsfr"
+                      value={poi.description ?? ""}
+                      onChange={(val) =>
+                        handleUpdate(index, "description", val)
+                      }
+                      className="w-full"
+                      placeholder="Exemple : jours et horaires d'ouverture"
+                      aria-label="Informations pratiques"
+                    />
+                  </Field>
+                  <Field label="Coordonnées GPS">
+                    <div className="flex gap-2">
+                      <TextInput
+                        variant="dsfr"
+                        value={String(poi.lat ?? "")}
+                        onChange={(val) => handleUpdate(index, "lat", val)}
+                        className="w-full flex-1"
+                        aria-label="Latitude"
+                      />
+                      <TextInput
+                        variant="dsfr"
+                        value={String(poi.lng ?? "")}
+                        onChange={(val) => handleUpdate(index, "lng", val)}
+                        className="w-full flex-1"
+                        aria-label="Longitude"
+                      />
+                    </div>
+                  </Field>
                 </div>
-                <TextInput
-                  value={poi.email ?? ""}
-                  onChange={(val) => handleUpdate(index, "email", val)}
-                  placeholder="Email"
-                  label="Email"
-                  id={`poi-email-${index}`}
-                  className="w-full"
-                />
-                <div className="flex gap-2">
-                  <TextInput
-                    value={String(poi.lat ?? "")}
-                    onChange={(val) => handleUpdate(index, "lat", val)}
-                    placeholder="Latitude"
-                    label="Latitude"
-                    id={`poi-lat-${index}`}
-                    className="flex-1"
-                  />
-                  <TextInput
-                    value={String(poi.lng ?? "")}
-                    onChange={(val) => handleUpdate(index, "lng", val)}
-                    placeholder="Longitude"
-                    label="Longitude"
-                    id={`poi-lng-${index}`}
-                    className="flex-1"
-                  />
-                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleRemove(index)}
+                  className="mt-1 p-1 text-(--text-mention-grey) hover:text-(--text-default-error)"
+                  aria-label={`Supprimer ${poi.title || `POI ${index + 1}`}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => handleRemove(index)}
-                className="p-1 text-gray-400 hover:text-red-500 mt-1"
-                aria-label={`Supprimer ${poi.title || `POI ${index + 1}`}`}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
             </div>
           ))}
 
-          <Button type="button" onClick={handleAdd} size="sm">
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="flex items-center gap-1 text-[14px] leading-[24px] text-[var(--text-action-high-blue-france)] hover:underline"
+          >
             <Plus className="h-4 w-4" />
             Ajouter un point d'intérêt
-          </Button>
+          </button>
         </div>
       )}
     >

@@ -16,6 +16,20 @@ export function NeedSelectField({ fieldKey }: { fieldKey: string }) {
   // Get reference data from document
   const needsLookup = document?.referenceData?.needs ?? {};
   const needsByTheme = document?.referenceData?.needsByTheme ?? {};
+  const themeColors = document?.referenceData?.themeColors ?? {};
+
+  // Color each need with its parent theme's color (needId → color)
+  const needColors = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const [themeId, needIds] of Object.entries(needsByTheme)) {
+      const color = themeColors[themeId];
+      if (!color) continue;
+      for (const needId of needIds) {
+        map[needId] = color;
+      }
+    }
+    return map;
+  }, [needsByTheme, themeColors]);
 
   // Get selected themes (primary + secondary)
   const primaryTheme = getFieldValue("theme");
@@ -80,6 +94,9 @@ export function NeedSelectField({ fieldKey }: { fieldKey: string }) {
       value={value}
       onChange={handleChange}
       placeholder="Ajouter un besoin"
+      optionVariant="pill"
+      optionLayout="list"
+      optionColors={needColors}
     />
   );
 }

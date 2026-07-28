@@ -73,7 +73,7 @@ export interface GetDocumentsParams {
   searchField?: SearchField;
   /** When true, extend `search` to editorial/ingestion markdown content - usefull to know if we are in "Importer du contenu" ou "Fiches" */
   searchInContent?: boolean;
-  /** Filter by entry type: "0" (dates fixes) or "1" (entrées permanentes) */
+  /** Filter by entry type: "0" (dates fixes) or "1" (a tout moment) */
   modalitesEntreesSorties?: string | null;
   /** Include large markdown/json fields. Used by /workflow preview drawer only. */
   includePreviewFields?: boolean;

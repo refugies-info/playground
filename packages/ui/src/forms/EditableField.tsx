@@ -11,7 +11,12 @@ const editableFieldVariants = cva(
   {
     variants: {
       mode: {
-        read: "cursor-pointer text-left hover:bg-gray-100 ",
+        // h-full + flex-1: le bouton lecture remplit toute la hauteur de la
+        // cellule (conteneur flex-col) → cliquer n'importe où dans la cellule édite.
+        // Pas de hover propre : la couleur de survol est portée par la cellule
+        // parente (violet en normal, rouge en warning) et transparaît ici, ce qui
+        // garde toute la case d'une seule couleur au hover.
+        read: "h-full flex-1 cursor-pointer text-left",
         edit: "relative  bg-white",
       },
       isDisabled: {
@@ -51,6 +56,12 @@ export interface EditableFieldProps
 
   /** Placeholder text when value is empty */
   placeholder?: string;
+
+  /**
+   * Stretch the edit container to the full cell height (used for text fields so
+   * the input fills the cell like the read button does). Cards/pickers leave it off.
+   */
+  fillHeight?: boolean;
 
   /** Additional class names */
   className?: string;
@@ -92,6 +103,7 @@ export const EditableField = React.forwardRef<
       onExit,
       disabled = false,
       placeholder = "Cliquer pour modifier",
+      fillHeight = false,
       className,
     },
     ref,
@@ -141,28 +153,14 @@ export const EditableField = React.forwardRef<
       }
     }, [disabled, isEditing, onEdit]);
 
-    // Edit mode
-    if (isEditing) {
-      return (
-        <div
-          ref={containerRef}
-          className={cn(
-            editableFieldVariants({ mode: "edit", isDisabled: disabled }),
-            className,
-          )}
-        >
-          {renderEdit({ onBlur: handleBlur, onKeyDown: handleKeyDown })}
-        </div>
-      );
-    }
-
-    // Read mode
-    return (
+    // Read-mode button. Also rendered underneath the edit overlay (see below)
+    // so the cell keeps its size while the editing card floats on top.
+    const readButton = (
       <button
         ref={ref as React.Ref<HTMLButtonElement>}
         type="button"
         onClick={handleClick}
-        disabled={disabled}
+        disabled={disabled || isEditing}
         className={cn(
           editableFieldVariants({ mode: "read", isDisabled: disabled }),
           className,
@@ -173,6 +171,42 @@ export const EditableField = React.forwardRef<
         )}
       </button>
     );
+
+    // Card/picker edit mode (fillHeight = false): render the editing UI as an
+    // absolute overlay so elle flotte au-dessus du tableau au lieu d'agrandir la
+    // cellule et de pousser les lignes. `top-full` l'ancre sous la cellule, comme
+    // le panneau du ComboboxInput (thèmes/besoins) : la valeur affichée reste
+    // lisible pendant l'édition au lieu d'être recouverte.
+    if (isEditing && !fillHeight) {
+      return (
+        <div ref={containerRef} className="relative flex h-full flex-1">
+          {readButton}
+          <div className="absolute left-0 top-full z-20 mt-1 w-full">
+            {renderEdit({ onBlur: handleBlur, onKeyDown: handleKeyDown })}
+          </div>
+        </div>
+      );
+    }
+
+    // Inline edit mode (fillHeight = true, e.g. text inputs): replace the read
+    // content in place so the input fills the cell like the read button did.
+    if (isEditing) {
+      return (
+        <div
+          ref={containerRef}
+          className={cn(
+            editableFieldVariants({ mode: "edit", isDisabled: disabled }),
+            "h-full flex-1",
+            className,
+          )}
+        >
+          {renderEdit({ onBlur: handleBlur, onKeyDown: handleKeyDown })}
+        </div>
+      );
+    }
+
+    // Read mode
+    return readButton;
   },
 );
 

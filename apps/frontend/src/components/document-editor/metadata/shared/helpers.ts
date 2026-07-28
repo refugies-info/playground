@@ -4,6 +4,21 @@
  */
 
 /**
+ * A metadata value counts as "empty" when the AI couldn't fill it or it was
+ * cleared: nullish/empty string, empty array, or object with no own keys.
+ *
+ * Generic (accepts `unknown`) so it works on any merged metadata value —
+ * distinct from field-specific length checks on already-narrowed shapes.
+ */
+export function isEmptyValue(value: unknown): boolean {
+  if (value === undefined || value === null || value === "") return true;
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === "object")
+    return Object.keys(value as object).length === 0;
+  return false;
+}
+
+/**
  * Resolves a dot-notation path in an object.
  * @example resolvePath({ a: { b: 1 } }, "a.b") → 1
  */
