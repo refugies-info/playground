@@ -1,5 +1,7 @@
 import {
   type DocumentSortField,
+  parseDateFilterCondition,
+  parseDateFilterType,
   parseSearchField,
 } from "@playground/shared-types";
 import { redirect } from "next/navigation";
@@ -72,6 +74,15 @@ export default async function DocumentsPage(props: PageProps) {
   const searchParam = getQueryParam(searchParams.search);
   const searchField = parseSearchField(getQueryParam(searchParams.searchField));
 
+  const dateFilterType = parseDateFilterType(
+    getQueryParam(searchParams.dateType),
+  );
+  const dateFilterCondition = parseDateFilterCondition(
+    getQueryParam(searchParams.dateCondition),
+  );
+  const dateFrom = getQueryParam(searchParams.dateFrom);
+  const dateTo = getQueryParam(searchParams.dateTo);
+
   const serviceParams: GetDocumentsParams = {
     page: currentPage,
     pageSize,
@@ -85,8 +96,10 @@ export default async function DocumentsPage(props: PageProps) {
         : undefined,
     workStatus: getQueryParam(searchParams.workStatus),
     onlineStatus: getQueryParam(searchParams.onlineStatus),
-    sessionStart: getQueryParam(searchParams.sessionStart),
-    sessionEnd: getQueryParam(searchParams.sessionEnd),
+    dateFilterType,
+    dateFilterCondition,
+    dateFrom,
+    dateTo,
     assigneeEmail: assigneeEmailParam,
     search: searchParam,
     searchField,
@@ -106,8 +119,10 @@ export default async function DocumentsPage(props: PageProps) {
       getQueryParam(searchParams.status),
     workStatus: getQueryParam(searchParams.workStatus),
     onlineStatus: getQueryParam(searchParams.onlineStatus),
-    sessionStart: getQueryParam(searchParams.sessionStart),
-    sessionEnd: getQueryParam(searchParams.sessionEnd),
+    dateType: dateFilterType ?? "",
+    dateCondition: dateFilterCondition ?? "",
+    dateFrom,
+    dateTo,
     assigneeEmail: assigneeEmailParam,
     search: searchParam,
     searchField: searchField ?? "",

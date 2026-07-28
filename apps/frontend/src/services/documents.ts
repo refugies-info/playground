@@ -1,5 +1,7 @@
 import type {
   ComplianceStatus,
+  DateFilterCondition,
+  DateFilterType,
   Document,
   DocumentSortField,
   Metadata,
@@ -7,7 +9,14 @@ import type {
   SearchField,
   WorkStatus,
 } from "@playground/shared-types";
-import { injectFrontmatterContent, logger } from "@playground/shared-types";
+import {
+  DATE_FILTER_COLUMNS,
+  DEFAULT_DATE_FILTER_CONDITION,
+  DEFAULT_DATE_FILTER_TYPE,
+  injectFrontmatterContent,
+  logger,
+  nextIsoDay,
+} from "@playground/shared-types";
 import type { Database, Json } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
@@ -66,6 +75,14 @@ export interface GetDocumentsParams {
   sessionStart?: string;
   /** Fin de session — session_end_date <= sessionEnd (YYYY-MM-DD) */
   sessionEnd?: string;
+  /** Type de date filtré (RI-1371). Non renseigné = "Fin de session". */
+  dateFilterType?: DateFilterType;
+  /** Sens du filtre (RI-1371). Non renseigné = "Jusqu'à". */
+  dateFilterCondition?: DateFilterCondition;
+  /** Borne basse du filtre de date, incluse (YYYY-MM-DD) */
+  dateFrom?: string;
+  /** Borne haute du filtre de date, incluse (YYYY-MM-DD) */
+  dateTo?: string;
   assigneeEmail?: string;
   /** Multi-column text search (title, external_id, structure_name, commune) */
   search?: string;
@@ -90,6 +107,10 @@ export async function getDocuments(params: GetDocumentsParams) {
     onlineStatus,
     sessionStart,
     sessionEnd,
+    dateFilterType,
+    dateFilterCondition,
+    dateFrom,
+    dateTo,
     assigneeEmail,
     search,
     searchField,
@@ -162,6 +183,25 @@ export async function getDocuments(params: GetDocumentsParams) {
   // Fin de session : session_end_date <= sessionEnd
   if (sessionEnd) {
     query = query.lte("session_end_date", sessionEnd);
+  }
+
+  // Filtre de date multi-types (RI-1371) — bornes incluses des deux côtés.
+  // La condition détermine quelles bornes sont retenues : une URL bricolée à la
+  // main ne peut pas appliquer une borne que le formulaire n'affiche pas.
+  if (dateFrom || dateTo) {
+    const { column, isTimestamp } =
+      DATE_FILTER_COLUMNS[dateFilterType ?? DEFAULT_DATE_FILTER_TYPE];
+    const condition = dateFilterCondition ?? DEFAULT_DATE_FILTER_CONDITION;
+
+    if (dateFrom && condition !== "until") {
+      query = query.gte(column, dateFrom);
+    }
+    if (dateTo && condition !== "from") {
+      // Sur un horodatage, inclure toute la journée = borner au lendemain exclu.
+      query = isTimestamp
+        ? query.lt(column, nextIsoDay(dateTo))
+        : query.lte(column, dateTo);
+    }
   }
 
   // Filter by assignee email (editors/admins only — translators excluded from dropdown)
