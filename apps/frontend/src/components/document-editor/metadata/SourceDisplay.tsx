@@ -27,9 +27,13 @@ export function SourceDisplay({ source, diMetadata }: SourceDisplayProps) {
   const sourceEntries = normalizeSourceEntries(source, diMetadata);
 
   // Measure overflow on mount and whenever the cell/row is resized (re-wrapping).
+  // Uniquement à l'état replié : une fois déplié, la cellule s'est agrandie à la
+  // hauteur du contenu, la mesure conclurait « ça tient » et ferait disparaître
+  // le chevron — donc plus moyen de replier. Elle réécrirait au passage
+  // `collapsedMaxHeight` avec la hauteur dépliée, rendant le repli invisible.
   useEffect(() => {
     const el = contentRef.current;
-    if (!el) return;
+    if (!el || isExpanded) return;
     const cell = el.closest("td");
     const measure = () => {
       // Height available in the row for the content = cell height minus the
@@ -46,7 +50,7 @@ export function SourceDisplay({ source, diMetadata }: SourceDisplayProps) {
     observer.observe(el);
     if (cell) observer.observe(cell);
     return () => observer.disconnect();
-  }, []);
+  }, [isExpanded]);
 
   if (sourceEntries.length === 0) {
     return (
@@ -59,8 +63,14 @@ export function SourceDisplay({ source, diMetadata }: SourceDisplayProps) {
   return (
     <button
       type="button"
-      disabled={!isOverflowing}
-      onClick={() => setIsExpanded((v) => !v)}
+      // `aria-disabled` et non `disabled` : un bouton désactivé n'émet aucun
+      // événement souris, et comme il couvre toute la cellule, le mousedown
+      // n'atteignait pas `document` — le clic-extérieur ne fermait donc pas la
+      // modale d'édition ouverte dans une autre cellule.
+      aria-disabled={!isOverflowing || undefined}
+      onClick={() => {
+        if (isOverflowing) setIsExpanded((v) => !v);
+      }}
       aria-expanded={isOverflowing ? isExpanded : undefined}
       aria-label={
         isOverflowing

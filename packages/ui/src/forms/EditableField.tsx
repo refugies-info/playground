@@ -173,13 +173,15 @@ export const EditableField = React.forwardRef<
     );
 
     // Card/picker edit mode (fillHeight = false): render the editing UI as an
-    // absolute overlay on top of the read display — like the combobox dropdown —
-    // so it floats over the table instead of expanding the cell and pushing rows.
+    // absolute overlay so elle flotte au-dessus du tableau au lieu d'agrandir la
+    // cellule et de pousser les lignes. `top-full` l'ancre sous la cellule, comme
+    // le panneau du ComboboxInput (thèmes/besoins) : la valeur affichée reste
+    // lisible pendant l'édition au lieu d'être recouverte.
     if (isEditing && !fillHeight) {
       return (
         <div ref={containerRef} className="relative flex h-full flex-1">
           {readButton}
-          <div className="absolute left-0 top-0 z-20 w-full">
+          <div className="absolute left-0 top-full z-20 mt-1 w-full">
             {renderEdit({ onBlur: handleBlur, onKeyDown: handleKeyDown })}
           </div>
         </div>
