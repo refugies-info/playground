@@ -49,22 +49,26 @@ export function MetadataTable({
   const provenanceByKey = new Map(provenance?.map((p) => [p.key, p]) ?? []);
 
   return (
-    <div className="bg-white">
-      <table className="w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[20%]">
+    <div className="border border-[var(--border-default-grey)] bg-white">
+      <table className="w-full table-fixed border-collapse">
+        <thead>
+          <tr className="bg-[var(--background-action-low-blue-france)]">
+            <th className="w-[180px] px-4 py-3 text-left text-xs font-bold text-[#000091]">
               Métadonnée
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[40%]">
-              Valeur(s) renseignée(s)
+            <th className="w-[412px] px-4 py-3 text-left text-xs font-bold text-[#000091]">
+              Valeur
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[35%]">
-              Source RCO
+            <th className="px-4 py-3 text-left text-xs font-bold text-[#000091]">
+              Source
             </th>
+            <th
+              className="w-[80px] px-4 py-3"
+              aria-label="Source du remplissage"
+            />
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-white">
           {fields.map((field) => (
             <MetadataRow
               key={field.riKey}

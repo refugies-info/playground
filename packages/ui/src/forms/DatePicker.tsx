@@ -1,7 +1,3 @@
-/**
- * @deprecated - NOT USED in apps/frontend
- * TODO: Verify usage before removing. Last checked: 2026-03-30
- */
 "use client";
 
 import { format } from "date-fns";
@@ -74,13 +70,19 @@ export function DatePicker({
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className="w-full text-left px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        className={cn(
+          // DSFR "Champ de saisie" — fond gris contrasté, bordure basse pleine
+          "w-full rounded-t-[4px] border-0 border-b-2 border-[var(--border-plain-grey)] bg-[var(--background-contrast-grey)] px-4 py-2 text-left text-[14px] leading-[24px] disabled:cursor-not-allowed disabled:opacity-50",
+          value
+            ? "text-[var(--text-default-grey)]"
+            : "text-[var(--text-disabled-grey)]",
+        )}
       >
         {value ? format(value, "dd/MM/yyyy") : placeholder}
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute z-10 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2">
+        <div className="absolute z-10 mt-1 rounded-[2px] border border-[var(--border-default-grey)] bg-white p-2 shadow-lg">
           <DayPicker
             mode="single"
             selected={value ?? undefined}

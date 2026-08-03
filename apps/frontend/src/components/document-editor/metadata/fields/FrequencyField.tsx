@@ -1,6 +1,6 @@
 "use client";
 
-import { EditableField, NumberInput, SelectInput } from "@playground/ui";
+import { EditableField, NumberInput, SelectRow } from "@playground/ui";
 import { useCallback, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 import { TIME_UNIT_OPTIONS } from "../publication-targets/refugies-info";
@@ -110,44 +110,39 @@ export function FrequencyField({
       onExit={handleExit}
       placeholder="Cliquer pour modifier"
       renderEdit={() => (
-        <>
-          <div className="flex flex-wrap items-center gap-2 p-1">
-            <SelectInput
-              options={FREQUENCY_DETAILS_OPTIONS}
-              value={localAmountDetails}
-              onChange={setLocalAmountDetails}
-              className="w-32"
-              aria-label={`${label} - type`}
-            />
+        <div className="flex w-full flex-col gap-2 rounded-[2px] border border-[var(--border-default-grey)] bg-white p-2 shadow-md">
+          <SelectRow
+            label="Condition"
+            options={FREQUENCY_DETAILS_OPTIONS}
+            value={localAmountDetails}
+            onChange={setLocalAmountDetails}
+          />
 
+          <div className="px-2">
             <NumberInput
+              variant="dsfr"
               value={localHours}
               onChange={setLocalHours}
               min={0}
-              className="w-14"
+              autoFocus
               aria-label={`${label} - quantité`}
             />
-
-            <SelectInput
-              options={TIME_UNIT_OPTIONS}
-              value={localTimeUnit}
-              onChange={setLocalTimeUnit}
-              className="w-24"
-              aria-label={`${label} - unité de temps`}
-            />
           </div>
-          <div className="flex flex-wrap items-center gap-2 p-1">
-            <span className="text-xs text-gray-500">par</span>
 
-            <SelectInput
-              options={FREQUENCY_UNIT_OPTIONS}
-              value={localFrequencyUnit}
-              onChange={setLocalFrequencyUnit}
-              className="w-32"
-              aria-label={`${label} - fréquence`}
-            />
-          </div>
-        </>
+          <SelectRow
+            label="Durée"
+            options={TIME_UNIT_OPTIONS}
+            value={localTimeUnit}
+            onChange={setLocalTimeUnit}
+          />
+
+          <SelectRow
+            label="Par"
+            options={FREQUENCY_UNIT_OPTIONS}
+            value={localFrequencyUnit}
+            onChange={setLocalFrequencyUnit}
+          />
+        </div>
       )}
     >
       {displayValue}

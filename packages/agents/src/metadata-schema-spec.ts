@@ -61,7 +61,7 @@ type MetadataRi = {
     frequencyUnit?: string;
   } | null;
   periode?: {
-    modalitesEntreesSorties: 0 | 1 | null;  // 0=dates fixes, 1=entrées permanentes, null=inconnu
+    modalitesEntreesSorties: 0 | 1 | null;  // 0=dates fixes, 1=a tout moment, null=inconnu
     items: Array<{ startDate?: string; endDate?: string }> | null;
   } | null;
   timeSlots?: string[] | null;

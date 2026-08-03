@@ -67,7 +67,7 @@ const radioGroupVariants = cva("flex items-center gap-3", {
  * ```tsx
  * const options = [
  *   { value: "0", label: "Dates fixes" },
- *   { value: "1", label: "Entrées permanentes" },
+ *   { value: "1", label: "A tout moment" },
  * ];
  *
  * <RadioGroup

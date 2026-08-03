@@ -12,6 +12,49 @@ function checkHasFrontmatter(content: string): boolean {
 }
 
 /**
+ * Repairs frontmatter whose closing `---` delimiter is missing.
+ *
+ * The metadata agent (Agathe) reliably emits a YAML frontmatter block followed
+ * by a markdown body (`## Métadonnées mappées`, tables, …) but intermittently
+ * forgets the closing `---` line. Without it, gray-matter/js-yaml tries to parse
+ * the markdown tables as YAML and throws, turning an otherwise valid report into
+ * an `error`. Since the output is LLM-generated, prompting alone is unreliable;
+ * we recover deterministically here.
+ *
+ * `content` must already start with an opening `---` delimiter line. If a proper
+ * closing delimiter already precedes the markdown body, the content is returned
+ * unchanged. Otherwise a `---` line is inserted right before the first markdown
+ * section (heading or table row) that follows the YAML.
+ */
+function ensureClosingFrontmatter(content: string): string {
+  const open = content.match(/^---\r?\n/);
+  if (!open) return content;
+
+  const rest = content.slice(open[0].length);
+
+  // A proper closing delimiter is a `---` alone on its own line.
+  const closeMatch = rest.match(/\r?\n---[ \t]*(?:\r?\n|$)/);
+  // The markdown body starts at the first heading (`#`..`######`) or table row.
+  const bodyMatch = rest.match(/\r?\n(?:#{1,6}[ \t]|\| )/);
+
+  const closeIdx = closeMatch?.index ?? Number.POSITIVE_INFINITY;
+  const bodyIdx = bodyMatch?.index ?? Number.POSITIVE_INFINITY;
+
+  // Already closed before any markdown body — nothing to repair.
+  if (closeIdx <= bodyIdx) return content;
+
+  // Closing delimiter missing (or misplaced after the body): inject one just
+  // before the markdown body so the YAML frontmatter block is well-formed.
+  if (bodyMatch?.index !== undefined) {
+    const yaml = rest.slice(0, bodyMatch.index);
+    const body = rest.slice(bodyMatch.index); // starts with a newline
+    return `${open[0]}${yaml}\n---${body}`;
+  }
+
+  return content;
+}
+
+/**
  * Extracts valid markdown content by locating the start of the frontmatter.
  */
 function extractValidContent(content: string): string {
@@ -19,7 +62,7 @@ function extractValidContent(content: string): string {
   // (i.e. it finishes a line).
   const match = content.match(/---\r?\n/);
   if (match && match.index !== undefined) {
-    return content.slice(match.index);
+    return ensureClosingFrontmatter(content.slice(match.index));
   }
   return content;
 }

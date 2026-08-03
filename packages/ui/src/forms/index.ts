@@ -9,5 +9,6 @@ export {
   type RadioGroupProps,
 } from "./RadioGroup";
 export { SelectInput, type SelectInputProps } from "./SelectInput";
+export { SelectRow, type SelectRowProps } from "./SelectRow";
 export { TextArea, type TextAreaProps } from "./TextArea";
 export { TextInput, type TextInputProps } from "./TextInput";

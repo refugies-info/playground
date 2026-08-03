@@ -8,6 +8,10 @@ import { unstable_cache } from "next/cache";
 interface RiTheme {
   id: string;
   name: string;
+  /** Libellé court du thème (name.short.fr côté RI), préféré pour l'affichage */
+  short?: string;
+  /** Couleur de fond du thème (colors.color40 côté RI, exposée sous `color`) */
+  color?: string;
 }
 
 interface RiNeed {
@@ -19,6 +23,8 @@ interface RiNeed {
 export interface RiReferenceData {
   /** Map of theme ID → display name */
   themes: Record<string, string>;
+  /** Map of theme ID → background color (colors.color40 côté RI) */
+  themeColors: Record<string, string>;
   /** Map of need ID → display name */
   needs: Record<string, string>;
   /** Map of theme ID → array of need IDs (for filtering needs by selected themes) */
@@ -86,8 +92,11 @@ export const fetchRiReferenceData = unstable_cache(
       ]);
 
       const themesMap: Record<string, string> = {};
+      const themeColorsMap: Record<string, string> = {};
       for (const t of themes) {
-        themesMap[t.id] = t.name;
+        // Libellé court préféré ; repli sur le nom complet si absent
+        themesMap[t.id] = t.short || t.name;
+        if (t.color) themeColorsMap[t.id] = t.color;
       }
 
       const needsMap: Record<string, string> = {};
@@ -100,10 +109,15 @@ export const fetchRiReferenceData = unstable_cache(
         needsByTheme[n.themeId].push(n.id);
       }
 
-      return { themes: themesMap, needs: needsMap, needsByTheme };
+      return {
+        themes: themesMap,
+        themeColors: themeColorsMap,
+        needs: needsMap,
+        needsByTheme,
+      };
     } catch (error) {
       logger.error(error, "Failed to fetch RI reference data");
-      return { themes: {}, needs: {}, needsByTheme: {} };
+      return { themes: {}, themeColors: {}, needs: {}, needsByTheme: {} };
     }
   },
   ["ri-reference-data"],

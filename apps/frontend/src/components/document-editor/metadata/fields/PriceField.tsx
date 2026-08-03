@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  EditableField,
-  NumberInput,
-  RadioGroup,
-  SelectInput,
-} from "@playground/ui";
+import { EditableField, NumberInput, SelectRow, Switch } from "@playground/ui";
 import { useCallback, useState } from "react";
 import { useMetadata } from "../MetadataContext";
 import { PRICE_DETAILS_OPTIONS } from "../publication-targets/refugies-info";
@@ -14,15 +9,10 @@ import { PRICE_DETAILS_OPTIONS } from "../publication-targets/refugies-info";
 // Constants
 // =============================================================================
 
-const PRICE_MODE_OPTIONS = [
-  { value: "free", label: "Gratuit" },
-  { value: "paid", label: "Payant" },
-] as const;
-
 const PAID_TYPE_OPTIONS = [
-  { value: "fixed", label: "Montant fixe" },
+  { value: "fixed", label: "Fixe" },
   { value: "range", label: "Fourchette" },
-  { value: "flexible", label: "Montant libre" },
+  { value: "flexible", label: "Libre" },
 ] as const;
 
 type PriceMode = "free" | "paid";
@@ -196,75 +186,84 @@ export function PriceField({
       onExit={handleExit}
       placeholder="Cliquer pour modifier"
       renderEdit={() => (
-        <div className="flex flex-col gap-3 p-1">
+        <div className="flex w-full flex-col gap-2 rounded-[2px] border border-[var(--border-default-grey)] bg-white p-2 shadow-md">
           {/* Niveau 1 : Gratuit / Payant */}
-          <RadioGroup
-            name={`${fieldKey}-mode`}
-            options={PRICE_MODE_OPTIONS}
-            value={localMode}
-            onChange={(val) => val && setLocalMode(val as PriceMode)}
-          />
+          <div className="flex items-center justify-between px-2 py-1.5">
+            <span className="text-[14px] leading-[24px] text-[var(--text-default-grey)]">
+              Payant ?
+            </span>
+            <Switch
+              checked={localMode === "paid"}
+              onChange={(checked) => setLocalMode(checked ? "paid" : "free")}
+              aria-label="Payant ?"
+            />
+          </div>
 
           {/* Niveau 2 : sous-choix si Payant */}
           {localMode === "paid" && (
-            <div className="flex flex-col gap-3">
-              <RadioGroup
-                name={`${fieldKey}-paid-type`}
+            <>
+              <SelectRow
+                label="Format du prix"
                 options={PAID_TYPE_OPTIONS}
                 value={localPaidType}
-                onChange={(val) => val && setLocalPaidType(val as PaidType)}
+                onChange={(val) => setLocalPaidType(val as PaidType)}
               />
+
+              <div className="border-t border-[var(--border-default-grey)]" />
 
               {/* Montant fixe */}
               {localPaidType === "fixed" && (
-                <div className="flex items-center gap-2">
+                <div className="px-2">
                   <NumberInput
+                    variant="dsfr"
                     value={localAmount}
                     onChange={setLocalAmount}
                     min={0}
-                    className="w-16"
+                    className="w-full"
                     aria-label={`${label} - montant`}
-                  />
-                  <span className="text-xs text-gray-500">€</span>
-                  <SelectInput
-                    options={PRICE_DETAILS_OPTIONS}
-                    value={localPeriod}
-                    onChange={setLocalPeriod}
-                    className="w-34"
-                    aria-label={`${label} - récurrence`}
                   />
                 </div>
               )}
 
               {/* Fourchette */}
               {localPaidType === "range" && (
-                <div className="flex items-center gap-2">
-                  <NumberInput
-                    value={localMin}
-                    onChange={setLocalMin}
-                    min={0}
-                    className="w-16"
-                    aria-label={`${label} - montant min`}
-                  />
-                  <span className="text-xs text-gray-500">€ à</span>
-                  <NumberInput
-                    value={localMax}
-                    onChange={setLocalMax}
-                    min={0}
-                    className="w-16"
-                    aria-label={`${label} - montant max`}
-                  />
-                  <span className="text-xs text-gray-500">€</span>
-                  <SelectInput
-                    options={PRICE_DETAILS_OPTIONS}
-                    value={localPeriod}
-                    onChange={setLocalPeriod}
-                    className="w-34"
-                    aria-label={`${label} - récurrence`}
-                  />
+                <div className="flex items-center gap-2 px-2">
+                  <div className="flex-1">
+                    <NumberInput
+                      variant="dsfr"
+                      value={localMin}
+                      onChange={setLocalMin}
+                      min={0}
+                      className="w-full"
+                      aria-label={`${label} - montant min`}
+                    />
+                  </div>
+                  <span className="text-[14px] leading-[24px] text-[var(--text-default-grey)]">
+                    et
+                  </span>
+                  <div className="flex-1">
+                    <NumberInput
+                      variant="dsfr"
+                      value={localMax}
+                      onChange={setLocalMax}
+                      min={0}
+                      className="w-full"
+                      aria-label={`${label} - montant max`}
+                    />
+                  </div>
                 </div>
               )}
-            </div>
+
+              {/* Récurrence — sauf pour un montant libre */}
+              {localPaidType !== "flexible" && (
+                <SelectRow
+                  label="Récurrence"
+                  options={PRICE_DETAILS_OPTIONS}
+                  value={localPeriod}
+                  onChange={setLocalPeriod}
+                />
+              )}
+            </>
           )}
         </div>
       )}

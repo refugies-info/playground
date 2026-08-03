@@ -1,10 +1,15 @@
 "use client";
 
 import type { Document, DocumentSortField } from "@playground/shared-types";
-import { SEARCH_SCOPE_OPTIONS } from "@playground/shared-types";
+import {
+  DATE_FILTER_CONDITION_OPTIONS,
+  DATE_FILTER_TYPE_OPTIONS,
+  DEFAULT_DATE_FILTER_CONDITION,
+  SEARCH_SCOPE_OPTIONS,
+} from "@playground/shared-types";
 import {
   BoutonFiltre,
-  BoutonFiltreDate,
+  FiltreDate,
   SearchInput,
   TooltipProvider,
 } from "@playground/ui";
@@ -32,8 +37,10 @@ interface DocumentsListProps {
     complianceStatus?: string;
     workStatus?: string;
     onlineStatus?: string;
-    sessionStart: string;
-    sessionEnd: string;
+    dateType: string;
+    dateCondition: string;
+    dateFrom: string;
+    dateTo: string;
     assigneeEmail: string;
     assigneeAvatar?: string;
     search: string;
@@ -56,7 +63,7 @@ export function DocumentsList({
   const router = useRouter();
 
   // Use the shared hook for filter state + URL sync
-  const { filters, updateFilter } = useUrlFilters({
+  const { filters, updateFilter, updateFilters } = useUrlFilters({
     basePath: "/documents",
     initialFilters,
   });
@@ -172,7 +179,6 @@ export function DocumentsList({
 
   return (
     <div className="w-full flex flex-col gap-8">
-      {/* Figma node 1264-7549 — gap: 16px, ordre: Search / Auteur / Visibilité / Traitement / Date session / Conformité */}
       <div className="flex flex-wrap items-center gap-4">
         <SearchInput
           value={filters.search}
@@ -182,6 +188,28 @@ export function DocumentsList({
           scopeOptions={SEARCH_SCOPE_OPTIONS}
           scope={filters.searchField}
           onScopeChange={(value) => updateFilter("searchField", value)}
+        />
+
+        <FiltreDate
+          value={{
+            type: filters.dateType,
+            condition: filters.dateCondition,
+            from: filters.dateFrom,
+            to: filters.dateTo,
+          }}
+          onChange={({ type, condition, from, to }) =>
+            updateFilters({
+              dateType: type,
+              dateCondition: condition,
+              dateFrom: from,
+              dateTo: to,
+            })
+          }
+          typeOptions={DATE_FILTER_TYPE_OPTIONS}
+          conditionOptions={DATE_FILTER_CONDITION_OPTIONS}
+          defaultCondition={DEFAULT_DATE_FILTER_CONDITION}
+          rangeCondition="between"
+          upperBoundConditions={["until"]}
         />
 
         <BoutonFiltre
@@ -217,26 +245,6 @@ export function DocumentsList({
           value={filters.workStatus || ""}
           onChange={(value) => updateFilter("workStatus", value)}
         />
-
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-[var(--text-default-grey,#3A3A3A)]">
-            Date de session
-          </span>
-          <BoutonFiltreDate
-            value={filters.sessionStart}
-            onChange={(value) => updateFilter("sessionStart", value)}
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-[var(--text-default-grey,#3A3A3A)]">
-            à
-          </span>
-          <BoutonFiltreDate
-            value={filters.sessionEnd}
-            onChange={(value) => updateFilter("sessionEnd", value)}
-          />
-        </div>
 
         <BoutonFiltre
           label="Type d'entrée"
