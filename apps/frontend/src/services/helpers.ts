@@ -5,14 +5,14 @@
  */
 export function extractAuthorProfile(
   userProfile:
-    | { email: string; role: string }
-    | { email: string; role: string }[]
-    | { email?: string; role?: string }
+    | { email: string; role: string; avatar_url?: string | null }
+    | { email: string; role: string; avatar_url?: string | null }[]
+    | { email?: string; role?: string; avatar_url?: string | null }
     | null
     | undefined,
-): { email: string; role: string } {
+): { email: string; role: string; avatarUrl?: string } {
   if (!userProfile) {
-    return { email: "", role: "" };
+    return { email: "", role: "", avatarUrl: "" };
   }
 
   const profile = Array.isArray(userProfile) ? userProfile[0] : userProfile;
@@ -20,5 +20,6 @@ export function extractAuthorProfile(
   return {
     email: profile?.email || "",
     role: profile?.role || "",
+    avatarUrl: profile?.avatar_url || undefined,
   };
 }

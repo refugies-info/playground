@@ -128,6 +128,7 @@ export async function getTranslations(params: GetTranslationsParams) {
         username,
         first_name,
         last_name,
+        avatar_url,
         created_at
       )
     `,

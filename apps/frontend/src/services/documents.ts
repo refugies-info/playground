@@ -335,9 +335,13 @@ export async function getDocuments(params: GetDocumentsParams) {
       const assigneeProfile = item.assignee_profile as {
         email?: string;
         role?: string;
+        avatar_url?: string;
       } | null;
-      const { email: assigneeEmail, role: assigneeRole } =
-        extractAuthorProfile(assigneeProfile);
+      const {
+        email: assigneeEmail,
+        role: assigneeRole,
+        avatarUrl: assigneeAvatar,
+      } = extractAuthorProfile(assigneeProfile);
 
       return {
         id: item.id,
@@ -364,6 +368,7 @@ export async function getDocuments(params: GetDocumentsParams) {
         editorialRecordId: item.editorial_record_id ?? undefined,
         assigneeEmail,
         assigneeRole,
+        assigneeAvatar,
         commune: item.commune ?? null,
         modalitesEntreesSorties: item.modalites_entrees_sorties ?? null,
         externalId: item.external_id ?? null,
@@ -559,9 +564,13 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   const assigneeProfile = item.assignee_profile as {
     email?: string;
     role?: string;
+    avatarUrl?: string;
   } | null;
-  const { email: assigneeEmail, role: assigneeRole } =
-    extractAuthorProfile(assigneeProfile);
+  const {
+    email: assigneeEmail,
+    role: assigneeRole,
+    avatarUrl: assigneeAvatar,
+  } = extractAuthorProfile(assigneeProfile);
 
   // ID is required - should never be null after the data check above
   if (!item.id) {
@@ -637,6 +646,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     updated_at: item.updated_at ?? "",
     assigneeEmail,
     assigneeRole,
+    assigneeAvatar,
     externalId: item.external_id ?? null,
     activeIngestionVersion: item.active_ingestion_version ?? null,
     latestIngestionVersion: item.latest_ingestion_version ?? null,

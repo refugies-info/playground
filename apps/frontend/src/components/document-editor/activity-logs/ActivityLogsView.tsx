@@ -328,6 +328,7 @@ export function ActivityLogsView({
                               >
                                 <Avatar
                                   displayName={entry.authorName ?? undefined}
+                                  avatarUrl={entry.authorAvatar}
                                   className="size-6 shrink-0"
                                 />
                                 <div className="flex min-w-0 flex-1 flex-row gap-2">

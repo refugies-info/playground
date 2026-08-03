@@ -249,13 +249,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "editorial_records_current_editor_id_fkey"
-            columns: ["current_editor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "editorial_records_ingestion_record_id_fkey"
             columns: ["ingestion_record_id"]
             isOneToOne: false
@@ -994,7 +987,7 @@ export type Database = {
         | "compliance_human"
         | "publication"
         | "publication_langue"
-        | "archivage"
+        | "archive"
         | "update"
         | "update_compliance"
         | "clear_language"
@@ -1683,7 +1676,7 @@ export const Constants = {
         "compliance_human",
         "publication",
         "publication_langue",
-        "archivage",
+        "archive",
         "update",
         "update_compliance",
         "clear_language",
