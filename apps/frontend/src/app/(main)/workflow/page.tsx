@@ -1,5 +1,7 @@
 import {
   type DocumentSortField,
+  parseDateFilterCondition,
+  parseDateFilterType,
   parseSearchField,
 } from "@playground/shared-types";
 import { getQueryParam } from "@/lib/search-params";
@@ -31,8 +33,16 @@ export default async function WorkflowPage(props: PageProps) {
 
   const search = getQueryParam(searchParams.search);
   const searchField = parseSearchField(getQueryParam(searchParams.searchField));
-  const sessionStart = getQueryParam(searchParams.sessionStart);
-  const sessionEnd = getQueryParam(searchParams.sessionEnd);
+  // Filtre de date composite : type + condition + une ou deux dates.
+  // Les parsers rejettent les valeurs hors énumération d'une URL bricolée.
+  const dateFilterType = parseDateFilterType(
+    getQueryParam(searchParams.dateType),
+  );
+  const dateFilterCondition = parseDateFilterCondition(
+    getQueryParam(searchParams.dateCondition),
+  );
+  const dateFrom = getQueryParam(searchParams.dateFrom);
+  const dateTo = getQueryParam(searchParams.dateTo);
 
   // Parse and validate sort parameters (server-side sort).
   const sortByParam = getQueryParam(searchParams.sortBy);
@@ -69,8 +79,10 @@ export default async function WorkflowPage(props: PageProps) {
     search,
     searchField,
     searchInContent: true, // texte étendu : titre, structure, commune, id + markdown
-    sessionStart,
-    sessionEnd,
+    dateFilterType,
+    dateFilterCondition,
+    dateFrom,
+    dateTo,
     includePreviewFields: true,
   });
 
@@ -86,8 +98,10 @@ export default async function WorkflowPage(props: PageProps) {
       initialFilters={{
         search,
         searchField: searchField ?? "",
-        sessionStart,
-        sessionEnd,
+        dateType: dateFilterType ?? "",
+        dateCondition: dateFilterCondition ?? "",
+        dateFrom,
+        dateTo,
       }}
     />
   );
