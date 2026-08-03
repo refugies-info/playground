@@ -1,12 +1,15 @@
 "use client";
 
 import {
+  DATE_FILTER_CONDITION_OPTIONS,
+  DATE_FILTER_TYPE_OPTIONS,
+  DEFAULT_DATE_FILTER_CONDITION,
   type Document,
   type DocumentSortField,
   logger,
   SEARCH_SCOPE_OPTIONS,
 } from "@playground/shared-types";
-import { BoutonFiltreDate, Button, SearchInput } from "@playground/ui";
+import { Button, FiltreDate, SearchInput } from "@playground/ui";
 import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -21,11 +24,25 @@ import { DocumentPreviewDrawer } from "./document-preview-drawer";
 const HIGHLIGHT_ANIMATION_DURATION_MS = 1000;
 const REALTIME_REFRESH_THROTTLE_MS = 2000;
 
+// L'onglet Importer ne liste que des fiches non arbitrées (pending/error/null) :
+// report_created_at, archived_at et latest_publication y sont nuls par
+// construction. Proposer ces types de date ne renverrait jamais de résultat.
+const WORKFLOW_DATE_TYPES: string[] = [
+  "session_start",
+  "session_end",
+  "import",
+];
+const WORKFLOW_DATE_TYPE_OPTIONS = DATE_FILTER_TYPE_OPTIONS.filter((option) =>
+  WORKFLOW_DATE_TYPES.includes(option.value),
+);
+
 interface WorkflowFilters extends Record<string, string> {
   search: string;
   searchField: string;
-  sessionStart: string;
-  sessionEnd: string;
+  dateType: string;
+  dateCondition: string;
+  dateFrom: string;
+  dateTo: string;
 }
 
 interface WorkflowClientProps {
@@ -66,10 +83,11 @@ export function WorkflowClient(props: WorkflowClientProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Filters synced with URL (reuse shared hook)
-  const { filters, updateFilter } = useUrlFilters<WorkflowFilters>({
-    basePath: "/workflow",
-    initialFilters,
-  });
+  const { filters, updateFilter, updateFilters } =
+    useUrlFilters<WorkflowFilters>({
+      basePath: "/workflow",
+      initialFilters,
+    });
 
   // Track documents locally to detect changes for animation
   const [documents, setDocuments] = useState(inProgressDocuments);
@@ -212,6 +230,11 @@ export function WorkflowClient(props: WorkflowClientProps) {
   const handleFilterChange = (key: keyof WorkflowFilters, value: string) => {
     skipHighlightRef.current = true;
     updateFilter(key, value);
+  };
+
+  const handleFiltersChange = (updates: Partial<WorkflowFilters>) => {
+    skipHighlightRef.current = true;
+    updateFilters(updates);
   };
 
   const handleOpenDrawer = (doc: Document) => {
@@ -483,26 +506,27 @@ export function WorkflowClient(props: WorkflowClientProps) {
             onScopeChange={(value) => handleFilterChange("searchField", value)}
           />
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-[var(--text-default-grey,#3A3A3A)]">
-              Date de session
-            </span>
-            <BoutonFiltreDate
-              value={filters.sessionStart}
-              onChange={(value) => handleFilterChange("sessionStart", value)}
-            />
-          </div>
-
-          {/* Fin de session : session_end_date <= date */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-[var(--text-default-grey,#3A3A3A)]">
-              à
-            </span>
-            <BoutonFiltreDate
-              value={filters.sessionEnd}
-              onChange={(value) => handleFilterChange("sessionEnd", value)}
-            />
-          </div>
+          <FiltreDate
+            value={{
+              type: filters.dateType,
+              condition: filters.dateCondition,
+              from: filters.dateFrom,
+              to: filters.dateTo,
+            }}
+            onChange={({ type, condition, from, to }) =>
+              handleFiltersChange({
+                dateType: type,
+                dateCondition: condition,
+                dateFrom: from,
+                dateTo: to,
+              })
+            }
+            typeOptions={WORKFLOW_DATE_TYPE_OPTIONS}
+            conditionOptions={DATE_FILTER_CONDITION_OPTIONS}
+            defaultCondition={DEFAULT_DATE_FILTER_CONDITION}
+            rangeCondition="between"
+            upperBoundConditions={["until"]}
+          />
 
           {/* Bouton aligné à droite dans le même conteneur que la recherche */}
           <Button

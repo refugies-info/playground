@@ -71,10 +71,6 @@ export interface GetDocumentsParams {
   complianceStatus?: (string | null)[] | string | null;
   workStatus?: string | null;
   onlineStatus?: string | null;
-  /** Début de session — session_start_date >= sessionStart (YYYY-MM-DD) */
-  sessionStart?: string;
-  /** Fin de session — session_end_date <= sessionEnd (YYYY-MM-DD) */
-  sessionEnd?: string;
   /** Type de date filtré (RI-1371). Non renseigné = "Fin de session". */
   dateFilterType?: DateFilterType;
   /** Sens du filtre (RI-1371). Non renseigné = "Jusqu'à". */
@@ -105,8 +101,6 @@ export async function getDocuments(params: GetDocumentsParams) {
     complianceStatus,
     workStatus,
     onlineStatus,
-    sessionStart,
-    sessionEnd,
     dateFilterType,
     dateFilterCondition,
     dateFrom,
@@ -174,15 +168,6 @@ export async function getDocuments(params: GetDocumentsParams) {
     } else {
       query = query.eq("computed_online_status", onlineStatus);
     }
-  }
-
-  // Début de session : session_start_date >= sessionStart
-  if (sessionStart) {
-    query = query.gte("session_start_date", sessionStart);
-  }
-  // Fin de session : session_end_date <= sessionEnd
-  if (sessionEnd) {
-    query = query.lte("session_end_date", sessionEnd);
   }
 
   // Filtre de date multi-types (RI-1371) — bornes incluses des deux côtés.
