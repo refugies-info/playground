@@ -1,7 +1,7 @@
 "use client";
 
 import { Camera, Loader2 } from "lucide-react";
-import { useId, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { cn } from "../../utils/cn";
 
 export interface ImageUploadProps {
@@ -29,7 +29,6 @@ export function ImageUpload({
   label = "Photo de profil",
 }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const inputId = useId();
   const [preview, setPreview] = useState<string | null>(value ?? null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +83,6 @@ export function ImageUpload({
         )}
       >
         {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={preview}
             alt={label}
@@ -107,8 +105,9 @@ export function ImageUpload({
         )}
       </button>
       <input
-        id={inputId}
         ref={inputRef}
+        aria-hidden="true"
+        tabIndex={-1}
         type="file"
         accept={accept.join(",")}
         className="hidden"

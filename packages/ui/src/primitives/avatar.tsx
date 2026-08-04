@@ -78,11 +78,10 @@ export function Avatar({
       {...props}
     >
       {avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={avatarUrl}
           alt={displayName}
-          className="rounded-full object-cover shadow-inner"
+          className="w-full h-full rounded-full object-cover shadow-inner"
         />
       ) : (
         <span

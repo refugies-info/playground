@@ -363,7 +363,6 @@ export function UserCard({
           <div className="flex-1 flex flex-col justify-center items-center text-center space-y-4">
             <div className="relative">
               {formData.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={formData.avatarUrl}
                   alt={formData.username || formData.email}

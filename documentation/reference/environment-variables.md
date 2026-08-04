@@ -148,6 +148,34 @@ Notifications Slack envoyées depuis le step de publication (`packages/workflows
 
 ---
 
+## Cloudinary Configuration
+
+Utilisée par `@playground/cloudinary` pour l'upload des photos de profil (avatars). Les trois variables sont lues dans `packages/cloudinary/src/client.ts` : si l'une manque, l'upload échoue avec `CloudinaryConfigError`.
+
+### `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
+
+- **Type**: String
+- **Required**: Yes (pour l'upload d'avatar)
+- **Example**: `refugies-info`
+- **Description**: Nom du cloud Cloudinary (partie publique de l'URL des médias)
+- **Usage**: Configuration du SDK Cloudinary côté serveur et construction des URLs d'affichage
+
+### `CLOUDINARY_API_KEY`
+
+- **Type**: String
+- **Required**: Yes (pour l'upload d'avatar)
+- **Description**: Clé API Cloudinary
+- **Usage**: Authentification des appels d'upload signés (server-only, jamais exposée au client)
+
+### `CLOUDINARY_API_SECRET`
+
+- **Type**: String (Secret)
+- **Required**: Yes (pour l'upload d'avatar)
+- **Description**: Secret API Cloudinary
+- **Usage**: Signature des uploads (server-only, jamais exposée au client)
+
+---
+
 ## Application Configuration
 
 ### `NEXT_PUBLIC_APP_URL`
