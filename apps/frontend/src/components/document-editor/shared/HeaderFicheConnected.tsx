@@ -23,6 +23,7 @@ import { useDocumentActions } from "../actions/DocumentActionsContext";
 import { usePublicationRealtime } from "../actions/hooks/usePublicationRealtime";
 import { useDocument } from "../DocumentContext";
 import { useMetadata } from "../metadata/MetadataContext";
+import { DocumentStatus } from "./DocumentStatus";
 import { useDocumentStatusRealtime } from "./hooks/useDocumentStatusRealtime";
 
 interface HeaderFicheConnectedProps {
@@ -182,6 +183,7 @@ export function HeaderFicheConnected({
           {showSaveIndicator ? (
             <SaveIndicator status={saveStatus} onSave={handleSave} />
           ) : null}
+          <DocumentStatus />
           <WorkStatusDropdown
             workflowId={document?.id}
             currentWorkStatus={document?.workStatus}
