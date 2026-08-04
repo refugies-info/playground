@@ -11,13 +11,15 @@ import { updateAssigneeAction } from "@/services/assignee-actions";
 interface AssigneeDropdownProps {
   workflowId?: string;
   currentEmail?: string;
+  avatarUrl?: string;
   editors: Profile[];
-  onOptimisticUpdate?: (email: string | null) => void;
+  onOptimisticUpdate?: (email: string | null, avatarUrl: string | null) => void;
 }
 
 export function AssigneeDropdown({
   workflowId,
   currentEmail,
+  avatarUrl,
   editors,
   onOptimisticUpdate,
 }: AssigneeDropdownProps) {
@@ -26,7 +28,7 @@ export function AssigneeDropdown({
 
   if (!workflowId) {
     return currentEmail ? (
-      <Avatar displayName={currentEmail} />
+      <Avatar displayName={currentEmail} avatarUrl={avatarUrl} />
     ) : (
       <Avatar isAI={true} />
     );
@@ -35,7 +37,7 @@ export function AssigneeDropdown({
   const handleSelect = async (editor: Profile) => {
     if (editor.email === currentEmail || pending) return;
     setPending(true);
-    onOptimisticUpdate?.(editor.email);
+    onOptimisticUpdate?.(editor.email, editor.avatarUrl ?? null);
 
     const result = await updateAssigneeAction(workflowId, editor.id);
     setPending(false);
@@ -43,7 +45,7 @@ export function AssigneeDropdown({
     if (result.success) {
       router.refresh();
     } else {
-      onOptimisticUpdate?.(currentEmail ?? null);
+      onOptimisticUpdate?.(currentEmail ?? null, avatarUrl ?? null);
     }
   };
 
@@ -55,7 +57,7 @@ export function AssigneeDropdown({
       aria-label="Assigner à…"
     >
       {currentEmail ? (
-        <Avatar displayName={currentEmail} />
+        <Avatar displayName={currentEmail} avatarUrl={avatarUrl} />
       ) : (
         <Avatar isAI={true} />
       )}
@@ -84,6 +86,7 @@ export function AssigneeDropdown({
             >
               <Avatar
                 displayName={editor.displayName}
+                avatarUrl={editor.avatarUrl}
                 className="size-6 shrink-0"
               />
               <span className="flex-1 truncate">{editor.displayName}</span>

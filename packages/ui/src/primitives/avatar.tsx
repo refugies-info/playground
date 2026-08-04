@@ -17,12 +17,14 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Affichage forcé comme IA (si false/absent et email présent → user) */
   isAI?: boolean;
   displayName?: string;
+  avatarUrl?: string;
 }
 
 export function Avatar({
   displayName,
   isAI,
   className,
+  avatarUrl,
   ...props
 }: AvatarProps) {
   const showAsAI = isAI || !displayName;
@@ -75,12 +77,20 @@ export function Avatar({
       title={displayName ?? undefined}
       {...props}
     >
-      <span
-        className="text-xs font-medium leading-none select-none"
-        style={{ color: "var(--text-title-blue-france, #000091)" }}
-      >
-        {initials}
-      </span>
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt={displayName}
+          className="w-full h-full rounded-full object-cover shadow-inner"
+        />
+      ) : (
+        <span
+          className="text-xs font-medium leading-none select-none"
+          style={{ color: "var(--text-title-blue-france, #000091)" }}
+        >
+          {initials}
+        </span>
+      )}
     </div>
   );
 }

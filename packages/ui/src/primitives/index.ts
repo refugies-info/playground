@@ -10,6 +10,7 @@ export * from "./error";
 export * from "./filtre-date";
 export * from "./icon";
 export * from "./icon-badge";
+export * from "./image-upload";
 export * from "./indication-conformite";
 export * from "./indication-sauvegarde";
 export * from "./input";

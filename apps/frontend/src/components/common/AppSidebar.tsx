@@ -26,10 +26,15 @@ import { createClient } from "@/lib/supabase/client";
 export interface AppSidebarProps {
   userRole?: string | null;
   userEmail?: string | null;
+  avatarUrl?: string;
 }
 
 /** Sidebar de navigation globale. État replié/déplié persisté en cookie, lu côté serveur → zéro flash. */
-export function AppSidebar({ userRole, userEmail }: AppSidebarProps) {
+export function AppSidebar({
+  userRole,
+  userEmail,
+  avatarUrl,
+}: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { isCollapsed, setIsCollapsed } = useSidebar();
@@ -54,7 +59,11 @@ export function AppSidebar({ userRole, userEmail }: AppSidebarProps) {
           aria-label="Menu utilisateur"
           className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--border-action-high-blue-france)]"
         >
-          <Avatar displayName={userEmail ?? undefined} className="size-12" />
+          <Avatar
+            displayName={userEmail ?? undefined}
+            avatarUrl={avatarUrl}
+            className="size-12"
+          />
         </button>
       </PopoverTrigger>
       <PopoverContent

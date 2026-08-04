@@ -17,8 +17,12 @@ export interface ActivityLogEntry {
   authorEmail?: string;
   /** Author display name for the dynamic text (null = PapaIA). */
   authorName?: string;
+  /** Author display avatar with url */
+  authorAvatar?: string;
   /** Second party display name — e.g. the assignee in an assignation. */
   targetName?: string;
+  /** Targeted avatar author url */
+  targetAvatar?: string;
   /** Optional language code carried in the payload (publication_langue). */
   language: string | null;
   /** Compliance verdict carried in the payload (compliance/update_compliance). */
@@ -57,10 +61,10 @@ export async function getActivityLogs(
         model
       ),
       author:profiles!activity_logs_author_id_fkey (
-        email, first_name, last_name, username, created_at, role, language
+        email, first_name, last_name, username, created_at, role, language, avatar_url
       ),
       target:profiles!activity_logs_target_profile_id_fkey (
-        email, first_name, last_name, username, created_at, role, language
+        email, first_name, last_name, username, created_at, role, language, avatar_url
       )
     `,
     )
@@ -104,7 +108,9 @@ export async function getActivityLogs(
       createdAt: row.created_at,
       authorEmail: author?.email,
       authorName: author?.displayName,
+      authorAvatar: author?.avatarUrl,
       targetName: target?.displayName,
+      targetAvatar: target?.avatarUrl,
       language,
       complianceStatus,
       note,

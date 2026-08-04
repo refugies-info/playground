@@ -5,20 +5,7 @@ import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getCurrentUser } from "@/lib/auth";
-
-// Security Check Helper
-async function assertAdmin() {
-  const currentUser = await getCurrentUser();
-
-  if (currentUser.role !== "admin") {
-    logger.warn(
-      { userId: currentUser.id, role: currentUser.role },
-      "Unauthorized attempt to access admin action",
-    );
-    throw new Error("Non autorisé : Droits d'administrateur requis.");
-  }
-}
+import { assertAdmin } from "@/lib/authz";
 
 // User Schemas
 const createUserSchema = z.object({

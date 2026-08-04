@@ -10,8 +10,14 @@ const nextConfig: NextConfig = {
     "@playground/agents",
     "@playground/workflows",
     "@playground/supabase",
+    "@playground/cloudinary",
   ],
   serverExternalPackages: ["libxml2-wasm", "pino", "pino-pretty"],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
+  },
 };
 
 // Validate required environment variables at build time

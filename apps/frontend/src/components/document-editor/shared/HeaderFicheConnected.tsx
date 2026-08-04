@@ -193,6 +193,7 @@ export function HeaderFicheConnected({
           <AssigneeDropdown
             workflowId={document?.id}
             currentEmail={document?.assigneeEmail}
+            avatarUrl={document?.assigneeAvatar}
             editors={editors}
           />
         </>
