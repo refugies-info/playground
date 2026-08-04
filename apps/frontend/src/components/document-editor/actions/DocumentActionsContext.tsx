@@ -150,7 +150,7 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
       if (!document?.id) {
         return { success: false, error: "Document non trouvé" };
       }
-      if (document.complianceStatus !== "compliant") {
+      if (document.complianceStatus === "non_compliant") {
         return {
           success: false,
           error: "Fiche non conforme : édition impossible",
@@ -238,6 +238,12 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
     ) => {
       if (!document?.id) {
         return { success: false, error: "Document non trouvé" };
+      }
+      if (document.complianceStatus === "non_compliant") {
+        return {
+          success: false,
+          error: "Fiche non conforme : publication impossible",
+        };
       }
 
       setIsPublishing(true);
