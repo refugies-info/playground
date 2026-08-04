@@ -12,7 +12,6 @@ import {
   extractTitleFromMarkdown,
   hasH1,
   logger,
-  type WorkStatus,
 } from "@playground/shared-types";
 import {
   createContext,
@@ -151,6 +150,12 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
       if (!document?.id) {
         return { success: false, error: "Document non trouvé" };
       }
+      if (document.complianceStatus !== "compliant") {
+        return {
+          success: false,
+          error: "Fiche non conforme : édition impossible",
+        };
+      }
 
       // contentOverride permet d'éviter le problème de stale closure :
       // quand on accepte une suggestion IA, le state n'est pas encore mis à jour
@@ -182,7 +187,6 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
             return {
               ...prev,
               title: effectiveTitle,
-              workStatus: "draft" as WorkStatus,
               metadata: {
                 ...prev.metadata,
                 title: effectiveTitle,
@@ -209,8 +213,6 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
     [document, setDocument, setIsDirty],
   );
 
-  useAutosave(isDirty, saveDocument);
-
   const { isLocked, editorName, takeOver } = useEditLock(
     document?.editorialRecordId,
     document?.currentUserId,
@@ -218,6 +220,9 @@ export function DocumentActionsProvider({ children }: { children: ReactNode }) {
     document?.currentEditorId,
     document?.currentEditorName,
   );
+
+  const isCompliant = document?.complianceStatus === "compliant";
+  useAutosave(isDirty && isCompliant && !isLocked, saveDocument);
 
   // =============================================================================
   // Publish

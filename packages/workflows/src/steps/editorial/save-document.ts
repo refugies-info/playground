@@ -99,21 +99,12 @@ export async function saveDocumentStep(
 
     if (workflow.editorial_record_id) {
       // Update existing editorial_record
-      // Also ensure work_status is set to 'draft' if not already
-
-      const currentWorkStatus = editorialRecord?.work_status;
-      const shouldUpdateStatus = currentWorkStatus !== "draft";
 
       const updatePayload: Record<string, unknown> = {
         markdown,
         metadata: updatedMetadata,
         updated_at: new Date().toISOString(),
       };
-
-      if (shouldUpdateStatus) {
-        updatePayload.work_status = "draft";
-        progressUpdated = true;
-      }
 
       const { error: updateError } = await supabase
         .from("editorial_records")
@@ -140,7 +131,6 @@ export async function saveDocumentStep(
         .insert({
           ingestion_record_id: workflow.ingestion_record_id,
           markdown,
-          work_status: "draft",
         })
         .select("id")
         .single();
