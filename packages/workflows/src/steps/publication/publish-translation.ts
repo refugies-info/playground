@@ -118,7 +118,9 @@ export async function publishTranslationStep(
     // 1. Fetch translation record
     const { data: translation, error: translationError } = await supabase
       .from("translation_records")
-      .select("id, editorial_record_id, language, markdown, workflow_id")
+      .select(
+        "id, editorial_record_id, language, markdown, metadata, workflow_id",
+      )
       .eq("id", translationId)
       .maybeSingle();
 
@@ -175,10 +177,20 @@ export async function publishTranslationStep(
       return failStep(supabase, "Missing webhook secret configuration");
     }
 
+    const translatedMetadata = (translation.metadata ?? {}) as Record<
+      string,
+      unknown
+    >;
+    const abstract =
+      typeof translatedMetadata.abstract === "string"
+        ? translatedMetadata.abstract
+        : undefined;
+
     const webhookPayload = await adapter.buildTranslationPayload({
       language: translation.language,
       title,
       markdown: translation.markdown,
+      abstract,
       existingRemoteId: remoteId,
       userEmail,
     });

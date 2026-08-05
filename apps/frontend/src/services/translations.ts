@@ -465,6 +465,7 @@ export async function getTranslationById(id: string) {
     sourceMarkdown: row.editorial_records?.markdown || "",
     sourceMetadata:
       (row.editorial_records?.metadata as Record<string, unknown>) || {},
+    metadata: (row.metadata as Record<string, unknown>) || {},
     publicationUrl: sourcePublicationUrl, // Use source URL for canPreview check
   };
 }

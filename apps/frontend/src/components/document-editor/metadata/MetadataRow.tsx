@@ -35,6 +35,7 @@ import {
   Users,
 } from "lucide-react";
 import { useCallback } from "react";
+import { ValueActionButton } from "@/components/common/ValueActionButton";
 import { useMetadata } from "./MetadataContext";
 import { getDisplayComponent } from "./publication-targets/refugies-info";
 import { SourceDisplay } from "./SourceDisplay";
@@ -260,32 +261,5 @@ function FieldIcon({ riKey }: { riKey: string }) {
       className="h-4 w-4 shrink-0 text-[var(--text-label-grey)]"
       aria-hidden
     />
-  );
-}
-
-// =============================================================================
-// Value Action Button (inline box in the value cell)
-// =============================================================================
-
-function ValueActionButton({
-  icon: Icon,
-  onClick,
-  title,
-  className = "",
-}: {
-  icon: LucideIcon;
-  onClick: () => void;
-  title: string;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex size-8 cursor-pointer items-center justify-center text-gray-500 transition-colors hover:bg-[var(--background-alt-blue-france)] hover:text-[var(--text-action-high-blue-france)] ${className}`}
-      title={title}
-    >
-      <Icon className="h-4 w-4" />
-    </button>
   );
 }

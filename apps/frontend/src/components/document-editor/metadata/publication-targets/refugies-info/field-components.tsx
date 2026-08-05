@@ -19,14 +19,7 @@ import {
   ThemeSelectField,
 } from "../../fields";
 import type { MetadataFieldDef } from "../../types";
-import { MULTI_ENUM_OPTIONS } from "./constants";
-
-// =============================================================================
-// Constants
-// =============================================================================
-
-/** Maximum characters for the "En bref" (abstract) field */
-const ABSTRACT_MAX_LENGTH = 200;
+import { ABSTRACT_MAX_LENGTH, MULTI_ENUM_OPTIONS } from "./constants";
 
 // =============================================================================
 // Types

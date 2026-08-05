@@ -1,7 +1,7 @@
 "use server";
 
-import { logger } from "@playground/shared-types";
-import { createSupabaseServerClient } from "@playground/supabase";
+import { logger, validateField } from "@playground/shared-types";
+import { createSupabaseServerClient, type Json } from "@playground/supabase";
 import {
   generateTranslationWorkflow,
   LANGUAGE_WORKFLOWS,
@@ -188,6 +188,65 @@ export async function saveTranslation(
     return { success: true, archived };
   } catch (error) {
     logger.error(error, "Unexpected error saving translation");
+    return { success: false, error: "Erreur inattendue lors de la sauvegarde" };
+  }
+}
+
+/**
+ * Saves a single translated metadata field (RI-1379).
+ *
+ * Pendant traduction de `saveMetadataFieldAction` : une seule clé de
+ * `translation_records.metadata` est écrite, via une RPC, pour ne pas écraser
+ * les autres (le titre traduit y vit aussi, et sert de repli à la recherche).
+ *
+ * @param id - The translation record ID.
+ * @param key - The metadata key (e.g. "abstract").
+ * @param value - The new value. `undefined` deletes the key.
+ */
+export async function saveTranslationMetadataFieldAction(
+  id: string,
+  key: string,
+  value: unknown,
+): Promise<{ success: boolean; error?: string }> {
+  if (!id || !key) {
+    return { success: false, error: "Paramètres manquants" };
+  }
+
+  // Même validation qu'en FR : les deux versions partagent le schéma du champ.
+  const validation = validateField(key, value);
+  if (!validation.success) {
+    return { success: false, error: validation.error };
+  }
+
+  try {
+    const auth = await getAuthorizedTranslationSession({
+      action: "save",
+      translationId: id,
+      allowTranslator: true,
+    });
+    if (auth.errorResponse) return auth.errorResponse;
+    const { supabase } = auth;
+
+    const { error } = await supabase.rpc("update_translation_metadata_field", {
+      record_id: id,
+      field_key: key,
+      // `undefined` = suppression de la clé ; `null` = vidage explicite.
+      field_value: (value === undefined ? null : value) as Json,
+      delete_key: value === undefined,
+    });
+
+    if (error) {
+      logger.error(error, "Error updating translation metadata field");
+      return {
+        success: false,
+        error: "Erreur lors de la sauvegarde de la métadonnée",
+      };
+    }
+
+    revalidatePath(`/translations/${id}/metadata`);
+    return { success: true };
+  } catch (error) {
+    logger.error(error, "Unexpected error saving translation metadata field");
     return { success: false, error: "Erreur inattendue lors de la sauvegarde" };
   }
 }

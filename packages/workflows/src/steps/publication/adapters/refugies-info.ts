@@ -73,7 +73,8 @@ export const refugiesInfoAdapter: PublisherAdapter = {
   },
 
   async buildTranslationPayload(doc): Promise<WebhookPayload> {
-    const { language, title, markdown, existingRemoteId, userEmail } = doc;
+    const { language, title, markdown, abstract, existingRemoteId, userEmail } =
+      doc;
 
     // Strip the first H1 heading for the translation payload
     const cleanedMarkdown = await stripFirstH1(markdown);
@@ -87,7 +88,7 @@ export const refugiesInfoAdapter: PublisherAdapter = {
             content: {
               titreInformatif: title,
               titreMarque: "", // Usually fixed or copied from FR
-              abstract: "",
+              abstract: abstract ?? "",
               markdown: cleanedMarkdown,
             },
           },
