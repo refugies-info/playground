@@ -1,7 +1,7 @@
 "use client";
 
 import { Camera, Loader2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "../../utils/cn";
 
 export interface ImageUploadProps {
@@ -32,6 +32,13 @@ export function ImageUpload({
   const [preview, setPreview] = useState<string | null>(value ?? null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Follow external changes to `value` — the image can be replaced or removed
+  // by something other than this widget (a "clear" button next to it). Skipped
+  // while uploading so the local preview isn't dropped mid-flight.
+  useEffect(() => {
+    if (!isUploading) setPreview(value ?? null);
+  }, [value, isUploading]);
 
   const pick = () => {
     if (disabled || isUploading) return;
@@ -86,7 +93,12 @@ export function ImageUpload({
           <img
             src={preview}
             alt={label}
-            className="w-full h-full object-cover"
+            className={cn(
+              "w-full h-full",
+              // A circle frames a photo, so filling it is right; a rectangle
+              // holds things like logos, which must stay whole and undistorted.
+              shape === "circle" ? "object-cover" : "object-contain",
+            )}
           />
         ) : (
           <Camera size={20} className="text-gray-400" />
