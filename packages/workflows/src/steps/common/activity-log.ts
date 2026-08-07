@@ -1,5 +1,6 @@
 import { type ActivityLogType, logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
+import { dispatchNotifications } from "./notification";
 import { getSupabaseClient } from "./supabase";
 
 /**
@@ -54,7 +55,7 @@ export async function recordActivity(
         letta_report_id: lettaReportId,
         activity,
       })
-      .select("id")
+      .select("id, created_at")
       .maybeSingle();
 
     if (error || !data) {
@@ -64,6 +65,17 @@ export async function recordActivity(
       );
       return null;
     }
+
+    // Fan the event out to its recipients. Failures are swallowed inside
+    // dispatchNotifications: the audit trail must never depend on the inbox.
+    await dispatchNotifications({
+      activityLogId: data.id,
+      createdAt: data.created_at,
+      action,
+      workflowId,
+      authorId,
+      targetProfileId,
+    });
 
     return data.id;
   } catch (error) {
