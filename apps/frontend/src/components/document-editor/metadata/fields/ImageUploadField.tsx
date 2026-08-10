@@ -9,10 +9,13 @@ import { useMetadata } from "../MetadataContext";
 /**
  * ImageUploadField — Métadonnée image téléversée plutôt que saisie (RI-1395).
  *
- * Le champ envoie le fichier sur Cloudinary puis enregistre l'URL renvoyée par
- * le chemin habituel (`updateField`) : la valeur stockée reste une URL, comme
- * quand elle était tapée à la main, et hérite donc de la validation Zod, du
- * marquage « modifié » et du bouton vider de la ligne.
+ * Branche {@link ImageUpload} sur MetadataContext : le fichier part sur
+ * Cloudinary, puis seule l'URL renvoyée est enregistrée via `updateField`. La
+ * valeur stockée reste une URL comme quand elle était tapée à la main, et hérite
+ * donc de la validation Zod et du marquage « modifié ».
+ *
+ * Les trois états visuels appartiennent au primitive — c'est le même dépôt
+ * d'image partout dans l'app.
  */
 export function ImageUploadField({
   fieldKey,
@@ -25,7 +28,7 @@ export function ImageUploadField({
   disabled?: boolean;
 }) {
   const { document } = useDocument();
-  const { getFieldValue, updateField } = useMetadata();
+  const { getFieldValue, updateField, clearField } = useMetadata();
 
   const value = getFieldValue(fieldKey);
   const url = typeof value === "string" && value ? value : null;
@@ -44,10 +47,18 @@ export function ImageUploadField({
     [document?.id, fieldKey, updateField],
   );
 
+  // `clearField` écrit un null explicite, comme le bouton « vider » de la ligne :
+  // la métadonnée compte alors comme renseignée-vide, pas comme non traitée.
+  const handleDelete = useCallback(
+    () => clearField(fieldKey),
+    [clearField, fieldKey],
+  );
+
   return (
     <ImageUpload
       value={url}
       onUpload={handleUpload}
+      onDelete={handleDelete}
       shape="rect"
       label={label}
       disabled={disabled}
