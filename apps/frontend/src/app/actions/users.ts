@@ -1,5 +1,5 @@
 "use server";
-import { EmailSchema, logger,USER_ROLES } from "@playground/shared-types";
+import { EmailSchema, logger, USER_ROLES } from "@playground/shared-types";
 
 import { getSupabaseAdmin } from "@playground/supabase";
 import { revalidatePath } from "next/cache";
