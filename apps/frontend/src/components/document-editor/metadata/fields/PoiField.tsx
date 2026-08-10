@@ -66,9 +66,6 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
     if (localPois.length > 0) {
       const poisToSave = localPois.map(({ _poiId, ...poi }) => {
         const result = { ...poi };
-        if (typeof result.email === "string") {
-          result.email = result.email.trim();
-        }
         if (result.lat !== undefined && result.lat !== "") {
           const parsed = parseFloat(String(result.lat));
           if (!isNaN(parsed)) result.lat = parsed;
@@ -214,9 +211,10 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
                       type="email"
                       autoComplete="email"
                       value={poi.email ?? ""}
-                      onChange={(val) =>
-                        handleUpdate(index, "email", val.trim())
-                      }
+                      // Pas de trim ici : les espaces de bord sont retirées par
+                      // le schéma à l'enregistrement (RI-1424), et `getEmailError`
+                      // les tolère — elles ne déclenchent donc aucune erreur.
+                      onChange={(val) => handleUpdate(index, "email", val)}
                       onBlur={(e) => {
                         markEmailTouched(poi._poiId);
                         e.currentTarget.reportValidity();

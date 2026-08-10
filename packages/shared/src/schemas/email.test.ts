@@ -21,10 +21,15 @@ describe("getEmailError", () => {
     expect(getEmailError("@structure.fr")).toBe(EMAIL_ERROR_MESSAGE);
   });
 
-  it("refuse les espaces, y compris en bord d'adresse", () => {
+  it("tolère les espaces de bord — elles sont retirées, pas refusées", () => {
     // Le cas d'origine du ticket : une adresse copiée-collée avec une espace.
-    expect(getEmailError(" contact@structure.fr")).toBe(EMAIL_ERROR_MESSAGE);
-    expect(getEmailError("contact@structure.fr ")).toBe(EMAIL_ERROR_MESSAGE);
+    expect(getEmailError(" contact@structure.fr")).toBeUndefined();
+    expect(getEmailError("contact@structure.fr ")).toBeUndefined();
+    expect(getEmailError("\tcontact@structure.fr\n")).toBeUndefined();
+  });
+
+  it("refuse une espace au milieu de l'adresse", () => {
+    // `trim` ne touche que les bords : celle-ci reste une vraie erreur.
     expect(getEmailError("con tact@structure.fr")).toBe(EMAIL_ERROR_MESSAGE);
   });
 
@@ -38,6 +43,14 @@ describe("getEmailError", () => {
 describe("EmailSchema", () => {
   it("rejette une chaîne vide", () => {
     expect(EmailSchema.safeParse("").success).toBe(false);
+  });
+
+  it("renvoie l'adresse nettoyée dans `data`", () => {
+    // C'est la seule façon de récupérer la valeur trimée : un appelant qui
+    // réutilise son entrée au lieu de `result.data` perd la normalisation.
+    const result = EmailSchema.safeParse("  contact@structure.fr  ");
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toBe("contact@structure.fr");
   });
 
   it("porte le message partagé", () => {
