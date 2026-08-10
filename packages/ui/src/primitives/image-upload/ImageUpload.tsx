@@ -108,8 +108,12 @@ export function ImageUpload({
     await onDelete();
   };
 
+  // `twMerge` fait gagner la dernière classe en conflit : `rounded-full` écrase
+  // le `rounded-[4px]` du cadre sans avoir besoin d'un modificateur important.
+  // Le rectangle occupe toute la largeur disponible — la maquette est cadrée à
+  // 189px, mais la tuile doit remplir sa case (cellule de tableau, colonne…).
   const shapeClass =
-    shape === "circle" ? "size-20 !rounded-full" : "h-[86px] w-[189px]";
+    shape === "circle" ? "size-20 rounded-full" : "h-[86px] w-full";
   const tile = cn(TILE_CLASS, shapeClass, className);
 
   return (
