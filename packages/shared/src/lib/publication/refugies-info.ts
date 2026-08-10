@@ -130,10 +130,17 @@ export async function buildRefugiesInfoPayload(
   ) as string | null;
   const abstract = (metadata.abstract as string) || "";
 
-  // Sponsors at root level
+  // Sponsors at root level.
+  // `logo` (URL Cloudinary posée dans les métadonnées) voyage avec la structure :
+  // RI exige un `name` non vide sur chaque sponsor, donc un logo sans structure
+  // ne peut pas être envoyé. Côté RI la valeur est stockée telle quelle, en string.
   const sponsors: RefugiesInfoSponsor[] = [];
   if (metadata.mainSponsor !== undefined && metadata.mainSponsor !== "") {
-    sponsors.push({ name: metadata.mainSponsor as string });
+    const logo = typeof metadata.logo === "string" ? metadata.logo.trim() : "";
+    sponsors.push({
+      name: metadata.mainSponsor as string,
+      ...(logo && { logo }),
+    });
   }
 
   // Map (POIs) at root level — RI expects dispositif.map, not dispositif.metadatas.map
