@@ -1,3 +1,5 @@
+import type { UserRole } from "@playground/shared-types";
+
 export interface CurrentUser {
   id: string;
   email: string;
@@ -10,7 +12,7 @@ export interface CurrentUser {
   createdAt: string | null;
 }
 
-export type UserRole = "admin" | "editor" | "translator";
+export type { UserRole };
 
 /**
  * A profile whose display name has already been resolved (via {@link displayName}).
