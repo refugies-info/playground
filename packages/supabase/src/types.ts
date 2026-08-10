@@ -1022,6 +1022,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_translation_metadata_field: {
+        Args: {
+          delete_key?: boolean
+          field_key: string
+          field_value: Json
+          record_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       activity_log_action:

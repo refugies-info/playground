@@ -19,6 +19,7 @@ import {
   publishTranslation,
   retryTranslationGeneration,
   saveTranslation,
+  saveTranslationMetadataFieldAction as saveTranslationMetadataField,
 } from "@/services/translation-actions";
 import { useTranslationPublicationRealtime } from "./hooks/useTranslationPublicationRealtime";
 
@@ -34,6 +35,8 @@ interface TranslationData {
   translationMarkdown: string;
   sourceMarkdown: string;
   sourceMetadata?: Record<string, unknown>; // Metadata from source FR document
+  /** Métadonnées traduites (RI-1379) — seule `abstract` est traduisible. */
+  metadata?: Record<string, unknown>;
   publicationUrl?: string;
 }
 
@@ -41,6 +44,14 @@ export interface TranslationContextType {
   translation: TranslationData | null;
   setTranslation: React.Dispatch<React.SetStateAction<TranslationData | null>>;
   updateContent: (content: string) => void;
+  /**
+   * Enregistre une métadonnée traduite (RI-1379). Sauvegarde immédiate, comme
+   * côté FR : ce champ ne passe pas par l'autosave du markdown.
+   */
+  updateMetadataField: (
+    key: string,
+    value: unknown,
+  ) => Promise<{ success: boolean; error?: string }>;
   saveTranslation: () => Promise<{ success: boolean; error?: string }>;
   publishTranslation: () => Promise<{ success: boolean; error?: string }>;
   isDirty: boolean;
@@ -211,6 +222,34 @@ export function TranslationProvider({
       translationMarkdown: content,
     });
     setIsDirty(true);
+  };
+
+  const updateMetadataField = async (key: string, value: unknown) => {
+    if (!translation) return { success: false, error: "No translation" };
+
+    // Optimiste : la cellule affiche la nouvelle valeur sans attendre le serveur.
+    const previous = translation.metadata ?? {};
+    const next = { ...previous };
+    if (value === undefined) {
+      delete next[key];
+    } else {
+      next[key] = value;
+    }
+    setTranslation({ ...translation, metadata: next });
+
+    const result = await saveTranslationMetadataField(
+      translation.id,
+      key,
+      value,
+    );
+    if (!result.success) {
+      // Échec : on remet la valeur d'avant plutôt que d'afficher un texte
+      // que le serveur n'a pas enregistré.
+      setTranslation((current) =>
+        current ? { ...current, metadata: previous } : current,
+      );
+    }
+    return result;
   };
 
   const activeSaveTranslation = async () => {
@@ -430,6 +469,7 @@ export function TranslationProvider({
         translation,
         setTranslation: handleSetTranslation,
         updateContent,
+        updateMetadataField,
         saveTranslation: activeSaveTranslation,
         publishTranslation: activePublishTranslation,
         isDirty,
