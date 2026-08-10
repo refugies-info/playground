@@ -48,12 +48,6 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
   // Local state for editing
   const [localPois, setLocalPois] = useState<PoiWithId[]>(poiWithIds);
 
-  const [touchedEmails, setTouchedEmails] = useState<Set<number>>(new Set());
-
-  const markEmailTouched = useCallback((poiId: number) => {
-    setTouchedEmails((prev) => new Set(prev).add(poiId));
-  }, []);
-
   // Sync local state when entering edit mode
   const handleEdit = useCallback(() => {
     setLocalPois(poiWithIds);
@@ -215,15 +209,8 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
                       // le schéma à l'enregistrement (RI-1424), et `getEmailError`
                       // les tolère — elles ne déclenchent donc aucune erreur.
                       onChange={(val) => handleUpdate(index, "email", val)}
-                      onBlur={(e) => {
-                        markEmailTouched(poi._poiId);
-                        e.currentTarget.reportValidity();
-                      }}
-                      error={
-                        touchedEmails.has(poi._poiId)
-                          ? getEmailError(poi.email)
-                          : undefined
-                      }
+                      onBlur={(e) => e.currentTarget.reportValidity()}
+                      error={getEmailError(poi.email)}
                       className="w-full"
                       aria-label="Email de contact"
                     />
