@@ -24,6 +24,19 @@ const meta: Meta<typeof ImageUpload> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/**
+ * Le rectangle prend toute la largeur de son conteneur. Les stories le placent
+ * donc dans une boîte de la largeur de la maquette (189px) pour montrer les
+ * proportions attendues, comme le ferait une cellule du tableau des métadonnées.
+ */
+const inCell: Story["decorators"] = [
+  (StoryFn) => (
+    <div style={{ width: 189 }}>
+      <StoryFn />
+    </div>
+  ),
+];
+
 /** Cercle vide (avatar par défaut). */
 export const CercleVide: Story = {
   args: { shape: "circle" },
@@ -40,6 +53,7 @@ export const CercleAvecValeur: Story = {
 /** Rectangle vide — état « pas encore de logo » de la maquette. */
 export const Rectangle: Story = {
   args: { shape: "rect" },
+  decorators: inCell,
 };
 
 /**
@@ -53,6 +67,7 @@ export const SquareWithDeletableLogo: Story = {
     value: "https://res.cloudinary.com/demo/image/upload/w_200/sample.jpg",
     onDelete: () => {},
   },
+  decorators: inCell,
 };
 
 /**
@@ -65,6 +80,7 @@ export const SquareWithoutDeletableLogo: Story = {
     label: "Logo",
     value: "https://res.cloudinary.com/demo/image/upload/w_200/sample.jpg",
   },
+  decorators: inCell,
 };
 
 /** Désactivé. */
