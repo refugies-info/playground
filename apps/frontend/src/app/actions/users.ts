@@ -1,6 +1,5 @@
 "use server";
-
-import { logger, USER_ROLES } from "@playground/shared-types";
+import { EmailSchema, logger,USER_ROLES } from "@playground/shared-types";
 
 import { getSupabaseAdmin } from "@playground/supabase";
 import { revalidatePath } from "next/cache";
@@ -9,7 +8,7 @@ import { assertAdmin } from "@/lib/authz";
 
 // User Schemas
 const createUserSchema = z.object({
-  email: z.string().email(),
+  email: EmailSchema,
   username: z.string().min(2).max(50),
   role: z.enum(USER_ROLES),
   language: z.string().optional(),

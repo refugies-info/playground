@@ -1,6 +1,6 @@
 "use client";
 
-import type { RiPoi } from "@playground/shared-types";
+import { getEmailError, type RiPoi } from "@playground/shared-types";
 import { EditableField, TextInput } from "@playground/ui";
 import { Badge } from "@playground/ui/primitives";
 import { Plus, Trash2 } from "lucide-react";
@@ -48,6 +48,12 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
   // Local state for editing
   const [localPois, setLocalPois] = useState<PoiWithId[]>(poiWithIds);
 
+  const [touchedEmails, setTouchedEmails] = useState<Set<number>>(new Set());
+
+  const markEmailTouched = useCallback((poiId: number) => {
+    setTouchedEmails((prev) => new Set(prev).add(poiId));
+  }, []);
+
   // Sync local state when entering edit mode
   const handleEdit = useCallback(() => {
     setLocalPois(poiWithIds);
@@ -60,6 +66,9 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
     if (localPois.length > 0) {
       const poisToSave = localPois.map(({ _poiId, ...poi }) => {
         const result = { ...poi };
+        if (typeof result.email === "string") {
+          result.email = result.email.trim();
+        }
         if (result.lat !== undefined && result.lat !== "") {
           const parsed = parseFloat(String(result.lat));
           if (!isNaN(parsed)) result.lat = parsed;
@@ -202,8 +211,21 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
                   <Field label="Email de contact (optionnel)">
                     <TextInput
                       variant="dsfr"
+                      type="email"
+                      autoComplete="email"
                       value={poi.email ?? ""}
-                      onChange={(val) => handleUpdate(index, "email", val)}
+                      onChange={(val) =>
+                        handleUpdate(index, "email", val.trim())
+                      }
+                      onBlur={(e) => {
+                        markEmailTouched(poi._poiId);
+                        e.currentTarget.reportValidity();
+                      }}
+                      error={
+                        touchedEmails.has(poi._poiId)
+                          ? getEmailError(poi.email)
+                          : undefined
+                      }
                       className="w-full"
                       aria-label="Email de contact"
                     />

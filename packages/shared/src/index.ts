@@ -12,5 +12,6 @@ export * from "./lib/metadata-autofix";
 export * from "./lib/publication/refugies-info";
 export * from "./lib/workflow-status";
 export * from "./logger";
+export * from "./schemas/email";
 export * from "./schemas/metadata-ri";
 export * from "./types/index";
