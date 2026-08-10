@@ -477,6 +477,48 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          activity_log_id: string
+          archived_at: string | null
+          created_at: string
+          id: string
+          read_at: string | null
+          recipient_id: string
+        }
+        Insert: {
+          activity_log_id: string
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          recipient_id: string
+        }
+        Update: {
+          activity_log_id?: string
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          recipient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_activity_log_id_fkey"
+            columns: ["activity_log_id"]
+            isOneToOne: false
+            referencedRelation: "activity_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

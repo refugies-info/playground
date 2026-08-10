@@ -50,6 +50,8 @@ export type { RecordActivityParams } from "./steps/common/activity-log";
 export { recordActivity } from "./steps/common/activity-log";
 export type { GetEditorialRecordIdResult } from "./steps/common/get-editorial-record-id";
 export { getEditorialRecordIdStep } from "./steps/common/get-editorial-record-id";
+export type { DispatchNotificationsParams } from "./steps/common/notification";
+export { dispatchNotifications } from "./steps/common/notification";
 export { getSupabaseClient } from "./steps/common/supabase";
 export type { ForceEditorialStepResult } from "./steps/editorial/force-editorial-step";
 export type { PersistEditorialReportResult } from "./steps/editorial/persist-editorial-report";
