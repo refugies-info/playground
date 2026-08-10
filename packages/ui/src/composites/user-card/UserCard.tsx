@@ -1,6 +1,7 @@
 "use client";
 
 import { LANGUAGES } from "@playground/shared-types";
+import type { UserRole } from "@playground/shared-types/constants/roles";
 import { cva } from "class-variance-authority";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -55,7 +56,7 @@ const avatarVariants = cva(
   },
 );
 
-export type UserRole = "admin" | "editor" | "translator";
+export type { UserRole };
 
 interface UserCardProps {
   user?: User;
@@ -82,6 +83,13 @@ const ROLES: {
   { value: "editor", label: "Éditeur", color: "indigo" },
   { value: "translator", label: "Traducteur", color: "orange" },
 ];
+
+// Every role must have a label and a colour in the selector above.
+// Adding a value to USER_ROLES without adding it here breaks the build.
+const _ROLES_EXHAUSTIVE: Record<UserRole, true> = Object.fromEntries(
+  ROLES.map((role) => [role.value, true]),
+) as Record<UserRole, true>;
+void _ROLES_EXHAUSTIVE;
 
 export function UserCard({
   user,
