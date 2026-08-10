@@ -71,6 +71,8 @@ export interface PublisherAdapter {
     language: string;
     title: string;
     markdown: string;
+    /** Traduction du « En bref » (RI-1379) — absente tant qu'elle n'est pas saisie */
+    abstract?: string;
     existingRemoteId: string;
     userEmail: string;
   }): WebhookPayload | Promise<WebhookPayload>;
