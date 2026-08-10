@@ -61,10 +61,10 @@ export async function getActivityLogs(
         model
       ),
       author:profiles!activity_logs_author_id_fkey (
-        email, first_name, last_name, username, created_at, role, language, avatar_url
+        id, email, first_name, last_name, username, created_at, role, language, avatar_url
       ),
       target:profiles!activity_logs_target_profile_id_fkey (
-        email, first_name, last_name, username, created_at, role, language, avatar_url
+        id, email, first_name, last_name, username, created_at, role, language, avatar_url
       )
     `,
     )

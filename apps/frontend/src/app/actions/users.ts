@@ -1,6 +1,6 @@
 "use server";
 
-import { logger } from "@playground/shared-types";
+import { logger, USER_ROLES } from "@playground/shared-types";
 
 import { getSupabaseAdmin } from "@playground/supabase";
 import { revalidatePath } from "next/cache";
@@ -11,14 +11,14 @@ import { assertAdmin } from "@/lib/authz";
 const createUserSchema = z.object({
   email: z.string().email(),
   username: z.string().min(2).max(50),
-  role: z.enum(["admin", "editor", "translator"]),
+  role: z.enum(USER_ROLES),
   language: z.string().optional(),
 });
 
 const updateUserSchema = z.object({
   id: z.string().uuid(),
   username: z.string().min(2).max(50),
-  role: z.enum(["admin", "editor", "translator"]),
+  role: z.enum(USER_ROLES),
   language: z.string().optional(),
 });
 
