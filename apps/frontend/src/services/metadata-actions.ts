@@ -120,6 +120,11 @@ export async function saveMetadataFieldAction(
   if (!validation.success) {
     return { success: false, error: validation.error };
   }
+  // On enregistre la valeur telle que le schéma la rend, pas telle qu'elle est
+  // arrivée : c'est ce qui applique le trim de l'email d'un point d'intérêt
+  // (RI-1424) quel que soit l'appelant. Identique à l'entrée pour tout champ
+  // sans transformation.
+  const valueToSave = validation.data;
 
   // 3. Authenticate user
   const [currentUser, cookieStore] = await Promise.all([
@@ -162,8 +167,8 @@ export async function saveMetadataFieldAction(
 
   // 6. Use RPC to update only the specific key
   // Distinguish between null (explicit clear) and undefined (delete key)
-  const shouldDeleteKey = value === undefined;
-  const jsonValue = value === undefined ? null : (value as Json);
+  const shouldDeleteKey = valueToSave === undefined;
+  const jsonValue = valueToSave === undefined ? null : (valueToSave as Json);
 
   const { error: rpcError } = await supabase.rpc("update_metadata_field", {
     record_id: editorialRecordId,
@@ -202,11 +207,15 @@ export async function saveMetadataFieldsAction(
   }
 
   // 2. Validate all field values
+  // On mémorise la valeur rendue par le schéma pour l'enregistrer à la place de
+  // l'entrée : même raison que dans `saveMetadataFieldAction` (RI-1424).
+  const valuesToSave = new Map<string, unknown>();
   for (const [key, value] of Object.entries(fields)) {
     const validation = validateField(key, value);
     if (!validation.success) {
       return { success: false, error: `${key}: ${validation.error}` };
     }
+    valuesToSave.set(key, validation.data);
   }
 
   // 3. Authenticate user
@@ -249,7 +258,7 @@ export async function saveMetadataFieldsAction(
   const editorialRecordId = recordResult.editorialRecordId;
 
   // 6. Save each field via RPC
-  for (const [key, value] of Object.entries(fields)) {
+  for (const [key, value] of valuesToSave) {
     const jsonValue =
       value === undefined || value === null ? null : (value as Json);
 

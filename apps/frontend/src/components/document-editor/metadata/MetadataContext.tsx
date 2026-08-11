@@ -514,16 +514,20 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       // 4. Mark as saving
       dispatch({ type: "START_SAVING", key });
 
-      // 5. Optimistic update (with fixed value)
-      if (fixedValue === undefined) {
+      // 5. Optimistic update — on affiche la valeur telle que le schéma la rend
+      // (et non `fixedValue`), sinon la cellule montrerait autre chose que ce
+      // qui part en base : une espace de bord d'email retirée par le schéma
+      // resterait visible jusqu'au rechargement (RI-1424).
+      const validatedValue = validation.data;
+      if (validatedValue === undefined) {
         // undefined = delete override (revert to AI value)
         dispatch({ type: "DELETE_FIELD", key });
-      } else if (fixedValue === null) {
+      } else if (validatedValue === null) {
         // null = explicitly clear field (override with null)
         dispatch({ type: "CLEAR_FIELD", key });
       } else {
         // other value = set override
-        dispatch({ type: "SET_FIELD", key, value: fixedValue });
+        dispatch({ type: "SET_FIELD", key, value: validatedValue });
       }
 
       // 5. Save to server
