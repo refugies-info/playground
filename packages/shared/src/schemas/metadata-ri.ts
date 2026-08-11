@@ -111,9 +111,6 @@ export const PoiSchema = z.object({
   lng: z.number({ message: "La longitude doit être un nombre" }).optional(),
   email: z
     .string({ message: "L'email doit être une chaîne de caractères" })
-    // Espaces de bord retirées à l'enregistrement (RI-1424). Pas de `.email()`
-    // ici : ça refuserait les adresses douteuses déjà en base et bloquerait la
-    // modification du reste du point d'intérêt.
     .trim()
     .optional(),
   phone: z

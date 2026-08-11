@@ -205,9 +205,6 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
                       type="email"
                       autoComplete="email"
                       value={poi.email ?? ""}
-                      // Pas de trim ici : les espaces de bord sont retirées par
-                      // le schéma à l'enregistrement (RI-1424), et `getEmailError`
-                      // les tolère — elles ne déclenchent donc aucune erreur.
                       onChange={(val) => handleUpdate(index, "email", val)}
                       onBlur={(e) => e.currentTarget.reportValidity()}
                       error={getEmailError(poi.email)}
