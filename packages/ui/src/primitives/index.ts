@@ -2,6 +2,7 @@ export * from "./avatar";
 export * from "./badge";
 export * from "./bouton-filtre";
 export * from "./bouton-menu";
+export * from "./bouton-notification";
 export * from "./button";
 export * from "./callout";
 export * from "./card";

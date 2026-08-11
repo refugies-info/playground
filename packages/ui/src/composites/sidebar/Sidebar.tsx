@@ -37,6 +37,8 @@ export interface SidebarProps {
   children: React.ReactNode;
   /** Avatar de l'utilisateur connecté (image ou initiales) */
   userAvatar?: React.ReactNode;
+  /** Bouton de notifications */
+  notifications?: React.ReactNode;
   className?: string;
 }
 
@@ -46,6 +48,7 @@ export function Sidebar({
   logo,
   children,
   userAvatar,
+  notifications,
   className,
 }: SidebarProps) {
   return (
@@ -67,7 +70,7 @@ export function Sidebar({
         <div className="flex flex-col gap-2">{children}</div>
       </div>
 
-      {/* Bottom — Avatar + bouton toggle */}
+      {/* Bottom — Notifications + avatar + bouton toggle */}
       <div
         className={cn(
           "px-4 py-6",
@@ -76,8 +79,16 @@ export function Sidebar({
             : "flex flex-row items-center justify-between",
         )}
       >
-        {/* Avatar */}
-        {userAvatar && <div className="shrink-0">{userAvatar}</div>}
+        {/* Notifications + avatar */}
+        <div
+          className={cn(
+            "flex shrink-0 items-center",
+            isCollapsed ? "flex-col gap-4" : "flex-row gap-2",
+          )}
+        >
+          {notifications}
+          {userAvatar}
+        </div>
 
         {/* Bouton toggle */}
         <Button
