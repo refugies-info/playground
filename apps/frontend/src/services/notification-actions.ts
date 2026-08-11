@@ -1,8 +1,13 @@
 "use server";
 
-import { logger } from "@playground/shared-types";
+import { logger, type NotificationType } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
+import {
+  listNotifications,
+  type NotificationItem,
+  type NotificationTab,
+} from "./notifications";
 
 export interface NotificationActionResult {
   success: boolean;
@@ -74,6 +79,35 @@ export async function setNotificationArchived(
     return { success: true };
   } catch (error) {
     logger.error({ error, id }, "Unexpected error archiving notification");
+    return { success: false, error: "Erreur inattendue" };
+  }
+}
+
+export async function fetchNotifications(
+  options: { tab?: NotificationTab; types?: readonly NotificationType[] } = {},
+): Promise<NotificationItem[]> {
+  return listNotifications(options);
+}
+
+export async function markAllNotificationsAsRead(): Promise<NotificationActionResult> {
+  try {
+    const cookieStore = await cookies();
+    const supabase = createSupabaseServerClient(cookieStore);
+
+    const { error } = await supabase
+      .from("notifications")
+      .update({ read_at: new Date().toISOString() })
+      .is("archived_at", null)
+      .is("read_at", null);
+
+    if (error) {
+      logger.error({ error }, "Error marking all notifications as read");
+      return { success: false, error: "Erreur lors de la mise à jour" };
+    }
+
+    return { success: true };
+  } catch (error) {
+    logger.error({ error }, "Unexpected error marking all as read");
     return { success: false, error: "Erreur inattendue" };
   }
 }

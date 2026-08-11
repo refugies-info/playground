@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { Suspense } from "react";
 import { AppSidebar } from "@/components/common/AppSidebar";
+import { NotificationsPanel } from "@/components/notifications/NotificationsPanel";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { getCurrentUser } from "@/lib/auth";
@@ -34,6 +35,7 @@ export default async function MainLayout({
               <PageShell>{children}</PageShell>
             </Suspense>
           </main>
+          <NotificationsPanel />
         </div>
       </NotificationsProvider>
     </SidebarProvider>

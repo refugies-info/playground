@@ -79,6 +79,10 @@ export interface NotificationItem {
   targetName?: string;
   note: string | null;
   language: string | null;
+  /**
+   * Non utilisée pour l'instant, mais on la récupère pour pouvoir l'afficher dans le futur.
+   */
+  complianceStatus: string | null;
 }
 
 const NOTIFICATION_LIST_SELECT = `
@@ -191,6 +195,10 @@ export async function listNotifications(
       note: typeof activity.note === "string" ? activity.note : null,
       language:
         typeof activity.language === "string" ? activity.language : null,
+      complianceStatus:
+        typeof activity.complianceStatus === "string"
+          ? activity.complianceStatus
+          : null,
     });
   }
 
