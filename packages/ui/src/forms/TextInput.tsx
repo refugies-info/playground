@@ -118,6 +118,14 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
           aria-describedby={error ? `${id}-error` : undefined}
           {...props}
         />
+        {error && (
+          <p
+            id={`${id}-error`}
+            className="text-[12px] leading-[20px] text-(--text-default-error)"
+          >
+            {error}
+          </p>
+        )}
       </div>
     );
   },

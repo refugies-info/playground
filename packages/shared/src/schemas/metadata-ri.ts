@@ -111,6 +111,7 @@ export const PoiSchema = z.object({
   lng: z.number({ message: "La longitude doit être un nombre" }).optional(),
   email: z
     .string({ message: "L'email doit être une chaîne de caractères" })
+    .trim()
     .optional(),
   phone: z
     .string({ message: "Le téléphone doit être une chaîne de caractères" })
@@ -256,25 +257,30 @@ export type MetadataRi = z.infer<typeof MetadataRiSchema>;
 
 /**
  * Validate a single field value against its schema.
- * Returns { success: true } or { success: false; error: string }
+ * Returns { success: true; data } or { success: false; error: string }
+ *
+ * `data` est la valeur **après** passage du schéma : c'est elle qu'il faut
+ * enregistrer, sinon les normalisations du schéma (trim de l'email d'un point
+ * d'intérêt, RI-1424) sont perdues. Pour un champ sans transformation — tous les
+ * autres à ce jour — `data` est identique à l'entrée.
  */
 export function validateField(
   key: string,
   value: unknown,
-): { success: true } | { success: false; error: string } {
+): { success: true; data: unknown } | { success: false; error: string } {
   // Get the field schema from the main schema
   const fieldSchema =
     MetadataRiSchema.shape[key as keyof typeof MetadataRiSchema.shape];
 
   // If no schema defined for this key, allow it (permissive for unknown fields)
   if (!fieldSchema) {
-    return { success: true };
+    return { success: true, data: value };
   }
 
   const result = fieldSchema.safeParse(value);
 
   if (result.success) {
-    return { success: true };
+    return { success: true, data: result.data };
   }
 
   // Format error message - use the first error with custom message

@@ -1,6 +1,6 @@
 "use client";
 
-import type { RiPoi } from "@playground/shared-types";
+import { getEmailError, type RiPoi } from "@playground/shared-types";
 import { EditableField, TextInput } from "@playground/ui";
 import { Badge } from "@playground/ui/primitives";
 import { Plus, Trash2 } from "lucide-react";
@@ -202,8 +202,12 @@ export function PoiField({ fieldKey }: { fieldKey: string }) {
                   <Field label="Email de contact (optionnel)">
                     <TextInput
                       variant="dsfr"
+                      type="email"
+                      autoComplete="email"
                       value={poi.email ?? ""}
                       onChange={(val) => handleUpdate(index, "email", val)}
+                      onBlur={(e) => e.currentTarget.reportValidity()}
+                      error={getEmailError(poi.email)}
                       className="w-full"
                       aria-label="Email de contact"
                     />
