@@ -5,42 +5,20 @@ import {
   type ActivityLogType,
   dayKey,
   LANGUAGES,
-  TYPE_ARCHIVE,
   TYPE_ASSIGNMENT,
-  TYPE_CLEAR_LANGUAGE,
   TYPE_COMPLIANCE_HUMAN,
   TYPE_COMPLIANCE_IA,
   TYPE_NOTE,
-  TYPE_PUBLICATION,
   TYPE_PUBLICATION_LANGUE,
-  TYPE_TRANSLATION,
   TYPE_TRANSLATION_ERROR,
-  TYPE_TRANSLATION_PRIORITY,
-  TYPE_UPDATE,
   TYPE_UPDATE_COMPLIANCE,
 } from "@playground/shared-types";
-import {
-  Avatar,
-  BADGE_ERROR,
-  BADGE_INFO,
-  BADGE_SUCCESS,
-  type BadgeColors,
-  BoutonFiltre,
-  IconBadge,
-} from "@playground/ui/primitives";
-import {
-  type RemixiconComponentType,
-  RiAuctionLine,
-  RiFileTextLine,
-  RiGlobalLine,
-  RiPencilLine,
-  RiTranslate2,
-  RiUserLine,
-} from "@remixicon/react";
+import { Avatar, BoutonFiltre, IconBadge } from "@playground/ui/primitives";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { getTypeBadge } from "@/lib/activity-log-badge";
 import { formatDateFr } from "@/lib/format-date";
 import type { Profile } from "@/lib/profile";
 import type { ActivityLogEntry } from "@/services/activity-logs";
@@ -66,30 +44,6 @@ const LANGUAGE_LABELS = new Map<string, string>(
   LANGUAGES.map((l) => [l.code, l.label]),
 );
 
-// Mapping métier : type de log → icône + couleurs (tokens DSFR du design system).
-interface TypeBadge {
-  icon: RemixiconComponentType;
-  colors?: BadgeColors;
-}
-
-const TYPE_BADGE: Record<ActivityLogType, TypeBadge> = {
-  [TYPE_COMPLIANCE_IA]: { icon: RiAuctionLine },
-  [TYPE_COMPLIANCE_HUMAN]: { icon: RiAuctionLine },
-  [TYPE_UPDATE_COMPLIANCE]: { icon: RiAuctionLine },
-  [TYPE_ASSIGNMENT]: { icon: RiUserLine },
-  [TYPE_CLEAR_LANGUAGE]: { icon: RiFileTextLine },
-  [TYPE_NOTE]: { icon: RiPencilLine },
-  [TYPE_TRANSLATION]: { icon: RiTranslate2 },
-  [TYPE_TRANSLATION_PRIORITY]: { icon: RiTranslate2 },
-  [TYPE_TRANSLATION_ERROR]: { icon: RiTranslate2 },
-  [TYPE_UPDATE]: { icon: RiGlobalLine, colors: BADGE_INFO },
-  [TYPE_PUBLICATION]: { icon: RiGlobalLine, colors: BADGE_SUCCESS },
-  [TYPE_PUBLICATION_LANGUE]: { icon: RiGlobalLine, colors: BADGE_SUCCESS },
-  [TYPE_ARCHIVE]: { icon: RiGlobalLine, colors: BADGE_ERROR },
-};
-
-const DEFAULT_BADGE: TypeBadge = { icon: RiFileTextLine };
-
 // Compliance verdict → human label, fills the "%s" in the jugement templates.
 const COMPLIANCE_LABELS: Record<string, string> = {
   compliant: "conforme",
@@ -99,7 +53,7 @@ const COMPLIANCE_LABELS: Record<string, string> = {
 
 function ActivityTypeIcon({ action }: { action: ActivityLogType }) {
   const label = TYPE_META.get(action)?.label ?? action;
-  const { icon, colors } = TYPE_BADGE[action] ?? DEFAULT_BADGE;
+  const { icon, colors } = getTypeBadge(action);
   return <IconBadge icon={icon} colors={colors} title={label} />;
 }
 

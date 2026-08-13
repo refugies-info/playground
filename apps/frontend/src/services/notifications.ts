@@ -80,6 +80,12 @@ export interface NotificationItem {
   note: string | null;
   language: string | null;
   /**
+   * URL publique de la fiche sur Réfugiés.info, portée par la charge d'une
+   * publication. C'est la destination du lien externe de la ligne — le titre,
+   * lui, renvoie vers la fiche dans le BOMO.
+   */
+  publishedUrl: string | null;
+  /**
    * Non utilisée pour l'instant, mais on la récupère pour pouvoir l'afficher dans le futur.
    */
   complianceStatus: string | null;
@@ -195,6 +201,10 @@ export async function listNotifications(
       note: typeof activity.note === "string" ? activity.note : null,
       language:
         typeof activity.language === "string" ? activity.language : null,
+      publishedUrl:
+        typeof activity.publishedUrl === "string"
+          ? activity.publishedUrl
+          : null,
       complianceStatus:
         typeof activity.complianceStatus === "string"
           ? activity.complianceStatus

@@ -8,13 +8,14 @@ import {
   RiArchiveLine,
   RiExternalLinkLine,
 } from "@playground/ui/icons";
+import { IconBadge } from "@playground/ui/primitives";
 import type { ComponentType } from "react";
+import { getTypeBadge } from "@/lib/activity-log-badge";
 import type { NotificationItem } from "@/services/notifications";
 import {
   formatNotificationDate,
   getNotificationHref,
   getNotificationMessage,
-  getTypePresentation,
 } from "./notification-presentation";
 
 export function NotificationRow({
@@ -31,7 +32,9 @@ export function NotificationRow({
   const isUnread = item.readAt === null;
   const message = getNotificationMessage(item);
   const canOpen = getNotificationHref(item) !== null;
-  const { icon: TypeIcon, badgeClassName } = getTypePresentation(item.type);
+  // Indexé sur l'action et non sur le type de notification : c'est la même
+  // pastille que dans le journal d'activités, au même niveau de détail.
+  const { icon: typeIcon, colors: typeColors } = getTypeBadge(item.action);
 
   return (
     <div
@@ -48,16 +51,11 @@ export function NotificationRow({
           isAI={!item.actorName}
           className="size-6"
         />
-        <span
-          aria-hidden
-          className={cn(
-            "absolute left-3 top-[13px] flex size-[18px] items-center justify-center rounded-full",
-            "border-[0.45px] border-(--border-default-grey)",
-            badgeClassName,
-          )}
-        >
-          <TypeIcon className="size-[9px]" />
-        </span>
+        <IconBadge
+          icon={typeIcon}
+          colors={typeColors}
+          className="absolute left-3 top-[13px] size-[18px] [&>svg]:size-[9px]"
+        />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -84,12 +82,19 @@ export function NotificationRow({
           )}
         >
           {message}
-          {item.language && (
-            <RiExternalLinkLine
-              size={14}
-              aria-hidden
-              className="ml-1 inline-block align-text-bottom text-(--text-action-high-blue-france)"
-            />
+          {item.publishedUrl && (
+            <a
+              href={item.publishedUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Voir la fiche sur Réfugiés.info"
+              className="ml-1 inline-block align-text-bottom text-(--text-action-high-blue-france) hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--border-action-high-blue-france)"
+            >
+              <RiExternalLinkLine size={14} aria-hidden />
+              <span className="sr-only">
+                Voir la fiche sur Réfugiés.info (nouvel onglet)
+              </span>
+            </a>
           )}
         </p>
 

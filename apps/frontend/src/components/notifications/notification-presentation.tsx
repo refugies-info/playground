@@ -4,49 +4,8 @@ import {
   NOTIFICATION_NOTE,
   NOTIFICATION_PUBLICATION,
   NOTIFICATION_UPDATE,
-  type NotificationType,
 } from "@playground/shared-types";
-import {
-  Archive,
-  type LucideIcon,
-  MessageSquare,
-  RefreshCw,
-  Send,
-  UserPlus,
-} from "lucide-react";
 import type { NotificationItem } from "@/services/notifications";
-
-interface TypePresentation {
-  icon: LucideIcon;
-  badgeClassName: string;
-}
-
-const TYPE_PRESENTATION: Record<NotificationType, TypePresentation> = {
-  [NOTIFICATION_PUBLICATION]: {
-    icon: Send,
-    badgeClassName: "bg-(--background-flat-success) text-white",
-  },
-  [NOTIFICATION_UPDATE]: {
-    icon: RefreshCw,
-    badgeClassName: "bg-(--background-contrast-grey) text-(--text-title-grey)",
-  },
-  [NOTIFICATION_ARCHIVE]: {
-    icon: Archive,
-    badgeClassName: "bg-(--background-flat-error) text-white",
-  },
-  [NOTIFICATION_ASSIGNMENT]: {
-    icon: UserPlus,
-    badgeClassName: "bg-(--background-contrast-grey) text-(--text-title-grey)",
-  },
-  [NOTIFICATION_NOTE]: {
-    icon: MessageSquare,
-    badgeClassName: "bg-(--background-flat-grey) text-white",
-  },
-};
-
-export function getTypePresentation(type: NotificationType): TypePresentation {
-  return TYPE_PRESENTATION[type];
-}
 
 export function getNotificationMessage(item: NotificationItem): string {
   const actor = item.actorName ?? "PapaIA";
