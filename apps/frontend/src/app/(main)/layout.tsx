@@ -22,7 +22,10 @@ export default async function MainLayout({
   const sidebarCollapsed = cookieStore.get(SIDEBAR_COOKIE)?.value === "true";
   return (
     <SidebarProvider initialCollapsed={sidebarCollapsed}>
-      <NotificationsProvider initialUnreadCount={notificationCounts.unread}>
+      <NotificationsProvider
+        userId={currentUser.id}
+        initialUnreadCount={notificationCounts.unread}
+      >
         <div className="flex h-screen w-full bg-[var(--background-alt-blue-france,#f5f5fe)]">
           <AppSidebar
             userRole={currentUser.role}

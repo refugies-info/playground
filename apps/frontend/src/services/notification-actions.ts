@@ -4,7 +4,9 @@ import { logger, type NotificationType } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import {
+  getNotificationCounts,
   listNotifications,
+  type NotificationCounts,
   type NotificationItem,
   type NotificationTab,
 } from "./notifications";
@@ -110,4 +112,8 @@ export async function markAllNotificationsAsRead(): Promise<NotificationActionRe
     logger.error({ error }, "Unexpected error marking all as read");
     return { success: false, error: "Erreur inattendue" };
   }
+}
+
+export async function fetchNotificationCounts(): Promise<NotificationCounts> {
+  return getNotificationCounts();
 }

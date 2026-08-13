@@ -1,5 +1,6 @@
 "use client";
 
+import type { NotificationType } from "@playground/shared-types";
 import { Button, cn } from "@playground/ui";
 import { FrArrowLeftSLineDouble } from "@playground/ui/icons";
 import { useRouter } from "next/navigation";
@@ -7,12 +8,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import {
+  fetchNotificationCounts,
   fetchNotifications,
   markAllNotificationsAsRead,
   setNotificationArchived,
   setNotificationRead,
 } from "@/services/notification-actions";
-import type { NotificationItem } from "@/services/notifications";
+import type {
+  NotificationCounts,
+  NotificationItem,
+  NotificationTab,
+} from "@/services/notifications";
+import { NotificationFilters } from "./NotificationFilters";
 import { NotificationRow } from "./NotificationRow";
 import {
   getNotificationGroup,
@@ -23,6 +30,8 @@ import {
 
 const GROUP_ORDER: NotificationGroupKey[] = ["today", "week", "older"];
 
+const EMPTY_COUNTS: NotificationCounts = { all: 0, unread: 0, archived: 0 };
+
 export function NotificationsPanel() {
   const { isOpen, close, refreshUnreadCount } = useNotifications();
   const { isCollapsed } = useSidebar();
@@ -31,15 +40,23 @@ export function NotificationsPanel() {
   const panelRef = useRef<HTMLDivElement>(null);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [tab, setTab] = useState<NotificationTab>("all");
+  const [selectedTypes, setSelectedTypes] = useState<NotificationType[]>([]);
+  const [counts, setCounts] = useState<NotificationCounts>(EMPTY_COUNTS);
 
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      setItems(await fetchNotifications({ tab: "all" }));
+      const [nextItems, nextCounts] = await Promise.all([
+        fetchNotifications({ tab, types: selectedTypes }),
+        fetchNotificationCounts(),
+      ]);
+      setItems(nextItems);
+      setCounts(nextCounts);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [tab, selectedTypes]);
 
   useEffect(() => {
     if (isOpen) void load();
@@ -51,7 +68,11 @@ export function NotificationsPanel() {
     const handlePointerDown = (event: MouseEvent) => {
       const target = event.target as Node;
       if (panelRef.current?.contains(target)) return;
-      if ((target as HTMLElement).closest?.("[aria-expanded]")) return;
+
+      const element = target as HTMLElement;
+      if (element.closest?.("[aria-expanded]")) return;
+      if (element.closest?.("[data-radix-popper-content-wrapper]")) return;
+
       close();
     };
 
@@ -75,6 +96,10 @@ export function NotificationsPanel() {
     },
     [],
   );
+
+  const refreshCounts = useCallback(async () => {
+    setCounts(await fetchNotificationCounts());
+  }, []);
 
   const handleOpen = useCallback(
     async (item: NotificationItem) => {
@@ -100,8 +125,9 @@ export function NotificationsPanel() {
       });
       await setNotificationRead(item.id, isUnRead);
       void refreshUnreadCount();
+      void refreshCounts();
     },
-    [applyLocally, refreshUnreadCount],
+    [applyLocally, refreshCounts, refreshUnreadCount],
   );
 
   const handleArchive = useCallback(
@@ -110,8 +136,9 @@ export function NotificationsPanel() {
       setItems((previous) => previous.filter((row) => row.id !== item.id));
       await setNotificationArchived(item.id, isArchived);
       void refreshUnreadCount();
+      void refreshCounts();
     },
-    [refreshUnreadCount],
+    [refreshCounts, refreshUnreadCount],
   );
 
   const handleMarkAllAsRead = useCallback(async () => {
@@ -121,7 +148,8 @@ export function NotificationsPanel() {
     );
     await markAllNotificationsAsRead();
     void refreshUnreadCount();
-  }, [refreshUnreadCount]);
+    void refreshCounts();
+  }, [refreshCounts, refreshUnreadCount]);
 
   if (!isOpen) return null;
 
@@ -158,6 +186,14 @@ export function NotificationsPanel() {
 
       <div className="mx-5 mt-6 border-t border-(--border-default-grey)" />
 
+      <NotificationFilters
+        tab={tab}
+        onTabChange={setTab}
+        counts={counts}
+        selectedTypes={selectedTypes}
+        onTypesChange={setSelectedTypes}
+      />
+
       <div className="flex-1 overflow-y-auto px-1 pb-4">
         {isLoading && items.length === 0 && (
           <p className="px-4 py-6 text-sm text-(--text-mention-grey)">
@@ -167,7 +203,9 @@ export function NotificationsPanel() {
 
         {!isLoading && items.length === 0 && (
           <p className="px-4 py-6 text-sm text-(--text-mention-grey)">
-            Aucune notification pour le moment.
+            {selectedTypes.length > 0
+              ? "Oups ! Il n'y a aucun résultat avec les filtres appliqués."
+              : "Aucune notification pour le moment."}
           </p>
         )}
 

@@ -25,9 +25,11 @@ const NotificationsContext = createContext<NotificationsContextValue | null>(
 
 export function NotificationsProvider({
   children,
+  userId,
   initialUnreadCount = 0,
 }: {
   children: React.ReactNode;
+  userId?: string;
   initialUnreadCount?: number;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,7 +55,12 @@ export function NotificationsProvider({
       .channel("notifications-unread-count")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "notifications" },
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          ...(userId ? { filter: `recipient_id=eq.${userId}` } : {}),
+        },
         () => {
           void refreshUnreadCount();
         },
@@ -63,7 +70,7 @@ export function NotificationsProvider({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, refreshUnreadCount]);
+  }, [supabase, refreshUnreadCount, userId]);
 
   const value = useMemo(
     () => ({
