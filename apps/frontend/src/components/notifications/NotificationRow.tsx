@@ -2,8 +2,13 @@
 
 import { NOTIFICATION_NOTE } from "@playground/shared-types";
 import { Avatar, cn } from "@playground/ui";
-import { RiExternalLinkLine } from "@playground/ui/icons";
-import { Archive, Mail, MailOpen } from "lucide-react";
+import {
+  FrMarkAsReadLine,
+  FrMarkAsUnreadLine,
+  RiArchiveLine,
+  RiExternalLinkLine,
+} from "@playground/ui/icons";
+import type { ComponentType } from "react";
 import type { NotificationItem } from "@/services/notifications";
 import {
   formatNotificationDate,
@@ -24,48 +29,46 @@ export function NotificationRow({
   onArchive: (item: NotificationItem) => void;
 }) {
   const isUnread = item.readAt === null;
-  const { icon: TypeIcon, badgeClassName } = getTypePresentation(item.type);
   const message = getNotificationMessage(item);
   const canOpen = getNotificationHref(item) !== null;
+  const { icon: TypeIcon, badgeClassName } = getTypePresentation(item.type);
 
   return (
     <div
       className={cn(
-        "group relative flex gap-3 border-b border-(--border-default-grey) py-4 pl-4 pr-3",
+        "group relative flex items-start gap-3 border-b border-(--border-default-grey) py-4 pl-[13px] pr-4",
         "transition-colors hover:bg-(--background-alt-blue-france)",
-        isUnread && "border-l-2 border-l-(--blue-france-sun-113-625-hover)",
+        isUnread && "border-l-[3px] border-l-(--border-default-blue-france)",
       )}
     >
-      <div className="relative shrink-0">
+      <div className="relative h-fit w-[30px] shrink-0">
         <Avatar
           displayName={item.actorName}
           avatarUrl={item.actorAvatar}
           isAI={!item.actorName}
-          className="size-8"
+          className="size-6"
         />
         <span
           aria-hidden
           className={cn(
-            "absolute -bottom-1 -right-1 flex size-4 items-center justify-center rounded-full",
+            "absolute left-3 top-[13px] flex size-[18px] items-center justify-center rounded-full",
+            "border-[0.45px] border-(--border-default-grey)",
             badgeClassName,
           )}
         >
-          <TypeIcon className="size-2.5" />
+          <TypeIcon className="size-[9px]" />
         </span>
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
         <button
           type="button"
           onClick={() => onOpen(item)}
           disabled={!canOpen}
           className={cn(
-            "text-left text-sm font-bold leading-6",
+            "text-left text-base font-medium leading-6 text-(--text-default-grey)",
             "focus-visible:outline-none focus-visible:underline",
             canOpen ? "cursor-pointer hover:underline" : "cursor-default",
-            isUnread
-              ? "text-(--text-title-grey)"
-              : "text-(--text-mention-grey)",
           )}
         >
           {item.documentTitle ?? "Fiche supprimée"}
@@ -95,25 +98,23 @@ export function NotificationRow({
         </time>
       </div>
 
-      <div className="flex shrink-0 flex-col items-end justify-between">
-        <span
-          aria-hidden
-          className={cn(
-            "mt-1 size-2 rounded-full",
-            isUnread
-              ? "bg-(--blue-france-sun-113-625-hover)"
-              : "bg-transparent",
-          )}
-        />
+      <div className="relative flex h-6 w-12 shrink-0 items-center justify-end">
+        {isUnread && (
+          <span
+            aria-hidden
+            className="size-2 rounded-full bg-(--border-default-blue-france) group-hover:invisible group-focus-within:invisible"
+          />
+        )}
 
-        <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+        <div className="absolute right-0 top-0 hidden overflow-hidden border border-(--border-default-grey) bg-white group-hover:flex group-focus-within:flex">
           <RowAction
-            icon={isUnread ? MailOpen : Mail}
+            icon={isUnread ? FrMarkAsReadLine : FrMarkAsUnreadLine}
             title={isUnread ? "Marquer comme lue" : "Marquer comme non lue"}
             onClick={() => onToggleRead(item)}
+            className="border-r border-(--border-default-grey)"
           />
           <RowAction
-            icon={Archive}
+            icon={RiArchiveLine}
             title={item.archivedAt ? "Désarchiver" : "Archiver"}
             onClick={() => onArchive(item)}
           />
@@ -127,19 +128,26 @@ function RowAction({
   icon: Icon,
   title,
   onClick,
+  className,
 }: {
-  icon: typeof Archive;
+  icon: ComponentType<{ size?: number | string; color?: string }>;
   title: string;
   onClick: () => void;
+  className?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       title={title}
-      className="flex size-8 cursor-pointer items-center justify-center rounded text-(--text-mention-grey) transition-colors hover:bg-white hover:text-(--text-action-high-blue-france) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--border-action-high-blue-france)"
+      className={cn(
+        "flex size-6 cursor-pointer items-center justify-center text-(--text-mention-grey)",
+        "transition-colors hover:bg-(--background-alt-blue-france) hover:text-(--text-action-high-blue-france)",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--border-action-high-blue-france)",
+        className,
+      )}
     >
-      <Icon className="size-4" />
+      <Icon size={16} aria-hidden />
       <span className="sr-only">{title}</span>
     </button>
   );

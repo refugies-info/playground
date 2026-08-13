@@ -227,11 +227,13 @@ export function NotificationsPanel() {
         ))}
       </div>
 
-      <footer className="flex justify-center border-t border-(--border-default-grey) px-5 py-5">
-        <Button variant="tertiaire" size="sm" onClick={handleMarkAllAsRead}>
-          Tout marquer comme lu
-        </Button>
-      </footer>
+      {items.length > 0 && (
+        <footer className="flex justify-center border-t border-(--border-default-grey) px-5 py-5">
+          <Button variant="tertiaire" size="sm" onClick={handleMarkAllAsRead}>
+            Tout marquer comme lu
+          </Button>
+        </footer>
+      )}
     </div>
   );
 }
