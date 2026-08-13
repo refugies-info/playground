@@ -140,7 +140,8 @@ ${sanitizedContent}
 
 /**
  * Non-streaming version of simplifyContent.
- * Calls the Letta agent and waits for the full response — no chunks, no pings.
+ * Calls the Letta agent and consumes the whole stream, returning the full
+ * response in one go — the caller never sees chunks or pings.
  *
  * Use this in durable workflow steps where streaming to a client is not needed.
  *
@@ -156,12 +157,14 @@ export async function simplifyContentSync(
 
   logger.info(
     { conversationId, contentLength: markdownContent.length },
-    "[simplifyContentSync] Starting (consuming stream, breaking on first content)",
+    "[simplifyContentSync] Starting (consuming full stream)",
   );
 
   // The Letta SDK always streams for conversations.messages.create.
-  // We reuse the existing generator but exit as soon as we have the
-  // assistant message — no need to wait for pings to stop.
+  // Depending on the server's streaming mode, `assistant_message` chunks are
+  // token deltas rather than complete messages — and a multi-step agent can
+  // emit several of them. We must consume the whole stream and concatenate
+  // every chunk, otherwise the content is silently truncated.
   let assistantContent = "";
   let usage: SimplifyContentResult["usage"];
   let runId: string | undefined;
@@ -176,14 +179,11 @@ export async function simplifyContentSync(
       runId = chunk.run_id;
     }
 
-    if (
-      chunk.message_type === "assistant_message" &&
-      typeof chunk.content === "string" &&
-      chunk.content
-    ) {
-      assistantContent = chunk.content;
-      // Break immediately — don't wait for pings or end of stream.
-      break;
+    if (chunk.message_type === "assistant_message") {
+      assistantContent +=
+        typeof chunk.content === "string"
+          ? chunk.content
+          : JSON.stringify(chunk.content);
     }
   }
 
