@@ -66,9 +66,12 @@ export function NotificationRow({
           onClick={() => onOpen(item)}
           disabled={!canOpen}
           className={cn(
-            "text-left text-base font-medium leading-6 text-(--text-default-grey)",
+            "text-left text-base font-medium leading-6",
             "focus-visible:outline-none focus-visible:underline",
             canOpen ? "cursor-pointer hover:underline" : "cursor-default",
+            isUnread
+              ? "text-(--text-default-grey)"
+              : "text-(--text-disabled-grey)",
           )}
         >
           {item.documentTitle ?? "Fiche supprimée"}

@@ -169,7 +169,7 @@ export function NotificationsPanel() {
         isCollapsed ? "left-20" : "left-[240px]",
       )}
     >
-      <header className="flex items-start justify-between gap-4 px-5 pt-7">
+      <header className="flex items-end justify-between gap-4 px-5 pt-7">
         <h2 className="text-[28px] font-bold leading-9 text-(--text-title-grey)">
           Notifications
         </h2>
@@ -184,7 +184,7 @@ export function NotificationsPanel() {
         </Button>
       </header>
 
-      <div className="mx-5 mt-6 border-t border-(--border-default-grey)" />
+      <div className="mx-5 mt-6 mb-2 border-t border-(--border-default-grey)" />
 
       <NotificationFilters
         tab={tab}
@@ -211,7 +211,7 @@ export function NotificationsPanel() {
 
         {groups.map((group) => (
           <section key={group.key} className="mb-2">
-            <h3 className="px-4 pb-2 pt-6 text-sm font-medium text-(--text-mention-grey)">
+            <h3 className="px-4 pb-2 pt-6 text-base font-bold leading-6 text-(--text-mention-grey)">
               {NOTIFICATION_GROUP_LABELS[group.key]}
             </h3>
             {group.items.map((item) => (

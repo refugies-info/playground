@@ -10,7 +10,7 @@ import {
   PopoverTrigger,
   SegmentedControl,
 } from "@playground/ui";
-import { Plus, X } from "lucide-react";
+import { RiAddLine, RiCloseLine } from "@playground/ui/icons";
 import type {
   NotificationCounts,
   NotificationTab,
@@ -39,7 +39,7 @@ export function NotificationFilters({
     onTypesChange(selectedTypes.filter((value) => value !== type));
 
   return (
-    <div className="flex flex-col gap-4 px-5 py-4">
+    <div className="flex flex-col gap-6 px-5 py-4 pb-0">
       <SegmentedControl
         variant="outlined"
         value={tab}
@@ -52,29 +52,28 @@ export function NotificationFilters({
         ]}
       />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm leading-6 text-(--text-default-grey)">
+      <div className="flex flex-wrap items-center gap-1">
+        <span className="text-sm leading-6 text-(--text-mention-grey)">
           Filtrer par :
         </span>
 
         {selectedTypes.map((type) => {
           const meta = NOTIFICATION_TYPES.find((item) => item.value === type);
+          const label = meta?.label ?? type;
           return (
             <span
               key={type}
-              className="inline-flex items-center gap-1 rounded-full bg-(--background-alt-blue-france) py-1 pl-3 pr-1 text-sm text-(--text-action-high-blue-france)"
+              className="inline-flex items-center gap-[2px] rounded-2xl bg-(--background-action-low-blue-france) py-[2px] pl-2 pr-[5px] text-xs leading-5 text-(--text-title-grey)"
             >
-              {meta?.label ?? type}
+              {label}
               <button
                 type="button"
                 onClick={() => removeType(type)}
-                title={`Retirer le filtre ${meta?.label ?? type}`}
-                className="flex size-5 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--border-action-high-blue-france)"
+                title={`Retirer le filtre ${label}`}
+                className="flex cursor-pointer items-center justify-center rounded-full text-(--text-title-grey) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--border-action-high-blue-france)"
               >
-                <X className="size-3" aria-hidden />
-                <span className="sr-only">
-                  Retirer le filtre {meta?.label ?? type}
-                </span>
+                <RiCloseLine size={12} aria-hidden />
+                <span className="sr-only">Retirer le filtre {label}</span>
               </button>
             </span>
           );
@@ -82,23 +81,28 @@ export function NotificationFilters({
         {availableTypes.length > 0 && (
           <Popover>
             <PopoverTrigger asChild>
+              {/* Bouton nu de 32px : la maquette ne lui donne ni bordure ni
+                  fond, seul le survol le matérialise. */}
               <button
                 type="button"
                 title="Ajouter un filtre par type"
-                className="flex size-8 cursor-pointer items-center justify-center rounded border border-(--border-default-grey) text-(--text-action-high-blue-france) transition-colors hover:bg-(--background-alt-blue-france) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--border-action-high-blue-france)"
+                className="flex size-8 cursor-pointer items-center justify-center bg-white text-(--text-mention-grey) transition-colors hover:bg-(--background-alt-blue-france) hover:text-(--text-action-high-blue-france) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--border-action-high-blue-france)"
               >
-                <Plus className="size-4" aria-hidden />
+                <RiAddLine size={16} aria-hidden />
                 <span className="sr-only">Ajouter un filtre par type</span>
               </button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-56 p-1">
+            <PopoverContent
+              align="start"
+              className="w-[120px] rounded-[2px] p-2"
+            >
               <ul className="flex flex-col">
                 {availableTypes.map((type) => (
                   <li key={type.value}>
                     <button
                       type="button"
                       onClick={() => addType(type.value)}
-                      className="w-full cursor-pointer rounded px-3 py-2 text-left text-sm text-(--text-default-grey) transition-colors hover:bg-(--background-alt-blue-france)"
+                      className="w-full cursor-pointer rounded-[2px] px-2 py-1 text-left text-sm font-medium leading-6 text-(--text-default-grey) transition-colors hover:bg-(--background-alt-blue-france)"
                     >
                       {type.label}
                     </button>
