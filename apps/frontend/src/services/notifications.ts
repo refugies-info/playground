@@ -100,6 +100,9 @@ const NOTIFICATION_LIST_SELECT = `
     action,
     activity,
     workflow_id,
+    document:workflows_enriched!activity_logs_workflow_id_fkey (
+      title
+    ),
     author:profiles!activity_logs_author_id_fkey (
       id, email, first_name, last_name, username, created_at, role, language, avatar_url
     ),
@@ -145,29 +148,6 @@ export async function listNotifications(
 
   const rows = data ?? [];
 
-  const workflowIds = [
-    ...new Set(
-      rows
-        .map((row) => row.activity_log?.workflow_id)
-        .filter((id): id is string => Boolean(id)),
-    ),
-  ];
-
-  const titles = new Map<string, string | null>();
-  if (workflowIds.length > 0) {
-    const { data: documents, error: titlesError } = await supabase
-      .from("workflows_enriched")
-      .select("id, title")
-      .in("id", workflowIds);
-
-    if (titlesError) {
-      logger.error({ error: titlesError }, "Error fetching document titles");
-    }
-    for (const document of documents ?? []) {
-      if (document.id) titles.set(document.id, document.title);
-    }
-  }
-
   const selectedTypes = types && types.length > 0 ? new Set(types) : null;
 
   const items: NotificationItem[] = [];
@@ -192,9 +172,7 @@ export async function listNotifications(
       readAt: row.read_at,
       archivedAt: row.archived_at,
       documentId: log.workflow_id,
-      documentTitle: log.workflow_id
-        ? (titles.get(log.workflow_id) ?? null)
-        : null,
+      documentTitle: log.document?.title ?? null,
       actorName: author?.displayName,
       actorAvatar: author?.avatarUrl,
       targetName: target?.displayName,
