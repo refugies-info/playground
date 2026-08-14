@@ -21,6 +21,7 @@
     "@playground/supabase": "workspace:*",
     "@playground/ui": "workspace:*",
     "@playground/workflows": "workspace:*",
+    "@sentry/nextjs": "^10",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "2.84.0",
     "@tanstack/react-table": "^8.21.3",
