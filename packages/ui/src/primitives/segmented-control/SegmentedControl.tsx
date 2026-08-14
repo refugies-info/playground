@@ -120,10 +120,10 @@ function SegmentedControl<T extends string>({
       aria-label={ariaLabel ?? "Options"}
       className={cn(
         "relative inline-flex flex-row rounded-xs h-8",
-        "border border-[var(--border-default-grey,#dddddd)]",
+        "border border-(--border-default-grey)",
         variant === "slider"
-          ? "bg-[var(--background-alt-grey,#f6f6f6)]"
-          : "bg-[var(--background-default-grey,#ffffff)]",
+          ? "bg-(--background-alt-grey)"
+          : "bg-(--background-default-grey)",
         disabled && "opacity-50",
         className,
       )}
@@ -137,7 +137,7 @@ function SegmentedControl<T extends string>({
             transform: `translateX(${activeIndex * 100}%)`,
           }}
         >
-          <div className="h-full rounded-xs bg-[var(--background-default-grey,#ffffff)] shadow-[2px_0px_6px_0px_rgba(0,0,18,0.16)]" />
+          <div className="h-full rounded-xs bg-(--background-default-grey) shadow-[2px_0px_6px_0px_var(--shadow-color)]" />
         </div>
       )}
 
@@ -162,14 +162,14 @@ function SegmentedControl<T extends string>({
                 ? [
                     "flex-1 p-2",
                     isActive
-                      ? "text-[var(--text-default-grey,#3a3a3a)]"
-                      : "text-[var(--text-mention-grey,#666666)] hover:text-[var(--text-default-grey,#3a3a3a)]",
+                      ? "text-(--text-default-grey)"
+                      : "text-(--text-mention-grey) hover:text-(--text-default-grey)",
                   ]
                 : [
                     "whitespace-nowrap rounded-xs border px-3 text-sm font-medium leading-6",
                     isActive
-                      ? "border-[var(--border-active-blue-france)] text-[var(--text-active-blue-france)]"
-                      : "border-transparent text-[var(--text-action-high-grey)]",
+                      ? "border-(--border-active-blue-france) text-(--text-active-blue-france)"
+                      : "border-transparent text-(--text-action-high-grey)",
                   ],
             )}
           >

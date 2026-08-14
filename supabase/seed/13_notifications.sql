@@ -1,24 +1,12 @@
 -- Seed notifications (RI-1415)
 --
--- Deux couches, comme en production : des lignes `activity_logs` — la source de
--- vérité de l'événement — puis un éventail de `notifications`, la vue d'un
--- destinataire sur cet événement.
---
--- Ce que ce jeu de données couvre, pour pouvoir vérifier le panneau d'un coup
--- d'œil :
---   - les 5 types de notification (publication, MAJ, archivage, assignation, note)
---   - les 3 regroupements temporels (aujourd'hui, 7 derniers jours, plus anciennes)
---   - les 3 onglets (non lue, lue, archivée)
---   - un auteur nul, c'est-à-dire un événement produit par PapaIA et non par un humain
---
--- Les dates sont relatives à `now()` : le seed reste valide quel que soit le jour
--- où on le rejoue, alors que des dates figées finiraient par sortir du groupe
--- « aujourd'hui ».
+-- Couvre les 5 types, les 3 regroupements temporels, les 3 onglets et un
+-- événement sans auteur (PapaIA). Dates relatives à `now()` pour que le seed
+-- reste valide quel que soit le jour où on le rejoue.
 --
 -- ⚠️ L'éventail est volontairement plus large qu'en production : chaque événement
--- est distribué à tous les profils sauf son auteur, pour que n'importe quel compte
--- de test voie les 5 types. Les vraies règles de destinataires, plus étroites
--- (une assignation ne concerne que l'assigné), vivent dans `dispatchNotifications`.
+-- va à tous les profils sauf son auteur, pour que n'importe quel compte de test
+-- voie les 5 types. Les vraies règles vivent dans `dispatchNotifications`.
 
 -- ---------------------------------------------------------------------------
 -- Les événements
