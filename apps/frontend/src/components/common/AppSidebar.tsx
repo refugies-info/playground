@@ -4,8 +4,8 @@ import {
   AppLogo,
   Avatar,
   BoutonMenu,
-  BoutonNotification,
   Button,
+  NotificationButton,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -117,7 +117,7 @@ export function AppSidebar({
       logo={logo}
       userAvatar={userAvatar}
       notifications={
-        <BoutonNotification
+        <NotificationButton
           unreadCount={unreadCount}
           open={isNotificationsOpen}
           onClick={toggleNotifications}

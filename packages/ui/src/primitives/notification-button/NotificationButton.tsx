@@ -3,7 +3,7 @@ import type * as React from "react";
 import { RiNotification3Line } from "../../icons";
 import { cn } from "../../utils";
 
-const boutonNotificationVariants = cva(
+const notificationButtonVariants = cva(
   [
     "relative inline-flex size-12 items-center justify-center rounded-3xl",
     "cursor-pointer transition-colors",
@@ -28,26 +28,21 @@ const boutonNotificationVariants = cva(
   },
 );
 
-export interface BoutonNotificationProps
+export interface NotificationButtonProps
   extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "children">,
-    VariantProps<typeof boutonNotificationVariants> {
-  /**
-   * Nombre de notifications non lues. Au-dessus de zéro, la pastille apparaît.
-   * Sert aussi à l'énoncé accessible, seul endroit où le compte exact est donné.
-   */
+    VariantProps<typeof notificationButtonVariants> {
   unreadCount?: number;
-  /** Panneau ouvert — l'état « cliqué » de la maquette. */
   open?: boolean;
   className?: string;
 }
 
-export function BoutonNotification({
+export function NotificationButton({
   unreadCount = 0,
   open = false,
   className,
   "aria-label": ariaLabel,
   ...props
-}: BoutonNotificationProps) {
+}: NotificationButtonProps) {
   const hasUnread = unreadCount > 0;
 
   const label =
@@ -61,7 +56,7 @@ export function BoutonNotification({
       type="button"
       aria-label={label}
       aria-expanded={open}
-      className={cn(boutonNotificationVariants({ open }), className)}
+      className={cn(notificationButtonVariants({ open }), className)}
       {...props}
     >
       <RiNotification3Line size={24} aria-hidden />

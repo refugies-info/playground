@@ -27,17 +27,11 @@ import { cn } from "../../utils";
  */
 
 export interface SidebarProps {
-  /** État replié/déplié de la sidebar */
   isCollapsed: boolean;
-  /** Callback déclenché au clic sur le bouton toggle (bas de la sidebar) */
   onToggle: () => void;
-  /** Logo de l'application — passer <AppLogo collapsed={isCollapsed} ... /> */
   logo: React.ReactNode;
-  /** Items de navigation — passer des <BoutonMenu iconOnly={isCollapsed} ... /> */
   children: React.ReactNode;
-  /** Avatar de l'utilisateur connecté (image ou initiales) */
   userAvatar?: React.ReactNode;
-  /** Bouton de notifications */
   notifications?: React.ReactNode;
   className?: string;
 }
@@ -61,16 +55,12 @@ export function Sidebar({
       )}
       aria-label="Navigation principale"
     >
-      {/* Top — Logo + nav items */}
       <div className="flex flex-col gap-14 px-4 py-6 flex-1 overflow-y-auto overflow-x-hidden">
-        {/* Logo — px-3 pour aligner l'icône avec le px-3 base des BoutonMenu */}
         <div className="flex items-center px-3">{logo}</div>
 
-        {/* Nav items */}
         <div className="flex flex-col gap-2">{children}</div>
       </div>
 
-      {/* Bottom — Notifications + avatar + bouton toggle */}
       <div
         className={cn(
           "px-4 py-6",
@@ -79,7 +69,6 @@ export function Sidebar({
             : "flex flex-row items-center justify-between",
         )}
       >
-        {/* Notifications + avatar */}
         <div
           className={cn(
             "flex shrink-0 items-center",
@@ -90,7 +79,6 @@ export function Sidebar({
           {userAvatar}
         </div>
 
-        {/* Bouton toggle */}
         <Button
           variant="quatrieme"
           size="sm"

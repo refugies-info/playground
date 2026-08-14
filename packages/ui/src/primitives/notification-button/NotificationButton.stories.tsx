@@ -1,17 +1,12 @@
-import { BoutonNotification } from "@playground/ui";
+import { NotificationButton } from "@playground/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
 /**
- * BoutonNotification — Bouton d'ouverture du panneau de notifications.
- *
- * Les 6 aperçus de la maquette sont le croisement de deux propriétés : le fond
- * (repos / survol / ouvert) et la présence de la pastille de non-lues. Le survol
- * n'étant pas une prop, il se vérifie à la souris sur les stories ci-dessous.
+ * NotificationButton — Bouton d'ouverture du panneau de notifications.
  */
-const meta: Meta<typeof BoutonNotification> = {
-  title: "Primitives/BoutonNotification",
-  component: BoutonNotification,
-  tags: ["autodocs"],
+const meta: Meta<typeof NotificationButton> = {
+  title: "Primitives/NotificationButton",
+  component: NotificationButton,
   parameters: { layout: "centered" },
 };
 
