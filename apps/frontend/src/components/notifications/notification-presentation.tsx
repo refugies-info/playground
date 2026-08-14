@@ -5,6 +5,7 @@ import {
   NOTIFICATION_PUBLICATION,
   NOTIFICATION_UPDATE,
 } from "@playground/shared-types";
+import { formatDateFr, formatTimeFr } from "@/lib/format-date";
 import type { NotificationItem } from "@/services/notifications";
 
 export function getNotificationMessage(item: NotificationItem): string {
@@ -38,16 +39,9 @@ export function getNotificationHref(item: NotificationItem): string | null {
 }
 
 export function formatNotificationDate(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-
-  const day = date.toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-  });
-  const time = date
-    .toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
-    .replace(":", "h");
+  const day = formatDateFr(iso, { day: "numeric", month: "long" });
+  const time = formatTimeFr(iso);
+  if (!day || !time) return "";
 
   return `${day} – ${time}`;
 }

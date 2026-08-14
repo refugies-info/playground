@@ -19,7 +19,7 @@ import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { getTypeBadge } from "@/lib/activity-log-badge";
-import { formatDateFr } from "@/lib/format-date";
+import { formatDateFr, formatTimeFr } from "@/lib/format-date";
 import type { Profile } from "@/lib/profile";
 import type { ActivityLogEntry } from "@/services/activity-logs";
 import { NoteComposer } from "./NoteComposer";
@@ -242,12 +242,7 @@ export function ActivityLogsView({
                       {/* "liste des logs" */}
                       <div className="flex flex-col gap-2">
                         {entries.map((entry, idx) => {
-                          const time = new Date(entry.createdAt)
-                            .toLocaleTimeString("fr-FR", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                            .replace(":", "h");
+                          const time = formatTimeFr(entry.createdAt) ?? "";
                           return (
                             <div
                               key={entry.id}
