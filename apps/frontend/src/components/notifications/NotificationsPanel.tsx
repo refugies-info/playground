@@ -10,7 +10,7 @@ import { useSidebar } from "@/contexts/SidebarContext";
 import {
   fetchNotificationCounts,
   fetchNotifications,
-  markAllNotificationsAsRead,
+  markNotificationsAsRead,
   setNotificationArchived,
   setNotificationRead,
 } from "@/services/notification-actions";
@@ -142,14 +142,19 @@ export function NotificationsPanel() {
   );
 
   const handleMarkAllAsRead = useCallback(async () => {
+    const unreadIds = items
+      .filter((item) => item.readAt === null)
+      .map((item) => item.id);
+    if (unreadIds.length === 0) return;
+
     const now = new Date().toISOString();
     setItems((previous) =>
       previous.map((item) => ({ ...item, readAt: item.readAt ?? now })),
     );
-    await markAllNotificationsAsRead();
+    await markNotificationsAsRead(unreadIds);
     void refreshUnreadCount();
     void refreshCounts();
-  }, [refreshCounts, refreshUnreadCount]);
+  }, [items, refreshCounts, refreshUnreadCount]);
 
   if (!isOpen) return null;
 
@@ -157,6 +162,8 @@ export function NotificationsPanel() {
     key,
     items: items.filter((item) => getNotificationGroup(item.createdAt) === key),
   })).filter((group) => group.items.length > 0);
+
+  const hasUnread = items.some((item) => item.readAt === null);
 
   return (
     <div
@@ -227,7 +234,7 @@ export function NotificationsPanel() {
         ))}
       </div>
 
-      {items.length > 0 && (
+      {hasUnread && (
         <footer className="flex justify-center border-t border-(--border-default-grey) px-5 py-5">
           <Button variant="tertiaire" size="sm" onClick={handleMarkAllAsRead}>
             Tout marquer comme lu

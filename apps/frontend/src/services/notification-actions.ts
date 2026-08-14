@@ -91,7 +91,11 @@ export async function fetchNotifications(
   return listNotifications(options);
 }
 
-export async function markAllNotificationsAsRead(): Promise<NotificationActionResult> {
+export async function markNotificationsAsRead(
+  ids: readonly string[],
+): Promise<NotificationActionResult> {
+  if (ids.length === 0) return { success: true };
+
   try {
     const cookieStore = await cookies();
     const supabase = createSupabaseServerClient(cookieStore);
@@ -99,17 +103,17 @@ export async function markAllNotificationsAsRead(): Promise<NotificationActionRe
     const { error } = await supabase
       .from("notifications")
       .update({ read_at: new Date().toISOString() })
-      .is("archived_at", null)
+      .in("id", ids)
       .is("read_at", null);
 
     if (error) {
-      logger.error({ error }, "Error marking all notifications as read");
+      logger.error({ error }, "Error marking notifications as read");
       return { success: false, error: "Erreur lors de la mise à jour" };
     }
 
     return { success: true };
   } catch (error) {
-    logger.error({ error }, "Unexpected error marking all as read");
+    logger.error({ error }, "Unexpected error marking notifications as read");
     return { success: false, error: "Erreur inattendue" };
   }
 }
