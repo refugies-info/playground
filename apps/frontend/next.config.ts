@@ -50,7 +50,7 @@ export default withSentryConfig(withWorkflow(nextConfig), {
 
   org: "betagouv",
 
-  project: "ri-bomo",
+  project: "refugiesinfo-bomo",
   sentryUrl: "https://sentry.incubateur.net/",
 
   // Only print logs for uploading source maps in CI
