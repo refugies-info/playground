@@ -17,6 +17,7 @@
     "@playground/agents": "workspace:*",
     "@playground/cloudinary": "workspace:*",
     "@playground/rco": "workspace:*",
+    "@playground/sentry": "workspace:*",
     "@playground/shared-types": "workspace:*",
     "@playground/supabase": "workspace:*",
     "@playground/ui": "workspace:*",

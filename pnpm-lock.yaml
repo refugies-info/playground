@@ -105,6 +105,9 @@ importers:
       '@playground/rco':
         specifier: workspace:*
         version: link:../../packages/rco
+      '@playground/sentry':
+        specifier: workspace:*
+        version: link:../../packages/sentry
       '@playground/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared
