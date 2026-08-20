@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 import { isConnectionError } from "@/lib/errors";
 
@@ -23,6 +24,7 @@ export default function GlobalError({
   useEffect(() => {
     // biome-ignore lint/suspicious/noConsole: intentional — helps debugging in production
     console.error("[GlobalError]", error);
+    Sentry.captureException(error);
   }, [error]);
 
   const isDbDown = isConnectionError(error);
