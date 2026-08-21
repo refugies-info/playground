@@ -70,7 +70,7 @@ export const OnlineStatusCell = ({
         <Tag status="archive" />
         {formattedDate && (
           <span
-            className="text-[12px] leading-5 text-(--text-disabled-grey)"
+            className="text-[12px] leading-5 text-(--text-disabled-grey) whitespace-nowrap"
             title={
               archivedDateIsApproximate
                 ? "Date approximative : cette fiche a été archivée avant que le back-office n'enregistre les dates d'archivage."

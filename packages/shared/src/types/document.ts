@@ -58,11 +58,8 @@ export interface Document {
   publishedUrl?: string;
   publicationStatus?: string;
   publicationRemoteId?: string;
-  /** Date de la dernière publication — affichée sous le tag "Publié" */
   publishedAt?: string | null;
-  /** Date d'archivage dérivée (RI-1446) — affichée sous le tag "Archivé" */
   archivedAt?: string | null;
-  /** La date d'archivage n'est qu'une approximation : l'UI la préfixe d'un « ~ » */
   archivedAtIsApproximate?: boolean;
   structureName?: string;
   sessionStartDate?: string;
