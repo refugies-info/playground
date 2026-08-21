@@ -7,6 +7,7 @@ import {
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { mapProfileDto } from "@/lib/profile";
+import { buildPublicationUrl } from "@/lib/url-builder";
 
 /**
  * Counts backing the three filter tabs of the notification panel.
@@ -113,6 +114,23 @@ const NOTIFICATION_LIST_SELECT = `
 `;
 
 /**
+ * URL publique de la fiche portée par une publication.
+ *
+ * La charge d'une publication contient `publishedUrl`, mais les évènements plus
+ * anciens ne connaissent que le `remoteId` : on reconstruit alors l'URL pour que
+ * le lien externe de la ligne s'affiche quand même.
+ */
+function resolvePublishedUrl(activity: Record<string, unknown>): string | null {
+  if (typeof activity.publishedUrl === "string") return activity.publishedUrl;
+
+  return buildPublicationUrl(
+    process.env.RI_BASE_URL,
+    typeof activity.language === "string" ? activity.language : null,
+    typeof activity.remoteId === "string" ? activity.remoteId : null,
+  );
+}
+
+/**
  * List the current user's notifications, newest first.
  *
  * @param options.tab - `all` excludes archived rows, as "Toutes" means "still in
@@ -179,10 +197,7 @@ export async function listNotifications(
       note: typeof activity.note === "string" ? activity.note : null,
       language:
         typeof activity.language === "string" ? activity.language : null,
-      publishedUrl:
-        typeof activity.publishedUrl === "string"
-          ? activity.publishedUrl
-          : null,
+      publishedUrl: resolvePublishedUrl(activity),
       complianceStatus:
         typeof activity.complianceStatus === "string"
           ? activity.complianceStatus

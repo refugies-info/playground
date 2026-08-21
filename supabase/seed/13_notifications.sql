@@ -15,7 +15,10 @@
 insert into activity_logs (id, action, activity, author_id, target_profile_id, workflow_id, created_at)
 values
   -- Aujourd'hui
-  ('c1000000-0000-4000-8000-000000000001', 'publication', '{"language": "fr"}'::jsonb,
+  -- `remoteId` / `publishedUrl` : charge réelle d'une publication, c'est elle qui
+  -- alimente le lien externe vers la fiche sur refugies.info.
+  ('c1000000-0000-4000-8000-000000000001', 'publication',
+   '{"language": "fr", "remoteId": "5ce79f4683983700167bc8c7", "publishedUrl": "https://refugies.info/dispositif/5ce79f4683983700167bc8c7"}'::jsonb,
    '9605264d-dd1d-423a-80da-49bae335a41b', null, 'ef7a8315-f3e6-4274-bd31-11af28ce12b3', now() - interval '2 hours'),
   ('c1000000-0000-4000-8000-000000000002', 'note',
    '{"note": "Attention, la date de session est incohérente avec la fiche RCO — à vérifier avant publication."}'::jsonb,
@@ -29,7 +32,8 @@ values
    null, null, 'e173e735-552e-46a6-9b4b-a56521d43ce0', now() - interval '2 days'),
   ('c1000000-0000-4000-8000-000000000005', 'archive', '{}'::jsonb,
    '9ab52a92-e96f-4912-bf41-fad212ddae44', null, '3aa0a9ec-32ce-4f18-9d65-b2816cd6cffa', now() - interval '3 days'),
-  ('c1000000-0000-4000-8000-000000000006', 'publication', '{"language": "en"}'::jsonb,
+  ('c1000000-0000-4000-8000-000000000006', 'publication',
+   '{"language": "en", "remoteId": "5f8d0d55b54764421b7156c3", "publishedUrl": "https://refugies.info/en/program/5f8d0d55b54764421b7156c3"}'::jsonb,
    'f9fff286-ed64-43f4-b624-d17a86d4d6d0', null, '18fc7d09-52ec-4b16-b732-2e5e5d37f0a1', now() - interval '5 days'),
 
   -- Plus anciennes

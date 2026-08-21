@@ -88,7 +88,7 @@ export function NotificationRow({
               target="_blank"
               rel="noopener noreferrer"
               title="Voir la fiche sur Réfugiés.info"
-              className="ml-1 inline-block align-text-bottom text-(--text-action-high-blue-france) hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--border-action-high-blue-france)"
+              className="ml-1 inline-flex align-[-2px] text-(--text-action-high-blue-france) hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--border-action-high-blue-france)"
             >
               <RiExternalLinkLine size={14} aria-hidden />
               <span className="sr-only">
@@ -110,11 +110,11 @@ export function NotificationRow({
         {isUnread && (
           <span
             aria-hidden
-            className="size-2 rounded-full bg-(--border-default-blue-france) group-hover:invisible group-focus-within:invisible"
+            className="size-2 rounded-full bg-(--border-default-blue-france) group-hover:invisible group-has-[:focus-visible]:invisible"
           />
         )}
 
-        <div className="absolute right-0 top-0 hidden overflow-hidden border border-(--border-default-grey) bg-white group-hover:flex group-focus-within:flex">
+        <div className="absolute right-0 top-0 hidden overflow-hidden border border-(--border-default-grey) bg-white group-hover:flex group-has-[:focus-visible]:flex">
           <RowAction
             icon={isUnread ? FrMarkAsReadLine : FrMarkAsUnreadLine}
             title={isUnread ? "Marquer comme lue" : "Marquer comme non lue"}
