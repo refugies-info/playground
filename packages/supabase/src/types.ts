@@ -917,6 +917,7 @@ export type Database = {
         Row: {
           active_ingestion_version: number | null
           archived_at: string | null
+          archived_at_is_approximate: boolean | null
           assignee_email: string | null
           assignee_profile: Json | null
           commune: string | null
