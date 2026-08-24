@@ -104,6 +104,7 @@ export const createOnlineStatusColumn = (): ColumnDef<Document> => ({
       publishedUrl={row.original.publishedUrl}
       publishedDate={row.original.publishedAt}
       archivedDate={row.original.archivedAt}
+      archivedDateIsApproximate={row.original.archivedAtIsApproximate}
     />
   ),
 });

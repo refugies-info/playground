@@ -14,6 +14,11 @@ export interface OnlineStatusCellProps {
   publishedDate?: string | null;
   /** Date à afficher sous le badge quand le statut est "archived" */
   archivedDate?: string | null;
+  /**
+   * La date d'archivage est reconstituée, pas enregistrée (RI-1446) : on la
+   * préfixe alors d'un « ~ » pour ne pas la faire passer pour une date certaine.
+   */
+  archivedDateIsApproximate?: boolean;
 }
 
 export const OnlineStatusCell = ({
@@ -21,6 +26,7 @@ export const OnlineStatusCell = ({
   publishedUrl,
   publishedDate,
   archivedDate,
+  archivedDateIsApproximate,
 }: OnlineStatusCellProps) => {
   if (!status) return <EmptyDash />;
 
@@ -63,8 +69,15 @@ export const OnlineStatusCell = ({
       <div className="flex flex-col gap-0.5">
         <Tag status="archive" />
         {formattedDate && (
-          <span className="text-[12px] leading-5 text-(--text-disabled-grey)">
-            {formattedDate}
+          <span
+            className="text-[12px] leading-5 text-(--text-disabled-grey) whitespace-nowrap"
+            title={
+              archivedDateIsApproximate
+                ? "Date approximative : cette fiche a été archivée avant que le back-office n'enregistre les dates d'archivage."
+                : undefined
+            }
+          >
+            {archivedDateIsApproximate ? `~ ${formattedDate}` : formattedDate}
           </span>
         )}
       </div>
