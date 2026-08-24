@@ -14,6 +14,7 @@ export * from "./image-upload";
 export * from "./indication-conformite";
 export * from "./indication-sauvegarde";
 export * from "./input";
+export * from "./notification-button";
 export * from "./papa-ia";
 export * from "./search-input";
 export * from "./segmented-control";
