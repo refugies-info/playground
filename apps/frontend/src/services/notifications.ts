@@ -1,6 +1,13 @@
-import { logger } from "@playground/shared-types";
+import {
+  type ActivityLogType,
+  logger,
+  type NotificationType,
+  notificationTypeFromAction,
+} from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
+import { mapProfileDto } from "@/lib/profile";
+import { buildPublicationUrl } from "@/lib/url-builder";
 
 /**
  * Counts backing the three filter tabs of the notification panel.
@@ -48,4 +55,155 @@ export async function getNotificationCounts(): Promise<NotificationCounts> {
     unread: unread.count ?? 0,
     archived: archived.count ?? 0,
   };
+}
+
+/** The three tabs of the panel's segmented control. */
+export type NotificationTab = "all" | "unread" | "archived";
+
+/**
+ * One row of the notification panel.
+ *
+ * Flattened on purpose: the panel never needs the activity_logs row itself, only
+ * what it takes to render a line — who, on which document, what kind of event.
+ */
+export interface NotificationItem {
+  id: string;
+  type: NotificationType;
+  action: ActivityLogType;
+  createdAt: string;
+  readAt: string | null;
+  archivedAt: string | null;
+  documentId: string | null;
+  documentTitle: string | null;
+  actorName?: string;
+  actorAvatar?: string;
+  targetName?: string;
+  note: string | null;
+  language: string | null;
+  /**
+   * URL publique de la fiche sur Réfugiés.info, portée par la charge d'une
+   * publication. C'est la destination du lien externe de la ligne — le titre,
+   * lui, renvoie vers la fiche dans le BOMO.
+   */
+  publishedUrl: string | null;
+  /**
+   * Non utilisée pour l'instant, mais on la récupère pour pouvoir l'afficher dans le futur.
+   */
+  complianceStatus: string | null;
+}
+
+const NOTIFICATION_LIST_SELECT = `
+  id,
+  read_at,
+  archived_at,
+  created_at,
+  activity_log:activity_logs!notifications_activity_log_id_fkey (
+    action,
+    activity,
+    workflow_id,
+    document:workflows_enriched!activity_logs_workflow_id_fkey (
+      title
+    ),
+    author:profiles!activity_logs_author_id_fkey (
+      id, email, first_name, last_name, username, created_at, role, language, avatar_url
+    ),
+    target:profiles!activity_logs_target_profile_id_fkey (
+      id, email, first_name, last_name, username, created_at, role, language, avatar_url
+    )
+  )
+`;
+
+/**
+ * URL publique de la fiche portée par une publication.
+ *
+ * La charge d'une publication contient `publishedUrl`, mais les évènements plus
+ * anciens ne connaissent que le `remoteId` : on reconstruit alors l'URL pour que
+ * le lien externe de la ligne s'affiche quand même.
+ */
+function resolvePublishedUrl(activity: Record<string, unknown>): string | null {
+  if (typeof activity.publishedUrl === "string") return activity.publishedUrl;
+
+  return buildPublicationUrl(
+    process.env.RI_BASE_URL,
+    typeof activity.language === "string" ? activity.language : null,
+    typeof activity.remoteId === "string" ? activity.remoteId : null,
+  );
+}
+
+/**
+ * List the current user's notifications, newest first.
+ *
+ * @param options.tab - `all` excludes archived rows, as "Toutes" means "still in
+ *   the inbox". `unread` additionally keeps `read_at IS NULL`.
+ * @param options.types - Restrict to these notification types. Empty or omitted
+ *   means no type filtering.
+ */
+export async function listNotifications(
+  options: { tab?: NotificationTab; types?: readonly NotificationType[] } = {},
+): Promise<NotificationItem[]> {
+  const { tab = "all", types } = options;
+
+  const cookieStore = await cookies();
+  const supabase = createSupabaseServerClient(cookieStore);
+
+  let query = supabase
+    .from("notifications")
+    .select(NOTIFICATION_LIST_SELECT)
+    .order("created_at", { ascending: false });
+
+  query =
+    tab === "archived"
+      ? query.not("archived_at", "is", null)
+      : query.is("archived_at", null);
+  if (tab === "unread") query = query.is("read_at", null);
+
+  const { data, error } = await query;
+
+  if (error) {
+    logger.error({ error, tab }, "Error fetching notifications");
+    return [];
+  }
+
+  const rows = data ?? [];
+
+  const selectedTypes = types && types.length > 0 ? new Set(types) : null;
+
+  const items: NotificationItem[] = [];
+  for (const row of rows) {
+    const log = row.activity_log;
+    if (!log) continue;
+
+    const action = log.action as ActivityLogType;
+    const type = notificationTypeFromAction(action);
+    if (!type) continue;
+    if (selectedTypes && !selectedTypes.has(type)) continue;
+
+    const author = log.author ? mapProfileDto(log.author) : undefined;
+    const target = log.target ? mapProfileDto(log.target) : undefined;
+    const activity = (log.activity ?? {}) as Record<string, unknown>;
+
+    items.push({
+      id: row.id,
+      type,
+      action,
+      createdAt: row.created_at,
+      readAt: row.read_at,
+      archivedAt: row.archived_at,
+      documentId: log.workflow_id,
+      documentTitle: log.document?.title ?? null,
+      actorName: author?.displayName,
+      actorAvatar: author?.avatarUrl,
+      targetName: target?.displayName,
+      note: typeof activity.note === "string" ? activity.note : null,
+      language:
+        typeof activity.language === "string" ? activity.language : null,
+      publishedUrl: resolvePublishedUrl(activity),
+      complianceStatus:
+        typeof activity.complianceStatus === "string"
+          ? activity.complianceStatus
+          : null,
+    });
+  }
+
+  return items;
 }

@@ -14,3 +14,14 @@ export function formatDateFr(
   if (Number.isNaN(date.getTime())) return null;
   return date.toLocaleDateString("fr-FR", options);
 }
+
+export function formatTimeFr(
+  value: string | number | Date | null | undefined,
+): string | null {
+  if (value == null || value === "") return null;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date
+    .toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+    .replace(":", "h");
+}

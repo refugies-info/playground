@@ -27,16 +27,12 @@ import { cn } from "../../utils";
  */
 
 export interface SidebarProps {
-  /** État replié/déplié de la sidebar */
   isCollapsed: boolean;
-  /** Callback déclenché au clic sur le bouton toggle (bas de la sidebar) */
   onToggle: () => void;
-  /** Logo de l'application — passer <AppLogo collapsed={isCollapsed} ... /> */
   logo: React.ReactNode;
-  /** Items de navigation — passer des <BoutonMenu iconOnly={isCollapsed} ... /> */
   children: React.ReactNode;
-  /** Avatar de l'utilisateur connecté (image ou initiales) */
   userAvatar?: React.ReactNode;
+  notifications?: React.ReactNode;
   className?: string;
 }
 
@@ -46,6 +42,7 @@ export function Sidebar({
   logo,
   children,
   userAvatar,
+  notifications,
   className,
 }: SidebarProps) {
   return (
@@ -58,16 +55,12 @@ export function Sidebar({
       )}
       aria-label="Navigation principale"
     >
-      {/* Top — Logo + nav items */}
       <div className="flex flex-col gap-14 px-4 py-6 flex-1 overflow-y-auto overflow-x-hidden">
-        {/* Logo — px-3 pour aligner l'icône avec le px-3 base des BoutonMenu */}
         <div className="flex items-center px-3">{logo}</div>
 
-        {/* Nav items */}
         <div className="flex flex-col gap-2">{children}</div>
       </div>
 
-      {/* Bottom — Avatar + bouton toggle */}
       <div
         className={cn(
           "px-4 py-6",
@@ -76,10 +69,16 @@ export function Sidebar({
             : "flex flex-row items-center justify-between",
         )}
       >
-        {/* Avatar */}
-        {userAvatar && <div className="shrink-0">{userAvatar}</div>}
+        <div
+          className={cn(
+            "flex shrink-0 items-center",
+            isCollapsed ? "flex-col gap-4" : "flex-row gap-2",
+          )}
+        >
+          {notifications}
+          {userAvatar}
+        </div>
 
-        {/* Bouton toggle */}
         <Button
           variant="quatrieme"
           size="sm"
