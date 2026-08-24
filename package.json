@@ -22,6 +22,9 @@
       "better-sqlite3",
       "esbuild",
       "sharp"
+    ],
+    "ignoredBuiltDependencies": [
+      "@sentry/cli"
     ]
   },
   "scripts": {
@@ -72,6 +75,8 @@
     "@playground/supabase": "workspace:*",
     "@refugies-info/di": "workspace:*",
     "@types/js-yaml": "^4.0.9",
+    "@workflow/cli": "4.2.10",
+    "@workflow/next": "4.0.10",
     "commander": "^14.0.2",
     "cve-lite-cli": "1.18.1",
     "dotenv": "^17.2.3",
@@ -80,9 +85,7 @@
     "lint-staged": "^16.2.7",
     "postcss": "^8.5.15",
     "tsx": "^4.20.6",
-    "turbo": "^2.9.14",
-    "@workflow/cli": "4.2.10",
-    "@workflow/next": "4.0.10"
+    "turbo": "^2.9.14"
   },
   "lint-staged": {
     "**/*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
