@@ -7,22 +7,6 @@ import type { BadgeProps } from "@playground/ui/primitives";
 type BadgeVariant = NonNullable<BadgeProps["variant"]>;
 
 // =============================================================================
-// Quality Score
-// =============================================================================
-
-/**
- * Returns a badge variant based on quality score thresholds.
- */
-export function getQualityScoreVariant(score: number | null): BadgeVariant {
-  if (score === null) return "warning";
-  const percentage = Math.round(score * 100);
-  if (percentage >= 80) return "success";
-  if (percentage >= 50) return "warning";
-  if (percentage > 0) return "danger";
-  return "neutral";
-}
-
-// =============================================================================
 // Translation Status (untyped — string union not exported from shared-types)
 // =============================================================================
 

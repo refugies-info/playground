@@ -9,7 +9,7 @@ import {
   logger,
   SEARCH_SCOPE_OPTIONS,
 } from "@playground/shared-types";
-import { Button, FiltreDate, SearchInput } from "@playground/ui";
+import { BoutonFiltre, Button, FiltreDate, SearchInput } from "@playground/ui";
 import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -43,6 +43,7 @@ interface WorkflowFilters extends Record<string, string> {
   dateCondition: string;
   dateFrom: string;
   dateTo: string;
+  modalitesEntreesSorties: string;
 }
 
 interface WorkflowClientProps {
@@ -526,6 +527,18 @@ export function WorkflowClient(props: WorkflowClientProps) {
             defaultCondition={DEFAULT_DATE_FILTER_CONDITION}
             rangeCondition="between"
             upperBoundConditions={["until"]}
+          />
+
+          <BoutonFiltre
+            label="Type d'entrée"
+            options={[
+              { label: "À dates fixes", value: "0" },
+              { label: "À tout moment", value: "1" },
+            ]}
+            value={filters.modalitesEntreesSorties}
+            onChange={(value) =>
+              handleFilterChange("modalitesEntreesSorties", value)
+            }
           />
 
           {/* Bouton aligné à droite dans le même conteneur que la recherche */}

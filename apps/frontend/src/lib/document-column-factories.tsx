@@ -11,9 +11,9 @@ import {
   IngestionVersionCell,
   ModalitesEntreesSortiesCell,
   OnlineStatusCell,
-  QualityScoreCell,
   SessionPeriodCell,
 } from "@/components/documents/cells";
+import { createTextColumn } from "@/lib/column-factories";
 import type { Profile } from "@/lib/profile";
 
 /**
@@ -70,6 +70,14 @@ export const createStructureNameColumn = (): ColumnDef<Document> => ({
     );
   },
 });
+
+export const createCommuneColumn = (): ColumnDef<Document> =>
+  createTextColumn<Document>({
+    accessorKey: "commune",
+    title: "Ville",
+    getValue: (doc) => doc.commune,
+    className: "text-sm",
+  });
 
 // =============================================================================
 // Documents-specific Factories (/documents table)
@@ -206,12 +214,4 @@ export const createExternalIdRawColumn = (): ColumnDef<Document> => ({
       }
     />
   ),
-});
-
-export const createQualityScoreColumn = (): ColumnDef<Document> => ({
-  accessorKey: "qualityScore",
-  header: ({ column }) => (
-    <DataTableColumnHeader column={column} title="Score de qualité" />
-  ),
-  cell: ({ row }) => <QualityScoreCell score={row.original.qualityScore} />,
 });

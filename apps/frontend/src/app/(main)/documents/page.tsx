@@ -1,7 +1,7 @@
 import {
-  type DocumentSortField,
   parseDateFilterCondition,
   parseDateFilterType,
+  parseDocumentSortField,
   parseSearchField,
 } from "@playground/shared-types";
 import { redirect } from "next/navigation";
@@ -40,28 +40,10 @@ export default async function DocumentsPage(props: PageProps) {
   );
 
   // Parse and validate sort parameters
-  const sortByParam = getQueryParam(searchParams.sortBy);
-  const validSortFields: DocumentSortField[] = [
-    "title",
-    "date_added",
+  const sortBy = parseDocumentSortField(
+    getQueryParam(searchParams.sortBy),
     "arbitrationDate",
-    "updated_at",
-    "compliance_status",
-    "work_status",
-    "online_status",
-    "id",
-    "structureName",
-    "sessionStartDate",
-    "assigneeEmail",
-    "commune",
-    "modalitesEntreesSorties",
-    "wordCount",
-    "activeIngestionVersion",
-  ];
-  const sortBy =
-    sortByParam && validSortFields.includes(sortByParam as DocumentSortField)
-      ? (sortByParam as DocumentSortField)
-      : "arbitrationDate";
+  );
 
   const sortOrderParam = getQueryParam(searchParams.sortOrder);
   const sortOrder =
