@@ -1,7 +1,7 @@
 import {
-  type DocumentSortField,
   parseDateFilterCondition,
   parseDateFilterType,
+  parseDocumentSortField,
   parseSearchField,
 } from "@playground/shared-types";
 import { getQueryParam } from "@/lib/search-params";
@@ -43,23 +43,16 @@ export default async function WorkflowPage(props: PageProps) {
   );
   const dateFrom = getQueryParam(searchParams.dateFrom);
   const dateTo = getQueryParam(searchParams.dateTo);
+  // Type d'entrée : "0" (dates fixes) ou "1" (à tout moment).
+  const modalitesEntreesSorties = getQueryParam(
+    searchParams.modalitesEntreesSorties,
+  );
 
   // Parse and validate sort parameters (server-side sort).
-  const sortByParam = getQueryParam(searchParams.sortBy);
-  const validSortFields: DocumentSortField[] = [
+  const sortBy = parseDocumentSortField(
+    getQueryParam(searchParams.sortBy),
     "date_added",
-    "compliance_status",
-    "qualityScore",
-    "wordCount",
-    "title",
-    "structureName",
-    "sessionStartDate",
-    "activeIngestionVersion",
-  ];
-  const sortBy =
-    sortByParam && validSortFields.includes(sortByParam as DocumentSortField)
-      ? (sortByParam as DocumentSortField)
-      : "date_added";
+  );
   const sortOrderParam = getQueryParam(searchParams.sortOrder);
   const sortOrder =
     sortOrderParam === "asc" || sortOrderParam === "desc"
@@ -83,6 +76,7 @@ export default async function WorkflowPage(props: PageProps) {
     dateFilterCondition,
     dateFrom,
     dateTo,
+    modalitesEntreesSorties,
     includePreviewFields: true,
   });
 
@@ -102,6 +96,7 @@ export default async function WorkflowPage(props: PageProps) {
         dateCondition: dateFilterCondition ?? "",
         dateFrom,
         dateTo,
+        modalitesEntreesSorties,
       }}
     />
   );
