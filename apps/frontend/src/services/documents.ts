@@ -44,7 +44,6 @@ const DOCUMENT_LIST_SELECT = `
   structure_name,
   session_start_date,
   session_end_date,
-  quality_score,
   rco_record_id,
   assignee_email,
   assignee_profile,
