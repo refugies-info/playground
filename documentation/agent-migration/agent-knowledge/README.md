@@ -102,3 +102,28 @@ Luis, 15 juin 2026 — ces choix sont pris par défaut pour ne pas bloquer le sc
 2. **Format des skills** : style Letta Code — un `SKILL.md` par skill, exemples inline ou dans un sous-dossier `examples/`
 3. **Sévérité de la validation** : erreurs de frontmatter = fail CI, liens cassés = warn (pour absorber le legacy)
 4. **Multilingue (skill `translate`)** : un seul skill `translate/` qui couvre les 5 langues (ar/uk/ru/ps/ti), avec exemples par langue dans `examples/translate/{ar,uk,ru,ps,ti}/`
+
+## Export Letta Cloud (PR-03 / RI-1260) — migration one-shot, terminée
+
+Les fichiers de ce corpus ont été bootstrappés depuis Letta Cloud via deux scripts d'export one-shot, **supprimés dans le commit `770ef93`** (post-PR-03) car la migration est terminée. Le corpus est désormais la source de vérité versionnée — il n'est plus synchronisé depuis Letta Cloud.
+
+**Pourquoi les scripts ont été retirés** :
+
+- L'API `/v1/folders/*` de Letta Cloud est dépréciée serveur-side (retourne 400 sur tous les endpoints)
+- Le contournement utilisé (`GET /v1/agents/{agent_id}/export`, porté de [karfur PR #3788](https://github.com/refugies-info/karfur/pull/3788)) était suffisant pour la migration initiale
+- Le runtime du playground (PR-04+) se connecte à Agathe via la **Letta Code WS API**, pas via l'API HTTP Letta Cloud utilisée par les scripts
+- Les scripts n'ont donc plus de consommateur runtime — ce sont devenus du code mort
+
+**Pour référence historique**, les étapes de la migration initiale (juin 2026) :
+
+- 3 blocs de prompts workspace (`system/metadata_schema`, `system/compétence_conformité_éditoriale_di`, `system/compétence_détection_doublons`) → `prompts/`
+- 13 fichiers de corpus (8 langage-clair, 4 metadatas, 2 conformite-editoriale) via l'endpoint agent-level → `{langage-clair,metadatas,conformite-editoriale}/`
+- PDF convertis en Markdown côté serveur Letta Cloud, JSON/CSV conservés natifs
+- Contacts non publics masqués (emails, téléphones)
+- Source `ressources_exemples_redaction` exclue après revue qualité
+- Manifeste `_export-manifest.json` (15 KB) pour la traçabilité par fichier (chunks, file_id, source_path, weak_extraction_reasons)
+- 1 408 chunks indexés, 0 alerte d'extraction faible, 6 fichiers exclus
+
+**Pour mettre à jour le corpus depuis Letta Cloud** (si besoin futur) : utiliser [karfur PR #3788](https://github.com/refugies-info/karfur/pull/3788) comme référence — le script y est maintenu. Réécrire ensuite manuellement les fichiers modifiés dans ce dossier.
+
+Voir `documentation/agent-migration/letta-cloud-audit-2026-06-15.md` pour l'audit complet de l'API Letta Cloud.
