@@ -170,44 +170,95 @@ All SDK access funnels through `packages/agents/src/agent-sdk/` (NEW). **Scope (
 
 **`ConversationStore` port (v2, gpt #4):** interface only in `packages/agents` (which has no Supabase dependency and must not gain one — verified `packages/agents/package.json`); the Supabase-backed implementation lives with the existing service-role client in `packages/workflows` / `@playground/supabase`.
 
+**Concrete adapter example (modeled on the SSE adapter pattern):** the `streamTurn` generator and its SSE-route consumer, showing how typed SDK events map to the legacy wire format under the canonical content contract:
+
+```typescript
+// packages/agents/src/agent-sdk/streaming.ts
+async function* streamTurn(session: Session, content: string): AsyncGenerator<LegacyChunk> {
+  for await (const msg of session.stream(content)) {
+    switch (msg.type) {
+      case "assistant":
+        // Canonical content contract: assistant deltas are the ONLY content-bearing events
+        yield {
+          message_type: "assistant_message",
+          content: msg.content,        // delta fragment, not full text
+          run_id: msg.runId,
+          timestamp: new Date().toISOString(),
+        };
+        break;
+      case "result":
+        // Terminal result: metadata-only completion — never a content-bearing chunk
+        yield {
+          message_type: "run_completed",
+          content: "",                 // empty — consumers must NOT concatenate this
+          run_id: msg.runIds[0],
+          timestamp: new Date().toISOString(),
+        };
+        break;
+      case "error":
+        yield {
+          message_type: "error",
+          content: JSON.stringify({ type: "error", error: msg.error }),
+          run_id: msg.runId,
+          timestamp: new Date().toISOString(),
+        };
+        break;
+      // reasoning, tool_call, tool_result, etc. mapped as needed
+    }
+  }
+}
+
+// apps/frontend/src/app/api/agents/metadata/stream/route.ts (SSE consumer)
+// Persistence fix: the accumulator is the SOLE persistence source —
+// the v1 route overwrote finalAssistantContent per chunk (route.ts:143-168),
+// persisting only the last delta. The fix uses collectTurn's result.
+const { content: fullResponse, runIds, usage } = await collectTurn(session, userMessage);
+await persistReport({
+  raw_response: fullResponse,           // complete accumulated response
+  markdown: fullResponse,
+  run_id: runIds[0],
+  token_cost: usage?.totalTokens ?? null, // C1 branch-dependent (§D.1)
+});
+```
+
 ---
 
 ## C. Risk Register (canonical)
 
-Severity / affected files / mitigation (one per risk) / owning ticket. Files-affected matrix in §C.2.
+Severity / affected files / mitigation / rollback (one per risk) / owning ticket. Files-affected matrix in §C.2.
 
-| ID | Risk | Severity | Affected files | Mitigation | Ticket |
-|---|---|---|---|---|---|
-| R1 | **Token-usage accounting gap** — `token_cost` fed by `runs.usage.retrieve`; no documented SDK equivalent | High | `simplification.ts:14-35`, `letta_reports.token_cost`, `pipelines/editorial/persist-*.ts`, activity-logs UI | C1 ordered fallback chain (§D.1), branch selected in spike Q2, implemented once in `streamTurn` plumbing | MG-01, MG-06 |
-| R2 | **Stream event shape change** — every consumer filters `message_type` and accumulates deltas (12+ sites) | High | `agents.ts` (2×), `ingestion.ts`, `metadata.ts`, `simplification.ts` (2×), 5 workflow step files, SSE route, `force-metadata-reports.ts` | Single `streamTurn` adapter (§B.5) maps typed events → legacy chunk shape under the **canonical content contract** (deltas-only content; `result` = metadata); shared `collectTurn` accumulator with exact-once fixture | MG-03, MG-04, MG-15 |
-| R3 | **Error taxonomy rewrite** — `APIError.status` branches (401/403/429) become `errorCode`/transport errors; 429 signal source unknown | Medium | `di-single-record-steps.ts`, `audit-di-step.ts`, `metadata-di-step.ts` (8 call sites) | One `mapLettaError` → `FatalError`/`RetryableError` mapper in `packages/agents`, fixture-tested; external retry contracts unchanged | MG-03, MG-04 |
-| R4 | **Conversation lifecycle** — `conversations.cancel` + `"No active runs"` sniffing; conversation create inline | Medium | `force-editorial-step.ts:92-132` | `session.abort()` via the seam; keep `CONV_ID_PATTERN` (same `conv-` format — fixtures verified in Q7) | MG-13 |
-| R5 | **Agent identity change** — new agents → new IDs; 7 configured language keys vs 5 real agents; code defaults drift from inventory (`ar`, `ti`); `<REDACTED>` name bug | High | `packages/shared/src/constants/languages.ts:79-`, env config | Idempotent provisioning script prints env block; hardcoded fallback IDs removed; **MG-08 routing matrix reconciles 7 keys ↔ 5 agents (en/fa disposition explicit) before provisioning** | MG-07, MG-08 |
-| R6 | **Node/runtime floor** — `backend: "local"` needs Node 22.19+; Vercel/CI images unverified | Low | `.prototools` (24.13.1 ✓), Vercel Functions/Workflows images, CI | Verify floors in spike Q6; cloud backend on current Node; document in local-dev rewrite | MG-01, MG-18 |
-| R7 | **Duplicate-search data source does not exist** — karfur HTTP client dies; the assumed Supabase `dispositifs` table is absent (data lives in Mongo; no vector/semantic index anywhere) | High (raised in v2) | new client tool; audit skill; RI-1276; future `supabase/` migrations | **MG-10a decides + implements the authoritative source (Mongo query vs Supabase mirror with sync/freshness/indexing)** incl. search spec (fields, normalization, candidate generation, whether "semantic" is required, labeled set ≥ 30, numeric precision/recall thresholds); MG-10b implements the client tool against it | MG-10a, MG-10b |
-| R8 | **Long-running steps / reconnection** — 1-3 min turns over WebSocket; closed sessions unreusable; **no event replay** | Medium | `force-editorial-step.ts`, all steps holding sessions | Per-step open→use→close discipline; documented mid-turn drop recipe: `resumeSession(convId)` + `listMessages()` reconcile (validated in spike Q7) | MG-01, MG-04, MG-13 |
-| R9 | **Frontend SSE contract** — *corrected vs Companion A:* route has no in-repo frontend caller (§A.6); wire format kept for external consumers | Low | `apps/frontend/src/app/api/agents/metadata/stream/route.ts` | Server-side legacy-shape mapper (§B.5) + explicit keep/deprecate decision recorded | MG-15 |
-| R10 | **Local dev topology** — docker/Ollama vs `backend: "local"` decision; scripts + docs stale; **local App Server ≠ zero-cost inference** | Low-Med | `docker-compose.letta.yml`, `letta:*` scripts, `create-local-agents.ts`, `documentation/ai/local-letta-dev.md` | Spike-driven decision; one-command local bootstrap; **explicit local inference provider; zero-cost claim proven by network instrumentation (no external model calls)** | MG-18 |
-| R11 | **Supply-chain gating** — `minimumReleaseAge: 10080` delays first install; `trustPolicyExclude` needed for the new package; bundle-size impact | Low | `pnpm-workspace.yaml`, `knip.json`, lockfile | Schedule dependency PR ≥ 7 days post-release; mirror `trustPolicyExclude` treatment; knip + cve-lite gates in MG-02 | MG-02 |
-| R12 | **Rollback safety** — dual implementations must coexist; a regression in one pipeline must not block others | Low-Med | all dual-implementation paths | Global + per-pipeline `LETTA_GATEWAY` resolver **implemented and tested in MG-04**; each port wires its own override; rollback drill executed in MG-19 | MG-04, MG-19 |
-| R13 | **Stateless sessions would suppress agent knowledge** (v2, k3 #1) — memory/skills-instructions invisible in `stateless: true` turns | High | session factory; audit/metadata/translation workers | Workers default **stateful**; `stateless` only if Q8 proves instruction loading in stateless mode; MG-07 integration test opens the exact production session mode and proves `/audit`, `/metadata`, `/translate` access instructions + tools | MG-01 (Q8), MG-07, MG-11, MG-14 |
+| ID | Risk | Severity | Affected files | Mitigation | Rollback | Ticket |
+|---|---|---|---|---|---|---|
+| R1 | **Token-usage accounting gap** — `token_cost` fed by `runs.usage.retrieve`; no documented SDK equivalent | High | `simplification.ts:14-35`, `letta_reports.token_cost`, `pipelines/editorial/persist-*.ts`, activity-logs UI | C1 ordered fallback chain (§D.1), branch selected in spike Q2, implemented once in `streamTurn` plumbing | Flip `LETTA_GATEWAY` back to `v1`; `runs.usage.retrieve` resumes working immediately | MG-01, MG-06 |
+| R2 | **Stream event shape change** — every consumer filters `message_type` and accumulates deltas (12+ sites) | High | `agents.ts` (2×), `ingestion.ts`, `metadata.ts`, `simplification.ts` (2×), 5 workflow step files, SSE route, `force-metadata-reports.ts` | Single `streamTurn` adapter (§B.5) maps typed events → legacy chunk shape under the **canonical content contract** (deltas-only content; `result` = metadata); shared `collectTurn` accumulator with exact-once fixture | Flip `LETTA_GATEWAY` back to `v1`; adapter bypassed, original chunk parsing restored | MG-03, MG-04, MG-15 |
+| R3 | **Error taxonomy rewrite** — `APIError.status` branches (401/403/429) become `errorCode`/transport errors; 429 signal source unknown | Medium | `di-single-record-steps.ts`, `audit-di-step.ts`, `metadata-di-step.ts` (8 call sites) | One `mapLettaError` → `FatalError`/`RetryableError` mapper in `packages/agents`, fixture-tested; external retry contracts unchanged | Flip `LETTA_GATEWAY` back to `v1`; `APIError` import restored, original classification logic resumes | MG-03, MG-04 |
+| R4 | **Conversation lifecycle** — `conversations.cancel` + `"No active runs"` sniffing; conversation create inline | Medium | `force-editorial-step.ts:92-132` | `session.abort()` via the seam; keep `CONV_ID_PATTERN` (same `conv-` format — fixtures verified in Q7) | Flip `LETTA_GATEWAY_EDITORIAL` back to `v1`; `conversations.cancel` + string sniffing restored | MG-13 |
+| R5 | **Agent identity change** — new agents → new IDs; 7 configured language keys vs 5 real agents; code defaults drift from inventory (`ar`, `ti`); `<REDACTED>` name bug | High | `packages/shared/src/constants/languages.ts:79-`, env config | Idempotent provisioning script prints env block; hardcoded fallback IDs removed; **MG-08 routing matrix reconciles 7 keys ↔ 5 agents (en/fa disposition explicit) before provisioning** | Keep v1 agent IDs in env (provisioning script prints both); flip gateway back to `v1` | MG-07, MG-08 |
+| R6 | **Node/runtime floor** — `backend: "local"` needs Node 22.19+; Vercel/CI images unverified | Low | `.prototools` (24.13.1 ✓), Vercel Functions/Workflows images, CI | Verify floors in spike Q6; cloud backend on current Node; document in local-dev rewrite | Use `backend: "cloud"` (no local subprocess); no Node floor change needed | MG-01, MG-18 |
+| R7 | **Duplicate-search data source does not exist** — karfur HTTP client dies; the assumed Supabase `dispositifs` table is absent (data lives in Mongo; no vector/semantic index anywhere) | High (raised in v2) | new client tool; audit skill; RI-1276; future `supabase/` migrations | **MG-10a decides + implements the authoritative source (Mongo query vs Supabase mirror with sync/freshness/indexing)** incl. search spec (fields, normalization, candidate generation, whether "semantic" is required, labeled set ≥ 30, numeric precision/recall thresholds); MG-10b implements the client tool against it | Disable the `search_ri_duplicate_dispositifs` tool on the session (remove from `allowedTools`); audit runs without duplicate detection | MG-10a, MG-10b |
+| R8 | **Long-running steps / reconnection** — 1-3 min turns over WebSocket; closed sessions unreusable; **no event replay** | Medium | `force-editorial-step.ts`, all steps holding sessions | Per-step open→use→close discipline; documented mid-turn drop recipe: `resumeSession(convId)` + `listMessages()` reconcile (validated in spike Q7) | Flip gateway back to `v1`; stateless REST calls have no WebSocket reconnection risk | MG-01, MG-04, MG-13 |
+| R9 | **Frontend SSE contract** — *corrected vs Companion A:* route has no in-repo frontend caller (§A.6); wire format kept for external consumers | Low | `apps/frontend/src/app/api/agents/metadata/stream/route.ts` | Server-side legacy-shape mapper (§B.5) + explicit keep/deprecate decision recorded | Flip gateway back to `v1`; raw v1 chunks resume, no mapper needed | MG-15 |
+| R10 | **Local dev topology** — docker/Ollama vs `backend: "local"` decision; scripts + docs stale; **local App Server ≠ zero-cost inference** | Low-Med | `docker-compose.letta.yml`, `letta:*` scripts, `create-local-agents.ts`, `documentation/ai/local-letta-dev.md` | Spike-driven decision; one-command local bootstrap; **explicit local inference provider; zero-cost claim proven by network instrumentation (no external model calls)** | Restore `docker-compose.letta.yml` + `letta:*` scripts; revert `create-local-agents.ts` to v1 client | MG-18 |
+| R11 | **Supply-chain gating** — `minimumReleaseAge: 10080` delays first install; `trustPolicyExclude` needed for the new package; bundle-size impact | Low | `pnpm-workspace.yaml`, `knip.json`, lockfile | Schedule dependency PR ≥ 7 days post-release; mirror `trustPolicyExclude` treatment; knip + cve-lite gates in MG-02 | Remove the new package from `package.json`; `pnpm install` restores the lockfile | MG-02 |
+| R12 | **Rollback safety** — dual implementations must coexist; a regression in one pipeline must not block others | Low-Med | all dual-implementation paths | Global + per-pipeline `LETTA_GATEWAY` resolver **implemented and tested in MG-04**; each port wires its own override; rollback drill executed in MG-19 | Per-pipeline flag flip (resolver shipped in MG-04); drill executed in staging before production flip | MG-04, MG-19 |
+| R13 | **Stateless sessions would suppress agent knowledge** (v2, k3 #1) — memory/skills-instructions invisible in `stateless: true` turns | High | session factory; audit/metadata/translation workers | Workers default **stateful**; `stateless` only if Q8 proves instruction loading in stateless mode; MG-07 integration test opens the exact production session mode and proves `/audit`, `/metadata`, `/translate` access instructions + tools | Ensure all session factories use `stateful` (the default); remove any `stateless: true` override | MG-01 (Q8), MG-07, MG-11, MG-14 |
 
 ### C.2 Breaking-changes / files-affected matrix
 
-| Breakage | Files affected | Replacement |
-|---|---|---|
-| `Letta` class + `createLettaClient` signature | `clients.ts` + every consumer (9 files) | `createAgentClient()` with backend selection |
-| Chunk-shape contract (`message_type`, `content`, `run_id`) | `agents.ts`, `ingestion.ts`, `metadata.ts`, `simplification.ts`, SSE route, 5 workflow step files, `force-metadata-reports.ts` | `streamTurn` typed-event adapter under the canonical content contract + `collectTurn` (or `createTranscriptAccumulator`) |
-| `APIError` import + instanceof checks | 3 workflow files (8 call sites) — all via undeclared transitive dep | `mapLettaError` taxonomy mapper in `packages/agents` |
-| `getRunUsage` | `simplification.ts` + 5 call sites | C1 chain (§D.1) |
-| `findOrCreateConversation` name matching (`as any`) | `agents.ts` + 6 call sites | Persisted conversation IDs, gateway/agent-namespaced (§D.3) |
-| `conversations.cancel` + string sniffing | `force-editorial-step.ts` | `session.abort()` |
-| `tools.upsert` / `agents.tools.attach` / `secrets` | `register-metadata-validator-tool.ts` (DELETED) | Session-scoped client tools |
-| `templates.agents.create` | `agents.ts:runAgentOneShot` (unused) | Delete |
-| `LETTA_PROJECT_ID` / `LETTA_BASE_URL` / `LETTA_ENVIRONMENT` | env files, `clients.ts`, docs | Backend selection (§B.3) |
-| Hardcoded translation agent IDs (7 keys, drifting) | `languages.ts` defaults | Provisioned IDs per MG-08 routing matrix |
-| Local dev stack | `docker-compose.letta.yml`, `letta:*` scripts, `create-local-agents.ts` | `backend: "local"` provisioning + explicit inference provider (decision MG-18) |
-| SSE wire format | `metadata/stream/route.ts` | Legacy-shape mapper (semantic contract test); persistence via accumulator — fixes the last-delta overwrite bug; deprecation decision (MG-15) |
+| Breakage | Files affected | Replacement | Required action |
+|---|---|---|---|
+| `Letta` class + `createLettaClient` signature | `clients.ts` + every consumer (9 files) | `createAgentClient()` with backend selection | Rewrite `createLettaClient()` to return `LettaAgentClient`; remove `LETTA_PROJECT_ID` requirements |
+| Chunk-shape contract (`message_type`, `content`, `run_id`) | `agents.ts`, `ingestion.ts`, `metadata.ts`, `simplification.ts`, SSE route, 5 workflow step files, `force-metadata-reports.ts` | `streamTurn` typed-event adapter under the canonical content contract + `collectTurn` (or `createTranscriptAccumulator`) | Replace `message_type` checks with `type` checks; add `switch(msg.type)` handlers in all consumers |
+| `APIError` import + instanceof checks | 3 workflow files (8 call sites) — all via undeclared transitive dep | `mapLettaError` taxonomy mapper in `packages/agents` | Replace `APIError` instanceof checks with `mapLettaError()` calls in 3 workflow files |
+| `getRunUsage` | `simplification.ts` + 5 call sites | C1 chain (§D.1) | Replace `getRunUsage()` with C1 branch implementation in `streamTurn` plumbing |
+| `findOrCreateConversation` name matching (`as any`) | `agents.ts` + 6 call sites | Persisted conversation IDs, gateway/agent-namespaced (§D.3) | Replace `findOrCreateConversation()` with `resolveConversation()` via `ConversationStore` port |
+| `conversations.cancel` + string sniffing | `force-editorial-step.ts` | `session.abort()` | Replace `conversations.cancel()` + string sniffing with `session.abort()` in `force-editorial-step.ts` |
+| `tools.upsert` / `agents.tools.attach` / `secrets` | `register-metadata-validator-tool.ts` (DELETED) | Session-scoped client tools | Implement `validateMetadataRiTool` as `AnyAgentTool`; delete `register-metadata-validator-tool.ts` and HTTP route |
+| `templates.agents.create` | `agents.ts:runAgentOneShot` (unused) | Delete | Remove `runAgentOneShot` and `templates.agents.create` import (unused, no SDK equivalent) |
+| `LETTA_PROJECT_ID` / `LETTA_BASE_URL` / `LETTA_ENVIRONMENT` | env files, `clients.ts`, docs | Backend selection (§B.3) | Remove `LETTA_PROJECT_ID`/`LETTA_BASE_URL`/`LETTA_ENVIRONMENT` from env and code; replace with explicit `backend` parameter |
+| Hardcoded translation agent IDs (7 keys, drifting) | `languages.ts` defaults | Provisioned IDs per MG-08 routing matrix | Replace hardcoded `LETTA_AGENTS_CONFIG` defaults with provisioned IDs from MG-07 script |
+| Local dev stack | `docker-compose.letta.yml`, `letta:*` scripts, `create-local-agents.ts` | `backend: "local"` provisioning + explicit inference provider (decision MG-18) | Rewrite `create-local-agents.ts` and `letta:*` scripts; update local-dev docs |
+| SSE wire format | `metadata/stream/route.ts` | Legacy-shape mapper (semantic contract test); persistence via accumulator — fixes the last-delta overwrite bug; deprecation decision (MG-15) | Rewrite SSE route to use `streamTurn()`; replace per-chunk overwrite with accumulator-based persistence |
 
 ---
 
@@ -294,197 +345,197 @@ Format: ID / wave / title / description / acceptance criteria (mechanically chec
 ### MG-01 — Wave 0.1 — Phase 0 spike gate
 **Description:** Stand up `@letta-ai/letta-agent-sdk` in a scratch workspace; answer Q1-Q8 per §E; capture a full `stream()` event log for one `/audit`-shaped turn against cloud and local backends; record go/no-go per question and the selected C1 branch.
 **Acceptance criteria:**
-- `documentation/agent-migration/agent-sdk-spike.md` (NEW) answers Q1-Q8 with code evidence + event log.
-- Spike script demonstrating send → stream → terminal `result` runs against both backends (committed under `documentation/agent-migration/spike/`, NEW).
-- Go/no-go recorded per question; C1 branch selected and written into §D.1 terms; Q8 knowledge-loading decision recorded (feeds R13).
+- [ ] `documentation/agent-migration/agent-sdk-spike.md` (NEW) answers Q1-Q8 with code evidence + event log.
+- [ ] Spike script demonstrating send → stream → terminal `result` runs against both backends (committed under `documentation/agent-migration/spike/`, NEW).
+- [ ] Go/no-go recorded per question; C1 branch selected and written into §D.1 terms; Q8 knowledge-loading decision recorded (feeds R13).
 **Depends-on:** — **Provenance:** BASE#1, A MIG-01 (Q1-Q6), C spike#1-3 + R8 (Q7), D-draft-06.
 
 ### MG-02 — Wave 0.2 — Add SDK dependency + supply-chain config
 **Description:** Add `@letta-ai/letta-agent-sdk` to `packages/agents/package.json` alongside `letta-client` (not removed until MG-21). Add the `trustPolicyExclude` entry mirroring the letta-client treatment in `pnpm-workspace.yaml`. Respect `minimumReleaseAge: 10080` — schedule the PR ≥ 7 days after the package's release. Dependency-only change.
 **Acceptance criteria:**
-- Both packages present in `pnpm-lock.yaml`; `import { LettaAgentClient }` type-checks in `packages/agents`.
-- `pnpm install && pnpm check:types && pnpm lint && pnpm knip && pnpm security:scan:js` green with zero runtime code changes (diff shows only manifest/lockfile/workspace-yaml).
+- [ ] Both packages present in `pnpm-lock.yaml`; `import { LettaAgentClient }` type-checks in `packages/agents`.
+- [ ] `pnpm install && pnpm check:types && pnpm lint && pnpm knip && pnpm security:scan:js` green with zero runtime code changes (diff shows only manifest/lockfile/workspace-yaml).
 **Depends-on:** MG-01 **Provenance:** B LEGACY-2, A MIG-02/R11.
 
 ### MG-03 — Wave 1.1 — Adapter seam with v1 implementation (pre-gate; scope narrowed in v2)
 **Description:** Introduce `packages/agents/src/agent-sdk/{client,session,streaming,error,conversation}.ts` (NEW) implementing the §B.5 seam — `createAgentClient()` / `createSession()` / `streamTurn()` / `collectTurn()` / `resolveConversation()` / `mapLettaError()` — with the **current v1 client as the only implementation**. Move all `APIError` import/classification logic out of the 3 workflow step files into `mapLettaError`. **Scope (v2, qwen #3): workflow steps and the SSE route switch to the seam.** Management scripts (`list-agents`, `create-local-agents`, `register-metadata-validator-tool`, `force-metadata-reports`) keep direct v1 usage until MG-07/MG-09/MG-18 — the three-function surface of v1 cannot cover their management/tool APIs, and pretending otherwise made v1's acceptance criterion unachievable. No behavior change; v1 remains the only runtime.
 **Acceptance criteria:**
-- `rg "@letta-ai/letta-client" packages/workflows apps/frontend` → 0 matches (scripts excluded by design; each script's migration is acceptance-checked in its owning ticket).
-- `streamTurn` v1 implementation unit-tested against recorded v1 chunk fixtures (multi-fragment accumulation, `run_id` capture, error propagation); `collectTurn` exact-once fixture green.
-- `pnpm check:types && pnpm lint && pnpm test` green; production behavior unchanged (v1 default).
+- [ ] `rg "@letta-ai/letta-client" packages/workflows apps/frontend` → 0 matches (scripts excluded by design; each script's migration is acceptance-checked in its owning ticket).
+- [ ] `streamTurn` v1 implementation unit-tested against recorded v1 chunk fixtures (multi-fragment accumulation, `run_id` capture, error propagation); `collectTurn` exact-once fixture green.
+- [ ] `pnpm check:types && pnpm lint && pnpm test` green; production behavior unchanged (v1 default).
 **Depends-on:** — (pre-gate; parallel-safe with MG-01/02) **Provenance:** BASE#2, B LEGACY-3/4 (naming), A MIG-03.
 
 ### MG-04 — Wave 1.2 — Agent SDK adapter behind flag
 **Description:** Second seam implementation on `LettaAgentClient`: factory with explicit backend selection (cloud `apiKey` / local / remote `url`+`authToken`); `createSession` dispatch (`agent-…` vs `conv-…`) with the per-workflow toolkit contract (explicit `allowedTools`, `permissionMode`, no unintended base tools); `streamTurn` mapping typed `SDKMessage` → legacy chunk shape under the **canonical content contract** (assistant fragments → `assistant_message` deltas, the only content-bearing events; terminal `result` → metadata-only completion: runIds, stopReason, usage when C1 branch 1); `collectTurn` accumulator with `result.result` as exact-once authoritative content; `mapLettaError` (errorCode → Fatal/Retryable) incl. `CloudManagedSandboxExpiredError` close→resume→retry-once (pre-send only) and the Q7 reconnection recipe; `abort()`; `await using` close discipline. **Gateway resolver (v2, k3 #6):** `LETTA_GATEWAY=v1|agent-sdk` global default `v1` **plus per-pipeline overrides** (`LETTA_GATEWAY_INGESTION`, `_EDITORIAL`, `_TRANSLATION`) implemented and unit-tested here — not deferred to MG-19, because MG-11-14 acceptance criteria already rely on per-pipeline rollback.
 **Acceptance criteria:**
-- Unit tests replay recorded SDK event fixtures (multi-fragment, tool-interleaved, failed `result`, mid-turn drop) and assert outputs identical to v1 fixtures (content, runIds, error classes). **Duplication fixture:** deltas `"foo"`,`"bar"` + terminal `result` `"foobar"` → emitted content is exactly `"foobar"` once; terminal event carries no content payload.
-- Gateway resolver unit tests: global default, per-pipeline override precedence, unknown values fall back to global with a logged warning. All three override vars documented in `.env.example`; default `v1` in staging and prod.
-- Toolkit least-privilege test: each workflow kind's session exposes exactly its declared tools.
-- Integration test vs `backend: "local"` completes an `/audit`-shaped turn end-to-end; zero leaked sessions (close instrumentation).
+- [ ] Unit tests replay recorded SDK event fixtures (multi-fragment, tool-interleaved, failed `result`, mid-turn drop) and assert outputs identical to v1 fixtures (content, runIds, error classes). **Duplication fixture:** deltas `"foo"`,`"bar"` + terminal `result` `"foobar"` → emitted content is exactly `"foobar"` once; terminal event carries no content payload.
+- [ ] Gateway resolver unit tests: global default, per-pipeline override precedence, unknown values fall back to global with a logged warning. All three override vars documented in `.env.example`; default `v1` in staging and prod.
+- [ ] Toolkit least-privilege test: each workflow kind's session exposes exactly its declared tools.
+- [ ] Integration test vs `backend: "local"` completes an `/audit`-shaped turn end-to-end; zero leaked sessions (close instrumentation).
 **Depends-on:** MG-01, MG-02, MG-03 **Provenance:** BASE#4, B Phase 1, C Phase 2, A MIG-05/MIG-08, D-draft-15/16 (per-session toolkit).
 
 ### MG-05 — Wave 2.1 — Conversation store: gateway-namespaced IDs; retire name lookup
 **Description:** Per §D.3 (amended): Supabase migration creating `letta_conversations` with `(purpose_key, gateway, agent_id, conversation_id, timestamps)` and `UNIQUE (purpose_key, gateway, agent_id)`; `ConversationStore` port declared in the seam, **Supabase-backed implementation in `packages/workflows` beside the existing service-role client** (`packages/agents` stays transport-only — it has no Supabase dependency today and does not gain one; v2, gpt #4); ID-first resolution in the seam's resolver keyed by `(purpose_key, gateway)`; name-lookup only as logged fallback on first touch (v1 gateway only). **Editorial dual-runtime decision executed here (v2, moved from MG-21 per k3 #4):** SDK editorial conversations get `letta_conversations` rows (`editorial:{workflowId}`, `gateway='agent-sdk'`); `workflows.conversation_id` stays v1-authoritative; the eventual keep/null disposition of the legacy column is recorded now, executed in MG-21. `CONV_ID_PATTERN` validation unchanged.
 **Acceptance criteria:**
-- Migration `supabase/migrations/*_create_letta_conversations.sql` (NEW) applied; `supabase db reset` green; RLS policies cover the new table; unique constraint enforced by a concurrency-safe upsert test.
-- Resolver unit test: stored ID for the requesting gateway → no `conversations.list` call; missing ID → fallback resolves by name once, logs deprecation warning, persists under the right `(gateway, agent_id)`; v1 and SDK rows never collide.
-- Editorial path still enforces `CONV_ID_PATTERN` (existing test green); dual-runtime editorial decision recorded in the migration docs.
+- [ ] Migration `supabase/migrations/*_create_letta_conversations.sql` (NEW) applied; `supabase db reset` green; RLS policies cover the new table; unique constraint enforced by a concurrency-safe upsert test.
+- [ ] Resolver unit test: stored ID for the requesting gateway → no `conversations.list` call; missing ID → fallback resolves by name once, logs deprecation warning, persists under the right `(gateway, agent_id)`; v1 and SDK rows never collide.
+- [ ] Editorial path still enforces `CONV_ID_PATTERN` (existing test green); dual-runtime editorial decision recorded in the migration docs.
 **Depends-on:** MG-01 (Q3/Q7), MG-03 **Provenance:** A MIG-07/R3, BASE#7, §D.3 (amended).
 
 ### MG-06 — Wave 2.2 — Token usage accounting (C1 branch; rescoped in v2)
 **Description:** Implement the spike-selected C1 branch (§D.1) inside the seam/persistence: (1) `stream_event` usage extraction; (2) narrow v1 usage-only module for `runs.usage.retrieve` during dual-implementation; (3) NULL degradation + follow-up. `LettaUsage` stays the contract. **Rescoped (v2, qwen #4 + k3 #7):** this ticket delivers fixture-level usage extraction, persistence-unit tests, and **one cloud turn end-to-end** — the ≥ 20-record golden run is moved to MG-16b because production-like agents (MG-07) and report-producing workflows (MG-11-14) do not exist yet at Wave 2.2, and the persistence writes live in those step files.
 **Acceptance criteria:**
-- Branch recorded in `documentation/agent-migration/usage-accounting.md` (NEW).
-- Branch 1: fixture test proves `stream_event` → `LettaUsage`; one cloud turn observes non-null usage. Branch 2: `rg "runs.usage.retrieve" packages` matches exactly one module; one cloud turn retrieves usage. Branch 3: `letta_reports.token_cost` IS NULL for agent-sdk rows, activity-log UI renders "n/a" (Playwright check), and a concrete follow-up issue is linked — **branch 3 must NOT be held to a "populates token_cost" criterion**.
+- [ ] Branch recorded in `documentation/agent-migration/usage-accounting.md` (NEW).
+- [ ] Branch 1: fixture test proves `stream_event` → `LettaUsage`; one cloud turn observes non-null usage. Branch 2: `rg "runs.usage.retrieve" packages` matches exactly one module; one cloud turn retrieves usage. Branch 3: `letta_reports.token_cost` IS NULL for agent-sdk rows, activity-log UI renders "n/a" (Playwright check), and a concrete follow-up issue is linked — **branch 3 must NOT be held to a "populates token_cost" criterion**.
 **Depends-on:** MG-01, MG-04 **Provenance:** A MIG-06/R2, BASE C.1.1, B §3.4.
 
 ### MG-08 — Wave 3.1 — Decision: translator topology + routing matrix (RI-1268)
 **Description:** Decision ticket per §D.2. Existing Linear issue RI-1268 « Skill `translation` multilingue : reprendre les **5 agents** `ar/uk/ru/ps/ti` (considérer 1 agent multilingue vs 5). `ps` et `ti` ont déjà la persona Letta Code standard — probablement un pré-déploiement. » **Required input (v2, qwen #5/gpt #9): the verified language→agent routing matrix** — all 7 configured keys (`ar/uk/ru/fa/ps/en/ti`) mapped against the 5 real agents, with an explicit disposition for `en`/`fa` (skip / alias / newly provision) and reconciliation of the `ar`/`ti` ID drift between `languages.ts` defaults and the inventory. Options are defined by that matrix. **Decision evidence precedes the decision (v2, k3 #10):** quality baselines for all five production languages (golden samples + editorial sign-off ar/uk/ru; automated schema/non-empty checks ps/ti), including the model-tier comparison if Option A would use per-session `model` overrides. Recommendation: one multilingual agent (Option A). Deadline: before MG-07 (Wave 3.2); hard stop before MG-14.
 **Acceptance criteria:**
-- `documentation/agent-migration/translator-agents-decision.md` (NEW) records the routing matrix, decision, rationale, criteria scores, per-language baseline evidence, deadline.
-- MG-07 / MG-14 / MG-22 reference the recorded outcome; no other ticket pre-commits either option.
+- [ ] `documentation/agent-migration/translator-agents-decision.md` (NEW) records the routing matrix, decision, rationale, criteria scores, per-language baseline evidence, deadline.
+- [ ] MG-07 / MG-14 / MG-22 reference the recorded outcome; no other ticket pre-commits either option.
 **Depends-on:** MG-01 **Provenance:** D-draft-18 (decision-ticket pattern), BASE#3, C R5, RI-1268.
 
 ### MG-07 — Wave 3.2 — Agents as code: provisioning script (corpus-blocking deliverables added in v2)
 **Description:** `scripts/provision-agents.ts` (NEW): idempotent (list-before-create, update-if-drifted) creation of the editorial multi-task agent — persona/`systemPrompt` + memory entries sourced from the repo (`packages/agents/prompts/compliance.md`, `packages/agents/prompts/duplicates.md`, `packages/agents/src/metadata-schema-spec.ts`) or a shared cloud repository `[VERIFY IN SPIKE: repositories API usage]` — with `baseTools: []`, model `LETTA_MODEL_NAME`; translation agents per the **MG-08 routing matrix**. Prints an env block; updates `.env.example`. **Corpus is a blocking input (v2, gpt #5):** the `agent-knowledge` scaffold is empty today (§A.4), so this ticket owns promoting the sources into committed `skills/{audit,redaction,metadata,translate}/SKILL.md` files (extends RI-1259/RI-1260/RI-1264/RI-1265/RI-1266); provisioning **fails** when a required skill is absent, and `scripts/validate-corpus.ts` is upgraded to treat missing required skills as errors (today missing examples are warnings only). **Session-mode proof (v2, k3 #1/R13):** an integration test provisions from the committed corpus, opens the exact session mode production will use (stateful by default; stateless only per Q8 outcome), and proves `/audit`, `/metadata`, `/translate` can access their instructions and tools.
 **Acceptance criteria:**
-- Running the script twice in staging yields identical agent IDs (idempotency); script exits non-zero if any required `SKILL.md` is missing (verified by temporarily hiding one).
-- `skills/{audit,redaction,metadata,translate}/SKILL.md` committed and non-empty; `corpus.config.yaml` status flipped from `scaffold`; `pnpm validate:corpus` green **and fails on a removed required skill**.
-- Printed env block matches the implemented contract (`PLAYGROUND_AGENT_ID`, `METADATA_AGENT_ID`, per-language vars or single `LETTA_TRANSLATOR_AGENT_ID` per MG-08 matrix).
-- Created editorial agent passes a manual `/audit` smoke prompt returning valid frontmatter (recorded in spike doc addendum), and the session-mode knowledge/tool-access integration test is green.
-- Agent definitions live in a committed, git-diffable module.
+- [ ] Running the script twice in staging yields identical agent IDs (idempotency); script exits non-zero if any required `SKILL.md` is missing (verified by temporarily hiding one).
+- [ ] `skills/{audit,redaction,metadata,translate}/SKILL.md` committed and non-empty; `corpus.config.yaml` status flipped from `scaffold`; `pnpm validate:corpus` green **and fails on a removed required skill**.
+- [ ] Printed env block matches the implemented contract (`PLAYGROUND_AGENT_ID`, `METADATA_AGENT_ID`, per-language vars or single `LETTA_TRANSLATOR_AGENT_ID` per MG-08 matrix).
+- [ ] Created editorial agent passes a manual `/audit` smoke prompt returning valid frontmatter (recorded in spike doc addendum), and the session-mode knowledge/tool-access integration test is green.
+- [ ] Agent definitions live in a committed, git-diffable module.
 **Depends-on:** MG-01, MG-02, MG-08 **Provenance:** BASE#3, A MIG-11, D-draft-21, B LEGACY-14, RI-1259/RI-1260/RI-1264/RI-1265/RI-1266.
 
 ### MG-09 — Wave 3.3 — Client tool: `validate_metadata_ri` (JSON contract fixed in v2)
 **Description:** Existing Linear issue RI-1274 « Tool `validate_metadata_ri` (déjà HTTP route Next.js) — le réexposer en tool Letta Code. » Implement `packages/agents/src/tools/validate-metadata-ri.ts` (NEW) as an `AnyAgentTool` executing the `MetadataRiSchema` Zod validation in-process (same logic as `POST /api/tools/validate-metadata-ri`); attached per-session by the seam's toolkit contract for metadata/audit/redaction kinds (editorial included — redaction is the editorial rewrite path via `simplification.ts`). **Contract (v2, qwen #8): the tool preserves the existing JSON contract** — valid → `{ valid: true, data }` (Zod-sanitized), invalid → `{ valid: false, errors: [{ field, message }] }` — golden-fixture-tested against current route behavior. "Canonical YAML" from v1 is dropped: the route never serializes YAML; if a YAML rendering is ever needed it is a new, separately tested serialization step. Delete `scripts/register-metadata-validator-tool.ts` (DELETED); drop `VALIDATE_METADATA_RI_URL` secret and the `NEXT_PUBLIC_APP_URL` usage; keep the HTTP route only if `rg "validate-metadata-ri"` shows remaining non-agent callers.
 **Acceptance criteria:**
-- Tool contract test: valid input → `{ valid: true, data }` matching route fixtures byte-for-byte on the sanitized object; invalid → exact legacy error list (golden fixtures from current route behavior).
-- Parity test: agent in a local-backend session calls the tool and self-corrects invalid `metadata_ri` on retry.
-- `rg "VALIDATE_METADATA_RI_URL" --type ts` → 0 matches; `rg "pip_requirements" scripts` → 0 matches; register script absent from `scripts/`.
+- [ ] Tool contract test: valid input → `{ valid: true, data }` matching route fixtures byte-for-byte on the sanitized object; invalid → exact legacy error list (golden fixtures from current route behavior).
+- [ ] Parity test: agent in a local-backend session calls the tool and self-corrects invalid `metadata_ri` on retry.
+- [ ] `rg "VALIDATE_METADATA_RI_URL" --type ts` → 0 matches; `rg "pip_requirements" scripts` → 0 matches; register script absent from `scripts/`.
 **Depends-on:** MG-04 **Provenance:** BASE#5, A MIG-12, B LEGACY-9, D-draft-04, RI-1274.
 
 ### MG-10a — Wave 3.4 — Duplicate-search data source (NEW in v2, split from MG-10; pre-gate-eligible)
 **Description:** Decide and implement the authoritative source for duplicate search — **there is no Supabase `dispositifs` table today** (§A.4): either query the existing Mongo collection through `@playground/mongo`, or create/populate/index a Supabase `dispositifs` table with explicit sync, freshness, deletion, credentials, schema, and production-size performance criteria. RI-1276 presumes the Supabase table; this ticket makes the presumption true or overturns it. Includes the search specification (v2, k3 #8): searchable fields, normalization, candidate-generation SQL/RPC, whether "semantic" matching is actually required (no vector/embedding infrastructure exists today — only one `pg_trgm` index on ingestion metadata), labeled-dataset ownership (≥ 30 cases), and **numeric** precision/recall thresholds agreed with editorial up front.
 **Acceptance criteria:**
-- Decision recorded (`documentation/agent-migration/duplicate-search-source.md`, NEW) with the search spec and thresholds; labeled dataset committed with a named owner.
-- Implemented source passes a mechanically runnable search benchmark against the agreed thresholds at production-scale fixture size (command + results committed).
+- [ ] Decision recorded (`documentation/agent-migration/duplicate-search-source.md`, NEW) with the search spec and thresholds; labeled dataset committed with a named owner.
+- [ ] Implemented source passes a mechanically runnable search benchmark against the agreed thresholds at production-scale fixture size (command + results committed).
 **Depends-on:** — (no SDK dependency; can start immediately) **Provenance:** RI-1276, BASE#6, C R7, qwen #7/gpt #2/k3 #8.
 
 ### MG-10b — Wave 3.5 — Client tool: `search_ri_duplicate_dispositifs`
 **Description:** Implement `packages/agents/src/tools/search-ri-duplicate-dispositifs.ts` (NEW) against the MG-10a source; attach to audit sessions via the seam's toolkit contract.
 **Acceptance criteria:**
-- Ranked candidate list returned for the MG-10a labeled fixtures at the agreed precision/recall thresholds (benchmark re-run in CI or documented reproduction).
-- Audit turn on golden samples emits duplicate/compliant verdicts consistent with the v1 baseline on identical inputs.
-- `rg "karfur" packages` → 0 matches.
+- [ ] Ranked candidate list returned for the MG-10a labeled fixtures at the agreed precision/recall thresholds (benchmark re-run in CI or documented reproduction).
+- [ ] Audit turn on golden samples emits duplicate/compliant verdicts consistent with the v1 baseline on identical inputs.
+- [ ] `rg "karfur" packages` → 0 matches.
 **Depends-on:** MG-04, MG-10a **Provenance:** BASE#6, A MIG-13, B LEGACY-10, C R7, RI-1276.
 
 ### MG-16a — Wave 4.0 — Parity harness + v1 baselines + observability baseline (NEW in v2, split from MG-16)
 **Description:** **Pre-port** harness and baselines (v2, k3 #3/gpt #3/qwen #10/gpt #10): fixed corpus of ingestion/editorial/translation inputs; replay runner over **both gateways** (v1 today, agent-sdk once MG-04 lands); comparison of **parsed `LettaReportResult`** (status, schema-valid metadata, compliance verdicts), token costs where available, and latency — never raw text (rule enforced in code: the harness fails if it diffs raw markdown). v1 baselines recorded **before any port ticket lands**. Also delivers the **executable observability baseline**: a committed report command (SQL/script) computing per-pipeline error rate, retry counts, and sandbox-expiry counts over a fixed lookback window with explicit denominators — the "v1 baseline" referenced by MG-17/MG-19 becomes a command, not an assertion.
 **Acceptance criteria:**
-- Harness committed (`scripts/parity-run.ts` NEW or a vitest suite); v1 baselines under `documentation/agent-migration/parity/` (NEW).
-- Observability baseline command committed; running it against production/staging data produces the per-pipeline baseline report referenced by later gates.
-- Comparison rule enforced in code.
+- [ ] Harness committed (`scripts/parity-run.ts` NEW or a vitest suite); v1 baselines under `documentation/agent-migration/parity/` (NEW).
+- [ ] Observability baseline command committed; running it against production/staging data produces the per-pipeline baseline report referenced by later gates.
+- [ ] Comparison rule enforced in code.
 **Depends-on:** MG-03, MG-04 **Provenance:** A MIG-16, C testing rule, BASE C.4, qwen #10, k3 #3, gpt #3/#10.
 
 ### MG-11 — Wave 4.1 — Port audit path
 **Description:** Switch `forceAuditReportStep`, `generateDiAuditReportsStep`, `diSingleAuditStep` (`di-single-record-steps.ts`, `audit-di-step.ts`) to the seam under the flag; sessions **stateful by default** (stateless only per Q8 outcome — v2, k3 #1); usage per MG-06; activity logging (`TYPE_COMPLIANCE_IA`/`TYPE_UPDATE_COMPLIANCE`) and `letta_reports` insert shape unchanged; pipeline's own `LETTA_GATEWAY_INGESTION` override wired (resolver from MG-04). Note: only the forced path is live today (§A.5).
 **Acceptance criteria:**
-- Staging golden run ≥ 20 records via the **MG-16a harness**: identical `status` distribution and schema-valid `metadata` vs v1 baseline (harness diff, §H).
-- Retry classification verified with injected `llm_api_error`/rate-limit fixtures (unit).
-- Rollback verified by flipping `LETTA_GATEWAY_INGESTION` back to `v1` in staging.
+- [ ] Staging golden run ≥ 20 records via the **MG-16a harness**: identical `status` distribution and schema-valid `metadata` vs v1 baseline (harness diff, §H).
+- [ ] Retry classification verified with injected `llm_api_error`/rate-limit fixtures (unit).
+- [ ] Rollback verified by flipping `LETTA_GATEWAY_INGESTION` back to `v1` in staging.
 **Depends-on:** MG-04, MG-05, MG-06, MG-07, MG-09, MG-10b, MG-16a **Provenance:** BASE#7, A MIG-09, C Phase 3, gpt #7.
 
 ### MG-12 — Wave 4.2 — Port metadata path
 **Description:** Switch `forceMetadataReportStep` (with `"generating"` sentinel insert/update and concurrent-generation 409 guard), `generateDiMetadataReportsStep`, `diSingleMetadataStep` (`metadata-di-step.ts`, `di-single-record-steps.ts`) to the seam. Keep the sentinel UX; re-evaluate the 409 guard against runtime queueing (`queue_update`) — keep the guard unless spike evidence shows queueing suffices; pipeline override `LETTA_GATEWAY_INGESTION` wired.
 **Acceptance criteria:**
-- Forced metadata regeneration via UI works under agent-sdk; sentinel → complete/error transitions visible via Supabase Realtime (Playwright).
-- Concurrent double-trigger test: no unhandled 409; guard-or-queue behavior documented in the ticket.
-- Golden-run parity as MG-11 (MG-16a harness).
+- [ ] Forced metadata regeneration via UI works under agent-sdk; sentinel → complete/error transitions visible via Supabase Realtime (Playwright).
+- [ ] Concurrent double-trigger test: no unhandled 409; guard-or-queue behavior documented in the ticket.
+- [ ] Golden-run parity as MG-11 (MG-16a harness).
 **Depends-on:** MG-04, MG-05, MG-06, MG-07, MG-09, MG-16a **Provenance:** BASE#7/#10, A MIG-10.
 
 ### MG-13 — Wave 4.3 — Port editorial rewrite step
 **Description:** Switch `forceEditorialStep` (+ `pipelines/editorial/force-editorial.ts`): inline `conversations.create` → seam session creation via the **MG-05 dual-runtime store** (`editorial:{workflowId}`, `gateway='agent-sdk'`; `workflows.conversation_id` untouched for v1); `conversations.cancel` + `"No active runs"` sniffing → `session.abort()` (or queue semantics per Q7); keep `CONV_ID_PATTERN`, durable-step retry semantics (`maxRetries = 2`); mid-turn drop recovery per the Q7 recipe (`resumeSession` + `listMessages()` reconcile, no replay); pipeline override `LETTA_GATEWAY_EDITORIAL` wired.
 **Acceptance criteria:**
-- `/api/editorial-rewrite` POST → `GET /[runId]` flow works end-to-end in staging under agent-sdk, including resume-after-refresh via `active_run_id` and the `letta_reports` fallback.
-- Concurrent double-forced rewrite: no unhandled 409 (queued, or aborted-and-retried per Q7 finding).
-- `rg "No active runs" packages` → 0 matches; SDK editorial conversation rows never overwrite v1 `workflows.conversation_id`.
+- [ ] `/api/editorial-rewrite` POST → `GET /[runId]` flow works end-to-end in staging under agent-sdk, including resume-after-refresh via `active_run_id` and the `letta_reports` fallback.
+- [ ] Concurrent double-forced rewrite: no unhandled 409 (queued, or aborted-and-retried per Q7 finding).
+- [ ] `rg "No active runs" packages` → 0 matches; SDK editorial conversation rows never overwrite v1 `workflows.conversation_id`.
 **Depends-on:** MG-04, MG-05, MG-06, MG-07, MG-09, MG-16a **Provenance:** BASE#8, A MIG-14, C R4/R8, k3 #4.
 
 ### MG-14 — Wave 4.4 — Port translation workflows
 **Description:** Switch `generateTranslationStep`, the per-language pipelines in `pipelines/translation/generate-translation.ts` (+ `workflow-registry.ts`), and `getAvailableTranslationAgentsStep` to the seam using MG-07 agents per the MG-08 routing matrix. Preserve per-record-per-language conversation isolation (MG-05 keys), language skip when unconfigured per the matrix, `TYPE_TRANSLATION_ERROR` logging, empty-markdown skip; pipeline override `LETTA_GATEWAY_TRANSLATION` wired.
 **Acceptance criteria:**
-- Translations generated in staging for **every language the MG-08 matrix routes to an agent** (not a two-language sample — v2, k3 #10/gpt #9); editorial quality spot-check sign-off recorded for ar/uk/ru.
-- Unconfigured/skipped-language behavior verified by unit test for each non-routed key (incl. `en`/`fa` disposition).
-- Topology-consistent env contract with **exact assertions** (v2, gpt #9): Option A → `rg "LETTA_TRANSLATOR_AGENT_ID" packages/shared` matches the single definition and `rg "LETTA_AGENT_(AR|UK|RU|FA|PS|EN|TI)" packages/shared` → 0 matches; Option B → every per-language var in the matrix documented in `.env.example` and none missing.
-- Exported available-language set unchanged unless the MG-08 decision explicitly approves a change.
+- [ ] Translations generated in staging for **every language the MG-08 matrix routes to an agent** (not a two-language sample — v2, k3 #10/gpt #9); editorial quality spot-check sign-off recorded for ar/uk/ru.
+- [ ] Unconfigured/skipped-language behavior verified by unit test for each non-routed key (incl. `en`/`fa` disposition).
+- [ ] Topology-consistent env contract with **exact assertions** (v2, gpt #9): Option A → `rg "LETTA_TRANSLATOR_AGENT_ID" packages/shared` matches the single definition and `rg "LETTA_AGENT_(AR|UK|RU|FA|PS|EN|TI)" packages/shared` → 0 matches; Option B → every per-language var in the matrix documented in `.env.example` and none missing.
+- [ ] Exported available-language set unchanged unless the MG-08 decision explicitly approves a change.
 **Depends-on:** MG-04, MG-05, MG-06, MG-07, MG-08, MG-16a **Provenance:** BASE#9, A MIG-15, B LEGACY-8, RI-1268.
 
 ### MG-15 — Wave 4.5 — SSE route on SDK + contract test
 **Description:** Rewrite `POST /api/agents/metadata/stream` on the seam's `streamTurn`; server-side mapper keeps the legacy wire format (`message_type` chunks, `data: [DONE]`, `{type:"error"}` events). **Persistence semantics fixed (v2, gpt #8):** the shared accumulator / terminal `result` is the **sole persistence source** — the current route overwrites `finalAssistantContent` per chunk (`route.ts:143-168`) and would persist only the last delta; that bug is not preserved. Verified repo fact (§A.6): the route has no in-repo frontend caller — record an explicit keep/deprecate decision.
 **Acceptance criteria:**
-- SSE contract test (v2, qwen #9): **recorded SDK event fixtures** (not v1 chunks — the mapper consumes `SDKMessage`) replayed through the mapper with **frozen/omitted timestamps** (current generators inject `new Date().toISOString()` per chunk, so byte-identity is impossible by construction); assertions are semantic and canonical: ordered event kinds, concatenated assistant content, run ID, error frame shape, terminating `[DONE]`. One separately recorded v1 fixture serves as the expected *normalized* contract.
-- Persistence fixture: multi-delta stream → persisted `raw_response`/markdown equals the **complete** accumulated response (not merely "a row was inserted").
-- Route e2e in staging: progressive streaming + final `letta_reports` persistence row.
-- Keep/deprecate decision recorded in the migration docs; route no longer references `chunk.run_id`/`message_type` directly (mapper-owned).
+- [ ] SSE contract test (v2, qwen #9): **recorded SDK event fixtures** (not v1 chunks — the mapper consumes `SDKMessage`) replayed through the mapper with **frozen/omitted timestamps** (current generators inject `new Date().toISOString()` per chunk, so byte-identity is impossible by construction); assertions are semantic and canonical: ordered event kinds, concatenated assistant content, run ID, error frame shape, terminating `[DONE]`. One separately recorded v1 fixture serves as the expected *normalized* contract.
+- [ ] Persistence fixture: multi-delta stream → persisted `raw_response`/markdown equals the **complete** accumulated response (not merely "a row was inserted").
+- [ ] Route e2e in staging: progressive streaming + final `letta_reports` persistence row.
+- [ ] Keep/deprecate decision recorded in the migration docs; route no longer references `chunk.run_id`/`message_type` directly (mapper-owned).
 **Depends-on:** MG-04, MG-06, MG-12 **Provenance:** BASE#11, A MIG-17/R9 (corrected per §A.6), D-draft-17, C R2, qwen #9, gpt #8.
 
 ### MG-16b — Wave 5.1 — Aggregate parity report (split from MG-16 in v2)
 **Description:** Post-port aggregation over the MG-16a harness: per-pipeline comparison report across all ported paths (ingestion forced paths, editorial, translation, SSE), discrepancy rate documented, cutover go/no-go recorded. **Owns the batch token-cost verification moved from MG-06 (v2):** ≥ 20-record agent-sdk run validates `token_cost` per the C1 branch — branches 1/2 must populate and validate; branch 3 must produce NULL for all SDK rows and link the follow-up issue. **Translation coverage (v2, k3 #10):** the corpus includes every language the routing matrix serves.
 **Acceptance criteria:**
-- Per-pipeline comparison report generated (v1 baselines vs agent-sdk runs on identical corpus); discrepancy rate documented; cutover go/no-go recorded.
-- Batch token-cost criterion satisfied **per branch** (see above) — no blanket "populates" wording.
-- Translation parity section covers every matrix-routed language.
+- [ ] Per-pipeline comparison report generated (v1 baselines vs agent-sdk runs on identical corpus); discrepancy rate documented; cutover go/no-go recorded.
+- [ ] Batch token-cost criterion satisfied **per branch** (see above) — no blanket "populates" wording.
+- [ ] Translation parity section covers every matrix-routed language.
 **Depends-on:** MG-11, MG-12, MG-13, MG-14, MG-15 **Provenance:** A MIG-16, C testing rule, BASE C.4, qwen #4, k3 #3/#7, gpt #3.
 
 ### MG-17 — Wave 5.2 — Paired load test at fan-out concurrency 5
 **Description:** **Paired protocol (v2, qwen #10):** the same fixed ≥ 50-record corpus, concurrency 5 (`METADATA_CONCURRENCY`/`AUDIT_CONCURRENCY` pattern), `SPAWN_DELAY_MS = 500`, same region and observation window, run through **both gateways** (v1 pass and agent-sdk pass in staging via the MG-04 flags) using the MG-16a harness/runner — production fan-out is disabled today (§A.5), so no natural v1 fan-out baseline exists; the pair is manufactured. Measures sandbox warm-up (Q5), 429-equivalent errorCodes (Q4), session leaks, p95 latency. This is the pre-re-enable gate for fan-out.
 **Acceptance criteria:**
-- Load script + both passes' results committed; zero leaked sessions (close instrumentation).
-- Comparative thresholds evaluated against the **v1 pass of the same pair** (error rate, p95), plus pre-agreed absolute SLOs recorded before the run; both documented.
-- Go/no-go for fan-out re-enable recorded (feeds MG-19).
+- [ ] Load script + both passes' results committed; zero leaked sessions (close instrumentation).
+- [ ] Comparative thresholds evaluated against the **v1 pass of the same pair** (error rate, p95), plus pre-agreed absolute SLOs recorded before the run; both documented.
+- [ ] Go/no-go for fan-out re-enable recorded (feeds MG-19).
 **Depends-on:** MG-11, MG-12, MG-16a **Provenance:** BASE C.4, A R8, C Phase 6, qwen #10.
 
 ### MG-18 — Wave 5.3 — Local dev stack + ops scripts
 **Description:** Implement the spike's backend decision: default `backend: "local"` (SDK App Server) replacing `docker-compose.letta.yml` (DELETED per decision), or compose retained as `backend: "remote"`. **Local inference provider made explicit (v2, k3 #9):** a local App Server is not free inference — the local profile pins a configured local model provider (retain/replace Ollama via `LOCAL_LLM_MODEL`-equivalent config) if zero-cost is required; otherwise the expected inference cost is documented. Rewrite `scripts/create-local-agents.ts` (fold into the MG-07 script with a local backend mode, or replace), `scripts/list-agents.ts`, `scripts/force-metadata-reports.ts` on the seam; update `letta:*` root scripts and `documentation/ai/local-letta-dev.md`; remove the stale `update:metadata-schema` entry — existing Linear issue RI-1278 « `scripts/update-metadata-schema-block.ts` devient obsolète (cf. gel). À supprimer ou transformer en script de validation locale. » (the inventory lists RI-1278 twice — rows 22/23; the stale-script reading is canonical here, flag the duplicate to editorial).
 **Acceptance criteria:**
-- Fresh clone → one documented command yields a working local agent (verified run recorded).
-- Local end-to-end `/audit` **with the declared inference profile**: if zero-cost is claimed, network instrumentation (blocked/denied external model endpoints) proves no external model calls; otherwise expected inference cost documented.
-- `rg "update:metadata-schema" package.json` → 0 matches; docker decision documented; `letta:*` scripts consistent with the decision.
+- [ ] Fresh clone → one documented command yields a working local agent (verified run recorded).
+- [ ] Local end-to-end `/audit` **with the declared inference profile**: if zero-cost is claimed, network instrumentation (blocked/denied external model endpoints) proves no external model calls; otherwise expected inference cost documented.
+- [ ] `rg "update:metadata-schema" package.json` → 0 matches; docker decision documented; `letta:*` scripts consistent with the decision.
 **Depends-on:** MG-04, MG-07 **Provenance:** BASE#12, B LEGACY-13, A R10, RI-1278.
 
 ### MG-19 — Wave 6.1 — Flag-gated cutover, progressive flip, fan-out decision, two-week soak
 **Description:** Cutover per §I: per-pipeline flags (resolver shipped in MG-04; this ticket **executes the rollback drill**, it does not introduce controls); progressive flip **ingestion → editorial → translation**, where "ingestion" today means the forced arbitration/metadata paths (fan-out and batch are dormant, §A.5); **explicit decision** whether to re-enable fan-out on the new SDK (uncomment `fanOutDiRecordsStep` in `pipelines/ingestion/di-ingestion.ts`) gated on MG-17 evidence — not an assumption; two-week soak with monitoring; rollback = per-pipeline flag flip. **Soak criteria made executable (v2, gpt #10):** "one full production cycle" is replaced by explicit per-path minimum successful counts, because forced paths are manual and a "cycle" can contain zero SDK calls.
 **Acceptance criteria:**
-- Per-pipeline flags documented in `.env.example`; rollback drill executed and recorded (flip one pipeline back in staging).
-- Soak exit requires, under agent-sdk in production: forced audit ≥ 30, forced metadata ≥ 30, editorial rewrites ≥ 20, translations ≥ 5 per matrix-routed language — each with error rate ≤ (MG-16a baseline + 2 pp, denominators from the committed report command), retry counts within baseline + 10%, zero unresolved sandbox-expiry incidents, `token_cost` populated per C1 branch. Numeric tolerances are pre-agreed defaults, adjustable before flip with editorial sign-off and recorded in the cutover doc.
-- Fan-out decision recorded with MG-17 evidence; if re-enabled, the uncommented code ships behind its own flag.
-- 2 consecutive clean production weeks (per the above definitions) before MG-20 starts.
+- [ ] Per-pipeline flags documented in `.env.example`; rollback drill executed and recorded (flip one pipeline back in staging).
+- [ ] Soak exit requires, under agent-sdk in production: forced audit ≥ 30, forced metadata ≥ 30, editorial rewrites ≥ 20, translations ≥ 5 per matrix-routed language — each with error rate ≤ (MG-16a baseline + 2 pp, denominators from the committed report command), retry counts within baseline + 10%, zero unresolved sandbox-expiry incidents, `token_cost` populated per C1 branch. Numeric tolerances are pre-agreed defaults, adjustable before flip with editorial sign-off and recorded in the cutover doc.
+- [ ] Fan-out decision recorded with MG-17 evidence; if re-enabled, the uncommented code ships behind its own flag.
+- [ ] 2 consecutive clean production weeks (per the above definitions) before MG-20 starts.
 **Depends-on:** MG-15, MG-16b, MG-17, MG-18 **Provenance:** B LEGACY-15, BASE#13, C Phase 6, verified repo fact §A.5, gpt #10.
 
 ### MG-20 — Wave 6.2 — Final verification checklist
 **Description:** Execute post-soak: full quality gates; corpus + docs validation; local e2e; production smoke.
 **Acceptance criteria:**
-- `pnpm check:types && pnpm lint && pnpm test && pnpm security:scan:js` green.
-- `pnpm validate:corpus && pnpm validate:docs` green.
-- Local e2e: one DI record through audit + metadata + editorial produces a `letta_reports` row per report.
-- Production smoke: one editorial rewrite on a real fiche completes via `/api/editorial-rewrite` → `[runId]`.
+- [ ] `pnpm check:types && pnpm lint && pnpm test && pnpm security:scan:js` green.
+- [ ] `pnpm validate:corpus && pnpm validate:docs` green.
+- [ ] Local e2e: one DI record through audit + metadata + editorial produces a `letta_reports` row per report.
+- [ ] Production smoke: one editorial rewrite on a real fiche completes via `/api/editorial-rewrite` → `[runId]`.
 **Depends-on:** MG-19 **Provenance:** B §8, A MIG-18 (partial).
 
 ### MG-21 — Wave 6.3 — Remove v1 SDK + dead code + cloud cleanup
 **Description:** Drop `@letta-ai/letta-client` (including the C1 branch-2 usage module if present); delete the v1 seam implementation, `runAgentOneShot`, `sendMessage`/`getAgent` if `rg` confirms no callers, deprecated `INGESTION_AGENT_HEADING`, the `trustPolicyExclude` entry for letta-client; prune `LETTA_PROJECT_ID`/`LETTA_BASE_URL`/`LETTA_ENVIRONMENT` from code and `.env.example`; **execute the `workflows.conversation_id` keep/null decision recorded in MG-05** (v2: decision was made before MG-13; this ticket only executes); retire v1-gateway rows in `letta_conversations` per the recorded policy; empty the orphaned blocks in `project-pZvdCSjhJ7Fgmi66gqgy`.
 **Acceptance criteria:**
-- `rg "@letta-ai/letta-client" . -g '!documentation' -g '!pnpm-lock.yaml'` → 0 matches; lockfile contains neither package remnants.
-- `rg "LETTA_PROJECT_ID|LETTA_ENVIRONMENT" apps packages scripts .env.example` → 0 matches.
-- `pnpm install && pnpm build && pnpm check:types && pnpm test && pnpm lint && pnpm knip` green.
-- Orphan cloud project emptied (CLI log/screenshot attached to the ticket).
+- [ ] `rg "@letta-ai/letta-client" . -g '!documentation' -g '!pnpm-lock.yaml'` → 0 matches; lockfile contains neither package remnants.
+- [ ] `rg "LETTA_PROJECT_ID|LETTA_ENVIRONMENT" apps packages scripts .env.example` → 0 matches.
+- [ ] `pnpm install && pnpm build && pnpm check:types && pnpm test && pnpm lint && pnpm knip` green.
+- [ ] Orphan cloud project emptied (CLI log/screenshot attached to the ticket).
 **Depends-on:** MG-20 **Provenance:** BASE#14, B LEGACY-12, D-draft-26/27, A MIG-18.
 
 ### MG-22 — Wave 6.4 — Documentation & config closeout
 **Description:** Update `AGENTS.md` (AI section: Agent SDK sessions model), `README.md`, `.env.example` (final env contract per §B.3), inventory post-migration section (append without rewriting history), and `documentation/agent-migration/agent-sdk-cutover.md` (NEW; agent bootstrap, adding a skill / client tool / slash command, MemFS layout, local testing incl. the inference profile). Record the usage-accounting outcome, adapter decision, translator decision, and the no-production-shadow decision (§I); close the Linear waves.
 **Acceptance criteria:**
-- `pnpm validate:docs` green; `rg "letta-client" documentation` matches only historical inventory sections.
-- `.env.example` matches the implemented env contract (verified by diff against env reads in code).
-- Cutover runbook covers all listed areas with concrete examples; migration folder marked complete with Linear closure links.
+- [ ] `pnpm validate:docs` green; `rg "letta-client" documentation` matches only historical inventory sections.
+- [ ] `.env.example` matches the implemented env contract (verified by diff against env reads in code).
+- [ ] Cutover runbook covers all listed areas with concrete examples; migration folder marked complete with Linear closure links.
 **Depends-on:** MG-21 **Provenance:** A MIG-19, D-draft-29/30, B LEGACY-16.
 
 ---
@@ -620,3 +671,21 @@ Findings from the three adversarial reviews. Merged findings are noted. "ACCEPT"
 | 23 | Soak/baseline criteria not executable (no denominators, windows, tolerances) | gpt #10 | **ACCEPT** | MG-16a delivers the executable observability baseline (committed report command, fixed windows, explicit denominators); MG-19 soak defines per-path minimum successful counts (audit ≥ 30, metadata ≥ 30, editorial ≥ 20, translation ≥ 5/language), numeric tolerances (baseline + 2 pp error rate, + 10% retries), and zero unresolved sandbox-expiry incidents. "One full production cycle" removed. |
 
 **Rejected findings: none.** Every finding was verified against the repo, the source reports, or both before disposition. Two sub-elements were deferred to Phase 0 spikes rather than resolved in-plan: stateless session semantics (Q8, from k3 #1) and — already spike-scoped in v1 — repositories API usage (MG-07 marker).
+
+### N. Gemini 3.7 Flash High Teamwork Report — Provenance Note
+
+A fourth adversarial review was conducted using Gemini 3.7 Flash High in teamwork mode (22-ticket decomposition, 8-risk register, 10 breaking-change matrix). The report was reviewed for technical content and format improvements.
+
+**Format improvements adopted (applied in this revision):**
+1. **Rollback column added to risk register (§C)** — each risk now has a concrete rollback procedure alongside its mitigation.
+2. **Required-action column added to breaking-changes matrix (§C.2)** — each breaking change now specifies the concrete migration action.
+3. **Concrete code example added to adapter seam (§B.5)** — `streamTurn` generator + SSE-route consumer showing the canonical content contract and persistence fix.
+4. **Acceptance criteria converted to `- [ ]` checklist format** across all 24 tickets — improves trackability during implementation.
+
+**Technical content declined (with reasons):**
+- **Assumes `dispositifs` in Supabase** — incorrect; the data lives in MongoDB (`packages/mongo/src/dispositifs.ts:69`), already addressed in R7/MG-10a.
+- **Assumes fan-out is active** — incorrect; `fanOutDiRecordsStep` is commented out in `pipelines/ingestion/di-ingestion.ts`, already documented in §A.5 and MG-17.
+- **Misses the SSE overwrite bug** — the teamwork report does not identify the `route.ts:143-168` per-chunk overwrite defect; this was found by gpt #8 and is addressed in MG-15.
+- **Misses the 7-vs-5 language agent discrepancy** — the teamwork report does not surface the `languages.ts` config drift; already addressed in R5/MG-08.
+- **Recommends `stateless: true` in RISK-06** — incorrect; stateless sessions suppress memory/skills instructions (R13, k3 #1); workers default stateful.
+- **Rates SSE frontend risk too high** — the SSE route has no in-repo frontend caller (§A.6); risk is Low, not High.
