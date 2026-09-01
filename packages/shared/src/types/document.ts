@@ -6,24 +6,42 @@ export type ComplianceStatus =
 export type WorkStatus = "to_process" | "draft" | "to_review";
 export type OnlineStatus = "published" | "unpublished" | "archived";
 
-// Derived state for backward compatibility or UI logic
-export type DocumentSortField =
-  | "title"
-  | "date_added"
-  | "arbitrationDate"
-  | "updated_at"
-  | "compliance_status"
-  | "work_status"
-  | "online_status"
-  | "id"
-  | "qualityScore"
-  | "structureName"
-  | "sessionStartDate"
-  | "assigneeEmail"
-  | "commune"
-  | "modalitesEntreesSorties"
-  | "wordCount"
-  | "activeIngestionVersion";
+/**
+ * Colonnes triables, indexées par l'`id` de colonne TanStack émis par
+ * DataTableColumnHeader. Source unique : les pages ne redéclarent pas leur
+ * propre whitelist, sinon une colonne triable côté UI retombe silencieusement
+ * sur le tri par défaut (RI-1445).
+ */
+export const DOCUMENT_SORT_FIELDS = [
+  "title",
+  "date_added",
+  "arbitrationDate",
+  "updated_at",
+  "compliance_status",
+  "work_status",
+  "online_status",
+  "id",
+  "externalId",
+  "structureName",
+  "sessionStartDate",
+  "assigneeEmail",
+  "commune",
+  "modalitesEntreesSorties",
+  "wordCount",
+  "activeIngestionVersion",
+] as const;
+
+export type DocumentSortField = (typeof DOCUMENT_SORT_FIELDS)[number];
+
+/** Narrow an untrusted query-param string to a valid DocumentSortField. */
+export function parseDocumentSortField(
+  value: string | undefined,
+  fallback: DocumentSortField,
+): DocumentSortField {
+  return value && (DOCUMENT_SORT_FIELDS as readonly string[]).includes(value)
+    ? (value as DocumentSortField)
+    : fallback;
+}
 
 export interface Document {
   id: string;
@@ -58,14 +76,12 @@ export interface Document {
   publishedUrl?: string;
   publicationStatus?: string;
   publicationRemoteId?: string;
-  /** Date de la dernière publication — affichée sous le tag "Publié" */
   publishedAt?: string | null;
-  /** Date d'archivage (editorial_records.archived_at) — affichée sous le tag "Archivé" */
   archivedAt?: string | null;
+  archivedAtIsApproximate?: boolean;
   structureName?: string;
   sessionStartDate?: string;
   sessionEndDate?: string | null;
-  qualityScore?: number | null;
   sourceSystem: "RCO" | "DI";
   updated_at: string;
   assigneeEmail?: string;

@@ -5,4 +5,6 @@
  * ce dossier n'est jamais régénéré : y placer les icônes absentes à la fois de
  * @gouvfr/dsfr et de @remixicon/react.
  */
+export { FrMarkAsReadLine } from "./FrMarkAsReadLine";
+export { FrMarkAsUnreadLine } from "./FrMarkAsUnreadLine";
 export { FrRefreshLine2 } from "./FrRefreshLine2";

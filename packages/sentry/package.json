@@ -1,0 +1,14 @@
+{
+  "name": "@playground/sentry",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    "./client": "./src/client.ts",
+    "./server": "./src/server.ts",
+    "./edge": "./src/edge.ts"
+  },
+  "peerDependencies": {
+    "@sentry/nextjs": "^10.69.0"
+  }
+}

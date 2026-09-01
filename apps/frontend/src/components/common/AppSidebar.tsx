@@ -5,6 +5,7 @@ import {
   Avatar,
   BoutonMenu,
   Button,
+  NotificationButton,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -20,6 +21,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useNotifications } from "@/contexts/NotificationsContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { createClient } from "@/lib/supabase/client";
 
@@ -38,6 +40,11 @@ export function AppSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const { isCollapsed, setIsCollapsed } = useSidebar();
+  const {
+    isOpen: isNotificationsOpen,
+    toggle: toggleNotifications,
+    unreadCount,
+  } = useNotifications();
 
   const handleToggle = () => setIsCollapsed(!isCollapsed);
 
@@ -109,6 +116,13 @@ export function AppSidebar({
       onToggle={handleToggle}
       logo={logo}
       userAvatar={userAvatar}
+      notifications={
+        <NotificationButton
+          unreadCount={unreadCount}
+          open={isNotificationsOpen}
+          onClick={toggleNotifications}
+        />
+      }
     >
       {isAdmin && (
         <BoutonMenu

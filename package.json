@@ -7,21 +7,40 @@
   "pnpm": {
     "overrides": {
       "undici-types": "6.18.2",
-      "vite": "6.4.2",
+      "vite": "6.4.3",
       "caniuse-lite": "1.0.30001756",
       "semver": "7.7.1",
-      "fast-uri": "3.1.2",
       "lodash": "4.18.1",
       "devalue": "5.8.1",
       "minimatch@5": "5.1.8",
       "minimatch@9": "9.0.7",
-      "undici": "7.24.0"
+      "undici@7": "7.29.0",
+      "nanoid@3": "3.3.18",
+      "nanoid@5": "5.1.16",
+      "brace-expansion@2": "2.1.4",
+      "brace-expansion@5": "5.0.9",
+      "@babel/core@7": "7.29.7",
+      "uuid@11": "11.1.1",
+      "piscina@4": "4.9.3",
+      "linkify-it@5": "5.0.2",
+      "fast-uri@3": "3.1.5",
+      "smol-toml@1": "1.8.0",
+      "body-parser@2": "2.3.0",
+      "postcss@8": "8.5.26",
+      "esbuild@0.28": "0.28.1",
+      "sharp@<0.35.0": "0.35.3",
+      "uuid@8": "11.1.1",
+      "esbuild@0.27": "0.28.1",
+      "next@16": "16.3.1"
     },
     "onlyBuiltDependencies": [
       "@swc/core",
       "better-sqlite3",
       "esbuild",
       "sharp"
+    ],
+    "ignoredBuiltDependencies": [
+      "@sentry/cli"
     ]
   },
   "scripts": {
@@ -72,6 +91,8 @@
     "@playground/supabase": "workspace:*",
     "@refugies-info/di": "workspace:*",
     "@types/js-yaml": "^4.0.9",
+    "@workflow/cli": "4.2.10",
+    "@workflow/next": "4.0.10",
     "commander": "^14.0.2",
     "cve-lite-cli": "1.18.1",
     "dotenv": "^17.2.3",
@@ -80,9 +101,7 @@
     "lint-staged": "^16.2.7",
     "postcss": "^8.5.15",
     "tsx": "^4.20.6",
-    "turbo": "^2.9.14",
-    "@workflow/cli": "4.2.10",
-    "@workflow/next": "4.0.10"
+    "turbo": "^2.9.14"
   },
   "lint-staged": {
     "**/*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [

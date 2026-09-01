@@ -2,9 +2,10 @@
 
 import type { Document } from "@playground/shared-types";
 import type { ColumnDef } from "@tanstack/react-table";
-import { createDateColumn, createTextColumn } from "@/lib/column-factories";
+import { createDateColumn } from "@/lib/column-factories";
 import {
   createAssigneeColumn,
+  createCommuneColumn,
   createComplianceStatusColumn,
   createExternalIdColumn,
   createIngestionVersionColumn,
@@ -44,15 +45,7 @@ export function getColumns(
     { ...createWordCountColumn(), size: 76 }, // "Mots"
     createTitleColumn(), // "Titre" fill
     createStructureNameColumn(), // "Structure"
-    {
-      ...createTextColumn({
-        accessorKey: "commune",
-        title: "Ville",
-        getValue: (doc) => doc.commune,
-        className: "text-sm",
-      }),
-      size: 120,
-    },
+    { ...createCommuneColumn(), size: 120 }, // "Ville"
     {
       ...createSessionPeriodColumn(),
       size: 121,
