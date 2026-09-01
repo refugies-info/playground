@@ -93,15 +93,15 @@
     "@types/js-yaml": "^4.0.9",
     "@workflow/cli": "4.2.10",
     "@workflow/next": "4.0.10",
-    "commander": "^14.0.2",
+    "commander": "^14.0.3",
     "cve-lite-cli": "1.18.1",
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.4.2",
     "husky": "^9.1.7",
-    "knip": "^5.70.0",
-    "lint-staged": "^16.2.7",
-    "postcss": "^8.5.15",
-    "tsx": "^4.20.6",
-    "turbo": "^2.9.14"
+    "knip": "^5.88.1",
+    "lint-staged": "^16.4.0",
+    "postcss": "8.5.26",
+    "tsx": "^4.23.12",
+    "turbo": "^2.10.11"
   },
   "lint-staged": {
     "**/*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
