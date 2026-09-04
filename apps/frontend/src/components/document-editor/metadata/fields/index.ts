@@ -7,6 +7,7 @@ export { CommitmentField } from "./CommitmentField";
 export { DepartmentField } from "./DepartmentField";
 export { EnumField } from "./EnumField";
 export { FrequencyField } from "./FrequencyField";
+export { ImageUploadField } from "./ImageUploadField";
 export { MultiEnumField } from "./MultiEnumField";
 export { NeedSelectField } from "./NeedSelectField";
 export { PoiField } from "./PoiField";

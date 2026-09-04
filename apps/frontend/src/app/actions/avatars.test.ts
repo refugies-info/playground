@@ -3,15 +3,18 @@
 // so this server-action test runs in the Node environment instead.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const uploadImage = vi.fn();
+const uploadImageFromFormData = vi.fn();
 const assertAdmin = vi.fn();
 const update = vi.fn();
 const eq = vi.fn();
 const from = vi.fn();
 const revalidatePath = vi.fn();
 
+// Le rejet des formats et des fichiers trop lourds appartient désormais à
+// `uploadImageFromFormData`, couvert dans packages/cloudinary : ce test-ci ne
+// vérifie plus que ce qui est propre à l'avatar.
 vi.mock("@playground/cloudinary", () => ({
-  uploadImage: (...a: unknown[]) => uploadImage(...a),
+  uploadImageFromFormData: (...a: unknown[]) => uploadImageFromFormData(...a),
 }));
 vi.mock("@/lib/authz", () => ({
   assertAdmin: (...a: unknown[]) => assertAdmin(...a),
@@ -32,6 +35,8 @@ function makeFile(type: string, size: number): File {
 }
 
 const UUID = "11111111-1111-1111-1111-111111111111";
+const SECURE_URL =
+  "https://res.cloudinary.com/demo/image/upload/bomo_avatars/z.webp";
 
 describe("uploadAvatar", () => {
   beforeEach(() => {
@@ -39,10 +44,7 @@ describe("uploadAvatar", () => {
     from.mockReturnValue({ update });
     update.mockReturnValue({ eq });
     eq.mockResolvedValue({ error: null });
-    uploadImage.mockResolvedValue({
-      secureUrl:
-        "https://res.cloudinary.com/demo/image/upload/bomo_avatars/z.webp",
-    });
+    uploadImageFromFormData.mockResolvedValue({ secureUrl: SECURE_URL });
   });
 
   it("uploads, writes avatar_url, revalidates, and returns the url", async () => {
@@ -53,8 +55,8 @@ describe("uploadAvatar", () => {
     const result = await uploadAvatar(UUID, fd);
 
     expect(assertAdmin).toHaveBeenCalled();
-    expect(uploadImage).toHaveBeenCalledWith(
-      expect.any(Buffer),
+    expect(uploadImageFromFormData).toHaveBeenCalledWith(
+      fd,
       expect.objectContaining({
         folder: "bomo_avatars",
         publicId: UUID,
@@ -70,29 +72,10 @@ describe("uploadAvatar", () => {
       }),
     );
     expect(from).toHaveBeenCalledWith("profiles");
-    expect(update).toHaveBeenCalledWith({
-      avatar_url:
-        "https://res.cloudinary.com/demo/image/upload/bomo_avatars/z.webp",
-    });
+    expect(update).toHaveBeenCalledWith({ avatar_url: SECURE_URL });
     expect(eq).toHaveBeenCalledWith("id", UUID);
     expect(revalidatePath).toHaveBeenCalledWith("/users");
     expect(result.secureUrl).toContain("res.cloudinary.com");
-  });
-
-  it("rejects an unsupported mime type", async () => {
-    const { uploadAvatar } = await import("./avatars");
-    const fd = new FormData();
-    fd.set("file", makeFile("image/gif", 1000));
-    await expect(uploadAvatar(UUID, fd)).rejects.toThrow(/format/i);
-    expect(uploadImage).not.toHaveBeenCalled();
-  });
-
-  it("rejects a file larger than 5 MB", async () => {
-    const { uploadAvatar } = await import("./avatars");
-    const fd = new FormData();
-    fd.set("file", makeFile("image/png", 5 * 1024 * 1024 + 1));
-    await expect(uploadAvatar(UUID, fd)).rejects.toThrow(/5\s*Mo|lourde/i);
-    expect(uploadImage).not.toHaveBeenCalled();
   });
 
   it("rejects a non-uuid userId", async () => {
@@ -100,7 +83,7 @@ describe("uploadAvatar", () => {
     const fd = new FormData();
     fd.set("file", makeFile("image/png", 1000));
     await expect(uploadAvatar("not-a-uuid", fd)).rejects.toThrow();
-    expect(uploadImage).not.toHaveBeenCalled();
+    expect(uploadImageFromFormData).not.toHaveBeenCalled();
   });
 
   it("does not upload or write when the admin gate rejects", async () => {
@@ -109,7 +92,16 @@ describe("uploadAvatar", () => {
     const fd = new FormData();
     fd.set("file", makeFile("image/png", 1000));
     await expect(uploadAvatar(UUID, fd)).rejects.toThrow(/autoris/i);
-    expect(uploadImage).not.toHaveBeenCalled();
+    expect(uploadImageFromFormData).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("does not write avatar_url when the upload fails", async () => {
+    uploadImageFromFormData.mockRejectedValueOnce(new Error("boom"));
+    const { uploadAvatar } = await import("./avatars");
+    const fd = new FormData();
+    fd.set("file", makeFile("image/png", 1000));
+    await expect(uploadAvatar(UUID, fd)).rejects.toThrow(/boom/);
     expect(update).not.toHaveBeenCalled();
   });
 });
