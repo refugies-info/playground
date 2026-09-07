@@ -10,18 +10,18 @@ import {
   SELECTABLE_WORK_STATUSES,
   WORK_STATUS_TO_TAG,
 } from "@/lib/work-status";
-import { updateWorkStatusAction } from "@/services/work-status-actions";
 
 interface WorkStatusDropdownProps {
-  workflowId?: string;
   currentWorkStatus?: WorkStatus | null;
   onOptimisticUpdate?: (workStatus: WorkStatus | null) => void;
   /** Notifie le parent de l'état d'enregistrement (pour SaveIndicator). */
   onPendingChange?: (pending: boolean) => void;
   /**
-   * Handler alternatif (RI-1430), utilisé à la place de `updateWorkStatusAction`
-   * — sert pour les traductions, indexées par `translationId` et non par un
-   * `workflowId` de fiche éditoriale. Prioritaire sur `workflowId` s'il est fourni.
+   * Appelé quand l'utilisateur choisit un nouveau statut. C'est à l'appelant
+   * de fournir l'action serveur adaptée à la ressource éditée (fiche FR via
+   * `updateWorkStatusAction`, traduction via `updateTranslationWorkStatusAction`,
+   * etc.) — le dropdown ne connaît ni table ni id, juste le résultat.
+   * Omis (ou `readOnly`) → rendu lecture seule (juste le Tag courant).
    */
   onUpdateStatus?: (
     status: WorkStatus,
@@ -33,12 +33,12 @@ interface WorkStatusDropdownProps {
 /**
  * WorkStatusDropdown — changement manuel de l'état de traitement d'une fiche.
  *
- * Utilisé depuis la liste des fiches, le header d'une fiche, et (via
- * `onUpdateStatus`) l'éditeur de traduction. Sans `workflowId` ni
- * `onUpdateStatus` (contexte lecture seule), affiche uniquement le Tag courant.
+ * Composant purement présentationnel : il ne sait pas écrire en base, il
+ * délègue ça à `onUpdateStatus`. Utilisé depuis la liste des fiches, le
+ * header d'une fiche, et l'éditeur de traduction — chacun lui passe l'action
+ * serveur adaptée à sa propre ressource.
  */
 export function WorkStatusDropdown({
-  workflowId,
   currentWorkStatus,
   onOptimisticUpdate,
   onPendingChange,
@@ -52,7 +52,7 @@ export function WorkStatusDropdown({
     ? WORK_STATUS_TO_TAG[currentWorkStatus]
     : undefined;
 
-  if (readOnly || (!workflowId && !onUpdateStatus)) {
+  if (readOnly || !onUpdateStatus) {
     return <Tag status={currentTag} />;
   }
 
@@ -64,9 +64,7 @@ export function WorkStatusDropdown({
     const previous = currentWorkStatus ?? null;
     onOptimisticUpdate?.(newStatus);
 
-    const result = onUpdateStatus
-      ? await onUpdateStatus(newStatus)
-      : await updateWorkStatusAction(workflowId as string, newStatus);
+    const result = await onUpdateStatus(newStatus);
     setPending(false);
     onPendingChange?.(false);
 

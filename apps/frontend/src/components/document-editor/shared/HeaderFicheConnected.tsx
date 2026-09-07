@@ -19,6 +19,7 @@ import { useState } from "react";
 import { AssigneeDropdown } from "@/components/common/AssigneeDropdown";
 import { WorkStatusDropdown } from "@/components/common/WorkStatusDropdown";
 import type { Profile } from "@/lib/profile";
+import { updateWorkStatusAction } from "@/services/work-status-actions";
 import { useDocumentActions } from "../actions/DocumentActionsContext";
 import { usePublicationRealtime } from "../actions/hooks/usePublicationRealtime";
 import { useDocument } from "../DocumentContext";
@@ -185,8 +186,12 @@ export function HeaderFicheConnected({
           ) : null}
           <DocumentStatus />
           <WorkStatusDropdown
-            workflowId={document?.id}
             currentWorkStatus={document?.workStatus}
+            onUpdateStatus={
+              document?.id
+                ? (status) => updateWorkStatusAction(document.id, status)
+                : undefined
+            }
             onOptimisticUpdate={(workStatus) =>
               setDocument((prev) => (prev ? { ...prev, workStatus } : prev))
             }

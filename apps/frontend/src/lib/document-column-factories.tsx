@@ -15,6 +15,7 @@ import {
 } from "@/components/documents/cells";
 import { createTextColumn } from "@/lib/column-factories";
 import type { Profile } from "@/lib/profile";
+import { updateWorkStatusAction } from "@/services/work-status-actions";
 
 /**
  * Domain-specific column factories for the Document type.
@@ -128,8 +129,10 @@ export const createWorkStatusColumn = <
   ),
   cell: ({ row }) => (
     <WorkStatusDropdown
-      workflowId={row.original.id}
       currentWorkStatus={row.original.workStatus}
+      onUpdateStatus={(status) =>
+        updateWorkStatusAction(row.original.id, status)
+      }
     />
   ),
 });
