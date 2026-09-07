@@ -1,20 +1,27 @@
-import { logger } from "@playground/shared-types";
+import { logger, type WorkStatus } from "@playground/shared-types";
 import type { StepResult } from "../../types";
 import { getSupabaseClient } from "../common/supabase";
+
+type TranslationWorkStatus = WorkStatus | "pending" | "error";
 
 /**
  * Updates the work_status of a translation record.
  *
+ * Returns the status the record had *before* this update (RI-1430) — used by
+ * the caller to restore it after a regeneration instead of forcing a fixed
+ * status, so an in-progress translation isn't silently "unclaimed" just
+ * because the AI content behind it was regenerated.
+ *
  * @param editorialRecordId - The ID of the editorial record
  * @param language - The target language
  * @param status - The new status to set
- * @returns Result of the update
+ * @returns Result of the update, including the previous status
  */
 export async function updateTranslationStatusStep(
   editorialRecordId: string,
   language: string,
-  status: "pending" | "to_process" | "error" | "draft",
-): Promise<StepResult<{ success: boolean }>> {
+  status: TranslationWorkStatus,
+): Promise<StepResult<{ success: boolean; previousStatus: string | null }>> {
   "use step";
 
   try {
@@ -23,7 +30,7 @@ export async function updateTranslationStatusStep(
     // Find the record
     const { data: record, error: findError } = await supabase
       .from("translation_records")
-      .select("id")
+      .select("id, work_status")
       .eq("editorial_record_id", editorialRecordId)
       .eq("language", language)
       .single();
@@ -47,7 +54,10 @@ export async function updateTranslationStatusStep(
       return { success: false, error: "Update failed" };
     }
 
-    return { success: true, data: { success: true } };
+    return {
+      success: true,
+      data: { success: true, previousStatus: record.work_status },
+    };
   } catch (error) {
     logger.error(error, "Unexpected error in updateTranslationStatusStep");
     return {
