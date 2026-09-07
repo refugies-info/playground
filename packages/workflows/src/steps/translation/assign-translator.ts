@@ -6,8 +6,13 @@ import { getSupabaseClient } from "../common/supabase";
  * Assigns the translation record to the translator configured for the target language.
  *
  * Looks up the profile with role='translator' and language=<language>,
- * then sets author_id on the translation record.
- * No-ops silently if no translator is configured for that language.
+ * then sets author_id on the translation record — but ONLY if it doesn't
+ * already have one (RI-1430). This step runs after every successful
+ * generation, including a manual regeneration on an already-assigned
+ * translation: no action should ever change the translator initially
+ * assigned to a fiche.
+ * No-ops silently if no translator is configured for that language, or if
+ * the record is already assigned.
  *
  * @param translationRecordId - The translation record to assign
  * @param language - The target language code
@@ -20,6 +25,31 @@ export async function assignTranslatorStep(
 
   try {
     const supabase = getSupabaseClient();
+
+    const { data: existing, error: existingError } = await supabase
+      .from("translation_records")
+      .select("author_id")
+      .eq("id", translationRecordId)
+      .single();
+
+    if (existingError) {
+      logger.error(
+        existingError,
+        "Error fetching translation record before assignment",
+      );
+      return { success: false, error: "Failed to fetch translation record" };
+    }
+
+    if (existing?.author_id) {
+      logger.info(
+        { translationRecordId, language },
+        "Translation already assigned — skipping (assignment happens once)",
+      );
+      return {
+        success: true,
+        data: { assigned: false, translatorId: existing.author_id },
+      };
+    }
 
     const { data: translator, error: fetchError } = await supabase
       .from("profiles")

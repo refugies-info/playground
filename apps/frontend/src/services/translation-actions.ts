@@ -268,11 +268,15 @@ export async function saveTranslationMetadataFieldAction(
  *
  * Before launching the publication workflow, this action always:
  * 1. Saves the markdown content
- * 2. Sets `author_id` to the current user (claim)
- * 3. Sets `work_status` to 'draft'
+ * 2. Sets `work_status` to 'draft'
  *
  * This ensures the record is in a clean state regardless of whether the
  * client already called `saveTranslation` before.
+ *
+ * Note (RI-1430) : `author_id` (le traducteur assigné) n'est JAMAIS modifié
+ * ici. Il est fixé une seule fois, automatiquement, par `assignTranslatorStep`
+ * — aucune action de l'éditeur (save, publish, regénération) ne doit
+ * réassigner la fiche à qui clique le bouton.
  *
  * @param id - The translation record ID.
  * @param markdown - The current markdown content to save before publishing.
@@ -294,13 +298,12 @@ export async function publishTranslation(
     if (auth.errorResponse) return auth.errorResponse;
     const { currentUser, supabase } = auth;
 
-    // Save content + claim authorship + mark as draft before launching workflow
+    // Save content + mark as draft before launching workflow
     const { error: saveError } = await supabase
       .from("translation_records")
       .update({
         markdown,
         work_status: "draft",
-        author_id: currentUser.id,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);
