@@ -16,13 +16,6 @@ interface WorkStatusDropdownProps {
   onOptimisticUpdate?: (workStatus: WorkStatus | null) => void;
   /** Notifie le parent de l'état d'enregistrement (pour SaveIndicator). */
   onPendingChange?: (pending: boolean) => void;
-  /**
-   * Appelé quand l'utilisateur choisit un nouveau statut. C'est à l'appelant
-   * de fournir l'action serveur adaptée à la ressource éditée (fiche FR via
-   * `updateWorkStatusAction`, traduction via `updateTranslationWorkStatusAction`,
-   * etc.) — le dropdown ne connaît ni table ni id, juste le résultat.
-   * Omis (ou `readOnly`) → rendu lecture seule (juste le Tag courant).
-   */
   onUpdateStatus?: (
     status: WorkStatus,
   ) => Promise<{ success: boolean; error?: string }>;

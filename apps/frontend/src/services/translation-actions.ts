@@ -177,10 +177,6 @@ export async function saveTranslation(
       .single();
     const archived = currentRecord?.online_status === "archived";
 
-    // Note (RI-1430) : on ne touche PAS `author_id` ici. Ce save est déclenché
-    // par l'autosave à chaque frappe — en faire un "claim" assignait la fiche
-    // au premier utilisateur qui l'ouvrait, même pour une simple relecture.
-    // L'auteur n'est revendiqué que sur une action explicite (publication).
     const { error } = await supabase
       .from("translation_records")
       .update({
@@ -349,13 +345,6 @@ export async function publishTranslation(
 
 /**
  * Manually changes the `work_status` of a translation record (RI-1430).
- *
- * Mirrors `updateWorkStatusAction` used for the FR editorial records, but
- * writes directly to `translation_records.work_status` (that table has no
- * indirection through a `workflow_id`), and allows translators to change the
- * status of their own assigned-language translations — the editorial version
- * is admin/editor only, which used to make this action unusable from the
- * translation editor entirely.
  */
 export async function updateTranslationWorkStatusAction(
   id: string,

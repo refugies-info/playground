@@ -15,8 +15,7 @@ export function TranslationStatus() {
   if (!translation) return null;
 
   const { workStatus, onlineStatus } = translation;
-  // RI-1430 — auparavant un simple <Tag> non cliquable : impossible de changer
-  // le statut de traitement depuis l'éditeur de traduction.
+
   const isSelectableStatus = SELECTABLE_STATUSES.includes(
     workStatus as WorkStatus,
   );
