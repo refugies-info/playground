@@ -1,20 +1,35 @@
 "use client";
 
+import type { WorkStatus } from "@playground/shared-types";
 import { RiExternalLinkLine } from "@playground/ui/icons";
 import { Tag } from "@playground/ui/primitives";
+import { WorkStatusDropdown } from "@/components/common/WorkStatusDropdown";
 import { useTranslation } from "./TranslationContext";
 
+const SELECTABLE_STATUSES: WorkStatus[] = ["to_process", "draft", "to_review"];
+
 export function TranslationStatus() {
-  const { translation, publicationUrl } = useTranslation();
+  const { translation, publicationUrl, updateWorkStatus, isArchived } =
+    useTranslation();
 
   if (!translation) return null;
 
   const { workStatus, onlineStatus } = translation;
+  // RI-1430 — auparavant un simple <Tag> non cliquable : impossible de changer
+  // le statut de traitement depuis l'éditeur de traduction.
+  const isSelectableStatus = SELECTABLE_STATUSES.includes(
+    workStatus as WorkStatus,
+  );
 
   return (
     <div className="flex items-center gap-2">
-      {workStatus === "to_process" && <Tag status="a-traiter" />}
-      {workStatus === "draft" && <Tag status="en-cours" />}
+      {isSelectableStatus && (
+        <WorkStatusDropdown
+          currentWorkStatus={workStatus as WorkStatus}
+          onUpdateStatus={updateWorkStatus}
+          readOnly={isArchived}
+        />
+      )}
 
       {onlineStatus === "published" && <Tag status="publie" />}
       {onlineStatus === "archived" && <Tag status="archive" />}

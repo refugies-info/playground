@@ -1,6 +1,10 @@
 "use server";
 
-import { logger, validateField } from "@playground/shared-types";
+import {
+  logger,
+  validateField,
+  type WorkStatus,
+} from "@playground/shared-types";
 import { createSupabaseServerClient, type Json } from "@playground/supabase";
 import {
   generateTranslationWorkflow,
@@ -21,7 +25,12 @@ import { getCurrentUser } from "@/lib/auth";
  *
  * @returns The user session and Supabase client, or an error response.
  */
-type TranslationAction = "save" | "publish" | "retry" | "cancel";
+type TranslationAction =
+  | "save"
+  | "publish"
+  | "retry"
+  | "cancel"
+  | "updateStatus";
 
 async function getAuthorizedTranslationSession({
   action,
@@ -156,7 +165,7 @@ export async function saveTranslation(
       allowTranslator: true,
     });
     if (auth.errorResponse) return auth.errorResponse;
-    const { currentUser, supabase } = auth;
+    const { supabase } = auth;
 
     // Read current archive state before saving. We still persist the content
     // (never lose the translator's work), but flag `archived` so the client can
@@ -168,11 +177,14 @@ export async function saveTranslation(
       .single();
     const archived = currentRecord?.online_status === "archived";
 
+    // Note (RI-1430) : on ne touche PAS `author_id` ici. Ce save est déclenché
+    // par l'autosave à chaque frappe — en faire un "claim" assignait la fiche
+    // au premier utilisateur qui l'ouvrait, même pour une simple relecture.
+    // L'auteur n'est revendiqué que sur une action explicite (publication).
     const { error } = await supabase
       .from("translation_records")
       .update({
         markdown,
-        author_id: currentUser.id,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);
@@ -329,6 +341,51 @@ export async function publishTranslation(
       success: false,
       error: "Erreur inattendue lors de la publication",
     };
+  }
+}
+
+/**
+ * Manually changes the `work_status` of a translation record (RI-1430).
+ *
+ * Mirrors `updateWorkStatusAction` used for the FR editorial records, but
+ * writes directly to `translation_records.work_status` (that table has no
+ * indirection through a `workflow_id`), and allows translators to change the
+ * status of their own assigned-language translations — the editorial version
+ * is admin/editor only, which used to make this action unusable from the
+ * translation editor entirely.
+ */
+export async function updateTranslationWorkStatusAction(
+  id: string,
+  workStatus: WorkStatus,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const auth = await getAuthorizedTranslationSession({
+      action: "updateStatus",
+      translationId: id,
+      allowTranslator: true,
+    });
+    if (auth.errorResponse) return auth.errorResponse;
+    const { supabase } = auth;
+
+    const { error } = await supabase
+      .from("translation_records")
+      .update({ work_status: workStatus, updated_at: new Date().toISOString() })
+      .eq("id", id);
+
+    if (error) {
+      logger.error(error, "Error updating translation work_status");
+      return {
+        success: false,
+        error: "Erreur lors du changement de statut",
+      };
+    }
+
+    revalidatePath(`/translations/${id}`);
+    revalidatePath("/translations");
+    return { success: true };
+  } catch (error) {
+    logger.error(error, "Unexpected error updating translation work_status");
+    return { success: false, error: "Erreur inattendue" };
   }
 }
 

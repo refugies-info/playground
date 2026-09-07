@@ -20,6 +20,7 @@ import {
   retryTranslationGeneration,
   saveTranslation,
   saveTranslationMetadataFieldAction as saveTranslationMetadataField,
+  updateTranslationWorkStatusAction,
 } from "@/services/translation-actions";
 import { useTranslationPublicationRealtime } from "./hooks/useTranslationPublicationRealtime";
 
@@ -38,6 +39,13 @@ interface TranslationData {
   /** Métadonnées traduites (RI-1379) — seule `abstract` est traduisible. */
   metadata?: Record<string, unknown>;
   publicationUrl?: string;
+  /**
+   * Horodatage de la dernière écriture connue sur `translation_records` (RI-1430).
+   * Sert à ignorer un événement Realtime arrivé en retard/désordonné (ex. un
+   * `work_status: "pending"` envoyé avant la régénération, reçu APRÈS le
+   * contenu déjà régénéré) : on n'applique un payload que s'il est plus récent.
+   */
+  updatedAt?: string;
 }
 
 export interface TranslationContextType {
@@ -54,6 +62,10 @@ export interface TranslationContextType {
   ) => Promise<{ success: boolean; error?: string }>;
   saveTranslation: () => Promise<{ success: boolean; error?: string }>;
   publishTranslation: () => Promise<{ success: boolean; error?: string }>;
+  /** Change manuellement l'état de traitement (RI-1430). */
+  updateWorkStatus: (
+    status: WorkStatus,
+  ) => Promise<{ success: boolean; error?: string }>;
   isDirty: boolean;
   isSaving: boolean;
   isPublishing: boolean;
@@ -178,6 +190,22 @@ export function TranslationProvider({
           const updatedRecord = payload.new;
           setTranslation((prev) => {
             if (!prev) return prev;
+            // RI-1430 — Realtime ne garantit pas l'ordre de livraison entre
+            // plusieurs UPDATE successifs (ex. pendant une régénération : d'abord
+            // work_status "pending" avec l'ancien markdown, puis le nouveau
+            // markdown + work_status final). Un événement arrivé en retard qui
+            // porte des données plus anciennes que ce qu'on affiche déjà écrasait
+            // silencieusement le contenu/statut fraîchement régénéré. On ignore
+            // donc tout payload dont `updated_at` n'est pas strictement plus
+            // récent que le dernier connu.
+            if (
+              prev.updatedAt &&
+              typeof updatedRecord.updated_at === "string" &&
+              new Date(updatedRecord.updated_at).getTime() <=
+                new Date(prev.updatedAt).getTime()
+            ) {
+              return prev;
+            }
             const next = {
               ...prev,
               status:
@@ -186,6 +214,7 @@ export function TranslationProvider({
                   : updatedRecord.work_status || "to_process",
               onlineStatus: updatedRecord.online_status,
               workStatus: updatedRecord.work_status,
+              updatedAt: updatedRecord.updated_at ?? prev.updatedAt,
             };
             // Regeneration completed: the workflow has written a new markdown.
             // Push it into the editor WITHOUT marking `isDirty` (already persisted).
@@ -284,6 +313,27 @@ export function TranslationProvider({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const updateWorkStatus = async (status: WorkStatus) => {
+    if (!translation) return { success: false, error: "No translation" };
+
+    const previous = translation.workStatus;
+    // Optimiste, comme pour les métadonnées : le Tag change sans attendre le serveur.
+    setTranslation((prev) =>
+      prev ? { ...prev, workStatus: status, status } : prev,
+    );
+
+    const result = await updateTranslationWorkStatusAction(
+      translation.id,
+      status,
+    );
+    if (!result.success) {
+      setTranslation((prev) =>
+        prev ? { ...prev, workStatus: previous } : prev,
+      );
+    }
+    return result;
   };
 
   const activePublishTranslation = async () => {
@@ -407,7 +457,7 @@ export function TranslationProvider({
       // the handoff mechanism in production (`start()` returns immediately there).
       const { data: fresh } = await supabase
         .from("translation_records")
-        .select("markdown, work_status, online_status")
+        .select("markdown, work_status, online_status, updated_at")
         .eq("id", translation.id)
         .single();
 
@@ -425,6 +475,10 @@ export function TranslationProvider({
               fresh.online_status === "published"
                 ? "published"
                 : fresh.work_status || "to_process",
+            // Marque ce contenu comme la référence la plus récente connue :
+            // un événement Realtime plus ancien (ex. le "pending" émis en
+            // tout début de régénération) sera ignoré s'il arrive après coup.
+            updatedAt: fresh.updated_at ?? prev.updatedAt,
           };
         });
       }
@@ -472,6 +526,7 @@ export function TranslationProvider({
         updateMetadataField,
         saveTranslation: activeSaveTranslation,
         publishTranslation: activePublishTranslation,
+        updateWorkStatus,
         isDirty,
         isSaving,
         isPublishing,

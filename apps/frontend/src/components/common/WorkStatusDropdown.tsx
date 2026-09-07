@@ -18,19 +18,32 @@ interface WorkStatusDropdownProps {
   onOptimisticUpdate?: (workStatus: WorkStatus | null) => void;
   /** Notifie le parent de l'état d'enregistrement (pour SaveIndicator). */
   onPendingChange?: (pending: boolean) => void;
+  /**
+   * Handler alternatif (RI-1430), utilisé à la place de `updateWorkStatusAction`
+   * — sert pour les traductions, indexées par `translationId` et non par un
+   * `workflowId` de fiche éditoriale. Prioritaire sur `workflowId` s'il est fourni.
+   */
+  onUpdateStatus?: (
+    status: WorkStatus,
+  ) => Promise<{ success: boolean; error?: string }>;
+  /** Force le rendu lecture seule (ex. fiche archivée) même si un handler est fourni. */
+  readOnly?: boolean;
 }
 
 /**
  * WorkStatusDropdown — changement manuel de l'état de traitement d'une fiche.
  *
- * Utilisé depuis la liste des fiches et depuis le header d'une fiche.
- * Sans `workflowId` (contexte lecture seule), affiche uniquement le Tag courant.
+ * Utilisé depuis la liste des fiches, le header d'une fiche, et (via
+ * `onUpdateStatus`) l'éditeur de traduction. Sans `workflowId` ni
+ * `onUpdateStatus` (contexte lecture seule), affiche uniquement le Tag courant.
  */
 export function WorkStatusDropdown({
   workflowId,
   currentWorkStatus,
   onOptimisticUpdate,
   onPendingChange,
+  onUpdateStatus,
+  readOnly,
 }: WorkStatusDropdownProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -39,8 +52,7 @@ export function WorkStatusDropdown({
     ? WORK_STATUS_TO_TAG[currentWorkStatus]
     : undefined;
 
-  // Lecture seule : pas de workflowId → juste le statut courant.
-  if (!workflowId) {
+  if (readOnly || (!workflowId && !onUpdateStatus)) {
     return <Tag status={currentTag} />;
   }
 
@@ -52,7 +64,9 @@ export function WorkStatusDropdown({
     const previous = currentWorkStatus ?? null;
     onOptimisticUpdate?.(newStatus);
 
-    const result = await updateWorkStatusAction(workflowId, newStatus);
+    const result = onUpdateStatus
+      ? await onUpdateStatus(newStatus)
+      : await updateWorkStatusAction(workflowId as string, newStatus);
     setPending(false);
     onPendingChange?.(false);
 
