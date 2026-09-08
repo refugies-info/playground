@@ -15,6 +15,7 @@ import {
 } from "@/components/documents/cells";
 import { createTextColumn } from "@/lib/column-factories";
 import type { Profile } from "@/lib/profile";
+import { SELECTABLE_WORK_STATUSES } from "@/lib/work-status";
 import { updateWorkStatusAction } from "@/services/work-status-actions";
 
 /**
@@ -133,6 +134,7 @@ export const createWorkStatusColumn = <
       onUpdateStatus={(status) =>
         updateWorkStatusAction(row.original.id, status)
       }
+      selectableStatuses={SELECTABLE_WORK_STATUSES}
     />
   ),
 });

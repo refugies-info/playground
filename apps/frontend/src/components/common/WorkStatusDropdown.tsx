@@ -6,10 +6,7 @@ import { Tag } from "@playground/ui/primitives";
 import { RiCheckLine } from "@remixicon/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-  SELECTABLE_WORK_STATUSES,
-  WORK_STATUS_TO_TAG,
-} from "@/lib/work-status";
+import { WORK_STATUS_TO_TAG } from "@/lib/work-status";
 
 interface WorkStatusDropdownProps {
   currentWorkStatus?: WorkStatus | null;
@@ -21,6 +18,13 @@ interface WorkStatusDropdownProps {
   ) => Promise<{ success: boolean; error?: string }>;
   /** Forces read-only rendering (e.g. archived record) even if a handler is provided. */
   readOnly?: boolean;
+  /**
+   * Statuses offered in the popup, in display order. No default: the
+   * component doesn't assume which resource it's editing (FR editorial
+   * records have "to_review", translations don't — RI-1430) — every caller
+   * passes the list that applies to its own resource.
+   */
+  selectableStatuses: WorkStatus[];
 }
 
 /**
@@ -28,8 +32,8 @@ interface WorkStatusDropdownProps {
  *
  * Purely presentational: it doesn't know how to write to the database, it
  * delegates that to `onUpdateStatus`. Used from the records list, a record's
- * header, and the translation editor — each passes it the server action
- * suited to its own resource.
+ * header, and the translation editor — each passes it the server action and
+ * the selectable statuses suited to its own resource.
  */
 export function WorkStatusDropdown({
   currentWorkStatus,
@@ -37,6 +41,7 @@ export function WorkStatusDropdown({
   onPendingChange,
   onUpdateStatus,
   readOnly,
+  selectableStatuses,
 }: WorkStatusDropdownProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -92,7 +97,7 @@ export function WorkStatusDropdown({
         closeOnChildClick
       >
         <div className="flex flex-col gap-1 px-2">
-          {SELECTABLE_WORK_STATUSES.map((status) => {
+          {selectableStatuses.map((status) => {
             const tagStatus = WORK_STATUS_TO_TAG[status];
             const isCurrent = status === currentWorkStatus;
             return (

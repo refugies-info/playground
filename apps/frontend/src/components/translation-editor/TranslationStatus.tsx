@@ -6,7 +6,10 @@ import { Tag } from "@playground/ui/primitives";
 import { WorkStatusDropdown } from "@/components/common/WorkStatusDropdown";
 import { useTranslation } from "./TranslationContext";
 
-const SELECTABLE_STATUSES: WorkStatus[] = ["to_process", "draft", "to_review"];
+// Translations only ever have "to_process" ("à traiter") or "draft" ("en
+// cours") — "to_review" ("à relire") is an FR editorial record status that
+// doesn't apply here (RI-1430).
+const TRANSLATION_SELECTABLE_STATUSES: WorkStatus[] = ["to_process", "draft"];
 
 export function TranslationStatus() {
   const { translation, publicationUrl, updateWorkStatus, isArchived } =
@@ -16,7 +19,7 @@ export function TranslationStatus() {
 
   const { workStatus, onlineStatus } = translation;
 
-  const isSelectableStatus = SELECTABLE_STATUSES.includes(
+  const isSelectableStatus = TRANSLATION_SELECTABLE_STATUSES.includes(
     workStatus as WorkStatus,
   );
 
@@ -27,6 +30,7 @@ export function TranslationStatus() {
           currentWorkStatus={workStatus as WorkStatus}
           onUpdateStatus={updateWorkStatus}
           readOnly={isArchived}
+          selectableStatuses={TRANSLATION_SELECTABLE_STATUSES}
         />
       )}
 
