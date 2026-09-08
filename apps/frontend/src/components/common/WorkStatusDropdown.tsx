@@ -14,22 +14,22 @@ import {
 interface WorkStatusDropdownProps {
   currentWorkStatus?: WorkStatus | null;
   onOptimisticUpdate?: (workStatus: WorkStatus | null) => void;
-  /** Notifie le parent de l'état d'enregistrement (pour SaveIndicator). */
+  /** Notifies the parent of the saving state (for SaveIndicator). */
   onPendingChange?: (pending: boolean) => void;
   onUpdateStatus?: (
     status: WorkStatus,
   ) => Promise<{ success: boolean; error?: string }>;
-  /** Force le rendu lecture seule (ex. fiche archivée) même si un handler est fourni. */
+  /** Forces read-only rendering (e.g. archived record) even if a handler is provided. */
   readOnly?: boolean;
 }
 
 /**
- * WorkStatusDropdown — changement manuel de l'état de traitement d'une fiche.
+ * WorkStatusDropdown — manually changes a record's work status.
  *
- * Composant purement présentationnel : il ne sait pas écrire en base, il
- * délègue ça à `onUpdateStatus`. Utilisé depuis la liste des fiches, le
- * header d'une fiche, et l'éditeur de traduction — chacun lui passe l'action
- * serveur adaptée à sa propre ressource.
+ * Purely presentational: it doesn't know how to write to the database, it
+ * delegates that to `onUpdateStatus`. Used from the records list, a record's
+ * header, and the translation editor — each passes it the server action
+ * suited to its own resource.
  */
 export function WorkStatusDropdown({
   currentWorkStatus,

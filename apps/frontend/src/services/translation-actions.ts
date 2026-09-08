@@ -203,9 +203,10 @@ export async function saveTranslation(
 /**
  * Saves a single translated metadata field (RI-1379).
  *
- * Pendant traduction de `saveMetadataFieldAction` : une seule clé de
- * `translation_records.metadata` est écrite, via une RPC, pour ne pas écraser
- * les autres (le titre traduit y vit aussi, et sert de repli à la recherche).
+ * Translation-side counterpart of `saveMetadataFieldAction`: only a single
+ * key of `translation_records.metadata` is written, via an RPC, so as not to
+ * overwrite the others (the translated title also lives there, and serves as
+ * a search fallback).
  *
  * @param id - The translation record ID.
  * @param key - The metadata key (e.g. "abstract").
@@ -220,7 +221,7 @@ export async function saveTranslationMetadataFieldAction(
     return { success: false, error: "Paramètres manquants" };
   }
 
-  // Même validation qu'en FR : les deux versions partagent le schéma du champ.
+  // Same validation as the FR side: both versions share the field's schema.
   const validation = validateField(key, value);
   if (!validation.success) {
     return { success: false, error: validation.error };
@@ -238,7 +239,7 @@ export async function saveTranslationMetadataFieldAction(
     const { error } = await supabase.rpc("update_translation_metadata_field", {
       record_id: id,
       field_key: key,
-      // `undefined` = suppression de la clé ; `null` = vidage explicite.
+      // `undefined` = delete the key; `null` = explicit clear.
       field_value: (value === undefined ? null : value) as Json,
       delete_key: value === undefined,
     });
@@ -268,11 +269,6 @@ export async function saveTranslationMetadataFieldAction(
  *
  * This ensures the record is in a clean state regardless of whether the
  * client already called `saveTranslation` before.
- *
- * Note (RI-1430) : `author_id` (le traducteur assigné) n'est JAMAIS modifié
- * ici. Il est fixé une seule fois, automatiquement, par `assignTranslatorStep`
- * — aucune action de l'éditeur (save, publish, regénération) ne doit
- * réassigner la fiche à qui clique le bouton.
  *
  * @param id - The translation record ID.
  * @param markdown - The current markdown content to save before publishing.
@@ -489,7 +485,7 @@ export async function cancelTranslationGeneration(
     try {
       await getRun(runId).cancel();
     } catch (err) {
-      // Le workflow est peut-être déjà terminé — non bloquant.
+      // The workflow may already be finished — non-blocking.
       logger.warn(
         { runId, translationId, err },
         "Cancel translation run failed (non-blocking)",

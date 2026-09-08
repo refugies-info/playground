@@ -36,7 +36,7 @@ interface TranslationData {
   translationMarkdown: string;
   sourceMarkdown: string;
   sourceMetadata?: Record<string, unknown>; // Metadata from source FR document
-  /** Métadonnées traduites (RI-1379) — seule `abstract` est traduisible. */
+  /** Translated metadata (RI-1379) — only `abstract` is translatable. */
   metadata?: Record<string, unknown>;
   publicationUrl?: string;
   updatedAt?: string;
@@ -47,8 +47,8 @@ export interface TranslationContextType {
   setTranslation: React.Dispatch<React.SetStateAction<TranslationData | null>>;
   updateContent: (content: string) => void;
   /**
-   * Enregistre une métadonnée traduite (RI-1379). Sauvegarde immédiate, comme
-   * côté FR : ce champ ne passe pas par l'autosave du markdown.
+   * Saves a translated metadata field (RI-1379). Saved immediately, like on
+   * the FR side: this field doesn't go through the markdown autosave.
    */
   updateMetadataField: (
     key: string,
@@ -62,11 +62,11 @@ export interface TranslationContextType {
   isDirty: boolean;
   isSaving: boolean;
   isPublishing: boolean;
-  /** True quand une regénération IA est en cours (work_status === "pending"). */
+  /** True while an AI regeneration is in progress (work_status === "pending"). */
   isRegenerating: boolean;
-  /** Déclenche la regénération IA de la traduction. */
+  /** Triggers the AI regeneration of the translation. */
   regenerate: () => Promise<void>;
-  /** Annule la regénération IA en cours (même session). */
+  /** Cancels the in-progress AI regeneration (same session). */
   cancelRegenerate: () => void;
   previewTranslation: () => Promise<void>;
   canPreview: boolean; // Whether preview is available (source must be published)
@@ -74,9 +74,9 @@ export interface TranslationContextType {
   publicationUrlError?: string | null;
   isRawMarkdownMode: boolean;
   setIsRawMarkdownMode: (value: boolean) => void;
-  /** True quand la fiche a été archivée par l'équipe éditoriale (lecture seule) */
+  /** True when the record has been archived by the editorial team (read-only) */
   isArchived: boolean;
-  /** Ouverture de la pop-up "Cette fiche a été archivée" */
+  /** Whether the "This record has been archived" pop-up is open */
   archivedModalOpen: boolean;
   closeArchivedModal: () => void;
 }
@@ -107,8 +107,8 @@ export function TranslationProvider({
   // visible for the entire duration. Cleared in finally, and also by the realtime completion event.
   const [isRegenLocal, setIsRegenLocal] = useState(false);
 
-  // La fiche est archivée dès que la traduction passe en online_status "archived"
-  // (cascade déclenchée par l'archivage de la fiche FR côté éditorial).
+  // The record is archived as soon as the translation's online_status becomes
+  // "archived" (a cascade triggered by archiving the FR record editorially).
   const isArchived = translation?.onlineStatus === "archived";
 
   // Run ID of the current regeneration — kept in memory to support cancellation.
@@ -128,9 +128,9 @@ export function TranslationProvider({
   // `start()` returns immediately).
   const isRegenerating = isRegenLocal || translation?.workStatus === "pending";
 
-  // Ouvre la pop-up dès que la fiche devient archivée. Couvre les deux scénarios :
-  // - ouverture d'une traduction déjà archivée (initialData)
-  // - archivage en direct pendant l'édition (UPDATE realtime sur translation_records)
+  // Opens the pop-up as soon as the record becomes archived. Covers both cases:
+  // - opening a translation that's already archived (initialData)
+  // - live archiving while editing (UPDATE realtime on translation_records)
   useEffect(() => {
     if (isArchived) setArchivedModalOpen(true);
   }, [isArchived]);
@@ -257,8 +257,8 @@ export function TranslationProvider({
       value,
     );
     if (!result.success) {
-      // Échec : on remet la valeur d'avant plutôt que d'afficher un texte
-      // que le serveur n'a pas enregistré.
+      // Failure: revert to the previous value rather than displaying text
+      // the server didn't actually save.
       setTranslation((current) =>
         current ? { ...current, metadata: previous } : current,
       );
@@ -286,9 +286,9 @@ export function TranslationProvider({
         // biome-ignore lint/suspicious/noConsole: Error logging
         console.error(result.error);
       }
-      // La sauvegarde a bien lieu (on ne perd pas le travail du traducteur), mais
-      // si la fiche est archivée on ouvre la pop-up même si le client n'a pas
-      // encore reçu la cascade realtime.
+      // The save still goes through (we never lose the translator's work), but
+      // if the record is archived we open the pop-up even if the client
+      // hasn't received the realtime cascade yet.
       if (result.archived) setArchivedModalOpen(true);
       return result;
     } catch (e) {

@@ -27,13 +27,13 @@ export async function generateTranslationWorkflow(
     language,
     "pending",
   );
-  // RI-1430 — `updateTranslationStatusStep` ne réussit que si l'enregistrement
-  // existe déjà, donc `pendingResult.success` distingue naturellement les deux
-  // cas : une régénération manuelle sur une traduction existante (peu importe
-  // son statut précédent) doit finir sur "draft" (en cours) — jamais repartir
-  // dans la file d'attente "à traiter". La toute première génération (le
-  // record n'existe pas encore, créé plus loin par generateTranslationStep)
-  // reste "to_process", comme avant.
+  // RI-1430 — `updateTranslationStatusStep` only succeeds if the record
+  // already exists, so `pendingResult.success` naturally tells the two cases
+  // apart: a manual regeneration on an existing translation (whatever its
+  // previous status was) must end up on "draft" (in progress) — never back
+  // in the "to_process" queue. The very first generation (the record doesn't
+  // exist yet, created further down by generateTranslationStep) still ends
+  // on "to_process", as before.
   const isRegeneration = pendingResult.success;
 
   try {

@@ -33,17 +33,17 @@ interface HeaderFicheConnectedProps {
 }
 
 /**
- * HeaderFicheConnected — Câblage métier du composite HeaderFiche.
+ * HeaderFicheConnected — business wiring for the HeaderFiche composite.
  *
- * Slot left  : bouton retour + IndicationSauvegarde + WorkStatusDropdown + Avatar
- * Slot center: titre du document
- * Slot right : Prévisualiser + PublishPanel
+ * Slot left  : back button + SaveIndicator + WorkStatusDropdown + Avatar
+ * Slot center: document title
+ * Slot right : Preview + PublishPanel
  *
- * Flow publication :
- *   1. Clic "Publier" → isPublishing=true → bouton en loading
- *   2. Réponse :
- *      - error   → result = { type: 'error' }   → affiche erreur dans la popover
- *      - success → result = { type: 'success' }  → affiche succès (URL immédiate ou via Realtime)
+ * Publication flow:
+ *   1. Click "Publish" → isPublishing=true → button goes to loading
+ *   2. Response:
+ *      - error   → result = { type: 'error' }   → shows the error in the popover
+ *      - success → result = { type: 'success' }  → shows success (immediate URL or via Realtime)
  */
 export function HeaderFicheConnected({
   from,
@@ -79,7 +79,7 @@ export function HeaderFicheConnected({
   const [triggerTranslations, setTriggerTranslations] = useState(true);
   const [isUrgent, setIsUrgent] = useState(false);
 
-  // Realtime — met à jour l'URL dans le result success si elle n'était pas dispo immédiatement
+  // Realtime — updates the URL in the success result if it wasn't available immediately
   const { isWaiting, setError, startListening } = usePublicationRealtime({
     workflowId: document?.id,
     onSuccess: (url) => {
@@ -116,7 +116,7 @@ export function HeaderFicheConnected({
   const showSaveIndicator =
     document?.complianceStatus !== "non_compliant" &&
     document?.complianceStatus !== "pending";
-  // Loading = workflow en cours d'appel OU en attente du résultat Realtime
+  // Loading = workflow call in progress OR waiting for the Realtime result
   const isLoading = isPublishing || isWaiting;
 
   const handleConfirmPublish = async () => {
@@ -129,11 +129,11 @@ export function HeaderFicheConnected({
     );
 
     if (result.success) {
-      // Le workflow a démarré — on attend le résultat via Realtime
-      // Ne pas afficher "succès" avant que Realtime confirme
+      // The workflow started — wait for the result via Realtime
+      // Don't show "success" before Realtime confirms it
       startListening();
     } else {
-      // Le workflow n'a pas pu démarrer (erreur réseau, config, etc.)
+      // The workflow failed to start (network error, config, etc.)
       setPublishResult({
         type: "error",
         error: result.error ?? "Échec de la publication",
