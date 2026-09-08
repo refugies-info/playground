@@ -1,20 +1,38 @@
 "use client";
 
+import type { WorkStatus } from "@playground/shared-types";
 import { RiExternalLinkLine } from "@playground/ui/icons";
 import { Tag } from "@playground/ui/primitives";
+import { WorkStatusDropdown } from "@/components/common/WorkStatusDropdown";
 import { useTranslation } from "./TranslationContext";
 
+// Translations only ever have "to_process" ("à traiter") or "draft" ("en
+// cours") — "to_review" ("à relire") is an FR editorial record status that
+// doesn't apply here (RI-1430).
+const TRANSLATION_SELECTABLE_STATUSES: WorkStatus[] = ["to_process", "draft"];
+
 export function TranslationStatus() {
-  const { translation, publicationUrl } = useTranslation();
+  const { translation, publicationUrl, updateWorkStatus, isArchived } =
+    useTranslation();
 
   if (!translation) return null;
 
   const { workStatus, onlineStatus } = translation;
 
+  const isSelectableStatus = TRANSLATION_SELECTABLE_STATUSES.includes(
+    workStatus as WorkStatus,
+  );
+
   return (
     <div className="flex items-center gap-2">
-      {workStatus === "to_process" && <Tag status="a-traiter" />}
-      {workStatus === "draft" && <Tag status="en-cours" />}
+      {isSelectableStatus && (
+        <WorkStatusDropdown
+          currentWorkStatus={workStatus as WorkStatus}
+          onUpdateStatus={updateWorkStatus}
+          readOnly={isArchived}
+          selectableStatuses={TRANSLATION_SELECTABLE_STATUSES}
+        />
+      )}
 
       {onlineStatus === "published" && <Tag status="publie" />}
       {onlineStatus === "archived" && <Tag status="archive" />}

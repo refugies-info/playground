@@ -22,7 +22,19 @@ export async function generateTranslationWorkflow(
 
   const { editorialRecordId, language, parentWorkflowId, userId } = input;
 
-  await updateTranslationStatusStep(editorialRecordId, language, "pending");
+  const pendingResult = await updateTranslationStatusStep(
+    editorialRecordId,
+    language,
+    "pending",
+  );
+  // RI-1430 — `updateTranslationStatusStep` only succeeds if the record
+  // already exists, so `pendingResult.success` naturally tells the two cases
+  // apart: a manual regeneration on an existing translation (whatever its
+  // previous status was) must end up on "draft" (in progress) — never back
+  // in the "to_process" queue. The very first generation (the record doesn't
+  // exist yet, created further down by generateTranslationStep) still ends
+  // on "to_process", as before.
+  const isRegeneration = pendingResult.success;
 
   try {
     const result = await generateTranslationStep(
@@ -38,7 +50,7 @@ export async function generateTranslationWorkflow(
     await updateTranslationStatusStep(
       editorialRecordId,
       language,
-      "to_process",
+      isRegeneration ? "draft" : "to_process",
     );
     await assignTranslatorStep(result.data.translationRecordId, language);
     await addTradToAirtableStep(editorialRecordId, language, userId);

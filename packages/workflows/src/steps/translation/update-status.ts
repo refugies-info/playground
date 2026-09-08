@@ -1,9 +1,17 @@
-import { logger } from "@playground/shared-types";
+import { logger, type WorkStatus } from "@playground/shared-types";
 import type { StepResult } from "../../types";
 import { getSupabaseClient } from "../common/supabase";
 
+type TranslationWorkStatus = WorkStatus | "pending" | "error";
+
 /**
  * Updates the work_status of a translation record.
+ *
+ * Fails (returns `success: false`) if no record exists yet for this
+ * editorial record + language — the caller (RI-1430) uses that to tell a
+ * regeneration on an existing translation apart from the very first
+ * generation, whose record doesn't exist until `generateTranslationStep`
+ * creates it.
  *
  * @param editorialRecordId - The ID of the editorial record
  * @param language - The target language
@@ -13,7 +21,7 @@ import { getSupabaseClient } from "../common/supabase";
 export async function updateTranslationStatusStep(
   editorialRecordId: string,
   language: string,
-  status: "pending" | "to_process" | "error" | "draft",
+  status: TranslationWorkStatus,
 ): Promise<StepResult<{ success: boolean }>> {
   "use step";
 

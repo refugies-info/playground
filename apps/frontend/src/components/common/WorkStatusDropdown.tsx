@@ -6,31 +6,42 @@ import { Tag } from "@playground/ui/primitives";
 import { RiCheckLine } from "@remixicon/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-  SELECTABLE_WORK_STATUSES,
-  WORK_STATUS_TO_TAG,
-} from "@/lib/work-status";
-import { updateWorkStatusAction } from "@/services/work-status-actions";
+import { WORK_STATUS_TO_TAG } from "@/lib/work-status";
 
 interface WorkStatusDropdownProps {
-  workflowId?: string;
   currentWorkStatus?: WorkStatus | null;
   onOptimisticUpdate?: (workStatus: WorkStatus | null) => void;
-  /** Notifie le parent de l'état d'enregistrement (pour SaveIndicator). */
+  /** Notifies the parent of the saving state (for SaveIndicator). */
   onPendingChange?: (pending: boolean) => void;
+  onUpdateStatus?: (
+    status: WorkStatus,
+  ) => Promise<{ success: boolean; error?: string }>;
+  /** Forces read-only rendering (e.g. archived record) even if a handler is provided. */
+  readOnly?: boolean;
+  /**
+   * Statuses offered in the popup, in display order. No default: the
+   * component doesn't assume which resource it's editing (FR editorial
+   * records have "to_review", translations don't — RI-1430) — every caller
+   * passes the list that applies to its own resource.
+   */
+  selectableStatuses: WorkStatus[];
 }
 
 /**
- * WorkStatusDropdown — changement manuel de l'état de traitement d'une fiche.
+ * WorkStatusDropdown — manually changes a record's work status.
  *
- * Utilisé depuis la liste des fiches et depuis le header d'une fiche.
- * Sans `workflowId` (contexte lecture seule), affiche uniquement le Tag courant.
+ * Purely presentational: it doesn't know how to write to the database, it
+ * delegates that to `onUpdateStatus`. Used from the records list, a record's
+ * header, and the translation editor — each passes it the server action and
+ * the selectable statuses suited to its own resource.
  */
 export function WorkStatusDropdown({
-  workflowId,
   currentWorkStatus,
   onOptimisticUpdate,
   onPendingChange,
+  onUpdateStatus,
+  readOnly,
+  selectableStatuses,
 }: WorkStatusDropdownProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -39,8 +50,7 @@ export function WorkStatusDropdown({
     ? WORK_STATUS_TO_TAG[currentWorkStatus]
     : undefined;
 
-  // Lecture seule : pas de workflowId → juste le statut courant.
-  if (!workflowId) {
+  if (readOnly || !onUpdateStatus) {
     return <Tag status={currentTag} />;
   }
 
@@ -52,7 +62,7 @@ export function WorkStatusDropdown({
     const previous = currentWorkStatus ?? null;
     onOptimisticUpdate?.(newStatus);
 
-    const result = await updateWorkStatusAction(workflowId, newStatus);
+    const result = await onUpdateStatus(newStatus);
     setPending(false);
     onPendingChange?.(false);
 
@@ -87,7 +97,7 @@ export function WorkStatusDropdown({
         closeOnChildClick
       >
         <div className="flex flex-col gap-1 px-2">
-          {SELECTABLE_WORK_STATUSES.map((status) => {
+          {selectableStatuses.map((status) => {
             const tagStatus = WORK_STATUS_TO_TAG[status];
             const isCurrent = status === currentWorkStatus;
             return (
