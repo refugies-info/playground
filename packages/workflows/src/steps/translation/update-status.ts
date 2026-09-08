@@ -7,21 +7,22 @@ type TranslationWorkStatus = WorkStatus | "pending" | "error";
 /**
  * Updates the work_status of a translation record.
  *
- * Returns the status the record had *before* this update (RI-1430) — used by
- * the caller to restore it after a regeneration instead of forcing a fixed
- * status, so an in-progress translation isn't silently "unclaimed" just
- * because the AI content behind it was regenerated.
+ * Fails (returns `success: false`) if no record exists yet for this
+ * editorial record + language — the caller (RI-1430) uses that to tell a
+ * regeneration on an existing translation apart from the very first
+ * generation, whose record doesn't exist until `generateTranslationStep`
+ * creates it.
  *
  * @param editorialRecordId - The ID of the editorial record
  * @param language - The target language
  * @param status - The new status to set
- * @returns Result of the update, including the previous status
+ * @returns Result of the update
  */
 export async function updateTranslationStatusStep(
   editorialRecordId: string,
   language: string,
   status: TranslationWorkStatus,
-): Promise<StepResult<{ success: boolean; previousStatus: string | null }>> {
+): Promise<StepResult<{ success: boolean }>> {
   "use step";
 
   try {
@@ -30,7 +31,7 @@ export async function updateTranslationStatusStep(
     // Find the record
     const { data: record, error: findError } = await supabase
       .from("translation_records")
-      .select("id, work_status")
+      .select("id")
       .eq("editorial_record_id", editorialRecordId)
       .eq("language", language)
       .single();
@@ -54,10 +55,7 @@ export async function updateTranslationStatusStep(
       return { success: false, error: "Update failed" };
     }
 
-    return {
-      success: true,
-      data: { success: true, previousStatus: record.work_status },
-    };
+    return { success: true, data: { success: true } };
   } catch (error) {
     logger.error(error, "Unexpected error in updateTranslationStatusStep");
     return {
