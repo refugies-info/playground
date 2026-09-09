@@ -62,5 +62,5 @@ function IndicationConformite({
   );
 }
 
-export { IndicationConformite };
 export type { IndicationConformiteProps };
+export { IndicationConformite };

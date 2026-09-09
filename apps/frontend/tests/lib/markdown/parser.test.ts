@@ -486,7 +486,7 @@ Content B
     // Toggle A
     expect(blocks[0].type).toBe("toggleListItem");
     expect(
-      (blocks[0].children?.[0].content as unknown as TestInlineContent[])[0]
+      (blocks[0].children![0].content as unknown as TestInlineContent[])[0]
         .text,
     ).toBe("Content A");
 
@@ -499,7 +499,7 @@ Content B
     // Toggle B
     expect(blocks[2].type).toBe("toggleListItem");
     expect(
-      (blocks[2].children?.[0].content as unknown as TestInlineContent[])[0]
+      (blocks[2].children![0].content as unknown as TestInlineContent[])[0]
         .text,
     ).toBe("Content B");
   });
@@ -815,7 +815,7 @@ Level 2 Child
     expect(root.children?.[0].type).toBe("callout"); // important
 
     // biome-ignore lint/suspicious/noExplicitAny: custom block
-    expect((root.children?.[1] as any).type).toBe("callout"); // good-to-know
+    expect((root.children![1] as any).type).toBe("callout"); // good-to-know
   });
 
   it("Level 3: Child of Important", async () => {
@@ -865,7 +865,7 @@ Level 4 Child
 
     expect(deepest.children).toHaveLength(1);
     // biome-ignore lint/suspicious/noExplicitAny: custom
-    expect((deepest.children?.[0] as any).type).toBe("callout");
+    expect((deepest.children![0] as any).type).toBe("callout");
   });
 
   it("Attributes Preservation", async () => {
