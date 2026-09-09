@@ -4,8 +4,8 @@
  * AUTO-GENERE par scripts/sync-dsfr-icons.ts
  * Ne pas editer a la main.
  *
- * Source : @gouvfr/dsfr 1.14.4
- * 45 icones custom
+ * Source : @gouvfr/dsfr 1.15.2
+ * 47 icones custom
  */
 
 export { EraserFill1 } from "./EraserFill1";
@@ -16,8 +16,10 @@ export { FrAlertWarning2Fill } from "./FrAlertWarning2Fill";
 export { FrAlertWarningFill } from "./FrAlertWarningFill";
 export { FrArrowLeftSFirstLine } from "./FrArrowLeftSFirstLine";
 export { FrArrowLeftSLineDouble } from "./FrArrowLeftSLineDouble";
+export { FrArrowRightDownCircleFill } from "./FrArrowRightDownCircleFill";
 export { FrArrowRightSLastLine } from "./FrArrowRightSLastLine";
 export { FrArrowRightSLineDouble } from "./FrArrowRightSLineDouble";
+export { FrArrowRightUpCircleFill } from "./FrArrowRightUpCircleFill";
 export { FrAvalanchesFill } from "./FrAvalanchesFill";
 export { FrAvalanchesLine } from "./FrAvalanchesLine";
 export { FranceFill } from "./FranceFill";
