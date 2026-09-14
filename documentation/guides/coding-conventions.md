@@ -35,11 +35,12 @@ Coding style rules to follow across the monorepo, on top of what Biome enforces 
 
 - Use `shadcn/ui` primitives where possible before building a bespoke component (see [Component Strategy](../frontend/component-strategy.md)).
 - Keep components free of business logic where practical: they receive what to display via props, do purely presentational reformatting locally, and leave business rules to callers/hooks/API routes.
+- Presentational components (design-system components in `packages/ui`, and generally anything under a `components/` folder) must not fetch or import data themselves — no direct Supabase calls in there. Load data at the page/feature level (or in a hook) and pass it down as props; see [Component Strategy](../frontend/component-strategy.md#keep-design-system-components-stateless).
 - Prefer several small, focused components over one large one.
 
 ## Data access
 
-- **Reads**: Supabase Client directly from the frontend (RLS-protected).
+- **Reads**: Supabase Client directly from the frontend — but only at the page/feature level (Server Components, route handlers, or hooks called from there), never inside a presentational component (see [Components](#components)). RLS protects these reads.
 - **Writes**: API routes using the Service Role Key.
 - Don't reach for an ORM — raw SQL or the Supabase Client only.
 
