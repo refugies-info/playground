@@ -1,4 +1,3 @@
-import { addTradToAirtableStep } from "../../steps/translation/add-trad-to-airtable";
 import { assignTranslatorStep } from "../../steps/translation/assign-translator";
 import {
   type GenerateTranslationResult,
@@ -10,7 +9,6 @@ export interface GenerateTranslationWorkflowInput {
   editorialRecordId: string;
   language: string;
   parentWorkflowId: string;
-  userId?: string;
 }
 
 export type GenerateTranslationWorkflowResult = GenerateTranslationResult;
@@ -20,7 +18,7 @@ export async function generateTranslationWorkflow(
 ): Promise<GenerateTranslationWorkflowResult> {
   "use workflow";
 
-  const { editorialRecordId, language, parentWorkflowId, userId } = input;
+  const { editorialRecordId, language, parentWorkflowId } = input;
 
   const pendingResult = await updateTranslationStatusStep(
     editorialRecordId,
@@ -53,7 +51,6 @@ export async function generateTranslationWorkflow(
       isRegeneration ? "draft" : "to_process",
     );
     await assignTranslatorStep(result.data.translationRecordId, language);
-    await addTradToAirtableStep(editorialRecordId, language, userId);
 
     return result.data;
   } catch (error) {

@@ -132,3 +132,28 @@ export async function notifyPublicationError(params: {
 
   await postSlackMessage(process.env[ENV_WEBHOOK_DEV], ENV_WEBHOOK_DEV, text);
 }
+
+/**
+ * Notifie #dev qu'une ligne de suivi n'a pas pu être créée dans Airtable.
+ *
+ * Le suivi Airtable est non bloquant : la traduction est publiée quand même.
+ * Sans cette alerte, l'échec resterait invisible (facturation traducteur
+ * silencieusement perdue).
+ */
+export async function notifyAirtableError(params: {
+  /** Titre FR de la fiche concernée. */
+  title: string;
+  language: string;
+  errorMessage: string;
+  /** Lien vers la fiche publiée, si disponible. */
+  publishedUrl?: string;
+}): Promise<void> {
+  const text = [
+    `:rotating_light: [${getEnvironmentLabel()}] Suivi Airtable échoué (SUIVI TRAD)`,
+    `fiche : *${params.title}* — ${params.language.toUpperCase()}`,
+    ...(params.publishedUrl ? [params.publishedUrl] : []),
+    `erreur: ${params.errorMessage}`,
+  ].join("\n");
+
+  await postSlackMessage(process.env[ENV_WEBHOOK_DEV], ENV_WEBHOOK_DEV, text);
+}

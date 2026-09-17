@@ -1,6 +1,7 @@
 import { countMarkdownWords, createAirtableRecord } from "@playground/airtable";
 import { extractTitleFromMarkdown, logger } from "@playground/shared-types";
 import type { StepResult } from "../../types";
+import { notifyAirtableError } from "../common/slack";
 import { getSupabaseClient } from "../common/supabase";
 
 /**
@@ -12,9 +13,20 @@ type AirtableTradFields = {
   Dispositif: string;
   Lien: string;
   Langues: string;
+  Type: "demarche" | "dispositif";
   "Travail effectué": "à revoir" | "à traduire";
   "Nb mots": number;
 };
+
+/**
+ * Input for the Airtable tracking step.
+ */
+export interface AddTradToAirtableInput {
+  translationId: string;
+  remoteId: string;
+  publisherId: string;
+  publisherEmail: string;
+}
 
 /**
  * Result of the Airtable tracking step.
@@ -28,133 +40,116 @@ const AIRTABLE_TABLE_NAME = "SUIVI TRAD";
 /**
  * Sends translation tracking data to Airtable for billing purposes.
  *
- * This step:
- * 1. Checks if this translation was already published (via publication_records) — skips if so
- * 2. Fetches the FR editorial record content
- * 3. Extracts the title and counts words from the FR markdown
- * 4. Looks up the published URL (if available)
- * 5. Creates a record in the Airtable "SUIVI TRAD" table
- *
- * Only creates an Airtable entry on the **first** translation generation
- * (i.e., before the translation has ever been published to the site).
- *
- * This step is **non-blocking**: it never fails the parent workflow.
- * If Airtable is unreachable or env vars are missing, it logs a warning and returns success.
- *
- * Inspired by karfur's `addTradToAirtable` in traductions.service.ts.
- *
- * @param editorialRecordId - The source editorial record ID (for FR content)
- * @param language - The target language code (e.g., "en", "ar")
- * @param userId - The user ID of the person who triggered the translation (resolved to username)
+ * @param input - The published translation context
  * @returns Result indicating if the record was sent
  */
 export async function addTradToAirtableStep(
-  editorialRecordId: string,
-  language: string,
-  userId?: string,
+  input: AddTradToAirtableInput,
 ): Promise<StepResult<AddTradToAirtableResult>> {
   "use step";
+
+  const { translationId, remoteId, publisherId, publisherEmail } = input;
 
   try {
     const supabase = getSupabaseClient();
 
-    // 0. Resolve translator name from user profile
-    let translatorName = "IA";
-    if (userId) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("username, email")
-        .eq("id", userId)
-        .single();
-
-      if (profile?.username) {
-        translatorName = profile.username;
-      } else if (profile?.email) {
-        translatorName = profile.email;
-      }
-    }
-
-    // 1. Check if this translation was already published — if so, skip
-    // We look for a published publication_record linked to the translation_record
-    // for this (editorial_record_id, language) pair.
-    const { data: translationRecord } = await supabase
+    // 1. Fetch the published translation record
+    const { data: translation, error: translationError } = await supabase
       .from("translation_records")
-      .select("id")
-      .eq("editorial_record_id", editorialRecordId)
-      .eq("language", language)
-      .maybeSingle();
+      .select("id, language, editorial_record_id")
+      .eq("id", translationId)
+      .single();
 
-    if (translationRecord) {
-      const { data: existingPublication } = await supabase
-        .from("publication_records")
-        .select("id")
-        .eq("translation_record_id", translationRecord.id)
-        .eq("status", "published")
-        .limit(1)
-        .maybeSingle();
-
-      if (existingPublication) {
-        logger.info(
-          { editorialRecordId, language },
-          "[addTradToAirtable] Translation already published, skipping duplicate Airtable entry",
-        );
-        return { success: true, data: { sent: false } };
-      }
+    if (translationError || !translation) {
+      logger.warn(
+        { translationId, error: translationError },
+        "[addTradToAirtable] Could not fetch translation record, skipping Airtable tracking",
+      );
+      return { success: true, data: { sent: false } };
     }
 
-    // 2. Fetch FR content from editorial record
+    // 2. The billed translator is whoever clicked "publier" — same rule as
+    // karfur, which passes the publishing expert's username to Airtable.
+    const translatorName = await resolvePublisherName(
+      supabase,
+      publisherId,
+      publisherEmail,
+    );
+
+    // 3. Fetch FR content from the editorial record (words are billed on the FR source)
     const { data: editorialRecord, error: fetchError } = await supabase
       .from("editorial_records")
       .select("id, markdown")
-      .eq("id", editorialRecordId)
+      .eq("id", translation.editorial_record_id)
       .single();
 
     if (fetchError || !editorialRecord?.markdown) {
       logger.warn(
-        { editorialRecordId, error: fetchError },
+        {
+          editorialRecordId: translation.editorial_record_id,
+          error: fetchError,
+        },
         "[addTradToAirtable] Could not fetch editorial record, skipping Airtable tracking",
       );
       return { success: true, data: { sent: false } };
     }
 
-    // 3. Extract title and count words from FR content
     const title =
       (await extractTitleFromMarkdown(editorialRecord.markdown)) ||
       "Sans titre";
     const wordCount = countMarkdownWords(editorialRecord.markdown);
 
     // 4. Build the link to the fiche
-    // Try to find the published remote_id to construct the URL
-    let lien = "";
     const baseUrl = process.env.RI_BASE_URL || "https://refugies.info";
-    const cleanBaseUrl = baseUrl.replace(/\/$/, "");
-
-    const { data: publication } = await supabase
-      .from("publication_records")
-      .select("remote_id")
-      .eq("editorial_record_id", editorialRecordId)
-      .eq("status", "published")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (publication?.remote_id) {
-      lien = `${cleanBaseUrl}/fr/dispositif/${publication.remote_id}`;
-    }
+    const lien = `${baseUrl.replace(/\/$/, "")}/fr/dispositif/${remoteId}`;
 
     // 5. Create Airtable record
     const fields: AirtableTradFields = {
       "Quel traducteur ?": translatorName,
       Dispositif: title,
       Lien: lien,
-      Langues: language.toUpperCase(),
-      "Travail effectué": "à traduire",
+      Langues: translation.language.toUpperCase(),
+      // The playground only ingests French courses, which are dispositifs
+      Type: "dispositif",
+      // The AI writes the first translation, so a human only ever reviews it
+      "Travail effectué": "à revoir",
       "Nb mots": wordCount,
     };
 
-    const sent = await createAirtableRecord(AIRTABLE_TABLE_NAME, fields);
+    const result = await createAirtableRecord(AIRTABLE_TABLE_NAME, fields);
 
-    return { success: true, data: { sent } };
+    if (!result.sent) {
+      logger.error(
+        {
+          translationId,
+          title,
+          language: translation.language,
+          error: result.error,
+        },
+        "[addTradToAirtable] Airtable tracking row NOT created",
+      );
+      await notifyAirtableError({
+        title,
+        language: translation.language,
+        errorMessage: result.error,
+        publishedUrl: lien,
+      });
+      return { success: true, data: { sent: false } };
+    }
+
+    logger.info(
+      {
+        translationId,
+        title,
+        language: translation.language,
+        translator: translatorName,
+        wordCount,
+        lien,
+      },
+      "[addTradToAirtable] Airtable tracking row created",
+    );
+
+    return { success: true, data: { sent: true } };
   } catch (error) {
     // Non-blocking: log the error but don't fail the workflow
     logger.error(
@@ -163,4 +158,26 @@ export async function addTradToAirtableStep(
     );
     return { success: true, data: { sent: false } };
   }
+}
+
+/**
+ * Returns the display name of the user who published the translation.
+ *
+ * @param supabase - Supabase client
+ * @param publisherId - The publishing user ID
+ * @param publisherEmail - Their session email, used as a fallback
+ * @returns The username, the email otherwise, or "Inconnu" as a last resort
+ */
+async function resolvePublisherName(
+  supabase: ReturnType<typeof getSupabaseClient>,
+  publisherId: string,
+  publisherEmail: string,
+): Promise<string> {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username, email")
+    .eq("id", publisherId)
+    .maybeSingle();
+
+  return profile?.username || profile?.email || publisherEmail || "Inconnu";
 }
