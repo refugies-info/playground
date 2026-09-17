@@ -1,34 +1,35 @@
-# Migration agent IA — Letta Code SDK et qmd
+# Migration agent IA — Letta Agent SDK
 
-This folder tracks the migration of the editorial AI agent from **Letta Cloud** (SDK `@letta-ai/letta-client`) to **Letta Code SDK** + `qmd` corpus.
+This folder tracks the migration of the editorial AI agent from the legacy Letta API (`@letta-ai/letta-client`) to **`@letta-ai/letta-agent-sdk`**, with a rollback-safe delivery path.
 
-## Linear tracking
+> ⚠️ **Current source of truth**: [`agent-sdk-migration-plan.md`](./agent-sdk-migration-plan.md) (2026-09-17).
+> Earlier planning from 15 June 2026 assumed qmd + a Letta Code runtime and a GCP worker; it was not implemented and is **superseded**. The `agent-knowledge/` corpus on `main` is an empty scaffold, not a completed migration.
+> Linear project `Migration agent IA — Letta Code SDK et qmd` and its 50 issues were archived on 2026-09-17. The new issue breakdown lives in the plan document.
 
-- Project: [Migration agent IA — Letta Code SDK et qmd](https://linear.app/refugies-info/project/migration-agent-ia-letta-code-sdk-et-qmd-458608ee4f70)
-- 50 issues, 6 waves (inventory → corpus → skills → runtime abstraction → Letta Code runtime → cutover).
+## Calendar constraint (Luis, 17 September 2026)
+
+There is **no firm date** for the legacy API closure, but it is **imminent**. The legacy path is therefore a bridge of unknown duration, not a comfortable fallback. Archiving the authoritative agent resources (memory blocks, prompts, personas) is the **first priority**, before any transport work.
 
 ## Two coexisting agent implementations (15 June 2026)
 
-1. **Agent Letta Cloud (production, source of the migration)** — `@playground/agents` package consuming `@letta-ai/letta-client@1.10.2`. Powers the ingestion/editorial/translation workflows in the Next.js frontend. Consumes **markdown + YAML frontmatter** from the Data Inclusion API. Production project: `project-pZvdCSjhJ7Fgmi66gqgy`.
-2. **Agent Letta Code (scaffolded, target of the migration)** — `.agents/`, `.commands/`, `.skills/`. "Agathe" agent partially scaffolded for **RCO XML (Lhéo)** input. Not active in production today, but RCO will become relevant again — resources must be kept.
+1. **Agent legacy Letta (production, source of the migration)** — `@playground/agents` package consuming `@letta-ai/letta-client@1.10.2`. Powers the ingestion/editorial/translation workflows in the Next.js frontend. Consumes **markdown + YAML frontmatter** from the Data Inclusion API.
+2. **Agent scaffold RCO XML (`.agents/`, `.commands/`, `.skills/`)** — archived from the repo on 15 June 2026 (see Annex C of the inventory). RCO is not an active production source; `packages/rco/src/` helpers are kept for a possible future reactivation.
 
-The migration **moves the production setup toward the Letta Code pattern**, while **preserving the RCO scaffolded setup** for future activation.
+## Key constraints
 
-## Key constraints (Luis, 15 June 2026)
-
-1. **Letta Cloud resources are frozen.** Letta deprecated "File" resource updates. Production agents rely on resources uploaded before this deprecation and will **never be updated again** on Letta Cloud. The migration must switch to a fully local+versioned pattern (Letta Code + qmd).
-2. **Current input format is markdown (YAML frontmatter + text body)** from the Data Inclusion API. RCO XML is not in active production but will be relevant again — the associated resources (`.commands/*.md`, `.skills/metadata/`) must be preserved.
-3. **`search_ri_duplicate_dispositifs` is not a self-contained tool.** It's a client to an ad-hoc API in the karfur codebase that returns likely duplicate candidates, which the LLM then analyzes. Migration must replace this with a Supabase-based equivalent in playground.
-4. **`ressources_metadatas/base-connaissance.md`** (referenced by `.skills/metadata/SKILL.md`) **is intentionally left missing** for now. Luis will check with the RI team whether the knowledge base is still relevant.
+1. **Legacy Letta resources are frozen.** Letta deprecated "File" resource updates; production agents rely on resources uploaded before that deprecation and will never be updated again. This is the main driver for moving to a locally versioned setup.
+2. **Current input format is markdown (YAML frontmatter + text body)** from the Data Inclusion API.
+3. **`search_ri_duplicate_dispositifs` is not a self-contained tool.** It is a client to an ad-hoc API in the karfur codebase that returns likely duplicate candidates, which the LLM then analyses. Any replacement must be justified by a demonstrated incompatibility — do not assume a Supabase `dispositifs` table exists.
+4. **The four `/audit`, `/redaction`, `/metadata`, `/translate` strings in `packages/agents/src/prompts.ts` are not an export of the editorial knowledge.** The real instructions and references still need to be recovered and verified.
 
 ## Documents
 
-| File                                       | RI            | Contents                                                                       |
-| ------------------------------------------ | ------------- | ------------------------------------------------------------------------------ |
-| [`letta-cloud-inventory.md`](./letta-cloud-inventory.md) | RI-1258 (PR 01) | Full inventory of both setups (Letta Cloud + Letta Code scaffold) before migration. Includes format-of-input decision, migration mapping table, per-PR implications. |
+| File | Date | Contents |
+| ---- | ---- | -------- |
+| [`agent-sdk-migration-plan.md`](./agent-sdk-migration-plan.md) | 2026-09-17 | **Current plan.** Phased PR breakdown, rollback procedure, Linear project structure, calendar constraint. Supersedes all earlier planning. |
+| [`letta-cloud-inventory.md`](./letta-cloud-inventory.md) | 2026-06-15 | Historical inventory of the legacy setup, used as context and as the starting point for the resource-archiving work. Its migration mapping is superseded. |
 
-## Scoping decision (15 June 2026)
+## Scoping decision (15 June 2026, still valid)
 
 - Migration work is executed from `playground` (branch `main`), not from `karfur`.
-- The original karfur PRs are still **referenced** in Linear descriptions (title "PR##") but **all migration code** is rewritten in this repo, from scratch.
-- The production input format is **markdown + frontmatter** (consistent with the `editorial_records` Supabase table). The RCO XML setup in `.commands/` is kept for future reactivation but is out of scope for the current migration.
+- The production input format is **markdown + frontmatter** (consistent with the `editorial_records` Supabase table). RCO XML is out of scope.

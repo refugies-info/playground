@@ -1,3 +1,5 @@
+<!-- SUPERSEDED: this inventory predates the 2026-09-17 Letta Agent SDK migration plan. Its migration mapping is historical; see agent-sdk-migration-plan.md. -->
+
 # Inventaire de l'agent IA — état au 15 juin 2026
 
 > **Scope** : RI-1258 / PR 01 — Documenter l'inventaire complet de l'agent IA **avant** la migration vers Letta Code SDK + corpus `qmd`.
