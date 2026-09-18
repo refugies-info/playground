@@ -70,12 +70,16 @@ content-playground/
 
 - **Types**: Define shared entities in `packages/shared`. Import them as `@playground/shared-types`.
 - **Database Access**:
-  - **Reads**: Direct Supabase Client (frontend, protected by RLS).
+  - **Reads**: Direct Supabase Client, but only at the page/feature level (protected by RLS) — never inside a presentational component.
   - **Writes**: API Routes (`apps/frontend/app/api/...`) using the Service Role Key.
 - **Styling**: Use Tailwind CSS utility classes.
-- **Components**: Use `shadcn/ui` components where possible.
-- **Language**: The content is primarily **French** (`language_code = 'fr'`).
+- **Components**: Use `shadcn/ui` components where possible. Presentational components must not fetch or import data themselves — they receive it via props; data is loaded at the page/feature level and passed down.
+- **Language**: The content is primarily **French** (`language_code = 'fr'`); code, types, and comments are in **English**.
 - **Functional Programming**: Prefer a functional approach over Object-Oriented Programming (OOP). Avoid classes; use pure functions and immutable data structures where possible. Implement objects as little as possible.
+- **Naming**: `camelCase` for variables/functions, `PascalCase` for types/interfaces and component files, `kebab-case` for other files/folders. Prefer a descriptive name that is a bit longer over a short, cryptic one.
+- **Comments**: write self-explanatory code first — good code shouldn't need comments to be understood. When you do comment, keep it short and in English, reserved for what the code can't say by itself (an exception, a workaround, a non-obvious rule) — not a restatement of what the line does.
+- **Don't repeat yourself**: refactor to reuse an existing function instead of copy-pasting; keep the codebase light.
+- Full rules and rationale: [Coding Conventions guide](documentation/guides/coding-conventions.md).
 
 ### 4. Architecture Notes
 
