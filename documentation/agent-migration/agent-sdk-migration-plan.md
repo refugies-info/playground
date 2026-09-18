@@ -966,6 +966,7 @@ la transition plutôt qu'un proxy**, pas de les cantonner à elle.
 - [ ] Validation éditoriale par langue.
 - [ ] Contenu précédent restaurable sans écraser une correction humaine ultérieure.
 - [ ] Une ancienne tentative ne peut changer le statut, réaffecter un traducteur, ni déclencher un nouvel envoi Airtable.
+- [ ] **Reprise d'une conversation d'une génération précédente** (§5.3) : l'historique est lu sans être réécrit, une nouvelle conversation est ouverte par l'agent courant, et la reprise reste **exceptionnelle**. L'attachement en masse d'une mémoire homologue est un signe de sur-attachement à corriger, pas un comportement à valider.
 - [ ] Effets externes incertains réconciliables — sans promettre un « exactly once » non démontré.
 
 **Dépendances :** PR-09 à PR-11, PR-07, PR-08.
@@ -1252,6 +1253,7 @@ Le corpus, la baseline et le spike peuvent avancer **en parallèle**. Les parcou
 | Validation de parité retardée | Coût d'opportunité | Risque de bascule précipitée |
 | Purge des ressources Cloud reportée | Dette technique | **Perte définitive possible** |
 | Migration partielle et durable (deux runtimes) | Acceptable | Zone de risque permanente |
+| Reprise de conversations v1 (§5.3) | Acceptable | ⚠️ À garder **exceptionnelle** : sur-attacher la mémoire homologue revient à payer indéfiniment la compatibilité descendante |
 
 ### 10.2 Ce qui change concrètement
 
