@@ -23,6 +23,7 @@ type AirtableTradFields = {
  */
 export interface AddTradToAirtableInput {
   translationId: string;
+  publicationRecordId: string;
   remoteId: string;
   publisherId: string;
   publisherEmail: string;
@@ -48,7 +49,13 @@ export async function addTradToAirtableStep(
 ): Promise<StepResult<AddTradToAirtableResult>> {
   "use step";
 
-  const { translationId, remoteId, publisherId, publisherEmail } = input;
+  const {
+    translationId,
+    publicationRecordId,
+    remoteId,
+    publisherId,
+    publisherEmail,
+  } = input;
 
   try {
     const supabase = getSupabaseClient();
@@ -68,7 +75,25 @@ export async function addTradToAirtableStep(
       return { success: true, data: { sent: false } };
     }
 
-    // 2. The billed translator is whoever clicked "publier" — same rule as
+    // 2. Bill the first publication only. Like karfur, which skips
+    const { data: previousPublication } = await supabase
+      .from("publication_records")
+      .select("id")
+      .eq("translation_record_id", translationId)
+      .eq("status", "published")
+      .neq("id", publicationRecordId)
+      .limit(1)
+      .maybeSingle();
+
+    if (previousPublication) {
+      logger.info(
+        { translationId, language: translation.language },
+        "[addTradToAirtable] Translation already published, skipping duplicate Airtable entry",
+      );
+      return { success: true, data: { sent: false } };
+    }
+
+    // 3. The billed translator is whoever clicked "publier" — same rule as
     // karfur, which passes the publishing expert's username to Airtable.
     const translatorName = await resolvePublisherName(
       supabase,
@@ -76,7 +101,7 @@ export async function addTradToAirtableStep(
       publisherEmail,
     );
 
-    // 3. Fetch FR content from the editorial record (words are billed on the FR source)
+    // 4. Fetch FR content from the editorial record (words are billed on the FR source)
     const { data: editorialRecord, error: fetchError } = await supabase
       .from("editorial_records")
       .select("id, markdown")
@@ -99,11 +124,11 @@ export async function addTradToAirtableStep(
       "Sans titre";
     const wordCount = countMarkdownWords(editorialRecord.markdown);
 
-    // 4. Build the link to the fiche
+    // 5. Build the link to the fiche
     const baseUrl = process.env.RI_BASE_URL || "https://refugies.info";
     const lien = `${baseUrl.replace(/\/$/, "")}/fr/dispositif/${remoteId}`;
 
-    // 5. Create Airtable record
+    // 6. Create Airtable record
     const fields: AirtableTradFields = {
       "Quel traducteur ?": translatorName,
       Dispositif: title,

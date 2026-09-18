@@ -18,10 +18,9 @@ export async function translationPublicationWorkflow(
     throw new Error(result.error || "Translation publication failed");
   }
 
-  // RI-1068 — billing tracking. Runs on every publication, including the
-  // republications that follow a human edit. Non-blocking: never throws.
   await addTradToAirtableStep({
     translationId: input.translationId,
+    publicationRecordId: result.data.publicationRecordId,
     remoteId: result.data.remoteId,
     publisherId: input.userId,
     publisherEmail: input.userEmail,

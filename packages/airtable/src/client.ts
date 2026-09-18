@@ -26,16 +26,12 @@ function getAirtableTranslationTable(tableName: string) {
   return new Airtable({ apiKey: token }).base(baseId).table(tableName);
 }
 
-/**
- * Outcome of a record creation, carrying the failure reason so callers can
- * report it (Slack, logs) instead of just knowing that "something failed".
- */
 export type CreateAirtableRecordResult =
   | { sent: true }
   | { sent: false; error: string };
 
 const MISSING_ENV_ERROR =
-  "Variables d'environnement AIRTABLE_TOKEN ou AIRTABLE_BASE_TRAD manquantes";
+  "AIRTABLE_TRANSLATE_TABLE_NOT_FOUND - impossible de charger la table de traduction Airtable";
 
 /**
  * Creates a record in an Airtable table.
