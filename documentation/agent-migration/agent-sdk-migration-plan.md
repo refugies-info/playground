@@ -45,7 +45,7 @@ Ces points ne peuvent pas être tranchés par la lecture du code seul. Je formul
 
 | # | Question | Recommandation |
 |---|---|---|
-| A | **Isolation du chemin de secours.** Les conversations d'un même agent partagent sa mémoire : modifier l'agent utilisé par v1 pendant les essais SDK peut dégrader le secours. | Ne pas toucher à la connaissance des agents v1 pendant la qualification ; si l'isolation n'est pas démontrable, utiliser des **agents dédiés au SDK**, configurés dans le dashboard. |
+| A | **Isolation du chemin de secours.** Les conversations d'un même agent partagent sa mémoire : modifier l'agent utilisé par v1 pendant les essais SDK peut dégrader le secours. **Contrainte ajoutée (§3.4-c)** : le chemin historique ne permet plus de **créer** d'agent de remplacement — l'isolation ne peut donc pas être obtenue en recréant des agents côté v1. | Sauvegarder la mémoire des agents v1 **existants** (outil officiel, §10.4) et ne pas la modifier pendant la qualification ; utiliser des **agents récents** pour les essais SDK. |
 | B | **Gel fonctionnel.** Les évolutions parallèles (retrieval/qmd, regroupement des traducteurs, réactivation du fan-out DI) augmentent fortement le nombre de causes possibles d'une régression. | Les **différer** en projets distincts, sauf dépendance bloquante démontrée. |
 | C | **Fenêtre de secours.** Aucune date ferme publiée, mais **fermeture confirmée comme imminente par Luis (17/09/2026)**. | Préserver le chemin v1 à chaque étape, **sans planifier de période de confort**. Traiter la bascule complète comme **datée par l'extérieur** ; voir §10. |
 
@@ -142,6 +142,58 @@ Cette route doit être **sécurisée ou retirée** indépendamment du choix de S
 | Consommateurs réels de la route SSE | Décide entre correction et retrait |
 | Sources faisant autorité pour la connaissance éditoriale | Le corpus du dépôt est incomplet ; les brouillons locaux n'ont pas valeur de référence |
 | Limites d'exécution Vercel pour des tours de 1 à 3 minutes | Détermine la faisabilité (`maxDuration`, régions, cold start) |
+
+> **Mise à jour du 18/09/2026 — apports du guide officiel `letta-ai/agent-v1-to-v2-migration-guide`.** Le plan ci-dessous a été revu sur quatre points structurants, détaillés en **§3.4** :
+> 1. **Certaines fonctionnalités** de la surface historique **sont déjà coupées en production** (pas seulement gelées) ;
+> 2. il existe un **outillage officiel de sauvegarde des agents Cloud** qui fait de la préservation des ressources une opération déléguée, pas un travail artisanal ;
+> 3. le chemin de secours v1 **ne peut plus accueillir de nouveaux agents**, ce qui change la §9-A ;
+> 4. un ordre de migration obligatoire apparaît entre le transport et la mémoire.
+
+### 3.4 Ce que le guide officiel Letta change dans ce plan
+
+Source : <https://github.com/letta-ai/agent-v1-to-v2-migration-guide> (dernier commit `61693d0`, 14/09/2026), examiné le 18/09/2026.
+
+**a) Certaines API historiques sont déjà désactivées, pas seulement gelées.**
+Le guide documente explicitement que l'endpoint `folders` retourne **HTTP 400 depuis le 17 juillet 2026** (`This API route is deprecated and no longer supported on the Letta API`).
+
+✅ **Vérifié sur notre code** : aucune utilisation de `folders` / `filesystem` / `files` / `exportFile` dans `packages`, `apps` ou `scripts`. **Impact nul sur Playground.**
+➡️ Le retrait letta Cloud est donc **incrémental**, pas un « big bang » : certains chemins tombent avant d'autres. La §10 devrait viser une **détection en continu** de ces bascules, pas une date unique.
+
+**b) Un outillage officiel de sauvegarde d'agents Cloud existe — et il est testé.**
+Le dépôt fournit une skill `backing-up-cloud-agents` avec un script (`cloud-agent.ts`) qui exporte les réglages d'un agent, ses messages de contexte et **l'historique Git complet de sa mémoire** vers un dossier privé, puis sait **recréer un agent neuf** à partir de ce backup.
+
+- Export : `GET /v1/agents/{id}` + `GET /v1/messages/{id}` + accès Git authentifié sur `/v1/git/{agent-id}/state.git`.
+- Restauration : `POST /v1/agents` (corps allowlisté, `initial_message_sequence` vide) puis clone/push Git et `POST /v1/agents/{id}/recompile`.
+- Garde-fous documentés : refus d'écraser un dossier existant, jamais de `git push --force`, **aucun retry automatique** d'une création potentiellement aboutie, ID imprimé avant toute étape pouvant échouer.
+- Couverture et exclusions explicitées (`references/format.md`) : secrets, outils, connexions, dépôts partagés, schedules, mémoire archival et **historique de messages** ne sont **pas** restaurés.
+
+️ **Conséquence pour §10.4** : la sauvegarde des ressources n'est plus un travail artisanal à concevoir, c'est une **opération déléguée à l'outil officiel**, à exécuter avant la fermeture. Un workflow CI (`cloud-agent-backup.yml`) et des tests sont fournis, ce qui en fait un artefact maintenable.
+
+**c) Le chemin de secours v1 ne peut plus accueillir de nouveaux agents.**
+La restauration **crée un nouvel agent Cloud** — ce qui est précisément le sens de « v1 → v2 ». Si les routes historiques se ferment, **le rollback ne peut pas créer un agent v1 de remplacement**.
+
+➡️ **La §9-A change de nature.** « Partager les agents v1 ou en créer des dédiés » n'est plus un arbitrage d'isolation : **créer un agent côté ancien chemin est un cul-de-sac**. Les essais SDK doivent donc utiliser des agents récents, et la préservation du v1 doit porter sur des **agents existants** dont la mémoire est sauvegardée, pas sur une capacité de recréation.
+
+**d) Ordre obligatoire : transport d'abord, mémoire ensuite.**
+Le guide insiste : l'API v1 et le SDK écrivent dans **deux magasins de mémoire différents** (blocs classiques côté v1, Git/MemFS côté SDK). La conversion de blocs legacy vers des fichiers `system/<label>.md` est un outil **distinct** (skill `migrating-v1-postgres-agents`), réservé à l'ancien serveur Python et à son backend local.
+
+➡️ **Le SDK ne peut donc pas lire la mémoire des agents historiques.** Tant que le transport v1 reste actif, il lit des blocs ; dès qu'il bascule sur le SDK, il lit un dépôt Git. Migrer le transport avant d'avoir **matérialisé la connaissance** côté Git produirait des agents SDK **sans instructions**, c'est-à-dire des générations silencieusement dégradées.
+
+➡️ Conséquence de séquencement, cohérente avec la §10.2 : dans la vague **V2**, PR-01 (matérialisation de la connaissance) **bloque** PR-09.
+
+**e) Le SDK évolue vite — épingler et revalider.**
+L'exemple officiel du guide épingle `@letta-ai/letta-agent-sdk@0.2.6`, alors que le registre npm publiait `0.8.11` le 16/09/2026 (et `0.8.3` le 01/09, seule version satisfaisant notre délai de maturité). Les API du SDK ont donc bougé entre les deux. La revalidation de la version retenue prévue dans PR-03 reste **obligatoire** : les extraits du guide sont indicatifs, pas normatifs pour notre version.
+
+**f) Précautions opérationnelles de l'outil de sauvegarde.**
+D'après sa documentation, un export **n'est pas une transaction** :
+
+- il faut **mettre l'agent en pause** (arrêter les tours, les éditions de mémoire et les activités planifiées) — le script détecte les changements entre ses lectures mais **ne peut pas prendre un instantané atomique** ;
+- le dossier de sortie doit être **privé et hors dépôt** : les messages et la mémoire peuvent contenir des secrets écrits par des personnes ou des agents ;
+- l'export ne lit que **le chat principal** (`agent.message_ids`), pas toutes les conversations ;
+- un échec de restauration **peut laisser un agent partiel derrière lui**, jamais supprimé automatiquement.
+
+**g) Compétence à acquérir.**
+La skill officielle est structurée `SKILL.md` + `references/` + `scripts/`, donc directement installable et auditables. Elle doit être intégrée à la vague **V1** plutôt que réécrite.
 
 ---
 
@@ -298,16 +350,22 @@ Champs minimaux suggérés pour `ai_operations` : `purpose_key`, `runtime`, `age
 - Documenter la fenêtre de support de l'API historique et le mode dégradé.
 - Identifier les sources éditoriales faisant autorité.
 - Séparer explicitement : décisions validées / hypothèses / questions de faisabilité.
+- **Intégrer l'outil officiel de sauvegarde d'agents Cloud** (skill `backing-up-cloud-agents` du guide Letta v1→v2, §3.4-b) plutôt que d'écrire un exporteur maison.
+- **Sonder les routes historiques** encore utilisées par le code (détection en continu, §10.5).
 
 **Critères d'acceptation**
 - [ ] **Statut d'obsolescence écrite dans le document lui-même** : en-tête de dépréciation, remplacement indiqué, procédure de récupération de l'inventaire vers le nouveau foyer. Ne pas laisser un plan obsolète comme source d'autorité par défaut.
 - [ ] **Balisage des ressources gelées** : marquer sur chaque ressource Letta Cloud (blocs mémoire, agents) sa date de dernière synchronisation avec le dépôt et sa nature figée, ainsi que **la procédure de récupération en cas de fermeture de l'API**. C'est le livrable immédiat le plus utile.
+- [ ] **Export de sauvegarde réalisé pour chaque agent de production** via l'outil officiel, agents en pause, dossiers privés hors dépôt (§10.4).
+- [ ] **Restauration prouvée** dans un agent neuf, avec les exclusions connues (messages, secrets, outils, connexions, dépôts partagés, schedules, mémoire archival) listées pour PR-20.
+- [ ] **Route `folders` confirmée morte** et absence d'usage dans le code (déjà vérifié le 18/09 : aucun usage).
+- [ ] **Sonde des routes historiques** en place, avec alerte avant impact production.
 - [ ] Matrice complète des parcours : actifs, dormants, à retirer.
 - [ ] IDs d'agents, langues et modèles réconciliés avec la configuration réellement déployée.
 - [ ] Sources de connaissance identifiées et statut de chacune explicité.
 - [ ] Aucun changement d'agent de production.
 
-**Dépendances :** aucune.
+**Dépendances :** aucune. **Bloque PR-09** (§3.4-d).
 
 #### PR-02 — `test(agents): établir les références de non-régression`
 
@@ -452,7 +510,7 @@ Champs minimaux suggérés pour `ai_operations` : `purpose_key`, `runtime`, `age
 - [ ] Aucune approbation interactive susceptible de bloquer indéfiniment un traitement serveur.
 - [ ] `resumeSession` après fermeture inattendue couvert par un test.
 
-**Dépendances :** PR-03 à PR-08.
+**Dépendances :** PR-03 à PR-08, **et PR-01 (bloquant)**. La connaissance doit être matérialisée côté Git avant qu'un adaptateur SDK ne lise une mémoire : l'API historique et le SDK écrivent dans deux magasins différents (§3.4-d). Sans PR-01, l'agent SDK démarre **sans instructions** et produit des sorties dégradées de façon silencieuse.
 
 #### PR-10 — `feat(agents): tracer les exécutions et leur consommation`
 
@@ -826,7 +884,7 @@ Le corpus, la baseline et le spike peuvent avancer **en parallèle**. Les parcou
 
 | # | Décision | Recommandation |
 |---|---|---|
-| A | **Isolation des agents de secours** — utiliser des agents dédiés au SDK, ou partager les agents v1 ? | Agents SDK dédiés si l'isolation n'est pas démontrable. |
+| A | **Isolation des agents de secours** — utiliser des agents dédiés au SDK, ou partager les agents v1 ? **Ne peut plus être résolu en créant des agents côté v1** (§3.4-c). | Sauvegarder la mémoire des agents v1 existants ; agents récents pour les essais SDK. |
 | B | **Gel fonctionnel** — qmd/retrieval, regroupement des traducteurs, réactivation du fan-out | Différer en projets distincts. |
 | C | **Fenêtre de secours v1** — durée et disponibilité | **Contrainte externe, pas un choix du projet** : la fermeture est imminente et sans date ferme. Le chemin v1 doit être préservé à chaque étape, mais **aucune période de confort ne peut être planifiée**. Voir §10. |
 | D | **Backend SDK** — `cloud` avec sandbox géré, `cloud` + `computer`, ou `remote` (App Server) | À trancher sur les résultats de PR-03 : latence, coût, sécurité, et localisation de l'exécution des outils. |
@@ -841,7 +899,7 @@ Le corpus, la baseline et le spike peuvent avancer **en parallèle**. Les parcou
 
 ---
 
-## 10. Contrainte de calendrier — fermeture imminente de l'API historique
+## 10. Contrainte de calendrier — retrait progressif et imminence de l'API historique
 
 > **Fait** : Luis a indiqué le 17/09/2026 qu'il n'y a **pas de date ferme**, mais que la fermeture de l'API historique est **pour bientôt**.
 > **Conséquence** : toute phase conditionnée à « deux semaines de production stables » n'est plus planifiable en l'état. Ce n'est pas une défaillance du plan : c'est une **contrainte externe** à absorber.
@@ -866,7 +924,7 @@ Répartition recommandée :
 | Vague | Contenu | Justification |
 |---|---|---|
 | **V1 — Sauvegarde** | PR-01 (inventaire + extraction des ressources) | Irréversible si manquée |
-| **V2 — Minimum viable sécurisé** | PR-04, PR-05, PR-09 | Route de secours contrôlée + adaptateur SDK fonctionnel |
+| **V2 — Minimum viable sécurisé** | PR-01, PR-04, PR-05, PR-09 — **PR-01 bloque PR-09** (§3.4-d) | Route de secours contrôlée + adaptateur SDK fonctionnel, avec connaissance matérialisée côté Git |
 | **V3 — Sécurité des données** | PR-06, PR-07, PR-08 | Peut suivre la bascule du transport **si et seulement si** l'activation reste manuelle, à faible volume, sur des fiches contrôlées |
 | **V4 — Qualité et généralisation** | PR-02, PR-03, PR-10 … PR-21 | Peut continuer après la bascule |
 
@@ -895,19 +953,40 @@ Dès que Letta annonce une date — **ou** si aucun calendrier n'est fourni sous
 ### 10.4 Plan de sauvegarde des ressources (à faire **avant** tout autre travail)
 
 1. Inventorier les agents de production : IDs, modèles, dates de dernière synchronisation.
-2. Extraire le contenu réel des blocs mémoire / consignes / personas, avec sa provenance exacte.
-3. Marquer chaque ressource : contenu du dépôt / dérivé / figé / obsolète.
-4. Stocker ces extraits **hors** des ressources gelées, dans le corpus documentaire versionné.
-5. Documenter la procédure de récupération si l'API n'est plus accessible.
-6. Faire relire le contenu extrait par les référents éditoriaux : un export non vérifié reste un export non fiable.
+2. **Acquérir l'outil officiel** `backing-up-cloud-agents` (skill du guide Letta v1→v2, §3.4-b) plutôt que d'écrire un exporteur maison.
+3. **Mettre chaque agent en pause** avant l'export : arrêter les tours, les éditions de mémoire et les activités planifiées, puis attendre la fin des pushs de mémoire en attente (l'outil n'est pas transactionnel).
+4. Exporter vers un dossier **privé, hors dépôt et hors checkout de mémoire partagée** : messages, métadonnées et mémoire peuvent contenir des secrets.
+5. Extraire le contenu réel des blocs mémoire / consignes / personas, avec sa provenance exacte.
+6. Marquer chaque ressource : contenu du dépôt / dérivé / figé / obsolète.
+7. **Restaurer l'export dans un agent neuf** pour prouver que la restauration fonctionne — ne pas se contenter d'un export non testé.
+8. Conserver l'agent original et le backup jusqu'à validation de l'agent restauré.
+9. Faire relire le contenu extrait par les référents éditoriaux : un export non vérifié reste un export non fiable.
+
+> ⚠️ **Ce que l'outil ne restaure pas** (documenté par le guide) : les messages, les secrets, les outils, les connexions, les dépôts de mémoire partagée, les schedules et la mémoire archival. Ces éléments doivent être reconfigureés manuellement — à intégrer à la procédure de PR-20.
 
 > **Sans cette sauvegarde, la migration peut réussir techniquement et perdre la connaissance métier.** C'est le risque principal du projet dans ce contexte de calendrier.
+
+### 10.5 Détection en continu des coupures d'API
+
+Puisque le retrait est **incrémental** (une route historiquement documentée est déjà en HTTP 400 depuis le 17/07/2026, §3.4-a) et non un basculement unique :
+
+1. Ajouter une **sonde** qui vérifie périodiquement que les routes historiques encore utilisées par le code répondent.
+2. Alerter l'équipe dès qu'une route passe en erreur **avant** que la production ne la rencontre.
+3. Reclasser immédiatement la vague correspondante en urgence.
+4. Documenter les routes déjà mortes pour éviter de les re-découvrir en incident.
+
+C'est la protection la plus utile contre l'absence de date ferme : on ne peut pas planifier la fermeture, mais on peut **la détecter en avance**.
 
 ---
 
 ## 11. Annexe — Sources et limites de l'analyse
 
 ### Sources officielles consultées (17/09/2026)
+
+- Guide officiel de migration v1 → v2 (dépôt Letta) — <https://github.com/letta-ai/agent-v1-to-v2-migration-guide> (examiné le 18/09/2026, commit `61693d0`)
+  - Migration dossiers → dépôts — `filesystem/README.md`, `filesystem/v1_example.ts`, `filesystem/v2_example.ts`
+  - Sauvegarde et restauration d'agents Cloud — `.agents/skills/backing-up-cloud-agents/SKILL.md` + `references/format.md`
+  - Migration d'agents PostgreSQL → backend local — `.agents/skills/migrating-v1-postgres-agents/SKILL.md` + `references/format.md`
 
 - Vue d'ensemble de l'Agent SDK — <https://docs.letta.com/agent-sdk/index.md>
 - Déploiement, sandboxes et récupération après expiration — <https://docs.letta.com/agent-sdk/deployment/index.md>
