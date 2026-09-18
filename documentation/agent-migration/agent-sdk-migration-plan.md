@@ -195,6 +195,54 @@ D'après sa documentation, un export **n'est pas une transaction** :
 **g) Compétence à acquérir.**
 La skill officielle est structurée `SKILL.md` + `references/` + `scripts/`, donc directement installable et auditables. Elle doit être intégrée à la vague **V1** plutôt que réécrite.
 
+**h) La conversion des ressources legacy vers du markdown n'est pas couverte par les outils officiels.**
+
+C'est la **limite la plus importante** du guide pour notre cas. Le guide fournit deux voies de migration, et aucune ne traite notre situation :
+
+| Voie officielle | Source | Sortie | Nous concerne ? |
+|---|---|---|---|
+| `backing-up-cloud-agents` | Agent Cloud récent (mémoire **Git**) | Agent neuf + mémoire Git intacte | Partiellement : nos agents v1 ont une mémoire en **blocs**, pas en Git |
+| `migrating-v1-postgres-agents` | Base **PostgreSQL** du serveur Python retiré | Backend local + fichiers `system/<label>.md` | Non : nous n'avons pas accès à cette base |
+
+La skill `migrating-v1-postgres-agents` **contient bien la logique de conversion qui nous manque** — blocs → `system/<label>.md` avec frontmatter `description` — mais elle **lit directement les tables PostgreSQL** du serveur historique. Elle n'accepte ni fichier intermédiaire ni export JSON en entrée.
+
+**Elle confirme cependant le standard de sortie à viser**, ce qui est précieux : un bloc legacy devient un fichier markdown
+
+```markdown
+---
+description: "<description du bloc>"
+---
+
+<valeur du bloc>
+```
+
+placé sous `system/` (les labels déjà préfixés par `system/` sont conservés), et l'ensemble forme un **dépôt Git avec un commit d'import**. C'est exactement le format auquel un agent SDK s'attend pour lire ses instructions.
+
+#### Trois voies d'obtention possibles
+
+| Voie | Principe | Avantages | Risques |
+|---|---|---|---|
+| **A — Depuis les documents originaux** | Reconstituer consignes et références à partir des sources éditoriales, hors Letta | Source de vérité indépendante de la plateforme ; pas de dépendance à une API en fin de vie ; relecture éditoriale naturelle ; aucun code de conversion à maintenir | **Nécessite de vérifier l'écart** entre le document d'origine et ce qui a réellement été injecté dans les agents. Un écart silencieux produirait des agents « conformes au document » mais différents de la production |
+| **B — Depuis une sauvegarde d'agent** | Exporter l'état de l'agent, puis convertir blocs → markdown | **Fidèle à ce qui tourne réellement** ; outillage d'export déjà fourni ; traçable | La conversion blocs → markdown **n'est pas fournie** : petit script à écrire (~50 lignes, le format cible est documenté ci-dessus). **À vérifier avant de s'y fier** : la structure exacte des blocs renvoyée par l'API d'export, et l'accessibilité de la mémoire d'un agent v1 en Git |
+| **C — Copier-coller depuis l'ADE** | Lecture manuelle dans l'interface Letta, recopie dans des fichiers | Fonctionne toujours, indépendamment de toute API | Erreur de transcription non détectable ; aucun diff possible ; non répétable ; **perd la traçabilité** |
+
+> **Recommandation : A comme cible, B comme filet immédiat.**
+> La voie A est la plus propre à terme, mais elle demande une **vérification d'écart** qui prend du temps — temps que l'imminence de la fermeture ne garantit pas. La voie B est rapide et fidèle. Les combiner donne le meilleur des deux : **B pour sauver maintenant**, **A pour reconstruire proprement ensuite**, avec une comparaison entre les deux comme contrôle qualité.
+> La voie C ne doit servir que de **dernier recours**, si A et B échouent toutes les deux.
+
+#### Action immédiate recommandée
+
+Avant de choisir définitivement, une **sonde à faible coût** sur un seul agent non critique :
+
+1. exporter l'agent avec l'outil officiel ;
+2. inspecter `agent.json` : les blocs de mémoire sont-ils présents et lisibles ?
+3. vérifier si la mémoire de l'agent est accessible en Git sur `/v1/git/{agent-id}/state.git` ;
+4. si les blocs sont exploitables, écrire la conversion minimale et **comparer le résultat** au contenu attendu côté éditorial.
+
+Le résultat de cette sonde détermine la voie pour l'ensemble des agents, et **conditionne PR-01** (§10.4). Elle doit être traitée avant tout travail sur le transport (§3.4-d).
+
+> ️ **Point d'attention sur l'ordre.** Cette conversion alimente `PR-01`, qui **bloque `PR-09`**. Autrement dit : sans conversion des ressources, l'adaptateur SDK ne peut pas produire d'agents correctement instruits. La conversion n'est donc pas une tâche documentaire annexe, c'est un **prérequis technique**.
+
 ---
 
 ## 4. Ce que change réellement Letta Agent SDK
@@ -357,6 +405,11 @@ Champs minimaux suggérés pour `ai_operations` : `purpose_key`, `runtime`, `age
 - [ ] **Statut d'obsolescence écrite dans le document lui-même** : en-tête de dépréciation, remplacement indiqué, procédure de récupération de l'inventaire vers le nouveau foyer. Ne pas laisser un plan obsolète comme source d'autorité par défaut.
 - [ ] **Balisage des ressources gelées** : marquer sur chaque ressource Letta Cloud (blocs mémoire, agents) sa date de dernière synchronisation avec le dépôt et sa nature figée, ainsi que **la procédure de récupération en cas de fermeture de l'API**. C'est le livrable immédiat le plus utile.
 - [ ] **Export de sauvegarde réalisé pour chaque agent de production** via l'outil officiel, agents en pause, dossiers privés hors dépôt (§10.4).
+- [ ] **Sonde de conversion exécutée sur un agent non critique** (§3.4-h) : les blocs de mémoire sont-ils lisibles dans l'export, et la mémoire de l'agent est-elle accessible en Git ?
+- [ ] **Voie de conversion arbitrée** (A documents originaux / B sauvegarde / C copier-coller) et **justifiée par écrit**. La logique officielle de conversion blocs → `system/<label>.md` est documentée, mais elle lit PostgreSQL : si elle n'est pas réutilisable, notre propre conversion doit être écrite.
+- [ ] **Ressources des agents v1 converties en markdown** au format `system/<label>.md` avec frontmatter `description`, dans un dépôt Git versionné.
+- [ ] **Écart documenté** entre les ressources converties et les documents d'origine, autrement dit : l'écart entre ce qui a réellement tourné en production et la source éditoriale de référence.
+- [ ] **Relecture éditoriale** des ressources converties effectuée par un référent.
 - [ ] **Restauration prouvée** dans un agent neuf, avec les exclusions connues (messages, secrets, outils, connexions, dépôts partagés, schedules, mémoire archival) listées pour PR-20.
 - [ ] **Route `folders` confirmée morte** et absence d'usage dans le code (déjà vérifié le 18/09 : aucun usage).
 - [ ] **Sonde des routes historiques** en place, avec alerte avant impact production.
@@ -393,7 +446,7 @@ Champs minimaux suggérés pour `ai_operations` : `purpose_key`, `runtime`, `age
 
 **Critères d'acceptation**
 - [ ] Preuve de compatibilité de la version choisie (pas seulement lecture des types).
-- [ ] Vérification qu'un contenu de skill/mémoire est **réellement accessible** dans le sandbox.
+- [ ] Vérification qu'un contenu de **skill** est réellement accessible dans le sandbox — c'est-à-dire que le mécanisme de chargement fonctionne, indépendamment de notre contenu, qui arrive en PR-11.
 - [ ] Aucun appel payant ni effet métier déclenché depuis les routes de production.
 - [ ] Décision écrite **go / no-go**.
 
@@ -416,6 +469,7 @@ Champs minimaux suggérés pour `ai_operations` : `purpose_key`, `runtime`, `age
 - [ ] Comportement métier inchangé ; baseline PR-02 conservée.
 - [ ] Aucun objet client/session transporté dans les arguments persistés d'un workflow.
 - [ ] Les types d'API-first permettent un bundling compatible Vercel.
+- [ ] **Interface de fourniture de connaissance définie** : chaque parcours déclare quel contenu d'instruction il attend (nom de skill, fichier de mémoire, ou identifiant de dépôt), sans présumer du SDK. L'implémentation de l'adaptateur est fournie en PR-11.
 
 **Dépendances :** PR-02. Peut avancer en parallèle du spike.
 
@@ -500,6 +554,7 @@ Champs minimaux suggérés pour `ai_operations` : `purpose_key`, `runtime`, `age
 - Erreurs typées, politique de retry bornée, reprise documentée.
 - Liste d'outils explicite et politique de permission.
 - `otid` pour la corrélation des envois.
+- **Fourniture effective de la connaissance** déclarée par l'interface de PR-04, à partir du contenu produit en PR-11.
 
 **Critères d'acceptation**
 - [ ] SDK désactivé par défaut.
@@ -509,8 +564,9 @@ Champs minimaux suggérés pour `ai_operations` : `purpose_key`, `runtime`, `age
 - [ ] Aucun outil d'écriture métier ni secret de base exposé au modèle.
 - [ ] Aucune approbation interactive susceptible de bloquer indéfiniment un traitement serveur.
 - [ ] `resumeSession` après fermeture inattendue couvert par un test.
+- [ ] **Une session SDK réelle voit les instructions du parcours** — vérifié par un test, pas par lecture de configuration. Sans cette assertion, un adaptateur peut être « vert » tout en produisant des agents non instruits.
 
-**Dépendances :** PR-03 à PR-08, **et PR-01 (bloquant)**. La connaissance doit être matérialisée côté Git avant qu'un adaptateur SDK ne lise une mémoire : l'API historique et le SDK écrivent dans deux magasins différents (§3.4-d). Sans PR-01, l'agent SDK démarre **sans instructions** et produit des sorties dégradées de façon silencieuse.
+**Dépendances :** PR-03 à PR-08, **PR-01 (bloquant) et PR-11 (bloquant)**. La connaissance doit être matérialisée côté Git avant qu'un adaptateur SDK ne lise une mémoire : l'API historique et le SDK écrivent dans deux magasins différents (§3.4-d). Sans PR-01 ni PR-11, l'agent SDK démarre **sans instructions** et produit des sorties dégradées de façon silencieuse.
 
 #### PR-10 — `feat(agents): tracer les exécutions et leur consommation`
 
@@ -530,7 +586,7 @@ Champs minimaux suggérés pour `ai_operations` : `purpose_key`, `runtime`, `age
 #### PR-11 — `feat(agents): versionner et distribuer la connaissance éditoriale`
 
 **Contenu**
-- Récupération contrôlée des consignes et ressources faisant autorité.
+- Récupération contrôlée des consignes et ressources faisant autorité, selon la voie arbitrée en PR-01 (documents originaux / sauvegarde d'agent / copier-coller — §3.4-h).
 - Skills audit, rédaction, métadonnées, traduction, avec leurs références.
 - Distribution via mémoire agent et/ou dépôts de mémoire partagée.
 - Manifeste de release et procédure de restauration.
@@ -540,11 +596,13 @@ Champs minimaux suggérés pour `ai_operations` : `purpose_key`, `runtime`, `age
 - [ ] Un corpus vide ou incomplet fait **échouer** la validation (le validateur actuel ne détecte pas un corpus vide).
 - [ ] Les brouillons historiques ne sont pas présentés comme des exports de production.
 - [ ] Chaque skill est effectivement accessible dans une session SDK réelle.
+- [ ] **Le contenu fourni répond à l'interface déclarée en PR-04** : chaque parcours reçoit bien la connaissance qu'il attend.
+- [ ] **Format `system/<label>.md` respecté** pour les ressources issues de blocs legacy, avec frontmatter `description` (§3.4-h).
 - [ ] Connaissance normative en lecture seule pour les agents lorsque c'est possible.
 - [ ] Aucune modification de l'agent de secours sans procédure réversible vérifiée.
 - [ ] Dérive du dashboard contrôlée pendant la bascule (gel ou détection explicite).
 
-**Dépendances :** PR-01, PR-03. Peut avancer en parallèle de la phase 1.
+**Dépendances :** PR-01 (**bloquant** : la conversion des ressources en est le livrable), PR-03, PR-04 (l'interface de fourniture doit exister avant le contenu). Peut avancer en parallèle de la phase 1.
 
 #### PR-12 — `feat(agents): rendre la validation des métadonnées déterministe`
 
@@ -923,8 +981,8 @@ Répartition recommandée :
 
 | Vague | Contenu | Justification |
 |---|---|---|
-| **V1 — Sauvegarde** | PR-01 (inventaire + extraction des ressources) | Irréversible si manquée |
-| **V2 — Minimum viable sécurisé** | PR-01, PR-04, PR-05, PR-09 — **PR-01 bloque PR-09** (§3.4-d) | Route de secours contrôlée + adaptateur SDK fonctionnel, avec connaissance matérialisée côté Git |
+| **V1 — Sauvegarde et conversion** | PR-01 (inventaire, export officiel, **conversion en markdown**) | Irréversible si manquée : au-delà de la fermeture, la connaissance legacy n'est plus récupérable |
+| **V2 — Minimum viable sécurisé** | PR-04, PR-05, PR-11, PR-09 — **PR-01 bloque PR-09**, **PR-04 déclare l'interface**, **PR-11 fournit le contenu** | Secours contrôlé + adaptateur SDK capable de lire la connaissance convertie |
 | **V3 — Sécurité des données** | PR-06, PR-07, PR-08 | Peut suivre la bascule du transport **si et seulement si** l'activation reste manuelle, à faible volume, sur des fiches contrôlées |
 | **V4 — Qualité et généralisation** | PR-02, PR-03, PR-10 … PR-21 | Peut continuer après la bascule |
 
@@ -960,11 +1018,15 @@ Dès que Letta annonce une date — **ou** si aucun calendrier n'est fourni sous
 6. Marquer chaque ressource : contenu du dépôt / dérivé / figé / obsolète.
 7. **Restaurer l'export dans un agent neuf** pour prouver que la restauration fonctionne — ne pas se contenter d'un export non testé.
 8. Conserver l'agent original et le backup jusqu'à validation de l'agent restauré.
-9. Faire relire le contenu extrait par les référents éditoriaux : un export non vérifié reste un export non fiable.
+9. **Convertir les ressources en markdown** au format attendu par le SDK : `system/<label>.md` avec frontmatter `description` (§3.4-h). C'est l'étape qui rend la connaissance **lisible par les nouveaux agents** — sans elle, la sauvegarde préserve un contenu inexploitable.
+10. **Sonder la faisabilité de la conversion** sur un agent non critique avant de traiter l'ensemble (§3.4-h).
+11. Faire relire le contenu extrait par les référents éditoriaux : un export non vérifié reste un export non fiable.
 
-> ⚠️ **Ce que l'outil ne restaure pas** (documenté par le guide) : les messages, les secrets, les outils, les connexions, les dépôts de mémoire partagée, les schedules et la mémoire archival. Ces éléments doivent être reconfigureés manuellement — à intégrer à la procédure de PR-20.
+> ️ **Ce que l'outil ne restaure pas** (documenté par le guide) : les messages, les secrets, les outils, les connexions, les dépôts de mémoire partagée, les schedules et la mémoire archival. Ces éléments doivent être reconfigureés manuellement — à intégrer à la procédure de PR-20.
 
 > **Sans cette sauvegarde, la migration peut réussir techniquement et perdre la connaissance métier.** C'est le risque principal du projet dans ce contexte de calendrier.
+
+> ️ **Une sauvegarde n'est pas une migration.** Exporter l'état d'un agent protège le contenu, mais ne le rend pas exploitable par un agent SDK : l'API historique et le SDK lisent **deux magasins de mémoire différents** (blocs vs Git). La conversion vers `system/<label>.md` est donc une étape à part entière, pas un détail de l'export.
 
 ### 10.5 Détection en continu des coupures d'API
 
