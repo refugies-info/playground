@@ -176,9 +176,11 @@ Trois drifts sont désormais **résolus** :
 
 Le prompt de `traducteur_ti` (`agent-f59e9249`, 12 522 c.) est **octet pour octet identique** à celui de l'agent « Code Review » (`agent-97d0fefa`). Il ne contient **aucune** mention de traduction, de langue ou de document.
 
-C'est la copie accidentelle d'un prompt de revue de code dans un agent de traduction — probablement lors d'une opération de copie entre agents. Les traductions tigrinya sont donc produites avec un prompt inadapté.
+C'est la copie accidentelle d'un prompt de revue de code dans un agent de traduction.
 
-> ⚠️ **À vérifier avant toute migration** : cet agent a-t-il produit des traductions en production ? Si oui, il faut déterminer l'impact éditorial. Le prompt inadapté n'empêche pas nécessairement la traduction (la commande `/translate` et le document arrivent par message utilisateur, cf. ci-dessous), mais il change le comportement attendu.
+> ✅ **Impact révisé le 18/09/2026** : après clonage de la mémoire de l'agent, la traduction
+> s'avère pilotée par une **skill dédiée et correcte**. Voir « L'anomalie `traducteur_ti`
+> n'affecte pas les traductions » ci-dessous. Le défaut reste à corriger, sans urgence.
 
 #### Où vit réellement la connaissance
 
@@ -196,64 +198,143 @@ La structure est donc :
 
 **Conséquence importante pour PR-11** : le dépôt `packages/agents/src/prompts.ts` ne contient que les quatre chaînes `/<commande>`. La *vraie* connaissance vit dans la mémoire des agents, et elle est **lisible via l'API des messages**. C'est la source à extraire — pas le fichier de constantes.
 
-#### Les « ressources fichier gelées » ne sont plus accessibles
+#### ✅ La mémoire des agents est accessible en Git — découverte majeure
 
-Testé le 18/09/2026 — les routes correspondantes renvoient **404** :
+Le guide officiel de migration documente un accès Git direct à la mémoire des agents
+(`https://api.letta.com/v1/git/{agent-id}/state.git`). **Testé et fonctionnel le 18/09/2026
+avec la clé fournie par Luis : les huit agents de production ont pu être clonés.**
+
+C'est la source qui manquait : **la mémoire réellement en contexte**, et non des
+brouillons du dépôt ni des blocs orphelins.
+
+```bash
+git clone --single-branch --branch main --no-tags \
+  "https://api.letta.com/v1/git/agent-{id}/state.git" ./{agent}
+```
+
+| Agent | Agent ID | Commits | Fichiers | Taille | Dernière modif. |
+|---|---|---|---|---|---|
+| `agathe` | `bd542fe1` | 14 | 20 | 60,8 Ko | 2026-08-18 |
+| `ti` | `f59e9249` | 9 | 7 | 33,8 Ko | 2026-06-17 |
+| `uk` | `add8dcc9` | 2 | 2 | 16,4 Ko | 2026-06-02 |
+| `ar_v2` | `9b1e38aa` | 6 | 5 | 15,2 Ko | 2026-06-16 |
+| `en` | `d70a6911` | 8 | 7 | 15,0 Ko | 2026-06-16 |
+| `ps` | `42fb380d` | 8 | 5 | 13,8 Ko | 2026-06-16 |
+| `fa` | `09f186f2` | 7 | 5 | 13,3 Ko | 2026-06-16 |
+| `ru` | `4d7f539b` | 2 | 2 | 4,6 Ko | 2026-06-02 |
+
+**Total ≈ 176 Ko de connaissance métier**, avec l'historique Git complet.
+
+> **Le risque « perte définitive » identifié en §10.4 est donc levé** : la connaissance a
+> été exportée et versionnée. Le plan peut désormais traiter la conversion comme un
+> travail de qualité, plus comme une course contre la fermeture.
+
+#### ️ Deux générations de mémoire coexistent dans la production
+
+| Génération | Agents | Format |
+|---|---|---|
+| **Letta Code** (avec skills) | `agathe`, `ar_v2`, `en`, `fa`, `ps`, `ti` | `skills/<nom>/SKILL.md` + `references/` + `system/persona.md` + `system/human.md` |
+| **Héritée** (sans skills) | `ru`, `uk` | consignes en `system/*.md` uniquement |
+
+Conséquence directe pour PR-11 : **les deux formats doivent être supportés**. `ru` et `uk`
+portent leurs consignes dans `system/` (donc en contexte à chaque tour), les autres dans un
+skill chargeable. Une unification est souhaitable, mais elle change le comportement de
+chargement : à traiter comme une décision, pas comme une normalisation cosmétique.
+
+#### ✅ `metadata_schema` est récupérable — ma conclusion précédente était fausse
+
+`agathe/system/metadata_schema.md` (4 904 caractères) **existe dans la mémoire de l'agent**.
+Le bloc n'apparaissait dans aucun listing d'API, mais il vit dans le dépôt Git.
+
+Même constat pour l'ensemble des compétences d'Agathe :
+
+| Fichier | Taille |
+|---|---|
+| `compétence_métadonnées_di.md` | 10 724 c. |
+| `compétence_conformité_éditoriale_di.md` | 6 839 c. |
+| `règles_rédaction_langage_clair.md` | 6 448 c. |
+| `format_sortie_transformation.md` | 5 242 c. |
+| `compétence_routeur.md` | 5 189 c. |
+| `metadata_schema.md` | 4 993 c. |
+| `compétence_transformation_langage_clair.md` | 4 842 c. |
+| `compétence_détection_doublons.md` | 4 390 c. |
+| `format_sortie_metadonnées.md` | 2 806 c. |
+| `mémoire_vive_lexique.md` | 2 507 c. |
+| `contexte_équipe.md`, `format_sortie_global.md`, `project-*.md`, `trajama_agent.md`, `traduction.md`, `persona.md`, `human.md` | 258–1 685 c. |
+
+⚠️ **L'historique Git d'Agathe est daté et attribué**, ce qui permet de tracer chaque règle :
 
 ```
-GET /v1/files                                   → 404
-GET /v1/folders                                 → 404   (HTTP 400 documenté depuis le 17/07)
-GET /v1/sources                                 → 404
-GET /v1/agents/{id}/blocks                      → 404
-GET /v1/agents/{id}/sources                     → 404
-GET /v1/agents/{id}/folders                     → 404
-GET /v1/agents/{id}/files                       → 404
-GET /v1/agents/{id}/export                      → 404
+fb6c5c6 2026-08-18 Ajout de la règle modalitesEntreesSorties à l'Étape 5 (Julie)
+488085d 2026-08-05 Renforcer la règle zéro texte avant frontmatter
+c286beb 2026-06-25 fix: FLE toujours suffisant comme signal de rattrapage sémantique
+d9bff6b 2026-06-16 Renforcement de la règle location (départements hors IDF)
 ```
 
-Tous les agents ont `blocks: []`, `sources: []`, `tools: []`, `secrets: []`. Le gèle documenté au 15/06/2026 s'est donc transformé en **retrait effectif**.
+Un `metadata-schema-spec.ts` dans le dépôt (4 483 c.) est un **parent, pas un équivalent** :
+similarité de 47 % seulement. La version de production fait autorité.
 
-#### Ce qui est récupérable sans accès aux fichiers
+#### ✅ L'anomalie `traducteur_ti` n'affecte pas les traductions
 
-Inventaire des blocs orphelins : 199 blocs, **47 contenus distincts**, dont **23 artefacts de connaissance RI** (≈ 86 000 caractères) :
+Conclusion révisée. `traducteur_ti` porte **deux** mécanismes :
 
-| Artefact | Taille | Copies |
-|---|---|---|
-| MISSION (rédaction en langage clair) | 7 817 c. | **32** |
-| OUTPUT_FORMAT / format de sortie | 2 720 c. | **39** |
-| Analyse de 30 formations LHEO | 16 025 c. | 2 |
-| Rapport de dédoublonnage LHEO | 6 542 c. | 2 |
-| `compliance_guidelines` (3 variantes) | ~5 700 c. | 6+2 |
-| `<doublons>` (détection de doublons) | 5 772 c. | 8 |
-| `règles_rédaction_langage_clair` | 4 461 c. | 2 |
-| Compétences : routeur, conformité, doublons, transformation | 1 577–2 417 c. | 2 chacune |
-| Personas : Edwige (2), Margot | 506–837 c. | 2 chacune |
-| Contexte d'équipe RI | 1 468 c. | 4 |
-| Version DRAFT de blocs optimisés | 5 022 c. | 2 |
+1. un prompt système inadapté (copie d'un prompt de revue de code) ;
+2. **une skill complète et correcte** : `skills/translating-fr-tigrinya/SKILL.md`
+   (33,8 Ko avec son `references/pipeline.md`) — charte, glossaire FR→Tigrinya,
+   pipeline de QA en 7 étapes, plus `system/skills/translate-fr-tigrinya.md` en contexte.
 
-**Ces blocs sont orphelins** : ils appartiennent à `project-pZvdCSjhJ7Fgmi66gqgy`, où **aucun agent ne vit**. Les agents de production n'ont jamais eu de bloc `metadata_schema`, `compliance` ou `doublons` attaché.
+**La traduction est donc bien pilotée par une skill dédiée.** Le prompt inadapté est un
+défaut de propreté, pas une cause de dégradation identifiée. Il reste à corriger, sans
+urgence.
 
-#### Confrontation dépôt ↔ production
+#### 🔍 Autre problème de configuration : `ru` et `uk` n'ont aucune skill
 
-Deux fichiers du dépôt ressemblent à ces artefacts, mais ce sont **des brouillons** :
+`ru` et `uk` sont actifs (dernier run le 17/09) mais leurs consignes vivent uniquement en
+`system/`. Aucune skill n'est chargeable. C'est cohérent avec leur génération, mais cela
+signifie que **toute leur connaissance est en contexte à chaque tour** — coût en tokens plus
+élevé et aucun chargement paresseux possible.
 
-| Fichier | Marqueur | Similarité avec le bloc orphelin |
-|---|---|---|
-| `packages/agents/prompts/compliance.md` | `### Prompt V1 (draft)` en ligne 22 + wrapper `<base_instructions>` | **93,1 %** après retrait du wrapper et du marqueur |
-| `packages/agents/prompts/duplicates.md` | Wrapper `<base_instructions>` | **98,0 %** après retrait du wrapper |
+#### Les routes de ressources restent, elles, inaccessibles
 
-Le seul écart du `compliance.md` est une ligne de pied de page boilerplate (`Base instructions complete.`). Le contenu est donc **largement récupérable depuis le dépôt** — ce que la leçon `corpus-migration-staleness-checks` prescrivait précisément de vérifier avant de traiter un fichier marqué `draft` comme export de production.
+Testé le 18/09/2026 avec la clé rafraîchie (portée globale selon Luis) — **404 confirmés** :
+
+```
+GET /v1/files                → 404     GET /v1/agents/{id}/blocks   → 404
+GET /v1/folders              → 404     GET /v1/agents/{id}/sources  → 404
+GET /v1/sources              → 404     GET /v1/agents/{id}/files    → 404
+GET /v1/organizations        → 404     GET /v1/agents/{id}/export   → 404
+GET /v1/identities           → 404
+```
+
+Luis confirme que **`platform.letta.com` est passé en lecture seule**, que l'affichage des
+blocs y est déprécié et que **les ressources « File » ne sont plus disponibles dans
+l'interface**. C'est cohérent : ces routes sont retirées, pas seulement gelées.
+
+#### Les blocs orphelins : un patrimoine secondaire
+
+199 blocs dans `project-pZvdCSjhJ7Fgmi66gqgy` (47 contenus distincts, 23 artefacts RI,
+≈ 86 000 caractères). **Aucun agent n'y vit** — ils ne sont donc **pas** la source de la
+connaissance de production. Ils restent utiles comme **historique éditorial** (analyse LHEO,
+rapports de dédoublonnage, personas Margot/Edwige, contexte d'équipe), à conserver mais sans
+statut d'autorité.
+
+Deux fichiers du dépôt y correspondent à 93,1 % (`prompts/compliance.md`) et 98,0 %
+(`prompts/duplicates.md`) après retrait du wrapper `<base_instructions>` et du marqueur
+`### Prompt V1 (draft)`. La leçon `corpus-migration-staleness-checks` s'applique : ce sont
+des brouillons, à ne pas confondre avec les versions servies.
 
 #### Ce qui reste hors de portée
 
 | Élément | Statut |
 |---|---|
-| Ressources « File » historiquement poussées | ❌ **Inaccessibles** (404) — à confirmer avec Letta |
-| Contenu exact des 5 012 blocs si d'autres existent | ⚠️ Le endpoint `/v1/blocks` est paginé ; 199 ont été récupérés. À paginer complètement |
-| Mémoire des agents de production au-delà du `system_message` | ⚠️ Les blocs compilés sont visibles, mais leur **valeur source** ne l'est pas toujours |
-| Git/MemFS des agents |  Aucun endpoint accessible avec cette clé |
+| Ressources « File » historiques | ❌ Retirées de l'API **et** de l'interface |
+| Blocs mémoire attachés aux agents | ❌ Aucun agent n'en a — tout vit dans `system/` et `skills/` |
+| Autres conversations d'un agent | ⚠️ Le clonage ne prend que `main` par défaut |
+| Connaissance des agents inactifs (`ar`, `ti` homonyme) | ️ Leurs dépôts n'ont pas été clonés — à faire si un historique est jugé utile |
 
-**Verdict** : la connaissance éditoriale est **récupérable à ≈ 90 %** — via le dépôt (brouillons quasi identiques) et via l'API des messages (blocs compilés). Le risque « perte définitive » identifié en §10.4 est donc **nettement réduit**, mais il subsiste sur les ressources File historiques, désormais inaccessibles.
+**Verdict révisé** : la connaissance éditoriale est **intégralement sauvegardée**, y compris
+`metadata_schema`. L'accès Git a transformé un risque de perte en un simple travail de mise
+en forme.
 
 > ⚠️ **Ceci ne dispense pas de la sauvegarde.** Une connaissance reconstituée depuis un brouillon `draft` n'est pas une connaissance validée. La voie A de §3.4-h (documents originaux) reste la cible, la voie B devient **immédiatement praticable** puisque les sources sont accessibles.
 
@@ -340,7 +421,9 @@ placé sous `system/` (les labels déjà préfixés par `system/` sont conservé
 | **B — Depuis une sauvegarde d'agent** | Exporter l'état de l'agent, puis convertir blocs → markdown | **Fidèle à ce qui tourne réellement** ; outillage d'export déjà fourni ; traçable | La conversion blocs → markdown **n'est pas fournie** : petit script à écrire (~50 lignes, le format cible est documenté ci-dessus). **À vérifier avant de s'y fier** : la structure exacte des blocs renvoyée par l'API d'export, et l'accessibilité de la mémoire d'un agent v1 en Git |
 | **C — Copier-coller depuis l'ADE** | Lecture manuelle dans l'interface Letta, recopie dans des fichiers | Fonctionne toujours, indépendamment de toute API | Erreur de transcription non détectable ; aucun diff possible ; non répétable ; **perd la traçabilité** |
 
-> **Recommandation : A comme cible, B comme filet immédiat.**
+> ✅ **Mise à jour du 18/09/2026** : la voie B est **déjà réalisée** — l'accès Git de §3.5 a permis d'exporter l'intégralité de la mémoire des agents. Le choix se réduit à *unifier ou conserver* les deux formats existants.
+
+> **Recommandation initiale (conservée pour l'historique) : A comme cible, B comme filet immédiat.**
 > La voie A est la plus propre à terme, mais elle demande une **vérification d'écart** qui prend du temps — temps que l'imminence de la fermeture ne garantit pas. La voie B est rapide et fidèle. Les combiner donne le meilleur des deux : **B pour sauver maintenant**, **A pour reconstruire proprement ensuite**, avec une comparaison entre les deux comme contrôle qualité.
 > La voie C ne doit servir que de **dernier recours**, si A et B échouent toutes les deux.
 
@@ -1138,9 +1221,17 @@ Dès que Letta annonce une date — **ou** si aucun calendrier n'est fourni sous
 
 > ️ **Ce que l'outil ne restaure pas** (documenté par le guide) : les messages, les secrets, les outils, les connexions, les dépôts de mémoire partagée, les schedules et la mémoire archival. Ces éléments doivent être reconfigureés manuellement — à intégrer à la procédure de PR-20.
 
-> **Sans cette sauvegarde, la migration peut réussir techniquement et perdre la connaissance métier.** C'est le risque principal du projet dans ce contexte de calendrier.
+> **Sans cette sauvegarde, la migration aurait pu réussir techniquement et perdre la connaissance métier.** C'était le risque principal du projet — il est traité depuis le 18/09/2026 (ci-dessous).
 
-> ️ **Une sauvegarde n'est pas une migration.** Exporter l'état d'un agent protège le contenu, mais ne le rend pas exploitable par un agent SDK : l'API historique et le SDK lisent **deux magasins de mémoire différents** (blocs vs Git). La conversion vers `system/<label>.md` est donc une étape à part entière, pas un détail de l'export.
+> ✅ **Sauvegarde effectuée le 18/09/2026** (§3.5) : les huit agents de production ont été
+> clonés depuis `https://api.letta.com/v1/git/{agent-id}/state.git`, soit ≈ 176 Ko de
+> connaissance métier avec historique Git. **Le risque de perte définitive est levé.**
+
+> ⚠️ **Mais une sauvegarde n'est pas une migration.** La mémoire est déjà au format
+> Git/MemFS, donc directement exploitable par un agent SDK. Le travail restant est
+> d'**unifier les deux formats** qui coexistent en production — `skills/` pour six agents,
+> `system/` seul pour `ru` et `uk`. C'est une décision de conception, plus une course
+> contre la fermeture.
 
 ### 10.5 Détection en continu des coupures d'API
 
