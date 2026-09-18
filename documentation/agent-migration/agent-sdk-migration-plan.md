@@ -136,12 +136,126 @@ Cette route doit être **sécurisée ou retirée** indépendamment du choix de S
 | À vérifier | Pourquoi |
 |---|---|
 | Date de fermeture de l'API historique | **Confirmée comme imminente, sans date ferme** (Luis, 17/09/2026) — conditionne la durée du pont v1. Voir §10. |
-| Agents réellement utilisés en production (IDs, langues, modèles) | La configuration du code peut dériver du dashboard |
+| Agents réellement utilisés en production (IDs, langues, modèles) | ✅ **Résolu** — voir §3.5 |
 | Schéma réellement déployé vs migrations | Le comportement des triggers et contraintes doit être constaté |
 | Quels parcours IA sont réellement actifs en production | Le fan-out est désactivé dans le code : à confirmer côté exploitation |
 | Consommateurs réels de la route SSE | Décide entre correction et retrait |
-| Sources faisant autorité pour la connaissance éditoriale | Le corpus du dépôt est incomplet ; les brouillons locaux n'ont pas valeur de référence |
+| Sources faisant autorité pour la connaissance éditoriale | Le corpus du dépôt est incomplet ; les brouillons locaux n'ont pas valeur de référence — **état réel des ressources établi en §3.5** |
 | Limites d'exécution Vercel pour des tours de 1 à 3 minutes | Détermine la faisabilité (`maxDuration`, régions, cold start) |
+
+### 3.5 État réel des agents en production (audit API du 18/09/2026)
+
+Audit réalisé via l'API Letta avec `PLAYGROUND_LETTA_API_KEY`, projet par défaut `97c52a94-4e58-4226-9ac3-b000d1dcba78`. Les IDs fournis par Luis sont confirmés ; la liste contenait plus d'agents que l'inventaire du 15/06/2026.
+
+#### Agents actifs et éléments périmés
+
+| Agent | ID | Modèle | Prompt | Dernier run | Statut |
+|---|---|---|---|---|---|
+| **Agathe** | `agent-bd542fe1-…c9af` | `anthropic/claude-sonnet-4-6` | 4 164 c. | 17/09 16:39 | ✅ Actif |
+| Agathe-dev | `agent-8165c57b-…1168` | `letta/auto-chat` | identique | 07/09 | Expérimental |
+| traducteur_ar_v2 | `agent-9b1e38aa-…ce86` | `letta/auto` | 9 301 c. | 17/09 16:12 | ✅ Actif |
+| traducteur_en | `agent-d70a6911-…986a` | `letta/auto` | 9 301 c. | 17/09 16:12 | ✅ Actif |
+| traducteur_fa | `agent-09f186f2-…26` | `letta/auto` | 9 301 c. | 17/09 16:12 | ✅ Actif |
+| traducteur_ps | `agent-42fb380d-…6a7` | `letta/auto` | 9 301 c. | 17/09 16:13 | ✅ Actif |
+| traducteur_ti | `agent-f59e9249-…735` | `letta/auto` | **12 522 c.** | 17/09 16:15 | ⚠️ Voir anomalie |
+| traducteur_ru | `agent-4d7f539b-…c9f7` | `letta/auto` | 1 707 c. | 17/09 16:12 | ⚠️ Ancien prompt |
+| traducteur_uk | `agent-add8dcc9-…b59` | `letta/auto` | 1 707 c. | 17/09 16:12 | ⚠️ Ancien prompt |
+| traducteur_ar | `agent-c19d4b57-…24b` | `anthropic/claude-haiku-4-5` | 1 707 c. | **16/06** |  **Remplacé par `_v2`** |
+| traducteur_ti | `agent-00b19760-…f7b` | `anthropic/claude-sonnet-4-6` | 9 301 c. | 02/06 | ❌ **Doublon de nom, inactif** |
+| traducteur_uk_dev | `agent-2015ce50-…567` | `letta/auto` | 1 707 c. | 07/09 | Expérimental |
+| Code Review | `agent-97d0fefa-…911` | `letta/auto` | 12 522 c. | 18/09 06:33 | Hors périmètre RI |
+| Review-letta | `agent-38e3ff6d-…4bb` | `letta/auto` | 13 963 c. | jamais | Hors périmètre RI |
+
+Trois drifts sont désormais **résolus** :
+
+1. **`ar` → `ar_v2`** : l'agent `ar` n'a plus tourné depuis le 16/06 et `traducteur_ar_v2` a pris le relais. Le code pointe pourtant toujours vers `agent-9b1e38aa` sous la clé `ar` — c'est correct, mais le nom `_v2` n'existe nulle part dans le code.
+2. **`ti`, deux agents homonymes** : `traducteur_ti` (`f59e9249`, actif) et `traducteur_ti` (`00b19760`, inactif). Le code référence le second — **donc le mauvais**. C'était le soupçon d'août : maintenant prouvé.
+3. **`en` et `fa` ont bien un agent** : l'inventaire du 15/06 indiquait « pas d'agent dédié ». C'était faux — les deux existent, tournent (`letta/auto`), et sont correctement référencés dans le code. **Aucune clé de langue n'est orpheline.**
+
+#### Anomalie : `traducteur_ti` applique un prompt de revue de code
+
+Le prompt de `traducteur_ti` (`agent-f59e9249`, 12 522 c.) est **octet pour octet identique** à celui de l'agent « Code Review » (`agent-97d0fefa`). Il ne contient **aucune** mention de traduction, de langue ou de document.
+
+C'est la copie accidentelle d'un prompt de revue de code dans un agent de traduction — probablement lors d'une opération de copie entre agents. Les traductions tigrinya sont donc produites avec un prompt inadapté.
+
+> ⚠️ **À vérifier avant toute migration** : cet agent a-t-il produit des traductions en production ? Si oui, il faut déterminer l'impact éditorial. Le prompt inadapté n'empêche pas nécessairement la traduction (la commande `/translate` et le document arrivent par message utilisateur, cf. ci-dessous), mais il change le comportement attendu.
+
+#### Où vit réellement la connaissance
+
+Correction d'une lecture hâtive : la liste `/v1/agents` renvoie `blocks: []` pour tous, mais **la représentation runtime en contient**. Le `system_message` réel de `traducteur_en` fait **14 462 caractères** contre 9 301 pour `agent.system` au moment de la création : **+5 161 caractères compilés depuis la mémoire**.
+
+La structure est donc :
+
+| Emplacement | Contenu | Récupérable ? |
+|---|---|---|
+| `agent.system` | Prompt de base + scaffolding (`base_instructions`, mémoire, fichier) | ✅ `GET /v1/agents/{id}` |
+| Blocs compilés au runtime | `human`, `persona`, `project`, index de skills | ✅ via `GET /v1/agents/{id}/messages` (`system_message`) |
+| Blocs orphelins | 199 blocs dans `project-pZvdCSjhJ7Fgmi66gqgy` — **aucun agent n'y vit** | ✅ `GET /v1/blocks` |
+| Consigne de traduction | **Dans la mémoire de l'agent**, pas dans `prompts.ts` | ✅ via le `system_message` |
+| `metadata_schema` | **Introuvable** via `/v1/blocks` | ❌ N'existe que dans le repo (`metadata-schema-spec.ts`, 4 483 c.) |
+
+**Conséquence importante pour PR-11** : le dépôt `packages/agents/src/prompts.ts` ne contient que les quatre chaînes `/<commande>`. La *vraie* connaissance vit dans la mémoire des agents, et elle est **lisible via l'API des messages**. C'est la source à extraire — pas le fichier de constantes.
+
+#### Les « ressources fichier gelées » ne sont plus accessibles
+
+Testé le 18/09/2026 — les routes correspondantes renvoient **404** :
+
+```
+GET /v1/files                                   → 404
+GET /v1/folders                                 → 404   (HTTP 400 documenté depuis le 17/07)
+GET /v1/sources                                 → 404
+GET /v1/agents/{id}/blocks                      → 404
+GET /v1/agents/{id}/sources                     → 404
+GET /v1/agents/{id}/folders                     → 404
+GET /v1/agents/{id}/files                       → 404
+GET /v1/agents/{id}/export                      → 404
+```
+
+Tous les agents ont `blocks: []`, `sources: []`, `tools: []`, `secrets: []`. Le gèle documenté au 15/06/2026 s'est donc transformé en **retrait effectif**.
+
+#### Ce qui est récupérable sans accès aux fichiers
+
+Inventaire des blocs orphelins : 199 blocs, **47 contenus distincts**, dont **23 artefacts de connaissance RI** (≈ 86 000 caractères) :
+
+| Artefact | Taille | Copies |
+|---|---|---|
+| MISSION (rédaction en langage clair) | 7 817 c. | **32** |
+| OUTPUT_FORMAT / format de sortie | 2 720 c. | **39** |
+| Analyse de 30 formations LHEO | 16 025 c. | 2 |
+| Rapport de dédoublonnage LHEO | 6 542 c. | 2 |
+| `compliance_guidelines` (3 variantes) | ~5 700 c. | 6+2 |
+| `<doublons>` (détection de doublons) | 5 772 c. | 8 |
+| `règles_rédaction_langage_clair` | 4 461 c. | 2 |
+| Compétences : routeur, conformité, doublons, transformation | 1 577–2 417 c. | 2 chacune |
+| Personas : Edwige (2), Margot | 506–837 c. | 2 chacune |
+| Contexte d'équipe RI | 1 468 c. | 4 |
+| Version DRAFT de blocs optimisés | 5 022 c. | 2 |
+
+**Ces blocs sont orphelins** : ils appartiennent à `project-pZvdCSjhJ7Fgmi66gqgy`, où **aucun agent ne vit**. Les agents de production n'ont jamais eu de bloc `metadata_schema`, `compliance` ou `doublons` attaché.
+
+#### Confrontation dépôt ↔ production
+
+Deux fichiers du dépôt ressemblent à ces artefacts, mais ce sont **des brouillons** :
+
+| Fichier | Marqueur | Similarité avec le bloc orphelin |
+|---|---|---|
+| `packages/agents/prompts/compliance.md` | `### Prompt V1 (draft)` en ligne 22 + wrapper `<base_instructions>` | **93,1 %** après retrait du wrapper et du marqueur |
+| `packages/agents/prompts/duplicates.md` | Wrapper `<base_instructions>` | **98,0 %** après retrait du wrapper |
+
+Le seul écart du `compliance.md` est une ligne de pied de page boilerplate (`Base instructions complete.`). Le contenu est donc **largement récupérable depuis le dépôt** — ce que la leçon `corpus-migration-staleness-checks` prescrivait précisément de vérifier avant de traiter un fichier marqué `draft` comme export de production.
+
+#### Ce qui reste hors de portée
+
+| Élément | Statut |
+|---|---|
+| Ressources « File » historiquement poussées | ❌ **Inaccessibles** (404) — à confirmer avec Letta |
+| Contenu exact des 5 012 blocs si d'autres existent | ⚠️ Le endpoint `/v1/blocks` est paginé ; 199 ont été récupérés. À paginer complètement |
+| Mémoire des agents de production au-delà du `system_message` | ⚠️ Les blocs compilés sont visibles, mais leur **valeur source** ne l'est pas toujours |
+| Git/MemFS des agents |  Aucun endpoint accessible avec cette clé |
+
+**Verdict** : la connaissance éditoriale est **récupérable à ≈ 90 %** — via le dépôt (brouillons quasi identiques) et via l'API des messages (blocs compilés). Le risque « perte définitive » identifié en §10.4 est donc **nettement réduit**, mais il subsiste sur les ressources File historiques, désormais inaccessibles.
+
+> ⚠️ **Ceci ne dispense pas de la sauvegarde.** Une connaissance reconstituée depuis un brouillon `draft` n'est pas une connaissance validée. La voie A de §3.4-h (documents originaux) reste la cible, la voie B devient **immédiatement praticable** puisque les sources sont accessibles.
 
 > **Mise à jour du 18/09/2026 — apports du guide officiel `letta-ai/agent-v1-to-v2-migration-guide`.** Le plan ci-dessous a été revu sur quatre points structurants, détaillés en **§3.4** :
 > 1. **Certaines fonctionnalités** de la surface historique **sont déjà coupées en production** (pas seulement gelées) ;
