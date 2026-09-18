@@ -31,7 +31,8 @@
  * |------|-----------------------|----------------------------------------|
  * | 200  | flux SSE              | Génération démarrée                    |
  * | 400  | `{ error }`           | Body invalide                          |
- * | 401  | `{ error }`           | Non authentifié                        |
+ * | 401  | `{ error }`           | Absence de session valide              |
+ * | 503  | `{ error }`           | Supabase injoignable (pas un défaut d'auth) |
  * | 403  | `{ error }`           | Permission refusée sur ce workflow     |
  * | 404  | `{ error }`           | Workflow ou conversation introuvable   |
  * | 500  | `{ error }`           | Configuration serveur incomplète       |
@@ -63,6 +64,7 @@ import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
+import { getRedirectPath } from "@/lib/errors";
 import { verifyWorkflowPermission } from "@/services/permission-helper";
 
 export const runtime = "nodejs";
@@ -182,16 +184,40 @@ export async function POST(request: NextRequest) {
   const { flowId, content } = parseResult.data;
 
   // ─── 1. Authentification ──────────────────────────────────────────────────
-  // getCurrentUser redirige les cas d'auth en contexte React, mais lève une
-  // erreur dans un route handler : on la traite explicitement ici.
+  // `getCurrentUser` redirige vers `/login` (absence de session) ou vers
+  // `/service-unavailable` (Supabase injoignable, profil illisible). Une
+  // redirection n'a pas de sens dans un route handler : elle lève une
+  // exception qu'il faut interpréter explicitement.
+  //
+  // Les deux cas ne doivent PAS être confondus : présenter une panne
+  // d'infrastructure comme un défaut d'authentification ferait perdre du temps
+  // au diagnostic et fausserait la supervision.
+  const cookieStore = await cookies();
+  const supabaseServer = createSupabaseServerClient(cookieStore);
+
   let currentUser: Awaited<ReturnType<typeof getCurrentUser>>;
-  let supabaseServer: ReturnType<typeof createSupabaseServerClient>;
   try {
-    const cookieStore = await cookies();
-    supabaseServer = createSupabaseServerClient(cookieStore);
     currentUser = await getCurrentUser();
   } catch (error) {
-    logger.warn({ error, flowId }, "[metadata/stream] Unauthenticated");
+    const redirectPath = getRedirectPath(error);
+
+    if (redirectPath === "/service-unavailable") {
+      logger.error(
+        { error, flowId },
+        "[metadata/stream] Auth backend unavailable",
+      );
+      return new Response(JSON.stringify({ error: "Service indisponible" }), {
+        status: 503,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Redirection vers /login, ou échec inattendu : traité comme une absence
+    // de session valide.
+    logger.warn(
+      { error, flowId, redirectPath },
+      "[metadata/stream] Unauthenticated",
+    );
     return new Response(JSON.stringify({ error: "Non authentifié" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },

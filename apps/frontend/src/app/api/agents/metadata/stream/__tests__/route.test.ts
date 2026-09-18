@@ -57,6 +57,17 @@ vi.mock("gray-matter", () => ({
 
 const WORKFLOW_ID = "11111111-1111-1111-1111-111111111111";
 
+/**
+ * Builds the exception Next.js throws from `redirect()`: an Error whose digest
+ * encodes the destination. The route tells /login (no session) apart from
+ * /service-unavailable (auth backend down) by reading that digest.
+ */
+function redirectError(destination: string): Error {
+  const error = new Error("NEXT_REDIRECT") as Error & { digest: string };
+  error.digest = `NEXT_REDIRECT;replace;${destination};307;`;
+  return error;
+}
+
 function makeRequest(body: unknown) {
   return {
     json: async () => body,
@@ -101,7 +112,8 @@ describe("POST /api/agents/metadata/stream", () => {
   });
 
   it("rejects an unauthenticated caller without starting a generation", async () => {
-    getCurrentUser.mockRejectedValue(new Error("no session"));
+    // getCurrentUser signals "no session" with a redirect("/login") exception.
+    getCurrentUser.mockRejectedValue(redirectError("/login"));
     const { POST } = await import("../route");
 
     const response = await POST(
@@ -110,6 +122,33 @@ describe("POST /api/agents/metadata/stream", () => {
 
     expect(response.status).toBe(401);
     expect(generateMetadataReport).not.toHaveBeenCalled();
+    expect(startWorkflow).not.toHaveBeenCalled();
+  });
+
+  it("reports an unreachable auth backend as 503, not as a failed login", async () => {
+    // getCurrentUser redirects to /service-unavailable when Supabase is down or
+    // the profile is unreadable. Mapping that to 401 would hide an outage.
+    getCurrentUser.mockRejectedValue(redirectError("/service-unavailable"));
+    const { POST } = await import("../route");
+
+    const response = await POST(
+      makeRequest({ flowId: WORKFLOW_ID, content: "x" }),
+    );
+
+    expect(response.status).toBe(503);
+    expect(generateMetadataReport).not.toHaveBeenCalled();
+    expect(startWorkflow).not.toHaveBeenCalled();
+  });
+
+  it("treats an unexpected auth failure as unauthenticated rather than crashing", async () => {
+    getCurrentUser.mockRejectedValue(new Error("boom"));
+    const { POST } = await import("../route");
+
+    const response = await POST(
+      makeRequest({ flowId: WORKFLOW_ID, content: "x" }),
+    );
+
+    expect(response.status).toBe(401);
     expect(startWorkflow).not.toHaveBeenCalled();
   });
 
