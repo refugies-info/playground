@@ -577,7 +577,85 @@ Champs minimaux suggérés pour `ai_operations` : `purpose_key`, `runtime`, `age
 5. **Une modification humaine concurrente est protégée.** Comparaison de la révision attendue avant commit ou restauration ; en cas de divergence, **conflit explicite**, jamais d'écrasement.
 6. **Les migrations SQL restent additives** pendant la coexistence.
 7. **Les évaluations n'écrivent pas de rapport activable en production.**
-8. **Les identifiants sont distingués.** ID d'opération métier, ID Vercel Workflow, ID de conversation, éventuels IDs de runs Letta : ce ne sont pas des synonymes. Les IDs Letta servent au diagnostic, pas à l'identité métier.
+8. **Les générations d'agents sont distinguées.** Une conversation appartient à une génération ; elle est lue, jamais réécrite par une autre (§5.3).
+9. **Les identifiants sont distingués.** ID d'opération métier, ID Vercel Workflow, ID de conversation, éventuels IDs de runs Letta : ce ne sont pas des synonymes. Les IDs Letta servent au diagnostic, pas à l'identité métier.
+
+### 5.3 Transition entre générations d'agents
+
+Décidé avec Luis le 18/09/2026. Concerne la reprise des conversations appartenant à un agent
+historique par un agent de la nouvelle génération.
+
+**Périmètre, volontairement étroit.** Le cas est **rare** : fiches encore en cours de
+rédaction ou de publication au moment de la bascule, et campagnes annuelles de mise à jour
+ciblées. Ce n'est pas un mécanisme de continuité générale.
+
+#### Ce qui n'est pas retenu
+
+Un **proxy applicatif** — où le nouvel agent relaierait les requêtes vers son homologue v1 —
+a été évalué puis écarté. Trois raisons relevant du code du SDK (`0.8.3`), pas d'une
+préférence :
+
+1. **Le SDK résout l'agent depuis la conversation**, il ne le reçoit pas :
+   `resumeSession("conv-xxx")` fait `agentId = conversation.agent_id`. Le SDK parle donc
+   toujours au propriétaire de la conversation, jamais au nouveau agent.
+2. **`agentId` est ignoré** dès que l'identifiant est un `conv-xxx` : il n'existe aucun moyen
+   supporté de faire traiter une conversation par un autre agent.
+3. **Aucun point d'extension** documenté pour intercepter la création de conversation.
+   Un proxy exigerait de patcher `CloudEnvironmentSession` — non supporté, cassant à chaque
+   montée de version du SDK.
+
+S'y ajoutent le doublement du coût par conversation relayée et le risque d'ambiguïté
+d'autorisation : avec quelle identité le relais écrit-il ?
+
+#### Architecture retenue
+
+```text
+Conversation historique (appartient à l'agent v1)
+        │
+        │ 1. lecture directe de l'historique
+        ▼
+Orchestrateur applicatif (Vercel Workflow)
+        │
+        ├── 2. mémoire v1 attachée en LECTURE au nouvel agent
+        │      repositories.attach(v1Repo, { permissions: "read" })
+        │
+        ── 3. nouvelle conversation ouverte par le NOUVEL agent
+               (jamais un fil partagé entre deux identités)
+```
+
+**Trois mécanismes natifs, aucune couche applicative de relais :**
+
+| Besoin | Mécanisme |
+|---|---|
+| Le nouvel agent connaît son prédécesseur et ce qu'il savait | **Mémoire partagée en lecture** : `client.repositories.attach(agentId, repositoryId, { permissions: "read" })` |
+| Il peut demander un complément ponctuel | **Sous-agent** authentifié par le runtime (`parent_agent_id`, `is_subagent`) |
+| La conversation appartient à l'ancien agent | Lecture de l'historique, puis **nouvelle conversation** ouverte par le nouvel agent — les deux identités ne partagent jamais un fil |
+
+#### Contraintes que la reprise doit respecter
+
+1. **L'ancien historique est lu, jamais réécrit.** Un message émis par le nouvel agent dans une conversation v1 serait attribué à l'ancienne génération.
+2. **La validation humaine reste acquise.** Une reprise ne réécrit ni un contenu déjà validé ni une surcharge de métadonnées (invariant 5).
+3. **La reprise est explicite.** L'utilisateur doit pouvoir la distinguer d'une génération ordinaire. **La forme exacte de cette signalisation est à statuer avec l'équipe produit** : le mécanisme est transparent, l'affichage ne l'est pas nécessairement.
+4. **La mémoire v1 est en lecture seule.** Le nouvel agent ne doit pas pouvoir modifier l'histoire qu'il consulte — sinon la source de comparaison disparaît (invariant 3).
+5. **Coût et latence documentés.** Attacher une mémoire et lire un historique a un coût en tokens ; à mesurer avant généralisation.
+
+#### Question ouverte — portée de la signalisation
+
+Le mécanisme doit être **transparent pour l'utilisateur** dans son fonctionnement, mais il reste à décider :
+**où et comment signaler qu'une fiche repose sur une conversation de la génération précédente ?**
+
+Pistes à soumettre à l'équipe produit :
+- une mention discrète sur la fiche concernée ;
+- un indicateur dans l'historique des générations ;
+- aucune signalisation, la reprise étant considérée comme un détail d'implémentation.
+
+**À statuer par l'équipe produit.** Cette décision conditionne PR-06 (modèle de données de la correspondance entre générations) et l'affichage de PR-16.
+
+#### Note — sous-agents et mémoire partagée sont plus larges que ce cas
+
+Ces deux mécanismes ne sont pas propres à la transition : ils constituent la façon standard
+de faire coopérer des agents chez Letta. Ce qui est décidé ici, c'est **de les utiliser pour
+la transition plutôt qu'un proxy**, pas de les cantonner à elle.
 
 ---
 
@@ -667,6 +745,7 @@ Champs minimaux suggérés pour `ai_operations` : `purpose_key`, `runtime`, `age
 - [ ] Aucun objet client/session transporté dans les arguments persistés d'un workflow.
 - [ ] Les types d'API-first permettent un bundling compatible Vercel.
 - [ ] **Interface de fourniture de connaissance définie** : chaque parcours déclare quel contenu d'instruction il attend (nom de skill, fichier de mémoire, ou identifiant de dépôt), sans présumer du SDK. L'implémentation de l'adaptateur est fournie en PR-11.
+- [ ] Dans la lignée de la §5.3 : l'interface accepte **une mémoire homologue v1 en lecture seule** et la désigne comme telle, de sorte que le nouvel agent sache identifier son prédécesseur en langage naturel.
 
 **Dépendances :** PR-02. Peut avancer en parallèle du spike.
 
@@ -700,6 +779,10 @@ Champs minimaux suggérés pour `ai_operations` : `purpose_key`, `runtime`, `age
 - [ ] Une régénération volontaire reste possible sur la même source.
 - [ ] Les retries conservent runtime, agent et identité de demande.
 - [ ] Les workflows antérieurs, sans nouveaux champs, restent interprétables comme v1.
+- [ ] **Pour la §5.3** : la correspondance entre une conversation d'une génération et son agent est persistée ; en cas d'ambiguïté (plusieurs agents, ou agent introuvable), la reprise est **bloquée explicitement**, jamais résolue par supposition.
+- [ ] **L'identité de l'agent propriétaire de la conversation est relue depuis la conversation elle-même** (`agent_id`), jamais déduite du résumé ou du nom.
+- [ ] **La résolution de la conversation précède le démarrage du workflow** : une reprise impossible doit échouer avant que du travail soit lancé.
+- [ ] L'UI peut afficher l'origine d'une reprise **quand la signalisation produit est retenue** (§5.3), sans que le mécanisme dépende de cette décision.
 - [ ] RLS, droits et migrations testés ; `supabase db reset` vérifié.
 
 **Dépendances :** PR-04, PR-05, conclusions de PR-03.
@@ -795,6 +878,8 @@ Champs minimaux suggérés pour `ai_operations` : `purpose_key`, `runtime`, `age
 - [ ] Chaque skill est effectivement accessible dans une session SDK réelle.
 - [ ] **Le contenu fourni répond à l'interface déclarée en PR-04** : chaque parcours reçoit bien la connaissance qu'il attend.
 - [ ] **Format `system/<label>.md` respecté** pour les ressources issues de blocs legacy, avec frontmatter `description` (§3.4-h).
+- [ ] **Les deux générations de mémoire coexistantes sont supportées** (§3.5) : `skills/<nom>/SKILL.md` (agathe, ar_v2, en, fa, ps, ti) et consignes en `system/*.md` seul (`ru`, `uk`).
+- [ ] **Le pointeur vers l'homologue vit dans la mémoire, pas dans le code.** Un fichier de mémoire du nouvel agent référence la mémoire homologue v1 et lui donne un nom d'usage (« ton prédécesseur v1 »). But : un **changement de règle ne nécessite aucune modification de code ni redéploiement de skill**. Corollaire : la politique de reprise est gouvernée par des données, donc soumise au même contrôle éditorial que le reste de la connaissance.
 - [ ] Connaissance normative en lecture seule pour les agents lorsque c'est possible.
 - [ ] Aucune modification de l'agent de secours sans procédure réversible vérifiée.
 - [ ] Dérive du dashboard contrôlée pendant la bascule (gel ou détection explicite).
