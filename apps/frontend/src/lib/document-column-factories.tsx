@@ -15,6 +15,8 @@ import {
 } from "@/components/documents/cells";
 import { createTextColumn } from "@/lib/column-factories";
 import type { Profile } from "@/lib/profile";
+import { SELECTABLE_WORK_STATUSES } from "@/lib/work-status";
+import { updateWorkStatusAction } from "@/services/work-status-actions";
 
 /**
  * Domain-specific column factories for the Document type.
@@ -56,9 +58,9 @@ export const createStructureNameColumn = (): ColumnDef<Document> => ({
     if (!value) return <span className="text-gray-400">—</span>;
     const titleLength = row.original.title?.length ?? 0;
     const structureLength = value.length;
-    // Truncate si la structure risque de prendre plus de lignes que le titre.
-    // La colonne structure est ~2x plus étroite que le titre, donc à longueur
-    // égale elle prend ~2x plus de lignes. On tronque quand le ratio dépasse.
+    // Truncate if the structure name risks taking more lines than the title.
+    // The structure column is ~2x narrower than the title one, so at equal
+    // length it takes ~2x more lines. We truncate once the ratio exceeds that.
     const shouldTruncate = structureLength > titleLength * 0.4;
     return (
       <div
@@ -128,8 +130,11 @@ export const createWorkStatusColumn = <
   ),
   cell: ({ row }) => (
     <WorkStatusDropdown
-      workflowId={row.original.id}
       currentWorkStatus={row.original.workStatus}
+      onUpdateStatus={(status) =>
+        updateWorkStatusAction(row.original.id, status)
+      }
+      selectableStatuses={SELECTABLE_WORK_STATUSES}
     />
   ),
 });

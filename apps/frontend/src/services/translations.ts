@@ -462,6 +462,7 @@ export async function getTranslationById(id: string) {
       | null
       | undefined,
     translationMarkdown: row.markdown,
+    updatedAt: row.updated_at ?? undefined,
     sourceMarkdown: row.editorial_records?.markdown || "",
     sourceMetadata:
       (row.editorial_records?.metadata as Record<string, unknown>) || {},

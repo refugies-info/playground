@@ -5,10 +5,6 @@ import { getSupabaseClient } from "../common/supabase";
 /**
  * Assigns the translation record to the translator configured for the target language.
  *
- * Looks up the profile with role='translator' and language=<language>,
- * then sets author_id on the translation record.
- * No-ops silently if no translator is configured for that language.
- *
  * @param translationRecordId - The translation record to assign
  * @param language - The target language code
  */

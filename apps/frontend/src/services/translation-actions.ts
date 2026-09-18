@@ -1,6 +1,10 @@
 "use server";
 
-import { logger, validateField } from "@playground/shared-types";
+import {
+  logger,
+  validateField,
+  type WorkStatus,
+} from "@playground/shared-types";
 import { createSupabaseServerClient, type Json } from "@playground/supabase";
 import {
   generateTranslationWorkflow,
@@ -21,7 +25,12 @@ import { getCurrentUser } from "@/lib/auth";
  *
  * @returns The user session and Supabase client, or an error response.
  */
-type TranslationAction = "save" | "publish" | "retry" | "cancel";
+type TranslationAction =
+  | "save"
+  | "publish"
+  | "retry"
+  | "cancel"
+  | "updateStatus";
 
 async function getAuthorizedTranslationSession({
   action,
@@ -156,7 +165,7 @@ export async function saveTranslation(
       allowTranslator: true,
     });
     if (auth.errorResponse) return auth.errorResponse;
-    const { currentUser, supabase } = auth;
+    const { supabase } = auth;
 
     // Read current archive state before saving. We still persist the content
     // (never lose the translator's work), but flag `archived` so the client can
@@ -172,7 +181,6 @@ export async function saveTranslation(
       .from("translation_records")
       .update({
         markdown,
-        author_id: currentUser.id,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);
@@ -195,9 +203,10 @@ export async function saveTranslation(
 /**
  * Saves a single translated metadata field (RI-1379).
  *
- * Pendant traduction de `saveMetadataFieldAction` : une seule clé de
- * `translation_records.metadata` est écrite, via une RPC, pour ne pas écraser
- * les autres (le titre traduit y vit aussi, et sert de repli à la recherche).
+ * Translation-side counterpart of `saveMetadataFieldAction`: only a single
+ * key of `translation_records.metadata` is written, via an RPC, so as not to
+ * overwrite the others (the translated title also lives there, and serves as
+ * a search fallback).
  *
  * @param id - The translation record ID.
  * @param key - The metadata key (e.g. "abstract").
@@ -212,7 +221,7 @@ export async function saveTranslationMetadataFieldAction(
     return { success: false, error: "Paramètres manquants" };
   }
 
-  // Même validation qu'en FR : les deux versions partagent le schéma du champ.
+  // Same validation as the FR side: both versions share the field's schema.
   const validation = validateField(key, value);
   if (!validation.success) {
     return { success: false, error: validation.error };
@@ -230,7 +239,7 @@ export async function saveTranslationMetadataFieldAction(
     const { error } = await supabase.rpc("update_translation_metadata_field", {
       record_id: id,
       field_key: key,
-      // `undefined` = suppression de la clé ; `null` = vidage explicite.
+      // `undefined` = delete the key; `null` = explicit clear.
       field_value: (value === undefined ? null : value) as Json,
       delete_key: value === undefined,
     });
@@ -256,8 +265,7 @@ export async function saveTranslationMetadataFieldAction(
  *
  * Before launching the publication workflow, this action always:
  * 1. Saves the markdown content
- * 2. Sets `author_id` to the current user (claim)
- * 3. Sets `work_status` to 'draft'
+ * 2. Sets `work_status` to 'draft'
  *
  * This ensures the record is in a clean state regardless of whether the
  * client already called `saveTranslation` before.
@@ -282,13 +290,12 @@ export async function publishTranslation(
     if (auth.errorResponse) return auth.errorResponse;
     const { currentUser, supabase } = auth;
 
-    // Save content + claim authorship + mark as draft before launching workflow
+    // Save content + mark as draft before launching workflow
     const { error: saveError } = await supabase
       .from("translation_records")
       .update({
         markdown,
         work_status: "draft",
-        author_id: currentUser.id,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);
@@ -329,6 +336,44 @@ export async function publishTranslation(
       success: false,
       error: "Erreur inattendue lors de la publication",
     };
+  }
+}
+
+/**
+ * Manually changes the `work_status` of a translation record (RI-1430).
+ */
+export async function updateTranslationWorkStatusAction(
+  id: string,
+  workStatus: WorkStatus,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const auth = await getAuthorizedTranslationSession({
+      action: "updateStatus",
+      translationId: id,
+      allowTranslator: true,
+    });
+    if (auth.errorResponse) return auth.errorResponse;
+    const { supabase } = auth;
+
+    const { error } = await supabase
+      .from("translation_records")
+      .update({ work_status: workStatus, updated_at: new Date().toISOString() })
+      .eq("id", id);
+
+    if (error) {
+      logger.error(error, "Error updating translation work_status");
+      return {
+        success: false,
+        error: "Erreur lors du changement de statut",
+      };
+    }
+
+    revalidatePath(`/translations/${id}`);
+    revalidatePath("/translations");
+    return { success: true };
+  } catch (error) {
+    logger.error(error, "Unexpected error updating translation work_status");
+    return { success: false, error: "Erreur inattendue" };
   }
 }
 
@@ -440,7 +485,7 @@ export async function cancelTranslationGeneration(
     try {
       await getRun(runId).cancel();
     } catch (err) {
-      // Le workflow est peut-être déjà terminé — non bloquant.
+      // The workflow may already be finished — non-blocking.
       logger.warn(
         { runId, translationId, err },
         "Cancel translation run failed (non-blocking)",
