@@ -59,12 +59,12 @@ Cette route doit être **sécurisée ou retirée** indépendamment du choix de S
 
 | À vérifier | Pourquoi |
 |---|---|
-| Date de fermeture de l'API historique | **Confirmée comme imminente, sans date ferme** (Luis, 17/09/2026) — conditionne la durée du pont v1. Voir [§10](07-retrait-v1-et-sauvegarde.md). |
-| Agents réellement utilisés en production (IDs, langues, modèles) | ✅ **Résolu** — voir [§3.5](03-audit-agents-production.md) |
+| Date de fermeture de l'API historique | **Confirmée comme imminente, sans date ferme** (Luis, 17/09/2026) — conditionne la durée du pont v1. Voir [§10](07-v1-removal-and-backup.md). |
+| Agents réellement utilisés en production (IDs, langues, modèles) | ✅ **Résolu** — voir [§3.5](03-production-agents-audit.md) |
 | Schéma réellement déployé vs migrations | Le comportement des triggers et contraintes doit être constaté |
 | Quels parcours IA sont réellement actifs en production | Le fan-out est désactivé dans le code : à confirmer côté exploitation |
 | Consommateurs réels de la route SSE | Décide entre correction et retrait |
-| Sources faisant autorité pour la connaissance éditoriale | Le corpus du dépôt est incomplet ; les brouillons locaux n'ont pas valeur de référence — **état réel des ressources établi en [§3.5](03-audit-agents-production.md)** |
+| Sources faisant autorité pour la connaissance éditoriale | Le corpus du dépôt est incomplet ; les brouillons locaux n'ont pas valeur de référence — **état réel des ressources établi en [§3.5](03-production-agents-audit.md)** |
 | Limites d'exécution Vercel pour des tours de 1 à 3 minutes | Détermine la faisabilité (`maxDuration`, régions, cold start) |
 
 ---
@@ -85,7 +85,7 @@ Source : <https://github.com/letta-ai/agent-v1-to-v2-migration-guide> (dernier c
 Le guide documente explicitement que l'endpoint `folders` retourne **HTTP 400 depuis le 17 juillet 2026** (`This API route is deprecated and no longer supported on the Letta API`).
 
 ✅ **Vérifié sur notre code** : aucune utilisation de `folders` / `filesystem` / `files` / `exportFile` dans `packages`, `apps` ou `scripts`. **Impact nul sur Playground.**
-➡️ Le retrait letta Cloud est donc **incrémental**, pas un « big bang » : certains chemins tombent avant d'autres. La [§10](07-retrait-v1-et-sauvegarde.md) devrait viser une **détection en continu** de ces bascules, pas une date unique.
+➡️ Le retrait letta Cloud est donc **incrémental**, pas un « big bang » : certains chemins tombent avant d'autres. La [§10](07-v1-removal-and-backup.md) devrait viser une **détection en continu** de ces bascules, pas une date unique.
 
 **b) Un outillage officiel de sauvegarde d'agents Cloud existe — et il est testé.**
 Le dépôt fournit une skill `backing-up-cloud-agents` avec un script (`cloud-agent.ts`) qui exporte les réglages d'un agent, ses messages de contexte et **l'historique Git complet de sa mémoire** vers un dossier privé, puis sait **recréer un agent neuf** à partir de ce backup.
@@ -95,7 +95,7 @@ Le dépôt fournit une skill `backing-up-cloud-agents` avec un script (`cloud-ag
 - Garde-fous documentés : refus d'écraser un dossier existant, jamais de `git push --force`, **aucun retry automatique** d'une création potentiellement aboutie, ID imprimé avant toute étape pouvant échouer.
 - Couverture et exclusions explicitées (`references/format.md`) : secrets, outils, connexions, dépôts partagés, schedules, mémoire archival et **historique de messages** ne sont **pas** restaurés.
 
-️ **Conséquence pour [§10.4](07-retrait-v1-et-sauvegarde.md#s104)** : la sauvegarde des ressources n'est plus un travail artisanal à concevoir, c'est une **opération déléguée à l'outil officiel**, à exécuter avant la fermeture. Un workflow CI (`cloud-agent-backup.yml`) et des tests sont fournis, ce qui en fait un artefact maintenable.
+️ **Conséquence pour [§10.4](07-v1-removal-and-backup.md#s104)** : la sauvegarde des ressources n'est plus un travail artisanal à concevoir, c'est une **opération déléguée à l'outil officiel**, à exécuter avant la fermeture. Un workflow CI (`cloud-agent-backup.yml`) et des tests sont fournis, ce qui en fait un artefact maintenable.
 
 **c) Le chemin de secours v1 ne peut plus accueillir de nouveaux agents.**
 La restauration **crée un nouvel agent Cloud** — ce qui est précisément le sens de « v1 → v2 ». Si les routes historiques se ferment, **le rollback ne peut pas créer un agent v1 de remplacement**.
@@ -107,7 +107,7 @@ Le guide insiste : l'API v1 et le SDK écrivent dans **deux magasins de mémoire
 
 ➡️ **Le SDK ne peut donc pas lire la mémoire des agents historiques.** Tant que le transport v1 reste actif, il lit des blocs ; dès qu'il bascule sur le SDK, il lit un dépôt Git. Migrer le transport avant d'avoir **matérialisé la connaissance** côté Git produirait des agents SDK **sans instructions**, c'est-à-dire des générations silencieusement dégradées.
 
-➡️ Conséquence de séquencement, cohérente avec la [§10.2](07-retrait-v1-et-sauvegarde.md#s102) : dans la vague **V2**, PR-01 (matérialisation de la connaissance) **bloque** PR-09.
+➡️ Conséquence de séquencement, cohérente avec la [§10.2](07-v1-removal-and-backup.md#s102) : dans la vague **V2**, PR-01 (matérialisation de la connaissance) **bloque** PR-09.
 
 **e) Le SDK évolue vite — épingler et revalider.**
 L'exemple officiel du guide épingle `@letta-ai/letta-agent-sdk@0.2.6`, alors que le registre npm publiait `0.8.11` le 16/09/2026 (et `0.8.3` le 01/09, seule version satisfaisant notre délai de maturité). Les API du SDK ont donc bougé entre les deux. La revalidation de la version retenue prévue dans PR-03 reste **obligatoire** : les extraits du guide sont indicatifs, pas normatifs pour notre version.
@@ -154,7 +154,7 @@ placé sous `system/` (les labels déjà préfixés par `system/` sont conservé
 | **B — Depuis une sauvegarde d'agent** | Exporter l'état de l'agent, puis convertir blocs → markdown | **Fidèle à ce qui tourne réellement** ; outillage d'export déjà fourni ; traçable | La conversion blocs → markdown **n'est pas fournie** : petit script à écrire (~50 lignes, le format cible est documenté ci-dessus). **À vérifier avant de s'y fier** : la structure exacte des blocs renvoyée par l'API d'export, et l'accessibilité de la mémoire d'un agent v1 en Git |
 | **C — Copier-coller depuis l'ADE** | Lecture manuelle dans l'interface Letta, recopie dans des fichiers | Fonctionne toujours, indépendamment de toute API | Erreur de transcription non détectable ; aucun diff possible ; non répétable ; **perd la traçabilité** |
 
-> ✅ **Mise à jour du 18/09/2026** : la voie B est **déjà réalisée** — l'accès Git de [§3.5](03-audit-agents-production.md) a permis d'exporter l'intégralité de la mémoire des agents. Le choix se réduit à *unifier ou conserver* les deux formats existants.
+> ✅ **Mise à jour du 18/09/2026** : la voie B est **déjà réalisée** — l'accès Git de [§3.5](03-production-agents-audit.md) a permis d'exporter l'intégralité de la mémoire des agents. Le choix se réduit à *unifier ou conserver* les deux formats existants.
 
 > **Recommandation initiale (conservée pour l'historique) : A comme cible, B comme filet immédiat.**
 > La voie A est la plus propre à terme, mais elle demande une **vérification d'écart** qui prend du temps — temps que l'imminence de la fermeture ne garantit pas. La voie B est rapide et fidèle. Les combiner donne le meilleur des deux : **B pour sauver maintenant**, **A pour reconstruire proprement ensuite**, avec une comparaison entre les deux comme contrôle qualité.
@@ -169,6 +169,6 @@ Avant de choisir définitivement, une **sonde à faible coût** sur un seul agen
 3. vérifier si la mémoire de l'agent est accessible en Git sur `/v1/git/{agent-id}/state.git` ;
 4. si les blocs sont exploitables, écrire la conversion minimale et **comparer le résultat** au contenu attendu côté éditorial.
 
-Le résultat de cette sonde détermine la voie pour l'ensemble des agents, et **conditionne PR-01** ([§10.4](07-retrait-v1-et-sauvegarde.md#s104)). Elle doit être traitée avant tout travail sur le transport ([§3.4-d](#s34)).
+Le résultat de cette sonde détermine la voie pour l'ensemble des agents, et **conditionne PR-01** ([§10.4](07-v1-removal-and-backup.md#s104)). Elle doit être traitée avant tout travail sur le transport ([§3.4-d](#s34)).
 
 > ️ **Point d'attention sur l'ordre.** Cette conversion alimente `PR-01`, qui **bloque `PR-09`**. Autrement dit : sans conversion des ressources, l'adaptateur SDK ne peut pas produire d'agents correctement instruits. La conversion n'est donc pas une tâche documentaire annexe, c'est un **prérequis technique**.

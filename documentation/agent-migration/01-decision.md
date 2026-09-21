@@ -27,9 +27,9 @@ Ces points ne peuvent pas être tranchés par la lecture du code seul. Je formul
 
 | # | Question | Recommandation |
 |---|---|---|
-| A | **Isolation du chemin de secours.** Les conversations d'un même agent partagent sa mémoire : modifier l'agent utilisé par v1 pendant les essais SDK peut dégrader le secours. **Contrainte ajoutée ([§3.4-c](02-etat-des-lieux.md#s34))** : le chemin historique ne permet plus de **créer** d'agent de remplacement — l'isolation ne peut donc pas être obtenue en recréant des agents côté v1. | Sauvegarder la mémoire des agents v1 **existants** (outil officiel, [§10.4](07-retrait-v1-et-sauvegarde.md#s104)) et ne pas la modifier pendant la qualification ; utiliser des **agents récents** pour les essais SDK. |
+| A | **Isolation du chemin de secours.** Les conversations d'un même agent partagent sa mémoire : modifier l'agent utilisé par v1 pendant les essais SDK peut dégrader le secours. **Contrainte ajoutée ([§3.4-c](02-current-state.md#s34))** : le chemin historique ne permet plus de **créer** d'agent de remplacement — l'isolation ne peut donc pas être obtenue en recréant des agents côté v1. | Sauvegarder la mémoire des agents v1 **existants** (outil officiel, [§10.4](07-v1-removal-and-backup.md#s104)) et ne pas la modifier pendant la qualification ; utiliser des **agents récents** pour les essais SDK. |
 | B | **Gel fonctionnel.** Les évolutions parallèles (retrieval/qmd, regroupement des traducteurs, réactivation du fan-out DI) augmentent fortement le nombre de causes possibles d'une régression. | Les **différer** en projets distincts, sauf dépendance bloquante démontrée. |
-| C | **Fenêtre de secours.** Aucune date ferme publiée, mais **fermeture confirmée comme imminente par Luis (17/09/2026)**. | Préserver le chemin v1 à chaque étape, **sans planifier de période de confort**. Traiter la bascule complète comme **datée par l'extérieur** ; voir [§10](07-retrait-v1-et-sauvegarde.md). |
+| C | **Fenêtre de secours.** Aucune date ferme publiée, mais **fermeture confirmée comme imminente par Luis (17/09/2026)**. | Préserver le chemin v1 à chaque étape, **sans planifier de période de confort**. Traiter la bascule complète comme **datée par l'extérieur** ; voir [§10](07-v1-removal-and-backup.md). |
 
 ---
 
@@ -204,9 +204,9 @@ la transition plutôt qu'un proxy**, pas de les cantonner à elle.
 
 | # | Décision | Recommandation |
 |---|---|---|
-| A | **Isolation des agents de secours** — utiliser des agents dédiés au SDK, ou partager les agents v1 ? **Ne peut plus être résolu en créant des agents côté v1** ([§3.4-c](02-etat-des-lieux.md#s34)). | Sauvegarder la mémoire des agents v1 existants ; agents récents pour les essais SDK. |
+| A | **Isolation des agents de secours** — utiliser des agents dédiés au SDK, ou partager les agents v1 ? **Ne peut plus être résolu en créant des agents côté v1** ([§3.4-c](02-current-state.md#s34)). | Sauvegarder la mémoire des agents v1 existants ; agents récents pour les essais SDK. |
 | B | **Gel fonctionnel** — qmd/retrieval, regroupement des traducteurs, réactivation du fan-out | Différer en projets distincts. |
-| C | **Fenêtre de secours v1** — durée et disponibilité | **Contrainte externe, pas un choix du projet** : la fermeture est imminente et sans date ferme. Le chemin v1 doit être préservé à chaque étape, mais **aucune période de confort ne peut être planifiée**. Voir [§10](07-retrait-v1-et-sauvegarde.md). |
+| C | **Fenêtre de secours v1** — durée et disponibilité | **Contrainte externe, pas un choix du projet** : la fermeture est imminente et sans date ferme. Le chemin v1 doit être préservé à chaque étape, mais **aucune période de confort ne peut être planifiée**. Voir [§10](07-v1-removal-and-backup.md). |
 | D | **Backend SDK** — `cloud` avec sandbox géré, `cloud` + `computer`, ou `remote` (App Server) | À trancher sur les résultats de PR-03 : latence, coût, sécurité, et localisation de l'exécution des outils. |
 | E | **Topologie des traducteurs** — conserver la configuration actuelle ou consolider | Conserver à l'identique pendant la migration ; toute consolidation est un projet distinct. |
 

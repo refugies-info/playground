@@ -86,7 +86,7 @@ git clone --single-branch --branch main --no-tags \
 
 **Total ≈ 176 Ko de connaissance métier**, avec l'historique Git complet.
 
-> **Le risque « perte définitive » identifié en [§10.4](07-retrait-v1-et-sauvegarde.md#s104) est donc levé** : la connaissance a
+> **Le risque « perte définitive » identifié en [§10.4](07-v1-removal-and-backup.md#s104) est donc levé** : la connaissance a
 > été exportée et versionnée. Le plan peut désormais traiter la conversion comme un
 > travail de qualité, plus comme une course contre la fermeture.
 
@@ -197,4 +197,4 @@ des brouillons, à ne pas confondre avec les versions servies.
 `metadata_schema`. L'accès Git a transformé un risque de perte en un simple travail de mise
 en forme.
 
-> ⚠️ **Ceci ne dispense pas de la sauvegarde.** Une connaissance reconstituée depuis un brouillon `draft` n'est pas une connaissance validée. La voie A de [§3.4-h](02-etat-des-lieux.md#s34) (documents originaux) reste la cible, la voie B devient **immédiatement praticable** puisque les sources sont accessibles.
+> ⚠️ **Ceci ne dispense pas de la sauvegarde.** Une connaissance reconstituée depuis un brouillon `draft` n'est pas une connaissance validée. La voie A de [§3.4-h](02-current-state.md#s34) (documents originaux) reste la cible, la voie B devient **immédiatement praticable** puisque les sources sont accessibles.

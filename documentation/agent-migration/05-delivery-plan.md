@@ -18,14 +18,14 @@
 - Documenter la fenêtre de support de l'API historique et le mode dégradé.
 - Identifier les sources éditoriales faisant autorité.
 - Séparer explicitement : décisions validées / hypothèses / questions de faisabilité.
-- **Intégrer l'outil officiel de sauvegarde d'agents Cloud** (skill `backing-up-cloud-agents` du guide Letta v1→v2, [§3.4-b](02-etat-des-lieux.md#s34)) plutôt que d'écrire un exporteur maison.
-- **Sonder les routes historiques** encore utilisées par le code (détection en continu, [§10.5](07-retrait-v1-et-sauvegarde.md#s105)).
+- **Intégrer l'outil officiel de sauvegarde d'agents Cloud** (skill `backing-up-cloud-agents` du guide Letta v1→v2, [§3.4-b](02-current-state.md#s34)) plutôt que d'écrire un exporteur maison.
+- **Sonder les routes historiques** encore utilisées par le code (détection en continu, [§10.5](07-v1-removal-and-backup.md#s105)).
 
 **Critères d'acceptation**
 - [ ] **Statut d'obsolescence écrite dans le document lui-même** : en-tête de dépréciation, remplacement indiqué, procédure de récupération de l'inventaire vers le nouveau foyer. Ne pas laisser un plan obsolète comme source d'autorité par défaut.
 - [ ] **Balisage des ressources gelées** : marquer sur chaque ressource Letta Cloud (blocs mémoire, agents) sa date de dernière synchronisation avec le dépôt et sa nature figée, ainsi que **la procédure de récupération en cas de fermeture de l'API**. C'est le livrable immédiat le plus utile.
-- [ ] **Export de sauvegarde réalisé pour chaque agent de production** via l'outil officiel, agents en pause, dossiers privés hors dépôt ([§10.4](07-retrait-v1-et-sauvegarde.md#s104)).
-- [ ] **Sonde de conversion exécutée sur un agent non critique** ([§3.4-h](02-etat-des-lieux.md#s34)) : les blocs de mémoire sont-ils lisibles dans l'export, et la mémoire de l'agent est-elle accessible en Git ?
+- [ ] **Export de sauvegarde réalisé pour chaque agent de production** via l'outil officiel, agents en pause, dossiers privés hors dépôt ([§10.4](07-v1-removal-and-backup.md#s104)).
+- [ ] **Sonde de conversion exécutée sur un agent non critique** ([§3.4-h](02-current-state.md#s34)) : les blocs de mémoire sont-ils lisibles dans l'export, et la mémoire de l'agent est-elle accessible en Git ?
 - [ ] **Voie de conversion arbitrée** (A documents originaux / B sauvegarde / C copier-coller) et **justifiée par écrit**. La logique officielle de conversion blocs → `system/<label>.md` est documentée, mais elle lit PostgreSQL : si elle n'est pas réutilisable, notre propre conversion doit être écrite.
 - [ ] **Ressources des agents v1 converties en markdown** au format `system/<label>.md` avec frontmatter `description`, dans un dépôt Git versionné.
 - [ ] **Écart documenté** entre les ressources converties et les documents d'origine, autrement dit : l'écart entre ce qui a réellement tourné en production et la source éditoriale de référence.
@@ -38,7 +38,7 @@
 - [ ] Sources de connaissance identifiées et statut de chacune explicité.
 - [ ] Aucun changement d'agent de production.
 
-**Dépendances :** aucune. **Bloque PR-09** ([§3.4-d](02-etat-des-lieux.md#s34)).
+**Dépendances :** aucune. **Bloque PR-09** ([§3.4-d](02-current-state.md#s34)).
 
 #### PR-02 — `test(agents): établir les références de non-régression`
 
@@ -191,7 +191,7 @@
 - [ ] `resumeSession` après fermeture inattendue couvert par un test.
 - [ ] **Une session SDK réelle voit les instructions du parcours** — vérifié par un test, pas par lecture de configuration. Sans cette assertion, un adaptateur peut être « vert » tout en produisant des agents non instruits.
 
-**Dépendances :** PR-03 à PR-08, **PR-01 (bloquant) et PR-11 (bloquant)**. La connaissance doit être matérialisée côté Git avant qu'un adaptateur SDK ne lise une mémoire : l'API historique et le SDK écrivent dans deux magasins différents ([§3.4-d](02-etat-des-lieux.md#s34)). Sans PR-01 ni PR-11, l'agent SDK démarre **sans instructions** et produit des sorties dégradées de façon silencieuse.
+**Dépendances :** PR-03 à PR-08, **PR-01 (bloquant) et PR-11 (bloquant)**. La connaissance doit être matérialisée côté Git avant qu'un adaptateur SDK ne lise une mémoire : l'API historique et le SDK écrivent dans deux magasins différents ([§3.4-d](02-current-state.md#s34)). Sans PR-01 ni PR-11, l'agent SDK démarre **sans instructions** et produit des sorties dégradées de façon silencieuse.
 
 #### PR-10 — `feat(agents): tracer les exécutions et leur consommation`
 
@@ -211,7 +211,7 @@
 #### PR-11 — `feat(agents): versionner et distribuer la connaissance éditoriale`
 
 **Contenu**
-- Récupération contrôlée des consignes et ressources faisant autorité, selon la voie arbitrée en PR-01 (documents originaux / sauvegarde d'agent / copier-coller — [§3.4-h](02-etat-des-lieux.md#s34)).
+- Récupération contrôlée des consignes et ressources faisant autorité, selon la voie arbitrée en PR-01 (documents originaux / sauvegarde d'agent / copier-coller — [§3.4-h](02-current-state.md#s34)).
 - Skills audit, rédaction, métadonnées, traduction, avec leurs références.
 - Distribution via mémoire agent et/ou dépôts de mémoire partagée.
 - Manifeste de release et procédure de restauration.
@@ -222,8 +222,8 @@
 - [ ] Les brouillons historiques ne sont pas présentés comme des exports de production.
 - [ ] Chaque skill est effectivement accessible dans une session SDK réelle.
 - [ ] **Le contenu fourni répond à l'interface déclarée en PR-04** : chaque parcours reçoit bien la connaissance qu'il attend.
-- [ ] **Format `system/<label>.md` respecté** pour les ressources issues de blocs legacy, avec frontmatter `description` ([§3.4-h](02-etat-des-lieux.md#s34)).
-- [ ] **Les deux générations de mémoire coexistantes sont supportées** ([§3.5](03-audit-agents-production.md)) : `skills/<nom>/SKILL.md` (agathe, ar_v2, en, fa, ps, ti) et consignes en `system/*.md` seul (`ru`, `uk`).
+- [ ] **Format `system/<label>.md` respecté** pour les ressources issues de blocs legacy, avec frontmatter `description` ([§3.4-h](02-current-state.md#s34)).
+- [ ] **Les deux générations de mémoire coexistantes sont supportées** ([§3.5](03-production-agents-audit.md)) : `skills/<nom>/SKILL.md` (agathe, ar_v2, en, fa, ps, ti) et consignes en `system/*.md` seul (`ru`, `uk`).
 - [ ] **Le pointeur vers l'homologue vit dans la mémoire, pas dans le code.** Un fichier de mémoire du nouvel agent référence la mémoire homologue v1 et lui donne un nom d'usage (« ton prédécesseur v1 »). But : un **changement de règle ne nécessite aucune modification de code ni redéploiement de skill**. Corollaire : la politique de reprise est gouvernée par des données, donc soumise au même contrôle éditorial que le reste de la connaissance.
 - [ ] Connaissance normative en lecture seule pour les agents lorsque c'est possible.
 - [ ] Aucune modification de l'agent de secours sans procédure réversible vérifiée.

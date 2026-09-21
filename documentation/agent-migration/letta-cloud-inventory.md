@@ -1,4 +1,4 @@
-<!-- SUPERSEDED: this inventory predates the 2026-09-17 Letta Agent SDK migration plan. Its migration mapping is historical; see README.md and the numbered plan documents (01-decision.md … 08-linear-et-annexe.md). -->
+<!-- SUPERSEDED: this inventory predates the 2026-09-17 Letta Agent SDK migration plan. Its migration mapping is historical; see README.md and the numbered plan documents (01-decision.md … 08-linear-and-appendix.md). -->
 
 # Inventaire de l'agent IA — état au 15 juin 2026
 

@@ -4,20 +4,20 @@ Ce dossier documente la migration de l'agent IA éditorial de l'API Letta histor
 
 > ⚠️ **Source de vérité actuelle** : les huit documents numérotés ci-dessous (plan du 17 septembre 2026, complété par l'audit du 18 septembre). Le plan était initialement un document unique (`agent-sdk-migration-plan.md`, supprimé) découpé ici par intention et par durée de vie, pour la revue.
 > La planification antérieure du 15 juin 2026 supposait qmd + un runtime Letta Code et un worker GCP ; elle n'a pas été implémentée et est **obsolète**. Le corpus `agent-knowledge/` sur `main` est un squelette vide, pas une migration aboutie.
-> Le projet Linear « Migration agent IA — Letta Code SDK et qmd » et ses 50 tickets ont été archivés le 17/09/2026. Le nouveau découpage des tickets vit dans [`08-linear-et-annexe.md`](./08-linear-et-annexe.md).
+> Le projet Linear « Migration agent IA — Letta Code SDK et qmd » et ses 50 tickets ont été archivés le 17/09/2026. Le nouveau découpage des tickets vit dans [`08-linear-and-appendix.md`](./08-linear-and-appendix.md).
 
 ## Comment lire ce dossier
 
 | Ordre | Document | Sections | Ce qu'on y trouve |
 | ----- | -------- | -------- | ----------------- |
 | 1 | [`01-decision.md`](./01-decision.md) | §1, §2, §5, §9 | **Ce qu'il faut décider** : synthèse exécutive, périmètre, architecture cible, arbitrages ouverts |
-| 2 | [`02-etat-des-lieux.md`](./02-etat-des-lieux.md) | §3.1 – §3.4 | **Ce qui est constaté** dans le dépôt, et ce que le guide officiel Letta change dans ce plan |
-| 3 | [`03-audit-agents-production.md`](./03-audit-agents-production.md) | §3.5 | **L'état réel de la production** : audit API du 18/09/2026 (agents, mémoire, ressources) |
-| 4 | [`04-changements-agent-sdk.md`](./04-changements-agent-sdk.md) | §4 | **Ce que change le SDK**, par rapport aux plans antérieurs |
-| 5 | [`05-plan-de-livraison.md`](./05-plan-de-livraison.md) | §6 | **Ce qui s'exécute** : sept phases (0 à 6), 21 PR, critères de sortie |
-| 6 | [`06-retour-arriere-production.md`](./06-retour-arriere-production.md) | §7 | **Le filet de sécurité** : procédure de retour arrière, cas A à D |
-| 7 | [`07-retrait-v1-et-sauvegarde.md`](./07-retrait-v1-et-sauvegarde.md) | §10 | **Ce qui se répète** : contrainte de calendrier, sauvegarde des ressources, détection des coupures |
-| 8 | [`08-linear-et-annexe.md`](./08-linear-et-annexe.md) | §8, §11 | **Le pilotage** : jalons, gabarit d'issue, chemin critique, sources et limites |
+| 2 | [`02-current-state.md`](./02-current-state.md) | §3.1 – §3.4 | **Ce qui est constaté** dans le dépôt, et ce que le guide officiel Letta change dans ce plan |
+| 3 | [`03-production-agents-audit.md`](./03-production-agents-audit.md) | §3.5 | **L'état réel de la production** : audit API du 18/09/2026 (agents, mémoire, ressources) |
+| 4 | [`04-agent-sdk-changes.md`](./04-agent-sdk-changes.md) | §4 | **Ce que change le SDK**, par rapport aux plans antérieurs |
+| 5 | [`05-delivery-plan.md`](./05-delivery-plan.md) | §6 | **Ce qui s'exécute** : sept phases (0 à 6), 21 PR, critères de sortie |
+| 6 | [`06-production-rollback.md`](./06-production-rollback.md) | §7 | **Le filet de sécurité** : procédure de retour arrière, cas A à D |
+| 7 | [`07-v1-removal-and-backup.md`](./07-v1-removal-and-backup.md) | §10 | **Ce qui se répète** : contrainte de calendrier, sauvegarde des ressources, détection des coupures |
+| 8 | [`08-linear-and-appendix.md`](./08-linear-and-appendix.md) | §8, §11 | **Le pilotage** : jalons, gabarit d'issue, chemin critique, sources et limites |
 
 La numérotation d'origine est conservée : une référence « §5.3 » ou « §10.4 » reste valable telle quelle dans le nouveau découpage.
 
@@ -26,17 +26,17 @@ La numérotation d'origine est conservée : une référence « §5.3 » ou « §
 | Renvoi d'origine | Destination |
 | ---------------- | ----------- |
 | §1, §2 | [`01-decision.md#s1`](./01-decision.md#s1), [`01-decision.md#s2`](./01-decision.md#s2) |
-| §3.1 – §3.3 | [`02-etat-des-lieux.md`](./02-etat-des-lieux.md) |
-| §3.4 (et §3.4-a … §3.4-h) | [`02-etat-des-lieux.md#s34`](./02-etat-des-lieux.md#s34) |
-| §3.5 | [`03-audit-agents-production.md`](./03-audit-agents-production.md) |
-| §4 | [`04-changements-agent-sdk.md`](./04-changements-agent-sdk.md) |
+| §3.1 – §3.3 | [`02-current-state.md`](./02-current-state.md) |
+| §3.4 (et §3.4-a … §3.4-h) | [`02-current-state.md#s34`](./02-current-state.md#s34) |
+| §3.5 | [`03-production-agents-audit.md`](./03-production-agents-audit.md) |
+| §4 | [`04-agent-sdk-changes.md`](./04-agent-sdk-changes.md) |
 | §5, §5.3 | [`01-decision.md#s5`](./01-decision.md#s5), [`01-decision.md#s53`](./01-decision.md#s53) |
-| §6 | [`05-plan-de-livraison.md`](./05-plan-de-livraison.md) |
-| §7 | [`06-retour-arriere-production.md`](./06-retour-arriere-production.md) |
-| §8 | [`08-linear-et-annexe.md#s8`](./08-linear-et-annexe.md#s8) |
+| §6 | [`05-delivery-plan.md`](./05-delivery-plan.md) |
+| §7 | [`06-production-rollback.md`](./06-production-rollback.md) |
+| §8 | [`08-linear-and-appendix.md#s8`](./08-linear-and-appendix.md#s8) |
 | §9, §9-A | [`01-decision.md#s9`](./01-decision.md#s9) |
-| §10, §10.2, §10.4, §10.5 | [`07-retrait-v1-et-sauvegarde.md`](./07-retrait-v1-et-sauvegarde.md) |
-| §11 | [`08-linear-et-annexe.md#s11`](./08-linear-et-annexe.md#s11) |
+| §10, §10.2, §10.4, §10.5 | [`07-v1-removal-and-backup.md`](./07-v1-removal-and-backup.md) |
+| §11 | [`08-linear-and-appendix.md#s11`](./08-linear-and-appendix.md#s11) |
 
 ## Contrainte de calendrier (Luis, 17 septembre 2026)
 

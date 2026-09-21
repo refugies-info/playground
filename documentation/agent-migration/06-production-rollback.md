@@ -60,7 +60,7 @@
 | Suspendre les générations et changer leur routage | **≤ 5 minutes** |
 | Établir la liste des opérations incertaines et décider | **≤ 30 minutes** |
 | Restauration de données | Délai selon périmètre, **sans sacrifice des corrections humaines** |
-| Bascule complète vers le SDK | **avant la fermeture annoncée par Letta** — voir [§10](07-retrait-v1-et-sauvegarde.md) |
+| Bascule complète vers le SDK | **avant la fermeture annoncée par Letta** — voir [§10](07-v1-removal-and-backup.md) |
 
 > Ces objectifs ne deviennent des engagements qu'après l'exercice staging de PR-20.
 

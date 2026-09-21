@@ -63,22 +63,22 @@ Dès que Letta annonce une date — **ou** si aucun calendrier n'est fourni sous
 ### 10.4 Plan de sauvegarde des ressources (à faire **avant** tout autre travail)
 
 1. Inventorier les agents de production : IDs, modèles, dates de dernière synchronisation.
-2. **Acquérir l'outil officiel** `backing-up-cloud-agents` (skill du guide Letta v1→v2, [§3.4-b](02-etat-des-lieux.md#s34)) plutôt que d'écrire un exporteur maison.
+2. **Acquérir l'outil officiel** `backing-up-cloud-agents` (skill du guide Letta v1→v2, [§3.4-b](02-current-state.md#s34)) plutôt que d'écrire un exporteur maison.
 3. **Mettre chaque agent en pause** avant l'export : arrêter les tours, les éditions de mémoire et les activités planifiées, puis attendre la fin des pushs de mémoire en attente (l'outil n'est pas transactionnel).
 4. Exporter vers un dossier **privé, hors dépôt et hors checkout de mémoire partagée** : messages, métadonnées et mémoire peuvent contenir des secrets.
 5. Extraire le contenu réel des blocs mémoire / consignes / personas, avec sa provenance exacte.
 6. Marquer chaque ressource : contenu du dépôt / dérivé / figé / obsolète.
 7. **Restaurer l'export dans un agent neuf** pour prouver que la restauration fonctionne — ne pas se contenter d'un export non testé.
 8. Conserver l'agent original et le backup jusqu'à validation de l'agent restauré.
-9. **Convertir les ressources en markdown** au format attendu par le SDK : `system/<label>.md` avec frontmatter `description` ([§3.4-h](02-etat-des-lieux.md#s34)). C'est l'étape qui rend la connaissance **lisible par les nouveaux agents** — sans elle, la sauvegarde préserve un contenu inexploitable.
-10. **Sonder la faisabilité de la conversion** sur un agent non critique avant de traiter l'ensemble ([§3.4-h](02-etat-des-lieux.md#s34)).
+9. **Convertir les ressources en markdown** au format attendu par le SDK : `system/<label>.md` avec frontmatter `description` ([§3.4-h](02-current-state.md#s34)). C'est l'étape qui rend la connaissance **lisible par les nouveaux agents** — sans elle, la sauvegarde préserve un contenu inexploitable.
+10. **Sonder la faisabilité de la conversion** sur un agent non critique avant de traiter l'ensemble ([§3.4-h](02-current-state.md#s34)).
 11. Faire relire le contenu extrait par les référents éditoriaux : un export non vérifié reste un export non fiable.
 
 > ️ **Ce que l'outil ne restaure pas** (documenté par le guide) : les messages, les secrets, les outils, les connexions, les dépôts de mémoire partagée, les schedules et la mémoire archival. Ces éléments doivent être reconfigurés manuellement — à intégrer à la procédure de PR-20.
 
 > **Sans cette sauvegarde, la migration aurait pu réussir techniquement et perdre la connaissance métier.** C'était le risque principal du projet — il est traité depuis le 18/09/2026 (ci-dessous).
 
-> ✅ **Sauvegarde effectuée le 18/09/2026** ([§3.5](03-audit-agents-production.md)) : les huit agents de production ont été
+> ✅ **Sauvegarde effectuée le 18/09/2026** ([§3.5](03-production-agents-audit.md)) : les huit agents de production ont été
 > clonés depuis `https://api.letta.com/v1/git/{agent-id}/state.git`, soit ≈ 176 Ko de
 > connaissance métier avec historique Git. **Le risque de perte définitive est levé.**
 
@@ -92,7 +92,7 @@ Dès que Letta annonce une date — **ou** si aucun calendrier n'est fourni sous
 
 ### 10.5 Détection en continu des coupures d'API
 
-Puisque le retrait est **incrémental** (une route historiquement documentée est déjà en HTTP 400 depuis le 17/07/2026, [§3.4-a](02-etat-des-lieux.md#s34)) et non un basculement unique :
+Puisque le retrait est **incrémental** (une route historiquement documentée est déjà en HTTP 400 depuis le 17/07/2026, [§3.4-a](02-current-state.md#s34)) et non un basculement unique :
 
 1. Ajouter une **sonde** qui vérifie périodiquement que les routes historiques encore utilisées par le code répondent.
 2. Alerter l'équipe dès qu'une route passe en erreur **avant** que la production ne la rencontre.
