@@ -1,0 +1,10 @@
+version: 2
+updates:
+  # GitHub Actions only. `.github/workflows/letta.yml` pins
+  # letta-ai/letta-code-action to a commit SHA (upstream tags are stale), so it
+  # needs an automated bump path. npm coverage is a separate policy decision
+  # and is deliberately not enabled here.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
