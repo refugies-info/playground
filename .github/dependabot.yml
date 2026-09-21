@@ -1,9 +1,15 @@
 version: 2
 updates:
-  # GitHub Actions only. `.github/workflows/letta.yml` pins
-  # letta-ai/letta-code-action to a commit SHA (upstream tags are stale), so it
-  # needs an automated bump path. npm coverage is a separate policy decision
-  # and is deliberately not enabled here.
+  # GitHub Actions only — keeps the tag-pinned actions current
+  # (actions/checkout@v6, actions/cache@v4, moonrepo/setup-toolchain@v0).
+  #
+  # It will NOT bump `letta-ai/letta-code-action` in workflows/letta.yml: that is
+  # pinned to a main commit newer than every upstream tag, and the
+  # github-actions ecosystem only advances tagged refs. Bump that SHA by hand
+  # until upstream cuts a newer release — auto-following an untagged branch SHA
+  # would run unreviewed upstream commits against our PRs.
+  #
+  # npm coverage is a separate policy decision and is deliberately not enabled.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
