@@ -19,7 +19,7 @@ Ce dossier documente la migration de l'agent IA éditorial de l'API Letta histor
 | 7 | [`07-retrait-v1-et-sauvegarde.md`](./07-retrait-v1-et-sauvegarde.md) | §10 | **Ce qui se répète** : contrainte de calendrier, sauvegarde des ressources, détection des coupures |
 | 8 | [`08-linear-et-annexe.md`](./08-linear-et-annexe.md) | §8, §11 | **Le pilotage** : jalons, gabarit d'issue, chemin critique, sources et limites |
 
-La numérotation d'origine est conservée : une référence « §6.2 » reste valable dans le nouveau découpage.
+La numérotation d'origine est conservée : une référence « §5.3 » ou « §10.4 » reste valable telle quelle dans le nouveau découpage.
 
 ### Où a atterri chaque renvoi
 
@@ -47,7 +47,7 @@ Il n'existe **pas de date ferme** pour la fermeture de l'API historique, mais el
 1. **Agent Letta historique (production, à l'origine de la migration)** — package `@playground/agents` consommant `@letta-ai/letta-client@1.10.2`. Il alimente les workflows d'ingestion, d'éditorial et de traduction du frontend Next.js. Il consomme du **markdown + frontmatter YAML** issu de l'API Data Inclusion.
 2. **Squelette d'agent RCO XML (`.agents/`, `.commands/`, `.skills/`)** — archivé du dépôt le 15 juin 2026 (voir annexe C de l'inventaire). RCO n'est pas une source de production active ; les helpers `packages/rco/src/` sont conservés pour une réactivation future éventuelle.
 
-L'annexe C de l'inventaire donne le détail ; l'audit du 18/09/2026 (§3.5) a depuis précisé quelles de ces ressources existent réellement côté production.
+L'annexe C de l'inventaire donne le détail ; l'audit du 18/09/2026 (§3.5) a depuis précisé quelles de ces ressources existent réellement côté production. Cet audit est **daté** : les faits d'API évoluent vite (§3.4-e), il devra être revérifié avant mise en œuvre.
 
 ## Contraintes clés
 

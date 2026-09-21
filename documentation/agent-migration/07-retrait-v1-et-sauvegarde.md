@@ -74,7 +74,7 @@ Dès que Letta annonce une date — **ou** si aucun calendrier n'est fourni sous
 10. **Sonder la faisabilité de la conversion** sur un agent non critique avant de traiter l'ensemble ([§3.4-h](02-etat-des-lieux.md#s34)).
 11. Faire relire le contenu extrait par les référents éditoriaux : un export non vérifié reste un export non fiable.
 
-> ️ **Ce que l'outil ne restaure pas** (documenté par le guide) : les messages, les secrets, les outils, les connexions, les dépôts de mémoire partagée, les schedules et la mémoire archival. Ces éléments doivent être reconfigureés manuellement — à intégrer à la procédure de PR-20.
+> ️ **Ce que l'outil ne restaure pas** (documenté par le guide) : les messages, les secrets, les outils, les connexions, les dépôts de mémoire partagée, les schedules et la mémoire archival. Ces éléments doivent être reconfigurés manuellement — à intégrer à la procédure de PR-20.
 
 > **Sans cette sauvegarde, la migration aurait pu réussir techniquement et perdre la connaissance métier.** C'était le risque principal du projet — il est traité depuis le 18/09/2026 (ci-dessous).
 
