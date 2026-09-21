@@ -1,78 +1,78 @@
-# Procédure de retour arrière en production
+# Production rollback procedure
 
-> **Section §7 — cas A à D, objectifs d'exploitation et limites du dispositif.**
+> **Section §7 — cases A to D, operational objectives and limits of the mechanism.**
 
 ---
 
-## 7. Procédure de retour arrière en production
+## 7. Production rollback procedure
 
-### Cas A — Régression limitée à un parcours SDK
+### Case A — Regression limited to one SDK flow
 
-1. **Suspendre** les nouvelles opérations du parcours concerné.
-2. Lister les opérations en cours et les effets déjà produits.
-3. Annuler ou laisser terminer selon l'état de chacune.
-4. **Révoquer leur droit d'écriture** si elles sont remplacées ou mises en quarantaine.
-5. Sélectionner v1 pour les **nouvelles** opérations.
-6. Vérifier une génération témoin et son résultat métier.
-7. Réouvrir progressivement.
+1. **Suspend** new operations of the affected flow.
+2. List in-flight operations and the effects already produced.
+3. Cancel them or let them finish depending on the state of each.
+4. **Revoke their write access** if they are replaced or quarantined.
+5. Select v1 for **new** operations.
+6. Verify a reference generation and its business result.
+7. Reopen gradually.
 
-> **Ne jamais changer le runtime au milieu d'une opération existante.**
+> **Never change the runtime in the middle of an existing operation.**
 
-### Cas B — Contenu incorrect déjà enregistré
+### Case B — Incorrect content already saved
 
-1. Identifier les résultats affectés par opération / release de connaissance.
-2. Empêcher leur sélection automatique.
-3. Comparer la révision actuelle avec celle attendue.
-4. Restaurer contenu, surcharges et liens précédents **uniquement en l'absence d'édition humaine ultérieure**.
-5. En cas de conflit : proposer une restauration manuelle, ne jamais écraser.
-6. Vérifier qu'une sauvegarde ultérieure ne réactive pas le mauvais rapport.
+1. Identify the affected results by operation / knowledge release.
+2. Prevent their automatic selection.
+3. Compare the current revision with the expected one.
+4. Restore previous content, overrides and links **only in the absence of any later human edit**.
+5. In case of conflict: offer a manual restore, never overwrite.
+6. Verify that a later backup does not reactivate the wrong report.
 
-> Pas de restauration globale de base pour un incident de génération isolé.
+> No global database restore for an isolated generation incident.
 
-### Cas C — Publication ou effet externe déjà effectué
+### Case C — Publication or external effect already carried out
 
-- **Ne pas rejouer automatiquement** une publication.
-- Vérifier l'état réel côté RI / Airtable et les reçus locaux.
-- Corriger explicitement l'effet externe.
-- Conserver la trace de l'opération et de la compensation.
+- **Do not automatically replay** a publication.
+- Verify the actual state on the RI / Airtable side and the local receipts.
+- Explicitly correct the external effect.
+- Keep the record of the operation and of the compensation.
 
-> Une transaction Supabase ne peut pas annuler un webhook déjà accepté.
+> A Supabase transaction cannot undo a webhook that has already been accepted.
 
-### Cas D — Le chemin v1 n'est plus disponible
+### Case D — The v1 path is no longer available
 
-> ️ **Ce cas n'est plus un scénario de bord : c'est le scénario attendu.**
-> Luis a confirmé le 17/09/2026 qu'il n'existe pas de date ferme de fermeture de l'API,
-> mais que celle-ci est **imminente**. Le secours v1 est donc un **pont dont la durée est
-> inconnue et imposée de l'extérieur**, pas une option que le projet contrôle.
+> ️ **This case is no longer an edge scenario: it is the expected scenario.**
+> Luis confirmed on 17/09/2026 that there is no firm date for the API shutdown,
+> but that it is **imminent**. The v1 fallback is therefore a **bridge whose duration is
+> unknown and imposed from the outside**, not an option the project controls.
 
-- Suspendre la génération IA.
-- Préserver lecture, édition et validation **manuelles**.
-- Autoriser la publication de contenus validés si elle ne dépend pas du traitement défaillant.
-- Conserver les demandes à traiter.
-- Restaurer une release SDK / une connaissance précédemment validée si cela résout l'incident.
+- Suspend AI generation.
+- Preserve **manual** reading, editing and validation.
+- Allow the publication of validated content if it does not depend on the failing processing.
+- Keep the requests to be processed.
+- Restore an SDK release / previously validated knowledge if that resolves the incident.
 
-> Le plan garantit une **continuité éditoriale dégradée** ; il ne peut pas garantir la continuité automatique de l'IA si les deux chemins Letta sont indisponibles.
+> The plan guarantees **degraded editorial continuity**; it cannot guarantee automatic AI continuity if both Letta paths are unavailable.
 
-### Objectifs d'exploitation proposés
+### Proposed operational objectives
 
-| Objectif | Cible provisoire |
+| Objective | Provisional target |
 |---|---|
-| Suspendre les générations et changer leur routage | **≤ 5 minutes** |
-| Établir la liste des opérations incertaines et décider | **≤ 30 minutes** |
-| Restauration de données | Délai selon périmètre, **sans sacrifice des corrections humaines** |
-| Bascule complète vers le SDK | **avant la fermeture annoncée par Letta** — voir [§10](07-v1-removal-and-backup.md) |
+| Suspend generations and change their routing | **≤ 5 minutes** |
+| Establish the list of uncertain operations and decide | **≤ 30 minutes** |
+| Data restore | Timeframe depending on scope, **without sacrificing human corrections** |
+| Full cutover to the SDK | **before the shutdown announced by Letta** — see [§10](07-v1-removal-and-backup.md) |
 
-> Ces objectifs ne deviennent des engagements qu'après l'exercice staging de PR-20.
+> These objectives only become commitments after the PR-20 staging exercise.
 
-### Ce que le rollback ne couvre pas
+### What rollback does not cover
 
-| Effet | Annulé par un rollback applicatif ? |
+| Effect | Undone by an application rollback? |
 |---|---|
-| Webhook de publication RI déjà accepté | ❌ |
-| Envoi Airtable déjà effectué | ❌ |
-| Affectation de traducteur déjà écrite | ❌ |
-| Traduction déjà écrasée (sans snapshot) | ❌ |
-| Surcharges de métadonnées déjà effacées | ❌ |
-| Mémoire Letta déjà modifiée | ❌ |
-| Rapports déjà créés | ⚠️ partiellement (quarantaine nécessaire) |
-| Workflows Vercel en cours | ⚠️ annulation requise, vérification nécessaire |
+| RI publication webhook already accepted | ❌ |
+| Airtable send already performed | ❌ |
+| Translator assignment already written | ❌ |
+| Translation already overwritten (without snapshot) | ❌ |
+| Metadata overrides already cleared | ❌ |
+| Letta memory already modified | ❌ |
+| Reports already created | ⚠️ partially (quarantine required) |
+| Vercel workflows in progress | ⚠️ cancellation required, verification required |

@@ -1,174 +1,174 @@
-# État des lieux du dépôt
+# Repository current state
 
-> **Sections §3.1 à §3.4 — surface d'intégration, risques de retour arrière déjà présents dans le code, et ce que le guide officiel Letta change dans ce plan.**
-
----
-
-## 3. État des lieux vérifié
-
-### 3.1 Surface d'intégration
-
-| Constat | Référence |
-|---|---|
-| Dépendance déclarée dans un seul paquet | `packages/agents/package.json` — `@letta-ai/letta-client: 1.10.2` |
-| Fabrique de client à double mode (`LETTA_BASE_URL` / `LETTA_ENVIRONMENT` → mode local ; sinon cloud avec clé + project ID) | `packages/agents/src/clients.ts` |
-| Parcours actifs : audit, rédaction, métadonnées (multi-tâches), traduction | `packages/agents/src/{ingestion,simplification,metadata}.ts`, `packages/workflows/src/steps/translation/generate-translation.ts` |
-| Appel principal : `conversations.messages.create()` avec consommation manuelle du flux et **concaténation** des fragments | `packages/agents/src/agents.ts`, `simplification.ts`, plusieurs steps de workflow |
-| Récupération d'usage via l'ancien `runs.usage.retrieve()` (cast `as any`) | `packages/agents/src/simplification.ts` |
-| Les steps de workflow importent `APIError` du client **sans déclarer la dépendance** (résolution par hoisting) | `packages/workflows/src/steps/ingestion/{di-single-record-steps,audit-di-step,metadata-di-step}.ts` |
-| La durabilité (reprise, retry, état) vient de **Vercel Workflow**, pas de Letta | `packages/workflows/src/...`, `editorial_records.active_run_id` |
-| Recherche de conversation par balayage de noms sur une liste plafonnée à 100 | `packages/agents/src/agents.ts` |
-| Le fan-out IA de l'ingestion DI est **commenté** | `packages/workflows/src/pipelines/ingestion/di-ingestion.ts` |
-| `prompts.ts` ne contient que les chaînes `/audit`, `/redaction`, `/metadata`, `/translate` | `packages/agents/src/prompts.ts` |
-| Le corpus documentaire présent sur `main` est une **structure largement vide** | `documentation/agent-migration/agent-knowledge/` |
-| Configuration de traduction : 7 clés de langue, modèles mixtes, IDs à réconcilier | `packages/shared/src/constants/languages.ts` |
-
-> **Point d'attention** : les constantes de `prompts.ts` ne sont **pas** un export de la connaissance éditoriale. Le plan précédent les assimilait parfois à un contenu quasi complet : ce n'est pas le cas. La connaissance doit être retrouvée, vérifiée et versionnée (PR-11).
-
-### 3.2 Risques de retour arrière déjà présents dans le code
-
-Ces risques **préexistent** à la migration. Ils doivent être traités avant toute bascule, sinon le retour arrière sera inefficace.
-
-**a) Métadonnées — effacement de surcharges humaines**
-Une régénération réussie vide `editorial_records.metadata` pour faire du rapport IA la nouvelle base. Revenir à l'ancien SDK **ne restaure pas** ces valeurs.
-*Référence : `packages/workflows/src/steps/ingestion/metadata-di-step.ts`.*
-
-**b) Traductions — écrasement direct**
-La génération écrit directement `translation_records.markdown`, sans historisation. Il faut une version restaurable **avant** bascule.
-*Référence : `packages/workflows/src/steps/translation/generate-translation.ts`.*
-
-**c) Rapports — sélection automatique**
-Un trigger sélectionne les **derniers rapports complets** lors d'une sauvegarde éditoriale. Un rapport SDK écarté pourrait donc être réactivé plus tard, à l'occasion d'une sauvegarde sans rapport avec l'incident.
-*Référence : `supabase/migrations/20260119155552_add_letta_reports_workflow_id_and_trigger.sql`.*
-
-**d) Annulation**
-L'annulation d'un workflow Vercel ne déclenche pas explicitement l'arrêt côté Letta. L'absence de confirmation d'arrêt ne vaut pas preuve d'arrêt.
-
-**e) Effets externes**
-Publication RI, affectation de traducteur et envoi Airtable ne sont pas compensés par un rollback applicatif. Un succès distant suivi d'un échec local peut conduire à un doublon si l'on rejoue.
-
-**f) Route SSE métadonnées**
-`apps/frontend/src/app/api/agents/metadata/stream/route.ts` :
-- remplace le contenu accumulé par le **dernier fragment** (perte du contenu précédent) ;
-- ne présente pas de contrôle d'autorisation métier dans son handler, alors qu'elle utilise la clé service ;
-- peut envoyer `[DONE]` malgré un échec de déclenchement de la persistance.
-
-Cette route doit être **sécurisée ou retirée** indépendamment du choix de SDK. C'est une correction de sécurité à part entière.
-
-### 3.3 Points à vérifier avant de planifier fermement
-
-| À vérifier | Pourquoi |
-|---|---|
-| Date de fermeture de l'API historique | **Confirmée comme imminente, sans date ferme** (Luis, 17/09/2026) — conditionne la durée du pont v1. Voir [§10](07-v1-removal-and-backup.md). |
-| Agents réellement utilisés en production (IDs, langues, modèles) | ✅ **Résolu** — voir [§3.5](03-production-agents-audit.md) |
-| Schéma réellement déployé vs migrations | Le comportement des triggers et contraintes doit être constaté |
-| Quels parcours IA sont réellement actifs en production | Le fan-out est désactivé dans le code : à confirmer côté exploitation |
-| Consommateurs réels de la route SSE | Décide entre correction et retrait |
-| Sources faisant autorité pour la connaissance éditoriale | Le corpus du dépôt est incomplet ; les brouillons locaux n'ont pas valeur de référence — **état réel des ressources établi en [§3.5](03-production-agents-audit.md)** |
-| Limites d'exécution Vercel pour des tours de 1 à 3 minutes | Détermine la faisabilité (`maxDuration`, régions, cold start) |
+> **Sections §3.1 to §3.4 — integration surface, rollback risks already present in the code, and what the official Letta guide changes in this plan.**
 
 ---
 
-> **Mise à jour du 18/09/2026 — apports du guide officiel `letta-ai/agent-v1-to-v2-migration-guide`.** Le plan ci-dessous a été revu sur quatre points structurants, détaillés en **[§3.4](#s34)** :
-> 1. **Certaines fonctionnalités** de la surface historique **sont déjà coupées en production** (pas seulement gelées) ;
-> 2. il existe un **outillage officiel de sauvegarde des agents Cloud** qui fait de la préservation des ressources une opération déléguée, pas un travail artisanal ;
-> 3. le chemin de secours v1 **ne peut plus accueillir de nouveaux agents**, ce qui change la [§9-A](01-decision.md#s9) ;
-> 4. un ordre de migration obligatoire apparaît entre le transport et la mémoire.
+## 3. Verified current state
+
+### 3.1 Integration surface
+
+| Finding | Reference |
+|---|---|
+| Dependency declared in a single package | `packages/agents/package.json` — `@letta-ai/letta-client: 1.10.2` |
+| Dual-mode client factory (`LETTA_BASE_URL` / `LETTA_ENVIRONMENT` → local mode; otherwise cloud with key + project ID) | `packages/agents/src/clients.ts` |
+| Active flows: audit, writing, metadata (multi-task), translation | `packages/agents/src/{ingestion,simplification,metadata}.ts`, `packages/workflows/src/steps/translation/generate-translation.ts` |
+| Main call: `conversations.messages.create()` with manual stream consumption and **concatenation** of the chunks | `packages/agents/src/agents.ts`, `simplification.ts`, several workflow steps |
+| Usage retrieval via the legacy `runs.usage.retrieve()` (cast `as any`) | `packages/agents/src/simplification.ts` |
+| The workflow steps import `APIError` from the client **without declaring the dependency** (resolved by hoisting) | `packages/workflows/src/steps/ingestion/{di-single-record-steps,audit-di-step,metadata-di-step}.ts` |
+| Durability (resume, retry, state) comes from **Vercel Workflow**, not from Letta | `packages/workflows/src/...`, `editorial_records.active_run_id` |
+| Conversation lookup by scanning names over a list capped at 100 | `packages/agents/src/agents.ts` |
+| The AI fan-out of DI ingestion is **commented out** | `packages/workflows/src/pipelines/ingestion/di-ingestion.ts` |
+| `prompts.ts` contains only the `/audit`, `/redaction`, `/metadata`, `/translate` strings | `packages/agents/src/prompts.ts` |
+| The documentation corpus present on `main` is a **largely empty structure** | `documentation/agent-migration/agent-knowledge/` |
+| Translation configuration: 7 language keys, mixed models, IDs to reconcile | `packages/shared/src/constants/languages.ts` |
+
+> **Caveat**: the constants in `prompts.ts` are **not** an export of the editorial knowledge. The previous plan sometimes treated them as near-complete content: that is not the case. The knowledge must be recovered, verified and versioned (PR-11).
+
+### 3.2 Rollback risks already present in the code
+
+These risks **pre-exist** the migration. They must be addressed before any cutover, otherwise the rollback will be ineffective.
+
+**a) Metadata — erasure of human overrides**
+A successful regeneration empties `editorial_records.metadata` to make the AI report the new baseline. Reverting to the old SDK **does not restore** those values.
+*Reference: `packages/workflows/src/steps/ingestion/metadata-di-step.ts`.*
+
+**b) Translations — direct overwrite**
+Generation writes directly to `translation_records.markdown`, with no historization. A restorable version is required **before** cutover.
+*Reference: `packages/workflows/src/steps/translation/generate-translation.ts`.*
+
+**c) Reports — automatic selection**
+A trigger selects the **latest complete reports** during an editorial backup. An SDK report that was discarded could therefore be reactivated later, during a backup unrelated to the incident.
+*Reference: `supabase/migrations/20260119155552_add_letta_reports_workflow_id_and_trigger.sql`.*
+
+**d) Cancellation**
+Cancelling a Vercel workflow does not explicitly trigger shutdown on the Letta side. The absence of a shutdown confirmation is not proof of shutdown.
+
+**e) External effects**
+RI publication, translator assignment and Airtable sends are not compensated by an application rollback. A remote success followed by a local failure can lead to a duplicate if the operation is replayed.
+
+**f) Metadata SSE route**
+`apps/frontend/src/app/api/agents/metadata/stream/route.ts`:
+- replaces the accumulated content with the **last chunk** (loss of the previous content);
+- has no business authorization check in its handler, even though it uses the service key;
+- can send `[DONE]` despite a failed persistence trigger.
+
+This route must be **secured or removed** regardless of which SDK is chosen. This is a security fix in its own right.
+
+### 3.3 Items to verify before planning firmly
+
+| To verify | Why |
+|---|---|
+| Historical API shutdown date | **Confirmed as imminent, with no firm date** (Luis, 17/09/2026) — determines the length of the v1 bridge. See [§10](07-v1-removal-and-backup.md). |
+| Agents actually used in production (IDs, languages, models) | ✅ **Resolved** — see [§3.5](03-production-agents-audit.md) |
+| Schema actually deployed vs migrations | The behavior of triggers and constraints must be observed |
+| Which AI flows are actually active in production | The fan-out is disabled in the code: to be confirmed on the operations side |
+| Actual consumers of the SSE route | Decides between fixing and removing it |
+| Authoritative sources for the editorial knowledge | The repository corpus is incomplete; local drafts are not authoritative — **actual state of the resources established in [§3.5](03-production-agents-audit.md)** |
+| Vercel execution limits for 1- to 3-minute turns | Determines feasibility (`maxDuration`, regions, cold start) |
+
+---
+
+> **Update of 18/09/2026 — contributions of the official `letta-ai/agent-v1-to-v2-migration-guide`.** The plan below was revised on four structural points, detailed in **[§3.4](#s34)**:
+> 1. **Some features** of the legacy surface **are already shut off in production** (not merely frozen);
+> 2. there is **official tooling for backing up Cloud agents**, which turns resource preservation into a delegated operation rather than handcrafted work;
+> 3. the v1 fallback path **can no longer host new agents**, which changes [§9-A](01-decision.md#s9);
+> 4. a mandatory migration order emerges between transport and memory.
 
 <a id="s34"></a>
 
-### 3.4 Ce que le guide officiel Letta change dans ce plan
+### 3.4 What the official Letta guide changes in this plan
 
-Source : <https://github.com/letta-ai/agent-v1-to-v2-migration-guide> (dernier commit `61693d0`, 14/09/2026), examiné le 18/09/2026.
+Source: <https://github.com/letta-ai/agent-v1-to-v2-migration-guide> (last commit `61693d0`, 14/09/2026), reviewed on 18/09/2026.
 
-**a) Certaines API historiques sont déjà désactivées, pas seulement gelées.**
-Le guide documente explicitement que l'endpoint `folders` retourne **HTTP 400 depuis le 17 juillet 2026** (`This API route is deprecated and no longer supported on the Letta API`).
+**a) Some legacy APIs are already disabled, not merely frozen.**
+The guide explicitly documents that the `folders` endpoint returns **HTTP 400 since 17 July 2026** (`This API route is deprecated and no longer supported on the Letta API`).
 
-✅ **Vérifié sur notre code** : aucune utilisation de `folders` / `filesystem` / `files` / `exportFile` dans `packages`, `apps` ou `scripts`. **Impact nul sur Playground.**
-➡️ Le retrait letta Cloud est donc **incrémental**, pas un « big bang » : certains chemins tombent avant d'autres. La [§10](07-v1-removal-and-backup.md) devrait viser une **détection en continu** de ces bascules, pas une date unique.
+✅ **Verified against our code**: no use of `folders` / `filesystem` / `files` / `exportFile` in `packages`, `apps` or `scripts`. **No impact on Playground.**
+➡️ The Letta Cloud removal is therefore **incremental**, not a "big bang": some paths go down before others. [§10](07-v1-removal-and-backup.md) should aim for **continuous detection** of these cutovers, not a single date.
 
-**b) Un outillage officiel de sauvegarde d'agents Cloud existe — et il est testé.**
-Le dépôt fournit une skill `backing-up-cloud-agents` avec un script (`cloud-agent.ts`) qui exporte les réglages d'un agent, ses messages de contexte et **l'historique Git complet de sa mémoire** vers un dossier privé, puis sait **recréer un agent neuf** à partir de ce backup.
+**b) Official Cloud agent backup tooling exists — and it is tested.**
+The repository provides a `backing-up-cloud-agents` skill with a script (`cloud-agent.ts`) that exports an agent's settings, its context messages and **the full Git history of its memory** to a private folder, and can then **recreate a brand-new agent** from that backup.
 
-- Export : `GET /v1/agents/{id}` + `GET /v1/messages/{id}` + accès Git authentifié sur `/v1/git/{agent-id}/state.git`.
-- Restauration : `POST /v1/agents` (corps allowlisté, `initial_message_sequence` vide) puis clone/push Git et `POST /v1/agents/{id}/recompile`.
-- Garde-fous documentés : refus d'écraser un dossier existant, jamais de `git push --force`, **aucun retry automatique** d'une création potentiellement aboutie, ID imprimé avant toute étape pouvant échouer.
-- Couverture et exclusions explicitées (`references/format.md`) : secrets, outils, connexions, dépôts partagés, schedules, mémoire archival et **historique de messages** ne sont **pas** restaurés.
+- Export: `GET /v1/agents/{id}` + `GET /v1/messages/{id}` + authenticated Git access on `/v1/git/{agent-id}/state.git`.
+- Restore: `POST /v1/agents` (allowlisted body, empty `initial_message_sequence`), then Git clone/push and `POST /v1/agents/{id}/recompile`.
+- Documented safeguards: refuses to overwrite an existing folder, never `git push --force`, **no automatic retry** of a creation that may have succeeded, ID printed before any step that can fail.
+- Coverage and exclusions spelled out (`references/format.md`): secrets, tools, connections, shared repositories, schedules, archival memory and **message history** are **not** restored.
 
-️ **Conséquence pour [§10.4](07-v1-removal-and-backup.md#s104)** : la sauvegarde des ressources n'est plus un travail artisanal à concevoir, c'est une **opération déléguée à l'outil officiel**, à exécuter avant la fermeture. Un workflow CI (`cloud-agent-backup.yml`) et des tests sont fournis, ce qui en fait un artefact maintenable.
+️ **Consequence for [§10.4](07-v1-removal-and-backup.md#s104)**: backing up the resources is no longer handcrafted work to be designed; it is an **operation delegated to the official tool**, to be run before shutdown. A CI workflow (`cloud-agent-backup.yml`) and tests are provided, which makes it a maintainable artifact.
 
-**c) Le chemin de secours v1 ne peut plus accueillir de nouveaux agents.**
-La restauration **crée un nouvel agent Cloud** — ce qui est précisément le sens de « v1 → v2 ». Si les routes historiques se ferment, **le rollback ne peut pas créer un agent v1 de remplacement**.
+**c) The v1 fallback path can no longer host new agents.**
+Restore **creates a new Cloud agent** — which is precisely the meaning of "v1 → v2". If the legacy routes shut down, **rollback cannot create a replacement v1 agent**.
 
-➡️ **La [§9-A](01-decision.md#s9) change de nature.** « Partager les agents v1 ou en créer des dédiés » n'est plus un arbitrage d'isolation : **créer un agent côté ancien chemin est un cul-de-sac**. Les essais SDK doivent donc utiliser des agents récents, et la préservation du v1 doit porter sur des **agents existants** dont la mémoire est sauvegardée, pas sur une capacité de recréation.
+➡️ **[§9-A](01-decision.md#s9) changes in nature.** "Sharing v1 agents or creating dedicated ones" is no longer an isolation trade-off: **creating an agent on the legacy path is a dead end**. SDK trials must therefore use recent agents, and v1 preservation must cover **existing agents** whose memory is backed up, not a capacity to recreate them.
 
-**d) Ordre obligatoire : transport d'abord, mémoire ensuite.**
-Le guide insiste : l'API v1 et le SDK écrivent dans **deux magasins de mémoire différents** (blocs classiques côté v1, Git/MemFS côté SDK). La conversion de blocs legacy vers des fichiers `system/<label>.md` est un outil **distinct** (skill `migrating-v1-postgres-agents`), réservé à l'ancien serveur Python et à son backend local.
+**d) Mandatory order: transport first, memory second.**
+The guide insists: the v1 API and the SDK write to **two different memory stores** (classic blocks on the v1 side, Git/MemFS on the SDK side). Converting legacy blocks into `system/<label>.md` files is a **separate** tool (the `migrating-v1-postgres-agents` skill), reserved for the old Python server and its local backend.
 
-➡️ **Le SDK ne peut donc pas lire la mémoire des agents historiques.** Tant que le transport v1 reste actif, il lit des blocs ; dès qu'il bascule sur le SDK, il lit un dépôt Git. Migrer le transport avant d'avoir **matérialisé la connaissance** côté Git produirait des agents SDK **sans instructions**, c'est-à-dire des générations silencieusement dégradées.
+➡️ **The SDK therefore cannot read the memory of the legacy agents.** As long as the v1 transport remains active, it reads blocks; as soon as it switches to the SDK, it reads a Git repository. Migrating the transport before the knowledge has been **materialized** on the Git side would produce SDK agents **without instructions**, that is, silently degraded generations.
 
-➡️ Conséquence de séquencement, cohérente avec la [§10.2](07-v1-removal-and-backup.md#s102) : dans la vague **V2**, PR-01 (matérialisation de la connaissance) **bloque** PR-09.
+➡️ A sequencing consequence, consistent with [§10.2](07-v1-removal-and-backup.md#s102): in wave **V2**, PR-01 (knowledge materialization) **blocks** PR-09.
 
-**e) Le SDK évolue vite — épingler et revalider.**
-L'exemple officiel du guide épingle `@letta-ai/letta-agent-sdk@0.2.6`, alors que le registre npm publiait `0.8.11` le 16/09/2026 (et `0.8.3` le 01/09, seule version satisfaisant notre délai de maturité). Les API du SDK ont donc bougé entre les deux. La revalidation de la version retenue prévue dans PR-03 reste **obligatoire** : les extraits du guide sont indicatifs, pas normatifs pour notre version.
+**e) The SDK moves fast — pin and revalidate.**
+The guide's official example pins `@letta-ai/letta-agent-sdk@0.2.6`, while the npm registry published `0.8.11` on 16/09/2026 (and `0.8.3` on 01/09, the only version satisfying our maturity delay). The SDK APIs have therefore moved between the two. The revalidation of the selected version planned in PR-03 remains **mandatory**: the guide's snippets are indicative, not normative for our version.
 
-**f) Précautions opérationnelles de l'outil de sauvegarde.**
-D'après sa documentation, un export **n'est pas une transaction** :
+**f) Operational precautions of the backup tool.**
+According to its documentation, an export **is not a transaction**:
 
-- il faut **mettre l'agent en pause** (arrêter les tours, les éditions de mémoire et les activités planifiées) — le script détecte les changements entre ses lectures mais **ne peut pas prendre un instantané atomique** ;
-- le dossier de sortie doit être **privé et hors dépôt** : les messages et la mémoire peuvent contenir des secrets écrits par des personnes ou des agents ;
-- l'export ne lit que **le chat principal** (`agent.message_ids`), pas toutes les conversations ;
-- un échec de restauration **peut laisser un agent partiel derrière lui**, jamais supprimé automatiquement.
+- the agent must be **paused** (stop turns, memory edits and scheduled activities) — the script detects changes between its reads but **cannot take an atomic snapshot**;
+- the output folder must be **private and outside the repository**: messages and memory may contain secrets written by people or agents;
+- the export reads only **the main chat** (`agent.message_ids`), not all conversations;
+- a failed restore **can leave a partial agent behind**, never deleted automatically.
 
-**g) Compétence à acquérir.**
-La skill officielle est structurée `SKILL.md` + `references/` + `scripts/`, donc directement installable et auditables. Elle doit être intégrée à la vague **V1** plutôt que réécrite.
+**g) A capability to acquire.**
+The official skill is structured as `SKILL.md` + `references/` + `scripts/`, so it is directly installable and auditable. It should be integrated into wave **V1** rather than rewritten.
 
-**h) La conversion des ressources legacy vers du markdown n'est pas couverte par les outils officiels.**
+**h) Converting legacy resources to markdown is not covered by the official tools.**
 
-C'est la **limite la plus importante** du guide pour notre cas. Le guide fournit deux voies de migration, et aucune ne traite notre situation :
+This is the **most important limitation** of the guide for our case. The guide provides two migration paths, and neither addresses our situation:
 
-| Voie officielle | Source | Sortie | Nous concerne ? |
+| Official path | Source | Output | Does it apply to us? |
 |---|---|---|---|
-| `backing-up-cloud-agents` | Agent Cloud récent (mémoire **Git**) | Agent neuf + mémoire Git intacte | Partiellement : nos agents v1 ont une mémoire en **blocs**, pas en Git |
-| `migrating-v1-postgres-agents` | Base **PostgreSQL** du serveur Python retiré | Backend local + fichiers `system/<label>.md` | Non : nous n'avons pas accès à cette base |
+| `backing-up-cloud-agents` | Recent Cloud agent (**Git** memory) | Brand-new agent + intact Git memory | Partially: our v1 agents have **block** memory, not Git |
+| `migrating-v1-postgres-agents` | **PostgreSQL** database of the retired Python server | Local backend + `system/<label>.md` files | No: we do not have access to that database |
 
-La skill `migrating-v1-postgres-agents` **contient bien la logique de conversion qui nous manque** — blocs → `system/<label>.md` avec frontmatter `description` — mais elle **lit directement les tables PostgreSQL** du serveur historique. Elle n'accepte ni fichier intermédiaire ni export JSON en entrée.
+The `migrating-v1-postgres-agents` skill **does contain the conversion logic we are missing** — blocks → `system/<label>.md` with a `description` frontmatter — but it **reads the PostgreSQL tables** of the legacy server directly. It accepts neither an intermediate file nor a JSON export as input.
 
-**Elle confirme cependant le standard de sortie à viser**, ce qui est précieux : un bloc legacy devient un fichier markdown
+**It does, however, confirm the target output standard**, which is valuable: a legacy block becomes a markdown file
 
 ```markdown
 ---
-description: "<description du bloc>"
+description: "<block description>"
 ---
 
-<valeur du bloc>
+<block value>
 ```
 
-placé sous `system/` (les labels déjà préfixés par `system/` sont conservés), et l'ensemble forme un **dépôt Git avec un commit d'import**. C'est exactement le format auquel un agent SDK s'attend pour lire ses instructions.
+placed under `system/` (labels already prefixed with `system/` are preserved), and the whole forms a **Git repository with an import commit**. This is exactly the format an SDK agent expects in order to read its instructions.
 
-#### Trois voies d'obtention possibles
+#### Three possible acquisition paths
 
-| Voie | Principe | Avantages | Risques |
+| Path | Principle | Advantages | Risks |
 |---|---|---|---|
-| **A — Depuis les documents originaux** | Reconstituer consignes et références à partir des sources éditoriales, hors Letta | Source de vérité indépendante de la plateforme ; pas de dépendance à une API en fin de vie ; relecture éditoriale naturelle ; aucun code de conversion à maintenir | **Nécessite de vérifier l'écart** entre le document d'origine et ce qui a réellement été injecté dans les agents. Un écart silencieux produirait des agents « conformes au document » mais différents de la production |
-| **B — Depuis une sauvegarde d'agent** | Exporter l'état de l'agent, puis convertir blocs → markdown | **Fidèle à ce qui tourne réellement** ; outillage d'export déjà fourni ; traçable | La conversion blocs → markdown **n'est pas fournie** : petit script à écrire (~50 lignes, le format cible est documenté ci-dessus). **À vérifier avant de s'y fier** : la structure exacte des blocs renvoyée par l'API d'export, et l'accessibilité de la mémoire d'un agent v1 en Git |
-| **C — Copier-coller depuis l'ADE** | Lecture manuelle dans l'interface Letta, recopie dans des fichiers | Fonctionne toujours, indépendamment de toute API | Erreur de transcription non détectable ; aucun diff possible ; non répétable ; **perd la traçabilité** |
+| **A — From the original documents** | Rebuild instructions and references from the editorial sources, outside Letta | Source of truth independent of the platform; no dependency on an end-of-life API; natural editorial review; no conversion code to maintain | **Requires verifying the gap** between the original document and what was actually injected into the agents. A silent gap would produce agents that are "compliant with the document" but different from production |
+| **B — From an agent backup** | Export the agent's state, then convert blocks → markdown | **Faithful to what is actually running**; export tooling already provided; traceable | The blocks → markdown conversion **is not provided**: a small script to write (~50 lines, the target format is documented above). **To verify before relying on it**: the exact block structure returned by the export API, and whether a v1 agent's memory is accessible in Git |
+| **C — Copy-paste from the ADE** | Manual reading in the Letta interface, retyping into files | Always works, independently of any API | Undetectable transcription errors; no diff possible; not repeatable; **loses traceability** |
 
-> ✅ **Mise à jour du 18/09/2026** : la voie B est **déjà réalisée** — l'accès Git de [§3.5](03-production-agents-audit.md) a permis d'exporter l'intégralité de la mémoire des agents. Le choix se réduit à *unifier ou conserver* les deux formats existants.
+> ✅ **Update of 18/09/2026**: path B is **already done** — the Git access from [§3.5](03-production-agents-audit.md) made it possible to export the entire agent memory. The choice now narrows to *unifying or keeping* the two existing formats.
 
-> **Recommandation initiale (conservée pour l'historique) : A comme cible, B comme filet immédiat.**
-> La voie A est la plus propre à terme, mais elle demande une **vérification d'écart** qui prend du temps — temps que l'imminence de la fermeture ne garantit pas. La voie B est rapide et fidèle. Les combiner donne le meilleur des deux : **B pour sauver maintenant**, **A pour reconstruire proprement ensuite**, avec une comparaison entre les deux comme contrôle qualité.
-> La voie C ne doit servir que de **dernier recours**, si A et B échouent toutes les deux.
+> **Initial recommendation (kept for the record): A as the target, B as the immediate safety net.**
+> Path A is the cleanest long-term, but it requires a **gap verification** that takes time — time that the imminence of the shutdown does not guarantee. Path B is fast and faithful. Combining them gives the best of both: **B to save now**, **A to rebuild properly later**, with a comparison between the two as a quality check.
+> Path C should serve only as a **last resort**, if A and B both fail.
 
-#### Action immédiate recommandée
+#### Recommended immediate action
 
-Avant de choisir définitivement, une **sonde à faible coût** sur un seul agent non critique :
+Before deciding definitively, a **low-cost probe** on a single non-critical agent:
 
-1. exporter l'agent avec l'outil officiel ;
-2. inspecter `agent.json` : les blocs de mémoire sont-ils présents et lisibles ?
-3. vérifier si la mémoire de l'agent est accessible en Git sur `/v1/git/{agent-id}/state.git` ;
-4. si les blocs sont exploitables, écrire la conversion minimale et **comparer le résultat** au contenu attendu côté éditorial.
+1. export the agent with the official tool;
+2. inspect `agent.json`: are the memory blocks present and readable?
+3. check whether the agent's memory is accessible in Git at `/v1/git/{agent-id}/state.git`;
+4. if the blocks are usable, write the minimal conversion and **compare the result** with the expected editorial content.
 
-Le résultat de cette sonde détermine la voie pour l'ensemble des agents, et **conditionne PR-01** ([§10.4](07-v1-removal-and-backup.md#s104)). Elle doit être traitée avant tout travail sur le transport ([§3.4-d](#s34)).
+The outcome of this probe determines the path for all agents, and **gates PR-01** ([§10.4](07-v1-removal-and-backup.md#s104)). It must be handled before any work on the transport ([§3.4-d](#s34)).
 
-> ️ **Point d'attention sur l'ordre.** Cette conversion alimente `PR-01`, qui **bloque `PR-09`**. Autrement dit : sans conversion des ressources, l'adaptateur SDK ne peut pas produire d'agents correctement instruits. La conversion n'est donc pas une tâche documentaire annexe, c'est un **prérequis technique**.
+> ️ **Caveat on ordering.** This conversion feeds `PR-01`, which **blocks `PR-09`**. In other words: without converting the resources, the SDK adapter cannot produce properly instructed agents. The conversion is therefore not a side documentation task; it is a **technical prerequisite**.

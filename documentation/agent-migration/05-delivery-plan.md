@@ -1,435 +1,435 @@
-# Plan de livraison — phases et PR
+# Delivery plan — phases and PRs
 
-> **Section §6 — sept phases (0 à 6), 21 PR planifiées et critères de sortie.**
-
----
-
-## 6. Découpage en phases et PR
-
-> Les références **PR-01 … PR-21** sont des **repères de planification**. Ce ne sont ni des numéros GitHub ni des tickets TEC existants. Chaque ligne devient une issue Tech.
-> Les bascules et périodes d'observation deviennent des issues d'exploitation séparées : elles ne nécessitent pas artificiellement une PR.
-
-### Phase 0 — Établir les faits et prouver la faisabilité
-
-#### PR-01 — `docs(agent-migration): actualiser le périmètre et les faits de migration`
-
-**Contenu**
-- Réconcilier code, configuration déployée, agents du dashboard, langues et modèles.
-- Documenter la fenêtre de support de l'API historique et le mode dégradé.
-- Identifier les sources éditoriales faisant autorité.
-- Séparer explicitement : décisions validées / hypothèses / questions de faisabilité.
-- **Intégrer l'outil officiel de sauvegarde d'agents Cloud** (skill `backing-up-cloud-agents` du guide Letta v1→v2, [§3.4-b](02-current-state.md#s34)) plutôt que d'écrire un exporteur maison.
-- **Sonder les routes historiques** encore utilisées par le code (détection en continu, [§10.5](07-v1-removal-and-backup.md#s105)).
-
-**Critères d'acceptation**
-- [ ] **Statut d'obsolescence écrite dans le document lui-même** : en-tête de dépréciation, remplacement indiqué, procédure de récupération de l'inventaire vers le nouveau foyer. Ne pas laisser un plan obsolète comme source d'autorité par défaut.
-- [ ] **Balisage des ressources gelées** : marquer sur chaque ressource Letta Cloud (blocs mémoire, agents) sa date de dernière synchronisation avec le dépôt et sa nature figée, ainsi que **la procédure de récupération en cas de fermeture de l'API**. C'est le livrable immédiat le plus utile.
-- [ ] **Export de sauvegarde réalisé pour chaque agent de production** via l'outil officiel, agents en pause, dossiers privés hors dépôt ([§10.4](07-v1-removal-and-backup.md#s104)).
-- [ ] **Sonde de conversion exécutée sur un agent non critique** ([§3.4-h](02-current-state.md#s34)) : les blocs de mémoire sont-ils lisibles dans l'export, et la mémoire de l'agent est-elle accessible en Git ?
-- [ ] **Voie de conversion arbitrée** (A documents originaux / B sauvegarde / C copier-coller) et **justifiée par écrit**. La logique officielle de conversion blocs → `system/<label>.md` est documentée, mais elle lit PostgreSQL : si elle n'est pas réutilisable, notre propre conversion doit être écrite.
-- [ ] **Ressources des agents v1 converties en markdown** au format `system/<label>.md` avec frontmatter `description`, dans un dépôt Git versionné.
-- [ ] **Écart documenté** entre les ressources converties et les documents d'origine, autrement dit : l'écart entre ce qui a réellement tourné en production et la source éditoriale de référence.
-- [ ] **Relecture éditoriale** des ressources converties effectuée par un référent.
-- [ ] **Restauration prouvée** dans un agent neuf, avec les exclusions connues (messages, secrets, outils, connexions, dépôts partagés, schedules, mémoire archival) listées pour PR-20.
-- [ ] **Route `folders` confirmée morte** et absence d'usage dans le code (déjà vérifié le 18/09 : aucun usage).
-- [ ] **Sonde des routes historiques** en place, avec alerte avant impact production.
-- [ ] Matrice complète des parcours : actifs, dormants, à retirer.
-- [ ] IDs d'agents, langues et modèles réconciliés avec la configuration réellement déployée.
-- [ ] Sources de connaissance identifiées et statut de chacune explicité.
-- [ ] Aucun changement d'agent de production.
-
-**Dépendances :** aucune. **Bloque PR-09** ([§3.4-d](02-current-state.md#s34)).
-
-#### PR-02 — `test(agents): établir les références de non-régression`
-
-**Contenu**
-- Corpus représentatif et anonymisé : audit, métadonnées, rédaction, traductions.
-- Cas limites : frontmatter invalide, `---` manquant, directives imbriquées, doublons, contenus longs, RTL / langues complexes.
-- Fixtures de transport et assertions sur les contrats métier actuels.
-
-**Critères d'acceptation**
-- [ ] Baseline enregistrée **avant** tout changement de comportement.
-- [ ] Comparaison sur données structurées, décisions métier et qualité éditoriale — pas sur une égalité textuelle brute.
-- [ ] Toute langue réellement activée est couverte.
-- [ ] Les défauts connus sont listés et distingués des comportements à préserver.
-
-**Dépendances :** PR-01.
-
-#### PR-03 — `test(agents): valider le SDK dans le runtime Vercel`
-
-**Contenu**
-- Version SDK épinglée et compatible avec la politique de maturité.
-- Essai isolé, avec agents d'évaluation dédiés.
-- Build Next.js et exécution d'une **étape Vercel Workflow réelle**.
-- Mesure du démarrage sandbox, durée des tours, limites d'exécution.
-- Tests de coupure après envoi, reprise, annulation, permissions, remontée d'usage.
-
-**Critères d'acceptation**
-- [ ] Preuve de compatibilité de la version choisie (pas seulement lecture des types).
-- [ ] Vérification qu'un contenu de **skill** est réellement accessible dans le sandbox — c'est-à-dire que le mécanisme de chargement fonctionne, indépendamment de notre contenu, qui arrive en PR-11.
-- [ ] Aucun appel payant ni effet métier déclenché depuis les routes de production.
-- [ ] Décision écrite **go / no-go**.
-
-**Dépendances :** PR-01 ; PR-02 pour des essais représentatifs.
-
-**🚦 Porte de sortie :** si Vercel ne convient pas, revenir à une décision d'architecture. **Ne pas introduire implicitement un worker GCP** : c'est un projet distinct.
+> **Section §6 — seven phases (0 to 6), 21 planned PRs and exit criteria.**
 
 ---
 
-### Phase 1 — Construire les protections communes et le retour arrière
+## 6. Breakdown into phases and PRs
 
-#### PR-04 — `refactor(agents): isoler les appels v1 derrière un contrat applicatif`
+> References **PR-01 … PR-21** are **planning markers**. They are neither GitHub numbers nor existing TEC tickets. Each line becomes a Tech issue.
+> Cutovers and observation periods become separate operations issues: they do not artificially require a PR.
 
-**Contenu**
-- Centraliser appels, événements, erreurs et résultats dans `packages/agents`.
-- Retirer la dépendance des workflows aux classes d'erreur propres au client historique.
-- Ne conserver que l'implémentation v1 active.
+### Phase 0 — Establish the facts and prove feasibility
 
-**Critères d'acceptation**
-- [ ] Comportement métier inchangé ; baseline PR-02 conservée.
-- [ ] Aucun objet client/session transporté dans les arguments persistés d'un workflow.
-- [ ] Les types d'API-first permettent un bundling compatible Vercel.
-- [ ] **Interface de fourniture de connaissance définie** : chaque parcours déclare quel contenu d'instruction il attend (nom de skill, fichier de mémoire, ou identifiant de dépôt), sans présumer du SDK. L'implémentation de l'adaptateur est fournie en PR-11.
-- [ ] Dans la lignée de la [§5.3](01-decision.md#s53) : l'interface accepte **une mémoire homologue v1 en lecture seule** et la désigne comme telle, de sorte que le nouvel agent sache identifier son prédécesseur en langage naturel.
+#### PR-01 — `docs(agent-migration): update the migration scope and facts`
 
-**Dépendances :** PR-02. Peut avancer en parallèle du spike.
+**Content**
+- Reconcile code, deployed configuration, dashboard agents, languages and models.
+- Document the support window of the legacy API and the degraded mode.
+- Identify the authoritative editorial sources.
+- Explicitly separate: validated decisions / assumptions / feasibility questions.
+- **Integrate the official Cloud agent backup tool** (skill `backing-up-cloud-agents` from the Letta v1→v2 guide, [§3.4-b](02-current-state.md#s34)) rather than writing a homegrown exporter.
+- **Probe the legacy routes** still used by the code (continuous detection, [§10.5](07-v1-removal-and-backup.md#s105)).
 
-#### PR-05 — `feat(agents): ajouter le routage contrôlé et l'arrêt des générations`
+**Acceptance criteria**
+- [ ] **Obsolescence status written into the document itself**: deprecation header, stated replacement, procedure for recovering the inventory into the new home. Do not leave an obsolete plan as the default source of authority.
+- [ ] **Tagging of frozen resources**: mark on each Letta Cloud resource (memory blocks, agents) its last synchronization date with the repository and its frozen nature, as well as **the recovery procedure if the API is shut down**. This is the most immediately useful deliverable.
+- [ ] **Backup export performed for each production agent** via the official tool, agents paused, private folders outside the repository ([§10.4](07-v1-removal-and-backup.md#s104)).
+- [ ] **Conversion probe run on a non-critical agent** ([§3.4-h](02-current-state.md#s34)): are the memory blocks readable in the export, and is the agent memory accessible in Git?
+- [ ] **Conversion path decided** (A original documents / B backup / C copy-paste) and **justified in writing**. The official conversion logic blocks → `system/<label>.md` is documented, but it reads PostgreSQL: if it is not reusable, our own conversion must be written.
+- [ ] **v1 agent resources converted to markdown** in the `system/<label>.md` format with `description` frontmatter, in a versioned Git repository.
+- [ ] **Documented gap** between the converted resources and the original documents, in other words: the gap between what actually ran in production and the reference editorial source.
+- [ ] **Editorial review** of the converted resources performed by a referent.
+- [ ] **Restoration proven** in a fresh agent, with the known exclusions (messages, secrets, tools, connections, shared repositories, schedules, archival memory) listed for PR-20.
+- [ ] **`folders` route confirmed dead** and no usage in the code (already verified on 18/09: no usage).
+- [ ] **Legacy route probe** in place, with an alert before production impact.
+- [ ] Complete matrix of the flows: active, dormant, to be removed.
+- [ ] Agent IDs, languages and models reconciled with the configuration actually deployed.
+- [ ] Knowledge sources identified and the status of each made explicit.
+- [ ] No production agent change.
 
-**Contenu**
-- Sélection serveur par parcours ; granularité **par langue** pour les traductions.
-- Contrôles proposés : `v1`, `agent-sdk`, `paused`.
-- Configuration dynamique authentifiée, auditée, à priorité déterministe.
-- Le mode `paused` bloque les nouvelles générations mais conserve les fonctions éditoriales sûres.
+**Dependencies:** none. **Blocks PR-09** ([§3.4-d](02-current-state.md#s34)).
 
-**Critères d'acceptation**
-- [ ] v1 reste le défaut.
-- [ ] Le SDK ne peut pas être activé avant que son adaptateur existe.
-- [ ] Un changement de routage est vérifiable **sans supposer** qu'une modification d'environnement Vercel est instantanée.
-- [ ] Si la configuration est illisible, aucune activation SDK implicite (comportement conservateur).
-- [ ] Arrêt d'urgence testé.
+#### PR-02 — `test(agents): establish the non-regression baselines`
 
-**Dépendances :** PR-04.
+**Content**
+- Representative, anonymized corpus: audit, metadata, writing, translations.
+- Edge cases: invalid frontmatter, missing `---`, nested directives, duplicates, long content, RTL / complex languages.
+- Transport fixtures and assertions on the current business contracts.
 
-#### PR-06 — `feat(workflows): persister les opérations et les conversations`
+**Acceptance criteria**
+- [ ] Baseline recorded **before** any behavior change.
+- [ ] Comparison on structured data, business decisions and editorial quality — not on raw textual equality.
+- [ ] Every language actually enabled is covered.
+- [ ] Known defects are listed and distinguished from behaviors to preserve.
 
-**Contenu**
-- Migrations additives pour les opérations et les correspondances de conversations.
-- Unicité et lookup sur `(purpose_key, runtime, agent_id)`.
-- Conservation des références éditoriales existantes.
-- Acquisition atomique d'une opération, contrôle de concurrence, protection contre les tentatives périmées (lease / fencing).
+**Dependencies:** PR-01.
 
-**Critères d'acceptation**
-- [ ] Deux requêtes identiques ne créent pas deux opérations actives.
-- [ ] Une régénération volontaire reste possible sur la même source.
-- [ ] Les retries conservent runtime, agent et identité de demande.
-- [ ] Les workflows antérieurs, sans nouveaux champs, restent interprétables comme v1.
-- [ ] **Pour la [§5.3](01-decision.md#s53)** : la correspondance entre une conversation d'une génération et son agent est persistée ; en cas d'ambiguïté (plusieurs agents, ou agent introuvable), la reprise est **bloquée explicitement**, jamais résolue par supposition.
-- [ ] **L'identité de l'agent propriétaire de la conversation est relue depuis la conversation elle-même** (`agent_id`), jamais déduite du résumé ou du nom.
-- [ ] **La résolution de la conversation précède le démarrage du workflow** : une reprise impossible doit échouer avant que du travail soit lancé.
-- [ ] L'UI peut afficher l'origine d'une reprise **quand la signalisation produit est retenue** ([§5.3](01-decision.md#s53)), sans que le mécanisme dépende de cette décision.
-- [ ] RLS, droits et migrations testés ; `supabase db reset` vérifié.
+#### PR-03 — `test(agents): validate the SDK in the Vercel runtime`
 
-**Dépendances :** PR-04, PR-05, conclusions de PR-03.
+**Content**
+- SDK version pinned and compatible with the maturity policy.
+- Isolated trial, with dedicated evaluation agents.
+- Next.js build and execution of a **real Vercel Workflow step**.
+- Measurement of sandbox startup, turn duration, execution limits.
+- Tests for cut-off after send, resume, cancellation, permissions, usage reporting.
 
-#### PR-07 — `fix(workflows): sécuriser les écritures et préserver les versions précédentes`
+**Acceptance criteria**
+- [ ] Proof of compatibility for the chosen version (not merely reading the types).
+- [ ] Verification that **skill** content is actually accessible in the sandbox — that is, that the loading mechanism works, independently of our content, which arrives in PR-11.
+- [ ] No paid call or business effect triggered from the production routes.
+- [ ] Written **go / no-go** decision.
 
-**Contenu**
-- Séparer **résultat généré** et **activation métier**.
-- Sauvegarder les valeurs remplacées : traductions, surcharges de métadonnées, liens, statuts.
-- Commit atomique avec vérification de la version source **et** de la révision cible.
-- Rendre les sélections automatiques de rapports compatibles avec la quarantaine et la restauration.
+**Dependencies:** PR-01; PR-02 for representative trials.
 
-**Critères d'acceptation**
-- [ ] Un rapport écarté n'est pas réactivé par une sauvegarde ultérieure.
-- [ ] Une modification humaine concurrente n'est jamais écrasée.
-- [ ] Une panne entre génération et persistance ne provoque pas automatiquement une nouvelle génération.
-- [ ] Une tentative obsolète ne peut modifier ni contenu ni statut.
-- [ ] Restauration sélective démontrée sur une traduction et sur des surcharges de métadonnées.
-
-**Dépendances :** PR-06.
-
-#### PR-08 — `fix(workflows): fiabiliser annulation et reprise des opérations`
-
-**Contenu**
-- Séparer explicitement : annulation applicative, annulation Vercel, annulation du transport.
-- États opérables : **envoi incertain**, annulation demandée, réconciliation nécessaire.
-- Traiter les sentinelles `generating` / `pending` abandonnées.
-- Réconciliation liée à l'opération, plutôt qu'à une fenêtre temporelle.
-
-**Critères d'acceptation**
-- [ ] Une réponse tardive après annulation ne devient pas active.
-- [ ] L'absence de confirmation d'arrêt distant ne vaut pas preuve d'arrêt.
-- [ ] Aucune relance aveugle après un envoi incertain.
-- [ ] Les générations bloquées sont visibles et récupérables par l'exploitation.
-- [ ] Le fencing protège les données **même si** la génération distante continue.
-
-**Dépendances :** PR-06, PR-07.
+**🚦 Exit gate:** if Vercel is unsuitable, return to an architecture decision. **Do not implicitly introduce a GCP worker**: that is a separate project.
 
 ---
 
-### Phase 2 — Ajouter le SDK et la connaissance nécessaire
+### Phase 1 — Build the shared safeguards and the rollback
 
-#### PR-09 — `feat(agents): implémenter l'adaptateur Letta Agent SDK`
+#### PR-04 — `refactor(agents): isolate v1 calls behind an application contract`
 
-**Contenu**
-- `LettaAgentClient` (backend à trancher en PR-03).
-- Création / reprise des conversations selon les correspondances persistées.
-- `send()` + consommation **complète** de `stream()`, résultat terminal, nettoyage des sessions.
-- Erreurs typées, politique de retry bornée, reprise documentée.
-- Liste d'outils explicite et politique de permission.
-- `otid` pour la corrélation des envois.
-- **Fourniture effective de la connaissance** déclarée par l'interface de PR-04, à partir du contenu produit en PR-11.
+**Content**
+- Centralize calls, events, errors and results in `packages/agents`.
+- Remove the dependency of the workflows on the error classes specific to the legacy client.
+- Keep only the active v1 implementation.
 
-**Critères d'acceptation**
-- [ ] SDK désactivé par défaut.
-- [ ] Aucun doublon fragments + résultat terminal.
-- [ ] Un terminal en échec ne produit jamais de résultat métier réussi.
-- [ ] Sessions fermées sur succès, erreur et annulation (`await using`).
-- [ ] Aucun outil d'écriture métier ni secret de base exposé au modèle.
-- [ ] Aucune approbation interactive susceptible de bloquer indéfiniment un traitement serveur.
-- [ ] `resumeSession` après fermeture inattendue couvert par un test.
-- [ ] **Une session SDK réelle voit les instructions du parcours** — vérifié par un test, pas par lecture de configuration. Sans cette assertion, un adaptateur peut être « vert » tout en produisant des agents non instruits.
+**Acceptance criteria**
+- [ ] Business behavior unchanged; PR-02 baseline preserved.
+- [ ] No client/session object carried in the persisted arguments of a workflow.
+- [ ] The API-first types allow Vercel-compatible bundling.
+- [ ] **Knowledge supply interface defined**: each flow declares which instruction content it expects (skill name, memory file, or repository identifier), without presuming the SDK. The adapter implementation is delivered in PR-11.
+- [ ] In line with [§5.3](01-decision.md#s53): the interface accepts **a read-only v1 counterpart memory** and designates it as such, so that the new agent can identify its predecessor in natural language.
 
-**Dépendances :** PR-03 à PR-08, **PR-01 (bloquant) et PR-11 (bloquant)**. La connaissance doit être matérialisée côté Git avant qu'un adaptateur SDK ne lise une mémoire : l'API historique et le SDK écrivent dans deux magasins différents ([§3.4-d](02-current-state.md#s34)). Sans PR-01 ni PR-11, l'agent SDK démarre **sans instructions** et produit des sorties dégradées de façon silencieuse.
+**Dependencies:** PR-02. Can proceed in parallel with the spike.
 
-#### PR-10 — `feat(agents): tracer les exécutions et leur consommation`
+#### PR-05 — `feat(agents): add controlled routing and generation shutdown`
 
-**Contenu**
-- Corrélation opération ↔ workflow Vercel ↔ conversation ↔ runs Letta.
-- Métriques par runtime / parcours / langue : succès, latence, retries, temps sandbox, résultats incertains.
-- Traçabilité : version SDK, modèle observé, release de connaissance.
+**Content**
+- Server-side selection per flow; **per-language** granularity for translations.
+- Proposed controls: `v1`, `agent-sdk`, `paused`.
+- Authenticated, audited dynamic configuration with deterministic priority.
+- The `paused` mode blocks new generations but keeps the safe editorial functions.
 
-**Critères d'acceptation**
-- [ ] Aucun raisonnement interne, secret ou document complet dans les logs ordinaires.
-- [ ] Usage inconnu représenté par `null`, **jamais** par zéro.
-- [ ] `token_cost` reste identifié comme **comptage de tokens**, pas comme montant monétaire.
-- [ ] Aucun besoin métier ne dépend d'un retour aux anciennes API pour obtenir une métrique facultative.
+**Acceptance criteria**
+- [ ] v1 remains the default.
+- [ ] The SDK cannot be enabled before its adapter exists.
+- [ ] A routing change is verifiable **without assuming** that a Vercel environment modification is instantaneous.
+- [ ] If the configuration is unreadable, no implicit SDK activation (conservative behavior).
+- [ ] Emergency shutdown tested.
 
-**Dépendances :** PR-06, PR-09.
+**Dependencies:** PR-04.
 
-#### PR-11 — `feat(agents): versionner et distribuer la connaissance éditoriale`
+#### PR-06 — `feat(workflows): persist operations and conversations`
 
-**Contenu**
-- Récupération contrôlée des consignes et ressources faisant autorité, selon la voie arbitrée en PR-01 (documents originaux / sauvegarde d'agent / copier-coller — [§3.4-h](02-current-state.md#s34)).
-- Skills audit, rédaction, métadonnées, traduction, avec leurs références.
-- Distribution via mémoire agent et/ou dépôts de mémoire partagée.
-- Manifeste de release et procédure de restauration.
-- Isolation de la connaissance v1 et des évaluations.
+**Content**
+- Additive migrations for operations and conversation mappings.
+- Uniqueness and lookup on `(purpose_key, runtime, agent_id)`.
+- Preservation of the existing editorial references.
+- Atomic acquisition of an operation, concurrency control, protection against stale attempts (lease / fencing).
 
-**Critères d'acceptation**
-- [ ] Un corpus vide ou incomplet fait **échouer** la validation (le validateur actuel ne détecte pas un corpus vide).
-- [ ] Les brouillons historiques ne sont pas présentés comme des exports de production.
-- [ ] Chaque skill est effectivement accessible dans une session SDK réelle.
-- [ ] **Le contenu fourni répond à l'interface déclarée en PR-04** : chaque parcours reçoit bien la connaissance qu'il attend.
-- [ ] **Format `system/<label>.md` respecté** pour les ressources issues de blocs legacy, avec frontmatter `description` ([§3.4-h](02-current-state.md#s34)).
-- [ ] **Les deux générations de mémoire coexistantes sont supportées** ([§3.5](03-production-agents-audit.md)) : `skills/<nom>/SKILL.md` (agathe, ar_v2, en, fa, ps, ti) et consignes en `system/*.md` seul (`ru`, `uk`).
-- [ ] **Le pointeur vers l'homologue vit dans la mémoire, pas dans le code.** Un fichier de mémoire du nouvel agent référence la mémoire homologue v1 et lui donne un nom d'usage (« ton prédécesseur v1 »). But : un **changement de règle ne nécessite aucune modification de code ni redéploiement de skill**. Corollaire : la politique de reprise est gouvernée par des données, donc soumise au même contrôle éditorial que le reste de la connaissance.
-- [ ] Connaissance normative en lecture seule pour les agents lorsque c'est possible.
-- [ ] Aucune modification de l'agent de secours sans procédure réversible vérifiée.
-- [ ] Dérive du dashboard contrôlée pendant la bascule (gel ou détection explicite).
+**Acceptance criteria**
+- [ ] Two identical requests do not create two active operations.
+- [ ] A deliberate regeneration remains possible on the same source.
+- [ ] Retries preserve runtime, agent and request identity.
+- [ ] Earlier workflows, without the new fields, remain interpretable as v1.
+- [ ] **For [§5.3](01-decision.md#s53)**: the mapping between a generation's conversation and its agent is persisted; in case of ambiguity (multiple agents, or agent not found), the resume is **explicitly blocked**, never resolved by assumption.
+- [ ] **The identity of the agent owning the conversation is read back from the conversation itself** (`agent_id`), never inferred from the summary or the name.
+- [ ] **Conversation resolution precedes workflow startup**: an impossible resume must fail before any work is started.
+- [ ] The UI can display the origin of a resume **when the product signaling is retained** ([§5.3](01-decision.md#s53)), without the mechanism depending on that decision.
+- [ ] RLS, permissions and migrations tested; `supabase db reset` verified.
 
-**Dépendances :** PR-01 (**bloquant** : la conversion des ressources en est le livrable), PR-03, PR-04 (l'interface de fourniture doit exister avant le contenu). Peut avancer en parallèle de la phase 1.
+**Dependencies:** PR-04, PR-05, PR-03 conclusions.
 
-#### PR-12 — `feat(agents): rendre la validation des métadonnées déterministe`
+#### PR-07 — `fix(workflows): secure writes and preserve previous versions`
 
-**Contenu**
-- Transformer le protocole de validation agent en skill.
-- **Conserver une validation applicative obligatoire**, indépendante du bon vouloir de l'agent.
-- Sérialiser les données **assainies** par le schéma.
-- Préparer le retrait du script Python d'enregistrement (après la fenêtre de secours).
+**Content**
+- Separate **generated result** and **business activation**.
+- Back up the replaced values: translations, metadata overrides, links, statuses.
+- Atomic commit with verification of the source version **and** the target revision.
+- Make automatic report selections compatible with quarantine and restoration.
 
-**Critères d'acceptation**
-- [ ] L'oubli du skill par l'agent ne permet pas d'activer des métadonnées invalides.
-- [ ] Les transformations du schéma sont présentes dans le résultat persisté.
-- [ ] Une sortie invalide laisse les surcharges humaines et les liens précédents intacts.
-- [ ] Le chemin v1 reste disponible pendant la fenêtre de secours.
+**Acceptance criteria**
+- [ ] A discarded report is not reactivated by a subsequent backup.
+- [ ] A concurrent human modification is never overwritten.
+- [ ] A failure between generation and persistence does not automatically trigger a new generation.
+- [ ] A stale attempt can modify neither content nor status.
+- [ ] Selective restoration demonstrated on a translation and on metadata overrides.
 
-**Dépendances :** PR-07, PR-09, PR-11.
+**Dependencies:** PR-06.
 
----
+#### PR-08 — `fix(workflows): make operation cancellation and resume reliable`
 
-### Phase 3 — Migrer les parcours, sans les activer globalement
+**Content**
+- Explicitly separate: application cancellation, Vercel cancellation, transport cancellation.
+- Operable states: **uncertain send**, cancellation requested, reconciliation required.
+- Handle abandoned `generating` / `pending` sentinels.
+- Reconciliation tied to the operation, rather than to a time window.
 
-#### PR-13 — `feat(agents): migrer l'audit éditorial vers le SDK`
+**Acceptance criteria**
+- [ ] A late response after cancellation does not become active.
+- [ ] The absence of remote shutdown confirmation is not proof of shutdown.
+- [ ] No blind retry after an uncertain send.
+- [ ] Blocked generations are visible and recoverable by operations.
+- [ ] Fencing protects the data **even if** the remote generation continues.
 
-**Contenu**
-- Audit forcé, chemins single-record et batch identifiés.
-- Contrat conformité + détection de doublons conservé.
-- Accès limité aux candidats doublons nécessaires.
-
-**Critères d'acceptation**
-- [ ] `compliant=true` **et** `duplicate=false` restent nécessaires au statut conforme.
-- [ ] Parité sur le corpus de référence.
-- [ ] Aucune dépendance à une table Supabase `dispositifs` supposée exister.
-- [ ] Le service de recherche actuel est conservé, ou remplacé uniquement si son incompatibilité est démontrée.
-- [ ] Fan-out automatique toujours désactivé.
-
-**Dépendances :** PR-09 à PR-11 + protections de la phase 1.
-
-#### PR-14 — `feat(agents): migrer la génération de métadonnées vers le SDK`
-
-**Contenu**
-- Métadonnées forcées et autres chemins conservés.
-- Publication via le commit transactionnel.
-- Respect de la distinction source active / source en attente.
-
-**Critères d'acceptation**
-- [ ] Une génération ne se rattache jamais à la mauvaise version d'ingestion.
-- [ ] Un échec laisse le rapport précédent utilisable.
-- [ ] Toute suppression prévue de surcharges humaines est **historisée et restaurable**.
-- [ ] Comparaison v1 / SDK validée.
-
-**Dépendances :** PR-12.
-
-#### PR-15 — `feat(agents): migrer la réécriture éditoriale vers le SDK`
-
-**Contenu**
-- Conserver le parcours POST → workflow → consultation du résultat.
-- Remplacer le transport et raccorder annulation / réconciliation.
-- Préserver la reprise de l'interface après rechargement.
-
-**Critères d'acceptation**
-- [ ] Deux demandes concurrentes ne s'annulent pas mutuellement sans règle explicite.
-- [ ] La consultation d'un résultat est autorisée via **son opération exacte**.
-- [ ] Aucun rattachement à un rapport voisin par approximation temporelle.
-- [ ] L'éditeur conserve la décision d'appliquer la proposition.
-
-**Dépendances :** PR-09, PR-10, PR-11 + phase 1.
-
-#### PR-16 — `feat(agents): migrer les traductions sans modifier leur topologie`
-
-**Contenu**
-- Conserver les agents / langues réellement configurés.
-- Basculer **indépendamment chaque langue**.
-- Protéger texte, statut et affectation contre les résultats périmés.
-- Garder les règles de régénération récemment corrigées sur `main`.
-
-**Critères d'acceptation**
-- [ ] Matrice complète des langues activées + comportement explicite des langues non configurées.
-- [ ] Liens, directives et structure Markdown préservés.
-- [ ] Validation éditoriale par langue.
-- [ ] Contenu précédent restaurable sans écraser une correction humaine ultérieure.
-- [ ] Une ancienne tentative ne peut changer le statut, réaffecter un traducteur, ni déclencher un nouvel envoi Airtable.
-- [ ] **Reprise d'une conversation d'une génération précédente** ([§5.3](01-decision.md#s53)) : l'historique est lu sans être réécrit, une nouvelle conversation est ouverte par l'agent courant, et la reprise reste **exceptionnelle**. L'attachement en masse d'une mémoire homologue est un signe de sur-attachement à corriger, pas un comportement à valider.
-- [ ] Effets externes incertains réconciliables — sans promettre un « exactly once » non démontré.
-
-**Dépendances :** PR-09 à PR-11, PR-07, PR-08.
-
-#### PR-17 — `fix(api): sécuriser et adapter le flux SSE des métadonnées`
-
-**Contenu**
-- Vérifier les consommateurs réels de la route.
-- Si conservée : authentification, autorisation de la fiche, transport commun, accumulation correcte, persistance fiable.
-- Si inutilisée : retrait contrôlé plutôt que migration inutile.
-
-**Critères d'acceptation**
-- [ ] Un utilisateur non autorisé ne peut ni lancer ni lire une génération.
-- [ ] Affichage progressif conservé si la route reste exposée.
-- [ ] Le contenu persisté est **complet**.
-- [ ] La fin du transport ne masque pas une erreur de persistance.
-- [ ] Déconnexion et résultat tardif couverts par les tests.
-
-**Dépendances :** PR-14. **La correction d'autorisation peut être extraite immédiatement** si la route est exposée en production.
-
-#### PR-18 — `refactor(scripts): adapter les outils d'exploitation au contrat commun`
-
-**Contenu**
-- Migrer `force-metadata-reports` vers les mêmes protections.
-- Rendre les scripts d'exploitation compatibles avec routage, pause et identité d'opération.
-- Inventorier les suppressions différées (agents locaux, Docker/Ollama, anciens scripts, configuration morte).
-
-**Critères d'acceptation**
-- [ ] Aucun script ne contourne les contrôles de concurrence ou de retour arrière.
-- [ ] Les essais d'exploitation n'effectuent aucune écriture surprise.
-- [ ] Les ressources encore nécessaires au secours v1 ne sont pas supprimées prématurément.
-
-**Dépendances :** PR-14 + phase 1.
+**Dependencies:** PR-06, PR-07.
 
 ---
 
-### Phase 4 — Qualification et préparation de la bascule
+### Phase 2 — Add the SDK and the necessary knowledge
 
-#### PR-19 — `test(agents): qualifier parité, charge et reprise après panne`
+#### PR-09 — `feat(agents): implement the Letta Agent SDK adapter`
 
-**Contenu**
-- Comparaisons v1 / SDK en staging, sur des entrées figées.
-- Isolation **SQL et mémoire agent**.
-- Tests de charge graduels.
-- Injection de pannes : coupure après envoi, crash avant commit, résultat tardif, annulation, édition humaine concurrente.
+**Content**
+- `LettaAgentClient` (backend to be decided in PR-03).
+- Creation / resumption of conversations according to the persisted mappings.
+- `send()` + **complete** consumption of `stream()`, terminal result, session cleanup.
+- Typed errors, bounded retry policy, documented resume.
+- Explicit tool list and permission policy.
+- `otid` for correlating sends.
+- **Effective supply of the knowledge** declared by the PR-04 interface, from the content produced in PR-11.
 
-**Critères d'acceptation**
-- [ ] Aucune publication RI ni écriture Airtable réelle depuis le banc de comparaison.
-- [ ] Aucun mélange de conversations, de fiches ou de langues.
-- [ ] Aucun écrasement de travail humain.
-- [ ] Aucun résultat incertain accepté comme succès.
-- [ ] Rapport qualité / latence / consommation avec décision **go / no-go**.
+**Acceptance criteria**
+- [ ] SDK disabled by default.
+- [ ] No duplication of fragments + terminal result.
+- [ ] A failed terminal never produces a successful business result.
+- [ ] Sessions closed on success, error and cancellation (`await using`).
+- [ ] No business write tool or database secret exposed to the model.
+- [ ] No interactive approval likely to block a server-side processing indefinitely.
+- [ ] `resumeSession` after an unexpected close covered by a test.
+- [ ] **A real SDK session sees the flow instructions** — verified by a test, not by reading configuration. Without this assertion, an adapter can be "green" while producing uninstructed agents.
 
-**Dépendances :** parcours à activer, PR-10.
+**Dependencies:** PR-03 to PR-08, **PR-01 (blocking) and PR-11 (blocking)**. The knowledge must be materialized on the Git side before an SDK adapter reads a memory: the legacy API and the SDK write to two different stores ([§3.4-d](02-current-state.md#s34)). Without PR-01 or PR-11, the SDK agent starts **without instructions** and produces silently degraded output.
 
-#### PR-20 — `feat(ops): finaliser les procédures de bascule et de restauration`
+#### PR-10 — `feat(agents): trace executions and their consumption`
 
-**Contenu**
-- Procédures opérables : pause, diagnostic, réconciliation, restauration.
-- Artefact applicatif dual-runtime de secours identifié.
-- Vérification de compatibilité des **workflows déjà démarrés** avec les nouveaux déploiements.
-- Documentation des responsabilités et des accès.
+**Content**
+- Correlation operation ↔ Vercel workflow ↔ conversation ↔ Letta runs.
+- Metrics per runtime / flow / language: success, latency, retries, sandbox time, uncertain results.
+- Traceability: SDK version, observed model, knowledge release.
 
-**Critères d'acceptation**
-- [ ] Exercice de retour arrière staging exécuté de bout en bout.
-- [ ] Restauration d'une traduction **et** de surcharges de métadonnées démontrée.
-- [ ] Une sauvegarde éditoriale après restauration ne réactive pas un rapport mis en quarantaine.
-- [ ] Une modification humaine concurrente est conservée.
-- [ ] Reprise d'un workflow **antérieur au déploiement** vérifiée.
-- [ ] Parcours manuel utilisable si v1 et SDK sont indisponibles.
+**Acceptance criteria**
+- [ ] No internal reasoning, secret or full document in ordinary logs.
+- [ ] Unknown usage represented by `null`, **never** by zero.
+- [ ] `token_cost` remains identified as **token counting**, not as a monetary amount.
+- [ ] No business need depends on a return to the legacy APIs to obtain an optional metric.
 
-**Dépendances :** PR-19.
+**Dependencies:** PR-06, PR-09.
+
+#### PR-11 — `feat(agents): version and distribute the editorial knowledge`
+
+**Content**
+- Controlled retrieval of the authoritative instructions and resources, according to the path decided in PR-01 (original documents / agent backup / copy-paste — [§3.4-h](02-current-state.md#s34)).
+- Audit, writing, metadata and translation skills, with their references.
+- Distribution via agent memory and/or shared memory repositories.
+- Release manifest and restoration procedure.
+- Isolation of the v1 knowledge and of the evaluations.
+
+**Acceptance criteria**
+- [ ] An empty or incomplete corpus makes validation **fail** (the current validator does not detect an empty corpus).
+- [ ] Historical drafts are not presented as production exports.
+- [ ] Each skill is effectively accessible in a real SDK session.
+- [ ] **The supplied content matches the interface declared in PR-04**: each flow actually receives the knowledge it expects.
+- [ ] **`system/<label>.md` format respected** for resources originating from legacy blocks, with `description` frontmatter ([§3.4-h](02-current-state.md#s34)).
+- [ ] **The two coexisting memory generations are supported** ([§3.5](03-production-agents-audit.md)): `skills/<nom>/SKILL.md` (agathe, ar_v2, en, fa, ps, ti) and instructions in `system/*.md` only (`ru`, `uk`).
+- [ ] **The pointer to the counterpart lives in the memory, not in the code.** A memory file of the new agent references the v1 counterpart memory and gives it a usage name ("your v1 predecessor"). Goal: a **rule change requires no code modification and no skill redeployment**. Corollary: the resume policy is governed by data, and therefore subject to the same editorial control as the rest of the knowledge.
+- [ ] Normative knowledge in read-only mode for the agents wherever possible.
+- [ ] No modification of the fallback agent without a verified reversible procedure.
+- [ ] Dashboard drift controlled during the cutover (freeze or explicit detection).
+
+**Dependencies:** PR-01 (**blocking**: converting the resources is its deliverable), PR-03, PR-04 (the supply interface must exist before the content). Can proceed in parallel with phase 1.
+
+#### PR-12 — `feat(agents): make metadata validation deterministic`
+
+**Content**
+- Turn the agent validation protocol into a skill.
+- **Keep a mandatory application-side validation**, independent of the agent's goodwill.
+- Serialize the data **sanitized** by the schema.
+- Prepare the removal of the Python registration script (after the fallback window).
+
+**Acceptance criteria**
+- [ ] The agent forgetting the skill does not allow invalid metadata to be activated.
+- [ ] Schema transformations are present in the persisted result.
+- [ ] An invalid output leaves the human overrides and the previous links intact.
+- [ ] The v1 path remains available during the fallback window.
+
+**Dependencies:** PR-07, PR-09, PR-11.
 
 ---
 
-### Phase 5 — Bascule opérationnelle progressive
+### Phase 3 — Migrate the flows, without enabling them globally
 
-> Issues d'**exploitation**, pas nécessairement de nouvelles PR.
+#### PR-13 — `feat(agents): migrate the editorial audit to the SDK`
 
-**OPS-01 — Pilote interne.** Utilisateurs et fiches identifiés ; un seul runtime par demande ; priorité aux générations explicitement déclenchées ; aucun fan-out automatique.
+**Content**
+- Forced audit, identified single-record and batch paths.
+- Compliance contract + duplicate detection preserved.
+- Access limited to the necessary duplicate candidates.
 
-**OPS-02 — Extension par parcours et par langue.** Ordre proposé : audit forcé → métadonnées forcées → réécriture → traductions (langue par langue). Chaque extension exige un bilan du palier précédent. Le routage reste réversible **indépendamment** pour chaque parcours.
+**Acceptance criteria**
+- [ ] `compliant=true` **and** `duplicate=false` remain required for the compliant status.
+- [ ] Parity on the reference corpus.
+- [ ] No dependency on a Supabase `dispositifs` table assumed to exist.
+- [ ] The current search service is kept, or replaced only if its incompatibility is demonstrated.
+- [ ] Automatic fan-out still disabled.
 
-**OPS-03 — Observation et acceptation.** Seuils proposés, **à valider avant le pilote** :
+**Dependencies:** PR-09 to PR-11 + phase 1 safeguards.
 
-| Indicateur | Condition proposée |
+#### PR-14 — `feat(agents): migrate metadata generation to the SDK`
+
+**Content**
+- Forced metadata and other preserved paths.
+- Publication via the transactional commit.
+- Respect for the active source / pending source distinction.
+
+**Acceptance criteria**
+- [ ] A generation never attaches to the wrong ingestion version.
+- [ ] A failure leaves the previous report usable.
+- [ ] Any planned removal of human overrides is **historized and restorable**.
+- [ ] v1 / SDK comparison validated.
+
+**Dependencies:** PR-12.
+
+#### PR-15 — `feat(agents): migrate editorial rewriting to the SDK`
+
+**Content**
+- Keep the POST → workflow → result consultation path.
+- Replace the transport and wire up cancellation / reconciliation.
+- Preserve the resume of the interface after a reload.
+
+**Acceptance criteria**
+- [ ] Two concurrent requests do not cancel each other without an explicit rule.
+- [ ] Consultation of a result is authorized via **its exact operation**.
+- [ ] No attachment to a neighboring report by temporal approximation.
+- [ ] The editor keeps the decision to apply the proposal.
+
+**Dependencies:** PR-09, PR-10, PR-11 + phase 1.
+
+#### PR-16 — `feat(agents): migrate translations without changing their topology`
+
+**Content**
+- Keep the agents / languages actually configured.
+- Switch **each language independently**.
+- Protect text, status and assignment against stale results.
+- Keep the regeneration rules recently fixed on `main`.
+
+**Acceptance criteria**
+- [ ] Complete matrix of the enabled languages + explicit behavior of the non-configured languages.
+- [ ] Links, directives and Markdown structure preserved.
+- [ ] Editorial validation per language.
+- [ ] Previous content restorable without overwriting a later human correction.
+- [ ] A stale attempt cannot change the status, reassign a translator, or trigger a new Airtable send.
+- [ ] **Resume of a conversation from a previous generation** ([§5.3](01-decision.md#s53)): the history is read without being rewritten, a new conversation is opened by the current agent, and the resume remains **exceptional**. Bulk attachment of a counterpart memory is a sign of over-attachment to be corrected, not a behavior to validate.
+- [ ] Uncertain external effects reconcilable — without promising an undemonstrated "exactly once".
+
+**Dependencies:** PR-09 to PR-11, PR-07, PR-08.
+
+#### PR-17 — `fix(api): secure and adapt the metadata SSE stream`
+
+**Content**
+- Verify the real consumers of the route.
+- If kept: authentication, record authorization, shared transport, correct accumulation, reliable persistence.
+- If unused: controlled removal rather than a pointless migration.
+
+**Acceptance criteria**
+- [ ] An unauthorized user can neither start nor read a generation.
+- [ ] Progressive display preserved if the route remains exposed.
+- [ ] The persisted content is **complete**.
+- [ ] The end of the transport does not mask a persistence error.
+- [ ] Disconnection and late result covered by the tests.
+
+**Dependencies:** PR-14. **The authorization fix can be extracted immediately** if the route is exposed in production.
+
+#### PR-18 — `refactor(scripts): adapt the operations tools to the shared contract`
+
+**Content**
+- Migrate `force-metadata-reports` to the same safeguards.
+- Make the operations scripts compatible with routing, pause and operation identity.
+- Inventory the deferred removals (local agents, Docker/Ollama, old scripts, dead configuration).
+
+**Acceptance criteria**
+- [ ] No script bypasses the concurrency or rollback controls.
+- [ ] Operations trials perform no surprise writes.
+- [ ] Resources still required for the v1 fallback are not removed prematurely.
+
+**Dependencies:** PR-14 + phase 1.
+
+---
+
+### Phase 4 — Qualification and cutover preparation
+
+#### PR-19 — `test(agents): qualify parity, load and recovery after failure`
+
+**Content**
+- v1 / SDK comparisons in staging, on frozen inputs.
+- **SQL and agent memory** isolation.
+- Gradual load tests.
+- Fault injection: cut-off after send, crash before commit, late result, cancellation, concurrent human edit.
+
+**Acceptance criteria**
+- [ ] No RI publication or real Airtable write from the comparison bench.
+- [ ] No mixing of conversations, records or languages.
+- [ ] No overwriting of human work.
+- [ ] No uncertain result accepted as a success.
+- [ ] Quality / latency / consumption report with a **go / no-go** decision.
+
+**Dependencies:** flows to enable, PR-10.
+
+#### PR-20 — `feat(ops): finalize the cutover and restoration procedures`
+
+**Content**
+- Operable procedures: pause, diagnosis, reconciliation, restoration.
+- Identified dual-runtime fallback application artifact.
+- Compatibility check of the **already-started workflows** with the new deployments.
+- Documentation of responsibilities and accesses.
+
+**Acceptance criteria**
+- [ ] Staging rollback exercise run end to end.
+- [ ] Restoration of a translation **and** of metadata overrides demonstrated.
+- [ ] An editorial backup after restoration does not reactivate a quarantined report.
+- [ ] A concurrent human modification is preserved.
+- [ ] Resume of a workflow **prior to the deployment** verified.
+- [ ] Manual path usable if v1 and the SDK are unavailable.
+
+**Dependencies:** PR-19.
+
+---
+
+### Phase 5 — Progressive operational cutover
+
+> **Operations** issues, not necessarily new PRs.
+
+**OPS-01 — Internal pilot.** Identified users and records; a single runtime per request; priority to explicitly triggered generations; no automatic fan-out.
+
+**OPS-02 — Extension per flow and per language.** Proposed order: forced audit → forced metadata → rewriting → translations (language by language). Each extension requires a review of the previous stage. Routing remains reversible **independently** for each flow.
+
+**OPS-03 — Observation and acceptance.** Proposed thresholds, **to be validated before the pilot**:
+
+| Indicator | Proposed condition |
 |---|---|
-| Intégrité | Zéro écrasement humain, zéro mélange de fiche/langue, zéro activation de résultat périmé |
-| Validation | Aucun résultat invalide activé |
-| Incidents | Aucun envoi incertain non traité au-delà du délai convenu |
-| Fiabilité | Taux d'échec ≤ baseline + 2 points, avec volumes et dénominateurs publiés |
-| Retries | Mesurés **par opération** ; limite définie avant le pilote |
-| Latence | p95 sous le SLO métier, avec marge par rapport aux limites Vercel |
-| Coût | Budget par opération incluant les sandboxes ; absence de donnée explicitée |
-| Observation | Deux semaines stables **et** volumes minimaux atteints |
+| Integrity | Zero human overwrite, zero record/language mixing, zero activation of a stale result |
+| Validation | No invalid result activated |
+| Incidents | No uncertain send left unprocessed beyond the agreed delay |
+| Reliability | Failure rate ≤ baseline + 2 points, with published volumes and denominators |
+| Retries | Measured **per operation**; limit defined before the pilot |
+| Latency | p95 under the business SLO, with margin against the Vercel limits |
+| Cost | Budget per operation including the sandboxes; absence of data made explicit |
+| Observation | Two stable weeks **and** minimum volumes reached |
 
-Volumes indicatifs de départ : 30 audits, 30 générations de métadonnées, 20 réécritures, 5 traductions par langue activée.
+Indicative starting volumes: 30 audits, 30 metadata generations, 20 rewrites, 5 translations per enabled language.
 
-> Ces volumes sont des critères **opérationnels**, pas une preuve statistique. Si l'activité est insuffisante, **prolonger l'observation** plutôt que déclarer le succès parce que deux semaines se sont écoulées.
+> These volumes are **operational** criteria, not a statistical proof. If activity is insufficient, **extend the observation** rather than declaring success because two weeks have elapsed.
 
 ---
 
-### Phase 6 — Retrait contrôlé du chemin historique
+### Phase 6 — Controlled removal of the legacy path
 
-#### PR-21 — `refactor(agents): retirer les appels applicatifs à l'API historique`
+#### PR-21 — `refactor(agents): remove application calls to the legacy API`
 
-**Contenu**
-- Supprimer l'adaptateur v1 et sa dépendance directe lorsqu'elle est inutile.
-- Retirer scripts, configuration locale et entrées mortes.
-- Mettre à jour documentation, configuration et contrats d'exploitation.
+**Content**
+- Remove the v1 adapter and its direct dependency when it is no longer needed.
+- Remove scripts, local configuration and dead entries.
+- Update documentation, configuration and operations contracts.
 
-**Critères d'acceptation**
-- [ ] Aucun appel applicatif direct à la surface historique.
-- [ ] Les dépendances transitives légitimes du SDK ne sont **pas** supprimées artificiellement.
-- [ ] Aucun workflow actif ne dépend encore du chemin retiré.
-- [ ] Le retour vers une release SDK connue et le mode manuel restent disponibles.
-- [ ] Accord explicite de clôture de la fenêtre v1.
+**Acceptance criteria**
+- [ ] No direct application call to the legacy surface.
+- [ ] Legitimate transitive SDK dependencies are **not** artificially removed.
+- [ ] No active workflow still depends on the removed path.
+- [ ] Rollback to a known SDK release and the manual mode remain available.
+- [ ] Explicit agreement to close the v1 window.
 
-**Dépendances :** OPS-03 accepté.
+**Dependencies:** OPS-03 accepted.
 
-> **À traiter séparément :** la suppression des anciens agents, mémoires et ressources Cloud. Ce nettoyage potentiellement irréversible nécessite inventaire, sauvegarde et autorisation explicite ; il ne doit pas être un effet secondaire de la PR de code.
+> **To be handled separately:** the removal of the old Cloud agents, memories and resources. This potentially irreversible cleanup requires an inventory, a backup and explicit authorization; it must not be a side effect of the code PR.

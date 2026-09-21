@@ -1,92 +1,92 @@
-# Ce que change réellement Letta Agent SDK
+# What Letta Agent SDK actually changes
 
-> **Section §4 — lecture de la documentation officielle au 17/09/2026.**
+> **Section §4 — reading of the official documentation as of 17/09/2026.**
 
 ---
 
-## 4. Ce que change réellement Letta Agent SDK
+## 4. What Letta Agent SDK actually changes
 
-> Lecture de la documentation officielle au 17 septembre 2026 : <https://docs.letta.com/agent-sdk>.
+> Reading of the official documentation as of 17 September 2026: <https://docs.letta.com/agent-sdk>.
 
-### 4.1 Le runtime est un choix d'architecture, pas un acquis
+### 4.1 The runtime is an architectural choice, not a given
 
-Le SDK est une **interface** vers un runtime agent. Le backend détermine où vivent l'état et l'exécution :
+The SDK is an **interface** to an agent runtime. The backend determines where state and execution live:
 
-| Objectif | Configuration SDK | Environnement d'exécution | État de l'agent |
+| Goal | SDK configuration | Execution environment | Agent state |
 |---|---|---|---|
-| Agent et exécution entièrement gérés | `backend: "cloud"` | Sandbox gérée | Letta Cloud |
-| Agent hébergé, exécution sur une machine que vous contrôlez | `backend: "cloud"` + `computer` | Machine sélectionnée | Letta Cloud |
-| État et exécution entièrement locaux | `backend: "local"` | Machine courante | Machine courante |
-| Runtime que vous opérez | `backend: "remote"` | Machine App Server | Selon le backend App Server |
+| Agent and execution fully managed | `backend: "cloud"` | Managed sandbox | Letta Cloud |
+| Hosted agent, execution on a machine you control | `backend: "cloud"` + `computer` | Selected machine | Letta Cloud |
+| State and execution fully local | `backend: "local"` | Current machine | Current machine |
+| Runtime that you operate | `backend: "remote"` | App Server machine | Depends on the App Server backend |
 
-**Conséquence à évaluer explicitement (arbitrage A/D) :** avec `backend: "cloud"`, l'exécution des outils se fait dans un environnement géré. Les **outils clients et les serveurs MCP s'exécutent, eux, dans le processus Node du SDK** — un serveur MCP stdio voit donc le système de fichiers de l'hôte, pas le sandbox géré.
+**Consequence to be evaluated explicitly (trade-off A/D):** with `backend: "cloud"`, tool execution takes place in a managed environment. **Client tools and MCP servers, however, run in the SDK's Node process** — a stdio MCP server therefore sees the host's filesystem, not the managed sandbox.
 
-### 4.2 Agent, conversation et session sont trois identités distinctes
+### 4.2 Agent, conversation and session are three distinct identities
 
-- **Agent** : identité et mémoire durables.
-- **Conversation** : fil de travail persistant (`conv-xxx`).
-- **Session** : connexion active permettant `send()` puis `stream()`.
+- **Agent**: durable identity and memory.
+- **Conversation**: persistent thread of work (`conv-xxx`).
+- **Session**: active connection enabling `send()` then `stream()`.
 
-`createAgent()` crée aussi la conversation par défaut. `createSession(agentId)` ouvre une **nouvelle** conversation ; `resumeSession(id)` accepte un `agent-xxx` (conversation par défaut) ou un `conv-xxx`.
+`createAgent()` also creates the default conversation. `createSession(agentId)` opens a **new** conversation; `resumeSession(id)` accepts an `agent-xxx` (default conversation) or a `conv-xxx`.
 
-> **Piège :** reprendre systématiquement l'ID d'agent revient à utiliser la conversation **par défaut** — ce n'est pas le bon mécanisme pour isoler les fiches. Le code actuel persiste déjà des IDs de conversation (`workflows.conversation_id`) : c'est la bonne approche, à généraliser.
+> **Pitfall:** systematically resuming from the agent ID amounts to using the **default** conversation — that is not the right mechanism for isolating content records. The current code already persists conversation IDs (`workflows.conversation_id`): that is the right approach, to be generalized.
 
-### 4.3 Une coupure réseau ne signifie pas que la génération n'a pas eu lieu
+### 4.3 A network outage does not mean the generation did not happen
 
-Garanties et non-garanties documentées :
+Documented guarantees and non-guarantees:
 
-- Les événements manqués pendant une déconnexion **ne sont pas rejoués**. La reprise passe par `listMessages()` ou `bootstrapState()`.
-- Une session dont la connexion s'est fermée **ne peut pas être réutilisée** : il faut `resumeSession(conversationId)`.
-- **« Si une connexion échoue après que `send()` a réussi, ne pas réessayer aveuglément »** — le message peut déjà avoir atteint le runtime.
-- Le seul retry automatique recommandé est l'expiration de sandbox **avant** envoi (`CloudManagedSandboxExpiredError`), avec un nouveau `resumeSession` puis un unique essai supplémentaire.
+- Events missed during a disconnection **are not replayed**. Recovery goes through `listMessages()` or `bootstrapState()`.
+- A session whose connection has closed **cannot be reused**: you must call `resumeSession(conversationId)`.
+- **"If a connection fails after `send()` succeeded, do not retry blindly"** — the message may already have reached the runtime.
+- The only recommended automatic retry is sandbox expiration **before** sending (`CloudManagedSandboxExpiredError`), with a new `resumeSession` and then a single additional attempt.
 
-**Conséquence :** le Playground doit gérer explicitement un état « **résultat incertain** ». Le SDK ne garantit pas une exécution métier exactement une fois.
+**Consequence:** the Playground must explicitly handle an "**uncertain result**" state. The SDK does not guarantee exactly-once business execution.
 
-### 4.4 Le résultat terminal ne doit pas être concaténé une seconde fois
+### 4.4 The terminal result must not be concatenated a second time
 
-Le flux émet des fragments `assistant` (et `reasoning`), puis un événement terminal `result` contenant le texte final complet, `success`, `stopReason`, `durationMs` et `runIds`.
+The stream emits `assistant` (and `reasoning`) fragments, then a terminal `result` event containing the complete final text, `success`, `stopReason`, `durationMs` and `runIds`.
 
-Contrat recommandé :
+Recommended contract:
 
-- fragments → **affichage progressif** ;
-- `result` réussi → **contenu candidat** à l'activation ;
-- validation métier obligatoire avant activation ;
-- **jamais** de concaténation du texte terminal aux fragments déjà assemblés ;
-- aucun succès métier déduit de la seule fermeture du flux.
+- fragments → **progressive display**;
+- successful `result` → **candidate content** for activation;
+- mandatory business validation before activation;
+- **never** concatenate the terminal text onto the fragments already assembled;
+- no business success inferred from the closing of the stream alone.
 
-> Le module de parsing existant (`packages/agents/src/parser.ts`) sait réparer un frontmatter dont le `---` de fermeture manque. C'est un acquis à préserver, mais il persiste `parsed.data` et non la sortie assainie du schéma : à corriger (PR-12).
+> The existing parsing module (`packages/agents/src/parser.ts`) knows how to repair frontmatter whose closing `---` is missing. This is an asset to preserve, but it persists `parsed.data` and not the sanitized output of the schema: to be fixed (PR-12).
 
-### 4.5 Permissions : un levier de sécurité utilisable côté serveur
+### 4.5 Permissions: a security lever usable server-side
 
-- `permissionMode` : `standard` | `acceptEdits` | `unrestricted` | `strict`.
-- `allowedTools` : filtre de **disponibilité** — si fourni, il doit lister **tous** les outils voulus (clients, MCP, intégrés).
-- `canUseTool` : décision par appel d'outil (autoriser / refuser / modifier l'entrée).
+- `permissionMode`: `standard` | `acceptEdits` | `unrestricted` | `strict`.
+- `allowedTools`: an **availability** filter — if provided, it must list **all** the desired tools (client, MCP, built-in).
+- `canUseTool`: decision per tool call (allow / deny / modify the input).
 
-> **Attention opérationnelle :** un agent serveur ne doit pas rester bloqué sur une approbation interactive. En traitement non interactif, utiliser un mode et une liste d'outils explicites, avec une politique par défaut restrictive.
+> **Operational warning:** a server agent must not remain blocked on an interactive approval. In non-interactive processing, use an explicit mode and tool list, with a restrictive default policy.
 
-### 4.6 Idempotence des messages
+### 4.6 Message idempotence
 
-`send()` accepte un `otid` fourni par l'appelant, qui se retrouve sur le message persisté : c'est le mécanisme prévu pour corréler un envoi applicatif avec le message du runtime.
+`send()` accepts an `otid` supplied by the caller, which then appears on the persisted message: this is the mechanism intended to correlate an application-side send with the runtime message.
 
-### 4.7 Mémoire : versionnée ≠ comportement reproductible
+### 4.7 Memory: versioned ≠ reproducible behavior
 
-- La mémoire d'un agent vit dans un dépôt git appartenant à l'agent ; MemFS le projette sur la machine de travail.
-- Les fichiers sous `system/` sont **dans le prompt système à chaque tour**.
-- Les conversations d'un même agent **partagent** sa mémoire.
+- An agent's memory lives in a git repository owned by the agent; MemFS projects it onto the working machine.
+- Files under `system/` are **in the system prompt on every turn**.
+- The conversations of the same agent **share** its memory.
 
-**Conséquence (arbitrage A) :** modifier l'agent utilisé par v1 pendant la qualification peut dégrader le secours **sans aucun changement de code**. Une release de connaissance doit être identifiée, contrôlée et restaurable, et les agents d'évaluation isolés de la production.
+**Consequence (trade-off A):** changing the agent used by v1 during qualification can degrade the fallback **without any code change at all**. A knowledge release must be identified, controlled and restorable, and evaluation agents isolated from production.
 
-### 4.8 Deux corrections importantes par rapport aux plans antérieurs
+### 4.8 Two important corrections relative to earlier plans
 
-**a) Dépendance transitive au client historique**
-Le paquet `@letta-ai/letta-agent-sdk` publié **dépend lui-même de `@letta-ai/letta-client`**. Le critère de fin ne peut donc pas être « zéro occurrence dans le lockfile ».
+**a) Transitive dependency on the legacy client**
+The published `@letta-ai/letta-agent-sdk` package **itself depends on `@letta-ai/letta-client`**. The exit criterion therefore cannot be "zero occurrences in the lockfile".
 
-✅ Bon critère : *aucun import ni appel applicatif direct à l'ancienne surface ; les dépendances internes du SDK sont suivies comme dépendances transitives.*
+✅ Good criterion: *no direct application import or call to the old surface; the SDK's internal dependencies are tracked as transitive dependencies.*
 
-**b) Version et délai de publication**
-Au moment de l'analyse (17/09/2026), sur le registre npm :
+**b) Version and publication delay**
+At the time of the analysis (17/09/2026), on the npm registry:
 
-- dernière version publiée : `0.8.11` (16 septembre — **trop récente** pour la politique interne de maturité de 7 jours) ;
-- version la plus récente satisfaisant déjà le délai : **`0.8.3`** (1er septembre).
+- latest published version: `0.8.11` (16 September — **too recent** for the internal 7-day maturity policy);
+- most recent version that already satisfies the delay: **`0.8.3`** (1 September).
 
-À revérifier au démarrage effectif de la phase 0. **Les fonctionnalités décrites dans la documentation courante doivent être testées contre la version réellement retenue** — pas seulement lues. Aucune exception automatique à la politique de maturité.
+To be re-checked at the effective start of phase 0. **The features described in the current documentation must be tested against the version actually retained** — not merely read. No automatic exception to the maturity policy.

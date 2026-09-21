@@ -1,102 +1,102 @@
-# Retrait de la v1 et sauvegarde des ressources
+# v1 removal and backup of resources
 
-> **Section §10 — imminence de la fermeture, plan de sauvegarde et détection continue des coupures d'API.**
+> **Section §10 — imminent shutdown, backup plan and continuous detection of API outages.**
 
 ---
 
-## 10. Contrainte de calendrier — retrait progressif et imminence de l'API historique
+## 10. Schedule constraint — gradual removal and the imminent legacy API shutdown
 
-> **Fait** : Luis a indiqué le 17/09/2026 qu'il n'y a **pas de date ferme**, mais que la fermeture de l'API historique est **pour bientôt**.
-> **Conséquence** : toute phase conditionnée à « deux semaines de production stables » n'est plus planifiable en l'état. Ce n'est pas une défaillance du plan : c'est une **contrainte externe** à absorber.
+> **Fact**: Luis indicated on 17/09/2026 that there is **no firm date**, but that the legacy API shutdown is **coming soon**.
+> **Consequence**: any phase conditioned on “two weeks of stable production” can no longer be scheduled as things stand. This is not a failure of the plan: it is an **external constraint** to absorb.
 
-### 10.1 Escalade des risques
+### 10.1 Risk escalation
 
-| Risque | Sans échéance connue | Avec fermeture imminente |
+| Risk | With no known deadline | With imminent shutdown |
 |---|---|---|
-| Secours utilisé pendant une indisponibilité de l'API | Acceptable | **Rupture de production** |
-| Validation de parité retardée | Coût d'opportunité | Risque de bascule précipitée |
-| Purge des ressources Cloud reportée | Dette technique | **Perte définitive possible** |
-| Migration partielle et durable (deux runtimes) | Acceptable | Zone de risque permanente |
-| Reprise de conversations v1 ([§5.3](01-decision.md#s53)) | Acceptable | ⚠️ À garder **exceptionnelle** : sur-attacher la mémoire homologue revient à payer indéfiniment la compatibilité descendante |
+| Fallback used during API downtime | Acceptable | **Production outage** |
+| Delayed parity validation | Opportunity cost | Risk of a rushed cutover |
+| Postponed purge of Cloud resources | Technical debt | **Possible permanent loss** |
+| Partial, long-lived migration (two runtimes) | Acceptable | Permanent risk zone |
+| Resuming v1 conversations ([§5.3](01-decision.md#s53)) | Acceptable | ⚠️ Keep it **exceptional**: over-attaching peer memory means paying for backward compatibility indefinitely |
 
 <a id="s102"></a>
 
-### 10.2 Ce qui change concrètement
+### 10.2 What actually changes
 
-**a) PR-01 devient la priorité immédiate.**
-La récupération et le balisage des ressources faisant autorité (blocs mémoire, consignes, personas, inventaire) ne relèvent plus de la documentation : ce sont des **sauvegardes avant fermeture**. Si l'API ferme avant que le contenu réel des agents de production soit extrait et vérifié, ce contenu est **définitivement perdu**.
+**a) PR-01 becomes the immediate priority.**
+Recovering and labeling the authoritative resources (memory blocks, instructions, personas, inventory) is no longer a documentation task: these are **pre-shutdown backups**. If the API shuts down before the actual content of the production agents has been extracted and verified, that content is **permanently lost**.
 
-**b) Le séquencement « quatre phases avant une seule écriture » est trop lent si la fermeture est très proche.**
-Répartition recommandée :
+**b) The “four phases before a single write” sequencing is too slow if shutdown is very close.**
+Recommended split:
 
-| Vague | Contenu | Justification |
+| Wave | Content | Rationale |
 |---|---|---|
-| **V1 — Sauvegarde et conversion** | PR-01 (inventaire, export officiel, **conversion en markdown**) | Irréversible si manquée : au-delà de la fermeture, la connaissance legacy n'est plus récupérable |
-| **V2 — Minimum viable sécurisé** | PR-04, PR-05, PR-11, PR-09 — **PR-01 bloque PR-09**, **PR-04 déclare l'interface**, **PR-11 fournit le contenu** | Secours contrôlé + adaptateur SDK capable de lire la connaissance convertie |
-| **V3 — Sécurité des données** | PR-06, PR-07, PR-08 | Peut suivre la bascule du transport **si et seulement si** l'activation reste manuelle, à faible volume, sur des fiches contrôlées |
-| **V4 — Qualité et généralisation** | PR-02, PR-03, PR-10 … PR-21 | Peut continuer après la bascule |
+| **V1 — Backup and conversion** | PR-01 (inventory, official export, **conversion to markdown**) | Irreversible if missed: past the shutdown, the legacy knowledge can no longer be recovered |
+| **V2 — Secure minimum viable** | PR-04, PR-05, PR-11, PR-09 — **PR-01 blocks PR-09**, **PR-04 declares the interface**, **PR-11 provides the content** | Controlled fallback + SDK adapter able to read the converted knowledge |
+| **V3 — Data safety** | PR-06, PR-07, PR-08 | Can follow the transport cutover **if and only if** activation stays manual, low-volume, on controlled records |
+| **V4 — Quality and generalization** | PR-02, PR-03, PR-10 … PR-21 | Can continue after the cutover |
 
-**c) « Continuité de l'IA » et « continuité éditoriale » sont deux objectifs distincts.**
-Si la fermeture survient plus tôt que prévu :
+**c) “AI continuity” and “editorial continuity” are two distinct objectives.**
+If shutdown happens earlier than expected:
 
-- ✅ Publication, édition, validation et traduction **manuelles** continuent.
-- ❌ Audit, métadonnées, réécriture et traduction **automatiques** s'arrêtent.
-- ✅ Rien n'est perdu si les données sont saines et restaurables.
+- ✅ **Manual** publication, editing, validation and translation continue.
+- ❌ **Automated** audit, metadata, rewriting and translation stop.
+- ✅ Nothing is lost if the data is sound and restorable.
 
-C'est la **seule** garantie tenable. Elle doit être explicitement acceptée par l'équipe éditoriale, pas seulement par l'équipe technique.
+This is the **only** tenable guarantee. It must be explicitly accepted by the editorial team, not just by the engineering team.
 
-**d) Déclencheur d'escalade.**
-Dès que Letta annonce une date — **ou** si aucun calendrier n'est fourni sous deux semaines — passer en mode « sortie rapide » : alléger la qualification lourde (PR-19) au profit d'un pilote manuel étroit sur une seule fiche, avec retour arrière immédiat.
+**d) Escalation trigger.**
+As soon as Letta announces a date — **or** if no timeline is provided within two weeks — switch to “fast exit” mode: lighten the heavy qualification (PR-19) in favor of a narrow manual pilot on a single record, with immediate rollback.
 
-### 10.3 Ce qu'il ne faut **pas** faire sous pression
+### 10.3 What **not** to do under pressure
 
-| Tentation | Pourquoi c'est dangereux |
+| Temptation | Why it is dangerous |
 |---|---|
-| Basculer les traductions automatiques en même temps que l'audit | Écrase `translation_records.markdown` — irréversible sans snapshot |
-| Activer la régénération de métadonnées sans snapshot des surcharges | Efface les corrections humaines — non réversible par rollback |
-| Activer le fan-out d'ingestion | Multiplie les générations avant que la sécurité soit en place |
-| Supprimer scripts et ressources v1 pour « nettoyer » | Retire le seul chemin de secours restant |
-| Migrer l'automatisation complète en une seule PR | Rend impossible l'attribution d'une régression |
+| Switching automated translations at the same time as the audit | Overwrites `translation_records.markdown` — irreversible without a snapshot |
+| Enabling metadata regeneration without a snapshot of the overrides | Erases human corrections — not reversible by rollback |
+| Enabling ingestion fan-out | Multiplies generations before safeguards are in place |
+| Deleting v1 scripts and resources to “clean up” | Removes the only remaining fallback path |
+| Migrating the whole automation in a single PR | Makes regression attribution impossible |
 
 <a id="s104"></a>
 
-### 10.4 Plan de sauvegarde des ressources (à faire **avant** tout autre travail)
+### 10.4 Resource backup plan (to be done **before** any other work)
 
-1. Inventorier les agents de production : IDs, modèles, dates de dernière synchronisation.
-2. **Acquérir l'outil officiel** `backing-up-cloud-agents` (skill du guide Letta v1→v2, [§3.4-b](02-current-state.md#s34)) plutôt que d'écrire un exporteur maison.
-3. **Mettre chaque agent en pause** avant l'export : arrêter les tours, les éditions de mémoire et les activités planifiées, puis attendre la fin des pushs de mémoire en attente (l'outil n'est pas transactionnel).
-4. Exporter vers un dossier **privé, hors dépôt et hors checkout de mémoire partagée** : messages, métadonnées et mémoire peuvent contenir des secrets.
-5. Extraire le contenu réel des blocs mémoire / consignes / personas, avec sa provenance exacte.
-6. Marquer chaque ressource : contenu du dépôt / dérivé / figé / obsolète.
-7. **Restaurer l'export dans un agent neuf** pour prouver que la restauration fonctionne — ne pas se contenter d'un export non testé.
-8. Conserver l'agent original et le backup jusqu'à validation de l'agent restauré.
-9. **Convertir les ressources en markdown** au format attendu par le SDK : `system/<label>.md` avec frontmatter `description` ([§3.4-h](02-current-state.md#s34)). C'est l'étape qui rend la connaissance **lisible par les nouveaux agents** — sans elle, la sauvegarde préserve un contenu inexploitable.
-10. **Sonder la faisabilité de la conversion** sur un agent non critique avant de traiter l'ensemble ([§3.4-h](02-current-state.md#s34)).
-11. Faire relire le contenu extrait par les référents éditoriaux : un export non vérifié reste un export non fiable.
+1. Inventory the production agents: IDs, models, last sync dates.
+2. **Acquire the official tool** `backing-up-cloud-agents` (skill from the Letta v1→v2 guide, [§3.4-b](02-current-state.md#s34)) rather than writing a home-grown exporter.
+3. **Pause each agent** before the export: stop turns, memory edits and scheduled activities, then wait for pending memory pushes to finish (the tool is not transactional).
+4. Export to a **private directory, outside the repository and outside any shared-memory checkout**: messages, metadata and memory may contain secrets.
+5. Extract the actual content of the memory blocks / instructions / personas, with its exact provenance.
+6. Tag each resource: repository content / derived / frozen / obsolete.
+7. **Restore the export into a fresh agent** to prove that restoration works — do not settle for an untested export.
+8. Keep the original agent and the backup until the restored agent is validated.
+9. **Convert the resources to markdown** in the format expected by the SDK: `system/<label>.md` with `description` frontmatter ([§3.4-h](02-current-state.md#s34)). This is the step that makes the knowledge **readable by the new agents** — without it, the backup preserves unusable content.
+10. **Probe the feasibility of the conversion** on a non-critical agent before processing the whole set ([§3.4-h](02-current-state.md#s34)).
+11. Have the extracted content reviewed by the editorial leads: an unverified export remains an unreliable export.
 
-> ️ **Ce que l'outil ne restaure pas** (documenté par le guide) : les messages, les secrets, les outils, les connexions, les dépôts de mémoire partagée, les schedules et la mémoire archival. Ces éléments doivent être reconfigurés manuellement — à intégrer à la procédure de PR-20.
+> ️ **What the tool does not restore** (documented by the guide): messages, secrets, tools, connections, shared-memory repositories, schedules and archival memory. These must be reconfigured manually — to be folded into the PR-20 procedure.
 
-> **Sans cette sauvegarde, la migration aurait pu réussir techniquement et perdre la connaissance métier.** C'était le risque principal du projet — il est traité depuis le 18/09/2026 (ci-dessous).
+> **Without this backup, the migration could have succeeded technically and lost the domain knowledge.** This was the project's main risk — it has been addressed since 18/09/2026 (below).
 
-> ✅ **Sauvegarde effectuée le 18/09/2026** ([§3.5](03-production-agents-audit.md)) : les huit agents de production ont été
-> clonés depuis `https://api.letta.com/v1/git/{agent-id}/state.git`, soit ≈ 176 Ko de
-> connaissance métier avec historique Git. **Le risque de perte définitive est levé.**
+> ✅ **Backup completed on 18/09/2026** ([§3.5](03-production-agents-audit.md)): the eight production agents were
+> cloned from `https://api.letta.com/v1/git/{agent-id}/state.git`, i.e. ≈ 176 KB of
+> domain knowledge with Git history. **The risk of permanent loss is lifted.**
 
-> ⚠️ **Mais une sauvegarde n'est pas une migration.** La mémoire est déjà au format
-> Git/MemFS, donc directement exploitable par un agent SDK. Le travail restant est
-> d'**unifier les deux formats** qui coexistent en production — `skills/` pour six agents,
-> `system/` seul pour `ru` et `uk`. C'est une décision de conception, plus une course
-> contre la fermeture.
+> ⚠️ **But a backup is not a migration.** Memory is already in Git/MemFS format,
+> so directly usable by an SDK agent. The remaining work is to
+> **unify the two formats** that coexist in production — `skills/` for six agents,
+> `system/` alone for `ru` and `uk`. That is a design decision, no longer a race
+> against shutdown.
 
 <a id="s105"></a>
 
-### 10.5 Détection en continu des coupures d'API
+### 10.5 Continuous detection of API outages
 
-Puisque le retrait est **incrémental** (une route historiquement documentée est déjà en HTTP 400 depuis le 17/07/2026, [§3.4-a](02-current-state.md#s34)) et non un basculement unique :
+Since the removal is **incremental** (one historically documented route has already returned HTTP 400 since 17/07/2026, [§3.4-a](02-current-state.md#s34)) and not a single cutover:
 
-1. Ajouter une **sonde** qui vérifie périodiquement que les routes historiques encore utilisées par le code répondent.
-2. Alerter l'équipe dès qu'une route passe en erreur **avant** que la production ne la rencontre.
-3. Reclasser immédiatement la vague correspondante en urgence.
-4. Documenter les routes déjà mortes pour éviter de les re-découvrir en incident.
+1. Add a **probe** that periodically checks that the legacy routes still used by the code respond.
+2. Alert the team as soon as a route starts failing, **before** production hits it.
+3. Immediately reclassify the corresponding wave as urgent.
+4. Document the routes that are already dead so they are not rediscovered during an incident.
 
-C'est la protection la plus utile contre l'absence de date ferme : on ne peut pas planifier la fermeture, mais on peut **la détecter en avance**.
+This is the most useful protection against the absence of a firm date: shutdown cannot be planned, but it can be **detected early**.

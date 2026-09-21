@@ -1,218 +1,218 @@
-# Décision et périmètre
+# Decision and scope
 
-> **Sections §1, §2, §5 et §9 — de la synthèse exécutive aux décisions à trancher.**
+> **Sections §1, §2, §5 and §9 — from the executive summary to the decisions to be made.**
 
 ---
 
 <a id="s1"></a>
 
-## 1. Résumé exécutif et recommandation
+## 1. Executive summary and recommendation
 
-**Recommandation : migration progressive et réversible, pas un remplacement direct.**
+**Recommendation: a gradual, reversible migration, not a direct replacement.**
 
-Le changement de SDK est, en soi, la partie la **plus circonscrite** du chantier : la surface d'appel est concentrée dans `packages/agents`, et l'orchestration durable est déjà assurée par Vercel Workflow, indépendamment de Letta.
+The SDK change is, in itself, the **most contained** part of the work: the call surface is concentrated in `packages/agents`, and durable orchestration is already handled by Vercel Workflow, independently of Letta.
 
-Le vrai enjeu est ailleurs : **pouvoir interrompre, expliquer et restaurer une opération sans perdre le travail éditorial**. Le code actuel présente plusieurs effets irréversibles (écrasement de traductions, effacement de surcharges humaines, sélection automatique de rapports, effets externes RI/Airtable) qu'un retour arrière applicatif ne corrige pas.
+The real challenge lies elsewhere: **being able to interrupt, explain and restore an operation without losing editorial work**. The current code has several irreversible effects (overwriting translations, erasing human overrides, automatic report selection, external RI/Airtable effects) that an application-level rollback does not fix.
 
-### Principes de livraison
+### Delivery principles
 
-1. **Coexistence temporaire.** Les deux implémentations vivent côte à côte ; chaque opération utilise **une seule** implémentation, choisie au démarrage et conservée pendant toutes ses reprises.
-2. **Une opération métier identifiée.** Une demande intentionnelle possède un identifiant stable, réutilisé par ses retries.
-3. **Séparation stricte.** *Router à nouveau* ≠ *restaurer des données* ≠ *réconcilier des effets externes*. Aucun bouton global ne doit prétendre tout annuler.
-4. **Rien d'irréversible sans preuve.** Pas de suppression d'agents, de mémoire ou de ressource Cloud dans le cadre de cette migration.
+1. **Temporary coexistence.** The two implementations live side by side; each operation uses **a single** implementation, chosen at start-up and kept for all of its retries.
+2. **One identified business operation.** An intentional request has a stable identifier, reused by its retries.
+3. **Strict separation.** *Re-routing* ≠ *restoring data* ≠ *reconciling external effects*. No global button may claim to undo everything.
+4. **Nothing irreversible without evidence.** No deletion of agents, memory or Cloud resources as part of this migration.
 
-### Trois arbitrages à confirmer avant de figer le backlog
+### Three trade-offs to confirm before freezing the backlog
 
-Ces points ne peuvent pas être tranchés par la lecture du code seul. Je formule une recommandation pour chacun.
+These points cannot be settled by reading the code alone. I give a recommendation for each.
 
-| # | Question | Recommandation |
+| # | Question | Recommendation |
 |---|---|---|
-| A | **Isolation du chemin de secours.** Les conversations d'un même agent partagent sa mémoire : modifier l'agent utilisé par v1 pendant les essais SDK peut dégrader le secours. **Contrainte ajoutée ([§3.4-c](02-current-state.md#s34))** : le chemin historique ne permet plus de **créer** d'agent de remplacement — l'isolation ne peut donc pas être obtenue en recréant des agents côté v1. | Sauvegarder la mémoire des agents v1 **existants** (outil officiel, [§10.4](07-v1-removal-and-backup.md#s104)) et ne pas la modifier pendant la qualification ; utiliser des **agents récents** pour les essais SDK. |
-| B | **Gel fonctionnel.** Les évolutions parallèles (retrieval/qmd, regroupement des traducteurs, réactivation du fan-out DI) augmentent fortement le nombre de causes possibles d'une régression. | Les **différer** en projets distincts, sauf dépendance bloquante démontrée. |
-| C | **Fenêtre de secours.** Aucune date ferme publiée, mais **fermeture confirmée comme imminente par Luis (17/09/2026)**. | Préserver le chemin v1 à chaque étape, **sans planifier de période de confort**. Traiter la bascule complète comme **datée par l'extérieur** ; voir [§10](07-v1-removal-and-backup.md). |
+| A | **Fallback path isolation.** The conversations of a given agent share its memory: modifying the agent used by v1 during the SDK trials can degrade the fallback. **Added constraint ([§3.4-c](02-current-state.md#s34))**: the legacy path no longer allows **creating** a replacement agent — so isolation cannot be obtained by recreating agents on the v1 side. | Back up the memory of **existing** v1 agents (official tool, [§10.4](07-v1-removal-and-backup.md#s104)) and do not modify it during qualification; use **recent agents** for the SDK trials. |
+| B | **Feature freeze.** Parallel developments (retrieval/qmd, translator consolidation, re-enabling the DI fan-out) greatly increase the number of possible causes of a regression. | **Defer** them into separate projects, unless a blocking dependency is demonstrated. |
+| C | **Fallback window.** No firm date published, but **shutdown confirmed as imminent by Luis (17/09/2026)**. | Preserve the v1 path at every step, **without planning any comfort period**. Treat the full cutover as **externally dated**; see [§10](07-v1-removal-and-backup.md). |
 
 ---
 
 <a id="s2"></a>
 
-## 2. Périmètre
+## 2. Scope
 
-### Dans le périmètre
+### In scope
 
-- Introduire une frontière applicative dans `packages/agents` pour ne plus dépendre directement de la surface historique.
-- Implémenter un adaptateur Letta Agent SDK derrière cette frontière.
-- Sécuriser les écritures (reports, traductions, métadonnées), la concurrence et la reprise.
-- Mettre en place un routage réversible et un mode dégradé.
-- Migrer les parcours actifs un par un : audit, métadonnées, réécriture, traductions.
-- Qualifier la parité en staging et encadrer la bascule progressive.
+- Introduce an application boundary in `packages/agents` so that we no longer depend directly on the legacy surface.
+- Implement a Letta Agent SDK adapter behind that boundary.
+- Harden writes (reports, translations, metadata), concurrency and resumption.
+- Set up reversible routing and a degraded mode.
+- Migrate the active flows one by one: audit, metadata, rewriting, translations.
+- Qualify parity in staging and oversee the gradual cutover.
 
-### Hors périmètre (sauf blocage démontré)
+### Out of scope (unless a demonstrated blocker)
 
-- Déploiement d'un worker Cloud Run ou d'un App Server auto-hébergé.
-- Inférence locale / agents de développement locaux.
-- Adoption obligatoire de qmd ou d'un autre moteur d'indexation.
-- Regroupement des traducteurs en un agent multilingue unique.
-- Réactivation automatique du fan-out d'ingestion DI.
-- Refonte de la publication vers Réfugiés.info.
-- Nettoyage définitif des agents / mémoires / ressources Letta Cloud.
+- Deploying a Cloud Run worker or a self-hosted App Server.
+- Local inference / local development agents.
+- Mandatory adoption of qmd or any other indexing engine.
+- Consolidating the translators into a single multilingual agent.
+- Automatic re-enabling of the DI ingestion fan-out.
+- Reworking publication to Réfugiés.info.
+- Permanent cleanup of Letta Cloud agents / memories / resources.
 
-> Ces sujets peuvent devenir des projets distincts. Les empiler dans la même migration rendrait impossible l'identification de la cause d'une régression.
+> These topics can become separate projects. Piling them into the same migration would make it impossible to identify the cause of a regression.
 
-### Note sur le plan précédent
+### Note on the previous plan
 
-Le plan porté par la PR #321 (et l'ancien projet Linear « Migration agent IA — Letta Code SDK et qmd ») est **obsolète** et n'est pas repris ici. Ses arbitrages ne sont pas considérés comme acquis. L'inventaire historique reste néanmoins utile comme **source de contexte** (recensement des agents, des ressources et des points de fragilité), pas comme spécification.
+The plan carried by PR #321 (and the former Linear project « Migration agent IA — Letta Code SDK et qmd ») is **obsolete** and is not carried over here. Its trade-offs are not considered settled. The legacy inventory nonetheless remains useful as a **source of context** (an inventory of agents, resources and weak points), not as a specification.
 
 ---
 
 <a id="s5"></a>
 
-## 5. Architecture cible recommandée
+## 5. Recommended target architecture
 
 ```text
-Interface Playground (éditeur, actions serveur, routes API)
+Playground interface (editor, server actions, API routes)
                           │
                           ▼
-                 Vercel Workflow (durabilité)
+                 Vercel Workflow (durability)
                           │
-              Opération métier persistée
-              ├─ identifiant de demande (stable)
+              Persisted business operation
+              ├─ request identifier (stable)
               ├─ source + version
-              ├─ révision cible attendue
-              ├─ runtime retenu (v1 | agent-sdk)
+              ├─ expected target revision
+              ├─ selected runtime (v1 | agent-sdk)
               ├─ agent + conversation
-              ─ release de connaissance
+              ─ knowledge release
                           │
                           ▼
-             Frontière applicative (packages/agents)
-                  ├─ adaptateur v1 (historique)
-                  └─ adaptateur Agent SDK
+             Application boundary (packages/agents)
+                  ├─ v1 adapter (legacy)
+                  └─ Agent SDK adapter
                           │
                           ▼
-             Résultat candidat + validation déterministe
+             Candidate result + deterministic validation
                           │
                           ▼
-             Commit métier transactionnel  ──▶  Supabase / progression UI
+             Transactional business commit  ──▶  Supabase / UI progress
 ```
 
-### 5.1 Données proposées
+### 5.1 Proposed data
 
-> Les noms ci-dessous sont des **propositions de nouvelles structures**, pas des éléments existants. Réutiliser les rapports et journaux actuels lorsque c'est possible, plutôt que créer un système parallèle complet.
+> The names below are **proposals for new structures**, not existing elements. Reuse the current reports and logs wherever possible, rather than building a complete parallel system.
 
-- **`ai_operations`** — demande, tentatives, runtime, état, références source/cible, résultat, informations de reprise et de restauration.
-- **`letta_conversations`** — correspondance entre usage métier, runtime, agent et conversation.
+- **`ai_operations`** — request, attempts, runtime, state, source/target references, result, resumption and restoration information.
+- **`letta_conversations`** — mapping between business use, runtime, agent and conversation.
 
-Champs minimaux suggérés pour `ai_operations` : `purpose_key`, `runtime`, `agent_id`, `conversation_id`, `source_id`, `source_version`, `target_revision_expected`, `intent_id`, `attempt`, `state`, `knowledge_release`, `sdk_version`, `uncertain_since`, `superseded_by`.
+Minimum fields suggested for `ai_operations`: `purpose_key`, `runtime`, `agent_id`, `conversation_id`, `source_id`, `source_version`, `target_revision_expected`, `intent_id`, `attempt`, `state`, `knowledge_release`, `sdk_version`, `uncertain_since`, `superseded_by`.
 
-### 5.2 Invariants obligatoires
+### 5.2 Mandatory invariants
 
-1. **Une demande intentionnelle possède un ID stable** ; ses retries le réutilisent. Une **régénération volontaire** du même contenu crée une nouvelle demande — une clé limitée à « source + version » l'interdirait.
-2. **Le runtime est persisté.** Un changement de configuration ne fait pas basculer silencieusement une tentative en cours.
-3. **L'agent et la release de connaissance sont persistés.** Un retry ne doit pas résoudre un nouvel ID d'agent après modification de configuration.
-4. **Une tentative périmée ne peut plus écrire** — contenu, statut, affectation, handler d'erreur, envoi externe.
-5. **Une modification humaine concurrente est protégée.** Comparaison de la révision attendue avant commit ou restauration ; en cas de divergence, **conflit explicite**, jamais d'écrasement.
-6. **Les migrations SQL restent additives** pendant la coexistence.
-7. **Les évaluations n'écrivent pas de rapport activable en production.**
-8. **Les générations d'agents sont distinguées.** Une conversation appartient à une génération ; elle est lue, jamais réécrite par une autre ([§5.3](#s53)).
-9. **Les identifiants sont distingués.** ID d'opération métier, ID Vercel Workflow, ID de conversation, éventuels IDs de runs Letta : ce ne sont pas des synonymes. Les IDs Letta servent au diagnostic, pas à l'identité métier.
+1. **An intentional request has a stable ID**; its retries reuse it. A **deliberate regeneration** of the same content creates a new request — a key limited to "source + version" would make that impossible.
+2. **The runtime is persisted.** A configuration change does not silently switch an attempt already under way.
+3. **The agent and the knowledge release are persisted.** A retry must not resolve a new agent ID after a configuration change.
+4. **A stale attempt can no longer write** — content, status, assignment, error handler, external send.
+5. **A concurrent human edit is protected.** The expected revision is compared before commit or restoration; on divergence, an **explicit conflict**, never an overwrite.
+6. **SQL migrations stay additive** during coexistence.
+7. **Evaluations do not write a report that can be activated in production.**
+8. **Agent generations are distinguished.** A conversation belongs to one generation; it is read, never rewritten by another ([§5.3](#s53)).
+9. **Identifiers are distinguished.** Business operation ID, Vercel Workflow ID, conversation ID, any Letta run IDs: these are not synonyms. Letta IDs serve diagnostics, not business identity.
 
 <a id="s53"></a>
 
-### 5.3 Transition entre générations d'agents
+### 5.3 Transition between agent generations
 
-Décidé avec Luis le 18/09/2026. Concerne la reprise des conversations appartenant à un agent
-historique par un agent de la nouvelle génération.
+Decided with Luis on 18/09/2026. Concerns the resumption of conversations belonging to a legacy
+agent by an agent of the new generation.
 
-**Périmètre, volontairement étroit.** Le cas est **rare** : fiches encore en cours de
-rédaction ou de publication au moment de la bascule, et campagnes annuelles de mise à jour
-ciblées. Ce n'est pas un mécanisme de continuité générale.
+**A deliberately narrow scope.** The case is **rare**: records still being
+drafted or published at the time of the cutover, and targeted annual update
+campaigns. It is not a general continuity mechanism.
 
-#### Ce qui n'est pas retenu
+#### What we did not retain
 
-Un **proxy applicatif** — où le nouvel agent relaierait les requêtes vers son homologue v1 —
-a été évalué puis écarté. Trois raisons relevant du code du SDK (`0.8.3`), pas d'une
-préférence :
+An **application-level proxy** — where the new agent would relay requests to its v1 counterpart —
+was evaluated and then discarded. Three reasons arising from the SDK code (`0.8.3`), not from a
+preference:
 
-1. **Le SDK résout l'agent depuis la conversation**, il ne le reçoit pas :
-   `resumeSession("conv-xxx")` fait `agentId = conversation.agent_id`. Le SDK parle donc
-   toujours au propriétaire de la conversation, jamais au nouveau agent.
-2. **`agentId` est ignoré** dès que l'identifiant est un `conv-xxx` : il n'existe aucun moyen
-   supporté de faire traiter une conversation par un autre agent.
-3. **Aucun point d'extension** documenté pour intercepter la création de conversation.
-   Un proxy exigerait de patcher `CloudEnvironmentSession` — non supporté, cassant à chaque
-   montée de version du SDK.
+1. **The SDK resolves the agent from the conversation**, it does not receive it:
+   `resumeSession("conv-xxx")` does `agentId = conversation.agent_id`. The SDK therefore
+   always talks to the owner of the conversation, never to the new agent.
+2. **`agentId` is ignored** as soon as the identifier is a `conv-xxx`: there is no supported
+   way to have a conversation handled by another agent.
+3. **No extension point** is documented for intercepting conversation creation.
+   A proxy would require patching `CloudEnvironmentSession` — unsupported, and broken on
+   every SDK version upgrade.
 
-S'y ajoutent le doublement du coût par conversation relayée et le risque d'ambiguïté
-d'autorisation : avec quelle identité le relais écrit-il ?
+Add to this the doubling of the cost per relayed conversation and the risk of
+authorization ambiguity: under which identity does the relay write?
 
-#### Architecture retenue
+#### What we retained
 
 ```text
-Conversation historique (appartient à l'agent v1)
+Legacy conversation (belongs to the v1 agent)
         │
-        │ 1. lecture directe de l'historique
+        │ 1. direct read of the history
         ▼
-Orchestrateur applicatif (Vercel Workflow)
+Application orchestrator (Vercel Workflow)
         │
-        ├── 2. mémoire v1 attachée en LECTURE au nouvel agent
+        ├── 2. v1 memory attached to the new agent in READ-ONLY mode
         │      repositories.attach(v1Repo, { permissions: "read" })
         │
-        ── 3. nouvelle conversation ouverte par le NOUVEL agent
-               (jamais un fil partagé entre deux identités)
+        ── 3. new conversation opened by the NEW agent
+               (never a thread shared between two identities)
 ```
 
-**Trois mécanismes natifs, aucune couche applicative de relais :**
+**Three native mechanisms, no application-level relay layer:**
 
-| Besoin | Mécanisme |
+| Need | Mechanism |
 |---|---|
-| Le nouvel agent connaît son prédécesseur et ce qu'il savait | **Mémoire partagée en lecture** : `client.repositories.attach(agentId, repositoryId, { permissions: "read" })` |
-| Il peut demander un complément ponctuel | **Sous-agent** authentifié par le runtime (`parent_agent_id`, `is_subagent`) |
-| La conversation appartient à l'ancien agent | Lecture de l'historique, puis **nouvelle conversation** ouverte par le nouvel agent — les deux identités ne partagent jamais un fil |
+| The new agent knows its predecessor and what it knew | **Shared memory in read-only mode**: `client.repositories.attach(agentId, repositoryId, { permissions: "read" })` |
+| It can ask for a one-off addition | **Sub-agent** authenticated by the runtime (`parent_agent_id`, `is_subagent`) |
+| The conversation belongs to the former agent | Read the history, then a **new conversation** opened by the new agent — the two identities never share a thread |
 
-#### Contraintes que la reprise doit respecter
+#### Constraints the resumption must respect
 
-1. **L'ancien historique est lu, jamais réécrit.** Un message émis par le nouvel agent dans une conversation v1 serait attribué à l'ancienne génération.
-2. **La validation humaine reste acquise.** Une reprise ne réécrit ni un contenu déjà validé ni une surcharge de métadonnées (invariant 5).
-3. **La reprise est explicite.** L'utilisateur doit pouvoir la distinguer d'une génération ordinaire. **La forme exacte de cette signalisation est à statuer avec l'équipe produit** : le mécanisme est transparent, l'affichage ne l'est pas nécessairement.
-4. **La mémoire v1 est en lecture seule.** Le nouvel agent ne doit pas pouvoir modifier l'histoire qu'il consulte — sinon la source de comparaison disparaît (invariant 3).
-5. **Coût et latence documentés.** Attacher une mémoire et lire un historique a un coût en tokens ; à mesurer avant généralisation.
+1. **The old history is read, never rewritten.** A message sent by the new agent in a v1 conversation would be attributed to the old generation.
+2. **Human validation is preserved.** A resumption rewrites neither already-validated content nor a metadata override (invariant 5).
+3. **The resumption is explicit.** The user must be able to distinguish it from an ordinary generation. **The exact form of that signalling is to be decided with the product team**: the mechanism is transparent, the display is not necessarily so.
+4. **The v1 memory is read-only.** The new agent must not be able to modify the history it consults — otherwise the source of comparison disappears (invariant 3).
+5. **Cost and latency documented.** Attaching a memory and reading a history has a token cost; it must be measured before generalisation.
 
-#### Question ouverte — portée de la signalisation
+#### Open question — scope of the signalling
 
-Le mécanisme doit être **transparent pour l'utilisateur** dans son fonctionnement, mais il reste à décider :
-**où et comment signaler qu'une fiche repose sur une conversation de la génération précédente ?**
+The mechanism must be **transparent to the user** in how it works, but one thing remains to be decided:
+**where and how should we signal that a record relies on a conversation from the previous generation?**
 
-Pistes à soumettre à l'équipe produit :
-- une mention discrète sur la fiche concernée ;
-- un indicateur dans l'historique des générations ;
-- aucune signalisation, la reprise étant considérée comme un détail d'implémentation.
+Options to submit to the product team:
+- a discreet mention on the record concerned;
+- an indicator in the generation history;
+- no signalling at all, the resumption being considered an implementation detail.
 
-**À statuer par l'équipe produit.** Cette décision conditionne PR-06 (modèle de données de la correspondance entre générations) et l'affichage de PR-16.
+**To be decided by the product team.** This decision conditions PR-06 (data model for the mapping between generations) and the display of PR-16.
 
-#### Note — sous-agents et mémoire partagée sont plus larges que ce cas
+#### Note — sub-agents and shared memory are broader than this case
 
-Ces deux mécanismes ne sont pas propres à la transition : ils constituent la façon standard
-de faire coopérer des agents chez Letta. Ce qui est décidé ici, c'est **de les utiliser pour
-la transition plutôt qu'un proxy**, pas de les cantonner à elle.
+These two mechanisms are not specific to the transition: they are the standard way of
+making agents cooperate at Letta. What is decided here is **to use them for
+the transition rather than a proxy**, not to confine them to it.
 
 ---
 
 <a id="s9"></a>
 
-## 9. Décisions à confirmer
+## 9. Decisions to confirm
 
-### Bloquantes pour figer le backlog
+### Blocking for freezing the backlog
 
-| # | Décision | Recommandation |
+| # | Decision | Recommendation |
 |---|---|---|
-| A | **Isolation des agents de secours** — utiliser des agents dédiés au SDK, ou partager les agents v1 ? **Ne peut plus être résolu en créant des agents côté v1** ([§3.4-c](02-current-state.md#s34)). | Sauvegarder la mémoire des agents v1 existants ; agents récents pour les essais SDK. |
-| B | **Gel fonctionnel** — qmd/retrieval, regroupement des traducteurs, réactivation du fan-out | Différer en projets distincts. |
-| C | **Fenêtre de secours v1** — durée et disponibilité | **Contrainte externe, pas un choix du projet** : la fermeture est imminente et sans date ferme. Le chemin v1 doit être préservé à chaque étape, mais **aucune période de confort ne peut être planifiée**. Voir [§10](07-v1-removal-and-backup.md). |
-| D | **Backend SDK** — `cloud` avec sandbox géré, `cloud` + `computer`, ou `remote` (App Server) | À trancher sur les résultats de PR-03 : latence, coût, sécurité, et localisation de l'exécution des outils. |
-| E | **Topologie des traducteurs** — conserver la configuration actuelle ou consolider | Conserver à l'identique pendant la migration ; toute consolidation est un projet distinct. |
+| A | **Fallback agent isolation** — use agents dedicated to the SDK, or share the v1 agents? **Can no longer be solved by creating agents on the v1 side** ([§3.4-c](02-current-state.md#s34)). | Back up the memory of existing v1 agents; recent agents for the SDK trials. |
+| B | **Feature freeze** — qmd/retrieval, translator consolidation, re-enabling the fan-out | Defer into separate projects. |
+| C | **v1 fallback window** — duration and availability | **An external constraint, not a project choice**: the shutdown is imminent and has no firm date. The v1 path must be preserved at every step, but **no comfort period can be planned**. See [§10](07-v1-removal-and-backup.md). |
+| D | **SDK backend** — `cloud` with a managed sandbox, `cloud` + `computer`, or `remote` (App Server) | To be decided on the results of PR-03: latency, cost, security, and where tool execution takes place. |
+| E | **Translator topology** — keep the current configuration or consolidate | Keep it unchanged during the migration; any consolidation is a separate project. |
 
-### Reportées (à documenter, pas à trancher maintenant)
+### Deferred (to be documented, not decided now)
 
-- Pertinence d'un index documentaire type qmd pour la connaissance éditoriale.
-- Évolution du service de recherche de doublons (source actuelle vs cible).
-- Réactivation du fan-out d'ingestion DI, sur la base de mesures.
-- Nettoyage des ressources Letta Cloud historiques.
+- Relevance of a qmd-style document index for editorial knowledge.
+- Evolution of the duplicate-search service (current source vs target).
+- Re-enabling of the DI ingestion fan-out, on the basis of measurements.
+- Cleanup of legacy Letta Cloud resources.
