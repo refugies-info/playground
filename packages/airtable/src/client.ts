@@ -26,32 +26,42 @@ function getAirtableTranslationTable(tableName: string) {
   return new Airtable({ apiKey: token }).base(baseId).table(tableName);
 }
 
+export type CreateAirtableRecordResult =
+  | { sent: true }
+  | { sent: false; error: string };
+
+const MISSING_ENV_ERROR =
+  "AIRTABLE_TRANSLATE_TABLE_NOT_FOUND - impossible de charger la table de traduction Airtable";
+
 /**
  * Creates a record in an Airtable table.
  *
  * Uses the official Airtable npm package (same as karfur).
- * Non-blocking: logs errors but never throws.
+ * Non-blocking: reports errors but never throws.
  *
  * @param tableName - The Airtable table name (e.g., "SUIVI TRAD")
  * @param fields - The record fields to create
- * @returns true if successful, false otherwise
+ * @returns The outcome, with the error message when the record was not created
  */
 export async function createAirtableRecord(
   tableName: string,
   fields: Partial<FieldSet>,
-): Promise<boolean> {
+): Promise<CreateAirtableRecordResult> {
   const table = getAirtableTranslationTable(tableName);
 
   if (!table) {
-    return false;
+    return { sent: false, error: MISSING_ENV_ERROR };
   }
 
   try {
     await table.create([{ fields }], { typecast: true });
     logger.info({ tableName }, "[Airtable] Record created successfully");
-    return true;
+    return { sent: true };
   } catch (error) {
     logger.error({ error, tableName }, "[Airtable] Failed to create record");
-    return false;
+    return {
+      sent: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }

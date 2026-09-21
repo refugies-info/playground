@@ -1,25 +1,16 @@
 import { logger } from "@playground/shared-types";
 
 /**
- * Notifications Slack via Incoming Webhooks.
+ * Slack notifications via Incoming Webhooks.
  *
- * Deux webhooks (un par channel), configurés par variables d'environnement :
- *   - SLACK_WEBHOOK_LOGS_BOMO → channel #logs-bomo : fiches RCO publiées (succès)
- *   - SLACK_WEBHOOK_DEV       → channel #dev       : erreurs de publication
- *
- * Fire-and-forget : toute erreur d'envoi est loggée puis avalée — une
- * notification Slack ne doit jamais casser la publication qu'elle rapporte.
+ * One webhook per channel, configured by environment variable:
+ *   - SLACK_WEBHOOK_LOGS_BOMO → #logs-bomo: successful RCO publications
+ *   - SLACK_WEBHOOK_DEV       → #dev: publication and Airtable failures
  */
 
 const ENV_WEBHOOK_LOGS_BOMO = "SLACK_WEBHOOK_LOGS_BOMO";
 const ENV_WEBHOOK_DEV = "SLACK_WEBHOOK_DEV";
 
-/**
- * Libellé d'environnement affiché dans les notifications Slack.
- *
- * Dérivé de RI_BASE_URL (cible réelle de la publication) plutôt que de
- * NODE_ENV, qui ne distingue pas staging de production.
- */
 function getEnvironmentLabel(): string {
   const baseUrl = (process.env.RI_BASE_URL || "").toLowerCase();
   if (baseUrl.includes("localhost") || baseUrl.includes("127.0.0.1")) {
@@ -31,32 +22,21 @@ function getEnvironmentLabel(): string {
   return "prod";
 }
 
-/**
- * Lien direct vers la fiche dans l'éditeur BOMO pour l'environnement courant.
- *
- * Base = BOMO_BASE_URL (ex. http://localhost:3001 en dev). Retourne null si la
- * variable n'est pas configurée — le lien est alors simplement omis du message.
- */
+/** Editor link for the document, or null when BOMO_BASE_URL is unset. */
 function getBomoDocumentUrl(workflowId: string): string | null {
   const baseUrl = process.env.BOMO_BASE_URL?.replace(/\/$/, "");
   if (!baseUrl) return null;
   return `${baseUrl}/documents/${workflowId}`;
 }
 
-/**
- * POST un message texte sur un Incoming Webhook Slack.
- * Ne throw jamais : les échecs sont loggés.
- */
+/** POSTs a text message to a Slack Incoming Webhook. Never throws. */
 async function postSlackMessage(
   webhookUrl: string | undefined,
   envName: string,
   text: string,
 ): Promise<void> {
   if (!webhookUrl) {
-    logger.warn(
-      { envName },
-      "Slack webhook non configuré — notification ignorée",
-    );
+    logger.warn({ envName }, "Slack webhook not configured, skipping message");
     return;
   }
 
@@ -70,20 +50,15 @@ async function postSlackMessage(
     if (!response.ok) {
       logger.error(
         { status: response.status, envName },
-        "Le webhook Slack a répondu avec un statut non-OK",
+        "Slack webhook returned a non-OK status",
       );
     }
   } catch (error) {
-    logger.error(
-      { error, envName },
-      "Échec de l'envoi de la notification Slack",
-    );
+    logger.error({ error, envName }, "Error sending Slack notification");
   }
 }
 
-/**
- * Notifie #logs-bomo qu'une fiche RCO a été publiée avec succès.
- */
+/** Notifies #logs-bomo that an RCO document was published. */
 export async function notifyPublicationSuccess(params: {
   workflowId: string;
   title: string;
@@ -107,14 +82,12 @@ export async function notifyPublicationSuccess(params: {
   );
 }
 
-/**
- * Notifie #dev qu'une publication RCO a échoué.
- */
+/** Notifies #dev that an RCO publication failed. */
 export async function notifyPublicationError(params: {
   workflowId: string;
   errorMessage: string;
   errorCode?: string;
-  /** 1re ligne de stack (origine de l'erreur), affichée en bloc code. */
+  /** First stack line (error origin), rendered as a code block. */
   errorOrigin?: string;
   userEmail?: string;
 }): Promise<void> {
@@ -128,6 +101,26 @@ export async function notifyPublicationError(params: {
     ...(params.errorCode ? [`code: \`${params.errorCode}\``] : []),
     `erreur: ${params.errorMessage}`,
     ...(params.errorOrigin ? [`origine: \`${params.errorOrigin}\``] : []),
+  ].join("\n");
+
+  await postSlackMessage(process.env[ENV_WEBHOOK_DEV], ENV_WEBHOOK_DEV, text);
+}
+
+/**
+ * Notifies #dev that an Airtable tracking row could not be created.
+ */
+export async function notifyAirtableError(params: {
+  /** French title of the document. */
+  title: string;
+  language: string;
+  errorMessage: string;
+  publishedUrl?: string;
+}): Promise<void> {
+  const text = [
+    `:rotating_light: [${getEnvironmentLabel()}] Suivi Airtable échoué (SUIVI TRAD)`,
+    `fiche : *${params.title}* — ${params.language.toUpperCase()}`,
+    ...(params.publishedUrl ? [params.publishedUrl] : []),
+    `erreur: ${params.errorMessage}`,
   ].join("\n");
 
   await postSlackMessage(process.env[ENV_WEBHOOK_DEV], ENV_WEBHOOK_DEV, text);
