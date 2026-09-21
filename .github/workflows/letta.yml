@@ -41,7 +41,9 @@ jobs:
     # Comment events additionally require an explicit `@letta-code` mention.
     # Without that gate, EVERY new comment started a full review pass:
     # Vercel/Supabase status comments, other review bots, and the agent's own
-    # replies to the author. On PR #331 that cost 13 review passes for a
+    # replies to the author. Of the 100 most recent runs of this workflow, 38
+    # started from `issue_comment` alone — more than `pull_request` (31) or
+    # `pull_request_review_comment` (31) — while PR #331 burned 5 passes on a
     # handful of findings. PR events (opened / synchronize / reopened) are
     # untouched, so release-please PRs are still reviewed on open and
     # incremental reviews still fire when commits land.
