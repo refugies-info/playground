@@ -8,8 +8,9 @@ name: Letta Code
 # `prompt:` is set, so the action always picks its "agent" mode — including for
 # mentions (src/modes/detector.ts returns "agent" as soon as `prompt` is set).
 # A mention therefore buys another review pass in the same thread, not a
-# branch-pushing interactive session. The agent resumes the conversation it
-# opened for this PR (matched on the summary `owner/repo/pr-<n>`). See
+# branch-pushing interactive session. Each pass runs the full review prompt on
+# a fresh conversation against the shared agent (`letta_args: --new` below);
+# it does not resume the pass it opened for this PR. See
 # https://github.com/letta-ai/letta-code-action#automated-workflows
 on:
   issues:
@@ -88,22 +89,33 @@ jobs:
       # `LETTA_AGENT_ID` reached the runner empty, it fell back to
       # auto-discovery, and every run created a fresh agent with no
       # conversation to resume. That is also why this workflow used to smuggle
-      # the agent through `letta_args`. On b7e51ed (2026-09-15) agent mode
-      # reads `agent_id`, resolves the existing conversation and sets
-      # `is_followup`, which is what makes the inputs below effective. No
-      # upstream tag covers this revision: bump the SHA, do not go back to a
+      # the agent through `letta_args`. On b7e51ed (2026-09-15) agent mode reads
+      # `agent_id` (modes/agent/index.ts), which is what makes the input below
+      # effective. It also looks up a conversation by summary
+      # (`PR #<n> owner/repo`) and, when the lookup hits, sets `conversation_id`
+      # and `is_followup` — which is why every run died with
+      # `404 Conversation not found` on 2026-09-21 (PR #332): run-letta.ts
+      # resumes with `--conversation <id>` whenever `letta_args` carries no
+      # override. That same `is_followup` flag swaps `followup_prompt` in for
+      # `prompt`, so those runs were also handed the delta-only follow-up text.
+      # `letta_args: --new` below takes the fresh-conversation branch instead.
+      # No upstream tag covers this revision: bump the SHA, do not go back to a
       # floating tag.
       - uses: letta-ai/letta-code-action@b7e51edb0643e67ae74327a1cdf0c332e549f8fc
         with:
           letta_api_key: ${{ secrets.LETTA_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # Read in agent mode on the pinned revision, and used to resume the
-          # conversation opened for this PR. Do NOT also pass it through
-          # `letta_args`: run-letta.ts treats a user-supplied `--agent` as
-          # "switch agent" and appends `--new`, discarding the conversation_id
-          # the action just resolved. That is what made every run start a fresh
-          # conversation and re-review the PR from scratch.
+          # Now a real input on the pinned revision, read in agent mode. The
+          # workflow used to smuggle it through `letta_args: --agent …`, which
+          # run-letta.ts treats as "switch agent" and pairs with `--new`; the
+          # input is equivalent and less surprising.
           agent_id: ${{ vars.LETTA_AGENT_ID }}
+          # Start a fresh conversation per pass. The action resolves a
+          # conversation for this PR and passes `--conversation <id>` when it
+          # finds one, which fails — see the pin comment above. `--new` is also
+          # exactly what the previous `letta_args: --agent …` produced, so this
+          # is the invocation already known to run end-to-end here.
+          letta_args: --new
           # "auto" lets the Letta platform pick the best model for the task.
           model: auto
           path_to_letta_executable: ${{ steps.letta-bin.outputs.path }}
@@ -196,16 +208,12 @@ jobs:
             opportunities — call those out as suggestion comments only. If the
             PR is clean for its stated scope, say so briefly and approve.
 
-            Reply in the same conversation when the author responds — do not
-            start a new review pass unless new commits land.
-          # Used instead of `prompt` when the action resumes the conversation
-          # it already opened for this PR (agent mode matches on the summary
-          # `owner/repo/pr-<n>`). Keeps follow-up passes delta-only.
-          followup_prompt: |
-            New commits landed on this PR since your last review. Review only
-            what changed since then, against the same focus areas and the same
-            budget (5 bullets, ~1200 characters, 5 inline comments maximum).
-
-            Do not repeat findings you already raised, and do not re-open
-            threads the author has since resolved. If the delta is clean, say
-            so in one sentence and approve.
+            Comment on the pull request itself. Each pass runs on a fresh
+            conversation, so anything you want the author to see has to be a
+            comment on this PR — never a note to yourself.
+          # Deliberately no `followup_prompt` here. Agent mode sets
+          # `is_followup` from the summary lookup above, which runs whether or
+          # not `--new` is passed, and the action prefers `followup_prompt` over
+          # `prompt` whenever it is set. With `--new` there is no prior review to
+          # diff against, so a follow-up prompt would mean a delta review of
+          # nothing. Re-add it only together with real conversation resumption.
