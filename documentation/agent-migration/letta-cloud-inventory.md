@@ -1,3 +1,5 @@
+<!-- SUPERSEDED: this inventory predates the 2026-09-17 Letta Agent SDK migration plan. Its migration mapping is historical; see README.md and the numbered plan documents (01-decision.md … 08-linear-and-appendix.md). -->
+
 # Inventaire de l'agent IA — état au 15 juin 2026
 
 > **Scope** : RI-1258 / PR 01 — Documenter l'inventaire complet de l'agent IA **avant** la migration vers Letta Code SDK + corpus `qmd`.
@@ -14,7 +16,7 @@
 >
 > 1. **Les ressources Letta Cloud sont gelées.** Letta a déprécié la mise à jour des "File" resources ; les agents en prod reposent sur des ressources uploaded **avant** cette dépréciation et ne seront **plus jamais mises à jour** côté Letta Cloud. Conséquence : la migration ne peut plus compter sur des pushes de prompts/blocs vers l'agent distant — tout doit devenir local et versionné (la cible Letta Code + qmd est précisément ce pattern).
 > 2. **Format d'entrée actuel = markdown (frontmatter YAML + corps)** issu de l'API Data Inclusion (structures + services). RCO XML n'est plus utilisé en production et n'est **plus maintenu** dans le repo (assets archivés le 15 juin 2026, voir Annexe C).
-> 3. **`search_ri_duplicate_dispositifs` n'est pas un outil self-contained.** C'est un **client vers une API ad-hoc du repo karfur** qui renvoie des candidats doublons probables ; l'agent Letta analyse ensuite les résultats. La migration doit donc remplacer ce client par un équivalent playground (requête Supabase sur la table `dispositifs`, cf. PR 20).
+> 3. **`search_ri_duplicate_dispositifs` n'est pas un outil self-contained.** C'est un **client vers une API ad-hoc du repo karfur** qui renvoie des candidats doublons probables ; l'agent Letta analyse ensuite les résultats. La migration doit donc remplacer ce client par un équivalent playground (cf. PR 20) — **la source cible reste à déterminer** : les dispositifs sont des données karfur (MongoDB), et le Supabase de playground n'expose aucune table `dispositifs` (cf. §A.5).
 > 4. **`memfs` (memory filesystem) remplace l'ancien pattern `.agents/` du repo.** Les agents Letta Code stockent désormais leur mémoire dans `~/.letta/agents/{agent_id}/memory/` (git-backed par le serveur Letta), pas dans le repo. La présence de `.agents/` dans le repo était une relique d'une architecture plus ancienne ; elle a été archivée avec les autres assets RCO le 15 juin 2026.
 
 ---
@@ -102,9 +104,10 @@
   3. Le tool forward la requête à l'API karfur, qui exécute un matching fuzzy (probablement Levenshtein + comparaison de champs) et renvoie les N meilleurs candidats.
   4. L'agent LLM prend ces candidats, les analyse sémantiquement, et produit la décision finale.
 - **Implication migration** : ce client n'a pas d'équivalent direct en playground. La migration doit soit :
-  - (a) **Réécrire la logique** du matching fuzzy directement en playground (probablement en TypeScript contre la table `dispositifs` du Supabase), ou
+  - (a) **Réécrire la logique** du matching fuzzy directement en playground (en TypeScript, contre une source restant à identifier), ou
   - (b) **Construire une API miroir** dans playground qui imite l'API karfur (transitoire).
   - C'est un livrable attendu du **PR 20** (validation déterministe des doublons).
+- **Source cible : non déterminée.** Les dispositifs sont des données **karfur** (MongoDB) ; le Supabase de playground n'expose **aucune** table `dispositifs`. Vérifié le 21/09/2026 : `packages/supabase/src/types.ts` (généré depuis le schéma déployé) déclare 13 tables — `activity_logs`, `di_services`, `di_structures`, `editorial_records`, `ingestion_records`, `ingestion_runs`, `letta_reports`, `notifications`, `profiles`, `publication_records`, `rco_records`, `translation_records`, `workflows` — et les 93 fichiers de `supabase/migrations/` ne mentionnent jamais `dispositifs`. En conséquence, **le service de recherche actuel est conservé** tant que son incompatibilité n'est pas démontrée (cf. critère PR-13 dans `05-plan-de-livraison.md`).
 
 ### A.6 Prompts et samples commités dans le repo
 
@@ -294,7 +297,7 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 | Slash command `/metadata` (`METADATA_SLASH_COMMAND`)        | **Skill `metadata` (markdown, à créer)** — _idem_ | ⏳ à faire |
 | Slash command `/translate` (`TRANSLATE_SLASH_COMMAND`)      | Skill de traduction multilingue (à créer)                      | ⏳ à faire |
 | Outil `validate_metadata_ri` (HTTP route)                   | Tool Letta Code (PR 18)                                        | ⏳ à faire |
-| Outil `search_ri_duplicate_dispositifs` (client API karfur) | Tool Letta Code **réécrit** comme requête Supabase (PR 20)     | ⏳ à faire |
+| Outil `search_ri_duplicate_dispositifs` (client API karfur) | Tool Letta Code — **source cible à déterminer** (PR 20)        | ⏳ à faire |
 | Script `scripts/update-metadata-schema-block.ts`            | Poussée auto du bloc mémoire au runtime Letta Code (PR 22) — _inutile depuis le gel_ | ⏳ obsolète |
 | Script `scripts/register-metadata-validator-tool.ts`        | Enregistrement du tool au runtime Letta Code (PR 18)           | ⏳ à faire |
 
@@ -323,12 +326,12 @@ Le setup Letta Code _historique_ avait 5 blocs (cf. Section B.2) — **archivés
 | 04 | RI-1261    | ~~Extraire les 5 fichiers `.agents/memory/system/*.md` dans le corpus, avec qmd~~ — **rendu obsolète par l'archive du 15 juin 2026**. Le pattern « mémoire partagée du repo » est remplacé par memfs (par-agent). |
 | 05 | RI-1262    | Indexer le corpus dans qmd.                                             |
 | 06 | RI-1263    | ~~Convertir `.commands/*.md` (RCO XML) en skills — conserver tels quels pour la future reprise RCO~~ — **rendu obsolète par l'archive du 15 juin 2026**. La migration ajoute une famille de skills « markdown » pour la prod (et rien pour RCO, qui est hors-scope). |
-| 09 | RI-1264    | Skill `audit` (markdown) : reprendre les prompts `compliance.md` + `duplicates.md` + tool `search_ri_duplicate_dispositifs` réécrit en requête Supabase (PR 20). |
+| 09 | RI-1264    | Skill `audit` (markdown) : reprendre les prompts `compliance.md` + `duplicates.md` + tool `search_ri_duplicate_dispositifs` réécrit en outil déterministe (source à déterminer, PR 20). |
 | 10 | RI-1265    | Skill `redaction` (markdown) : reprendre le slash command `/redaction`. |
 | 11 | RI-1266    | Skill `metadata` (markdown) : **réimplémenter** la logique déterministe de mapping (XML→frontmatter, jadis dans `.skills/metadata/scripts/map-metadata.ts` archivé) adaptée au nouveau format d'entrée markdown. Pattern de référence : Annexe B.6 archivée pour la structure. + tool `validate_metadata_ri` (PR 18). |
 | 13 | RI-1268    | Skill `translation` multilingue : reprendre les **5 agents** `ar/uk/ru/ps/ti` (considérer 1 agent multilingue vs 5). `ps` et `ti` ont déjà la persona Letta Code standard — probablement un pré-déploiement. |
 | 18 | RI-1274    | Tool `validate_metadata_ri` (déjà HTTP route Next.js) — le réexposer en tool Letta Code. |
-| 20 | RI-1276    | Tool `search_ri_duplicate_dispositifs` — **ne pas** se contenter d'extraire le client karfur : réécrire comme requête Supabase déterministe sur la table `dispositifs` (matching fuzzy + sémantique). |
+| 20 | RI-1276    | Tool `search_ri_duplicate_dispositifs` — **ne pas** se contenter d'extraire le client karfur : réécrire comme outil déterministe (matching fuzzy + sémantique), **sans présumer** d'une table Supabase `dispositifs` — elle n'existe pas (cf. §A.5). |
 | 22 | RI-1278    | `scripts/update-metadata-schema-block.ts` devient obsolète (cf. gel). À supprimer ou transformer en script de validation locale. |
 | 23 | RI-1278    | Squelette du runtime Letta Code.                                       |
 | 24–28 | RI-1279–RI-1283 | Brancher les 4 skills sur le runtime Letta Code.                  |
