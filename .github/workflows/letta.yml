@@ -140,6 +140,11 @@ jobs:
             Write your review comments in French (the team is French-speaking);
             keep code suggestions and identifiers in English.
 
+            Coding conventions are part of this review, not background reading.
+            AGENTS.md and `documentation/guides/coding-conventions.md` are
+            binding: a PR that contradicts them must be flagged (see areas 9
+            and 10), and a review that never opens them is incomplete.
+
             Budget — treat this as a hard constraint. A review that restates
             the diff costs the author more than it gives them:
             - One pass. No summary comment, no re-stating of the diff, no
