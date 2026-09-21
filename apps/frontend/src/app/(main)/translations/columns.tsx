@@ -18,6 +18,7 @@ import {
 } from "@/components/documents/cells";
 import { createTextColumn } from "@/lib/column-factories";
 import { getFlagClass } from "@/lib/document-labels";
+import { formatDateFr } from "@/lib/format-date";
 import { retryTranslationGeneration } from "@/services/translation-actions";
 import type { TranslationItem } from "@/services/translations";
 
@@ -171,6 +172,19 @@ export const columns: ColumnDef<TranslationItem>[] = [
       <DataTableColumnHeader column={column} title="ID" />
     ),
     cell: ({ row }) => <ExternalIdCell externalId={row.original.id} />,
+  },
+  // 11 — Date de publication
+  {
+    id: "publicationDate",
+    size: 120,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="(FR) Publiée le" />
+    ),
+    cell: ({ row }) => (
+      <span className="text-[12px] leading-5 text-(--text-disabled-grey)">
+        {formatDateFr(row.original.publicationDate) ?? "—"}
+      </span>
+    ),
   },
 ];
 

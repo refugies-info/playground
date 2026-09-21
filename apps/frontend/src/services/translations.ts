@@ -35,6 +35,7 @@ export interface TranslationItem {
   commune?: string | null;
   /** Date d'archivage de la fiche FR source (editorial_records.archived_at) */
   archivedAt?: string | null;
+  publicationDate?: string | null;
 }
 
 // Extended helper type including profiles
@@ -50,7 +51,12 @@ type TranslationWithRelations =
       | (Pick<Database["public"]["Tables"]["workflows"]["Row"], "id"> & {
           publication_records: Pick<
             Database["public"]["Tables"]["publication_records"]["Row"],
-            "remote_id" | "target" | "payload"
+            | "remote_id"
+            | "target"
+            | "payload"
+            | "mode"
+            | "status"
+            | "created_at"
           >[];
         })
       | null;
@@ -118,7 +124,10 @@ export async function getTranslations(params: GetTranslationsParams) {
         publication_records (
           remote_id,
           target,
-          payload
+          payload,
+          mode,
+          status,
+          created_at
         )
       ),
       profiles (
@@ -341,6 +350,16 @@ export async function getTranslations(params: GetTranslationsParams) {
         publicationUrl = `${cleanBaseUrl}/dispositif/${pubRecord.remote_id}`;
       }
 
+      const publicationDate =
+        row.workflows?.publication_records
+          ?.filter(
+            (record) =>
+              record.mode === "publish" && record.status === "published",
+          )
+          .map((record) => record.created_at)
+          .sort()
+          .at(-1) ?? null;
+
       const author = row.profile;
 
       return {
@@ -367,6 +386,7 @@ export async function getTranslations(params: GetTranslationsParams) {
         priority: row.priority ?? null,
         archivedAt: row.editorial_records?.archived_at ?? null,
         ...(row.workflow_id ? (enrichedMap.get(row.workflow_id) ?? {}) : {}),
+        publicationDate,
       } as TranslationItem;
     }),
   );
