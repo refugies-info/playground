@@ -40,12 +40,15 @@ the ones at deprecation risk.
 | `runs.usage.retrieve` | ❌ | **Removed** — usage now summed from `usage_statistics` stream chunks (same pattern as letta-code's accumulator) |
 | `agents.messages.create` | ❌ | **Removed** — was only used by dead code (`sendMessage`) |
 | `templates.agents.create` | ❌ | **Removed** — was only used by dead code (`runAgentOneShot`) |
-| `tools.upsert` | ❌ | ⚠️ Still used by one-shot registration scripts (`scripts/register-metadata-validator-tool.ts` and similar). These are **runbook scripts, not runtime code** — they are re-run manually when a tool changes, and can be ported to whatever endpoint replaces `tools.upsert` at that moment. No runtime call path depends on it. |
+| `tools.upsert` | ❌ | **Removed** — its only caller was `scripts/register-metadata-validator-tool.ts`, deleted with its `pnpm register:metadata-validator` entry. The tool stays attached to the frozen production agent (it keeps calling `/api/tools/validate-metadata-ri`, which remains); only the re-registration path is gone, which the frozen-agents constraint made dead anyway. |
 
-> **Runbook note on `tools.upsert`**: if Letta removes the endpoint before the
-> agent migration lands, the fix is confined to the registration scripts —
-> consult the letta-code source for the current tool-registration path and port
-> the script. Nothing in `packages/` calls `tools.upsert` at runtime.
+> **Runbook note on `tools.upsert`**: the registration script was deleted (TEC-63).
+> The `validate_metadata_ri` tool remains attached to the frozen production
+> agent and keeps working — the frontend route
+> `/api/tools/validate-metadata-ri` must stay while that agent is in use.
+> If the tool ever needs re-registering (dev/test environments), consult the
+> letta-code source for the current tool-registration path and write a new
+> script at that moment. Nothing in `packages/` calls `tools.upsert`.
 
 ### 3.2 Rollback risks already present in the code
 
