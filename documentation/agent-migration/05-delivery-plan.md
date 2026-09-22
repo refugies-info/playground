@@ -15,6 +15,8 @@
 
 **Content**
 - Reconcile code, deployed configuration, dashboard agents, languages and models.
+- Reconcile the deployed Supabase schema with the committed migration chain; record the target
+  environment and migration version used by every later database change.
 - Document the support window of the legacy API and the degraded mode.
 - Identify the authoritative editorial sources.
 - Explicitly separate: validated decisions / assumptions / feasibility questions.
@@ -36,6 +38,12 @@
 - [ ] Complete matrix of the flows: active, dormant, to be removed.
 - [ ] Agent IDs, languages and models reconciled with the configuration actually deployed.
 - [ ] Knowledge sources identified and the status of each made explicit.
+- [ ] Staging schema drift from [§3.3.1](02-current-state.md) resolved through a separate,
+  reviewed deployment operation, then re-audited before PR-06.
+- [ ] The four staging reports still marked `generating` classified as active or stale, then
+  reconciled before schema or trigger changes.
+- [ ] Each security-advisor finding that affects the migration boundary has an explicit outcome:
+  remediated before PR-06 or accepted with a documented owner and rationale.
 - [ ] No production agent change.
 
 **Dependencies:** none. **Blocks PR-09** ([§3.4-d](02-current-state.md#s34)).
@@ -129,6 +137,12 @@
 - [ ] **Conversation resolution precedes workflow startup**: an impossible resume must fail before any work is started.
 - [ ] The UI can display the origin of a resume **when the product signaling is retained** ([§5.3](01-decision.md#s53)), without the mechanism depending on that decision.
 - [ ] RLS, permissions and migrations tested; `supabase db reset` verified.
+- [ ] Migration written against the re-audited deployed baseline, not inferred only from generated
+  TypeScript types.
+- [ ] Existing conversation IDs are preserved when valid; missing IDs are not backfilled by
+  guessing from names, timestamps or neighboring reports.
+- [ ] Legacy workflows are classified explicitly as resumable, eligible for a fresh conversation,
+  terminal, or requiring manual reconciliation.
 
 **Dependencies:** PR-04, PR-05, PR-03 conclusions.
 
@@ -142,6 +156,8 @@
 
 **Acceptance criteria**
 - [ ] A discarded report is not reactivated by a subsequent backup.
+- [ ] The deployed `link_letta_reports_to_editorial_record()` trigger is removed or constrained so
+  that it cannot override an explicitly selected or quarantined report.
 - [ ] A concurrent human modification is never overwritten.
 - [ ] A failure between generation and persistence does not automatically trigger a new generation.
 - [ ] A stale attempt can modify neither content nor status.
@@ -262,6 +278,8 @@
 - [ ] `compliant=true` **and** `duplicate=false` remain required for the compliant status.
 - [ ] Parity on the reference corpus.
 - [ ] No dependency on a Supabase `dispositifs` table assumed to exist.
+- [ ] `publication_records` is not treated as the authoritative RI duplicate corpus: the staging
+  audit found only local publication history, not a synchronized copy of karfur dispositifs.
 - [ ] The current search service is kept, or replaced only if its incompatibility is demonstrated.
 - [ ] Automatic fan-out still disabled.
 

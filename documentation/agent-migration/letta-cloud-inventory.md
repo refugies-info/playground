@@ -103,11 +103,8 @@
   2. L'agent appelle le tool `search_ri_duplicate_dispositifs` en passant des métadonnées extraites du document.
   3. Le tool forward la requête à l'API karfur, qui exécute un matching fuzzy (probablement Levenshtein + comparaison de champs) et renvoie les N meilleurs candidats.
   4. L'agent LLM prend ces candidats, les analyse sémantiquement, et produit la décision finale.
-- **Implication migration** : ce client n'a pas d'équivalent direct en playground. La migration doit soit :
-  - (a) **Réécrire la logique** du matching fuzzy directement en playground (en TypeScript, contre une source restant à identifier), ou
-  - (b) **Construire une API miroir** dans playground qui imite l'API karfur (transitoire).
-  - C'est un livrable attendu du **PR 20** (validation déterministe des doublons).
-- **Source cible : non déterminée.** Les dispositifs sont des données **karfur** (MongoDB) ; le Supabase de playground n'expose **aucune** table `dispositifs`. Vérifié le 21/09/2026 : `packages/supabase/src/types.ts` (généré depuis le schéma déployé) déclare 13 tables — `activity_logs`, `di_services`, `di_structures`, `editorial_records`, `ingestion_records`, `ingestion_runs`, `letta_reports`, `notifications`, `profiles`, `publication_records`, `rco_records`, `translation_records`, `workflows` — et les 93 fichiers de `supabase/migrations/` ne mentionnent jamais `dispositifs`. En conséquence, **le service de recherche actuel est conservé** tant que son incompatibilité n'est pas démontrée (cf. critère PR-13 dans `05-plan-de-livraison.md`).
+- **Implication migration** : ce client n'a pas d'équivalent direct en playground. Le service de recherche actuel reste donc la référence pendant la migration. Une réécriture locale du matching fuzzy ou une API miroir ne devient un livrable que si une incompatibilité du service existant est démontrée ; cet arbitrage appartient au **PR-13** du nouveau plan.
+- **Source cible : non déterminée.** Les dispositifs sont des données **karfur** (MongoDB) ; le Supabase de playground n'expose **aucune** table `dispositifs`. L'audit MCP du staging du 22/09/2026 confirme 11 tables déployées, sans `dispositifs`. Le fichier `packages/supabase/src/types.ts` est le snapshot généré du schéma connu du dépôt, avec 13 tables ; il ne représente pas le staging actuel, où seules 73 migrations sur les 93 fichiers sont appliquées. Ni ce fichier, ni les 93 migrations ne mentionnent `dispositifs`. En conséquence, **le service de recherche actuel est conservé** tant que son incompatibilité n'est pas démontrée (cf. critère PR-13 dans `05-delivery-plan.md`).
 
 ### A.6 Prompts et samples commités dans le repo
 

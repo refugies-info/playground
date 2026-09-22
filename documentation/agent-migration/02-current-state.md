@@ -61,11 +61,54 @@ This route must be **secured or removed** regardless of which SDK is chosen. Thi
 |---|---|
 | Historical API shutdown date | **Confirmed as imminent, with no firm date** (Luis, 17/09/2026) — determines the length of the v1 bridge. See [§10](07-v1-removal-and-backup.md). |
 | Agents actually used in production (IDs, languages, models) | ✅ **Resolved** — see [§3.5](03-production-agents-audit.md) |
-| Schema actually deployed vs migrations | The behavior of triggers and constraints must be observed |
+| Schema actually deployed vs migrations | ✅ **Resolved for staging on 22/09/2026** — see the live audit below. Staging is 20 migrations behind `main`; the target environment must be re-audited before implementation. |
 | Which AI flows are actually active in production | The fan-out is disabled in the code: to be confirmed on the operations side |
 | Actual consumers of the SSE route | Decides between fixing and removing it |
 | Authoritative sources for the editorial knowledge | The repository corpus is incomplete; local drafts are not authoritative — **actual state of the resources established in [§3.5](03-production-agents-audit.md)** |
 | Vercel execution limits for 1- to 3-minute turns | Determines feasibility (`maxDuration`, regions, cold start) |
+
+#### 3.3.1 Live staging database audit — 22/09/2026
+
+The Supabase MCP connection was used to inspect `playground-staging` directly, without changing
+the database. The audit covered relations, columns, constraints, indexes, triggers, functions,
+RLS policies, Realtime publication membership, migration history and aggregate record state. The
+deployed schema is **not** the same as the schema represented by `main`:
+
+| Area | Deployed staging | Repository on `main` | Consequence |
+|---|---|---|---|
+| Migration history | 73 migrations, through `20260507140000_add_priority_to_translation_records` | 93 migration files, through `20260821143000_derive_archived_at_in_workflows_enriched` | 20 committed migrations are not applied to staging. |
+| Public relations | 11 tables + 3 views | 13 tables + 3 views in generated types | `activity_logs` and `notifications` do not exist in staging. |
+| Workflow source tracking | `workflows.ingestion_record_id` only | Adds `latest_ingestion_record_id` and version-aware behavior | Staging cannot distinguish the accepted source from a newer pending ingestion. |
+| Assignment and editing | `editorial_records.author_id`; no `current_editor_id` | Assignment moved to `workflows.assignee_id`; `current_editor_id` added | Concurrency and ownership safeguards must not be designed against generated types alone. |
+| Report links | No `ingestion_records.metadata_report_id` | Adds the per-ingestion metadata report link | A metadata report for a pending source cannot be represented in the deployed schema. |
+| Editorial lifecycle | `work_status` allows only `to_process` / `draft`; no `archived_at` | Adds `to_review` and archive history | Rollback and status tests must use the schema actually targeted for rollout. |
+| Realtime | `workflows`, `letta_reports`, `translation_records`, `publication_records` | Also enables ingestion records and notifications | UI observability differs between staging and the migration chain. |
+
+The live data also narrows several assumptions:
+
+- all **40,928** ingestion records are DI records; `rco_records` is empty;
+- every ingestion record has a workflow, but only **102 of 40,928** workflows have a
+  `conversation_id`; none has a `vercel_workflow_id` or `vercel_hook_token`;
+- all **6,678** Letta reports are linked to a workflow, including 4 still marked `generating`;
+- the automatic `link_letta_reports_to_editorial_record()` trigger is deployed and does select
+  the latest `complete` editorial and metadata reports by workflow on every editorial insert or
+  update, confirming the rollback risk in §3.2-c;
+- `publication_records` contains 129 staging publication events for only 55 distinct remote IDs.
+  It is an event history for `staging.refugies.info`, not an authoritative copy of the complete
+  karfur dispositif corpus. The live database therefore confirms that it cannot replace
+  `search_ri_duplicate_dispositifs` as-is.
+
+All 11 deployed tables have RLS enabled, but that does **not** mean the schema is ready for the
+migration. The Supabase security advisor reports, among other existing findings, executable
+`SECURITY DEFINER` functions for `anon` / `authenticated` (including the audit RPCs and
+`update_metadata_field`) and `ingestion_runs` with RLS but no policy. These are pre-existing
+security findings, not introduced by the Agent SDK plan; any new operation or conversation table
+must use explicit grants and tested policies rather than copying the current defaults.
+
+**Planning consequence:** schema drift reconciliation is a Phase 0 prerequisite. PR-06 must start
+from a re-audited target database, not from `packages/supabase/src/types.ts` alone. Applying the 20
+missing migrations is operational deployment work and must not be hidden inside the Agent SDK
+migration.
 
 ---
 
