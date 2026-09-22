@@ -182,7 +182,7 @@ export const columns: ColumnDef<TranslationItem>[] = [
     ),
     cell: ({ row }) => (
       <span className="text-[12px] leading-5 text-(--text-disabled-grey)">
-        {formatDateFr(row.original.publicationDate) ?? "—"}
+        {formatDateFr(row.original.publicationDate)}
       </span>
     ),
   },
