@@ -41,12 +41,12 @@
  * - compliance_status lives on `ingestion_records` (RI-1093), updated directly after audit
  */
 
-import { APIError } from "@letta-ai/letta-client/error";
+import { APIError } from "@letta-ai/letta-client/core/error";
 import {
+  accumulateUsage,
   createLettaClient,
   findOrCreateConversation,
   generateIngestionReport,
-  getRunUsage,
   type LettaUsage,
   parseIngestionResponse,
 } from "@playground/agents";
@@ -278,17 +278,14 @@ export async function generateDiAuditReportsStep(runId: string) {
       );
 
       let finalContent = "";
-      let usage: LettaUsage | undefined;
-      let chunkRunId: string | undefined;
+      const usage: LettaUsage = {};
 
       for await (const chunk of generateIngestionReport(
         lettaClient,
         target.markdown,
         conversationId,
       )) {
-        if (!chunkRunId && chunk.run_id) {
-          chunkRunId = chunk.run_id;
-        }
+        accumulateUsage(usage, chunk);
         if (chunk.message_type === "assistant_message") {
           if (typeof chunk.content !== "string") {
             throw new Error(
@@ -303,11 +300,7 @@ export async function generateDiAuditReportsStep(runId: string) {
         throw new Error("No assistant response received for ingestion report");
       }
 
-      if (chunkRunId) {
-        usage = await getRunUsage(lettaClient, chunkRunId);
-      }
-
-      const parsed = parseIngestionResponse(finalContent, agentId);
+      const parsed = parseIngestionResponse(finalContent, agentId, usage);
 
       const { data: report, error: reportError } = await supabase
         .from("letta_reports")
@@ -496,8 +489,7 @@ export async function forceAuditReportStep(workflowId: string) {
   );
 
   let finalContent = "";
-  let usage: LettaUsage | undefined;
-  let chunkRunId: string | undefined;
+  const usage: LettaUsage = {};
 
   try {
     for await (const chunk of generateIngestionReport(
@@ -505,9 +497,7 @@ export async function forceAuditReportStep(workflowId: string) {
       record.markdown,
       conversationId,
     )) {
-      if (!chunkRunId && chunk.run_id) {
-        chunkRunId = chunk.run_id;
-      }
+      accumulateUsage(usage, chunk);
       if (chunk.message_type === "assistant_message") {
         if (typeof chunk.content !== "string") {
           throw new Error(
@@ -522,11 +512,7 @@ export async function forceAuditReportStep(workflowId: string) {
       throw new Error("No assistant response received for ingestion report");
     }
 
-    if (chunkRunId) {
-      usage = await getRunUsage(lettaClient, chunkRunId);
-    }
-
-    const parsed = parseIngestionResponse(finalContent, agentId);
+    const parsed = parseIngestionResponse(finalContent, agentId, usage);
 
     // Insert Report
     const { data: report, error: reportError } = await supabase

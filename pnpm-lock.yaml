@@ -603,6 +603,9 @@ importers:
 
   packages/workflows:
     dependencies:
+      '@letta-ai/letta-client':
+        specifier: 1.10.2
+        version: 1.10.2
       '@playground/agents':
         specifier: workspace:*
         version: link:../agents

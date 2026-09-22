@@ -18,6 +18,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@letta-ai/letta-client": "1.10.2",
     "@playground/agents": "workspace:*",
     "@playground/airtable": "workspace:*",
     "@playground/rco": "workspace:*",

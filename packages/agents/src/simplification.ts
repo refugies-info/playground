@@ -6,32 +6,34 @@ import { REDACTION_SLASH_COMMAND } from "./prompts";
 import type { LettaUsage } from "./types";
 
 /**
- * Fetches usage statistics from Letta API for a given run ID.
- * @param client - Letta client instance
- * @param runId - The run ID to fetch usage for
- * @returns Usage object with token counts
+ * Accumulates token usage from a `usage_statistics` stream chunk into `usage`.
+ * The Letta stream emits one `usage_statistics` chunk per agent step (after
+ * `stop_reason`), so values are summed, not overwritten. This replaces the
+ * deprecated `runs.usage.retrieve` endpoint — the same pattern letta-code uses.
+ *
+ * @param usage - Accumulated usage so far (mutated and returned)
+ * @param chunk - A stream chunk; ignored unless it is a usage_statistics chunk
+ * @returns The updated accumulated usage
  */
-export async function getRunUsage(
-  client: Letta,
-  runId: string,
-): Promise<LettaUsage | undefined> {
-  try {
-    // biome-ignore lint/suspicious/noExplicitAny: Letta SDK work-around
-    const usageData = await (client.runs.usage.retrieve(runId) as any);
-    if (usageData && typeof usageData === "object") {
-      return {
-        promptTokens: usageData.prompt_tokens,
-        completionTokens: usageData.completion_tokens,
-        totalTokens: usageData.total_tokens,
-      };
-    }
-  } catch (err) {
-    logger.error(
-      { runId, error: err instanceof Error ? err.message : String(err) },
-      "[getRunUsage] Failed to fetch run usage",
-    );
+export function accumulateUsage(
+  usage: LettaUsage,
+  // biome-ignore lint/suspicious/noExplicitAny: Letta SDK stream yields various message types
+  chunk: any,
+): LettaUsage {
+  if (chunk?.message_type !== "usage_statistics") {
+    return usage;
   }
-  return undefined;
+  if (typeof chunk.prompt_tokens === "number") {
+    usage.promptTokens = (usage.promptTokens ?? 0) + chunk.prompt_tokens;
+  }
+  if (typeof chunk.completion_tokens === "number") {
+    usage.completionTokens =
+      (usage.completionTokens ?? 0) + chunk.completion_tokens;
+  }
+  if (typeof chunk.total_tokens === "number") {
+    usage.totalTokens = (usage.totalTokens ?? 0) + chunk.total_tokens;
+  }
+  return usage;
 }
 
 /**
@@ -166,18 +168,14 @@ export async function simplifyContentSync(
   // emit several of them. We must consume the whole stream and concatenate
   // every chunk, otherwise the content is silently truncated.
   let assistantContent = "";
-  let usage: SimplifyContentResult["usage"];
-  let runId: string | undefined;
+  const usage: LettaUsage = {};
 
   for await (const chunk of simplifyContent(
     client,
     markdownContent,
     conversationId,
   )) {
-    // Capture run_id from chunk metadata
-    if (!runId && chunk.run_id) {
-      runId = chunk.run_id;
-    }
+    accumulateUsage(usage, chunk);
 
     if (chunk.message_type === "assistant_message") {
       assistantContent +=
@@ -199,10 +197,6 @@ export async function simplifyContentSync(
 
   if (!assistantContent) {
     throw new Error("No assistant message in Letta response");
-  }
-
-  if (runId) {
-    usage = await getRunUsage(client, runId);
   }
 
   return {
