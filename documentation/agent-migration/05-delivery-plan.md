@@ -38,12 +38,8 @@
 - [ ] Complete matrix of the flows: active, dormant, to be removed.
 - [ ] Agent IDs, languages and models reconciled with the configuration actually deployed.
 - [ ] Knowledge sources identified and the status of each made explicit.
-- [ ] **Production is the verified schema baseline** ([§3.3.2](02-current-state.md)):
-  production matches `main` (93/93 migrations, 22/09/2026 audit); re-audit it before PR-06. The
-  20-migration drift is **staging-only** — decide whether to reconcile or retire the staging
-  project, and treat any staging migration replay as a separate, reviewed deployment operation.
-- [ ] The 4 reports stuck in `generating` are a staging-only finding ([§3.3.2](02-current-state.md));
-  production has none. Reconcile them only if staging is kept.
+- [ ] **Production is the verified schema baseline** ([§3.3.1](02-current-state.md)):
+  production matches `main` (93/93 migrations, 22/09/2026 audit); re-audit it before PR-06.
 - [ ] Each **production** security-advisor finding that affects the migration boundary has an
   explicit outcome: remediated before PR-06 or accepted with a documented owner and rationale.
 - [ ] No production agent change.
@@ -145,7 +141,7 @@
   guessing from names, timestamps or neighboring reports.
 - [ ] Legacy workflows are classified explicitly as resumable, eligible for a fresh conversation,
   terminal, or requiring manual reconciliation — at production scale: 2,823 workflows, only 152
-  with a conversation ID ([§3.3.2](02-current-state.md)).
+  with a conversation ID ([§3.3.1](02-current-state.md)).
 
 **Dependencies:** PR-04, PR-05, PR-03 conclusions.
 
@@ -281,8 +277,9 @@
 - [ ] `compliant=true` **and** `duplicate=false` remain required for the compliant status.
 - [ ] Parity on the reference corpus.
 - [ ] No dependency on a Supabase `dispositifs` table assumed to exist.
-- [ ] `publication_records` is not treated as the authoritative RI duplicate corpus: the staging
-  audit found only local publication history, not a synchronized copy of karfur dispositifs.
+- [ ] `publication_records` is not treated as the authoritative RI duplicate corpus: the
+  production audit found only local publication history, not a synchronized copy of karfur
+  dispositifs.
 - [ ] The current search service is kept, or replaced only if its incompatibility is demonstrated.
 - [ ] Automatic fan-out still disabled.
 
@@ -374,7 +371,7 @@
 #### PR-19 — `test(agents): qualify parity, load and recovery after failure`
 
 **Content**
-- v1 / SDK comparisons in staging, on frozen inputs.
+- v1 / SDK comparisons on a production-like dataset, on frozen inputs.
 - **SQL and agent memory** isolation.
 - Gradual load tests.
 - Fault injection: cut-off after send, crash before commit, late result, cancellation, concurrent human edit.
@@ -397,7 +394,7 @@
 - Documentation of responsibilities and accesses.
 
 **Acceptance criteria**
-- [ ] Staging rollback exercise run end to end.
+- [ ] Production-like rollback rehearsal run end to end.
 - [ ] Restoration of a translation **and** of metadata overrides demonstrated.
 - [ ] An editorial backup after restoration does not reactivate a quarantined report.
 - [ ] A concurrent human modification is preserved.

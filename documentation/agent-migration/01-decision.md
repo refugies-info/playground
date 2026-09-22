@@ -44,7 +44,7 @@ These points cannot be settled by reading the code alone. I give a recommendatio
 - Harden writes (reports, translations, metadata), concurrency and resumption.
 - Set up reversible routing and a degraded mode.
 - Migrate the active flows one by one: audit, metadata, rewriting, translations.
-- Qualify parity in staging and oversee the gradual cutover.
+- Qualify parity on a production-like environment and oversee the gradual cutover.
 
 ### Out of scope (unless a demonstrated blocker)
 

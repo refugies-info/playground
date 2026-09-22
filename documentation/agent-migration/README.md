@@ -2,7 +2,7 @@
 
 This folder documents the migration of the editorial AI agent from the legacy Letta API (`@letta-ai/letta-client`) to **`@letta-ai/letta-agent-sdk`**, along a reversible delivery path.
 
-> ⚠️ **Current source of truth**: the eight numbered documents below (plan of 17 September 2026, completed by the production-agent audit of 18 September and the live staging and production database audits of 22 September). The plan was initially a single document (`agent-sdk-migration-plan.md`, deleted), split here by intent and by lifetime, for review.
+> ⚠️ **Current source of truth**: the eight numbered documents below (plan of 17 September 2026, completed by the production-agent audit of 18 September and the live production database audit of 22 September). The plan was initially a single document (`agent-sdk-migration-plan.md`, deleted), split here by intent and by lifetime, for review.
 > The earlier planning of 15 June 2026 assumed qmd plus a Letta Code runtime and a GCP worker; it was never implemented and is **obsolete**. The `agent-knowledge/` corpus on `main` is an empty skeleton, not a completed migration.
 > The Linear project «Migration agent IA — Letta Code SDK et qmd» and its 50 tickets were archived on 17/09/2026. The new ticket breakdown lives in [`08-linear-and-appendix.md`](./08-linear-and-appendix.md).
 
@@ -11,7 +11,7 @@ This folder documents the migration of the editorial AI agent from the legacy Le
 | Order | Document | Sections | What it contains |
 | ----- | -------- | -------- | ---------------- |
 | 1 | [`01-decision.md`](./01-decision.md) | §1, §2, §5, §9 | **What must be decided**: executive summary, scope, target architecture, open trade-offs |
-| 2 | [`02-current-state.md`](./02-current-state.md) | §3.1 – §3.4 | **What has been observed** in the repository and staging database, and what the official Letta guide changes in this plan |
+| 2 | [`02-current-state.md`](./02-current-state.md) | §3.1 – §3.4 | **What has been observed** in the repository and production database, and what the official Letta guide changes in this plan |
 | 3 | [`03-production-agents-audit.md`](./03-production-agents-audit.md) | §3.5 | **The actual state of production**: API audit of 18/09/2026 (agents, memory, resources) |
 | 4 | [`04-agent-sdk-changes.md`](./04-agent-sdk-changes.md) | §4 | **What the SDK changes**, relative to the earlier plans |
 | 5 | [`05-delivery-plan.md`](./05-delivery-plan.md) | §6 | **What gets executed**: seven phases (0 to 6), 21 PRs, exit criteria |
@@ -55,7 +55,7 @@ Appendix C of the inventory gives the detail; the audit of 18/09/2026 (§3.5) ha
 2. **The current input format is markdown (YAML frontmatter + body)** from the Data Inclusion API.
 3. **`search_ri_duplicate_dispositifs` is not a standalone tool.** It is a client for an ad-hoc API in the karfur repository that returns duplicate candidates, which the LLM then analyses. Any replacement must be justified by a demonstrated incompatibility — do not assume a Supabase `dispositifs` table exists.
 4. **The four `/audit`, `/redaction`, `/metadata`, `/translate` chains in `packages/agents/src/prompts.ts` are not an export of the editorial knowledge.** The real instructions and references still have to be recovered and verified.
-5. **Production matches the repository migration chain; staging is the drifted environment.** The 22/09/2026 audits found production at 93/93 migrations (same as `main`) and staging at 73/93, with 20 migrations never applied — and staging appears to be the deprecated project. Plan database changes against production; reconcile or retire staging as a separate operation.
+5. **Production matches the repository migration chain.** The 22/09/2026 live audit found production at 93/93 migrations (same as `main`). Plan database changes against production; the deprecated staging project is out of scope and will be shut down separately.
 
 ## Scope decision (15 June 2026, still valid)
 

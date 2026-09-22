@@ -89,8 +89,9 @@ The corpus, the baseline and the spike can proceed **in parallel**. Flows can be
 ### What was not done
 
 - No test, build or lint was run.
-- No staging or production environment was queried.
-- No database (Supabase, MongoDB) was queried.
+- No database (Supabase, MongoDB) was queried. **Update of 22/09/2026:** the production
+  Supabase database has since been audited live via MCP ([§3.3.1](02-current-state.md)) —
+  production matches the repository migration chain.
 - No Letta Cloud resource was inspected (agents, memories, tools, conversations).
 - No verification of the actual Vercel execution limits.
 - No external confirmation of the historical API support policy.
