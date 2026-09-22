@@ -60,6 +60,31 @@ async function createFailedPublicationRecord(
   }
 }
 
+async function getWorkflowDiId(
+  supabase: SupabaseClient,
+  workflowId: string,
+): Promise<string | undefined> {
+  const { data: workflow, error } = await supabase
+    .from("workflows")
+    // FK hint required: workflows has two FKs to ingestion_records (active + latest)
+    .select(
+      "ingestion_records!status_ingestion_record_id_fkey(di_services(di_id))",
+    )
+    .eq("id", workflowId)
+    .maybeSingle();
+
+  if (error) {
+    logger.error({ error, workflowId }, "Error fetching di_id for origin_id");
+    return undefined;
+  }
+
+  const ingestionRecord = workflow?.ingestion_records as unknown as
+    | { di_services: { di_id: string | null } | null }
+    | undefined;
+
+  return ingestionRecord?.di_services?.di_id ?? undefined;
+}
+
 /**
  * Result of publishing a document.
  */
@@ -178,6 +203,8 @@ export async function publishDocumentStep(
     const markdownTitle = await extractTitleFromMarkdown(markdown);
     const effectiveTitle = markdownTitle || title;
 
+    const originId = await getWorkflowDiId(supabase, workflowId);
+
     // Use adapter to build payload
     const webhookPayload = await adapter.buildPayload({
       title: effectiveTitle,
@@ -186,6 +213,7 @@ export async function publishDocumentStep(
       userEmail,
       status: "Actif",
       existingRemoteId: existingRemoteId || undefined,
+      originId,
     });
 
     // Call the appropriate specialized endpoint

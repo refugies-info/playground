@@ -53,6 +53,7 @@ export interface PublisherAdapter {
     userEmail: string;
     status?: string;
     existingRemoteId?: string;
+    originId?: string;
   }): WebhookPayload | Promise<WebhookPayload>;
 
   /**
