@@ -61,7 +61,7 @@ This route must be **secured or removed** regardless of which SDK is chosen. Thi
 |---|---|
 | Historical API shutdown date | **Confirmed as imminent, with no firm date** (Luis, 17/09/2026) — determines the length of the v1 bridge. See [§10](07-v1-removal-and-backup.md). |
 | Agents actually used in production (IDs, languages, models) | ✅ **Resolved** — see [§3.5](03-production-agents-audit.md) |
-| Schema actually deployed vs migrations | ✅ **Resolved for staging on 22/09/2026** — see the live audit below. Staging is 20 migrations behind `main`; the target environment must be re-audited before implementation. |
+| Schema actually deployed vs migrations | ✅ **Resolved on 22/09/2026** — see the live audits below. **Production matches `main`** (93/93 migrations); **staging is the drifted environment** (73/93) and appears to be the deprecated one (Luis, 22/09/2026). |
 | Which AI flows are actually active in production | The fan-out is disabled in the code: to be confirmed on the operations side |
 | Actual consumers of the SSE route | Decides between fixing and removing it |
 | Authoritative sources for the editorial knowledge | The repository corpus is incomplete; local drafts are not authoritative — **actual state of the resources established in [§3.5](03-production-agents-audit.md)** |
@@ -105,10 +105,53 @@ migration. The Supabase security advisor reports, among other existing findings,
 security findings, not introduced by the Agent SDK plan; any new operation or conversation table
 must use explicit grants and tested policies rather than copying the current defaults.
 
-**Planning consequence:** schema drift reconciliation is a Phase 0 prerequisite. PR-06 must start
-from a re-audited target database, not from `packages/supabase/src/types.ts` alone. Applying the 20
-missing migrations is operational deployment work and must not be hidden inside the Agent SDK
-migration.
+**Planning consequence:** the repository schema snapshot in `packages/supabase/src/types.ts`
+**is** faithful to production, the migration target. The drift is a staging operational issue, not
+a plan issue. PR-06 can build on the generated types, but must still run its RLS/permissions tests
+against production (or a production-like clone), and staging must either be reconciled or
+retired — see §3.3.2.
+
+#### 3.3.2 Live production database audit — 22/09/2026
+
+The same MCP audit was run against `playground-production` (eu-west-3). **Production is at the
+tip of the migration chain: 93/93 migrations applied**, through
+`20260821143000_derive_archived_at_in_workflows_enriched` — the deployed schema matches
+`main`, including `activity_logs`, `notifications`, `workflows.assignee_id`,
+`latest_ingestion_record_id`, `current_editor_id`, `archived_at` and
+`ingestion_records.metadata_report_id`. All 13 tables have RLS enabled; Realtime publishes 6
+tables (`workflows`, `ingestion_records`, `letta_reports`, `translation_records`,
+`publication_records`, `notifications`).
+
+| Metric | Production | Staging (drifted) |
+|---|---|---|
+| Migrations applied | 93/93 | 73/93 |
+| Ingestion records (all DI) | 21,852 | 40,928 |
+| Workflows | 2,823 | 40,928 |
+| `conversation_id` set | 152 | 102 |
+| `assignee_id` set | 323 | n/a (column absent) |
+| `latest_ingestion_record_id` set | 2,823 (all) | n/a (column absent) |
+| Vercel workflow IDs / hook tokens | 0 / 0 | 0 / 0 |
+| Letta reports | 2,679 (2,310 complete, 369 error, **0 generating**) | 6,678 (4 generating) |
+| Editorial records (archived) | 361 (107) | 124 |
+| Translation records | 133 | 154 |
+| Publication events (distinct remote IDs) | 296 (171) | 129 (55) |
+| Activity logs / notifications | 1,279 / 413 | n/a (tables absent) |
+
+The production data confirms and sharpens the staging findings:
+
+- conversation identity is the exception (152 of 2,823 workflows), so PR-06's legacy-row
+  classification criterion applies at production scale;
+- **no report is stuck in `generating` in production** — the 4 stale `generating` rows are a
+  staging-only artifact, and the PR-01 reconciliation criterion for them drops out if staging is
+  retired;
+- `publication_records` is still local event history (296 events, 171 distinct remote IDs),
+  not an authoritative dispositif corpus — the `search_ri_duplicate_dispositifs` conclusion is
+  unchanged;
+- the security-advisor findings exist in production too: `ingestion_runs` with RLS but no
+  policy, 10 `SECURITY DEFINER` functions executable by `anon` / `authenticated` (including
+  `rls_auto_enable` and both `update_*_metadata_field` RPCs), mutable `search_path` on 3
+  functions, `pg_trgm` in `public`, leaked-password protection disabled. The PR-01 remediation /
+  acceptance criterion therefore targets **production**, not staging.
 
 ---
 

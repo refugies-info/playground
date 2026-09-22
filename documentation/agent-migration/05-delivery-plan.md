@@ -38,12 +38,14 @@
 - [ ] Complete matrix of the flows: active, dormant, to be removed.
 - [ ] Agent IDs, languages and models reconciled with the configuration actually deployed.
 - [ ] Knowledge sources identified and the status of each made explicit.
-- [ ] Staging schema drift from [§3.3.1](02-current-state.md) resolved through a separate,
-  reviewed deployment operation, then re-audited before PR-06.
-- [ ] The four staging reports still marked `generating` classified as active or stale, then
-  reconciled before schema or trigger changes.
-- [ ] Each security-advisor finding that affects the migration boundary has an explicit outcome:
-  remediated before PR-06 or accepted with a documented owner and rationale.
+- [ ] **Production is the verified schema baseline** ([§3.3.2](02-current-state.md)):
+  production matches `main` (93/93 migrations, 22/09/2026 audit); re-audit it before PR-06. The
+  20-migration drift is **staging-only** — decide whether to reconcile or retire the staging
+  project, and treat any staging migration replay as a separate, reviewed deployment operation.
+- [ ] The 4 reports stuck in `generating` are a staging-only finding ([§3.3.2](02-current-state.md));
+  production has none. Reconcile them only if staging is kept.
+- [ ] Each **production** security-advisor finding that affects the migration boundary has an
+  explicit outcome: remediated before PR-06 or accepted with a documented owner and rationale.
 - [ ] No production agent change.
 
 **Dependencies:** none. **Blocks PR-09** ([§3.4-d](02-current-state.md#s34)).
@@ -137,12 +139,13 @@
 - [ ] **Conversation resolution precedes workflow startup**: an impossible resume must fail before any work is started.
 - [ ] The UI can display the origin of a resume **when the product signaling is retained** ([§5.3](01-decision.md#s53)), without the mechanism depending on that decision.
 - [ ] RLS, permissions and migrations tested; `supabase db reset` verified.
-- [ ] Migration written against the re-audited deployed baseline, not inferred only from generated
-  TypeScript types.
+- [ ] Migration written against the re-audited production baseline (verified: production matches
+  `main` as of 22/09/2026), not inferred only from generated TypeScript types.
 - [ ] Existing conversation IDs are preserved when valid; missing IDs are not backfilled by
   guessing from names, timestamps or neighboring reports.
 - [ ] Legacy workflows are classified explicitly as resumable, eligible for a fresh conversation,
-  terminal, or requiring manual reconciliation.
+  terminal, or requiring manual reconciliation — at production scale: 2,823 workflows, only 152
+  with a conversation ID ([§3.3.2](02-current-state.md)).
 
 **Dependencies:** PR-04, PR-05, PR-03 conclusions.
 
