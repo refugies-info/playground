@@ -61,11 +61,70 @@ This route must be **secured or removed** regardless of which SDK is chosen. Thi
 |---|---|
 | Historical API shutdown date | **Confirmed as imminent, with no firm date** (Luis, 17/09/2026) — determines the length of the v1 bridge. See [§10](07-v1-removal-and-backup.md). |
 | Agents actually used in production (IDs, languages, models) | ✅ **Resolved** — see [§3.5](03-production-agents-audit.md) |
-| Schema actually deployed vs migrations | The behavior of triggers and constraints must be observed |
+| Schema actually deployed vs migrations | ✅ **Resolved on 22/09/2026** — see the live audit below. **Production matches `main`** (93/93 migrations). The deprecated staging project is out of scope (Luis, 22/09/2026). |
 | Which AI flows are actually active in production | The fan-out is disabled in the code: to be confirmed on the operations side |
 | Actual consumers of the SSE route | Decides between fixing and removing it |
 | Authoritative sources for the editorial knowledge | The repository corpus is incomplete; local drafts are not authoritative — **actual state of the resources established in [§3.5](03-production-agents-audit.md)** |
 | Vercel execution limits for 1- to 3-minute turns | Determines feasibility (`maxDuration`, regions, cold start) |
+
+#### 3.3.1 Live production database audit — 22/09/2026
+
+The Supabase MCP connection was used to inspect `playground-production` (eu-west-3) directly,
+without changing the database. The audit covered relations, columns, constraints, indexes,
+triggers, functions, RLS policies, Realtime publication membership, migration history and
+aggregate record state.
+
+**Production is at the tip of the migration chain: 93/93 migrations applied**, through
+`20260821143000_derive_archived_at_in_workflows_enriched` — the deployed schema matches
+`main`, including `activity_logs`, `notifications`, `workflows.assignee_id`,
+`latest_ingestion_record_id`, `current_editor_id`, `archived_at` and
+`ingestion_records.metadata_report_id`. All 13 tables have RLS enabled; Realtime publishes 6
+tables (`workflows`, `ingestion_records`, `letta_reports`, `translation_records`,
+`publication_records`, `notifications`). The repository schema snapshot
+`packages/supabase/src/types.ts` is therefore faithful to the live target.
+
+| Metric | Production |
+|---|---|
+| Ingestion records (all DI) | 21,852 |
+| Workflows | 2,823 |
+| `conversation_id` set | 152 |
+| `assignee_id` set | 323 |
+| `latest_ingestion_record_id` set | 2,823 (all) |
+| Letta reports | 2,679 (2,310 complete, 369 error, 0 `generating`) |
+| Editorial records (archived) | 361 (107) |
+| Translation records | 133 |
+| Publication events (distinct remote IDs) | 296 (171) |
+| Activity logs / notifications | 1,279 / 413 |
+
+The live data narrows several assumptions:
+
+- conversation identity is the exception (152 of 2,823 workflows), so PR-06's legacy-row
+  classification criterion applies at production scale;
+- no report is stuck in `generating`;
+- `vercel_workflow_id` and `vercel_hook_token` columns exist on `workflows`, but **no code ever
+  writes to them** (only generated type files reference them) and **0 of 2,823 rows** are
+  populated. They are dead space from an abandoned callback design — PR-06 should remove or
+  repurpose them rather than build on them;
+- the automatic `link_letta_reports_to_editorial_record()` trigger is deployed and selects the
+  latest `complete` editorial and metadata reports by workflow on every editorial insert or
+  update, confirming the rollback risk in §3.2-c;
+- `publication_records` is local event history (296 events, 171 distinct remote IDs), not an
+  authoritative copy of the karfur dispositif corpus — it cannot replace
+  `search_ri_duplicate_dispositifs` as-is.
+
+All 13 tables have RLS enabled, but the Supabase security advisor reports pre-existing findings
+that any new persistence migration must not copy: `ingestion_runs` with RLS but no policy, 10
+`SECURITY DEFINER` functions executable by `anon` / `authenticated` (including
+`rls_auto_enable` and both `update_*_metadata_field` RPCs), mutable `search_path` on 3
+functions, `pg_trgm` in `public`, leaked-password protection disabled.
+
+**Planning consequence:** PR-06 can build on the generated types, but must run its RLS /
+permissions tests against production (or a production-like clone), and the security-advisor
+findings need remediation or explicit acceptance before new persistence tables are added.
+
+**Out of scope:** the deprecated staging project (eu-west-2) is unmaintained, drifted 20
+migrations behind `main`, and will be shut down (Luis, 22/09/2026). It is excluded from this
+plan; its shutdown is a separate operational task with no migration consequence.
 
 ---
 

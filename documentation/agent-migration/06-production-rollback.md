@@ -62,7 +62,7 @@
 | Data restore | Timeframe depending on scope, **without sacrificing human corrections** |
 | Full cutover to the SDK | **before the shutdown announced by Letta** — see [§10](07-v1-removal-and-backup.md) |
 
-> These objectives only become commitments after the PR-20 staging exercise.
+> These objectives only become commitments after the PR-20 production-like rollback rehearsal.
 
 ### What rollback does not cover
 
