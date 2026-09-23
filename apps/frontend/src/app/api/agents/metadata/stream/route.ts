@@ -1,7 +1,7 @@
 import {
+  accumulateUsage,
   createLettaClient,
   generateMetadataReport,
-  getRunUsage,
   type LettaUsage,
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
@@ -142,8 +142,7 @@ export async function POST(request: NextRequest) {
 
   // Track the final assistant response for persistence
   let finalAssistantContent = "";
-  let usage: LettaUsage | undefined;
-  let runId: string | undefined;
+  const usage: LettaUsage = {};
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -155,10 +154,7 @@ export async function POST(request: NextRequest) {
           fullContent,
           conversationId,
         )) {
-          // Capture run_id from chunk metadata
-          if (!runId && chunk.run_id) {
-            runId = chunk.run_id;
-          }
+          accumulateUsage(usage, chunk);
 
           // Capture assistant message content for persistence
           if (chunk.message_type === "assistant_message") {
@@ -169,11 +165,6 @@ export async function POST(request: NextRequest) {
 
           const data = `data: ${JSON.stringify(chunk)}\n\n`;
           controller.enqueue(encoder.encode(data));
-        }
-
-        // Fetch usage from the Letta API using run_id
-        if (runId) {
-          usage = await getRunUsage(client, runId);
         }
 
         /**

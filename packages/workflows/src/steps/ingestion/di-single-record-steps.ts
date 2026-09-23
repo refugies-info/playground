@@ -5,13 +5,13 @@
  * Contains only "use step" functions to avoid bundler confusion.
  */
 
-import { APIError } from "@letta-ai/letta-client/error";
+import { APIError } from "@letta-ai/letta-client/core/error";
 import {
+  accumulateUsage,
   createLettaClient,
   findOrCreateConversation,
   generateIngestionReport,
   generateMetadataReport,
-  getRunUsage,
   type LettaUsage,
   MetadataMetadataSchema,
   parseAgentResponse,
@@ -112,8 +112,7 @@ export async function diSingleAuditStep(
   );
 
   let finalContent = "";
-  let usage: LettaUsage | undefined;
-  let runId: string | undefined;
+  const usage: LettaUsage = {};
 
   try {
     for await (const chunk of generateIngestionReport(
@@ -121,9 +120,7 @@ export async function diSingleAuditStep(
       markdown,
       conversationId,
     )) {
-      if (!runId && chunk.run_id) {
-        runId = chunk.run_id;
-      }
+      accumulateUsage(usage, chunk);
       if (chunk.message_type === "assistant_message") {
         if (typeof chunk.content !== "string") {
           throw new Error(
@@ -156,11 +153,7 @@ export async function diSingleAuditStep(
     throw new Error("No assistant response received for audit");
   }
 
-  if (runId) {
-    usage = await getRunUsage(lettaClient, runId);
-  }
-
-  const parsed = parseIngestionResponse(finalContent, agentId);
+  const parsed = parseIngestionResponse(finalContent, agentId, usage);
 
   const { data: report, error: reportError } = await supabase
     .from("letta_reports")
@@ -288,8 +281,7 @@ export async function diSingleMetadataStep(
   );
 
   let finalContent = "";
-  let usage: LettaUsage | undefined;
-  let runId: string | undefined;
+  const usage: LettaUsage = {};
 
   try {
     for await (const chunk of generateMetadataReport(
@@ -297,9 +289,7 @@ export async function diSingleMetadataStep(
       markdown,
       conversationId,
     )) {
-      if (!runId && chunk.run_id) {
-        runId = chunk.run_id;
-      }
+      accumulateUsage(usage, chunk);
       if (chunk.message_type === "assistant_message") {
         if (typeof chunk.content !== "string") {
           throw new Error(
@@ -330,10 +320,6 @@ export async function diSingleMetadataStep(
 
   if (!finalContent) {
     throw new Error("No assistant response received for metadata");
-  }
-
-  if (runId) {
-    usage = await getRunUsage(lettaClient, runId);
   }
 
   const parsed = parseAgentResponse(

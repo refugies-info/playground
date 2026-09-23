@@ -10,12 +10,12 @@
 
 | Finding | Reference |
 |---|---|
-| Dependency declared in a single package | `packages/agents/package.json` — `@letta-ai/letta-client: 1.10.2` |
+| Dependency declared in `packages/agents` and `packages/workflows` (both `1.10.2`) | `packages/{agents,workflows}/package.json` — `@letta-ai/letta-client: 1.10.2` |
 | Dual-mode client factory (`LETTA_BASE_URL` / `LETTA_ENVIRONMENT` → local mode; otherwise cloud with key + project ID) | `packages/agents/src/clients.ts` |
 | Active flows: audit, writing, metadata (multi-task), translation | `packages/agents/src/{ingestion,simplification,metadata}.ts`, `packages/workflows/src/steps/translation/generate-translation.ts` |
 | Main call: `conversations.messages.create()` with manual stream consumption and **concatenation** of the chunks | `packages/agents/src/agents.ts`, `simplification.ts`, several workflow steps |
-| Usage retrieval via the legacy `runs.usage.retrieve()` (cast `as any`) | `packages/agents/src/simplification.ts` |
-| The workflow steps import `APIError` from the client **without declaring the dependency** (resolved by hoisting) | `packages/workflows/src/steps/ingestion/{di-single-record-steps,audit-di-step,metadata-di-step}.ts` |
+| Usage captured from `usage_statistics` stream chunks (summed per agent step) — `runs.usage.retrieve()` removed (TEC-63) | `packages/agents/src/simplification.ts` (`accumulateUsage`), all stream consumers |
+| Workflow steps import `APIError` from the canonical `core/error` subpath, with the dependency declared | `packages/workflows/src/steps/ingestion/{di-single-record-steps,audit-di-step,metadata-di-step}.ts` |
 | Durability (resume, retry, state) comes from **Vercel Workflow**, not from Letta | `packages/workflows/src/...`, `editorial_records.active_run_id` |
 | Conversation lookup by scanning names over a list capped at 100 | `packages/agents/src/agents.ts` |
 | The AI fan-out of DI ingestion is **commented out** | `packages/workflows/src/pipelines/ingestion/di-ingestion.ts` |
@@ -24,6 +24,31 @@
 | Translation configuration: 7 language keys, mixed models, IDs to reconcile | `packages/shared/src/constants/languages.ts` |
 
 > **Caveat**: the constants in `prompts.ts` are **not** an export of the editorial knowledge. The previous plan sometimes treated them as near-complete content: that is not the case. The knowledge must be recovered, verified and versioned (PR-11).
+
+#### 3.1.1 v1 API surface vs letta-code correlation (TEC-63, 22/09/2026)
+
+Correlation of every v1 endpoint used by playground against `letta-ai/letta-code`
+(the reference consumer Letta keeps working). Endpoints unused by letta-code are
+the ones at deprecation risk.
+
+| v1 endpoint | Used by letta-code | Playground usage after TEC-63 |
+|---|---|---|
+| `conversations.messages.create` (streaming) | ✅ primary send path | ✅ all flows |
+| `conversations.create` / `list` | ✅ | ✅ conversation bootstrap |
+| `agents.list` / `retrieve` / `update` (incl. secrets) | ✅ | ✅ client factory, conversation lookup |
+| `agents.tools.attach` | ✅ | ✅ registration scripts |
+| `runs.usage.retrieve` | ❌ | **Removed** — usage now summed from `usage_statistics` stream chunks (same pattern as letta-code's accumulator) |
+| `agents.messages.create` | ❌ | **Removed** — was only used by dead code (`sendMessage`) |
+| `templates.agents.create` | ❌ | **Removed** — was only used by dead code (`runAgentOneShot`) |
+| `tools.upsert` | ❌ | **Removed** — its only caller was `scripts/register-metadata-validator-tool.ts`, deleted with its `pnpm register:metadata-validator` entry. The tool stays attached to the frozen production agent (it keeps calling `/api/tools/validate-metadata-ri`, which remains); only the re-registration path is gone, which the frozen-agents constraint made dead anyway. |
+
+> **Runbook note on `tools.upsert`**: the registration script was deleted (TEC-63).
+> The `validate_metadata_ri` tool remains attached to the frozen production
+> agent and keeps working — the frontend route
+> `/api/tools/validate-metadata-ri` must stay while that agent is in use.
+> If the tool ever needs re-registering (dev/test environments), consult the
+> letta-code source for the current tool-registration path and write a new
+> script at that moment. Nothing in `packages/` calls `tools.upsert`.
 
 ### 3.2 Rollback risks already present in the code
 

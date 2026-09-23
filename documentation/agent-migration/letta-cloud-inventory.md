@@ -72,12 +72,12 @@
 
 | Bloc mémoire       | Contenu                                                  | Source dans le repo                                                | Script de synchro                                    | État de synchro |
 | ------------------ | -------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------- | --------------- |
-| `metadata_schema`  | Spécification TypeScript+YAML du schéma `metadata_ri`   | `packages/agents/src/metadata-schema-spec.ts` (`METADATA_SCHEMA_SPEC`) | `scripts/update-metadata-schema-block.ts`        | 🧊 gelé (cf. contrainte 1) |
+| `metadata_schema`  | Spécification TypeScript+YAML du schéma `metadata_ri`   | `packages/agents/src/metadata-schema-spec.ts` (`METADATA_SCHEMA_SPEC`) | ~~`scripts/update-metadata-schema-block.ts`~~ (supprimé, TEC-63) | 🧊 gelé (cf. contrainte 1) |
 | `compliance`       | Prompt de vérification de conformité au périmètre RI     | `packages/agents/prompts/compliance.md`                            | _non scripté_ (mise à jour manuelle)                 | 🧊 gelé (cf. contrainte 1) |
 | `doublons`         | Prompt de détection de doublons (Carif-Oref vs RI)       | `packages/agents/prompts/duplicates.md`                            | _non scripté_ (mise à jour manuelle)                 | 🧊 gelé (cf. contrainte 1) |
 
 > 🧊 **Tous les blocs mémoire sont désormais gelés côté Letta Cloud** (la fonctionnalité d'upload de "File" resources a été dépréciée par Letta). Cela veut dire concrètement que :
-> - `scripts/update-metadata-schema-block.ts` ne pourra plus modifier le bloc `metadata_schema` de l'agent de production. Il reste utile pour les **environnements de dev/test** éventuels, mais pas pour la prod.
+> - ~~`scripts/update-metadata-schema-block.ts`~~ — script supprimé (TEC-63, il visait déjà un fichier inexistant depuis PR-03). Le bloc `metadata_schema` de l'agent de production est gelé ; pour des environnements de dev/test, un nouveau script serait à écrire au moment de la migration.
 > - Les blocs `compliance` et `doublons` sont figés à la dernière version uploadée (qui peut diverger des fichiers du repo).
 > - **C'est l'argument principal pour la migration** : passer à un setup où prompts et blocs sont versionnés localement (Letta Code + qmd) évite cette classe de drift.
 
@@ -91,7 +91,7 @@
   - Entrée : `{ metadata_ri: object }`
   - Sortie (valide) : `{ valid: true, data: <objet Zod-sanitisé> }`
   - Sortie (invalide) : `{ valid: false, errors: [{ field, message }] }`
-- **Enregistrement** : `scripts/register-metadata-validator-tool.ts`
+- **Enregistrement** : ~~`scripts/register-metadata-validator-tool.ts`~~ (supprimé, TEC-63 — l'outil reste attaché à l'agent gelé ; seule la capacité de ré-enregistrement est perdue, inutile depuis le gel)
 - **Rôle** : l'agent appelle cet outil **avant de finaliser** un frontmatter `metadata_ri`.
 
 #### `search_ri_duplicate_dispositifs`
@@ -197,8 +197,8 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 | Script                                              | Rôle                                                                  |
 | --------------------------------------------------- | --------------------------------------------------------------------- |
 | `scripts/list-agents.ts`                            | Liste les agents du projet Letta Cloud (debug)                        |
-| `scripts/register-metadata-validator-tool.ts`      | Enregistre l'outil `validate_metadata_ri` sur l'agent Letta Cloud     |
-| `scripts/update-metadata-schema-block.ts`          | Pousse le bloc mémoire `metadata_schema` à partir de `METADATA_SCHEMA_SPEC` |
+| ~~`scripts/register-metadata-validator-tool.ts`~~   | Supprimé (TEC-63) — enregistrait l'outil `validate_metadata_ri` ; inutile depuis le gel |
+| ~~`scripts/update-metadata-schema-block.ts`~~       | Supprimé (TEC-63) — poussait le bloc `metadata_schema` ; visait déjà un fichier inexistant depuis PR-03 |
 
 ### A.8 Variables d'environnement Letta Cloud
 
@@ -295,8 +295,8 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 | Slash command `/translate` (`TRANSLATE_SLASH_COMMAND`)      | Skill de traduction multilingue (à créer)                      | ⏳ à faire |
 | Outil `validate_metadata_ri` (HTTP route)                   | Tool Letta Code (PR 18)                                        | ⏳ à faire |
 | Outil `search_ri_duplicate_dispositifs` (client API karfur) | Tool Letta Code — **source cible à déterminer** (PR 20)        | ⏳ à faire |
-| Script `scripts/update-metadata-schema-block.ts`            | Poussée auto du bloc mémoire au runtime Letta Code (PR 22) — _inutile depuis le gel_ | ⏳ obsolète |
-| Script `scripts/register-metadata-validator-tool.ts`        | Enregistrement du tool au runtime Letta Code (PR 18)           | ⏳ à faire |
+| Script `scripts/update-metadata-schema-block.ts`            | ~~Poussée auto du bloc mémoire~~ — supprimé (TEC-63, obsolète depuis le gel) | ✅ supprimé |
+| Script `scripts/register-metadata-validator-tool.ts`        | Enregistrement du tool au runtime Letta Code (PR 18)           | ✅ supprimé (TEC-63) — à réécrire au moment de PR 18 si besoin |
 
 ### C.2 Format d'entrée : décision actée
 
@@ -329,7 +329,7 @@ Le setup Letta Code _historique_ avait 5 blocs (cf. Section B.2) — **archivés
 | 13 | RI-1268    | Skill `translation` multilingue : reprendre les **5 agents** `ar/uk/ru/ps/ti` (considérer 1 agent multilingue vs 5). `ps` et `ti` ont déjà la persona Letta Code standard — probablement un pré-déploiement. |
 | 18 | RI-1274    | Tool `validate_metadata_ri` (déjà HTTP route Next.js) — le réexposer en tool Letta Code. |
 | 20 | RI-1276    | Tool `search_ri_duplicate_dispositifs` — **ne pas** se contenter d'extraire le client karfur : réécrire comme outil déterministe (matching fuzzy + sémantique), **sans présumer** d'une table Supabase `dispositifs` — elle n'existe pas (cf. §A.5). |
-| 22 | RI-1278    | `scripts/update-metadata-schema-block.ts` devient obsolète (cf. gel). À supprimer ou transformer en script de validation locale. |
+| 22 | RI-1278    | ~~`scripts/update-metadata-schema-block.ts`~~ supprimé (TEC-63) — obsolète depuis le gel. Un éventuel script de validation locale reste à définir. |
 | 23 | RI-1278    | Squelette du runtime Letta Code.                                       |
 | 24–28 | RI-1279–RI-1283 | Brancher les 4 skills sur le runtime Letta Code.                  |
 | 29 | RI-1284    | Worker Cloud Run pour le runtime.                                      |
@@ -355,7 +355,7 @@ Le setup Letta Code _historique_ avait 5 blocs (cf. Section B.2) — **archivés
 - `apps/frontend/src/app/api/editorial-rewrite/route.ts`
 - `apps/frontend/src/app/api/editorial-rewrite/[runId]/route.ts`
 - `apps/frontend/src/app/api/agents/metadata/stream/route.ts`
-- `scripts/{list-agents,register-metadata-validator-tool,update-metadata-schema-block}.ts`
+- `scripts/list-agents.ts` (les scripts `register-metadata-validator-tool.ts` et `update-metadata-schema-block.ts` ont été supprimés — TEC-63)
 
 ### Expérimental (Letta Code) — 🗄️ **archivé le 15 juin 2026** (cf. Annexe C)
 - ~~`.agents/memory/system/{persona,project,luis,jeremie,mcp_servers}.md`~~
