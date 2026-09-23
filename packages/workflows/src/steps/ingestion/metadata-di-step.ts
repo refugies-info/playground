@@ -44,11 +44,12 @@ import {
   createLettaClient,
   findOrCreateConversation,
   generateMetadataReport,
+  getAgentModel,
   type LettaUsage,
   MetadataMetadataSchema,
   parseAgentResponse,
 } from "@playground/agents";
-import { LETTA_MODEL_NAME, logger } from "@playground/shared-types";
+import { logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
 import { getStepMetadata } from "@workflow/core";
 import { FatalError } from "@workflow/errors";
@@ -256,6 +257,9 @@ export async function generateDiMetadataReportsStep(runId: string) {
   const lettaClient = createLettaClient();
   const supabase = getSupabaseClient();
 
+  // Resolve the agent's actual model handle (cached per process) — TEC-65
+  const model = await getAgentModel(agentId, lettaClient);
+
   logger.info(
     { runId, total: targets.length, agentId },
     `▶ Metadata step — processing ${targets.length} record(s) with concurrency ${METADATA_CONCURRENCY}`,
@@ -317,7 +321,7 @@ export async function generateDiMetadataReportsStep(runId: string) {
           raw_response: parsed.rawResponse ?? null,
           workflow_id: target.workflow_id,
           token_cost: usage?.totalTokens ?? null,
-          model: LETTA_MODEL_NAME,
+          model,
         })
         .select("id")
         .single();
@@ -399,7 +403,7 @@ export async function generateDiMetadataReportsStep(runId: string) {
           status: "error",
           raw_response: error instanceof Error ? error.message : String(error),
           workflow_id: target.workflow_id,
-          model: LETTA_MODEL_NAME,
+          model,
         });
       } catch (dbError) {
         logger.error(
@@ -462,6 +466,8 @@ export async function forceMetadataReportStep(workflowId: string) {
   // This allows the UI to restore the loading state after a page refresh,
   // and prevents concurrent calls from racing into the Letta API.
   // The report will be updated (not replaced) once generation completes.
+  // The model is the agent's actual handle (cached per process) — TEC-65.
+  const model = await getAgentModel(agentId);
   const { data: generatingReport, error: generatingInsertError } =
     await supabase
       .from("letta_reports")
@@ -472,7 +478,7 @@ export async function forceMetadataReportStep(workflowId: string) {
         markdown: "",
         metadata: {} as Json,
         workflow_id: workflowId,
-        model: LETTA_MODEL_NAME,
+        model,
       })
       .select("id")
       .single();
