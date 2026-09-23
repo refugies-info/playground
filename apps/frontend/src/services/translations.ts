@@ -35,6 +35,7 @@ export interface TranslationItem {
   commune?: string | null;
   /** Date d'archivage de la fiche FR source (editorial_records.archived_at) */
   archivedAt?: string | null;
+  publicationDate: string;
 }
 
 // Extended helper type including profiles
@@ -46,14 +47,16 @@ type TranslationWithRelations =
       Database["public"]["Tables"]["editorial_records"]["Row"],
       "markdown" | "metadata" | "archived_at"
     > | null;
-    workflows:
-      | (Pick<Database["public"]["Tables"]["workflows"]["Row"], "id"> & {
-          publication_records: Pick<
-            Database["public"]["Tables"]["publication_records"]["Row"],
-            "remote_id" | "target" | "payload"
-          >[];
-        })
-      | null;
+    workflows: Pick<Database["public"]["Tables"]["workflows"]["Row"], "id"> & {
+      publication_records: Pick<
+        Database["public"]["Tables"]["publication_records"]["Row"],
+        "remote_id" | "target" | "payload" | "mode" | "status" | "created_at"
+      >[];
+      fr_publications: Pick<
+        Database["public"]["Tables"]["publication_records"]["Row"],
+        "created_at"
+      >[];
+    };
     profile?: Profile;
   };
 
@@ -113,12 +116,18 @@ export async function getTranslations(params: GetTranslationsParams) {
         metadata,
         archived_at
       ),
-      workflows (
+      workflows!inner (
         id,
         publication_records (
           remote_id,
           target,
-          payload
+          payload,
+          mode,
+          status,
+          created_at
+        ),
+        fr_publications:publication_records!inner (
+          created_at
         )
       ),
       profiles (
@@ -136,6 +145,10 @@ export async function getTranslations(params: GetTranslationsParams) {
   );
 
   // Apply Filters
+  query = query
+    .eq("workflows.fr_publications.mode", "publish")
+    .eq("workflows.fr_publications.status", "published");
+
   if (language) {
     query = query.eq("language", language);
   }
@@ -328,7 +341,7 @@ export async function getTranslations(params: GetTranslationsParams) {
 
       // Find the publication record corresponding to THIS translation language
       // We check the payload to see if it contains the translation key
-      const pubRecord = row.workflows?.publication_records?.find((record) => {
+      const pubRecord = row.workflows.publication_records.find((record) => {
         const payload = record.payload as unknown as {
           dispositif?: { translations?: Record<string, unknown> };
         };
@@ -340,6 +353,11 @@ export async function getTranslations(params: GetTranslationsParams) {
         // Assuming generic /dispositif/ID structure for now, same as documents service
         publicationUrl = `${cleanBaseUrl}/dispositif/${pubRecord.remote_id}`;
       }
+
+      const [publicationDate] = row.workflows.fr_publications
+        .map((record) => record.created_at)
+        .sort()
+        .reverse();
 
       const author = row.profile;
 
@@ -367,6 +385,7 @@ export async function getTranslations(params: GetTranslationsParams) {
         priority: row.priority ?? null,
         archivedAt: row.editorial_records?.archived_at ?? null,
         ...(row.workflow_id ? (enrichedMap.get(row.workflow_id) ?? {}) : {}),
+        publicationDate,
       } as TranslationItem;
     }),
   );

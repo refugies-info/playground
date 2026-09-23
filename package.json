@@ -68,8 +68,6 @@
     "letta:sync": "docker compose -f docker-compose.letta.yml restart letta && sleep 10",
     "letta:init": "pnpm letta:up && pnpm letta:pull && pnpm letta:sync && LETTA_BASE_URL=http://localhost:8283 pnpm agents:create-local",
     "agents:create-local": "tsx scripts/create-local-agents.ts",
-    "register:metadata-validator": "tsx scripts/register-metadata-validator-tool.ts",
-    "update:metadata-schema": "tsx scripts/update-metadata-schema-block.ts",
     "generate:json": "tsx scripts/generate-json.ts",
     "generate:md": "tsx scripts/generate-md.ts",
     "copy:schema": "tsx scripts/copy-schema.ts",

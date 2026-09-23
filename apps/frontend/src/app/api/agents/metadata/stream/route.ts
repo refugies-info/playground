@@ -47,9 +47,9 @@
  */
 
 import {
+  accumulateUsage,
   createLettaClient,
   generateMetadataReport,
-  getRunUsage,
   type LettaUsage,
 } from "@playground/agents";
 import { logger } from "@playground/shared-types";
@@ -281,8 +281,7 @@ export async function POST(request: NextRequest) {
       // Le contenu persisté est la concaténation de TOUS les fragments : ne
       // jamais écraser avec le dernier reçu (bug corrigé ici).
       const accumulatedParts: string[] = [];
-      let usage: LettaUsage | undefined;
-      let runId: string | undefined;
+      const usage: LettaUsage = {};
 
       try {
         const client = createLettaClient();
@@ -292,9 +291,7 @@ export async function POST(request: NextRequest) {
           context.fullContent,
           context.conversationId,
         )) {
-          if (!runId && chunk.run_id) {
-            runId = chunk.run_id;
-          }
+          accumulateUsage(usage, chunk);
 
           if (
             chunk.message_type === "assistant_message" &&
@@ -316,10 +313,6 @@ export async function POST(request: NextRequest) {
           });
           controller.close();
           return;
-        }
-
-        if (runId) {
-          usage = await getRunUsage(client, runId);
         }
 
         // La persistance doit réussir avant d'annoncer la fin du flux : sinon un

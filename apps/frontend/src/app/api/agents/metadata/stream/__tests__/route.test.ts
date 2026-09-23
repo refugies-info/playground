@@ -19,7 +19,7 @@ const from = vi.fn();
 const startWorkflow = vi.fn();
 const generateMetadataReport = vi.fn();
 const createLettaClient = vi.fn(() => ({}));
-const getRunUsage = vi.fn();
+const accumulateUsage = vi.fn((usage: Record<string, unknown>) => usage);
 const matterStringify = vi.fn((content: string) => content);
 
 vi.mock("@/lib/auth", () => ({
@@ -41,7 +41,8 @@ vi.mock("@playground/shared-types", () => ({
 vi.mock("@playground/agents", () => ({
   createLettaClient: () => createLettaClient(),
   generateMetadataReport: (...a: unknown[]) => generateMetadataReport(...a),
-  getRunUsage: (...a: unknown[]) => getRunUsage(...a),
+  accumulateUsage: (...a: unknown[]) =>
+    accumulateUsage(...(a as [Record<string, unknown>])),
 }));
 vi.mock("@playground/workflows", () => ({
   persistMetadataWorkflow: "persistMetadataWorkflow",
@@ -107,7 +108,6 @@ describe("POST /api/agents/metadata/stream", () => {
       error: null,
     });
 
-    getRunUsage.mockResolvedValue(undefined);
     startWorkflow.mockResolvedValue(undefined);
   });
 

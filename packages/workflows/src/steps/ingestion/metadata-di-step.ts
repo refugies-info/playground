@@ -38,12 +38,12 @@
  * - Uses METADATA_AGENT_ID env var, falls back to PLAYGROUND_AGENT_ID
  */
 
-import { APIError } from "@letta-ai/letta-client/error";
+import { APIError } from "@letta-ai/letta-client/core/error";
 import {
+  accumulateUsage,
   createLettaClient,
   findOrCreateConversation,
   generateMetadataReport,
-  getRunUsage,
   type LettaUsage,
   MetadataMetadataSchema,
   parseAgentResponse,
@@ -277,17 +277,14 @@ export async function generateDiMetadataReportsStep(runId: string) {
       );
 
       let finalContent = "";
-      let usage: LettaUsage | undefined;
-      let chunkRunId: string | undefined;
+      const usage: LettaUsage = {};
 
       for await (const chunk of generateMetadataReport(
         lettaClient,
         target.markdown,
         conversationId,
       )) {
-        if (!chunkRunId && chunk.run_id) {
-          chunkRunId = chunk.run_id;
-        }
+        accumulateUsage(usage, chunk);
         if (chunk.message_type === "assistant_message") {
           if (typeof chunk.content !== "string") {
             throw new Error(
@@ -300,10 +297,6 @@ export async function generateDiMetadataReportsStep(runId: string) {
 
       if (!finalContent) {
         throw new Error("No assistant response received for metadata report");
-      }
-
-      if (chunkRunId) {
-        usage = await getRunUsage(lettaClient, chunkRunId);
       }
 
       const parsed = parseAgentResponse(
@@ -540,17 +533,14 @@ export async function forceMetadataReportStep(workflowId: string) {
     );
 
     let finalContent = "";
-    let usage: LettaUsage | undefined;
-    let chunkRunId: string | undefined;
+    const usage: LettaUsage = {};
 
     for await (const chunk of generateMetadataReport(
       lettaClient,
       record.markdown,
       conversationId,
     )) {
-      if (!chunkRunId && chunk.run_id) {
-        chunkRunId = chunk.run_id;
-      }
+      accumulateUsage(usage, chunk);
       if (chunk.message_type === "assistant_message") {
         if (typeof chunk.content !== "string") {
           throw new Error(
@@ -563,10 +553,6 @@ export async function forceMetadataReportStep(workflowId: string) {
 
     if (!finalContent) {
       throw new Error("No assistant response received for metadata report");
-    }
-
-    if (chunkRunId) {
-      usage = await getRunUsage(lettaClient, chunkRunId);
     }
 
     const parsed = parseAgentResponse(
