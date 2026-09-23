@@ -276,12 +276,6 @@ export function TranslationProvider({
       );
       if (result.success) {
         setIsDirty(false);
-        setTranslation({
-          ...translation,
-          status: "draft",
-          // Optimistic update — topbar reflects new state immediately
-          workStatus: "draft" as WorkStatus,
-        });
       } else {
         // biome-ignore lint/suspicious/noConsole: Error logging
         console.error(result.error);
