@@ -16,7 +16,7 @@
  *         ├── [4] generateDiAuditReportsStep  ◄── THIS FILE
  *         │         │
  *         │         ├── fetchAllDiServiceIds()
- *         │         │         └── Paginate di_services table
+ *         │         │         └── Paginate services table
  *         │         │
  *         │         └── fetchDiAuditTargets()
  *         │                   ├── RPC: count_di_audit_candidates (for reporting)
