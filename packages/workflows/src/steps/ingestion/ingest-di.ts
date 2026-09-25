@@ -11,15 +11,15 @@
  *   diIngestionWorkflow
  *         │
  *         ├── [1] ingestStructuresStep
- *         │         └── Fetches structures from CARIF-OREF → di_structures
+ *         │         └── Fetches structures from CARIF-OREF → structures
  *         │
  *         ├── [2] ingestServicesStep
- *         │         └── Fetches services from CARIF-OREF → di_services
+ *         │         └── Fetches services from CARIF-OREF → services
  *         │             Returns a runId for downstream steps
  *         │
  *         ├── [3] processRecordsStep  (only if runId exists)
  *         │         └── Creates/updates ingestion_records + workflows
- *         │             from new/changed di_services
+ *         │             from new/changed services
  *         │
  *         ├── [4] fanOutDiRecordsStep (fan-out)
  *         │         └── Spawns diSingleRecordWorkflow for each record
@@ -45,7 +45,7 @@ import { getSupabaseClient } from "./utils";
 /**
  * Step 1: Ingest structures from the CARIF-OREF API.
  *
- * Fetches all structures and upserts them into `di_structures`.
+ * Fetches all structures and upserts them into `structures`.
  * Idempotent via content_hash deduplication.
  *
  * @returns Ingestion result with counts (fetched, inserted, updated, unchanged).
@@ -72,7 +72,7 @@ export async function ingestStructuresStep() {
 /**
  * Step 2: Ingest services from the CARIF-OREF API.
  *
- * Fetches all services and upserts them into `di_services`.
+ * Fetches all services and upserts them into `services`.
  * Returns a `runId` that downstream steps use to scope their processing.
  * Idempotent via content_hash deduplication.
  *

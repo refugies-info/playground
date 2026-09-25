@@ -307,7 +307,6 @@ export function WorkflowClient(props: WorkflowClientProps) {
             setResults({
               ...fullResult.files,
               "Ingestion Status": fullResult.ingestion.status,
-              "RCO Record ID": fullResult.ingestion.rcoRecordId || "N/A",
               "Ingestion Record ID":
                 fullResult.ingestion.ingestionRecordId || "N/A",
             });

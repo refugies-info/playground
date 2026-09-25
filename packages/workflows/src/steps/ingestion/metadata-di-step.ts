@@ -20,7 +20,7 @@
  *                   │
  *                   ├── fetchDiMetadataTargets()
  *                   │         └── Supabase query on ingestion_records
- *                   │             + !inner join on di_services (DI scoping)
+ *                   │             + !inner join on services (DI scoping)
  *                   │             + !inner join on workflows (get workflow_id)
  *                   │             + only compliant records with ingestion_report_id (audited)
  *                   │             + exclude records with existing metadata report
@@ -134,7 +134,7 @@ async function fetchDiMetadataTargets(): Promise<{
       `
       id,
       markdown,
-      di_services!inner ( id )
+      services!inner ( id )
     `,
     )
     .not("ingestion_report_id", "is", null)
