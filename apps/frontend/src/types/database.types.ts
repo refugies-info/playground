@@ -34,101 +34,82 @@ export type Database = {
   };
   public: {
     Tables: {
-      di_services: {
+      activity_logs: {
         Row: {
-          content_hash: string | null;
+          action: Database["public"]["Enums"]["activity_log_action"];
+          activity: Json;
+          author_id: string | null;
           created_at: string;
-          data: Json | null;
-          di_id: string | null;
-          di_structure_id: string | null;
           id: string;
-          ingestion_run_id: string | null;
-          raw_data: string;
-          updated_at: string;
-          version: number;
+          letta_report_id: string | null;
+          target_profile_id: string | null;
+          workflow_id: string | null;
         };
         Insert: {
-          content_hash?: string | null;
+          action: Database["public"]["Enums"]["activity_log_action"];
+          activity?: Json;
+          author_id?: string | null;
           created_at?: string;
-          data?: Json | null;
-          di_id?: string | null;
-          di_structure_id?: string | null;
           id?: string;
-          ingestion_run_id?: string | null;
-          raw_data: string;
-          updated_at?: string;
-          version?: number;
+          letta_report_id?: string | null;
+          target_profile_id?: string | null;
+          workflow_id?: string | null;
         };
         Update: {
-          content_hash?: string | null;
+          action?: Database["public"]["Enums"]["activity_log_action"];
+          activity?: Json;
+          author_id?: string | null;
           created_at?: string;
-          data?: Json | null;
-          di_id?: string | null;
-          di_structure_id?: string | null;
           id?: string;
-          ingestion_run_id?: string | null;
-          raw_data?: string;
-          updated_at?: string;
-          version?: number;
+          letta_report_id?: string | null;
+          target_profile_id?: string | null;
+          workflow_id?: string | null;
         };
         Relationships: [
           {
-            foreignKeyName: "di_services_ingestion_run_id_fkey";
-            columns: ["ingestion_run_id"];
+            foreignKeyName: "activity_logs_author_id_fkey";
+            columns: ["author_id"];
             isOneToOne: false;
-            referencedRelation: "ingestion_runs";
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
-        ];
-      };
-      di_structures: {
-        Row: {
-          content_hash: string | null;
-          created_at: string;
-          data: Json | null;
-          di_id: string | null;
-          id: string;
-          ingestion_run_id: string | null;
-          raw_data: string;
-          updated_at: string;
-          version: number;
-        };
-        Insert: {
-          content_hash?: string | null;
-          created_at?: string;
-          data?: Json | null;
-          di_id?: string | null;
-          id?: string;
-          ingestion_run_id?: string | null;
-          raw_data: string;
-          updated_at?: string;
-          version?: number;
-        };
-        Update: {
-          content_hash?: string | null;
-          created_at?: string;
-          data?: Json | null;
-          di_id?: string | null;
-          id?: string;
-          ingestion_run_id?: string | null;
-          raw_data?: string;
-          updated_at?: string;
-          version?: number;
-        };
-        Relationships: [
           {
-            foreignKeyName: "di_structures_ingestion_run_id_fkey";
-            columns: ["ingestion_run_id"];
+            foreignKeyName: "activity_logs_letta_report_id_fkey";
+            columns: ["letta_report_id"];
             isOneToOne: false;
-            referencedRelation: "ingestion_runs";
+            referencedRelation: "letta_reports";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "activity_logs_target_profile_id_fkey";
+            columns: ["target_profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "activity_logs_workflow_id_fkey";
+            columns: ["workflow_id"];
+            isOneToOne: false;
+            referencedRelation: "workflows";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "activity_logs_workflow_id_fkey";
+            columns: ["workflow_id"];
+            isOneToOne: false;
+            referencedRelation: "workflows_enriched";
             referencedColumns: ["id"];
           },
         ];
       };
       editorial_records: {
         Row: {
+          active_run_id: string | null;
+          archived_at: string | null;
           content_report_id: string | null;
           created_at: string;
+          current_editor_id: string | null;
           id: string;
           ingestion_record_id: string;
           markdown: string | null;
@@ -139,8 +120,11 @@ export type Database = {
           work_status: string | null;
         };
         Insert: {
+          active_run_id?: string | null;
+          archived_at?: string | null;
           content_report_id?: string | null;
           created_at?: string;
+          current_editor_id?: string | null;
           id?: string;
           ingestion_record_id: string;
           markdown?: string | null;
@@ -151,8 +135,11 @@ export type Database = {
           work_status?: string | null;
         };
         Update: {
+          active_run_id?: string | null;
+          archived_at?: string | null;
           content_report_id?: string | null;
           created_at?: string;
+          current_editor_id?: string | null;
           id?: string;
           ingestion_record_id?: string;
           markdown?: string | null;
@@ -195,71 +182,71 @@ export type Database = {
       };
       ingestion_records: {
         Row: {
+          compliance_status: string | null;
           created_at: string;
-          di_service_id: string | null;
-          di_structure_id: string | null;
           id: string;
           ingestion_report_id: string | null;
           markdown: string;
           metadata: Json;
-          origin: string;
-          rco_record_id: string | null;
+          metadata_report_id: string | null;
+          service_id: string | null;
+          structure_id: string | null;
           updated_at: string;
           version: number | null;
         };
         Insert: {
+          compliance_status?: string | null;
           created_at?: string;
-          di_service_id?: string | null;
-          di_structure_id?: string | null;
           id?: string;
           ingestion_report_id?: string | null;
           markdown: string;
           metadata: Json;
-          origin?: string;
-          rco_record_id?: string | null;
+          metadata_report_id?: string | null;
+          service_id?: string | null;
+          structure_id?: string | null;
           updated_at?: string;
           version?: number | null;
         };
         Update: {
+          compliance_status?: string | null;
           created_at?: string;
-          di_service_id?: string | null;
-          di_structure_id?: string | null;
           id?: string;
           ingestion_report_id?: string | null;
           markdown?: string;
           metadata?: Json;
-          origin?: string;
-          rco_record_id?: string | null;
+          metadata_report_id?: string | null;
+          service_id?: string | null;
+          structure_id?: string | null;
           updated_at?: string;
           version?: number | null;
         };
         Relationships: [
           {
             foreignKeyName: "ingestion_records_di_service_id_fkey";
-            columns: ["di_service_id"];
+            columns: ["service_id"];
             isOneToOne: false;
-            referencedRelation: "di_services";
+            referencedRelation: "services";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "ingestion_records_di_service_id_fkey";
-            columns: ["di_service_id"];
+            columns: ["service_id"];
             isOneToOne: false;
-            referencedRelation: "di_services_latest";
+            referencedRelation: "services_latest";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "ingestion_records_di_structure_id_fkey";
-            columns: ["di_structure_id"];
+            columns: ["structure_id"];
             isOneToOne: false;
-            referencedRelation: "di_structures";
+            referencedRelation: "structures";
             referencedColumns: ["id"];
           },
           {
             foreignKeyName: "ingestion_records_di_structure_id_fkey";
-            columns: ["di_structure_id"];
+            columns: ["structure_id"];
             isOneToOne: false;
-            referencedRelation: "di_structures_latest";
+            referencedRelation: "structures_latest";
             referencedColumns: ["id"];
           },
           {
@@ -270,10 +257,10 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "ingestion_records_rco_record_id_fkey";
-            columns: ["rco_record_id"];
+            foreignKeyName: "ingestion_records_metadata_report_id_fkey";
+            columns: ["metadata_report_id"];
             isOneToOne: false;
-            referencedRelation: "rco_records";
+            referencedRelation: "letta_reports";
             referencedColumns: ["id"];
           },
         ];
@@ -333,9 +320,11 @@ export type Database = {
           id: string;
           markdown: string;
           metadata: Json;
+          model: string | null;
           raw_response: string | null;
           report_type: string;
           status: string;
+          token_cost: number | null;
           updated_at: string;
           workflow_id: string | null;
         };
@@ -345,9 +334,11 @@ export type Database = {
           id?: string;
           markdown: string;
           metadata: Json;
+          model?: string | null;
           raw_response?: string | null;
           report_type: string;
           status?: string;
+          token_cost?: number | null;
           updated_at?: string;
           workflow_id?: string | null;
         };
@@ -357,9 +348,11 @@ export type Database = {
           id?: string;
           markdown?: string;
           metadata?: Json;
+          model?: string | null;
           raw_response?: string | null;
           report_type?: string;
           status?: string;
+          token_cost?: number | null;
           updated_at?: string;
           workflow_id?: string | null;
         };
@@ -368,14 +361,56 @@ export type Database = {
             foreignKeyName: "letta_reports_workflow_id_fkey";
             columns: ["workflow_id"];
             isOneToOne: false;
-            referencedRelation: "workflow_ingestion_metadata";
-            referencedColumns: ["workflow_id"];
+            referencedRelation: "workflows";
+            referencedColumns: ["id"];
           },
           {
             foreignKeyName: "letta_reports_workflow_id_fkey";
             columns: ["workflow_id"];
             isOneToOne: false;
-            referencedRelation: "workflows";
+            referencedRelation: "workflows_enriched";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      notifications: {
+        Row: {
+          activity_log_id: string;
+          archived_at: string | null;
+          created_at: string;
+          id: string;
+          read_at: string | null;
+          recipient_id: string;
+        };
+        Insert: {
+          activity_log_id: string;
+          archived_at?: string | null;
+          created_at?: string;
+          id?: string;
+          read_at?: string | null;
+          recipient_id: string;
+        };
+        Update: {
+          activity_log_id?: string;
+          archived_at?: string | null;
+          created_at?: string;
+          id?: string;
+          read_at?: string | null;
+          recipient_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_activity_log_id_fkey";
+            columns: ["activity_log_id"];
+            isOneToOne: false;
+            referencedRelation: "activity_logs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey";
+            columns: ["recipient_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -388,6 +423,7 @@ export type Database = {
           first_name: string | null;
           full_name: string | null;
           id: string;
+          language: string | null;
           last_name: string | null;
           last_sign_in_at: string | null;
           role: string | null;
@@ -401,6 +437,7 @@ export type Database = {
           first_name?: string | null;
           full_name?: string | null;
           id: string;
+          language?: string | null;
           last_name?: string | null;
           last_sign_in_at?: string | null;
           role?: string | null;
@@ -414,6 +451,7 @@ export type Database = {
           first_name?: string | null;
           full_name?: string | null;
           id?: string;
+          language?: string | null;
           last_name?: string | null;
           last_sign_in_at?: string | null;
           role?: string | null;
@@ -427,6 +465,7 @@ export type Database = {
           author_id: string | null;
           created_at: string;
           editorial_record_id: string | null;
+          error_message: string | null;
           id: string;
           mode: string;
           payload: Json | null;
@@ -442,6 +481,7 @@ export type Database = {
           author_id?: string | null;
           created_at?: string;
           editorial_record_id?: string | null;
+          error_message?: string | null;
           id?: string;
           mode?: string;
           payload?: Json | null;
@@ -457,6 +497,7 @@ export type Database = {
           author_id?: string | null;
           created_at?: string;
           editorial_record_id?: string | null;
+          error_message?: string | null;
           id?: string;
           mode?: string;
           payload?: Json | null;
@@ -501,53 +542,114 @@ export type Database = {
             foreignKeyName: "publication_records_workflow_id_fkey";
             columns: ["workflow_id"];
             isOneToOne: false;
-            referencedRelation: "workflow_ingestion_metadata";
-            referencedColumns: ["workflow_id"];
+            referencedRelation: "workflows";
+            referencedColumns: ["id"];
           },
           {
             foreignKeyName: "publication_records_workflow_id_fkey";
             columns: ["workflow_id"];
             isOneToOne: false;
-            referencedRelation: "workflows";
+            referencedRelation: "workflows_enriched";
             referencedColumns: ["id"];
           },
         ];
       };
-      rco_records: {
+      services: {
         Row: {
+          content_hash: string | null;
           created_at: string;
+          data: Json | null;
           id: string;
-          metadata: Json;
-          source_created_at: string;
-          source_raw: string;
-          source_updated_at: string;
-          training_action_id: string;
-          training_offer_id: string;
+          ingestion_run_id: string | null;
+          origin: Database["public"]["Enums"]["origin"];
+          origin_id: string | null;
+          raw_data: string;
+          structure_id: string | null;
           updated_at: string;
+          version: number;
         };
         Insert: {
+          content_hash?: string | null;
           created_at?: string;
+          data?: Json | null;
           id?: string;
-          metadata: Json;
-          source_created_at: string;
-          source_raw: string;
-          source_updated_at: string;
-          training_action_id: string;
-          training_offer_id: string;
+          ingestion_run_id?: string | null;
+          origin?: Database["public"]["Enums"]["origin"];
+          origin_id?: string | null;
+          raw_data: string;
+          structure_id?: string | null;
           updated_at?: string;
+          version?: number;
         };
         Update: {
+          content_hash?: string | null;
           created_at?: string;
+          data?: Json | null;
           id?: string;
-          metadata?: Json;
-          source_created_at?: string;
-          source_raw?: string;
-          source_updated_at?: string;
-          training_action_id?: string;
-          training_offer_id?: string;
+          ingestion_run_id?: string | null;
+          origin?: Database["public"]["Enums"]["origin"];
+          origin_id?: string | null;
+          raw_data?: string;
+          structure_id?: string | null;
           updated_at?: string;
+          version?: number;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "di_services_ingestion_run_id_fkey";
+            columns: ["ingestion_run_id"];
+            isOneToOne: false;
+            referencedRelation: "ingestion_runs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      structures: {
+        Row: {
+          content_hash: string | null;
+          created_at: string;
+          data: Json | null;
+          id: string;
+          ingestion_run_id: string | null;
+          origin: Database["public"]["Enums"]["origin"];
+          origin_id: string | null;
+          raw_data: string;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          content_hash?: string | null;
+          created_at?: string;
+          data?: Json | null;
+          id?: string;
+          ingestion_run_id?: string | null;
+          origin?: Database["public"]["Enums"]["origin"];
+          origin_id?: string | null;
+          raw_data: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          content_hash?: string | null;
+          created_at?: string;
+          data?: Json | null;
+          id?: string;
+          ingestion_run_id?: string | null;
+          origin?: Database["public"]["Enums"]["origin"];
+          origin_id?: string | null;
+          raw_data?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "di_structures_ingestion_run_id_fkey";
+            columns: ["ingestion_run_id"];
+            isOneToOne: false;
+            referencedRelation: "ingestion_runs";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       translation_records: {
         Row: {
@@ -561,6 +663,7 @@ export type Database = {
           metadata: Json | null;
           metadata_report_id: string | null;
           online_status: string | null;
+          priority: string | null;
           updated_at: string;
           work_status: string | null;
           workflow_id: string | null;
@@ -576,6 +679,7 @@ export type Database = {
           metadata?: Json | null;
           metadata_report_id?: string | null;
           online_status?: string | null;
+          priority?: string | null;
           updated_at?: string;
           work_status?: string | null;
           workflow_id?: string | null;
@@ -591,6 +695,7 @@ export type Database = {
           metadata?: Json | null;
           metadata_report_id?: string | null;
           online_status?: string | null;
+          priority?: string | null;
           updated_at?: string;
           work_status?: string | null;
           workflow_id?: string | null;
@@ -628,14 +733,14 @@ export type Database = {
             foreignKeyName: "translation_records_workflow_id_fkey";
             columns: ["workflow_id"];
             isOneToOne: false;
-            referencedRelation: "workflow_ingestion_metadata";
-            referencedColumns: ["workflow_id"];
+            referencedRelation: "workflows";
+            referencedColumns: ["id"];
           },
           {
             foreignKeyName: "translation_records_workflow_id_fkey";
             columns: ["workflow_id"];
             isOneToOne: false;
-            referencedRelation: "workflows";
+            referencedRelation: "workflows_enriched";
             referencedColumns: ["id"];
           },
         ];
@@ -643,49 +748,166 @@ export type Database = {
       workflows: {
         Row: {
           assignee_id: string | null;
-          compliance_status: string | null;
           conversation_id: string | null;
           created_at: string;
           editorial_record_id: string | null;
           id: string;
           ingestion_record_id: string | null;
-          rco_record_id: string | null;
+          latest_ingestion_record_id: string | null;
           updated_at: string;
           vercel_hook_token: string | null;
           vercel_workflow_id: string | null;
         };
         Insert: {
           assignee_id?: string | null;
-          compliance_status?: string | null;
           conversation_id?: string | null;
           created_at?: string;
           editorial_record_id?: string | null;
           id?: string;
           ingestion_record_id?: string | null;
-          rco_record_id?: string | null;
+          latest_ingestion_record_id?: string | null;
           updated_at?: string;
           vercel_hook_token?: string | null;
           vercel_workflow_id?: string | null;
         };
         Update: {
           assignee_id?: string | null;
-          compliance_status?: string | null;
           conversation_id?: string | null;
           created_at?: string;
           editorial_record_id?: string | null;
           id?: string;
           ingestion_record_id?: string | null;
-          rco_record_id?: string | null;
+          latest_ingestion_record_id?: string | null;
           updated_at?: string;
           vercel_hook_token?: string | null;
           vercel_workflow_id?: string | null;
         };
         Relationships: [
           {
+            foreignKeyName: "status_editorial_record_id_fkey";
+            columns: ["editorial_record_id"];
+            isOneToOne: false;
+            referencedRelation: "editorial_records";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "status_ingestion_record_id_fkey";
+            columns: ["ingestion_record_id"];
+            isOneToOne: false;
+            referencedRelation: "ingestion_records";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "workflows_assignee_id_fkey";
             columns: ["assignee_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "workflows_latest_ingestion_record_id_fkey";
+            columns: ["latest_ingestion_record_id"];
+            isOneToOne: false;
+            referencedRelation: "ingestion_records";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+    };
+    Views: {
+      services_latest: {
+        Row: {
+          content_hash: string | null;
+          created_at: string | null;
+          data: Json | null;
+          id: string | null;
+          ingestion_run_id: string | null;
+          origin: Database["public"]["Enums"]["origin"] | null;
+          origin_id: string | null;
+          raw_data: string | null;
+          structure_id: string | null;
+          updated_at: string | null;
+          version: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "di_services_ingestion_run_id_fkey";
+            columns: ["ingestion_run_id"];
+            isOneToOne: false;
+            referencedRelation: "ingestion_runs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      structures_latest: {
+        Row: {
+          content_hash: string | null;
+          created_at: string | null;
+          data: Json | null;
+          id: string | null;
+          ingestion_run_id: string | null;
+          origin: Database["public"]["Enums"]["origin"] | null;
+          origin_id: string | null;
+          raw_data: string | null;
+          updated_at: string | null;
+          version: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "di_structures_ingestion_run_id_fkey";
+            columns: ["ingestion_run_id"];
+            isOneToOne: false;
+            referencedRelation: "ingestion_runs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      workflows_enriched: {
+        Row: {
+          active_ingestion_version: number | null;
+          archived_at: string | null;
+          archived_at_is_approximate: boolean | null;
+          assignee_email: string | null;
+          assignee_profile: Json | null;
+          commune: string | null;
+          compliance_status: string | null;
+          computed_online_status: string | null;
+          computed_work_status: string | null;
+          created_at: string | null;
+          editorial_markdown: string | null;
+          editorial_metadata: Json | null;
+          editorial_record_id: string | null;
+          external_id: string | null;
+          has_pending_ingestion_update: boolean | null;
+          has_publication_history: boolean | null;
+          id: string | null;
+          ingestion_created_at: string | null;
+          ingestion_markdown: string | null;
+          ingestion_metadata: Json | null;
+          ingestion_record_id: string | null;
+          ingestion_report_id: string | null;
+          ingestion_word_count: number | null;
+          latest_ingestion_version: number | null;
+          latest_publication: Json | null;
+          modalites_entrees_sorties: string | null;
+          origin: Database["public"]["Enums"]["origin"] | null;
+          quality_score: number | null;
+          raw_online_status: string | null;
+          raw_work_status: string | null;
+          report_created_at: string | null;
+          session_end_date: string | null;
+          session_start_date: string | null;
+          structure_name: string | null;
+          title: string | null;
+          updated_at: string | null;
+          workflow_assignee_id: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ingestion_records_ingestion_report_id_fkey";
+            columns: ["ingestion_report_id"];
+            isOneToOne: false;
+            referencedRelation: "letta_reports";
             referencedColumns: ["id"];
           },
           {
@@ -703,88 +925,72 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "status_rco_record_id_fkey";
-            columns: ["rco_record_id"];
+            foreignKeyName: "workflows_assignee_id_fkey";
+            columns: ["workflow_assignee_id"];
             isOneToOne: false;
-            referencedRelation: "rco_records";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-    };
-    Views: {
-      di_services_latest: {
-        Row: {
-          content_hash: string | null;
-          created_at: string | null;
-          data: Json | null;
-          di_id: string | null;
-          di_structure_id: string | null;
-          id: string | null;
-          ingestion_run_id: string | null;
-          raw_data: string | null;
-          updated_at: string | null;
-          version: number | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "di_services_ingestion_run_id_fkey";
-            columns: ["ingestion_run_id"];
-            isOneToOne: false;
-            referencedRelation: "ingestion_runs";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      di_structures_latest: {
-        Row: {
-          content_hash: string | null;
-          created_at: string | null;
-          data: Json | null;
-          di_id: string | null;
-          id: string | null;
-          ingestion_run_id: string | null;
-          raw_data: string | null;
-          updated_at: string | null;
-          version: number | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "di_structures_ingestion_run_id_fkey";
-            columns: ["ingestion_run_id"];
-            isOneToOne: false;
-            referencedRelation: "ingestion_runs";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      workflow_ingestion_metadata: {
-        Row: {
-          external_id: string | null;
-          ingestion_record_id: string | null;
-          quality_score: number | null;
-          session_start_date: string | null;
-          structure_name: string | null;
-          title: string | null;
-          workflow_id: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "status_ingestion_record_id_fkey";
-            columns: ["ingestion_record_id"];
-            isOneToOne: false;
-            referencedRelation: "ingestion_records";
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
       };
     };
     Functions: {
+      claim_di_audit_targets: {
+        Args: {
+          max_editorial_backlog?: number;
+          p_service_ids: string[];
+          timeout_interval?: string;
+        };
+        Returns: {
+          id: string;
+          is_pending_update: boolean;
+          markdown: string;
+          workflow_id: string;
+        }[];
+      };
+      count_di_audit_candidates: {
+        Args: { p_service_ids: string[] };
+        Returns: number;
+      };
       get_my_language: { Args: never; Returns: string };
       get_my_role: { Args: never; Returns: string };
+      show_limit: { Args: never; Returns: number };
+      show_trgm: { Args: { "": string }; Returns: string[] };
+      update_metadata_field: {
+        Args: {
+          delete_key?: boolean;
+          field_key: string;
+          field_value: Json;
+          record_id: string;
+        };
+        Returns: undefined;
+      };
+      update_translation_metadata_field: {
+        Args: {
+          delete_key?: boolean;
+          field_key: string;
+          field_value: Json;
+          record_id: string;
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
-      [_ in never]: never;
+      activity_log_action:
+        | "compliance_ia"
+        | "compliance_human"
+        | "publication"
+        | "publication_langue"
+        | "archive"
+        | "update"
+        | "update_compliance"
+        | "clear_language"
+        | "translation"
+        | "translation_error"
+        | "translation_priority"
+        | "assignment"
+        | "note";
+      origin: "RCO" | "DI";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -917,6 +1123,23 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      activity_log_action: [
+        "compliance_ia",
+        "compliance_human",
+        "publication",
+        "publication_langue",
+        "archive",
+        "update",
+        "update_compliance",
+        "clear_language",
+        "translation",
+        "translation_error",
+        "translation_priority",
+        "assignment",
+        "note",
+      ],
+      origin: ["RCO", "DI"],
+    },
   },
 } as const;

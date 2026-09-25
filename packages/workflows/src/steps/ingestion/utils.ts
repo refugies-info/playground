@@ -20,7 +20,7 @@ export function getSupabaseClient() {
 const DI_FETCH_PAGE_SIZE = 1000;
 
 /**
- * Fetches all service IDs from the `di_services` table.
+ * Fetches all service IDs from the `services` table.
  *
  * Uses pagination to retrieve all IDs as strings.
  *
@@ -35,7 +35,7 @@ export async function fetchAllDiServiceIds(): Promise<string[]> {
 
   while (hasMore) {
     const { data, error } = await supabase
-      .from("di_services_latest")
+      .from("services_latest")
       .select("id")
       .range(page * DI_FETCH_PAGE_SIZE, (page + 1) * DI_FETCH_PAGE_SIZE - 1);
 
