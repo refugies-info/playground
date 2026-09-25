@@ -25,3 +25,42 @@ describe("buildRefugiesInfoPayload titreMarque", () => {
     expect(dispositif.translations.fr.content.titreMarque).toBe(null);
   });
 });
+
+describe("buildRefugiesInfoPayload logo", () => {
+  const logo =
+    "https://res.cloudinary.com/ri/image/upload/bomo_logos/doc-1.png";
+
+  it("attaches the metadata logo to the sponsor", async () => {
+    const { dispositif } = await build({
+      mainSponsor: "CPIE Centre Corse",
+      logo,
+    });
+    expect(dispositif.sponsors).toEqual([{ name: "CPIE Centre Corse", logo }]);
+  });
+
+  it("omits the logo key when no logo is set", async () => {
+    const { dispositif } = await build({ mainSponsor: "CPIE Centre Corse" });
+    expect(dispositif.sponsors).toEqual([{ name: "CPIE Centre Corse" }]);
+  });
+
+  it("ignores a blank or non-string logo", async () => {
+    const blank = await build({
+      mainSponsor: "CPIE Centre Corse",
+      logo: "   ",
+    });
+    expect(blank.dispositif.sponsors).toEqual([{ name: "CPIE Centre Corse" }]);
+
+    const cleared = await build({
+      mainSponsor: "CPIE Centre Corse",
+      logo: null,
+    });
+    expect(cleared.dispositif.sponsors).toEqual([
+      { name: "CPIE Centre Corse" },
+    ]);
+  });
+
+  it("drops the logo when no structure is set (RI requires a sponsor name)", async () => {
+    const { dispositif } = await build({ logo });
+    expect(dispositif.sponsors).toEqual([]);
+  });
+});

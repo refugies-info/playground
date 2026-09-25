@@ -9,6 +9,7 @@ import {
   CommitmentField,
   DepartmentField,
   FrequencyField,
+  ImageUploadField,
   MultiEnumField,
   NeedSelectField,
   PoiField,
@@ -45,7 +46,9 @@ export const FIELD_COMPONENTS: Record<string, ComponentType<FieldProps>> = {
   // Text fields
   titreMarque: TextField,
   mainSponsor: TextField,
-  logo: TextField,
+
+  // Image field — téléversement plutôt que saisie d'URL (RI-1395)
+  logo: ImageUploadField,
 
   // Textarea fields
   abstract: AbstractField,

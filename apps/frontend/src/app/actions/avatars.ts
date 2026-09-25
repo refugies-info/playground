@@ -1,14 +1,11 @@
 "use server";
 
-import { uploadImage } from "@playground/cloudinary";
+import { uploadImageFromFormData } from "@playground/cloudinary";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { assertAdmin } from "@/lib/authz";
-
-const MAX_BYTES = 5 * 1024 * 1024;
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const userIdSchema = z.string().uuid();
 
@@ -27,20 +24,7 @@ export async function uploadAvatar(
     throw new Error("Identifiant utilisateur invalide.");
   }
 
-  const file = formData.get("file");
-  if (!(file instanceof File)) {
-    throw new Error("Aucun fichier fourni.");
-  }
-  if (!ACCEPTED_TYPES.includes(file.type)) {
-    throw new Error("Format non supporté. Formats acceptés : JPEG, PNG, WebP.");
-  }
-  if (file.size > MAX_BYTES) {
-    throw new Error("Image trop lourde (5 Mo maximum).");
-  }
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  const { secureUrl } = await uploadImage(buffer, {
+  const { secureUrl } = await uploadImageFromFormData(formData, {
     folder: "bomo_avatars",
     publicId: parsedId.data,
     overwrite: true,

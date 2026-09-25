@@ -24,6 +24,19 @@ const meta: Meta<typeof ImageUpload> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/**
+ * Le rectangle prend toute la largeur de son conteneur. Les stories le placent
+ * donc dans une boîte de la largeur de la maquette (189px) pour montrer les
+ * proportions attendues, comme le ferait une cellule du tableau des métadonnées.
+ */
+const inCell: Story["decorators"] = [
+  (StoryFn) => (
+    <div style={{ width: 189 }}>
+      <StoryFn />
+    </div>
+  ),
+];
+
 /** Cercle vide (avatar par défaut). */
 export const CercleVide: Story = {
   args: { shape: "circle" },
@@ -37,9 +50,37 @@ export const CercleAvecValeur: Story = {
   },
 };
 
-/** Rectangle (futur : documents / fiches RCO). */
+/** Rectangle vide — état « pas encore de logo » de la maquette. */
 export const Rectangle: Story = {
   args: { shape: "rect" },
+  decorators: inCell,
+};
+
+/**
+ * Rectangle avec logo. `onDelete` étant fourni, le survol découvre la corbeille
+ * rouge : c'est l'état utilisé par la métadonnée « Logo » d'une fiche.
+ */
+export const SquareWithDeletableLogo: Story = {
+  args: {
+    shape: "rect",
+    label: "Logo",
+    value: "https://res.cloudinary.com/demo/image/upload/w_200/sample.jpg",
+    onDelete: () => {},
+  },
+  decorators: inCell,
+};
+
+/**
+ * Sans `onDelete`, le survol propose le remplacement plutôt que la suppression —
+ * sinon aucune action ne resterait possible sur une image déjà déposée.
+ */
+export const SquareWithoutDeletableLogo: Story = {
+  args: {
+    shape: "rect",
+    label: "Logo",
+    value: "https://res.cloudinary.com/demo/image/upload/w_200/sample.jpg",
+  },
+  decorators: inCell,
 };
 
 /** Désactivé. */
