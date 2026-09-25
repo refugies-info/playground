@@ -11,6 +11,7 @@
   "dependencies": {
     "@letta-ai/letta-client": "1.10.2",
     "@playground/rco": "workspace:^",
+    "@playground/shared-types": "workspace:*",
     "dotenv": "^17.4.2",
     "gray-matter": "^4.0.3"
   },
