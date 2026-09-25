@@ -163,6 +163,6 @@ pnpm di:ingest --type services --limit 50
 
 ### Database Tables
 
-- `di_structures` / `di_services` - Main data tables with version history
-- `di_structures_latest` / `di_services_latest` - Views for current versions only
+- `structures` / `services` - Main data tables with version history
+- `structures_latest` / `services_latest` - Views for current versions only
 - `di_ingestion_runs` - Tracks each ingestion run with stats
