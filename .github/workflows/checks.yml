@@ -18,7 +18,7 @@ jobs:
     name: Lint, Format & Type Check
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup toolchain
         uses: moonrepo/setup-toolchain@v0
