@@ -4,7 +4,7 @@
  * AUTO-GENERE par scripts/sync-dsfr-icons.ts
  * Ne pas editer a la main.
  *
- * Source : @gouvfr/dsfr 1.15.2
+ * Source : @gouvfr/dsfr 1.15.3
  * 47 icones custom
  */
 
