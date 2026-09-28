@@ -1,8 +1,8 @@
 /**
  * Spécification lisible par le LLM du schéma de sortie metadata_ri.
  *
- * Poussée dans le bloc mémoire `metadata_schema` de l'agent via
- * scripts/update-metadata-schema-block.ts. À synchroniser avec
+ * Poussée dans le bloc mémoire `metadata_schema` de l'agent (gelé côté
+ * production — cf. la contrainte de gel des agents Letta Cloud). À synchroniser avec
  * MetadataRiSchema dans packages/shared/src/schemas/metadata-ri.ts.
  */
 export const METADATA_SCHEMA_SPEC = `<system-reminder>
