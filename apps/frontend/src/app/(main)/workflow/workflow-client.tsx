@@ -13,12 +13,15 @@ import { BoutonFiltre, Button, FiltreDate, SearchInput } from "@playground/ui";
 import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { triggerDiIngestionAction } from "@/app/actions/di";
+import { triggerIngestionAction } from "@/app/actions/ingestion";
 import { AppPaginationControls } from "@/components/common/AppPagination";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import type { IngestionRunSummary } from "@/lib/ingestion-run";
+import type { IngestionSource } from "@/lib/ingestion-source";
 import { createClient } from "@/lib/supabase/client";
 import { inProgressColumns } from "./columns";
 import { DocumentPreviewDrawer } from "./document-preview-drawer";
+import { LatestIngestionRunCard } from "./latest-ingestion-run-card";
 
 // Duration must match the Tailwind animation duration used in getRowClassName (duration-1000)
 const HIGHLIGHT_ANIMATION_DURATION_MS = 1000;
@@ -55,6 +58,8 @@ interface WorkflowClientProps {
   sortBy: DocumentSortField;
   sortOrder: "asc" | "desc";
   initialFilters: WorkflowFilters;
+  ingestionSource: IngestionSource;
+  latestIngestionRun: IngestionRunSummary | null;
 }
 
 export function WorkflowClient(props: WorkflowClientProps) {
@@ -72,6 +77,8 @@ export function WorkflowClient(props: WorkflowClientProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [workflowId, setWorkflowId] = useState<string | null>(null);
+  const [results, setResults] = useState<Record<string, unknown> | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const [arbitrationLoading, setArbitrationLoading] = useState<string | null>(
     null,
   );
@@ -241,13 +248,15 @@ export function WorkflowClient(props: WorkflowClientProps) {
     setIsDrawerOpen(true);
   };
 
-  const handleRunDiIngestion = async () => {
+  const handleRunIngestion = async () => {
     setIsLoading(true);
     setError(null);
     setWorkflowId(null);
+    setResults(null);
+    setStatus(null);
 
     try {
-      const result = await triggerDiIngestionAction();
+      const result = await triggerIngestionAction();
 
       if (!result.success) {
         setError(result.error || "Unknown error occurred");
@@ -262,6 +271,83 @@ export function WorkflowClient(props: WorkflowClientProps) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // ... rest of functions ...
+
+  const handleRefreshStatus = async () => {
+    if (!workflowId) return;
+    // Implementation for status refresh if needed
+    try {
+      const response = await fetch(`/api/workflow/${workflowId}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch workflow status");
+      }
+      const data = await response.json();
+      setStatus(data.status);
+      // Reloads the latest run card from ingestion_runs.
+      router.refresh();
+
+      if (data.status === "completed" && data.output) {
+        const [resultMap, ...values] = data.output;
+
+        if (resultMap && typeof resultMap === "object") {
+          // biome-ignore lint/suspicious/noExplicitAny: Recursive reconstruction
+          const reconstruct = (val: any): any => {
+            if (typeof val === "number") return values[val - 1];
+            if (Array.isArray(val)) return val.map(reconstruct);
+            if (val && typeof val === "object") {
+              // biome-ignore lint/suspicious/noExplicitAny: Recursive reconstruction
+              const res: any = {};
+              for (const k in val) {
+                res[k] = reconstruct(val[k]);
+              }
+              return res;
+            }
+            return val;
+          };
+
+          const fullResult = reconstruct(resultMap);
+
+          if (fullResult.ingestion) {
+            setResults({
+              ...fullResult.files,
+              "Ingestion Status": fullResult.ingestion.status,
+              "Ingestion Record ID":
+                fullResult.ingestion.ingestionRecordId || "N/A",
+            });
+          } else if (fullResult.structures && fullResult.services) {
+            setResults({
+              "Ingestion Type": "Data Inclusion",
+              "Structures Fetched": String(fullResult.structures.totalFetched),
+              "Services Fetched": String(fullResult.services.totalFetched),
+              "Services Inserted": String(fullResult.services.totalInserted),
+              "Services Updated": String(fullResult.services.totalUpdated),
+              "Audit Reports": fullResult.audit
+                ? `${fullResult.audit.succeeded}/${fullResult.audit.attempted}`
+                : "N/A",
+            });
+          } else if (fullResult.changes) {
+            setResults({
+              "Ingestion Type": "RCO",
+              "Run Status": fullResult.status,
+              "Actions traitées": String(fullResult.processed),
+              Nouvelles: String(fullResult.changes.new),
+              "Reprises DI": String(fullResult.changes.baseline),
+              "Sessions seules": String(fullResult.changes.sessions_only),
+              "Contenu modifié": String(fullResult.changes.content),
+              Inchangées: String(fullResult.changes.unchanged),
+              "Absentes RCO": String(fullResult.missing),
+              Erreurs: String(fullResult.errors.length),
+            });
+          } else {
+            setResults(fullResult);
+          }
+        }
+      }
+    } catch (err) {
+      logger.error(err, "Error refreshing status");
     }
   };
 
@@ -347,7 +433,30 @@ export function WorkflowClient(props: WorkflowClientProps) {
                     {workflowId}
                   </code>
                 </p>
+                {status && (
+                  <p className="mt-2">
+                    Status:{" "}
+                    <span
+                      className={`font-semibold ${
+                        status === "completed"
+                          ? "text-green-600"
+                          : status === "failed"
+                            ? "text-red-600"
+                            : "text-blue-600"
+                      }`}
+                    >
+                      {status}
+                    </span>
+                  </p>
+                )}
               </div>
+              <Button
+                variant="tertiaire"
+                size="sm"
+                onClick={handleRefreshStatus}
+              >
+                Refresh Status
+              </Button>
             </div>
             <p className="mt-2 text-sm">
               Check the{" "}
@@ -360,6 +469,50 @@ export function WorkflowClient(props: WorkflowClientProps) {
                 Workflow Dashboard
               </a>{" "}
               (if enabled) or server logs for progress.
+            </p>
+          </div>
+        )}
+
+        {props.latestIngestionRun && (
+          <LatestIngestionRunCard run={props.latestIngestionRun} />
+        )}
+
+        {results && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-4">Results</h2>
+            <div className="grid gap-4">
+              {Object.entries(results).map(([key, value]) => (
+                <div
+                  key={key}
+                  className="p-4 border rounded-lg bg-white dark:bg-gray-800 shadow-sm"
+                >
+                  <h3 className="font-semibold text-lg mb-2">{key}</h3>
+                  <div className="flex items-center justify-between">
+                    <code className="text-sm bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded break-all">
+                      {value as string}
+                    </code>
+                    {(typeof value === "string" && value.startsWith("Error")) ||
+                    value === "error" ||
+                    value === "failed" ? (
+                      <span className="text-red-500 text-sm font-medium">
+                        Failed
+                      </span>
+                    ) : (typeof value === "string" &&
+                        value.startsWith("success")) ||
+                      (key.includes("Status") && value === "success") ? (
+                      <span className="text-green-500 text-sm font-medium">
+                        Success
+                      </span>
+                    ) : (
+                      <span className="text-gray-500 text-sm">Info</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-sm text-gray-500">
+              Files have been saved to the <code>output</code> directory in the
+              project root.
             </p>
           </div>
         )}
@@ -414,11 +567,13 @@ export function WorkflowClient(props: WorkflowClientProps) {
           {/* Bouton aligné à droite dans le même conteneur que la recherche */}
           <Button
             className="ml-auto"
-            onClick={handleRunDiIngestion}
+            onClick={handleRunIngestion}
             disabled={isLoading}
             isLoading={isLoading}
           >
-            {isLoading ? "En cours…" : "Lancer l'import DI"}
+            {isLoading
+              ? "En cours…"
+              : `Lancer l'import ${props.ingestionSource.toUpperCase()}`}
           </Button>
         </div>
 
