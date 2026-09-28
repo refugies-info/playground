@@ -5,20 +5,20 @@
  * Contains only "use step" functions to avoid bundler confusion.
  */
 
-import { APIError } from "@letta-ai/letta-client/error";
+import { APIError } from "@letta-ai/letta-client/core/error";
 import {
+  accumulateUsage,
   createLettaClient,
   findOrCreateConversation,
   generateIngestionReport,
   generateMetadataReport,
-  getRunUsage,
+  getAgentModel,
   type LettaUsage,
   MetadataMetadataSchema,
   parseAgentResponse,
   parseIngestionResponse,
 } from "@playground/agents";
 import {
-  LETTA_MODEL_NAME,
   logger,
   TYPE_COMPLIANCE_IA,
   TYPE_UPDATE,
@@ -100,6 +100,9 @@ export async function diSingleAuditStep(
   const lettaClient = createLettaClient();
   const supabase = getSupabaseClient();
 
+  // Resolve the agent's actual model handle (cached per process) — TEC-65
+  const model = await getAgentModel(agentId, lettaClient);
+
   logger.info(
     { ingestionRecordId, workflowId },
     "▶ Starting single audit Letta call",
@@ -112,8 +115,7 @@ export async function diSingleAuditStep(
   );
 
   let finalContent = "";
-  let usage: LettaUsage | undefined;
-  let runId: string | undefined;
+  const usage: LettaUsage = {};
 
   try {
     for await (const chunk of generateIngestionReport(
@@ -121,9 +123,7 @@ export async function diSingleAuditStep(
       markdown,
       conversationId,
     )) {
-      if (!runId && chunk.run_id) {
-        runId = chunk.run_id;
-      }
+      accumulateUsage(usage, chunk);
       if (chunk.message_type === "assistant_message") {
         if (typeof chunk.content !== "string") {
           throw new Error(
@@ -156,11 +156,7 @@ export async function diSingleAuditStep(
     throw new Error("No assistant response received for audit");
   }
 
-  if (runId) {
-    usage = await getRunUsage(lettaClient, runId);
-  }
-
-  const parsed = parseIngestionResponse(finalContent, agentId);
+  const parsed = parseIngestionResponse(finalContent, agentId, usage);
 
   const { data: report, error: reportError } = await supabase
     .from("letta_reports")
@@ -173,7 +169,7 @@ export async function diSingleAuditStep(
       raw_response: parsed.rawResponse ?? null,
       workflow_id: workflowId,
       token_cost: usage?.totalTokens ?? null,
-      model: LETTA_MODEL_NAME,
+      model,
     })
     .select("id")
     .single();
@@ -276,6 +272,9 @@ export async function diSingleMetadataStep(
   const lettaClient = createLettaClient();
   const supabase = getSupabaseClient();
 
+  // Resolve the agent's actual model handle (cached per process) — TEC-65
+  const model = await getAgentModel(agentId, lettaClient);
+
   logger.info(
     { ingestionRecordId, workflowId },
     "▶ Starting single metadata Letta call",
@@ -288,8 +287,7 @@ export async function diSingleMetadataStep(
   );
 
   let finalContent = "";
-  let usage: LettaUsage | undefined;
-  let runId: string | undefined;
+  const usage: LettaUsage = {};
 
   try {
     for await (const chunk of generateMetadataReport(
@@ -297,9 +295,7 @@ export async function diSingleMetadataStep(
       markdown,
       conversationId,
     )) {
-      if (!runId && chunk.run_id) {
-        runId = chunk.run_id;
-      }
+      accumulateUsage(usage, chunk);
       if (chunk.message_type === "assistant_message") {
         if (typeof chunk.content !== "string") {
           throw new Error(
@@ -332,10 +328,6 @@ export async function diSingleMetadataStep(
     throw new Error("No assistant response received for metadata");
   }
 
-  if (runId) {
-    usage = await getRunUsage(lettaClient, runId);
-  }
-
   const parsed = parseAgentResponse(
     finalContent,
     agentId,
@@ -354,7 +346,7 @@ export async function diSingleMetadataStep(
       raw_response: parsed.rawResponse ?? null,
       workflow_id: workflowId,
       token_cost: usage?.totalTokens ?? null,
-      model: LETTA_MODEL_NAME,
+      model,
     })
     .select("id")
     .single();

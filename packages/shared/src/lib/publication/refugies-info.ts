@@ -21,6 +21,7 @@ export type RefugiesInfoSession = {
 
 export type RefugiesInfoDispositif = {
   origin?: "RCO";
+  origin_id?: string;
   theme: string;
   secondaryThemes: unknown[];
   needs: unknown[];
@@ -48,6 +49,7 @@ type BuildRefugiesInfoPayloadInput = {
   markdown: string;
   metadata: Record<string, unknown>;
   origin?: "RCO";
+  originId?: string;
   normalizeMarkdown?: (markdown: string) => string;
 };
 
@@ -113,7 +115,8 @@ const setIfDefined = (
 export async function buildRefugiesInfoPayload(
   input: BuildRefugiesInfoPayloadInput,
 ): Promise<RefugiesInfoPayload> {
-  const { title, markdown, metadata, origin, normalizeMarkdown } = input;
+  const { title, markdown, metadata, origin, originId, normalizeMarkdown } =
+    input;
 
   const themeValue = metadata.theme as string | string[] | undefined;
   const themeId =
@@ -221,6 +224,9 @@ export async function buildRefugiesInfoPayload(
 
   if (origin) {
     dispositif.origin = origin;
+  }
+  if (originId) {
+    dispositif.origin_id = originId;
   }
   if (map && map.length > 0) {
     dispositif.map = map;

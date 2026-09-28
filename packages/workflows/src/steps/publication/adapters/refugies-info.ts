@@ -36,13 +36,15 @@ export const refugiesInfoAdapter: PublisherAdapter = {
   },
 
   async buildPayload(doc): Promise<WebhookPayload> {
-    const { title, markdown, metadata, userEmail, existingRemoteId } = doc;
+    const { title, markdown, metadata, userEmail, existingRemoteId, originId } =
+      doc;
 
     const { dispositif } = await buildRefugiesInfoPayload({
       title,
       markdown,
       metadata,
       origin: existingRemoteId ? undefined : "RCO",
+      originId,
     });
 
     if (existingRemoteId) {

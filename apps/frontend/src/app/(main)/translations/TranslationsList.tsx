@@ -78,7 +78,9 @@ export function TranslationsList({
       ? columns.filter((col) => {
           const key =
             "accessorKey" in col ? col.accessorKey : "id" in col ? col.id : "";
-          return key !== "language" && key !== "author";
+          return (
+            key !== "language" && key !== "author" && key !== "publicationDate"
+          );
         })
       : columns;
 
