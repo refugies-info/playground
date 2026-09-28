@@ -13,12 +13,15 @@ import { BoutonFiltre, Button, FiltreDate, SearchInput } from "@playground/ui";
 import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { triggerDiIngestionAction } from "@/app/actions/di";
+import { triggerIngestionAction } from "@/app/actions/ingestion";
 import { AppPaginationControls } from "@/components/common/AppPagination";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import type { IngestionRunSummary } from "@/lib/ingestion-run";
+import type { IngestionSource } from "@/lib/ingestion-source";
 import { createClient } from "@/lib/supabase/client";
 import { inProgressColumns } from "./columns";
 import { DocumentPreviewDrawer } from "./document-preview-drawer";
+import { LatestIngestionRunCard } from "./latest-ingestion-run-card";
 
 // Duration must match the Tailwind animation duration used in getRowClassName (duration-1000)
 const HIGHLIGHT_ANIMATION_DURATION_MS = 1000;
@@ -55,6 +58,8 @@ interface WorkflowClientProps {
   sortBy: DocumentSortField;
   sortOrder: "asc" | "desc";
   initialFilters: WorkflowFilters;
+  ingestionSource: IngestionSource;
+  latestIngestionRun: IngestionRunSummary | null;
 }
 
 export function WorkflowClient(props: WorkflowClientProps) {
@@ -243,7 +248,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
     setIsDrawerOpen(true);
   };
 
-  const handleRunDiIngestion = async () => {
+  const handleRunIngestion = async () => {
     setIsLoading(true);
     setError(null);
     setWorkflowId(null);
@@ -251,7 +256,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
     setStatus(null);
 
     try {
-      const result = await triggerDiIngestionAction();
+      const result = await triggerIngestionAction();
 
       if (!result.success) {
         setError(result.error || "Unknown error occurred");
@@ -281,6 +286,8 @@ export function WorkflowClient(props: WorkflowClientProps) {
       }
       const data = await response.json();
       setStatus(data.status);
+      // Reloads the latest run card from ingestion_runs.
+      router.refresh();
 
       if (data.status === "completed" && data.output) {
         const [resultMap, ...values] = data.output;
@@ -320,6 +327,19 @@ export function WorkflowClient(props: WorkflowClientProps) {
               "Audit Reports": fullResult.audit
                 ? `${fullResult.audit.succeeded}/${fullResult.audit.attempted}`
                 : "N/A",
+            });
+          } else if (fullResult.changes) {
+            setResults({
+              "Ingestion Type": "RCO",
+              "Run Status": fullResult.status,
+              "Actions traitées": String(fullResult.processed),
+              Nouvelles: String(fullResult.changes.new),
+              "Reprises DI": String(fullResult.changes.baseline),
+              "Sessions seules": String(fullResult.changes.sessions_only),
+              "Contenu modifié": String(fullResult.changes.content),
+              Inchangées: String(fullResult.changes.unchanged),
+              "Absentes RCO": String(fullResult.missing),
+              Erreurs: String(fullResult.errors.length),
             });
           } else {
             setResults(fullResult);
@@ -453,6 +473,10 @@ export function WorkflowClient(props: WorkflowClientProps) {
           </div>
         )}
 
+        {props.latestIngestionRun && (
+          <LatestIngestionRunCard run={props.latestIngestionRun} />
+        )}
+
         {results && (
           <div className="mt-8">
             <h2 className="text-2xl font-bold mb-4">Results</h2>
@@ -543,11 +567,13 @@ export function WorkflowClient(props: WorkflowClientProps) {
           {/* Bouton aligné à droite dans le même conteneur que la recherche */}
           <Button
             className="ml-auto"
-            onClick={handleRunDiIngestion}
+            onClick={handleRunIngestion}
             disabled={isLoading}
             isLoading={isLoading}
           >
-            {isLoading ? "En cours…" : "Lancer l'import DI"}
+            {isLoading
+              ? "En cours…"
+              : `Lancer l'import ${props.ingestionSource.toUpperCase()}`}
           </Button>
         </div>
 

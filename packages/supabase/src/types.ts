@@ -91,6 +91,13 @@ export type Database = {
             foreignKeyName: "activity_logs_workflow_id_fkey"
             columns: ["workflow_id"]
             isOneToOne: false
+            referencedRelation: "rco_session_updates_pending"
+            referencedColumns: ["workflow_id"]
+          },
+          {
+            foreignKeyName: "activity_logs_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
             referencedRelation: "workflows"
             referencedColumns: ["id"]
           },
@@ -225,6 +232,13 @@ export type Database = {
             foreignKeyName: "ingestion_records_di_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
+            referencedRelation: "rco_session_updates_pending"
+            referencedColumns: ["latest_service_id"]
+          },
+          {
+            foreignKeyName: "ingestion_records_di_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
           },
@@ -267,6 +281,7 @@ export type Database = {
       }
       ingestion_runs: {
         Row: {
+          checkpoint: Json | null
           completed_at: string | null
           created_at: string
           error_details: Json | null
@@ -282,6 +297,7 @@ export type Database = {
           type: string
         }
         Insert: {
+          checkpoint?: Json | null
           completed_at?: string | null
           created_at?: string
           error_details?: Json | null
@@ -297,6 +313,7 @@ export type Database = {
           type: string
         }
         Update: {
+          checkpoint?: Json | null
           completed_at?: string | null
           created_at?: string
           error_details?: Json | null
@@ -357,6 +374,13 @@ export type Database = {
           workflow_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "letta_reports_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "rco_session_updates_pending"
+            referencedColumns: ["workflow_id"]
+          },
           {
             foreignKeyName: "letta_reports_workflow_id_fkey"
             columns: ["workflow_id"]
@@ -537,6 +561,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "translation_records"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "publication_records_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "rco_session_updates_pending"
+            referencedColumns: ["workflow_id"]
           },
           {
             foreignKeyName: "publication_records_workflow_id_fkey"
@@ -733,6 +764,13 @@ export type Database = {
             foreignKeyName: "translation_records_workflow_id_fkey"
             columns: ["workflow_id"]
             isOneToOne: false
+            referencedRelation: "rco_session_updates_pending"
+            referencedColumns: ["workflow_id"]
+          },
+          {
+            foreignKeyName: "translation_records_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
             referencedRelation: "workflows"
             referencedColumns: ["id"]
           },
@@ -815,6 +853,22 @@ export type Database = {
       }
     }
     Views: {
+      rco_session_updates_pending: {
+        Row: {
+          active_origin: Database["public"]["Enums"]["origin"] | null
+          active_service_version: number | null
+          active_sessions: Json | null
+          ingested_at: string | null
+          latest_service_id: string | null
+          latest_service_version: number | null
+          latest_sessions: Json | null
+          numero_action: string | null
+          origin_id: string | null
+          title: string | null
+          workflow_id: string | null
+        }
+        Relationships: []
+      }
       services_latest: {
         Row: {
           content_hash: string | null
