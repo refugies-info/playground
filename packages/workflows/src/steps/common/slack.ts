@@ -5,7 +5,7 @@ import { logger } from "@playground/shared-types";
  *
  * One webhook per channel, configured by environment variable:
  *   - SLACK_WEBHOOK_LOGS_BOMO → #logs-bomo: successful RCO publications
- *   - SLACK_WEBHOOK_DEV       → #dev: publication and Airtable failures
+ *   - SLACK_WEBHOOK_DEV       → #dev: publication, translation and Airtable failures
  */
 
 const ENV_WEBHOOK_LOGS_BOMO = "SLACK_WEBHOOK_LOGS_BOMO";
@@ -101,6 +101,32 @@ export async function notifyPublicationError(params: {
     ...(params.errorCode ? [`code: \`${params.errorCode}\``] : []),
     `erreur: ${params.errorMessage}`,
     ...(params.errorOrigin ? [`origine: \`${params.errorOrigin}\``] : []),
+  ].join("\n");
+
+  await postSlackMessage(process.env[ENV_WEBHOOK_DEV], ENV_WEBHOOK_DEV, text);
+}
+
+/** Notifies #dev that a translation publication failed. */
+export async function notifyTranslationPublicationError(params: {
+  translationId: string;
+  errorMessage: string;
+  workflowId?: string;
+  language?: string;
+  userEmail?: string;
+}): Promise<void> {
+  const bomoUrl = params.workflowId
+    ? getBomoDocumentUrl(params.workflowId)
+    : null;
+  const languageLabel = params.language
+    ? ` (${params.language.toUpperCase()})`
+    : "";
+  const text = [
+    `:rotating_light: [${getEnvironmentLabel()}] Échec de publication de traduction${languageLabel}`,
+    ...(bomoUrl
+      ? [`fiche BOMO : ${bomoUrl}`]
+      : [`traduction: \`${params.translationId}\``]),
+    ...(params.userEmail ? [`par ${params.userEmail}`] : []),
+    `erreur: ${params.errorMessage}`,
   ].join("\n");
 
   await postSlackMessage(process.env[ENV_WEBHOOK_DEV], ENV_WEBHOOK_DEV, text);
