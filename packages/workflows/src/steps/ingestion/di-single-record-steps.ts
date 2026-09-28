@@ -12,13 +12,13 @@ import {
   findOrCreateConversation,
   generateIngestionReport,
   generateMetadataReport,
+  getAgentModel,
   type LettaUsage,
   MetadataMetadataSchema,
   parseAgentResponse,
   parseIngestionResponse,
 } from "@playground/agents";
 import {
-  LETTA_MODEL_NAME,
   logger,
   TYPE_COMPLIANCE_IA,
   TYPE_UPDATE,
@@ -100,6 +100,9 @@ export async function diSingleAuditStep(
   const lettaClient = createLettaClient();
   const supabase = getSupabaseClient();
 
+  // Resolve the agent's actual model handle (cached per process) — TEC-65
+  const model = await getAgentModel(agentId, lettaClient);
+
   logger.info(
     { ingestionRecordId, workflowId },
     "▶ Starting single audit Letta call",
@@ -166,7 +169,7 @@ export async function diSingleAuditStep(
       raw_response: parsed.rawResponse ?? null,
       workflow_id: workflowId,
       token_cost: usage?.totalTokens ?? null,
-      model: LETTA_MODEL_NAME,
+      model,
     })
     .select("id")
     .single();
@@ -269,6 +272,9 @@ export async function diSingleMetadataStep(
   const lettaClient = createLettaClient();
   const supabase = getSupabaseClient();
 
+  // Resolve the agent's actual model handle (cached per process) — TEC-65
+  const model = await getAgentModel(agentId, lettaClient);
+
   logger.info(
     { ingestionRecordId, workflowId },
     "▶ Starting single metadata Letta call",
@@ -340,7 +346,7 @@ export async function diSingleMetadataStep(
       raw_response: parsed.rawResponse ?? null,
       workflow_id: workflowId,
       token_cost: usage?.totalTokens ?? null,
-      model: LETTA_MODEL_NAME,
+      model,
     })
     .select("id")
     .single();
