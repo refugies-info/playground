@@ -41,7 +41,7 @@
     "postinstall": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/sync-dsfr-icons.ts"
   },
   "dependencies": {
-    "@gouvfr/dsfr": "^1.15.2",
+    "@gouvfr/dsfr": "^1.15.3",
     "@playground/shared-types": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.23",
     "@radix-ui/react-label": "^2.1.15",
@@ -61,7 +61,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^24.13.3",
+    "@types/node": "^24.13.5",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "typescript": "^5.9.3"
