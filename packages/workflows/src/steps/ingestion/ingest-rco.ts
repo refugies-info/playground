@@ -40,6 +40,7 @@ export const EMPTY_RCO_TOTALS: RcoBatchResult = {
   structuresWritten: 0,
   ingestionRecordsCreated: 0,
   errors: [],
+  outcomes: [],
 };
 
 const toRunStats = (totals: RcoBatchResult) => ({
@@ -74,7 +75,12 @@ async function resumeRun(
   await markIngestionRunRunning(supabase, runId);
   const checkpoint = run.checkpoint as RcoCheckpoint;
   logger.info({ runId, nextIndex: checkpoint.nextIndex }, "▶ Resuming RCO run");
-  return { runId, ...checkpoint };
+  return {
+    runId,
+    ...checkpoint,
+    // Checkpoints saved before a totals field existed miss it.
+    totals: { ...EMPTY_RCO_TOTALS, ...checkpoint.totals },
+  };
 }
 
 async function searchActions(options: RcoRunOptions): Promise<string[]> {
