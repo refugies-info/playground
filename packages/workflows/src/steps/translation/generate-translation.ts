@@ -199,7 +199,9 @@ ${sanitizedContent}
       });
       return {
         success: false,
-        error: `Letta agent call failed for language ${language}`,
+        error: `Letta agent call failed for language ${language}: ${
+          agentError instanceof Error ? agentError.message : String(agentError)
+        }`,
       };
     }
 
