@@ -1,7 +1,8 @@
 import type { Letta } from "@letta-ai/letta-client";
-import type { AssistantMessage } from "@letta-ai/letta-client/resources/agents";
 import type { ConversationCreateParams } from "@letta-ai/letta-client/resources/conversations";
-import { getRunUsage } from "./simplification";
+import { LETTA_MODEL_NAME, logger } from "@playground/shared-types";
+import { createLettaClient } from "./clients";
+import { accumulateUsage } from "./simplification";
 import type { LettaUsage } from "./types";
 
 export const listAgents = async (client: Letta) => {
@@ -12,42 +13,54 @@ export const getAgent = async (client: Letta, agentId: string) => {
   return client.agents.retrieve(agentId);
 };
 
-export const sendMessage = async (
-  client: Letta,
+/**
+ * Per-process cache of agent model handles, keyed by agent ID.
+ * Prod Letta Cloud agents are frozen (model never changes), so one
+ * retrieve per process per agent is enough (TEC-65).
+ */
+const agentModelCache = new Map<string, string>();
+
+/**
+ * Resolves the actual model handle of an agent via `agents.retrieve`.
+ *
+ * Used to populate `letta_reports.model` with the real handle instead of
+ * the `LETTA_MODEL_NAME` config constant. Never throws: on any failure
+ * (client creation, network, API, missing field) it falls back to
+ * `LETTA_MODEL_NAME` so a model lookup can never block a report from
+ * being persisted.
+ *
+ * @param agentId - The agent whose model handle to resolve
+ * @param client - Optional pre-existing Letta client; one is created if omitted
+ * @returns The agent's model handle, or `LETTA_MODEL_NAME` as fallback
+ */
+export const getAgentModel = async (
   agentId: string,
-  content: string,
-): Promise<{
-  content: string;
-  usage?: Record<string, unknown>;
-}> => {
-  const response = await client.agents.messages.create(agentId, {
-    messages: [
-      {
-        role: "user",
-        content: content,
-      },
-    ],
-  });
-
-  const messages = response.messages;
-  const lastMessage = messages.findLast(
-    (msg) => msg.message_type === "assistant_message",
-  ) as AssistantMessage;
-
-  if (!lastMessage) {
-    throw new Error("No message with content found in response");
+  client?: Letta,
+): Promise<string> => {
+  const cached = agentModelCache.get(agentId);
+  if (cached) {
+    return cached;
   }
 
-  const messageContent = lastMessage.content;
-  const resultString =
-    typeof messageContent === "string"
-      ? messageContent
-      : JSON.stringify(messageContent);
+  try {
+    const lettaClient = client ?? createLettaClient();
+    const agent = await lettaClient.agents.retrieve(agentId);
+    if (agent.model) {
+      agentModelCache.set(agentId, agent.model);
+      return agent.model;
+    }
+    logger.warn(
+      { agentId },
+      "Agent has no model field — falling back to LETTA_MODEL_NAME",
+    );
+  } catch (error) {
+    logger.warn(
+      { agentId, error },
+      "Failed to retrieve agent model — falling back to LETTA_MODEL_NAME",
+    );
+  }
 
-  return {
-    content: resultString,
-    usage: response.usage as Record<string, unknown> | undefined,
-  };
+  return LETTA_MODEL_NAME;
 };
 
 export const sendMessageToConversation = async (
@@ -57,7 +70,6 @@ export const sendMessageToConversation = async (
 ): Promise<{
   content: string;
   usage?: LettaUsage;
-  runId?: string;
 }> => {
   const stream = await client.conversations.messages.create(conversationId, {
     messages: [
@@ -69,13 +81,10 @@ export const sendMessageToConversation = async (
   });
 
   let finalContent = "";
-  let runId: string | undefined;
+  const usage: LettaUsage = {};
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
   for await (const chunk of stream as AsyncIterable<any>) {
-    // Capture run_id from chunks (available in response headers/chunks)
-    if (!runId && chunk.run_id) {
-      runId = chunk.run_id;
-    }
+    accumulateUsage(usage, chunk);
     if (chunk.message_type === "assistant_message") {
       if (typeof chunk.content === "string") {
         finalContent += chunk.content;
@@ -89,12 +98,9 @@ export const sendMessageToConversation = async (
     throw new Error("No message with content found in response");
   }
 
-  const usage = runId ? await getRunUsage(client, runId) : undefined;
-
   return {
     content: finalContent,
     usage,
-    runId,
   };
 };
 
@@ -128,37 +134,4 @@ export const findOrCreateConversation = async (
   const newConversation = await client.conversations.create(createParams);
 
   return newConversation.id;
-};
-
-export const runAgentOneShot = async (
-  client: Letta,
-  templateId: string,
-  flowId: string,
-  content: string,
-): Promise<{
-  content: string;
-  agentId: string;
-  usage?: Record<string, unknown>;
-}> => {
-  // Create a new agent from the template
-  const agentResponse = await client.templates.agents.create(templateId, {
-    agent_name: `${templateId}-${flowId}`.replace(/[:/]/g, "-"),
-  });
-  const agentId = agentResponse.agent_ids[0];
-
-  if (!agentId) {
-    throw new Error("Failed to create agent from template");
-  }
-
-  const { content: resultString, usage } = await sendMessage(
-    client,
-    agentId,
-    content,
-  );
-
-  return {
-    content: resultString,
-    agentId,
-    usage,
-  };
 };

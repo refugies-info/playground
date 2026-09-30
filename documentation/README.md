@@ -21,6 +21,7 @@ Step-by-step guides for common tasks:
 - **[Local Development Setup](./guides/local-development.md)** — Set up your development environment
 - **[Supabase Setup](./guides/supabase-setup.md)** — Configure Supabase locally and in production
 - **[Deployment](./guides/deployment.md)** — Deploy to Vercel, Supabase, and Letta Cloud
+- **[Coding Conventions](./guides/coding-conventions.md)** — Naming, comments, functional style, and other code style rules
 
 ---
 

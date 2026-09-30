@@ -1,0 +1,10 @@
+version: 2
+updates:
+  # GitHub Actions only — keeps the tag-pinned actions current
+  # (actions/checkout@v6, actions/cache@v4, moonrepo/setup-toolchain@v0).
+  #
+  # npm coverage is a separate policy decision and is deliberately not enabled.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

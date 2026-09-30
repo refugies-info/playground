@@ -20,6 +20,7 @@ Create a guide when:
 - **[Local Development Setup](./local-development.md)** — Set up your development environment
 - **[Supabase Setup](./supabase-setup.md)** — Configure Supabase locally and in production
 - **[Deployment](./deployment.md)** — Deploy to Vercel, Supabase, and Letta Cloud
+- **[Coding Conventions](./coding-conventions.md)** — Naming, comments, functional style, and other code style rules
 
 ## Examples of Guide Topics
 

@@ -9,8 +9,8 @@ import { METADATA_SLASH_COMMAND } from "./prompts";
  * Output: AsyncGenerator yielding stream chunks
  *
  * The agent should produce metadata_ri YAML frontmatter conforming to MetadataRiSchema.
- * The schema spec lives in the agent's `metadata_schema` core memory block (see
- * scripts/update-metadata-schema-block.ts) — not injected per-message.
+ * The schema spec lives in the agent's `metadata_schema` core memory block
+ * (frozen on the production agent — cf. the Letta Cloud freeze constraint) — not injected per-message.
  *
  * @param client - The Letta client instance
  * @param markdownContent - The document content (markdown with frontmatter)

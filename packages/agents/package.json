@@ -11,14 +11,15 @@
   "dependencies": {
     "@letta-ai/letta-client": "1.10.2",
     "@playground/rco": "workspace:^",
-    "dotenv": "^17.2.3",
+    "@playground/shared-types": "workspace:*",
+    "dotenv": "^17.4.2",
     "gray-matter": "^4.0.3"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
-    "tsx": "^4.20.6",
+    "@types/node": "^24.13.5",
+    "tsx": "^4.23.12",
     "typescript": "^5.9.3",
-    "vite": "^6.4.2",
+    "vite": "6.4.3",
     "vitest": "^4.1.11"
   }
 }
