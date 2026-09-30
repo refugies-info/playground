@@ -12,13 +12,13 @@ import {
   findOrCreateConversation,
   generateIngestionReport,
   generateMetadataReport,
-  getAgentModel,
   type LettaUsage,
   MetadataMetadataSchema,
   parseAgentResponse,
   parseIngestionResponse,
 } from "@playground/agents";
 import {
+  LETTA_MODEL_HANDLE,
   logger,
   TYPE_COMPLIANCE_IA,
   TYPE_UPDATE,
@@ -101,7 +101,7 @@ export async function diSingleAuditStep(
   const supabase = getSupabaseClient();
 
   // Resolve the agent's actual model handle (cached per process) — TEC-65
-  const model = await getAgentModel(agentId, lettaClient);
+  const model = LETTA_MODEL_HANDLE;
 
   logger.info(
     { ingestionRecordId, workflowId },
@@ -273,7 +273,7 @@ export async function diSingleMetadataStep(
   const supabase = getSupabaseClient();
 
   // Resolve the agent's actual model handle (cached per process) — TEC-65
-  const model = await getAgentModel(agentId, lettaClient);
+  const model = LETTA_MODEL_HANDLE;
 
   logger.info(
     { ingestionRecordId, workflowId },

@@ -1,10 +1,9 @@
 import {
-  getAgentModel,
   type LettaUsage,
   MetadataMetadataSchema,
   parseAgentResponse,
 } from "@playground/agents";
-import { logger } from "@playground/shared-types";
+import { LETTA_MODEL_HANDLE, logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
 import type { LettaReportType, StepResult } from "../../types";
 import { getSupabaseClient } from "../common/supabase";
@@ -49,9 +48,7 @@ export async function persistMetadataReportStep(
   try {
     const supabase = getSupabaseClient();
 
-    // Resolve the agent's actual model handle (cached per process, falls back
-    // to the LETTA_MODEL_NAME constant if the retrieve fails) — TEC-65
-    const model = await getAgentModel(agentId);
+    const model = LETTA_MODEL_HANDLE;
 
     // Parse metadata response - expects frontmatter with scores
     const result = parseAgentResponse(

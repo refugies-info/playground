@@ -1,51 +1,41 @@
 import type { Letta } from "@letta-ai/letta-client";
-import { LETTA_MODEL_NAME } from "@playground/shared-types";
+import { LETTA_MODEL_HANDLE } from "@playground/shared-types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getAgentModel } from "./agents";
+import { sendMessageToConversation } from "./agents";
 
-const retrieveMock = vi.fn();
+const createMock = vi.fn();
 
-/** Minimal Letta client stub — getAgentModel only touches agents.retrieve. */
+/** Minimal Letta client stub — sendMessageToConversation only touches conversations.messages.create. */
 const client = {
-  agents: { retrieve: (...args: unknown[]) => retrieveMock(...args) },
+  conversations: {
+    messages: { create: (...args: unknown[]) => createMock(...args) },
+  },
 } as unknown as Letta;
 
-describe("getAgentModel", () => {
+const streamOf = async function* (chunks: unknown[]) {
+  yield* chunks;
+};
+
+describe("sendMessageToConversation", () => {
   beforeEach(() => {
-    retrieveMock.mockReset();
+    createMock.mockReset();
   });
 
-  it("returns the agent's model handle from agents.retrieve", async () => {
-    retrieveMock.mockResolvedValue({ model: "anthropic/claude-sonnet-4.6" });
+  it("forces the model on every request instead of relying on the agent's", async () => {
+    createMock.mockResolvedValue(
+      streamOf([{ message_type: "assistant_message", content: "Привіт" }]),
+    );
 
-    const model = await getAgentModel("agent-success", client);
+    const { content } = await sendMessageToConversation(
+      client,
+      "conv-1",
+      "Bonjour",
+    );
 
-    expect(model).toBe("anthropic/claude-sonnet-4.6");
-    expect(retrieveMock).toHaveBeenCalledWith("agent-success");
-  });
-
-  it("falls back to LETTA_MODEL_NAME when the agent has no model field", async () => {
-    retrieveMock.mockResolvedValue({ model: null });
-
-    const model = await getAgentModel("agent-null-model", client);
-
-    expect(model).toBe(LETTA_MODEL_NAME);
-  });
-
-  it("falls back to LETTA_MODEL_NAME when the retrieve call fails", async () => {
-    retrieveMock.mockRejectedValue(new Error("network down"));
-
-    const model = await getAgentModel("agent-failure", client);
-
-    expect(model).toBe(LETTA_MODEL_NAME);
-  });
-
-  it("serves subsequent calls for the same agent from the cache", async () => {
-    retrieveMock.mockResolvedValue({ model: "letta/letta-free" });
-
-    await getAgentModel("agent-cache", client);
-    await getAgentModel("agent-cache", client);
-
-    expect(retrieveMock).toHaveBeenCalledTimes(1);
+    expect(content).toBe("Привіт");
+    expect(createMock).toHaveBeenCalledWith(
+      "conv-1",
+      expect.objectContaining({ override_model: LETTA_MODEL_HANDLE }),
+    );
   });
 });
