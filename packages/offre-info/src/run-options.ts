@@ -23,4 +23,13 @@ export const RCO_RUN_OPTIONS: z.input<typeof RcoRunOptionsSchema> = {
   dryRun: true,
   maxActions: 20,
   pageSize: 100,
+  numeroActions: [
+    "01_GE1912267",
+    "02_00375614",
+    "14_SE_0001694172",
+    "14_SE_0001856985",
+    "01_GE2051036",
+    "02_00511953",
+    "20_758839S",
+  ],
 };

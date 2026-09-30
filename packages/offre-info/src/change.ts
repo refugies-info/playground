@@ -45,7 +45,7 @@ export const createsIngestionRecord = (change: RcoChange): boolean =>
 
 export function changedTopLevelFields(
   previous: unknown,
-  next: RcoActionDocument,
+  next: unknown,
 ): string[] {
   const before = asRecord(previous);
   const after = asRecord(next);
@@ -56,4 +56,40 @@ export function changedTopLevelFields(
         computeContentHash(after[field] ?? null),
     )
     .sort();
+}
+
+const sessionsById = (document: unknown) =>
+  new Map(
+    (Array.isArray(asRecord(document).sessions)
+      ? (asRecord(document).sessions as unknown[])
+      : []
+    ).map((session) => [String(asRecord(session).id), session]),
+  );
+
+function changedSessionPaths(previous: unknown, next: unknown): string[] {
+  const before = sessionsById(previous);
+  const after = sessionsById(next);
+  const paths = new Set<string>();
+  for (const [id, session] of after) {
+    if (!before.has(id)) paths.add("sessions.added");
+    else {
+      for (const field of changedTopLevelFields(before.get(id), session)) {
+        paths.add(`sessions.${field}`);
+      }
+    }
+  }
+  for (const id of before.keys()) {
+    if (!after.has(id)) paths.add("sessions.removed");
+  }
+  return [...paths].sort();
+}
+
+// Readable diff: action fields, plus per-session detail instead of "sessions".
+export function changedFieldPaths(
+  previous: unknown,
+  next: RcoActionDocument,
+): string[] {
+  return changedTopLevelFields(previous, next).flatMap((field) =>
+    field === "sessions" ? changedSessionPaths(previous, next) : [field],
+  );
 }

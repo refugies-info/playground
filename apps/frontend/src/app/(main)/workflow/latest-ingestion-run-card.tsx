@@ -1,9 +1,64 @@
 import { Badge, type BadgeProps } from "@playground/ui/primitives";
+import Link from "next/link";
 import { formatDateFr, formatTimeFr } from "@/lib/format-date";
 
-import type { IngestionRunSummary } from "@/lib/ingestion-run";
+import type { DiComparisonRow, IngestionRunSummary } from "@/lib/ingestion-run";
 
 type BadgeVariant = NonNullable<BadgeProps["variant"]>;
+
+// Legend of RCO outcomes; `changes` explains the "Changements" column
+// when an outcome has no field-level diff. A dry run only simulates effects.
+const CHANGE_LABELS: Record<
+  string,
+  { label: string; variant: BadgeVariant; meaning: string; changes: string }
+> = {
+  new: {
+    label: "Nouvelle",
+    variant: "info",
+    meaning: "Action inconnue : crée une fiche v1 à valider.",
+    changes: "Nouvelle fiche",
+  },
+  baseline: {
+    label: "Reprise DI",
+    variant: "success",
+    meaning:
+      "Action déjà importée depuis DI : sa première version RCO devient la référence. Formats DI et RCO différents : seuls les champs communs (titre, structure, commune, heures, sessions) sont comparés. La fiche publiée n'est pas modifiée ; les runs suivants comparent RCO à RCO.",
+    changes: "Référence RCO",
+  },
+  sessions_only: {
+    label: "Sessions seules",
+    variant: "warning",
+    meaning:
+      "Seules les sessions changent : pas de revalidation, visible dans la vue rco_session_updates_pending avant republication.",
+    changes: "",
+  },
+  content: {
+    label: "Contenu modifié",
+    variant: "warning",
+    meaning:
+      "Un champ de l'action change : nouvelle version à valider (audit + validation humaine).",
+    changes: "",
+  },
+  unchanged: {
+    label: "Inchangée",
+    variant: "neutral",
+    meaning: "Identique à la dernière version RCO : rien n'est écrit.",
+    changes: "Aucun",
+  },
+  missing: {
+    label: "Absente RCO",
+    variant: "neutral",
+    meaning:
+      "Trouvée par la recherche mais /offre renvoie 404 : comptée, rien n'est écrit.",
+    changes: "—",
+  },
+  error: {
+    label: "Erreur",
+    variant: "danger",
+    meaning: "Action ignorée, voir la liste des erreurs ; le lot continue.",
+    changes: "—",
+  },
+};
 
 const STATUS_BADGES: Record<string, { label: string; variant: BadgeVariant }> =
   {
@@ -15,6 +70,37 @@ const STATUS_BADGES: Record<string, { label: string; variant: BadgeVariant }> =
 
 const formatDateTime = (value: string | null) =>
   value ? `${formatDateFr(value)} à ${formatTimeFr(value)}` : "—";
+
+function DiComparison({ rows }: { rows: DiComparisonRow[] }) {
+  const gaps = rows.filter(({ same }) => !same).length;
+  return (
+    <details>
+      <summary
+        className={`cursor-pointer ${gaps > 0 ? "text-yellow-700" : "text-green-700"}`}
+      >
+        {gaps > 0 ? `${gaps} écart(s) avec DI` : "Identique à DI"}
+      </summary>
+      <table className="mt-1 text-xs">
+        <thead className="text-gray-500">
+          <tr>
+            <th className="pr-3 font-medium">Champ</th>
+            <th className="pr-3 font-medium">DI</th>
+            <th className="font-medium">RCO</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(({ field, di, rco, same }) => (
+            <tr key={field} className={same ? "" : "bg-yellow-50"}>
+              <td className="pr-3 align-top font-medium">{field}</td>
+              <td className="pr-3 align-top">{di ?? "—"}</td>
+              <td className="align-top">{rco ?? "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
+  );
+}
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
@@ -90,6 +176,98 @@ export function LatestIngestionRunCard({ run }: { run: IngestionRunSummary }) {
               </li>
             ))}
           </ul>
+        </details>
+      )}
+
+      {run.actions.length > 0 && (
+        <details className="mt-3 text-sm">
+          <summary className="cursor-pointer text-gray-700">
+            Détail par action ({run.actions.length})
+          </summary>
+          <table className="mt-2 w-full text-left">
+            <thead className="text-xs text-gray-500">
+              <tr>
+                <th className="py-1 pr-4 font-medium">N° action</th>
+                <th className="py-1 pr-4 font-medium">Résultat</th>
+                <th className="py-1 pr-4 font-medium">Changements</th>
+                <th className="py-1 font-medium">Fiche</th>
+              </tr>
+            </thead>
+            <tbody>
+              {run.actions.map(
+                ({
+                  numeroAction,
+                  change,
+                  document,
+                  changedFields,
+                  diComparison,
+                }) => {
+                  const outcome = CHANGE_LABELS[change] ?? {
+                    label: change,
+                    variant: "neutral" as const,
+                    meaning: "",
+                    changes: "",
+                  };
+                  return (
+                    <tr key={numeroAction} className="border-t border-gray-100">
+                      <td className="py-1 pr-4">
+                        <code className="bg-gray-100 px-1 rounded">
+                          {numeroAction}
+                        </code>
+                      </td>
+                      <td className="py-1 pr-4">
+                        <Badge variant={outcome.variant}>{outcome.label}</Badge>
+                      </td>
+                      <td className="py-1 pr-4 text-gray-600">
+                        {diComparison.length > 0 ? (
+                          <DiComparison rows={diComparison} />
+                        ) : changedFields.length > 0 ? (
+                          <span className="flex flex-wrap gap-1">
+                            {changedFields.map((field) => (
+                              <code
+                                key={field}
+                                className="bg-yellow-50 px-1 rounded text-xs"
+                              >
+                                {field}
+                              </code>
+                            ))}
+                          </span>
+                        ) : (
+                          outcome.changes || "—"
+                        )}
+                      </td>
+                      <td className="py-1">
+                        {document ? (
+                          <Link
+                            href={`/documents/${document.id}`}
+                            className="underline text-blue-700"
+                          >
+                            {document.title ?? "Voir la fiche"}
+                          </Link>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                },
+              )}
+            </tbody>
+          </table>
+          <dl className="mt-4 grid gap-2 text-xs text-gray-600">
+            <dt className="font-medium text-gray-700">
+              Légende
+              {run.dryRun && " — dry run : effets simulés, rien n'est écrit"}
+            </dt>
+            {Object.entries(CHANGE_LABELS).map(
+              ([change, { label, variant, meaning }]) => (
+                <dd key={change} className="flex gap-2 items-start">
+                  <Badge variant={variant}>{label}</Badge>
+                  <span>{meaning}</span>
+                </dd>
+              ),
+            )}
+          </dl>
         </details>
       )}
     </section>
