@@ -47,11 +47,11 @@ import {
   createLettaClient,
   findOrCreateConversation,
   generateIngestionReport,
-  getAgentModel,
   type LettaUsage,
   parseIngestionResponse,
 } from "@playground/agents";
 import {
+  LETTA_MODEL_HANDLE,
   logger,
   TYPE_COMPLIANCE_IA,
   TYPE_UPDATE_COMPLIANCE,
@@ -261,7 +261,7 @@ export async function generateDiAuditReportsStep(runId: string) {
   const supabase = getSupabaseClient();
 
   // Resolve the agent's actual model handle (cached per process) — TEC-65
-  const model = await getAgentModel(agentId, lettaClient);
+  const model = LETTA_MODEL_HANDLE;
 
   const skipped = Math.max(0, totalCandidates - targets.length);
 
@@ -481,7 +481,7 @@ export async function forceAuditReportStep(workflowId: string) {
 
   const lettaClient = createLettaClient();
   // Resolve the agent's actual model handle (cached per process) — TEC-65
-  const model = await getAgentModel(agentId, lettaClient);
+  const model = LETTA_MODEL_HANDLE;
   const conversationId = await findOrCreateConversation(
     lettaClient,
     agentId,

@@ -1,6 +1,6 @@
 import type { Letta } from "@letta-ai/letta-client";
 
-import { logger } from "@playground/shared-types";
+import { LETTA_MODEL_HANDLE, logger } from "@playground/shared-types";
 import matter from "gray-matter";
 import { REDACTION_SLASH_COMMAND } from "./prompts";
 import type { LettaUsage } from "./types";
@@ -94,6 +94,7 @@ ${sanitizedContent}
         content: messageContent,
       },
     ],
+    override_model: LETTA_MODEL_HANDLE,
   });
 
   logger.info(

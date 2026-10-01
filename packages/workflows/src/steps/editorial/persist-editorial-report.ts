@@ -1,10 +1,9 @@
 import {
-  getAgentModel,
   type LettaUsage,
   NoFrontmatterSchema,
   parseAgentResponse,
 } from "@playground/agents";
-import { logger } from "@playground/shared-types";
+import { LETTA_MODEL_HANDLE, logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
 import type { LettaReportType, StepResult } from "../../types";
 import { getSupabaseClient } from "../common/supabase";
@@ -47,9 +46,7 @@ export async function persistEditorialReportStep(
   try {
     const supabase = getSupabaseClient();
 
-    // Resolve the agent's actual model handle (cached per process, falls back
-    // to the LETTA_MODEL_NAME constant if the retrieve fails) — TEC-65
-    const model = await getAgentModel(agentId);
+    const model = LETTA_MODEL_HANDLE;
 
     // Parse editorial response - no frontmatter expected for editorial reports
     const result = parseAgentResponse(
