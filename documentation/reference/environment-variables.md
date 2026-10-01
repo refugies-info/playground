@@ -119,7 +119,7 @@ Environment variables are configuration values that change between environments 
 
 ## Slack Notifications
 
-Notifications Slack envoyées depuis le step de publication (`packages/workflows/src/steps/publication/publish-document.ts`) via des Incoming Webhooks. Fire-and-forget : un échec d'envoi ne casse jamais la publication.
+Notifications Slack envoyées depuis les steps de publication (`packages/workflows/src/steps/publication/publish-document.ts` et `publish-translation.ts`) via des Incoming Webhooks. Fire-and-forget : un échec d'envoi ne casse jamais la publication.
 
 ### `SLACK_WEBHOOK_LOGS_BOMO`
 
@@ -135,7 +135,7 @@ Notifications Slack envoyées depuis le step de publication (`packages/workflows
 - **Type**: String (URL)
 - **Required**: No (notification ignorée + warn si absente)
 - **Example**: `https://hooks.slack.com/services/T000/B000/yyyy`
-- **Description**: Incoming Webhook du channel `#dev`. Reçoit un message à chaque échec de publication (workflow id, auteur, message d'erreur).
+- **Description**: Incoming Webhook du channel `#dev`. Reçoit un message à chaque échec de publication, fiche ou traduction (lien BOMO / id, langue, auteur, message d'erreur).
 - **Where to find**: Slack → App "Incoming Webhooks" → channel `#dev`
 - **Security**: Secret (never expose publicly)
 

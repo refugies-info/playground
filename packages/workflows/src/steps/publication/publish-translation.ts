@@ -6,6 +6,7 @@ import {
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { StepResult } from "../../types";
 import { recordActivity } from "../common/activity-log";
+import { notifyTranslationPublicationError } from "../common/slack";
 import { getSupabaseClient } from "../common/supabase";
 import { getPublisherAdapter } from "./adapters/refugies-info";
 
@@ -88,6 +89,7 @@ export async function publishTranslationStep(
   } = input;
 
   let translationWorkflowId: string | undefined;
+  let translationLanguage: string | undefined;
 
   /**
    * Helper to fail with error record creation
@@ -108,6 +110,16 @@ export async function publishTranslationStep(
         remoteId,
       });
     }
+
+    // Notifie #dev de l'échec (fire-and-forget)
+    await notifyTranslationPublicationError({
+      translationId,
+      errorMessage,
+      workflowId: translationWorkflowId,
+      language: translationLanguage,
+      userEmail,
+    });
+
     return { success: false, error: errorMessage };
   };
 
@@ -129,14 +141,12 @@ export async function publishTranslationStep(
         { translationId, error: translationError },
         "Translation record not found",
       );
-      const error = "Traduction non trouvée";
-      // Cannot create failed record if we don't have the translation record
-      // This is a critical error that should not happen in normal operation
-      return { success: false, error };
+      return failStep(supabase, "Traduction non trouvée");
     }
 
     // Store workflow_id for error handling
     translationWorkflowId = translation.workflow_id;
+    translationLanguage = translation.language;
 
     if (!translation.markdown) {
       return failStep(supabase, "La traduction n'a pas de contenu");
@@ -239,8 +249,16 @@ export async function publishTranslationStep(
       logger.error(insertError, "Error storing translation publication record");
       // This is a weird edge case - the webhook succeeded but we can't store the record
       // We can't create another failed record since the insert just failed
-      // Just return the error
-      return { success: false, error: "Failed to store publication record" };
+      // Just notify and return the error
+      const error = "Failed to store publication record";
+      await notifyTranslationPublicationError({
+        translationId,
+        errorMessage: error,
+        workflowId: translationWorkflowId,
+        language: translationLanguage,
+        userEmail,
+      });
+      return { success: false, error };
     }
 
     // 6. Update translation record status
