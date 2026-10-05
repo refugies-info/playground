@@ -55,3 +55,34 @@ export function buildPublicationUrl(
     return null;
   }
 }
+
+const LEGACY_INTERCARIFOREF_PATTERN =
+  /intercariforef\.org\/formations\/.*formation-(.+)\.html$/;
+
+/**
+ * Intercariforef dropped its legacy `formation-<numero_formation>_<action>.html`
+ * pages (now 404). Rebuilds the new search URL from the legacy link, where the
+ * action number appears without its region prefix (`02_00747097` → `00747097`).
+ * Other links are returned unchanged.
+ *
+ * @example
+ * buildRcoSourceUrl(
+ *   "https://www.intercariforef.org/formations/asl/formation-02_202410265937_00511985.html",
+ *   "carif-oref--02_00511985",
+ * )
+ * // Returns: "https://www.intercariforef.org/outils/recherche-offreinfo/formations/sessions/02_202410265937/02_00511985"
+ */
+export function buildRcoSourceUrl(
+  lienSource: string | undefined,
+  documentId: string | undefined,
+): string | undefined {
+  const legacyKey = lienSource?.match(LEGACY_INTERCARIFOREF_PATTERN)?.[1];
+  const numeroAction = documentId?.replace(/^carif-oref--/, "");
+  if (!legacyKey || !numeroAction) return lienSource;
+
+  const actionSuffix = `_${numeroAction.replace(/^\d+_/, "")}`;
+  if (!legacyKey.endsWith(actionSuffix)) return lienSource;
+
+  const numeroFormation = legacyKey.slice(0, -actionSuffix.length);
+  return `https://www.intercariforef.org/outils/recherche-offreinfo/formations/sessions/${numeroFormation}/${numeroAction}`;
+}
