@@ -24,7 +24,7 @@
     "@playground/rco": "workspace:*",
     "@playground/shared-types": "workspace:*",
     "@playground/supabase": "workspace:*",
-    "@workflow/core": "4.4.0",
+    "@workflow/core": "4.8.9",
     "@workflow/errors": "4.1.4",
     "gray-matter": "^4.0.3"
   },
