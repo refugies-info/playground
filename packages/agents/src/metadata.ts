@@ -1,4 +1,5 @@
 import type { Letta } from "@letta-ai/letta-client";
+import { LETTA_MODEL_HANDLE } from "@playground/shared-types";
 import { METADATA_SLASH_COMMAND } from "./prompts";
 
 /**
@@ -41,6 +42,7 @@ ${sanitizedContent}
         content: messageContent,
       },
     ],
+    override_model: LETTA_MODEL_HANDLE,
   });
 
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
