@@ -16,6 +16,7 @@ import {
 import { Button } from "@playground/ui/primitives";
 import { useCallback, useEffect, useState } from "react";
 import { useSidebar } from "@/contexts/SidebarContext";
+import { buildRcoSourceUrl } from "@/lib/url-builder";
 import { useDocument } from "../DocumentContext";
 import { useContentContext } from "./ContentContext";
 import { MarkdownViewer } from "./MarkdownViewer";
@@ -42,7 +43,10 @@ export function SourcePanel() {
     if (isSourceOpen) setSidebarCollapsed(true);
   }, [isSourceOpen, setSidebarCollapsed]);
 
-  const lienSource = document?.metadata?.lien_source as string | undefined;
+  const lienSource = buildRcoSourceUrl(
+    document?.metadata?.lien_source as string | undefined,
+    document?.metadata?.id as string | undefined,
+  );
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleClose = useCallback(() => {
