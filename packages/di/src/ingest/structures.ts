@@ -16,7 +16,7 @@ export interface DiStructuresIngestionResult {
 }
 
 /**
- * Ingest carif-oref structures from Data Inclusion API into the di_structures table
+ * Ingest carif-oref structures from Data Inclusion API into the structures table
  *
  * @param supabase - Supabase client with admin privileges
  * @param options - Ingestion options (pageSize, limit, onProgress callback)
@@ -36,7 +36,7 @@ export async function ingestCarifOrefStructures(
   const result = await ingestCarifOrefItems<StructureSummary>(
     supabase,
     (params) => diClient.getStructures(params),
-    "di_structures",
+    "structures",
     "structures",
     options,
   );

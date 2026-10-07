@@ -4,8 +4,8 @@
  * Orchestrates the full DI ingestion pipeline.
  *
  * Flow:
- *   [1] ingestStructuresStep   → di_structures
- *   [2] ingestServicesStep     → di_services
+ *   [1] ingestStructuresStep   → structures
+ *   [2] ingestServicesStep     → services
  *   [3] processRecordsStep     → ingestion_records (only if new data)
  *   [4] fanOutDiRecordsStep    → N × diSingleRecordWorkflow (fan-out)
  */
