@@ -1,0 +1,31 @@
+name: Notify production deploy
+
+# Vercel deploys via its Git integration and reports back through GitHub
+# deployment statuses; this workflow only relays the final state to Slack.
+on: deployment_status
+
+permissions: {}
+
+jobs:
+  notify-slack:
+    if: >-
+      startsWith(github.event.deployment_status.environment, 'Production') &&
+      endsWith(github.event.deployment_status.environment, 'playground-frontend') &&
+      contains(fromJSON('["success", "failure", "error"]'), github.event.deployment_status.state)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack message
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          STATE: ${{ github.event.deployment_status.state }}
+          LOGS_URL: ${{ github.event.deployment_status.target_url }}
+          COMMIT_SHA: ${{ github.event.deployment.sha }}
+          COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.event.deployment.sha }}
+        run: |
+          if [ "$STATE" = "success" ]; then
+            TEXT=":rocket: Mise en production terminée"
+          else
+            TEXT=":rotating_light: Échec de la mise en production : <${LOGS_URL}|voir les logs>"
+          fi
+          TEXT="${TEXT} — commit <${COMMIT_URL}|${COMMIT_SHA:0:7}>"
+          jq -n --arg text "$TEXT" '{text: $text}' | curl -fsS -X POST -H 'Content-Type: application/json' --data @- "$SLACK_WEBHOOK_URL"
