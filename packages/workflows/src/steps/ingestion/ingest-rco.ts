@@ -18,6 +18,7 @@ import { logger } from "@playground/shared-types";
 import {
   completeIngestionRun,
   createIngestionRun,
+  saveIngestionCheckpoint,
 } from "@playground/supabase/ingestion-runs";
 import { FatalError } from "@workflow/errors";
 import { getSupabaseClient } from "./utils";
@@ -41,6 +42,7 @@ const addBatchResult = (
   ingestionRecordsCreated:
     total.ingestionRecordsCreated + batch.ingestionRecordsCreated,
   errors: [...total.errors, ...batch.errors],
+  outcomes: [...total.outcomes, ...batch.outcomes],
 });
 
 const toRunStats = (totals: RcoBatchResult) => ({
@@ -83,9 +85,14 @@ export async function ingestRcoStep(runId: string): Promise<RcoBatchResult> {
       runId,
     );
     totals = addBatchResult(totals, batch);
-    logger.info({ runId, ...batch }, "✔ RCO batch ingested");
+    logger.info(
+      { runId, processed: batch.processed, changes: batch.changes },
+      "✔ RCO batch ingested",
+    );
   }
-  return totals;
+  // Read by the latest run card; outcomes stay out of the workflow event log.
+  await saveIngestionCheckpoint(supabase, runId, { totals });
+  return { ...totals, outcomes: [] };
 }
 
 export async function completeRcoRunStep(
