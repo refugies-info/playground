@@ -322,10 +322,7 @@ export function parseAgentResponse(
  *
  * Since 2026-10 the model narrates its steps ("I'll load the translation
  * skill first…") and wraps the fiche in a ```markdown fence, sometimes
- * followed by review notes; stored as-is, the editor showed all of it. Fiches
- * never contain code fences, so when fence lines are present only the fiche
- * they delimit is kept: between the first and last fence, or before a lone
- * closing fence. Otherwise the response is returned unchanged.
+ * followed by review notes;
  */
 export function extractTranslatedMarkdown(response: string): string {
   const lines = response.split("\n");

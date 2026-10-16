@@ -87,8 +87,6 @@ export async function persistMetadataReportStep(
       "Metadata report stored successfully",
     );
 
-    // Same guard as forceMetadataReportStep: linking an `error` report would
-    // shadow the previous complete one and blank the fiche's metadata.
     if (result.status !== "complete") {
       return {
         success: false,
