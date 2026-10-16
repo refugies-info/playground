@@ -54,6 +54,144 @@ function ensureClosingFrontmatter(content: string): string {
   return content;
 }
 
+/** Child keys of each nested node; `null` marks a scalar or a scalar list. */
+type IndentSpec = { [key: string]: IndentSpec | null };
+
+const POI_SPEC: IndentSpec = {
+  title: null,
+  address: null,
+  city: null,
+  lat: null,
+  lng: null,
+  email: null,
+  phone: null,
+  description: null,
+};
+
+const FLAT_FRONTMATTER_SPEC: IndentSpec = {
+  metadata_ri: {
+    titreMarque: null,
+    mainSponsor: null,
+    logo: null,
+    abstract: null,
+    theme: null,
+    secondaryThemes: null,
+    needs: null,
+    publicStatus: null,
+    public: null,
+    frenchLevel: null,
+    age: { type: null, ages: null },
+    price: { values: null, details: null },
+    commitment: { amountDetails: null, hours: null, timeUnit: null },
+    frequency: {
+      amountDetails: null,
+      hours: null,
+      timeUnit: null,
+      frequencyUnit: null,
+    },
+    periode: {
+      modalitesEntreesSorties: null,
+      items: { startDate: null, endDate: null },
+    },
+    timeSlots: null,
+    location: null,
+    conditions: null,
+    map: POI_SPEC,
+  },
+  provenance: {
+    key: null,
+    label: null,
+    value: null,
+    status: null,
+    source: { field: null, rawValue: null },
+  },
+};
+
+/**
+ * Rebuilds indentation of a metadata frontmatter emitted fully flat.
+ *
+ * Since 2026-10, the model intermittently drops all YAML indentation
+ * (`metadata_ri:\ntitreMarque: …`), which leaves `metadata_ri` empty or yields
+ * duplicated keys. The nesting is recoverable because the key layout of
+ * `metadata_ri` / `provenance` is known: each key is attached to the nearest
+ * open node that declares it. Throws on any unknown key so a guess never
+ * silently becomes data.
+ */
+export function reindentFlatYaml(yaml: string): string {
+  // ponytail: key layout duplicated from MetadataRiSchema, update both together
+  type Frame = { spec: IndentSpec; indent: number; isListItem: boolean };
+  const stack: Frame[] = [
+    { spec: FLAT_FRONTMATTER_SPEC, indent: 0, isListItem: false },
+  ];
+  const top = () => stack[stack.length - 1];
+  const out: string[] = [];
+
+  for (const rawLine of yaml.split(/\r?\n/)) {
+    // Flat outputs sometimes carry stray markdown-style spacing (`-   x`,
+    // `    key:`): leftover indentation is noise, so normalise it away.
+    const line = rawLine.trimStart().replace(/^-\s+/, "- ");
+    if (line === "") {
+      out.push(line);
+      continue;
+    }
+
+    const listItemKey = line.match(/^- ([A-Za-z_][\w-]*):(?: (.*))?$/);
+    if (listItemKey) {
+      const [, key, value] = listItemKey;
+      while (stack.length > 1 && (top().isListItem || !(key in top().spec)))
+        stack.pop();
+      const list = top();
+      if (!(key in list.spec)) throw new Error(`Unknown list key: ${key}`);
+      out.push(`${" ".repeat(list.indent)}${line}`);
+      stack.push({
+        spec: list.spec,
+        indent: list.indent + 2,
+        isListItem: true,
+      });
+      const child = list.spec[key];
+      if (!value && child)
+        stack.push({ spec: child, indent: list.indent + 4, isListItem: false });
+      continue;
+    }
+
+    if (line.startsWith("- ")) {
+      out.push(`${" ".repeat(top().indent)}${line}`);
+      continue;
+    }
+
+    const mappingKey = line.match(/^([A-Za-z_][\w-]*):(?: (.*))?$/);
+    if (!mappingKey) throw new Error(`Unexpected line: ${line}`);
+    const [, key, value] = mappingKey;
+    while (stack.length > 1 && !(key in top().spec)) stack.pop();
+    const frame = top();
+    if (!(key in frame.spec)) throw new Error(`Unknown key: ${key}`);
+    out.push(`${" ".repeat(frame.indent)}${line}`);
+    const child = frame.spec[key];
+    if (!value && child)
+      stack.push({ spec: child, indent: frame.indent + 2, isListItem: false });
+  }
+
+  return out.join("\n");
+}
+
+/**
+ * Re-indents the frontmatter of `content` (starting with `---`) when it is
+ * flat; returns `content` unchanged otherwise or if the repair fails.
+ */
+function repairFlatFrontmatter(content: string): string {
+  const frontmatter = content.match(
+    /^(---\r?\n)([\s\S]*?)(\r?\n---[ \t]*(?:\r?\n|$))/,
+  );
+  if (!frontmatter) return content;
+  const [whole, open, yaml, close] = frontmatter;
+  if (!/^metadata_ri:[ \t]*\r?\n[^\s-]/m.test(yaml)) return content;
+  try {
+    return `${open}${reindentFlatYaml(yaml)}${close}${content.slice(whole.length)}`;
+  } catch {
+    return content;
+  }
+}
+
 /**
  * Extracts valid markdown content by locating the start of the frontmatter.
  */
@@ -62,7 +200,9 @@ function extractValidContent(content: string): string {
   // (i.e. it finishes a line).
   const match = content.match(/---\r?\n/);
   if (match && match.index !== undefined) {
-    return ensureClosingFrontmatter(content.slice(match.index));
+    return repairFlatFrontmatter(
+      ensureClosingFrontmatter(content.slice(match.index)),
+    );
   }
   return content;
 }

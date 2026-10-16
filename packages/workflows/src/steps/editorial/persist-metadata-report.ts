@@ -87,6 +87,16 @@ export async function persistMetadataReportStep(
       "Metadata report stored successfully",
     );
 
+    // Same guard as forceMetadataReportStep: linking an `error` report would
+    // shadow the previous complete one and blank the fiche's metadata.
+    if (result.status !== "complete") {
+      return {
+        success: false,
+        error: `Metadata report not complete (status: ${result.status})`,
+        data: { reportId: report.id, linked: false },
+      };
+    }
+
     // 2. Get the editorial_record_id from the workflow
     const { data: workflow, error: workflowError } = await supabase
       .from("workflows")

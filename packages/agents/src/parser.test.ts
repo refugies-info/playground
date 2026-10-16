@@ -241,4 +241,165 @@ some_other_key: "no metadata_ri"
 
     expect(result.status).toBe("error");
   });
+
+  // Real shape from prod (claude-sonnet-5-5, 2026-10-13): all indentation dropped.
+  const flatResponse = `Le contenu n'est pas affiché, je le récupère via grep.---
+metadata_ri:
+titreMarque: ATELIER DES ARTISTES EN EXIL
+logo: null
+needs:
+- 613721a409c5190dfa70d057
+- 613721a409c5190dfa70d05e
+price:
+values:
+- 0
+commitment:
+amountDetails: exactly
+hours:
+- 93
+timeUnit: hours
+frequency:
+amountDetails: exactly
+hours: 6
+frequencyUnit: week
+periode:
+modalitesEntreesSorties: 1
+items:
+- startDate: '2026-09-07T00:00:00.000Z'
+endDate: '2027-06-06T00:00:00.000Z'
+timeSlots: null
+location:
+- 75 - Paris
+map:
+address: 106 Rue Brancion 75015
+lat: 48.8307988
+provenance:
+- key: titreMarque
+label: Titre marque
+value: ""
+status: valid
+source:
+- field: structure.nom
+rawValue: ATELIER DES ARTISTES EN EXIL
+- field: description
+rawValue: "Programme hebdomadaire (6h)"
+- key: price
+label: Prix
+status: valid
+source:
+- field: extra.action.frais-restants
+rawValue: "null"
+---
+
+## Métadonnées mappées`;
+
+  it("should rebuild the nesting of a fully flat metadata frontmatter", () => {
+    const result = parseAgentResponse(
+      flatResponse,
+      agentId,
+      MetadataMetadataSchema,
+    );
+
+    expect(result.status).toBe("complete");
+    expect(result.metadata.metadata_ri).toEqual({
+      titreMarque: "ATELIER DES ARTISTES EN EXIL",
+      logo: null,
+      needs: ["613721a409c5190dfa70d057", "613721a409c5190dfa70d05e"],
+      price: { values: [0] },
+      commitment: { amountDetails: "exactly", hours: [93], timeUnit: "hours" },
+      frequency: { amountDetails: "exactly", hours: 6, frequencyUnit: "week" },
+      periode: {
+        modalitesEntreesSorties: 1,
+        items: [
+          {
+            startDate: "2026-09-07T00:00:00.000Z",
+            endDate: "2027-06-06T00:00:00.000Z",
+          },
+        ],
+      },
+      timeSlots: null,
+      location: ["75 - Paris"],
+      map: { address: "106 Rue Brancion 75015", lat: 48.8307988 },
+    });
+    expect(result.metadata.provenance).toEqual([
+      {
+        key: "titreMarque",
+        label: "Titre marque",
+        value: "",
+        status: "valid",
+        source: [
+          { field: "structure.nom", rawValue: "ATELIER DES ARTISTES EN EXIL" },
+          { field: "description", rawValue: "Programme hebdomadaire (6h)" },
+        ],
+      },
+      {
+        key: "price",
+        label: "Prix",
+        status: "valid",
+        source: [{ field: "extra.action.frais-restants", rawValue: "null" }],
+      },
+    ]);
+    expect(result.content).toContain("## Métadonnées mappées");
+  });
+
+  it("should rebuild a flat frontmatter carrying stray markdown spacing", () => {
+    const rawResponse = `---
+metadata_ri:
+titreMarque: Commune de Evry-Courcouronnes
+needs:
+
+-   613721a409c5190dfa70d057
+    publicStatus:
+-   asile
+    price:
+    values:
+    -   0
+        commitment: null
+        periode:
+        items:
+    -   startDate: '2026-09-28T00:00:00.000Z'
+        endDate: '2027-06-11T00:00:00.000Z'
+provenance:
+-   key: titreMarque
+    source:
+    -   field: structure.nom
+---
+# Report`;
+
+    const result = parseAgentResponse(
+      rawResponse,
+      agentId,
+      MetadataMetadataSchema,
+    );
+
+    expect(result.status).toBe("complete");
+    expect(result.metadata.metadata_ri).toEqual({
+      titreMarque: "Commune de Evry-Courcouronnes",
+      needs: ["613721a409c5190dfa70d057"],
+      publicStatus: ["asile"],
+      price: { values: [0] },
+      commitment: null,
+      periode: {
+        items: [
+          {
+            startDate: "2026-09-28T00:00:00.000Z",
+            endDate: "2027-06-11T00:00:00.000Z",
+          },
+        ],
+      },
+    });
+    expect(result.metadata.provenance).toEqual([
+      { key: "titreMarque", source: [{ field: "structure.nom" }] },
+    ]);
+  });
+
+  it("should keep the error when a flat frontmatter has an unknown key", () => {
+    const result = parseAgentResponse(
+      flatResponse.replace("logo: null", "inventedKey: x"),
+      agentId,
+      MetadataMetadataSchema,
+    );
+
+    expect(result.status).toBe("error");
+  });
 });
