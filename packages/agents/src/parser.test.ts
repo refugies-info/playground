@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseAgentResponse } from "./parser";
+import { extractTranslatedMarkdown, parseAgentResponse } from "./parser";
 import { IngestionMetadataSchema, MetadataMetadataSchema } from "./schemas";
 
 describe("parseAgentResponse", () => {
@@ -401,5 +401,42 @@ provenance:
     );
 
     expect(result.status).toBe("error");
+  });
+});
+
+describe("extractTranslatedMarkdown", () => {
+  it("should drop narration and unwrap the markdown fence (prod, 2026-10-06)", () => {
+    const response = `I'll load the translation skill first, since it defines the pipeline and rules.The skill tool isn't available here, so I'll translate directly.
+
+\`\`\`markdown
+# Reach level A1 in Paris to find a job
+
+- French lessons
+
+:::good-to-know
+The training is open to people who:
+:::
+\`\`\``;
+
+    expect(
+      extractTranslatedMarkdown(response),
+    ).toBe(`# Reach level A1 in Paris to find a job
+
+- French lessons
+
+:::good-to-know
+The training is open to people who:
+:::`);
+  });
+
+  it("should drop review notes after a lone closing fence", () => {
+    const response =
+      "# Title\n\nBody\n```\n\nPoints à signaler avant validation :\n\n1. note";
+    expect(extractTranslatedMarkdown(response)).toBe("# Title\n\nBody");
+  });
+
+  it("should return an unfenced response unchanged", () => {
+    const response = "# Title\n\nBody";
+    expect(extractTranslatedMarkdown(response)).toBe(response);
   });
 });

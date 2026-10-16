@@ -316,3 +316,31 @@ export function parseAgentResponse(
     };
   }
 }
+
+/**
+ * Returns the fiche from a translation agent response.
+ *
+ * Since 2026-10 the model narrates its steps ("I'll load the translation
+ * skill first…") and wraps the fiche in a ```markdown fence, sometimes
+ * followed by review notes; stored as-is, the editor showed all of it. Fiches
+ * never contain code fences, so when fence lines are present only the fiche
+ * they delimit is kept: between the first and last fence, or before a lone
+ * closing fence. Otherwise the response is returned unchanged.
+ */
+export function extractTranslatedMarkdown(response: string): string {
+  const lines = response.split("\n");
+  const fences = lines.flatMap((line, index) =>
+    /^```(?:markdown|md)?[ \t]*\r?$/.test(line) ? [index] : [],
+  );
+  if (fences.length === 0) return response;
+  const [first] = fences;
+  const last = fences[fences.length - 1];
+  if (fences.length === 1) {
+    if (lines[first].trim() !== "```" || first === 0) return response;
+    return lines.slice(0, first).join("\n").trim();
+  }
+  return lines
+    .slice(first + 1, last)
+    .join("\n")
+    .trim();
+}

@@ -1,5 +1,6 @@
 import {
   createLettaClient,
+  extractTranslatedMarkdown,
   findOrCreateConversation,
   sendMessageToConversation,
   TRANSLATE_SLASH_COMMAND,
@@ -184,7 +185,7 @@ ${sanitizedContent}
         conversationId,
         contentToTranslate,
       );
-      translatedContent = result.content;
+      translatedContent = extractTranslatedMarkdown(result.content);
     } catch (agentError) {
       logger.error(
         { agentError, agentId, language, conversationId },
