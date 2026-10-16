@@ -88,6 +88,8 @@ export interface GetDocumentsParams {
   searchInContent?: boolean;
   /** Filter by entry type: "0" (dates fixes) or "1" (a tout moment) */
   modalitesEntreesSorties?: string | null;
+  /** Filter by source of the active ingestion version: "DI" or "RCO" */
+  origin?: string | null;
   /** Include large markdown/json fields. Used by /workflow preview drawer only. */
   includePreviewFields?: boolean;
 }
@@ -110,6 +112,7 @@ export async function getDocuments(params: GetDocumentsParams) {
     searchField,
     searchInContent = false,
     modalitesEntreesSorties,
+    origin,
     includePreviewFields = false,
   } = params;
 
@@ -199,6 +202,10 @@ export async function getDocuments(params: GetDocumentsParams) {
   // Filter by entry type (modalités d'entrées/sorties)
   if (modalitesEntreesSorties) {
     query = query.eq("modalites_entrees_sorties", modalitesEntreesSorties);
+  }
+
+  if (origin === "DI" || origin === "RCO") {
+    query = query.eq("origin", origin);
   }
 
   // Multi-column text search (title, external_id, structure_name, commune).

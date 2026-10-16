@@ -49,6 +49,7 @@ export default async function WorkflowPage(props: PageProps) {
   const modalitesEntreesSorties = getQueryParam(
     searchParams.modalitesEntreesSorties,
   );
+  const origin = getQueryParam(searchParams.origin);
 
   // Parse and validate sort parameters (server-side sort).
   const sortBy = parseDocumentSortField(
@@ -78,6 +79,7 @@ export default async function WorkflowPage(props: PageProps) {
         dateFrom,
         dateTo,
         modalitesEntreesSorties,
+        origin,
         includePreviewFields: true,
       }),
       getLatestIngestionRun(ingestionSource),
@@ -100,6 +102,7 @@ export default async function WorkflowPage(props: PageProps) {
         dateFrom,
         dateTo,
         modalitesEntreesSorties,
+        origin,
       }}
       ingestionSource={ingestionSource}
       latestIngestionRun={latestIngestionRun}
