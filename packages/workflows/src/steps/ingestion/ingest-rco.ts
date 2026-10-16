@@ -41,7 +41,6 @@ export const EMPTY_RCO_TOTALS: RcoBatchResult = {
   structuresWritten: 0,
   ingestionRecordsCreated: 0,
   errors: [],
-  outcomes: [],
 };
 
 const toRunStats = (totals: RcoBatchResult) => ({

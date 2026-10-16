@@ -41,7 +41,6 @@ const addBatchResult = (
   ingestionRecordsCreated:
     total.ingestionRecordsCreated + batch.ingestionRecordsCreated,
   errors: [...total.errors, ...batch.errors],
-  outcomes: [...total.outcomes, ...batch.outcomes],
 });
 
 export async function rcoIngestionWorkflow(options: RcoRunOptions) {

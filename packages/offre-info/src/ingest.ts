@@ -12,7 +12,6 @@ import {
 } from "./change";
 import { isRcoAuthError, isRcoRateLimitError, type RcoClient } from "./client";
 import { toOriginId } from "./config";
-import { compareWithDiVersion, type DiComparisonRow } from "./di-comparison";
 import {
   buildActionDocument,
   pickReferenceSession,
@@ -36,8 +35,6 @@ type PlannedAction = {
   hash: string;
   structure: RcoStructureDocument;
   change: RcoChange;
-  changedFields: string[];
-  diComparison?: DiComparisonRow[];
 };
 
 export type RcoBatchResult = {
@@ -49,33 +46,10 @@ export type RcoBatchResult = {
   structuresWritten: number;
   ingestionRecordsCreated: number;
   errors: Array<{ numeroAction: string; error: string }>;
-  // One entry per processed action, so the UI can link each one to its fiche.
-  outcomes: RcoActionOutcome[];
-};
-
-export type RcoActionOutcome = {
-  numeroAction: string;
-  change: RcoChange | "missing" | "error";
-  // Top-level fields that differ from the previous RCO version.
-  changedFields?: string[];
-  // Baseline only: common fields of the DI version next to the RCO values.
-  diComparison?: DiComparisonRow[];
 };
 
 // A DI previous version has another shape: diffing it would list every field.
 const DIFFABLE_CHANGES = new Set<RcoChange>(["sessions_only", "content"]);
-
-const toOutcome = ({
-  numeroAction,
-  change,
-  changedFields,
-  diComparison,
-}: PlannedAction): RcoActionOutcome => ({
-  numeroAction,
-  change,
-  changedFields,
-  diComparison,
-});
 
 const errorMessage = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
@@ -250,10 +224,8 @@ async function fetchSessionsByAction(
   for (const numeroAction of numeroActions) {
     try {
       const sessions = await fetchActionSessions(client, numeroAction);
-      if (sessions.length === 0) {
-        result.missing++;
-        result.outcomes.push({ numeroAction, change: "missing" });
-      } else fetched.push({ numeroAction, sessions });
+      if (sessions.length === 0) result.missing++;
+      else fetched.push({ numeroAction, sessions });
     } catch (error) {
       if (isRcoAuthError(error)) throw error;
       if (isRcoRateLimitError(error)) {
@@ -262,7 +234,6 @@ async function fetchSessionsByAction(
         break;
       }
       result.errors.push({ numeroAction, error: errorMessage(error) });
-      result.outcomes.push({ numeroAction, change: "error" });
     }
     result.processed++;
   }
@@ -290,7 +261,6 @@ export async function ingestRcoActions(
     structuresWritten: 0,
     ingestionRecordsCreated: 0,
     errors: [],
-    outcomes: [],
   };
 
   const fetched = await fetchSessionsByAction(client, numeroActions, result);
@@ -322,19 +292,19 @@ export async function ingestRcoActions(
         numeroAction,
         error: "organisme_responsable without siret",
       });
-      result.outcomes.push({ numeroAction, change: "error" });
       continue;
     }
 
     const document = buildActionDocument(sessions, structureId);
     const change = classifyChange(previous, document);
     result.changes[change]++;
-    const changedFields = DIFFABLE_CHANGES.has(change)
-      ? changedFieldPaths(previous?.data, document)
-      : [];
-    if (changedFields.length > 0) {
+    if (DIFFABLE_CHANGES.has(change)) {
       logger.info(
-        { numeroAction, change, changedFields },
+        {
+          numeroAction,
+          change,
+          changedFields: changedFieldPaths(previous?.data, document),
+        },
         "RCO action changed",
       );
     }
@@ -344,11 +314,6 @@ export async function ingestRcoActions(
       hash: computeContentHash(document),
       structure: buildStructureDocument(organisme, structureId),
       change,
-      changedFields,
-      diComparison:
-        change === "baseline"
-          ? compareWithDiVersion(previous?.data, document)
-          : undefined,
     });
   }
 
@@ -357,7 +322,6 @@ export async function ingestRcoActions(
       { runId, changes: result.changes },
       "RCO dry run: nothing written",
     );
-    for (const action of planned) result.outcomes.push(toOutcome(action));
     return result;
   }
 
@@ -370,18 +334,13 @@ export async function ingestRcoActions(
 
   for (const action of planned) {
     const { numeroAction, change } = action;
-    if (change === "unchanged") {
-      result.outcomes.push(toOutcome(action));
-      continue;
-    }
+    if (change === "unchanged") continue;
     try {
       await writeServiceVersion(supabase, action, uuidByOriginId, runId);
       if (createsIngestionRecord(change, action.document))
         result.ingestionRecordsCreated++;
-      result.outcomes.push(toOutcome(action));
     } catch (error) {
       result.errors.push({ numeroAction, error: errorMessage(error) });
-      result.outcomes.push({ numeroAction, change: "error" });
     }
   }
 

@@ -7,7 +7,6 @@ import {
 import { getIngestionSource } from "@/lib/ingestion-source";
 import { getQueryParam } from "@/lib/search-params";
 import { getDocuments } from "@/services/documents";
-import { getLatestIngestionRun } from "@/services/ingestion-runs";
 import { WorkflowClient } from "./workflow-client";
 
 interface PageProps {
@@ -63,27 +62,27 @@ export default async function WorkflowPage(props: PageProps) {
       : "asc";
 
   const ingestionSource = getIngestionSource();
-  const [{ data: inProgressDocuments, total, totalPages }, latestIngestionRun] =
-    await Promise.all([
-      getDocuments({
-        page,
-        pageSize,
-        complianceStatus: ["pending", "error", null], // Include pending, error, and NULL (unevaluated)
-        sortBy,
-        sortOrder,
-        search,
-        searchField,
-        searchInContent: true, // texte étendu : titre, structure, commune, id + markdown
-        dateFilterType,
-        dateFilterCondition,
-        dateFrom,
-        dateTo,
-        modalitesEntreesSorties,
-        origin,
-        includePreviewFields: true,
-      }),
-      getLatestIngestionRun(ingestionSource),
-    ]);
+  const {
+    data: inProgressDocuments,
+    total,
+    totalPages,
+  } = await getDocuments({
+    page,
+    pageSize,
+    complianceStatus: ["pending", "error", null], // Include pending, error, and NULL (unevaluated)
+    sortBy,
+    sortOrder,
+    search,
+    searchField,
+    searchInContent: true, // texte étendu : titre, structure, commune, id + markdown
+    dateFilterType,
+    dateFilterCondition,
+    dateFrom,
+    dateTo,
+    modalitesEntreesSorties,
+    origin,
+    includePreviewFields: true,
+  });
 
   return (
     <WorkflowClient
@@ -105,7 +104,6 @@ export default async function WorkflowPage(props: PageProps) {
         origin,
       }}
       ingestionSource={ingestionSource}
-      latestIngestionRun={latestIngestionRun}
     />
   );
 }
