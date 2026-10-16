@@ -4,6 +4,7 @@ import {
   changedFieldPaths,
   changedTopLevelFields,
   classifyChange,
+  createsIngestionRecord,
 } from "../src/change";
 import { buildActionDocument } from "../src/document";
 import { normalizeSession } from "../src/normalize";
@@ -82,5 +83,23 @@ describe("changedFieldPaths", () => {
     expect(
       changedFieldPaths(build(), build({ nombre_heures_total: 200 })),
     ).toEqual(["nombre_heures_total"]);
+  });
+});
+
+describe("createsIngestionRecord", () => {
+  const conventionnee = { conventionnement: true };
+
+  it("creates a record for new, baseline and content changes only", () => {
+    expect(createsIngestionRecord("new", conventionnee)).toBe(true);
+    expect(createsIngestionRecord("baseline", conventionnee)).toBe(true);
+    expect(createsIngestionRecord("content", conventionnee)).toBe(true);
+    expect(createsIngestionRecord("sessions_only", conventionnee)).toBe(false);
+    expect(createsIngestionRecord("unchanged", conventionnee)).toBe(false);
+  });
+
+  it("never creates a record for a non conventionnée action", () => {
+    expect(createsIngestionRecord("new", { conventionnement: false })).toBe(
+      false,
+    );
   });
 });

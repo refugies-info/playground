@@ -47,6 +47,7 @@ interface WorkflowFilters extends Record<string, string> {
   dateFrom: string;
   dateTo: string;
   modalitesEntreesSorties: string;
+  origin: string;
 }
 
 interface WorkflowClientProps {
@@ -564,6 +565,16 @@ export function WorkflowClient(props: WorkflowClientProps) {
             }
           />
 
+          <BoutonFiltre
+            label="Origine"
+            options={[
+              { label: "DI", value: "DI" },
+              { label: "RCO", value: "RCO" },
+            ]}
+            value={filters.origin}
+            onChange={(value) => handleFilterChange("origin", value)}
+          />
+
           {/* Bouton aligné à droite dans le même conteneur que la recherche */}
           <Button
             className="ml-auto"
@@ -573,7 +584,9 @@ export function WorkflowClient(props: WorkflowClientProps) {
           >
             {isLoading
               ? "En cours…"
-              : `Lancer l'import ${props.ingestionSource.toUpperCase()}`}
+              : props.ingestionSource === "rco"
+                ? "Charger 50 fiches RCO"
+                : "Lancer l'import DI"}
           </Button>
         </div>
 

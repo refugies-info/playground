@@ -16,20 +16,10 @@ export const RcoRunOptionsSchema = z.object({
 
 export type RcoRunOptions = z.infer<typeof RcoRunOptionsSchema>;
 
-// Options used by the "Lancer l'import RCO" button. Edit here to test a
-// given page or action; switch to { dryRun: false, maxActions: "all",
-// pageSize: 1000 } only once small runs are validated.
+// Options used by the import button: each click loads the next 50 actions
+// not stored as RCO yet. A DI fiche found there gets an RCO version.
 export const RCO_RUN_OPTIONS: z.input<typeof RcoRunOptionsSchema> = {
-  dryRun: true,
-  maxActions: 20,
-  pageSize: 100,
-  numeroActions: [
-    "01_GE1912267",
-    "02_00375614",
-    "14_SE_0001694172",
-    "14_SE_0001856985",
-    "01_GE2051036",
-    "02_00511953",
-    "20_758839S",
-  ],
+  dryRun: false,
+  maxActions: 50,
+  pageSize: RCO_SEARCH_PAGE_LIMIT,
 };

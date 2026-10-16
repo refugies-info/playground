@@ -10,6 +10,7 @@ import {
   ingestRcoActions,
   isRcoAuthError,
   isRcoRateLimitError,
+  pickActionsNotYetLoaded,
   type RcoBatchResult,
   type RcoRunOptions,
   searchActionNumbers,
@@ -86,11 +87,13 @@ async function resumeRun(
 async function searchActions(options: RcoRunOptions): Promise<string[]> {
   if (options.numeroActions) return options.numeroActions;
   try {
-    return await searchActionNumbers(getRcoClientFromEnv(), {
+    const found = await searchActionNumbers(getRcoClientFromEnv(), {
       page: options.searchPage,
       pageSize: options.pageSize,
-      maxActions: options.maxActions === "all" ? undefined : options.maxActions,
     });
+    return options.maxActions === "all"
+      ? found
+      : pickActionsNotYetLoaded(getSupabaseClient(), found, options.maxActions);
   } catch (error) {
     if (isRcoRateLimitError(error)) {
       throw new FatalError("RCO rate limit reached during search, retry later");

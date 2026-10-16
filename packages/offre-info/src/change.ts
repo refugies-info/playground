@@ -40,8 +40,15 @@ export function classifyChange(
     : "content";
 }
 
-export const createsIngestionRecord = (change: RcoChange): boolean =>
-  change === "new" || change === "content";
+// Baseline included: the first RCO version replaces the DI fiche in the
+// import tab, even when the content is equivalent. Like the DI import, only
+// conventionnées actions reach the import tab; the others are stored only.
+export const createsIngestionRecord = (
+  change: RcoChange,
+  document: Pick<RcoActionDocument, "conventionnement">,
+): boolean =>
+  document.conventionnement === true &&
+  (change === "new" || change === "baseline" || change === "content");
 
 export function changedTopLevelFields(
   previous: unknown,

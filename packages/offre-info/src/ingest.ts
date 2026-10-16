@@ -115,6 +115,32 @@ async function fetchLatestServices(
   return latestByOriginId;
 }
 
+const PENDING_LOOKUP_CHUNK = 200;
+
+// Actions never stored as RCO yet, in search order: each click loads the next ones.
+export async function pickActionsNotYetLoaded(
+  supabase: Supabase,
+  numeroActions: string[],
+  maxActions: number,
+): Promise<string[]> {
+  const picked: string[] = [];
+  for (
+    let start = 0;
+    start < numeroActions.length && picked.length < maxActions;
+    start += PENDING_LOOKUP_CHUNK
+  ) {
+    const chunk = numeroActions.slice(start, start + PENDING_LOOKUP_CHUNK);
+    const latest = await fetchLatestServices(supabase, chunk.map(toOriginId));
+    picked.push(
+      ...chunk.filter(
+        (numeroAction) =>
+          latest.get(toOriginId(numeroAction))?.origin !== "RCO",
+      ),
+    );
+  }
+  return picked.slice(0, maxActions);
+}
+
 async function fetchStructureIdsBySiret(
   supabase: Supabase,
   sirets: string[],
@@ -195,7 +221,7 @@ async function writeServiceVersion(
   if (error || !service)
     throw new Error(`services insert failed: ${error?.message}`);
 
-  if (!createsIngestionRecord(action.change)) return;
+  if (!createsIngestionRecord(action.change, action.document)) return;
 
   const { error: recordError } = await supabase
     .from("ingestion_records")
@@ -350,7 +376,8 @@ export async function ingestRcoActions(
     }
     try {
       await writeServiceVersion(supabase, action, uuidByOriginId, runId);
-      if (createsIngestionRecord(change)) result.ingestionRecordsCreated++;
+      if (createsIngestionRecord(change, action.document))
+        result.ingestionRecordsCreated++;
       result.outcomes.push(toOutcome(action));
     } catch (error) {
       result.errors.push({ numeroAction, error: errorMessage(error) });
