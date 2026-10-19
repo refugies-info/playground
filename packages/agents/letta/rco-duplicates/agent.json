@@ -1,0 +1,5 @@
+{
+  "name": "rco-duplicates",
+  "model": "letta/letta-free",
+  "envVar": "RCO_DUPLICATES_AGENT_ID"
+}
