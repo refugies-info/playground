@@ -46,6 +46,8 @@ export const RCO_CERTIFINFO_CODES = [
 
 export const RCO_SEARCH_PAGE_LIMIT = 1000;
 
+export const RCO_CONVENTIONNEMENT = true;
+
 // Half of the documented 10 req/s quota: we are a guest on their API.
 export const RCO_DEFAULT_MAX_REQUESTS_PER_SECOND = 5;
 

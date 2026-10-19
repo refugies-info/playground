@@ -3,7 +3,10 @@ import {
   RCO_DEFAULT_MAX_REQUESTS_PER_SECOND,
 } from "./config";
 
-export type RcoQueryParams = Record<string, string | number | undefined>;
+export type RcoQueryParams = Record<
+  string,
+  string | number | boolean | undefined
+>;
 
 export type RcoClient = {
   get: (path: string, params?: RcoQueryParams) => Promise<unknown | null>;
