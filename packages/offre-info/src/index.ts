@@ -1,4 +1,7 @@
 export * from "./action";
+export * from "./arbitrage/compliance-config";
+export * from "./arbitrage/compliance-rules";
+export * from "./arbitrage/duplicate-candidates";
 export * from "./change";
 export * from "./client";
 export * from "./config";

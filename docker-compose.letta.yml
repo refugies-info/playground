@@ -33,6 +33,10 @@ services:
       # No external LLM/embedding keys needed for local-only mode.
       # SECURE=false leaves the server auth-less (fine for localhost dev).
       SECURE: "false"
+      # Optional OpenAI-compatible provider, e.g. Albert (ALBERT_API_KEY in the
+      # root .env). Its models show up as openai/<model>.
+      OPENAI_API_KEY: ${ALBERT_API_KEY:-}
+      OPENAI_BASE_URL: ${ALBERT_BASE_URL:-https://albert.api.etalab.gouv.fr/v1}
     volumes:
       - letta_data:/root/.letta
     restart: unless-stopped
