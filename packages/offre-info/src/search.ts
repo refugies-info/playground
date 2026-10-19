@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { RcoClient } from "./client";
 import {
   RCO_CERTIFINFO_CODES,
+  RCO_CONVENTIONNEMENT,
   RCO_FORMACODES,
   RCO_SEARCH_PAGE_LIMIT,
 } from "./config";
@@ -27,6 +28,7 @@ export async function searchActionNumbers(
       await client.get("/recherche", {
         formacode: RCO_FORMACODES.join(","),
         certifinfo: RCO_CERTIFINFO_CODES.join(","),
+        conventionnement: RCO_CONVENTIONNEMENT,
         codes_operator: "OR",
         fields: "numero_action",
         limit: pageSize,
