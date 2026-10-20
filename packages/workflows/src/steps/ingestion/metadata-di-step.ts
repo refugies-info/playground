@@ -47,11 +47,13 @@ import {
   MetadataMetadataSchema,
   parseAgentResponse,
 } from "@playground/agents";
+import type { RcoActionDocument } from "@playground/offre-info";
 import { LETTA_MODEL_HANDLE, logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
 import { getStepMetadata } from "@workflow/core";
 import { FatalError } from "@workflow/errors";
 import { z } from "zod";
+import { generateRcoMetadata } from "./metadata-rco";
 import { getSupabaseClient, runWithConcurrency } from "./utils";
 
 // =============================================================================
@@ -422,6 +424,58 @@ export async function generateDiMetadataReportsStep(runId: string) {
 generateDiMetadataReportsStep.maxRetries = 3;
 
 /**
+ * Forced metadata of a DI record by the multi-task agent (/metadata command).
+ */
+async function generateForcedDiMetadata(
+  markdown: string,
+  workflowId: string,
+  agentId: string,
+) {
+  const lettaClient = createLettaClient();
+  const { id: conversationId } = await lettaClient.conversations.create({
+    agent_id: agentId,
+    summary: `metadata-${workflowId}`,
+  });
+
+  let finalContent = "";
+  const usage: LettaUsage = {};
+  for await (const chunk of generateMetadataReport(
+    lettaClient,
+    markdown,
+    conversationId,
+  )) {
+    accumulateUsage(usage, chunk);
+    if (chunk.message_type === "assistant_message") {
+      if (typeof chunk.content !== "string") {
+        throw new Error(
+          `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
+        );
+      }
+      finalContent += chunk.content;
+    }
+  }
+
+  if (!finalContent) {
+    throw new Error("No assistant response received for metadata report");
+  }
+
+  const parsed = parseAgentResponse(
+    finalContent,
+    agentId,
+    MetadataMetadataSchema,
+    usage,
+  );
+  return {
+    agentId,
+    markdown: parsed.content,
+    metadata: parsed.metadata,
+    status: parsed.status,
+    rawResponse: parsed.rawResponse,
+    tokens: usage.totalTokens ?? 0,
+  };
+}
+
+/**
  * Workflow step that forces generation of a metadata report for a specific workflow,
  * bypassing normal batch collection. Used primarily for manual arbitration/retry.
  *
@@ -515,7 +569,7 @@ export async function forceMetadataReportStep(workflowId: string) {
     // 2. Fetch Ingestion Record
     const { data: record, error: recordError } = await supabase
       .from("ingestion_records")
-      .select("id, markdown")
+      .select("id, markdown, service:services(origin, data)")
       .eq("id", ingestionRecordId)
       .single();
 
@@ -523,57 +577,29 @@ export async function forceMetadataReportStep(workflowId: string) {
       throw new Error(`Ingestion Record not found: ${recordError?.message}`);
     }
 
-    const lettaClient = createLettaClient();
-    const { id: conversationId } = await lettaClient.conversations.create({
-      agent_id: agentId,
-      summary: `metadata-${workflowId}`,
-    });
-
     logger.info(
-      { workflowId, ingestionRecordId },
+      { workflowId, ingestionRecordId, origin: record.service?.origin },
       "Starting forced metadata generation",
     );
 
-    let finalContent = "";
-    const usage: LettaUsage = {};
-
-    for await (const chunk of generateMetadataReport(
-      lettaClient,
-      record.markdown,
-      conversationId,
-    )) {
-      accumulateUsage(usage, chunk);
-      if (chunk.message_type === "assistant_message") {
-        if (typeof chunk.content !== "string") {
-          throw new Error(
-            `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
-          );
-        }
-        finalContent += chunk.content;
-      }
-    }
-
-    if (!finalContent) {
-      throw new Error("No assistant response received for metadata report");
-    }
-
-    const parsed = parseAgentResponse(
-      finalContent,
-      agentId,
-      MetadataMetadataSchema,
-      usage,
-    );
+    const parsed =
+      record.service?.origin === "RCO"
+        ? await generateRcoMetadata(
+            record.service.data as unknown as RcoActionDocument,
+          )
+        : await generateForcedDiMetadata(record.markdown, workflowId, agentId);
 
     // UPDATE the "generating" report with the final result.
     // Triggers a Realtime UPDATE event on the UI to unblock the spinner.
     const { data: report, error: reportError } = await supabase
       .from("letta_reports")
       .update({
-        markdown: parsed.content,
+        agent_id: parsed.agentId,
+        markdown: parsed.markdown,
         metadata: parsed.metadata as Json,
         status: parsed.status,
         raw_response: parsed.rawResponse ?? null,
-        token_cost: usage?.totalTokens ?? null,
+        token_cost: parsed.tokens || null,
       })
       .eq("id", generatingReportId)
       .select("id")

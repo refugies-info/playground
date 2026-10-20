@@ -79,7 +79,7 @@ export function checkAudience(action: RcoActionDocument): CriterionResult {
 
 // Fixed entries (false) close once the session has started; permanent (true)
 // or unknown entries stay open until the session ends.
-const isSessionOpen = (
+export const isSessionOpen = (
   session: RcoSession,
   permanentEntries: unknown,
   today: string,
