@@ -36,6 +36,14 @@ export type RcoActionDocument = Omit<SessionOffre, SessionLevelField> & {
 
 const SESSION_LEVEL_FIELD_SET = new Set<string>(SESSION_LEVEL_FIELDS);
 
+// The API rarely fills url_formation: fall back to the public offreinfo page.
+export const toSourceUrl = (action: RcoActionDocument): string =>
+  String(
+    action.url_formation ??
+      action.url_action ??
+      `https://www.intercariforef.org/offreinfo/${action.numero_formation}/${action.numero_action}/${action.sessions[0]?.numero_session}/`,
+  );
+
 const compareNullableText = (a: unknown, b: unknown) =>
   String(a ?? "").localeCompare(String(b ?? ""));
 

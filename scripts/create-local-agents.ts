@@ -1,5 +1,6 @@
 /**
- * Creates the local dev agents on a self-hosted Letta server (Ollama-backed),
+ * Creates the local dev agents on a self-hosted Letta server (LLM on Albert,
+ * embeddings on Ollama),
  * then prints the env vars to paste into .env.
  *
  * Safe by design: refuses to run against Letta Cloud, so it can never create
@@ -11,18 +12,16 @@
  *
  * Or manually:
  *   pnpm letta:up
- *   pnpm letta:pull            # pulls qwen2.5:0.5b + nomic-embed-text
+ *   pnpm letta:pull            # pulls nomic-embed-text
  *   pnpm letta:sync            # restart Letta so it discovers the new models
  *   LETTA_BASE_URL=http://localhost:8283 pnpm agents:create-local
  *
- * Letta agents require a tool-capable model: gemma3:1b has no `tools`
- * capability and is silently dropped ("Synced 0 LLM models"). qwen2.5:0.5b
- * is the smallest tool-capable option. Letta only syncs Ollama models at
- * startup, so always restart Letta after pulling a new model.
+ * The LLM is Albert's gpt-oss-120b (ALBERT_API_KEY, see docker-compose.letta.yml).
+ * Letta only syncs Ollama models at startup, so always restart Letta after
+ * pulling a new model.
  *
  * Optional env overrides:
- *   LOCAL_LLM_MODEL        — model handle (default: ollama/qwen2.5:0.5b,
- *                            or letta/letta-free for the free cloud endpoint)
+ *   LOCAL_LLM_MODEL        — model handle (default: openai-proxy/gpt-oss-120b)
  *   LOCAL_EMBEDDING_MODEL  — embedding handle (default: ollama/nomic-embed-text:latest)
  *
  * See documentation/ai/local-letta-dev.md.
@@ -35,16 +34,9 @@ const isLocal =
   process.env.LETTA_ENVIRONMENT === "local" ||
   Boolean(process.env.LETTA_BASE_URL);
 
-// Default: local Ollama model. This is the only zero-cost option that actually
-// runs inference on the self-hosted server — letta/letta-free creates fine but
-// 401s at inference time (it routes to inference.letta.com and needs Letta
-// Cloud auth the self-hosted server doesn't have).
-//
-// Letta agents need a tool-capable model:
-// qwen2.5:0.5b (~400MB) is the smallest tool-capable option; quality is low but
-// fine for plumbing/dev. For real quality, use Letta Cloud (api.letta.com) with
-// a valid LETTA_API_KEY + the letta/letta-free model there.
-const MODEL = process.env.LOCAL_LLM_MODEL ?? "ollama/qwen2.5:0.5b";
+// Albert (OpenAI-compatible). letta/letta-free creates fine on the self-hosted
+// server but 401s at inference time (it needs Letta Cloud auth).
+const MODEL = process.env.LOCAL_LLM_MODEL ?? "openai-proxy/gpt-oss-120b";
 const EMBEDDING =
   process.env.LOCAL_EMBEDDING_MODEL ?? "ollama/nomic-embed-text:latest";
 

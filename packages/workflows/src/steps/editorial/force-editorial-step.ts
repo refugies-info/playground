@@ -7,6 +7,8 @@
  * The Letta agent can take as long as it needs (1–3 minutes is normal).
  *
  * Flow:
+ *   RCO record → generateRcoPlainLanguage (plain-language-rco.ts), then 5–6.
+ *   DI record:
  *   1. Validate/recreate Letta conversation
  *   2. Cancel any active runs on the conversation
  *   3. Fetch content + metadata (editorial_record → ingestion_record fallback)
@@ -16,6 +18,7 @@
  */
 
 import { createLettaClient, simplifyContentSync } from "@playground/agents";
+import type { RcoActionDocument } from "@playground/offre-info";
 import { logger, TYPE_CLEAR_LANGUAGE } from "@playground/shared-types";
 import { FatalError } from "@workflow/errors";
 import matter from "gray-matter";
@@ -25,6 +28,7 @@ import {
   type PersistEditorialReportResult,
   persistEditorialReportStep,
 } from "./persist-editorial-report";
+import { generateRcoPlainLanguage } from "./plain-language-rco";
 
 // Conversation ID validation pattern (UUID v4 with conv- prefix)
 const CONV_ID_PATTERN =
@@ -48,30 +52,21 @@ export interface ForceEditorialStepResult {
  * @param workflowId - The workflow (document) ID
  * @param userId - The profile id of the human who triggered the rewrite
  */
-export async function forceEditorialStep(
-  workflowId: string,
-  userId: string,
-): Promise<ForceEditorialStepResult> {
-  "use step";
+type EditorialWorkflow = {
+  conversation_id: string | null;
+  editorial_record_id: string | null;
+  ingestion_record_id: string | null;
+};
 
+async function generateDiEditorial(
+  workflowId: string,
+  workflow: EditorialWorkflow,
+) {
   const supabase = getSupabaseClient();
 
   const agentId = process.env.PLAYGROUND_AGENT_ID;
   if (!agentId) {
     throw new FatalError("PLAYGROUND_AGENT_ID is not defined");
-  }
-
-  // ─── 1. Fetch workflow ────────────────────────────────────────────────
-  const { data: workflow, error: workflowError } = await supabase
-    .from("workflows")
-    .select("conversation_id, editorial_record_id, ingestion_record_id")
-    .eq("id", workflowId)
-    .single();
-
-  if (workflowError || !workflow) {
-    throw new FatalError(
-      `Workflow not found: ${workflowError?.message ?? "no data"}`,
-    );
   }
 
   // ─── 2. Validate / create conversation ────────────────────────────────
@@ -195,6 +190,47 @@ export async function forceEditorialStep(
   if (!finalContent.content) {
     throw new Error("No assistant response received from Letta agent");
   }
+
+  return { agentId, ...finalContent };
+}
+
+export async function forceEditorialStep(
+  workflowId: string,
+  userId: string,
+): Promise<ForceEditorialStepResult> {
+  "use step";
+
+  const supabase = getSupabaseClient();
+
+  // ─── 1. Fetch workflow ────────────────────────────────────────────────
+  const { data: workflow, error: workflowError } = await supabase
+    .from("workflows")
+    .select("conversation_id, editorial_record_id, ingestion_record_id")
+    .eq("id", workflowId)
+    .single();
+
+  if (workflowError || !workflow) {
+    throw new FatalError(
+      `Workflow not found: ${workflowError?.message ?? "no data"}`,
+    );
+  }
+
+  const service = workflow.ingestion_record_id
+    ? (
+        await supabase
+          .from("ingestion_records")
+          .select("service:services(origin, data)")
+          .eq("id", workflow.ingestion_record_id)
+          .single<{ service: { origin: string; data: unknown } | null }>()
+      ).data?.service
+    : null;
+
+  const { agentId, ...finalContent } =
+    service?.origin === "RCO"
+      ? await generateRcoPlainLanguage(
+          service.data as unknown as RcoActionDocument,
+        )
+      : await generateDiEditorial(workflowId, workflow);
 
   // ─── 6. Persist ───────────────────────────────────────────────────────
   const persistResult = await persistEditorialReportStep(
