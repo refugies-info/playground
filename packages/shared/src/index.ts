@@ -3,6 +3,7 @@
  * Exported from @content-playground/shared package
  */
 
+export * from "./constants/departments";
 export * from "./constants/languages";
 export * from "./constants/model";
 export * from "./constants/roles";

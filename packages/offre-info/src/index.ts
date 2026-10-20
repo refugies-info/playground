@@ -8,6 +8,8 @@ export * from "./config";
 export * from "./document";
 export * from "./ingest";
 export * from "./markdown";
+export * from "./metadata/metadata-config";
+export * from "./metadata/metadata-rules";
 export * from "./normalize";
 export * from "./search";
 export * from "./session-offre";
