@@ -25,7 +25,7 @@
     "letta:up": "docker compose -f docker-compose.letta.yml up -d",
     "letta:down": "docker compose -f docker-compose.letta.yml down",
     "letta:logs": "docker compose -f docker-compose.letta.yml logs -f",
-    "letta:pull": "docker compose -f docker-compose.letta.yml exec ollama ollama pull qwen2.5:0.5b && docker compose -f docker-compose.letta.yml exec ollama ollama pull nomic-embed-text",
+    "letta:pull": "docker compose -f docker-compose.letta.yml exec ollama ollama pull nomic-embed-text",
     "letta:sync": "docker compose -f docker-compose.letta.yml restart letta && sleep 10",
     "letta:init": "pnpm letta:up && pnpm letta:pull && pnpm letta:sync && LETTA_BASE_URL=http://localhost:8283 pnpm agents:create-local",
     "agents:create-local": "tsx scripts/create-local-agents.ts",

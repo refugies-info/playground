@@ -11,6 +11,7 @@ export * from "./markdown";
 export * from "./metadata/metadata-config";
 export * from "./metadata/metadata-rules";
 export * from "./normalize";
+export * from "./plain-language/plain-language-rules";
 export * from "./search";
 export * from "./session-offre";
 export * from "./structure";
