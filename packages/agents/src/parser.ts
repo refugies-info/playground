@@ -107,6 +107,12 @@ const FLAT_FRONTMATTER_SPEC: IndentSpec = {
   },
 };
 
+/** Single-quotes a plain scalar that YAML would misread (`a : b`, `a #b`). */
+function quoteUnsafeScalar(value: string): string {
+  if (/^['"[{|>]/.test(value) || !/: |\s#/.test(value)) return value;
+  return `'${value.replaceAll("'", "''")}'`;
+}
+
 /**
  * Rebuilds indentation of a metadata frontmatter emitted fully flat.
  *
@@ -142,7 +148,9 @@ export function reindentFlatYaml(yaml: string): string {
         stack.pop();
       const list = top();
       if (!(key in list.spec)) throw new Error(`Unknown list key: ${key}`);
-      out.push(`${" ".repeat(list.indent)}${line}`);
+      out.push(
+        `${" ".repeat(list.indent)}- ${key}:${value ? ` ${quoteUnsafeScalar(value)}` : ""}`,
+      );
       stack.push({
         spec: list.spec,
         indent: list.indent + 2,
@@ -165,7 +173,9 @@ export function reindentFlatYaml(yaml: string): string {
     while (stack.length > 1 && !(key in top().spec)) stack.pop();
     const frame = top();
     if (!(key in frame.spec)) throw new Error(`Unknown key: ${key}`);
-    out.push(`${" ".repeat(frame.indent)}${line}`);
+    out.push(
+      `${" ".repeat(frame.indent)}${key}:${value ? ` ${quoteUnsafeScalar(value)}` : ""}`,
+    );
     const child = frame.spec[key];
     if (!value && child)
       stack.push({ spec: child, indent: frame.indent + 2, isListItem: false });
