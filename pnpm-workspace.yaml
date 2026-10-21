@@ -51,11 +51,11 @@ trustPolicyExclude:
 
 overrides:
   undici-types: 6.18.2
-  vite: 6.4.3
+  vite: 6.4.4
   caniuse-lite: 1.0.30001756
   semver: 7.7.1
   lodash: 4.18.1
-  devalue: 5.9.2
+  devalue: 5.9.3
   minimatch@5: 5.1.8
   minimatch@9: 9.0.7
   undici@7: 7.29.1
@@ -65,17 +65,17 @@ overrides:
   brace-expansion@5: 5.0.12
   "@babel/core@7": 7.29.7
   uuid@11: 11.1.1
-  piscina@4: 4.9.3
+  piscina@4: 4.9.4
   linkify-it@5: 5.0.2
   fast-uri@3: 3.1.8
-  smol-toml@1: 1.8.0
+  smol-toml@1: 1.9.1
   body-parser@2: 2.3.0
   postcss@8: 8.5.28
   esbuild@0.28: 0.28.1
-  sharp@<0.35.0: 0.35.4
+  sharp@<0.35.0: 0.35.5
   uuid@8: 11.1.1
   esbuild@0.27: 0.28.1
-  next@16: 16.3.6
+  next@16: 16.3.8
 
 onlyBuiltDependencies:
   - "@swc/core"
