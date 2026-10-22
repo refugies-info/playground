@@ -27,15 +27,15 @@ function sortArraysDeep(value: unknown): unknown {
   }
   if (value !== null && typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>).map(([k, v]) => [
-        k,
-        sortArraysDeep(v),
-      ]),
+      Object.entries(value as Record<string, unknown>)
+        .filter(([k]) => !VOLATILE_KEYS.has(k))
+        .map(([k, v]) => [k, sortArraysDeep(v)]),
     );
   }
   return value;
 }
 
+const VOLATILE_KEYS = new Set(["@ref", "date_maj", "score_qualite"]);
 /**
  * Compute SHA-1 hash of content (same algorithm as Git).
  * Used for detecting changes in DI records between ingestion runs.

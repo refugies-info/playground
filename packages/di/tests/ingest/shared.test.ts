@@ -77,4 +77,35 @@ describe("computeContentHash", () => {
     expect(hash).toBeDefined();
     expect(hash.length).toBe(40); // SHA-1 hex
   });
+  it("should ignore volatile export keys (Carif @ref, date_maj, score_qualite)", () => {
+    const session = { periode: { debut: "20261207", fin: "20270303" } };
+    const before = {
+      date_maj: "2026-10-12",
+      score_qualite: 0.85,
+      extra: { action: { session: [{ "@ref": "124285", ...session }] } },
+    };
+    const after = {
+      date_maj: "2026-10-19",
+      score_qualite: 0.83,
+      extra: { action: { session: [{ "@ref": "125808", ...session }] } },
+    };
+    const changedSession = {
+      ...after,
+      extra: {
+        action: {
+          session: [
+            {
+              "@ref": "125808",
+              periode: { ...session.periode, fin: "20270404" },
+            },
+          ],
+        },
+      },
+    };
+
+    expect(computeContentHash(before)).toBe(computeContentHash(after));
+    expect(computeContentHash(before)).not.toBe(
+      computeContentHash(changedSession),
+    );
+  });
 });
