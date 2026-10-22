@@ -1,3 +1,5 @@
+import type { SessionOffreField } from "./session-offre";
+
 export const RCO_DEFAULT_BASE_URL = "https://api-offreinfo.intercariforef.org";
 export const RCO_SOURCE = "carif-oref";
 export const RCO_ORIGIN_PREFIX = "carif-oref--";
@@ -47,6 +49,27 @@ export const RCO_CERTIFINFO_CODES = [
 export const RCO_SEARCH_PAGE_LIMIT = 1000;
 
 export const RCO_CONVENTIONNEMENT = true;
+
+export const RCO_FINANCEUR_CODES = [2, 3, 8, 9, 11, 12, 13, 15, 19] as const;
+
+// /recherche only exposes a subset of SessionOffre: the detail (contenu,
+// lieux, contacts...) is read from /offre when a fiche is arbitrated.
+export const RCO_SEARCH_FIELDS = [
+  "id",
+  "numero_action",
+  "numero_session",
+  "url_formation",
+  "url_action",
+  "intitule_formation",
+  "organisme_responsable",
+  "date_debut",
+  "date_fin",
+  "etat_recrutement",
+  "modalites_enseignement",
+  "nombre_heures_total",
+  "info_public_vise",
+  "code_public_vise",
+] as const satisfies readonly SessionOffreField[];
 
 // Half of the documented 10 req/s quota: we are a guest on their API.
 export const RCO_DEFAULT_MAX_REQUESTS_PER_SECOND = 5;

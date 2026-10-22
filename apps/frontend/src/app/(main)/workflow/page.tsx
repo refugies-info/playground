@@ -49,6 +49,7 @@ export default async function WorkflowPage(props: PageProps) {
     searchParams.modalitesEntreesSorties,
   );
   const origin = getQueryParam(searchParams.origin);
+  const contentPreset = getQueryParam(searchParams.contentPreset);
 
   // Parse and validate sort parameters (server-side sort).
   const sortBy = parseDocumentSortField(
@@ -81,6 +82,7 @@ export default async function WorkflowPage(props: PageProps) {
     dateTo,
     modalitesEntreesSorties,
     origin,
+    excludeOepre: contentPreset === "sans-oepre",
     includePreviewFields: true,
   });
 
@@ -102,6 +104,7 @@ export default async function WorkflowPage(props: PageProps) {
         dateTo,
         modalitesEntreesSorties,
         origin,
+        contentPreset,
       }}
       ingestionSource={ingestionSource}
     />

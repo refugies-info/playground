@@ -6,7 +6,6 @@ export * from "./document";
 export * from "./ingest";
 export * from "./markdown";
 export * from "./normalize";
-export * from "./run-options";
 export * from "./search";
 export * from "./session-offre";
 export * from "./structure";

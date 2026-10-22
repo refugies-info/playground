@@ -1,12 +1,8 @@
 "use server";
 
-import { RCO_RUN_OPTIONS, RcoRunOptionsSchema } from "@playground/offre-info";
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
-import {
-  findLatestInterruptedRun,
-  findRunningIngestion,
-} from "@playground/supabase/ingestion-runs";
+import { findRunningIngestion } from "@playground/supabase/ingestion-runs";
 import {
   diIngestionWorkflow,
   rcoIngestionWorkflow,
@@ -24,13 +20,9 @@ async function startActiveSourceWorkflow() {
     );
   }
 
-  if (getIngestionSource() === "di") return start(diIngestionWorkflow, []);
-
-  const resumeRunId = await findLatestInterruptedRun(supabase, "rco");
-  const options = RcoRunOptionsSchema.parse(
-    resumeRunId ? { ...RCO_RUN_OPTIONS, resumeRunId } : RCO_RUN_OPTIONS,
-  );
-  return start(rcoIngestionWorkflow, [options]);
+  return getIngestionSource() === "di"
+    ? start(diIngestionWorkflow, [])
+    : start(rcoIngestionWorkflow, []);
 }
 
 export async function triggerIngestionAction() {

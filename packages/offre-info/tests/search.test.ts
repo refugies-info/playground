@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fetchActionSessions } from "../src/action";
 import type { RcoClient } from "../src/client";
-import { searchActionNumbers } from "../src/search";
+import { searchActionSessions } from "../src/search";
 import { rawSession } from "./fixtures";
 
 const page = (numbers: string[], total: number) => ({
@@ -21,38 +21,35 @@ const fakeClient = (
   for (const response of responses) get.mockResolvedValueOnce(response);
   return { get };
 };
-
-describe("searchActionNumbers", () => {
-  it("paginates until total and deduplicates sessions of the same action", async () => {
+describe("searchActionSessions", () => {
+  it("paginates until total and groups sessions by action", async () => {
     const client = fakeClient([page(["A", "A"], 3), page(["B"], 3)]);
-    await expect(searchActionNumbers(client, { pageSize: 2 })).resolves.toEqual(
-      ["A", "B"],
-    );
+    const actions = await searchActionSessions(client);
+    expect(
+      actions.map(({ numeroAction, sessions }) => [
+        numeroAction,
+        sessions.length,
+      ]),
+    ).toEqual([
+      ["A", 2],
+      ["B", 1],
+    ]);
     expect(client.get).toHaveBeenCalledTimes(2);
     expect(client.get.mock.calls[0]?.[1]).toMatchObject({
       codes_operator: "OR",
-      fields: "numero_action",
+      code_financeur: "2,3,8,9,11,12,13,15,19",
       formacode: "15235,15281,15043,15242",
-      limit: 2,
+      limit: 1000,
       page: 1,
     });
   });
 
-  it("loads only the requested page", async () => {
-    const client = fakeClient([page(["C"], 10)]);
-    await expect(
-      searchActionNumbers(client, { page: 3, pageSize: 2 }),
-    ).resolves.toEqual(["C"]);
-    expect(client.get).toHaveBeenCalledTimes(1);
-    expect(client.get.mock.calls[0]?.[1]).toMatchObject({ page: 3 });
-  });
-
-  it("stops early once maxActions is reached", async () => {
-    const client = fakeClient([page(["A", "B"], 10)]);
-    await expect(
-      searchActionNumbers(client, { maxActions: 1 }),
-    ).resolves.toEqual(["A"]);
-    expect(client.get).toHaveBeenCalledTimes(1);
+  it("keeps only the search fields and marks sessions conventionnées", async () => {
+    const [action] = await searchActionSessions(fakeClient([page(["A"], 1)]));
+    const session = action?.sessions[0];
+    expect(session?.conventionnement).toBe(true);
+    expect(session?.code_public_vise).toEqual([]);
+    expect(session).not.toHaveProperty("contenu_formation");
   });
 });
 

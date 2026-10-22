@@ -46,6 +46,7 @@ interface WorkflowFilters extends Record<string, string> {
   dateTo: string;
   modalitesEntreesSorties: string;
   origin: string;
+  contentPreset: string;
 }
 
 interface WorkflowClientProps {
@@ -334,7 +335,6 @@ export function WorkflowClient(props: WorkflowClientProps) {
               "Sessions seules": String(fullResult.changes.sessions_only),
               "Contenu modifié": String(fullResult.changes.content),
               Inchangées: String(fullResult.changes.unchanged),
-              "Absentes RCO": String(fullResult.missing),
               Erreurs: String(fullResult.errors.length),
             });
           } else {
@@ -566,6 +566,13 @@ export function WorkflowClient(props: WorkflowClientProps) {
             onChange={(value) => handleFilterChange("origin", value)}
           />
 
+          <BoutonFiltre
+            label="Contenu"
+            options={[{ label: "Sans OEPRE", value: "sans-oepre" }]}
+            value={filters.contentPreset}
+            onChange={(value) => handleFilterChange("contentPreset", value)}
+          />
+
           {/* Bouton aligné à droite dans le même conteneur que la recherche */}
           <Button
             className="ml-auto"
@@ -576,7 +583,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
             {isLoading
               ? "En cours…"
               : props.ingestionSource === "rco"
-                ? "Charger 50 fiches RCO"
+                ? "Importer les fiches RCO"
                 : "Lancer l'import DI"}
           </Button>
         </div>
