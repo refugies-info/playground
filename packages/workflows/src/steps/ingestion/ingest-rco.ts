@@ -6,42 +6,42 @@
  */
 
 import {
+  emptyRcoBatchResult,
   getRcoClientFromEnv,
   ingestRcoActions,
   isRcoAuthError,
-  isRcoRateLimitError,
-  pickActionsNotYetLoaded,
+  type RcoActionSessions,
   type RcoBatchResult,
-  type RcoRunOptions,
-  searchActionNumbers,
+  searchActionSessions,
 } from "@playground/offre-info";
 import { logger } from "@playground/shared-types";
 import {
   completeIngestionRun,
   createIngestionRun,
-  getIngestionRun,
-  markIngestionRunRunning,
-  saveIngestionCheckpoint,
 } from "@playground/supabase/ingestion-runs";
 import { FatalError } from "@workflow/errors";
 import { getSupabaseClient } from "./utils";
 
-export type RcoCheckpoint = {
-  numeroActions: string[];
-  nextIndex: number;
-  totals: RcoBatchResult;
-};
+// Keeps the services_latest `.in()` lookups under the URL length limit.
+const INGEST_CHUNK_SIZE = 200;
 
-export const EMPTY_RCO_TOTALS: RcoBatchResult = {
-  requested: 0,
-  processed: 0,
-  interrupted: false,
-  missing: 0,
-  changes: { new: 0, unchanged: 0, baseline: 0, sessions_only: 0, content: 0 },
-  structuresWritten: 0,
-  ingestionRecordsCreated: 0,
-  errors: [],
-};
+const addBatchResult = (
+  total: RcoBatchResult,
+  batch: RcoBatchResult,
+): RcoBatchResult => ({
+  processed: total.processed + batch.processed,
+  changes: {
+    new: total.changes.new + batch.changes.new,
+    unchanged: total.changes.unchanged + batch.changes.unchanged,
+    baseline: total.changes.baseline + batch.changes.baseline,
+    sessions_only: total.changes.sessions_only + batch.changes.sessions_only,
+    content: total.changes.content + batch.changes.content,
+  },
+  structuresWritten: total.structuresWritten + batch.structuresWritten,
+  ingestionRecordsCreated:
+    total.ingestionRecordsCreated + batch.ingestionRecordsCreated,
+  errors: [...total.errors, ...batch.errors],
+});
 
 const toRunStats = (totals: RcoBatchResult) => ({
   totalFetched: totals.processed,
@@ -54,129 +54,44 @@ const toRunStats = (totals: RcoBatchResult) => ({
   totalErrors: totals.errors.length,
 });
 
-const toFatalOnAuthError = (error: unknown): never => {
-  if (isRcoAuthError(error)) throw new FatalError((error as Error).message);
-  throw error;
-};
-
-async function resumeRun(
-  runId: string,
-): Promise<{ runId: string } & RcoCheckpoint> {
-  const supabase = getSupabaseClient();
-  const run = await getIngestionRun(supabase, runId);
-  if (
-    !run ||
-    run.source !== "rco" ||
-    run.status !== "interrupted" ||
-    !run.checkpoint
-  ) {
-    throw new FatalError(`Run ${runId} is not a resumable RCO run`);
-  }
-  await markIngestionRunRunning(supabase, runId);
-  const checkpoint = run.checkpoint as RcoCheckpoint;
-  logger.info({ runId, nextIndex: checkpoint.nextIndex }, "▶ Resuming RCO run");
-  return {
-    runId,
-    ...checkpoint,
-    // Checkpoints saved before a totals field existed miss it.
-    totals: { ...EMPTY_RCO_TOTALS, ...checkpoint.totals },
-  };
-}
-
-async function searchActions(options: RcoRunOptions): Promise<string[]> {
-  if (options.numeroActions) return options.numeroActions;
-  try {
-    const found = await searchActionNumbers(getRcoClientFromEnv(), {
-      page: options.searchPage,
-      pageSize: options.pageSize,
-    });
-    return options.maxActions === "all"
-      ? found
-      : pickActionsNotYetLoaded(getSupabaseClient(), found, options.maxActions);
-  } catch (error) {
-    if (isRcoRateLimitError(error)) {
-      throw new FatalError("RCO rate limit reached during search, retry later");
-    }
-    return toFatalOnAuthError(error);
-  }
-}
-
-export async function prepareRcoRunStep(
-  options: RcoRunOptions,
-): Promise<{ runId: string } & RcoCheckpoint> {
+export async function createRcoRunStep(): Promise<string> {
   "use step";
-  if (options.resumeRunId) return resumeRun(options.resumeRunId);
-
-  const supabase = getSupabaseClient();
-  const runId = await createIngestionRun(supabase, {
+  return createIngestionRun(getSupabaseClient(), {
     source: "rco",
     type: "services",
-    options,
+    options: {},
   });
-  let numeroActions: string[];
+}
+
+export async function ingestRcoStep(runId: string): Promise<RcoBatchResult> {
+  "use step";
+  const supabase = getSupabaseClient();
+  let actions: RcoActionSessions[];
   try {
-    numeroActions = await searchActions(options);
+    actions = await searchActionSessions(getRcoClientFromEnv());
   } catch (error) {
-    // A run left "running" would block the button for hours.
-    await completeIngestionRun(
-      supabase,
-      runId,
-      toRunStats(EMPTY_RCO_TOTALS),
-      "failed",
-      {
-        message: (error as Error).message,
-      },
-    );
+    if (isRcoAuthError(error)) throw new FatalError((error as Error).message);
     throw error;
   }
-  const checkpoint: RcoCheckpoint = {
-    numeroActions,
-    nextIndex: 0,
-    totals: EMPTY_RCO_TOTALS,
-  };
-  await saveIngestionCheckpoint(supabase, runId, checkpoint);
-  logger.info(
-    { runId, count: checkpoint.numeroActions.length },
-    "✔ RCO actions found",
-  );
-  return { runId, ...checkpoint };
-}
+  logger.info({ runId, count: actions.length }, "✔ RCO actions found");
 
-export async function ingestRcoBatchStep(
-  runId: string,
-  numeroActions: string[],
-  dryRun: boolean,
-): Promise<RcoBatchResult> {
-  "use step";
-  try {
-    const result = await ingestRcoActions(
-      getSupabaseClient(),
-      getRcoClientFromEnv(),
-      numeroActions,
-      {
-        runId,
-        dryRun,
-      },
+  let totals = emptyRcoBatchResult();
+  for (let start = 0; start < actions.length; start += INGEST_CHUNK_SIZE) {
+    const batch = await ingestRcoActions(
+      supabase,
+      actions.slice(start, start + INGEST_CHUNK_SIZE),
+      runId,
     );
-    logger.info({ runId, dryRun, ...result }, "✔ RCO batch ingested");
-    return result;
-  } catch (error) {
-    return toFatalOnAuthError(error);
+    totals = addBatchResult(totals, batch);
+    logger.info({ runId, ...batch }, "✔ RCO batch ingested");
   }
-}
-
-export async function saveRcoCheckpointStep(
-  runId: string,
-  checkpoint: RcoCheckpoint,
-): Promise<void> {
-  "use step";
-  await saveIngestionCheckpoint(getSupabaseClient(), runId, checkpoint);
+  return totals;
 }
 
 export async function completeRcoRunStep(
   runId: string,
-  totals: RcoBatchResult,
-  status: "completed" | "interrupted" | "failed",
+  status: "completed" | "failed",
+  totals: RcoBatchResult = emptyRcoBatchResult(),
   failure?: string,
 ): Promise<void> {
   "use step";

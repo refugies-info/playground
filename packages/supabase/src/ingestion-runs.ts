@@ -76,41 +76,6 @@ export async function completeIngestionRun(
   }
 }
 
-export async function saveIngestionCheckpoint(
-  supabase: Supabase,
-  runId: string,
-  checkpoint: unknown,
-): Promise<void> {
-  const { error } = await supabase
-    .from("ingestion_runs")
-    .update({ checkpoint: checkpoint as Json })
-    .eq("id", runId);
-  if (error)
-    throw new Error(`Failed to save ingestion checkpoint: ${error.message}`);
-}
-
-export async function getIngestionRun(supabase: Supabase, runId: string) {
-  const { data, error } = await supabase
-    .from("ingestion_runs")
-    .select("id, source, status, checkpoint")
-    .eq("id", runId)
-    .maybeSingle();
-  if (error) throw new Error(`Failed to read ingestion run: ${error.message}`);
-  return data;
-}
-
-export async function markIngestionRunRunning(
-  supabase: Supabase,
-  runId: string,
-): Promise<void> {
-  const { error } = await supabase
-    .from("ingestion_runs")
-    .update({ status: "running", completed_at: null })
-    .eq("id", runId);
-  if (error)
-    throw new Error(`Failed to resume ingestion run: ${error.message}`);
-}
-
 export async function findRunningIngestion(
   supabase: Supabase,
 ): Promise<{ id: string; source: string } | null> {
@@ -127,22 +92,6 @@ export async function findRunningIngestion(
   if (error)
     throw new Error(`Failed to check running ingestions: ${error.message}`);
   return data;
-}
-
-export async function findLatestInterruptedRun(
-  supabase: Supabase,
-  source: "di" | "rco",
-): Promise<string | null> {
-  const { data, error } = await supabase
-    .from("ingestion_runs")
-    .select("id, status")
-    .eq("source", source)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error)
-    throw new Error(`Failed to read latest ingestion run: ${error.message}`);
-  return data?.status === "interrupted" ? data.id : null;
 }
 
 /**

@@ -2,102 +2,39 @@
  * @file pipelines/ingestion/rco-ingestion.ts
  *
  * RCO ingestion, kept separate from diIngestionWorkflow so the source can be
- * switched back to DI. Progress is checkpointed after each batch: a rate
- * limit stops the run as "interrupted" and the next trigger resumes it.
+ * switched back to DI. Imports every action matching the catalogue criteria
+ * from /recherche only: the detail (/offre) is read when a fiche is arbitrated.
  *
  * Flow:
- *   [1] prepareRcoRunStep       → new run + /recherche, or resume a checkpoint
- *   [2] ingestRcoBatchStep      → per batch of 25: /offre + structures/services/records
- *   [3] saveRcoCheckpointStep   → nextIndex + running totals
- *   [4] completeRcoRunStep      → completed | interrupted
+ *   [1] createRcoRunStep    → ingestion_runs row ("running" lock)
+ *   [2] ingestRcoStep       → /recherche (all pages) + structures/services/records
+ *   [3] completeRcoRunStep  → completed | failed
  */
 
-import type { RcoBatchResult, RcoRunOptions } from "@playground/offre-info";
 import {
   completeRcoRunStep,
-  ingestRcoBatchStep,
-  prepareRcoRunStep,
-  saveRcoCheckpointStep,
+  createRcoRunStep,
+  ingestRcoStep,
 } from "../../steps/ingestion/ingest-rco";
 
-const BATCH_SIZE = 25;
-
-const addBatchResult = (
-  total: RcoBatchResult,
-  batch: RcoBatchResult,
-): RcoBatchResult => ({
-  requested: total.requested + batch.requested,
-  processed: total.processed + batch.processed,
-  interrupted: batch.interrupted,
-  missing: total.missing + batch.missing,
-  changes: {
-    new: total.changes.new + batch.changes.new,
-    unchanged: total.changes.unchanged + batch.changes.unchanged,
-    baseline: total.changes.baseline + batch.changes.baseline,
-    sessions_only: total.changes.sessions_only + batch.changes.sessions_only,
-    content: total.changes.content + batch.changes.content,
-  },
-  structuresWritten: total.structuresWritten + batch.structuresWritten,
-  ingestionRecordsCreated:
-    total.ingestionRecordsCreated + batch.ingestionRecordsCreated,
-  errors: [...total.errors, ...batch.errors],
-});
-
-export async function rcoIngestionWorkflow(options: RcoRunOptions) {
+export async function rcoIngestionWorkflow() {
   "use workflow";
 
   // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
-  console.log(`🚀 RCO ingestion started ${JSON.stringify(options)}`);
+  console.log("🚀 RCO ingestion started");
 
-  const {
-    runId,
-    numeroActions,
-    nextIndex,
-    totals: previousTotals,
-  } = await prepareRcoRunStep(options);
-
-  let totals = previousTotals;
-  let index = nextIndex;
+  const runId = await createRcoRunStep();
   try {
-    while (index < numeroActions.length) {
-      const batch = numeroActions.slice(index, index + BATCH_SIZE);
-      const batchResult = await ingestRcoBatchStep(
-        runId,
-        batch,
-        options.dryRun,
-      );
-      totals = addBatchResult(totals, batchResult);
-      index += batchResult.processed;
-      await saveRcoCheckpointStep(runId, {
-        numeroActions,
-        nextIndex: index,
-        totals,
-      });
-
-      if (batchResult.interrupted) {
-        await completeRcoRunStep(runId, totals, "interrupted");
-        // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
-        console.log(
-          `⏸ RCO ingestion interrupted by rate limit at ${index}/${numeroActions.length}`,
-        );
-        return {
-          runId,
-          status: "interrupted" as const,
-          nextIndex: index,
-          ...totals,
-        };
-      }
-    }
+    const totals = await ingestRcoStep(runId);
+    await completeRcoRunStep(runId, "completed", totals);
+    // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
+    console.log(
+      JSON.stringify({ msg: "🏁 RCO ingestion completed", runId, ...totals }),
+    );
+    return { runId, status: "completed" as const, ...totals };
   } catch (error) {
-    // Frees the "running" lock; the checkpoint still points at the failed batch.
-    await completeRcoRunStep(runId, totals, "failed", String(error));
+    // Frees the "running" lock.
+    await completeRcoRunStep(runId, "failed", undefined, String(error));
     throw error;
   }
-
-  await completeRcoRunStep(runId, totals, "completed");
-  // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
-  console.log(
-    JSON.stringify({ msg: "🏁 RCO ingestion completed", runId, ...totals }),
-  );
-  return { runId, status: "completed" as const, nextIndex: index, ...totals };
 }

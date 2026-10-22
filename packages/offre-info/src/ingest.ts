@@ -2,7 +2,6 @@ import { logger } from "@playground/shared-types";
 import type { Database, Json } from "@playground/supabase";
 import { computeContentHash } from "@playground/supabase/ingestion-runs";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { fetchActionSessions } from "./action";
 import {
   changedFieldPaths,
   classifyChange,
@@ -10,7 +9,6 @@ import {
   type PreviousService,
   type RcoChange,
 } from "./change";
-import { isRcoAuthError, isRcoRateLimitError, type RcoClient } from "./client";
 import { toOriginId } from "./config";
 import {
   buildActionDocument,
@@ -18,7 +16,7 @@ import {
   type RcoActionDocument,
 } from "./document";
 import { actionToMarkdown } from "./markdown";
-import type { SessionOffre } from "./session-offre";
+import type { RcoActionSessions } from "./search";
 import {
   buildStructureDocument,
   type RcoStructureDocument,
@@ -38,15 +36,20 @@ type PlannedAction = {
 };
 
 export type RcoBatchResult = {
-  requested: number;
   processed: number;
-  interrupted: boolean;
-  missing: number;
   changes: Record<RcoChange, number>;
   structuresWritten: number;
   ingestionRecordsCreated: number;
   errors: Array<{ numeroAction: string; error: string }>;
 };
+
+export const emptyRcoBatchResult = (): RcoBatchResult => ({
+  processed: 0,
+  changes: { new: 0, unchanged: 0, baseline: 0, sessions_only: 0, content: 0 },
+  structuresWritten: 0,
+  ingestionRecordsCreated: 0,
+  errors: [],
+});
 
 // A DI previous version has another shape: diffing it would list every field.
 const DIFFABLE_CHANGES = new Set<RcoChange>(["sessions_only", "content"]);
@@ -87,32 +90,6 @@ async function fetchLatestServices(
     });
   }
   return latestByOriginId;
-}
-
-const PENDING_LOOKUP_CHUNK = 200;
-
-// Actions never stored as RCO yet, in search order: each click loads the next ones.
-export async function pickActionsNotYetLoaded(
-  supabase: Supabase,
-  numeroActions: string[],
-  maxActions: number,
-): Promise<string[]> {
-  const picked: string[] = [];
-  for (
-    let start = 0;
-    start < numeroActions.length && picked.length < maxActions;
-    start += PENDING_LOOKUP_CHUNK
-  ) {
-    const chunk = numeroActions.slice(start, start + PENDING_LOOKUP_CHUNK);
-    const latest = await fetchLatestServices(supabase, chunk.map(toOriginId));
-    picked.push(
-      ...chunk.filter(
-        (numeroAction) =>
-          latest.get(toOriginId(numeroAction))?.origin !== "RCO",
-      ),
-    );
-  }
-  return picked.slice(0, maxActions);
 }
 
 async function fetchStructureIdsBySiret(
@@ -181,89 +158,61 @@ async function writeStructures(
   return { uuidByOriginId, written: changed.length };
 }
 
-async function writeServiceVersion(
+async function writeServiceVersions(
   supabase: Supabase,
-  action: PlannedAction,
+  actions: PlannedAction[],
   structureUuidByOriginId: Map<string, string>,
   runId: string,
-): Promise<void> {
-  const { data: service, error } = await supabase
+): Promise<number> {
+  const { data: services, error } = await supabase
     .from("services")
-    .insert(toVersionRow(action.document, action.hash, runId))
-    .select("id")
-    .single();
-  if (error || !service)
+    .insert(
+      actions.map(({ document, hash }) => toVersionRow(document, hash, runId)),
+    )
+    .select("id, origin_id");
+  if (error || !services)
     throw new Error(`services insert failed: ${error?.message}`);
 
-  if (!createsIngestionRecord(action.change, action.document)) return;
-
-  const { error: recordError } = await supabase
-    .from("ingestion_records")
-    .insert({
-      service_id: service.id,
+  const serviceIdByOriginId = new Map(
+    services.map((service) => [service.origin_id, service.id]),
+  );
+  const records = actions
+    .filter(({ change, document }) => createsIngestionRecord(change, document))
+    .map((action) => ({
+      service_id: serviceIdByOriginId.get(action.document.id) as string,
       structure_id: structureUuidByOriginId.get(action.structure.id) ?? null,
       markdown: actionToMarkdown(action.document, action.structure),
       metadata: {
         ...action.document,
         structure: action.structure,
       } as unknown as Json,
-    });
+    }));
+  if (records.length === 0) return 0;
+
+  const { error: recordError } = await supabase
+    .from("ingestion_records")
+    .insert(records);
   if (recordError) {
-    // Otherwise the next run sees an unchanged hash and never creates the record.
-    await supabase.from("services").delete().eq("id", service.id);
+    // Otherwise the next run sees an unchanged hash and never creates the records.
+    await supabase
+      .from("services")
+      .delete()
+      .in(
+        "id",
+        services.map((service) => service.id),
+      );
     throw new Error(`ingestion_records insert failed: ${recordError.message}`);
   }
-}
-
-async function fetchSessionsByAction(
-  client: RcoClient,
-  numeroActions: string[],
-  result: RcoBatchResult,
-): Promise<Array<{ numeroAction: string; sessions: SessionOffre[] }>> {
-  const fetched: Array<{ numeroAction: string; sessions: SessionOffre[] }> = [];
-  for (const numeroAction of numeroActions) {
-    try {
-      const sessions = await fetchActionSessions(client, numeroAction);
-      if (sessions.length === 0) result.missing++;
-      else fetched.push({ numeroAction, sessions });
-    } catch (error) {
-      if (isRcoAuthError(error)) throw error;
-      if (isRcoRateLimitError(error)) {
-        // Stop here: the checkpoint resumes from this action.
-        result.interrupted = true;
-        break;
-      }
-      result.errors.push({ numeroAction, error: errorMessage(error) });
-    }
-    result.processed++;
-  }
-  return fetched;
+  return records.length;
 }
 
 export async function ingestRcoActions(
   supabase: Supabase,
-  client: RcoClient,
-  numeroActions: string[],
-  { runId, dryRun }: { runId: string; dryRun: boolean },
+  fetched: RcoActionSessions[],
+  runId: string,
 ): Promise<RcoBatchResult> {
-  const result: RcoBatchResult = {
-    requested: numeroActions.length,
-    processed: 0,
-    interrupted: false,
-    missing: 0,
-    changes: {
-      new: 0,
-      unchanged: 0,
-      baseline: 0,
-      sessions_only: 0,
-      content: 0,
-    },
-    structuresWritten: 0,
-    ingestionRecordsCreated: 0,
-    errors: [],
-  };
-
-  const fetched = await fetchSessionsByAction(client, numeroActions, result);
+  const result = emptyRcoBatchResult();
+  result.processed = fetched.length;
   if (fetched.length === 0) return result;
 
   const latestServices = await fetchLatestServices(
@@ -317,13 +266,7 @@ export async function ingestRcoActions(
     });
   }
 
-  if (dryRun) {
-    logger.info(
-      { runId, changes: result.changes },
-      "RCO dry run: nothing written",
-    );
-    return result;
-  }
+  if (planned.length === 0) return result;
 
   const { uuidByOriginId, written } = await writeStructures(
     supabase,
@@ -332,17 +275,22 @@ export async function ingestRcoActions(
   );
   result.structuresWritten = written;
 
-  for (const action of planned) {
-    const { numeroAction, change } = action;
-    if (change === "unchanged") continue;
-    try {
-      await writeServiceVersion(supabase, action, uuidByOriginId, runId);
-      if (createsIngestionRecord(change, action.document))
-        result.ingestionRecordsCreated++;
-    } catch (error) {
-      result.errors.push({ numeroAction, error: errorMessage(error) });
-    }
+  const changed = planned.filter(({ change }) => change !== "unchanged");
+  if (changed.length === 0) return result;
+  try {
+    result.ingestionRecordsCreated = await writeServiceVersions(
+      supabase,
+      changed,
+      uuidByOriginId,
+      runId,
+    );
+  } catch (error) {
+    result.errors.push(
+      ...changed.map(({ numeroAction }) => ({
+        numeroAction,
+        error: errorMessage(error),
+      })),
+    );
   }
-
   return result;
 }

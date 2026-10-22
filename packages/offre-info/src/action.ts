@@ -9,5 +9,8 @@ export async function fetchActionSessions(
 ): Promise<SessionOffre[]> {
   const body = await client.get("/offre", { numero_action: numeroAction });
   if (body === null) return [];
-  return z.array(z.unknown()).parse(body).map(normalizeSession);
+  return z
+    .array(z.unknown())
+    .parse(body)
+    .map((raw) => normalizeSession(raw));
 }

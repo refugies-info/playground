@@ -3,6 +3,7 @@ import {
   SESSION_OFFRE_ARRAY_FIELDS,
   SESSION_OFFRE_FIELDS,
   type SessionOffre,
+  type SessionOffreField,
 } from "./session-offre";
 
 const RawSessionSchema = z
@@ -39,16 +40,19 @@ const toArray = (value: unknown): unknown[] => {
   return Array.isArray(value) ? value : [value];
 };
 
-export function normalizeSession(raw: unknown): SessionOffre {
+export function normalizeSession(
+  raw: unknown,
+  fields: readonly SessionOffreField[] = SESSION_OFFRE_FIELDS,
+): SessionOffre {
   const normalized = normalizeValue(RawSessionSchema.parse(raw)) as Record<
     string,
     unknown
   >;
   const session: Record<string, unknown> = Object.fromEntries(
-    SESSION_OFFRE_FIELDS.map((field) => [field, normalized[field] ?? null]),
+    fields.map((field) => [field, normalized[field] ?? null]),
   );
   for (const field of SESSION_OFFRE_ARRAY_FIELDS) {
-    session[field] = toArray(session[field]);
+    if (field in session) session[field] = toArray(session[field]);
   }
   return session as SessionOffre;
 }
