@@ -107,7 +107,6 @@ const FLAT_FRONTMATTER_SPEC: IndentSpec = {
   },
 };
 
-/** Single-quotes a plain scalar that YAML would misread (`a : b`, `a #b`). */
 function quoteUnsafeScalar(value: string): string {
   if (/^['"[{|>]/.test(value) || !/: |\s#/.test(value)) return value;
   return `'${value.replaceAll("'", "''")}'`;
