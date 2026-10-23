@@ -8,7 +8,7 @@ import "@blocknote/mantine/style.css";
 import { isRtlLanguage } from "@playground/shared-types";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { getLanguageFlag, getLanguageName } from "@/lib/document-labels";
+import { getFlagClass, getLanguageName } from "@/lib/document-labels";
 import { blocksToDirectiveMarkdown, markdownToBlocks } from "@/lib/markdown";
 import {
   type CustomEditor,
@@ -114,7 +114,7 @@ export function TranslationEditorPane() {
           <span className="flex items-center gap-2">
             {translation?.language ? (
               <span
-                className={`${getLanguageFlag(translation.language)} shadow-sm`}
+                className={`${getFlagClass(translation.language)} shadow-sm`}
               />
             ) : (
               <span className="text-lg">🏳️</span>
