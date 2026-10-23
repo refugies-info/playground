@@ -155,7 +155,7 @@ Overview of the technologies used in Content Playground and the rationale behind
 
 /supabase                  # Supabase configuration
 ├── config.toml            # Local dev config
-└── seed.sql               # Seed data
+└── seed/                  # Seed data (*.sql)
 ```
 
 ---
