@@ -1,16 +1,16 @@
 import "dotenv/config";
 /**
- * Test DI Ingestion Records Creation
+ * DI Ingestion Records Creation
  *
- * This script tests the creation of ingestion_records from di_services data.
+ * Creates ingestion_records from di_services data.
  * It processes services from a specific ingestion run and creates markdown records.
  *
  * Usage:
- *   pnpm tsx scripts/test-di-ingestion-records.ts [runId]
+ *   pnpm tsx scripts/create-di-ingestion-records.ts [runId]
  *
  * Examples:
- *   pnpm tsx scripts/test-di-ingestion-records.ts                    # Use latest run
- *   pnpm tsx scripts/test-di-ingestion-records.ts <specific-run-id>  # Use specific run
+ *   pnpm tsx scripts/create-di-ingestion-records.ts                    # Use latest run
+ *   pnpm tsx scripts/create-di-ingestion-records.ts <specific-run-id>  # Use specific run
  */
 
 import { logger } from "@playground/shared-types";
