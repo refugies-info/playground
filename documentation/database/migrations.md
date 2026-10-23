@@ -357,6 +357,15 @@ CREATE TRIGGER trigger_log_login
   EXECUTE FUNCTION public.log_auth_event();
 ```
 
+### Changing `workflows_enriched`
+
+The document list view was dropped and recreated 15 times before RI-1642. It is now append-only:
+
+- **A business rule changes** (commune, entry mode, session dates, archive date, word count): `CREATE OR REPLACE FUNCTION` on the matching `workflow_*` / `markdown_word_count` function. The view does not move.
+- **A new column**: add it at the end of the select list and use `CREATE OR REPLACE VIEW` with the full current definition. Postgres rejects it if an existing column moves or changes type.
+- **Never rename or drop** a column: add the new one, switch the code, leave the old one. A `DROP VIEW` is the last resort and must re-run both `GRANT SELECT`s and the `COMMENT`.
+- A new function the view calls needs `GRANT EXECUTE` to `authenticated` and `service_role`: the view is `security_invoker`.
+
 ---
 
 ## Troubleshooting

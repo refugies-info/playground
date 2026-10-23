@@ -422,7 +422,9 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   // Use enriched view for single document too
   const { data, error } = await supabase
     .from("workflows_enriched")
-    .select("*")
+    .select(
+      `${DOCUMENT_LIST_SELECT},${DOCUMENT_PREVIEW_FIELDS_SELECT},editorial_record_id,ingestion_record_id`,
+    )
     .eq("id", id)
     .single();
 
