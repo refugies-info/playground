@@ -5,7 +5,7 @@ import type { RcoStructureDocument } from "./structure";
 const LINE_BREAK_TAGS = /<br\s*\/?>|<\/p>|<\/li>/gi;
 const HTML_TAGS = /<[^>]+>/g;
 
-const toPlainText = (value: unknown): string =>
+export const toPlainText = (value: unknown): string =>
   typeof value === "string"
     ? value.replace(LINE_BREAK_TAGS, "\n").replace(HTML_TAGS, "").trim()
     : "";

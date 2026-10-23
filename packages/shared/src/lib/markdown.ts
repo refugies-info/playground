@@ -155,6 +155,7 @@ export function stripFrontmatter(markdown: string): string {
  * Utility to inject content from frontmatter fields into the markdown body.
  * This is specifically for DI records where description and conditions_acces
  * are stored in the frontmatter but need to be displayed in the editor.
+ * Records without those keys (RCO) keep their body as is.
  *
  * @param markdown - The full markdown with frontmatter
  * @returns Markdown with content injected into the body
@@ -185,8 +186,11 @@ export function injectFrontmatterContent(markdown: string): string {
       body += `## Conditions d'accès\n\n${data.conditions_acces.trim()}\n\n`;
     }
 
-    // If we didn't extract anything from frontmatter, fall back to existing body
-    if (!body && content && content.trim()) {
+    // Only DI keeps its text in the frontmatter: RCO writes it in the body.
+    const hasFrontmatterText =
+      typeof data.description === "string" ||
+      typeof data.conditions_acces === "string";
+    if (!hasFrontmatterText && content.trim()) {
       return content.trim();
     }
 

@@ -163,7 +163,7 @@ export function mapPublicStatus(action: RcoActionDocument): MappedField | null {
 const toCoordinate = (value: unknown) =>
   value == null || value === "" ? undefined : Number(value);
 
-const withoutEmpty = (object: Record<string, unknown>) =>
+export const withoutEmpty = (object: Record<string, unknown>) =>
   Object.fromEntries(
     Object.entries(object).filter(
       ([, value]) => value !== undefined && value !== "",
