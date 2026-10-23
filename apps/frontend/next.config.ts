@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     "@playground/ui",
     "@playground/rco",
+    "@playground/offre-info",
     "@playground/agents",
     "@playground/workflows",
     "@playground/supabase",

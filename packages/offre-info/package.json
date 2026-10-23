@@ -1,0 +1,24 @@
+{
+  "name": "@playground/offre-info",
+  "version": "0.0.0",
+  "private": true,
+  "description": "RCO API Offre Info client and ingestion",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "check:types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@playground/shared-types": "workspace:*",
+    "@playground/supabase": "workspace:*",
+    "@supabase/supabase-js": "2.84.0",
+    "yaml": "^2.9.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  }
+}

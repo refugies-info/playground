@@ -208,6 +208,16 @@ export const createSessionPeriodColumn = (): ColumnDef<Document> => ({
 // Workflow-specific Factories (/workflow table)
 // =============================================================================
 
+export const createOriginColumn = (): ColumnDef<Document> => ({
+  ...createTextColumn<Document>({
+    accessorKey: "sourceSystem",
+    title: "Origine",
+    getValue: (doc) => doc.sourceSystem,
+  }),
+  // No server-side sort field for origin.
+  enableSorting: false,
+});
+
 export const createExternalIdRawColumn = (): ColumnDef<Document> => ({
   id: "externalId",
   header: ({ column }) => <DataTableColumnHeader column={column} title="ID" />,

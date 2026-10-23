@@ -16,6 +16,7 @@
     "@blocknote/react": "^0.46.2",
     "@playground/agents": "workspace:*",
     "@playground/cloudinary": "workspace:*",
+    "@playground/offre-info": "workspace:*",
     "@playground/rco": "workspace:*",
     "@playground/sentry": "workspace:*",
     "@playground/shared-types": "workspace:*",

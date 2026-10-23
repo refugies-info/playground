@@ -67,6 +67,8 @@ export async function processIngestionRecords(
     const { data: services, error: servicesError } = await supabase
       .from("services_latest")
       .select("*")
+      // RCO services have their own transform and record creation.
+      .eq("origin", "DI")
       .range(page * FETCH_PAGE_SIZE, (page + 1) * FETCH_PAGE_SIZE - 1);
 
     if (servicesError) throw new Error(servicesError.message);
