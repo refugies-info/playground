@@ -201,4 +201,3 @@ The **Custom DSFR** tab groups icons whose name doesn't start with `Ri`.
 - [Remix Icons](https://remixicon.com/) — full catalogue
 - [DSFR Icons](https://www.systeme-de-design.gouv.fr/fondamentaux/icone/) — official DSFR selection
 - [Sync script](../scripts/sync-dsfr-icons.md)
-- [Component Strategy](./component-strategy.md)

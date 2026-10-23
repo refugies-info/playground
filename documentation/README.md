@@ -8,28 +8,22 @@ Index of the Content Playground documentation. Every link below points to a file
 
 1. [Local Development Setup](./guides/local-development.md) — Get running locally
 2. [Coding Conventions](./guides/coding-conventions.md) — Naming, comments, functional style
-3. [Common Commands](./reference/commands.md) — Useful CLI commands
+3. Commands: see the `scripts` of the root [package.json](../package.json)
 
 ---
 
 ## 📚 Guides
 
-- **[Guides Overview](./guides/README.md)**
 - **[Local Development Setup](./guides/local-development.md)** — Set up your development environment
-- **[Supabase Setup](./guides/supabase-setup.md)** — Configure Supabase locally and in production
-- **[Deployment](./guides/deployment.md)** — Deploy to Vercel, Supabase and Letta
 - **[Coding Conventions](./guides/coding-conventions.md)** — Code style rules
 - **[Testing](./guides/testing.md)** — Testing practices
 - **[Worktrees](./guides/worktrees.md)** — Working with git worktrees
-- **[DI Ingestion Records](./guides/di-ingestion-record-implementation.md)** — DI ingestion record implementation
-- **[DI Ingestion Testing](./guides/di-ingestion-testing.md)** — Testing the DI ingestion
 
 ---
 
 ## 🏗️ Architecture
 
-- **[Architecture Overview](./architecture/README.md)**
-- **[Tech Stack](./architecture/tech-stack.md)** — Technology choices and rationale
+- **[Tech Stack](./architecture/tech-stack.md)** — Technology choices, rationale and deployment
 - **[Content Pipeline](./architecture/content-pipeline.md)** — Markdown content pipeline
 - **[Document Editor Contexts](./architecture/document-editor-contexts.md)** — Editor contexts and routes
 - **[H1 Title Flow](./architecture/h1-title-flow.md)** — H1 title handling
@@ -39,9 +33,6 @@ Index of the Content Playground documentation. Every link below points to a file
 
 ## 🎨 Frontend
 
-- **[Frontend Overview](./frontend/README.md)**
-- **[Component Strategy](./frontend/component-strategy.md)** — Component architecture and organization
-- **[Component Quick Reference](./frontend/component-quick-reference.md)** — Short component overview
 - **[Design Tokens](./frontend/design-tokens.md)** — Structural decisions on tokens
 - **[Icon System](./frontend/icon-system.md)** — Icons
 - **[Publication & Archive](./frontend/publication/index.md)** — Preview, publish, archive, translation preview
@@ -50,8 +41,6 @@ Index of the Content Playground documentation. Every link below points to a file
 
 ## 🗄️ Database
 
-- **[Database Overview](./database/README.md)**
-- **[Schema](./database/schema.md)** — Tables and views
 - **[Migrations](./database/migrations.md)** — Migration strategy and best practices
 - **[RLS Policies](./database/rls-policies.md)** — Row-level security
 - **[Seed Data](./database/seed-data.md)** — Test users for local development
@@ -61,7 +50,6 @@ Index of the Content Playground documentation. Every link below points to a file
 
 ## 🤖 AI
 
-- **[AI Overview](./ai/README.md)**
 - **[Local Letta Dev](./ai/local-letta-dev.md)** — Self-hosted Letta for local development
 
 ### Agent migration (Letta Cloud → Letta Agent SDK)
@@ -75,7 +63,6 @@ Tracked under the Linear project [Migration agent IA — Letta Code SDK et qmd](
 
 ## 🔄 Workflows
 
-- **[Workflows Overview](./workflows/README.md)**
 - **[DI Ingestion](./workflows/di-ingestion.md)** — Data Inclusion ingestion workflow
 - **[Metadata Mapping](./workflows/metadata-mapping.md)** — Metadata validation
 - **[Translation Publication](./workflows/translation-publication.md)** — Translation publication flow
@@ -84,9 +71,7 @@ Tracked under the Linear project [Migration agent IA — Letta Code SDK et qmd](
 
 ## 🛠️ Reference
 
-- **[Reference Overview](./reference/README.md)**
 - **[Environment Variables](./reference/environment-variables.md)** — Configuration reference
-- **[Common Commands](./reference/commands.md)** — CLI commands
 
 ---
 
@@ -95,14 +80,6 @@ Tracked under the Linear project [Migration agent IA — Letta Code SDK et qmd](
 - **[Scripts Overview](./scripts/README.md)** — Index of all scripts
 - **[Force Metadata Reports](./scripts/force-metadata-reports.md)** — Regenerate AI metadata reports
 - **[Sync DSFR Icons](./scripts/sync-dsfr-icons.md)** — Icon sync script
-
----
-
-## 🔒 Internal
-
-- **[Internal Overview](./internal/README.md)**
-- **[Documentation Strategy](./internal/documentation-strategy.md)** — Guidelines for LLMs on creating documentation
-- **[Doc Creation Checklist](./internal/doc-creation-checklist.md)**
 
 ---
 
