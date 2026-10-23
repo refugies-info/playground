@@ -933,37 +933,24 @@ export type Database = {
           editorial_record_id: string | null
           external_id: string | null
           has_pending_ingestion_update: boolean | null
-          has_publication_history: boolean | null
           id: string | null
           ingestion_created_at: string | null
           ingestion_markdown: string | null
           ingestion_metadata: Json | null
           ingestion_record_id: string | null
-          ingestion_report_id: string | null
           ingestion_word_count: number | null
           latest_ingestion_version: number | null
           latest_publication: Json | null
           modalites_entrees_sorties: string | null
           origin: Database["public"]["Enums"]["origin"] | null
-          quality_score: number | null
-          raw_online_status: string | null
-          raw_work_status: string | null
           report_created_at: string | null
           session_end_date: string | null
           session_start_date: string | null
           structure_name: string | null
           title: string | null
           updated_at: string | null
-          workflow_assignee_id: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "ingestion_records_ingestion_report_id_fkey"
-            columns: ["ingestion_report_id"]
-            isOneToOne: false
-            referencedRelation: "letta_reports"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "status_editorial_record_id_fkey"
             columns: ["editorial_record_id"]
@@ -976,13 +963,6 @@ export type Database = {
             columns: ["ingestion_record_id"]
             isOneToOne: false
             referencedRelation: "ingestion_records"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "workflows_assignee_id_fkey"
-            columns: ["workflow_assignee_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1008,6 +988,7 @@ export type Database = {
       }
       get_my_language: { Args: never; Returns: string }
       get_my_role: { Args: never; Returns: string }
+      markdown_word_count: { Args: { markdown: string }; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       update_metadata_field: {
@@ -1027,6 +1008,43 @@ export type Database = {
           record_id: string
         }
         Returns: undefined
+      }
+      workflow_archive_date: {
+        Args: {
+          compliance_status: string
+          editorial_archived_at: string
+          editorial_updated_at: string
+          ingestion_report_id: string
+          online_status: string
+          workflow_id: string
+        }
+        Returns: {
+          archived_at: string
+          archived_at_is_approximate: boolean
+        }[]
+      }
+      workflow_commune: {
+        Args: {
+          editorial_metadata: Json
+          ingestion_metadata: Json
+          origin: string
+        }
+        Returns: string
+      }
+      workflow_modalites_entrees_sorties: {
+        Args: {
+          editorial_metadata: Json
+          ingestion_metadata: Json
+          origin: string
+        }
+        Returns: string
+      }
+      workflow_session_period: {
+        Args: { ingestion_metadata: Json; origin: string }
+        Returns: {
+          session_end_date: string
+          session_start_date: string
+        }[]
       }
     }
     Enums: {
