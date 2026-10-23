@@ -20,7 +20,6 @@ Create reference documentation when:
 
 - **[Environment Variables](./environment-variables.md)** — Configuration reference
 - **[Common Commands](./commands.md)** — CLI commands and aliases
-- **[Glossary](./glossary.md)** — Project terminology (coming soon)
 
 ## Examples of Reference Documentation
 
@@ -36,7 +35,6 @@ Create reference documentation when:
 
 - [Guides](../guides/README.md) — How-to guides
 - [Architecture](../architecture/README.md) — System design
-- [Troubleshooting](../troubleshooting/README.md) — Common issues & solutions
 
 ## Quick Links
 

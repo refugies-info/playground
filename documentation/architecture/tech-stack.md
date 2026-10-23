@@ -136,24 +136,17 @@ Overview of the technologies used in Content Playground and the rationale behind
 │   └── utils/             # Shared utilities
 └── package.json
 
-/documentation             # Project documentation
+/documentation           # Project documentation (index: documentation/README.md)
 ├── guides/                # How-to guides
 ├── architecture/          # System design
-├── api/                   # API reference
+├── frontend/              # Frontend
+├── database/              # Database
+├── ai/                    # AI / Letta
 ├── workflows/             # Feature workflows
-├── troubleshooting/       # Common issues
-├── reference/             # Quick references
-└── roadmaps/              # Project roadmaps
-
-/specs                     # Feature specifications
-├── 001-editorial-workflow/
-├── 002-turborepo-scaffolding/
-└── 003-supabase-auth/
-
-/migrations                # Database migrations
-└── *.sql                  # Migration files
+└── reference/             # Quick references
 
 /supabase                  # Supabase configuration
+├── migrations/            # Database migrations (*.sql)
 ├── config.toml            # Local dev config
 └── seed/                  # Seed data (*.sql)
 ```

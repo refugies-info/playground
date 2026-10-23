@@ -55,84 +55,7 @@ supabase db push
 
 ## Test Script
 
-The test script (`scripts/test-di-ingestion.ts`) provides a smoke test for DI ingestion.
-
-### Usage
-
-```bash
-pnpm tsx scripts/test-di-ingestion.ts [options]
-```
-
-### Options
-
-| Flag | Description | Default |
-|-------|-------------|----------|
-| `--type TYPE` | Type to ingest: `structures` or `services` | `structures` |
-| `--limit N` | Fetch only N items (for testing) | `5` |
-| `--all` | Fetch all items (no limit) | `false` |
-| `--cleanup` | Delete inserted records after test | `false` |
-
-### Examples
-
-```bash
-# Test structures (default, fetch 5, keep in DB)
-pnpm tsx scripts/test-di-ingestion.ts
-
-# Test services (fetch 5, keep in DB)
-pnpm tsx scripts/test-di-ingestion.ts --type services
-
-# Fetch 20 structures
-pnpm tsx scripts/test-di-ingestion.ts --limit 20
-
-# Fetch 10 services with cleanup
-pnpm tsx scripts/test-di-ingestion.ts --type services --limit 10 --cleanup
-
-# Fetch ALL structures (be careful - 1930+ records)
-pnpm tsx scripts/test-di-ingestion.ts --type structures --all
-
-# Fetch ALL services (be careful - 5040+ records)
-pnpm tsx scripts/test-di-ingestion.ts --type services --all
-```
-
----
-
-## What the Script Does
-
-1. **Environment Check**: Validates that required environment variables are set
-2. **API Fetch**: Fetches data from Data Inclusion API (with optional limit)
-3. **Sample Logging**: Shows a sample record to verify data structure
-4. **Database Insert**: Inserts records into appropriate table (`di_structures` or `di_services`)
-5. **Verification**: Reads back inserted records to confirm successful storage
-6. **Cleanup** (optional): Deletes test records from database
-
----
-
-## Sample Output
-
-```bash
-$ pnpm tsx scripts/test-di-ingestion.ts --type services --limit 2
-
-[INFO] === DI Ingestion Smoke Test ===
-[INFO] Environment loaded
-[INFO] Fetching services from DI API...
-[INFO] DI API pagination initialized for services
-[INFO] Completed DI API fetch for services
-[INFO] Sample service
-  sample: {
-    id: "carif-oref--01_AL1705012",
-    nom: "Préparation au test de connaissance du français...",
-    source: "carif-oref",
-    structure_id: "carif-oref--01_312"
-  }
-[INFO] Inserting services into di_services table...
-[INFO] Services inserted successfully
-  insertedCount: 2
-  insertedIds: ["carif-oref--01_AL1705012", "carif-oref--01_AL1705125"]
-[INFO] Verifying insertion...
-[INFO] Verified records in database
-  count: 2
-[INFO] === Smoke test completed ===
-```
+The former smoke script `scripts/test-di-ingestion.ts` no longer exists. To run an ingestion locally, use `pnpm di:ingest` (`scripts/ingest-di.ts`) or trigger the cron route with `pnpm di:cron`.
 
 ---
 
@@ -401,6 +324,6 @@ After successful ingestion testing:
 
 ## Related Documentation
 
-- [Environment Variables Reference](/reference/environment-variables.md) - DI configuration
-- [Database Schema](/database/schema.md) - Table definitions
-- [Testing Guide](/testing.md) - General testing practices
+- [Environment Variables Reference](../reference/environment-variables.md) - DI configuration
+- [Database Schema](../database/schema.md) - Table definitions
+- [Testing Guide](./testing.md) - General testing practices

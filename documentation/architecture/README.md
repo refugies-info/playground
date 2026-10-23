@@ -19,10 +19,8 @@ Create architecture documentation when:
 ## Contents
 
 - **[Tech Stack](./tech-stack.md)** — Technology choices and rationale
-- **[Monorepo Structure](./monorepo-structure.md)** — Turborepo organization
 - **[Content Pipeline](./content-pipeline.md)** — Markdown transformation & storage flow
-- **[Database Schema](./database-schema.md)** — Data model and migrations (coming soon)
-- **[Authentication](./authentication.md)** — Auth flow and security (coming soon)
+- **[Database Schema](../database/schema.md)** — Data model and migrations
 - **[Document Editor Contexts](./document-editor-contexts.md)** — Providers & route architecture
 
 ## Examples of Architecture Documentation

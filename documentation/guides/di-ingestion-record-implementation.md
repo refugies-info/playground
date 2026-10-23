@@ -33,12 +33,7 @@ Added `origin` column to `ingestion_records` table:
 4. Transform each service+structure into markdown with frontmatter
 5. Insert ingestion records with metadata containing nested structure
 
-### 3. RCO Ingestion Records
-**File**: `packages/supabase/src/ingestion.ts`
-
-Updated to set `origin: "RCO"` for RCO records for consistency.
-
-### 4. Test Script
+### 3. Test Script
 **File**: `scripts/create-di-ingestion-records.ts`
 
 Automated test script for DI ingestion records:

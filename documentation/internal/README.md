@@ -6,7 +6,6 @@ Internal guidelines and implementation notes for LLMs and developers. These are 
 
 - **[Documentation Strategy](./documentation-strategy.md)** — Full guidelines for LLMs on creating documentation
 - **[Documentation Creation Checklist](./doc-creation-checklist.md)** — Step-by-step checklist before creating docs
-- **[Component Strategy Implementation](./component-strategy-implementation.md)** — Implementation notes and what was done
 
 ## Purpose
 

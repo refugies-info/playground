@@ -56,10 +56,6 @@ What type of documentation is this?
 └─ troubleshooting/
    Examples: common errors, solutions, debugging tips
 
-"When will this happen?" (roadmap)
-└─ roadmaps/
-   Examples: project timeline, feature roadmap, milestones
-
 "LLM guidelines?" (meta)
 └─ internal/
    Examples: documentation strategy, implementation notes

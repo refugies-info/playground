@@ -44,7 +44,7 @@ pnpm test --run
 ### Location
 Test files should follow the `[filename].test.ts` naming convention and be located next to the file they are testing.
 
-Example: `apps/frontend/src/lib/markdown/parser.test.ts`
+Example: `packages/agents/src/parser.test.ts` (frontend tests live in `apps/frontend/tests/`, mirroring `src/`)
 
 ### Structure
 We use a standard `describe` / `it` / `expect` structure.
@@ -64,7 +64,7 @@ describe("myFunc", () => {
 
 ## 🩺 Markdown Parser Tests
 
-The `apps/frontend/src/lib/markdown/parser.test.ts` file is a critical part of our content pipeline verification. It ensures that:
+The `apps/frontend/tests/lib/markdown/parser.test.ts` file is a critical part of our content pipeline verification. It ensures that:
 
 1.  **Hierarchy Restoration**: Nested blocks (like `:::toggle`) are correctly transformed from flat Markdown into hierarchical BlockNote structures.
 2.  **Robustness**: The parser handles malformed Markdown (missing closing fences, stray colons) without crashing.
