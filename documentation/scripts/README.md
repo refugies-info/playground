@@ -27,7 +27,6 @@ All scripts live in `/scripts` and are invoked via `pnpm` (see `package.json`).
 
 | Command | Script | Description |
 |---------|--------|-------------|
-| `pnpm convert:dispositifs` | `convert-dispositifs.ts` | Convert dispositifs between formats |
 | `pnpm generate:json` | `generate-json.ts` | Generate JSON output from records |
 | `pnpm generate:md` | `generate-md.ts` | Generate markdown output from records |
 | `pnpm copy:schema` | `copy-schema.ts` | Copy schema definitions |

@@ -97,7 +97,7 @@
 #### `search_ri_duplicate_dispositifs`
 
 - **État actuel** : ⚠️ **client HTTP** appelé par l'agent Letta Cloud. Ce n'est pas un outil self-contained : l'agent appelle une **API ad-hoc du repo karfur** (cf. contrainte 3) qui retourne une liste de candidats doublons probables, puis l'agent LLM analyse et qualifie ces candidats.
-- **Référence** : `packages/agents/prompts/duplicates.md` (§ `## 📂 Base de connaissances`). Le prompt décrit la stratégie de matching fuzzy + sémantique, mais le matching "machine" est délégué à l'API karfur.
+- **Référence** : `packages/agents/prompts/duplicates.md` (§ `0. SOURCE OBLIGATOIRE`). L'appel à l'outil est obligatoire et aucun fichier (`dispositifs.yaml`, `structures.json`) n'est utilisé ; le prompt décrit la qualification fuzzy + sémantique des candidats, le matching "machine" est délégué à l'API karfur.
 - **Comportement effectif** :
   1. L'agent Letta reçoit un document Carif-Oref.
   2. L'agent appelle le tool `search_ri_duplicate_dispositifs` en passant des métadonnées extraites du document.
@@ -113,10 +113,8 @@
 | Fichier                                       | Usage                                                                  | Statut        |
 | --------------------------------------------- | ---------------------------------------------------------------------- | ------------- |
 | `packages/agents/prompts/compliance.md`       | Bloc mémoire `compliance` (base_instructions + section `<compliance>`) | Commit dans le repo (gelé côté Letta Cloud) |
-| `packages/agents/prompts/duplicates.md`       | Bloc mémoire `doublons` (base_instructions + section `<doublons>`)     | Commit dans le repo (gelé côté Letta Cloud) |
+| `packages/agents/prompts/duplicates.md`       | Bloc mémoire `doublons` (contenu de la section `<doublons>`)            | Commit dans le repo, à reporter à la main dans Letta Cloud |
 | `packages/agents/src/metadata-schema-spec.ts` | Constante `METADATA_SCHEMA_SPEC` (TS + YAML + 7 règles métier)         | Commit dans le repo (gelé côté Letta Cloud) |
-| `packages/agents/samples/dispositifs.json`    | Échantillon pour tests unitaires                                       | Commit dans le repo |
-| `packages/agents/samples/dispositifs.yaml`    | Échantillon pour tests unitaires (format YAML)                          | Commit dans le repo |
 
 ### A.7 Code applicatif (clients & workflows)
 
@@ -341,7 +339,6 @@ Le setup Letta Code _historique_ avait 5 blocs (cf. Section B.2) — **archivés
 ### Production (Letta Cloud)
 - `packages/agents/src/{clients,agents,ingestion,simplification,metadata,parser,schemas,types,prompts,index}.ts`
 - `packages/agents/prompts/{compliance,duplicates}.md`
-- `packages/agents/samples/{dispositifs.json,dispositifs.yaml}`
 - `packages/agents/src/metadata-schema-spec.ts`
 - `packages/shared/src/constants/languages.ts`
 - `packages/workflows/src/pipelines/ingestion/di-ingestion.ts` _(cron pipeline)_
