@@ -1,4 +1,5 @@
 export * from "./agents";
+export * from "./arbitrage";
 export * from "./clients";
 export * from "./ingestion";
 export * from "./metadata";

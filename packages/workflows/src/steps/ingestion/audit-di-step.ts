@@ -50,6 +50,7 @@ import {
   type LettaUsage,
   parseIngestionResponse,
 } from "@playground/agents";
+import type { RcoActionDocument } from "@playground/offre-info";
 import {
   LETTA_MODEL_HANDLE,
   logger,
@@ -61,6 +62,7 @@ import { getStepMetadata } from "@workflow/core";
 import { FatalError } from "@workflow/errors";
 import { z } from "zod";
 import { recordActivity } from "../common/activity-log";
+import { arbitrateRcoRecord } from "./arbitrate-rco";
 import {
   fetchAllDiServiceIds,
   getSupabaseClient,
@@ -419,6 +421,62 @@ export async function generateDiAuditReportsStep(runId: string) {
 generateDiAuditReportsStep.maxRetries = 3;
 
 /**
+ * Forced audit of a DI record by the multi-task agent (/audit command).
+ */
+async function generateForcedDiReport(markdown: string, workflowId: string) {
+  const agentId = process.env.PLAYGROUND_AGENT_ID;
+  if (!agentId) {
+    throw new FatalError("PLAYGROUND_AGENT_ID is not defined");
+  }
+
+  const lettaClient = createLettaClient();
+  const conversationId = await findOrCreateConversation(
+    lettaClient,
+    agentId,
+    `compliance-${workflowId}`,
+  );
+
+  let finalContent = "";
+  const usage: LettaUsage = {};
+  for await (const chunk of generateIngestionReport(
+    lettaClient,
+    markdown,
+    conversationId,
+  )) {
+    accumulateUsage(usage, chunk);
+    if (chunk.message_type === "assistant_message") {
+      if (typeof chunk.content !== "string") {
+        throw new Error(
+          `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
+        );
+      }
+      finalContent += chunk.content;
+    }
+  }
+
+  if (!finalContent) {
+    throw new Error("No assistant response received for ingestion report");
+  }
+
+  const parsed = parseIngestionResponse(finalContent, agentId, usage);
+  return {
+    agentId,
+    markdown: parsed.content,
+    metadata: parsed.metadata,
+    status: parsed.status,
+    rawResponse: parsed.rawResponse,
+    tokens: usage.totalTokens ?? 0,
+    // Compliant iff complete + not duplicate (RI-1117, RI-1093)
+    complianceStatus:
+      parsed.status !== "complete"
+        ? "error"
+        : parsed.metadata.compliant && !parsed.metadata.duplicate
+          ? "compliant"
+          : "non_compliant",
+  };
+}
+
+/**
  * Workflow step that forces generation of an audit report for a specific workflow,
  * bypassing normal batch collection. Used primarily for manual arbitration/retry.
  *
@@ -466,7 +524,7 @@ export async function forceAuditReportStep(workflowId: string) {
   // 2. Fetch Ingestion Record
   const { data: record, error: recordError } = await supabase
     .from("ingestion_records")
-    .select("id, markdown")
+    .select("id, markdown, service:services(origin, data)")
     .eq("id", ingestionRecordId)
     .single();
 
@@ -474,64 +532,32 @@ export async function forceAuditReportStep(workflowId: string) {
     throw new Error(`Ingestion Record not found: ${recordError?.message}`);
   }
 
-  const agentId = process.env.PLAYGROUND_AGENT_ID;
-  if (!agentId) {
-    throw new FatalError("PLAYGROUND_AGENT_ID is not defined");
-  }
-
-  const lettaClient = createLettaClient();
-  // Resolve the agent's actual model handle (cached per process) — TEC-65
-  const model = LETTA_MODEL_HANDLE;
-  const conversationId = await findOrCreateConversation(
-    lettaClient,
-    agentId,
-    `compliance-${workflowId}`,
-  );
-
   logger.info(
-    { workflowId, ingestionRecordId },
+    { workflowId, ingestionRecordId, origin: record.service?.origin },
     "Starting forced arbitration audit",
   );
 
-  let finalContent = "";
-  const usage: LettaUsage = {};
-
   try {
-    for await (const chunk of generateIngestionReport(
-      lettaClient,
-      record.markdown,
-      conversationId,
-    )) {
-      accumulateUsage(usage, chunk);
-      if (chunk.message_type === "assistant_message") {
-        if (typeof chunk.content !== "string") {
-          throw new Error(
-            `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
-          );
-        }
-        finalContent += chunk.content;
-      }
-    }
-
-    if (!finalContent) {
-      throw new Error("No assistant response received for ingestion report");
-    }
-
-    const parsed = parseIngestionResponse(finalContent, agentId, usage);
+    const result =
+      record.service?.origin === "RCO"
+        ? await arbitrateRcoRecord(
+            record.service.data as unknown as RcoActionDocument,
+          )
+        : await generateForcedDiReport(record.markdown, workflowId);
 
     // Insert Report
     const { data: report, error: reportError } = await supabase
       .from("letta_reports")
       .insert({
-        agent_id: agentId,
+        agent_id: result.agentId,
         report_type: "ingestion",
-        markdown: parsed.content,
-        metadata: parsed.metadata as Json,
-        status: parsed.status,
-        raw_response: parsed.rawResponse ?? null,
+        markdown: result.markdown,
+        metadata: result.metadata as Json,
+        status: result.status,
+        raw_response: result.rawResponse ?? null,
         workflow_id: workflowId,
-        token_cost: usage?.totalTokens ?? null,
-        model,
+        token_cost: result.tokens || null,
+        model: LETTA_MODEL_HANDLE,
       })
       .select("id")
       .single();
@@ -554,13 +580,7 @@ export async function forceAuditReportStep(workflowId: string) {
       );
     }
 
-    // Set compliance_status on ingestion_records — compliant iff complete + not duplicate (RI-1117, RI-1093)
-    const finalComplianceStatus =
-      parsed.status !== "complete"
-        ? "error"
-        : parsed.metadata.compliant && !parsed.metadata.duplicate
-          ? "compliant"
-          : "non_compliant";
+    const finalComplianceStatus = result.complianceStatus;
 
     const { error: finalStatusError } = await supabase
       .from("ingestion_records")
@@ -585,8 +605,8 @@ export async function forceAuditReportStep(workflowId: string) {
       activity: {
         complianceStatus: finalComplianceStatus,
         ingestionRecordId,
-        compliant: Boolean(parsed.metadata.compliant),
-        duplicate: Boolean(parsed.metadata.duplicate),
+        compliant: Boolean(result.metadata.compliant),
+        duplicate: Boolean(result.metadata.duplicate),
       },
     });
 
