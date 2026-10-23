@@ -14,7 +14,6 @@ All scripts live in `/scripts` and are invoked via `pnpm` (see `package.json`).
 |---------|--------|-------------|
 | `pnpm di:ingest` | `ingest-di.ts` | Ingest data from the Data Inclusion API into Supabase |
 | `pnpm di:extract` | `extract-random-records.ts` | Export random ingestion records as markdown files |
-| `pnpm seed:ingestion` | `seed-ingestion.ts` | Seed ingestion records for local development |
 
 ### AI Agents (Letta)
 
@@ -30,12 +29,6 @@ All scripts live in `/scripts` and are invoked via `pnpm` (see `package.json`).
 | `pnpm generate:json` | `generate-json.ts` | Generate JSON output from records |
 | `pnpm generate:md` | `generate-md.ts` | Generate markdown output from records |
 | `pnpm copy:schema` | `copy-schema.ts` | Copy schema definitions |
-
-### Database
-
-| Command | Script | Description |
-|---------|--------|-------------|
-| `pnpm seed:sync` | *(inline)* | Dump local Supabase data to `supabase/seed.sql` |
 
 ### Validation
 
