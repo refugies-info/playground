@@ -22,14 +22,6 @@ All scripts live in `/scripts` and are invoked via `pnpm` (see `package.json`).
 | `pnpm force:metadata` | `force-metadata-reports.ts` | [Force (re)generation of metadata reports](./force-metadata-reports.md) |
 | `pnpm list:agents` | `list-agents.ts` | List all Letta agents in the project |
 
-### Data Conversion
-
-| Command | Script | Description |
-|---------|--------|-------------|
-| `pnpm generate:json` | `generate-json.ts` | Generate JSON output from records |
-| `pnpm generate:md` | `generate-md.ts` | Generate markdown output from records |
-| `pnpm copy:schema` | `copy-schema.ts` | Copy schema definitions |
-
 ### Validation
 
 | Command | Script | Description |
