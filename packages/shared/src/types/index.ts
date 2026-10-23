@@ -4,7 +4,6 @@
  */
 
 export * from "./activity-log";
-export * from "./date";
 export * from "./date-filter";
 export * from "./document";
 export * from "./metadata-ri";

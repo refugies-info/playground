@@ -8,8 +8,6 @@ import {
 } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import {
-  archiveWorkflow,
-  forceArbitrationWorkflow,
   forceMetadataOnlyWorkflow,
   publicationWorkflow,
   saveDocumentStep,
@@ -28,7 +26,7 @@ import { verifyWorkflowPermission } from "./permission-helper";
  * Verifies user authentication and permissions for a specific action on a workflow.
  *
  * Checks if the user is logged in and has the required role/permissions
- * to perform the requested action ('modify', 'publish', 'archive').
+ * to perform the requested action ('modify', 'publish').
  *
  * @param workflowId - The ID of the workflow to access.
  * @param action - The action being performed.
@@ -36,7 +34,7 @@ import { verifyWorkflowPermission } from "./permission-helper";
  */
 async function getAuthorizedSession(
   workflowId: string,
-  action: "modify" | "publish" | "archive",
+  action: "modify" | "publish",
 ) {
   const [currentUser, cookieStore] = await Promise.all([
     getCurrentUser(),
@@ -59,7 +57,6 @@ async function getAuthorizedSession(
     const errorMessages = {
       modify: "Vous n'avez pas la permission de modifier ce document",
       publish: "Vous n'avez pas la permission de publier ce document",
-      archive: "Vous n'avez pas la permission d'archiver ce document",
     };
     return { errorResponse: { success: false, error: errorMessages[action] } };
   }
@@ -302,71 +299,6 @@ export async function publishDocument(
 }
 
 /**
- * Archives a document.
- *
- * Initiates the archive workflow which:
- * 1. Marks the document as archived on the main application.
- * 2. Updates local records and status.
- *
- * @param workflowId - The ID of the document workflow.
- * @param title - The title of the document.
- * @param markdown - The current markdown content.
- * @param metadata - Additional metadata.
- * @returns The result of the operation, including the workflow run ID.
- */
-export async function archiveDocument(
-  workflowId: string,
-  title: string,
-  markdown: string,
-  metadata?: Record<string, unknown>,
-): Promise<{
-  success: boolean;
-  workflowRunId?: string;
-  error?: string;
-}> {
-  try {
-    const auth = await getAuthorizedSession(workflowId, "archive");
-    if (auth.errorResponse) return auth.errorResponse;
-    const { user } = auth;
-
-    if (!archiveWorkflow) {
-      logger.error("archiveWorkflow is undefined - cannot start workflow");
-      return {
-        success: false,
-        error: "Configuration error: Workflow not loaded",
-      };
-    }
-
-    const result = await start(archiveWorkflow, [
-      {
-        workflowId,
-        title,
-        markdown,
-        metadata,
-        userId: user.id,
-        userEmail: user.email ?? "",
-        platform: "refugies.info",
-      },
-    ]);
-
-    logger.info(
-      { workflowRunId: result.runId, workflowId },
-      "Archive workflow started",
-    );
-
-    revalidatePath("/documents/[id]");
-
-    return {
-      success: true,
-      workflowRunId: result.runId,
-    };
-  } catch (error) {
-    logger.error(error, "Unexpected error starting archive workflow");
-    return { success: false, error: "Erreur inattendue lors de l'archivage" };
-  }
-}
-
-/**
  * Retrieves the raw editorial content of a workflow.
  *
  * Primarily used for debugging or inspecting the exact markdown stored
@@ -410,71 +342,9 @@ export async function getEditorialContent(
 }
 
 /**
- * Triggers forced arbitration (audit + metadata) for a workflow.
- *
- * Used when a workflow lacks a metadata report (e.g., legacy content from prod).
- * Runs both audit and metadata generation sequentially.
- *
- * @param workflowId - The ID of the workflow to process.
- * @returns Object indicating success/failure and the workflow run ID.
- */
-export async function triggerForceArbitration(workflowId: string): Promise<{
-  success: boolean;
-  workflowRunId?: string;
-  error?: string;
-}> {
-  // Verify user is authenticated
-  const cookieStore = await cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user || !user.email) {
-    logger.error(userError, "Error getting user for force arbitration");
-    return {
-      success: false,
-      error: "Utilisateur non authentifié",
-    };
-  }
-
-  try {
-    if (!forceArbitrationWorkflow) {
-      logger.error("forceArbitrationWorkflow is undefined - cannot start");
-      return {
-        success: false,
-        error: "Workflow non disponible",
-      };
-    }
-
-    const result = await start(forceArbitrationWorkflow, [workflowId]);
-
-    logger.info(
-      { workflowRunId: result.runId, workflowId },
-      "Force arbitration workflow started",
-    );
-
-    revalidatePath("/documents/[id]", "page");
-
-    return {
-      success: true,
-      workflowRunId: result.runId,
-    };
-  } catch (error) {
-    logger.error(error, "Unexpected error starting force arbitration workflow");
-    return {
-      success: false,
-      error: "Erreur inattendue lors du démarrage de l'arbitrage forcé",
-    };
-  }
-}
-
-/**
  * Triggers a metadata-only re-generation for a single document.
  *
- * Unlike triggerForceArbitration, this skips the audit step entirely.
+ * Unlike forceArbitrationAction (app/actions/di.ts), this skips the audit step entirely.
  * Use after re-training the metadata AI agent (Agathe) to regenerate
  * metadata on documents that already have a report.
  *

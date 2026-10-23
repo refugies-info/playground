@@ -22,7 +22,7 @@ import {
   saveTranslationMetadataFieldAction as saveTranslationMetadataField,
   updateTranslationWorkStatusAction,
 } from "@/services/translation-actions";
-import { useTranslationPublicationRealtime } from "./hooks/useTranslationPublicationRealtime";
+import { usePublicationRealtime } from "../document-editor/actions/hooks/usePublicationRealtime";
 
 type TranslationWorkStatus = WorkStatus | "pending" | "error";
 
@@ -158,8 +158,10 @@ export function TranslationProvider({
     // error is already stored in publicationRealtime.error
   }, []);
 
-  const publicationRealtime = useTranslationPublicationRealtime({
-    translationId: initialData.id,
+  const publicationRealtime = usePublicationRealtime({
+    recordKey: "translation_record_id",
+    recordId: initialData.id,
+    mode: "translation",
     language: initialData.language,
     onSuccess: handlePublicationSuccess,
     onError: handlePublicationError,

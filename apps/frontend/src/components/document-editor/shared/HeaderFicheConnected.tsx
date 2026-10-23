@@ -82,7 +82,8 @@ export function HeaderFicheConnected({
 
   // Realtime — updates the URL in the success result if it wasn't available immediately
   const { isWaiting, setError, startListening } = usePublicationRealtime({
-    workflowId: document?.id,
+    recordKey: "workflow_id",
+    recordId: document?.id,
     onSuccess: (url) => {
       setPublishResult({ type: "success", publishedUrl: url });
       setDocument((prev) => {

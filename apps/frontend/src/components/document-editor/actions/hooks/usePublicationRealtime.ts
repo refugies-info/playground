@@ -9,8 +9,24 @@ const FALLBACK_TIMEOUT_MS = 60_000;
 /** Interval between fallback polling attempts (ms) */
 const FALLBACK_POLL_INTERVAL_MS = 10_000;
 
+type PublicationRecordKey = "workflow_id" | "translation_record_id";
+
+interface PublicationRecord {
+  status: string;
+  mode?: string | null;
+  error_message?: string | null;
+  remote_id?: string | null;
+  target?: string | null;
+}
+
 interface UsePublicationRealtimeOptions {
-  workflowId?: string;
+  /** Column of publication_records to listen on. */
+  recordKey: PublicationRecordKey;
+  recordId?: string;
+  /** Only react to records with this mode (translations share the table with document publications). */
+  mode?: "translation";
+  /** Language prefix of the published URL; null/undefined for the FR document. */
+  language?: string;
   onSuccess: (publishedUrl: string) => void;
   onError?: (message: string) => void;
 }
@@ -20,12 +36,9 @@ interface UsePublicationRealtimeOptions {
  * Returns true if the record was handled (terminal state), false otherwise.
  */
 function handlePublicationRecord(
-  pubRecord: {
-    status: string;
-    error_message?: string | null;
-    remote_id?: string | null;
-    target?: string | null;
-  },
+  pubRecord: PublicationRecord,
+  mode: string | undefined,
+  language: string | undefined,
   callbacks: {
     setError: (msg: string | null) => void;
     setIsWaiting: (v: boolean) => void;
@@ -33,6 +46,8 @@ function handlePublicationRecord(
     onError?: (msg: string) => void;
   },
 ): boolean {
+  if (mode && pubRecord.mode !== mode) return false;
+
   if (pubRecord.status === "failed" && pubRecord.error_message) {
     const message = pubRecord.error_message;
     callbacks.setError(message);
@@ -49,7 +64,7 @@ function handlePublicationRecord(
     callbacks.setError(null);
     const url = buildPublicationUrl(
       pubRecord.target,
-      null, // FR document (no language prefix)
+      language ?? null,
       pubRecord.remote_id,
     );
     if (url) {
@@ -69,9 +84,9 @@ function handlePublicationRecord(
 }
 
 /**
- * Subscribe to publication_records INSERT events via Supabase Realtime.
- *
- * Replaces the old polling approach with real-time notifications:
+ * Subscribe to publication_records INSERT events via Supabase Realtime,
+ * for a document (`workflow_id`) or a translation (`translation_record_id`,
+ * requires REPLICA IDENTITY FULL, see migration):
  * - `status = 'published'` → calls onSuccess with the published URL
  * - `status = 'failed'` → calls onError with the error message
  *
@@ -83,7 +98,10 @@ function handlePublicationRecord(
  * or silent insert failure).
  */
 export function usePublicationRealtime({
-  workflowId,
+  recordKey,
+  recordId,
+  mode,
+  language,
   onSuccess,
   onError,
 }: UsePublicationRealtimeOptions) {
@@ -105,41 +123,40 @@ export function usePublicationRealtime({
   const callbacksRef = useRef(callbacks);
   callbacksRef.current = callbacks;
 
+  const label = mode ?? "document";
+
   // Subscribe to Realtime when waiting for publication result
   useEffect(() => {
-    if (!isWaiting || !workflowId) return;
+    if (!isWaiting || !recordId) return;
 
     const supabase = createClient();
     const channel = supabase
-      .channel(`document-publication-${workflowId}`)
+      .channel(`${label}-publication-${recordId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "publication_records",
-          filter: `workflow_id=eq.${workflowId}`,
+          filter: `${recordKey}=eq.${recordId}`,
         },
         (payload) => {
           if (!isMounted.current) return;
 
-          const pubRecord = payload.new;
+          const pubRecord = payload.new as PublicationRecord;
           logger.info(
             { pubRecord },
-            "Realtime INSERT: publication_records (document)",
+            `Realtime INSERT: publication_records (${label})`,
           );
 
           const handled = handlePublicationRecord(
-            pubRecord as {
-              status: string;
-              error_message?: string | null;
-              remote_id?: string | null;
-              target?: string | null;
-            },
+            pubRecord,
+            mode,
+            language,
             callbacksRef.current,
           );
 
-          if (!handled) {
+          if (!handled && (!mode || pubRecord.mode === mode)) {
             const message = "État de publication inattendu. Rechargez la page.";
             callbacksRef.current.setError(message);
             callbacksRef.current.setIsWaiting(false);
@@ -152,12 +169,12 @@ export function usePublicationRealtime({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [isWaiting, workflowId]);
+  }, [isWaiting, recordKey, recordId, mode, language, label]);
 
   // Fallback: poll publication_records directly after timeout
   // Catches cases where Realtime missed the event (race condition, network, etc.)
   useEffect(() => {
-    if (!isWaiting || !workflowId) return;
+    if (!isWaiting || !recordId) return;
 
     let pollInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -168,11 +185,15 @@ export function usePublicationRealtime({
         const supabase = createClient();
         const query = supabase
           .from("publication_records")
-          .select("status, error_message, remote_id, target")
-          .eq("workflow_id", workflowId)
+          .select("status, mode, error_message, remote_id, target")
+          .eq(recordKey, recordId)
           .in("status", ["published", "failed"])
           .order("created_at", { ascending: false })
           .limit(1);
+
+        if (mode) {
+          query.eq("mode", mode);
+        }
 
         // Only fetch records created after we started listening
         if (listeningStartedAt.current) {
@@ -184,7 +205,7 @@ export function usePublicationRealtime({
         if (queryError) {
           logger.warn(
             { queryError },
-            "Fallback poll: error querying publication_records",
+            `Fallback poll (${label}): error querying publication_records`,
           );
           return;
         }
@@ -193,15 +214,20 @@ export function usePublicationRealtime({
 
         logger.info(
           { data },
-          "Fallback poll: found publication record missed by Realtime",
+          `Fallback poll (${label}): found publication record missed by Realtime`,
         );
 
-        const handled = handlePublicationRecord(data, callbacksRef.current);
+        const handled = handlePublicationRecord(
+          data,
+          mode,
+          language,
+          callbacksRef.current,
+        );
         if (handled && pollInterval) {
           clearInterval(pollInterval);
         }
       } catch (err) {
-        logger.warn({ err }, "Fallback poll: unexpected error");
+        logger.warn({ err }, `Fallback poll (${label}): unexpected error`);
       }
     };
 
@@ -210,7 +236,7 @@ export function usePublicationRealtime({
       if (!isMounted.current) return;
 
       logger.warn(
-        { workflowId },
+        { recordKey, recordId },
         `No Realtime event after ${FALLBACK_TIMEOUT_MS / 1000}s — starting fallback poll`,
       );
 
@@ -223,7 +249,7 @@ export function usePublicationRealtime({
       clearTimeout(timeout);
       if (pollInterval) clearInterval(pollInterval);
     };
-  }, [isWaiting, workflowId]);
+  }, [isWaiting, recordKey, recordId, mode, language, label]);
 
   /**
    * Start listening for the publication result.
