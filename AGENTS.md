@@ -79,6 +79,7 @@ playground/
 - **Build**: `pnpm build`
 - **Lint/Format**: `pnpm lint` / `pnpm format` (uses Biome)
 - **Type Check**: `pnpm check:types`
+- **Validate**: `pnpm validate` (doc links, agent corpus, knip: unused files, unused/unlisted dependencies); runs in CI
 
 ### 3. Coding Conventions
 

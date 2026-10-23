@@ -61,6 +61,9 @@ jobs:
       - name: Type check
         run: pnpm check:types
 
+      - name: Docs, corpus and dead code (knip)
+        run: pnpm validate
+
       - name: Run Tests (with Storybook)
         if: steps.ui-changed.outputs.changed == 'true'
         run: pnpm test
