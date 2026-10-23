@@ -31,7 +31,7 @@ supabase/
 │   ├── 20251120000003_create_rls_policies.sql
 │   └── 20251120000004_create_audit_triggers.sql
 ├── config.toml
-└── seed.sql
+└── seed/                  # *.sql, loaded in lexicographic order
 ```
 
 ### Naming Convention
@@ -208,7 +208,7 @@ supabase start
 This:
 - Starts the local Supabase instance
 - Applies all migrations in order
-- Seeds test data from `supabase/seed.sql`
+- Seeds test data from `supabase/seed/*.sql` (`[db.seed]` in `config.toml`)
 
 ### Manual Application
 

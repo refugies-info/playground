@@ -105,6 +105,7 @@ content-playground/
 ### Database Migrations
 - **Location**: `supabase/migrations/`
 - **Naming**: Always use `supabase migration new <name>` to generate timestamped files.
+- **Apply locally**: `pnpm db:migrate` (`supabase migration up`) applies pending migrations and keeps local data; `npx supabase db reset` rebuilds from scratch (migrations + `supabase/seed/*.sql`).
 - **Conflicts**: If you encounter a timestamp collision (CI error), **rename your file** by incrementing the timestamp.
 - **Safety**: Always run `npx supabase db reset` locally after resolving conflicts to verify chain integrity.
 
