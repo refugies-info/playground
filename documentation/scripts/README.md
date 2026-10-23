@@ -26,7 +26,7 @@ All scripts live in `/scripts` and are invoked via `pnpm` (see `package.json`).
 
 | Command | Script | Description |
 |---------|--------|-------------|
-| `pnpm validate:docs` | `validate-docs.ts` | Validate documentation structure and links |
+| `pnpm validate:docs` | `validate-docs.ts` | Check that every relative link in tracked markdown files resolves |
 
 ---
 

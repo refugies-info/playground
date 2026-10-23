@@ -45,7 +45,7 @@ Each stage is designed to be transparent, auditable, and collaborative — ensur
 | **Frontend** | [Next.js (App Router)](https://nextjs.org) | User interface for editors |
 | **Styling** | [Tailwind CSS v4](https://tailwindcss.com) | Utility-first CSS framework |
 | **UI Components** | [shadcn/ui](https://ui.shadcn.com) + [Radix UI](https://www.radix-ui.com) | Accessible, composable component library |
-| **Backend / AI Orchestration** | [Letta Cloud](https://www.letta.com) | Agent-based AI orchestration |
+| **Backend / AI Orchestration** | [Letta](https://www.letta.com) (Cloud in prod, self-hosted locally) + Vercel Workflow | Agent-based AI orchestration |
 | **Database** | [Supabase](https://supabase.com) | Storage for imported / validated content |
 | **AI ↔ DB Bridge** | Letta Custom Tools | Direct Supabase queries via custom Letta tools |
 | **Authentication** | [Supabase Auth](https://supabase.com/docs/guides/auth) | User authentication and role-based access control |
@@ -148,7 +148,7 @@ cp .env.example .env
 # Open http://127.0.0.1:54323 in your browser
 ```
 
-**Full documentation**: See [documentation/supabase.md](./documentation/supabase.md)
+**Full documentation**: See [documentation/guides/supabase-setup.md](./documentation/guides/supabase-setup.md)
 
 **Service URLs**:
 - API: http://127.0.0.1:54321
@@ -161,9 +161,8 @@ cp .env.example .env
 
 Complete guides and architecture documentation available in the [documentation/](./documentation/) directory:
 
-- **[Supabase Local Development](./documentation/supabase.md)** — Setup, configuration, migrations, troubleshooting
+- **[Supabase Local Development](./documentation/guides/supabase-setup.md)** — Setup, configuration, migrations, troubleshooting
 - **[Documentation Index](./documentation/README.md)** — All available guides and resources
-- **[Monorepo Structure](./documentation/guides/monorepo-structure.md)** — Project organization and dependencies
 - **[Testing Guide](./documentation/guides/testing.md)** — How to run and write tests
 
 ---
@@ -219,7 +218,7 @@ This project maintains comprehensive documentation organized by **tech stack and
 **Documentation Structure** (`/documentation`):
 - **Frontend** — Next.js, Tailwind CSS, shadcn/ui, component architecture
 - **Database** — Supabase, PostgreSQL, migrations, RLS policies
-- **AI** — Letta Cloud integration, custom tools, agent workflows
+- **AI** — Letta integration (Cloud and local), agent workflows
 - **Guides** — How-to guides for setup, deployment, development
 - **Architecture** — System design, tech stack, monorepo structure
 - **Reference** — Quick lookup (commands, environment variables, glossary)

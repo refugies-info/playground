@@ -294,10 +294,9 @@ pnpm lighthouse
 
 ## Next Steps
 
-- Set up [monitoring and alerts](../architecture/authentication.md)
+- Set up monitoring and alerts
 - Configure [custom domain](https://vercel.com/docs/concepts/projects/domains)
 - Set up [CI/CD pipeline](../reference/commands.md)
-- Review [security best practices](../troubleshooting/)
 
 ---
 

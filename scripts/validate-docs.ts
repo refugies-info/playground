@@ -1,113 +1,61 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { logger } from "@playground/shared-types";
 
 /**
- * Validate Documentation Structure
- *
- * This script checks for rogue .md files outside allowed locations.
- * Allowed locations:
- * - README.md (project root)
- * - DOCUMENTATION_GUIDELINES.md (project root)
- * - documentation/** (all subdirectories)
- * - specs/** (all subdirectories)
- * - .windsurf/** (all subdirectories)
- * - .kilocode/** (all subdirectories)
- * - .specify/** (all subdirectories)
+ * Checks that every relative link in the tracked markdown files points to an
+ * existing file or folder. External links (http:, mailto:, …) and anchors are
+ * not checked.
  */
 
-// Locations are defined below
+const MARKDOWN_LINK = /\]\(([^)\s]+)\)/g;
+const EXTERNAL_LINK = /^[a-z][a-z0-9+.-]*:/i;
 
-const ALLOWED_PATTERNS = [
-  "AGENTS.md",
-  "README.md",
-  "DOCUMENTATION_GUIDELINES.md",
-  "documentation/**/*.md",
-  "specs/**/*.md",
-  ".windsurf/**/*.md",
-  ".kilocode/**/*.md",
-  ".specify/**/*.md",
-  "apps/**/README.md",
-  "packages/**/README.md",
-];
-
-const IGNORED_DIRS = [
-  "node_modules",
-  ".next",
-  "dist",
-  "build",
-  "coverage",
-  ".turbo",
-  ".git",
-];
-
-function isAllowed(filePath: string) {
-  const relativePath = path.relative(process.cwd(), filePath);
-
-  // Check exact matches
-  if (ALLOWED_PATTERNS.includes(relativePath)) {
-    return true;
-  }
-
-  // Check glob patterns
-  for (const pattern of ALLOWED_PATTERNS) {
-    if (pattern.includes("**")) {
-      const dir = pattern.split("/")[0];
-      if (relativePath.startsWith(`${dir}/`)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
+function stripCode(markdown: string): string {
+  return markdown.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "");
 }
 
-function findMdFiles(dir: string, files: string[] = []) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    const relativePath = path.relative(process.cwd(), fullPath);
-
-    // Skip ignored directories
-    if (IGNORED_DIRS.some((ignored) => relativePath.startsWith(ignored))) {
-      continue;
-    }
-
-    if (entry.isDirectory()) {
-      findMdFiles(fullPath, files);
-    } else if (entry.name.endsWith(".md")) {
-      files.push(fullPath);
-    }
+function findBrokenLinks(
+  file: string,
+  markdown: string,
+  exists: (target: string) => boolean,
+): string[] {
+  const broken: string[] = [];
+  for (const [, link] of stripCode(markdown).matchAll(MARKDOWN_LINK)) {
+    const target = link.split("#")[0];
+    if (!target || EXTERNAL_LINK.test(target)) continue;
+    const resolved = path.normalize(
+      path.join(path.dirname(file), decodeURIComponent(target)),
+    );
+    if (!exists(resolved)) broken.push(link);
   }
-
-  return files;
+  return broken;
 }
 
 function main() {
-  const mdFiles = findMdFiles(process.cwd());
-  const rogueFiles = mdFiles.filter((file) => !isAllowed(file));
+  const files = execFileSync("git", ["ls-files", "*.md"], { encoding: "utf8" })
+    .split("\n")
+    .filter(Boolean);
 
-  if (rogueFiles.length === 0) {
-    logger.info("✅ No rogue .md files found!");
-    process.exit(0);
+  let brokenCount = 0;
+  for (const file of files) {
+    const broken = findBrokenLinks(
+      file,
+      fs.readFileSync(file, "utf8"),
+      fs.existsSync,
+    );
+    for (const link of broken) {
+      logger.error(`❌ ${file} → ${link}`);
+    }
+    brokenCount += broken.length;
   }
 
-  logger.error("❌ Rogue .md files detected (not in allowed locations):");
-
-  rogueFiles.forEach((file) => {
-    const relativePath = path.relative(process.cwd(), file);
-    logger.error(`  ❌ ${relativePath}`);
-  });
-
-  logger.error("Allowed locations:");
-  ALLOWED_PATTERNS.forEach((pattern) => {
-    logger.error(`  ✅ ${pattern}`);
-  });
-
-  logger.error("See DOCUMENTATION_GUIDELINES.md for more information.");
-
-  process.exit(1);
+  if (brokenCount > 0) {
+    logger.error(`${brokenCount} broken relative link(s).`);
+    process.exit(1);
+  }
+  logger.info(`✅ ${files.length} markdown files, no broken relative link.`);
 }
 
 main();

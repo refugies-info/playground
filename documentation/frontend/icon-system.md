@@ -177,7 +177,7 @@ See [documentation/scripts/sync-dsfr-icons.md](../scripts/sync-dsfr-icons.md) fo
 
 ## Storybook
 
-Stories in `apps/storybook/src/stories/ui/Icon.stories.tsx`:
+Stories in `packages/ui/src/primitives/icon/Icon.stories.tsx`:
 
 - **Playground**: test a single icon with controls (size, aria-label)
 - **Table**: all icons with search and category tabs (Arrows, Buildings, Communication, Custom DSFR, etc.)

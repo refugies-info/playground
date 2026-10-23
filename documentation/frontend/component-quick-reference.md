@@ -165,10 +165,9 @@ export * from "./my-feature";
 
 | Document | Purpose |
 |----------|---------|
-| [COMPONENT_STRATEGY.md](./COMPONENT_STRATEGY.md) | Full guide with templates and examples |
-| [COMPONENT_STRATEGY_IMPLEMENTATION.md](./COMPONENT_STRATEGY_IMPLEMENTATION.md) | What was done and current status |
+| [component-strategy.md](./component-strategy.md) | Full guide with templates and examples |
 | [README.md](../README.md) | Project overview (see Component Architecture section) |
-| [documentation/README.md](../documentation/README.md) | Documentation index |
+| [documentation/README.md](../README.md) | Documentation index |
 
 ---
 
@@ -250,7 +249,7 @@ A: Move it to the design system to prevent duplication.
 
 ## Need More Details?
 
-See [COMPONENT_STRATEGY.md](./COMPONENT_STRATEGY.md) for:
+See [component-strategy.md](./component-strategy.md) for:
 - Detailed folder structure
 - Component templates with full code examples
 - Import conventions and patterns

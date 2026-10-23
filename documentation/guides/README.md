@@ -35,7 +35,6 @@ Create a guide when:
 
 - [Architecture](../architecture/README.md) — System design & decisions
 - [Reference](../reference/README.md) — Quick lookup materials
-- [Troubleshooting](../troubleshooting/README.md) — Common issues & solutions
 
 ## Quick Links
 

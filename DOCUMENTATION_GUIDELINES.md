@@ -49,9 +49,7 @@ documentation/
 ├── reference/                 # Quick lookup (commands, env vars, glossary)
 ├── scripts/                   # One-off & utility scripts documentation
 ├── internal/                  # LLM guidelines, implementation notes
-├── workflows/                 # Feature-specific processes
-├── troubleshooting/           # Common issues & solutions
-└── roadmaps/                  # Project roadmaps & timelines
+└── workflows/                 # Feature-specific processes
 ```
 
 ---

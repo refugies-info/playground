@@ -206,7 +206,7 @@ pnpm supabase:logs
 
 ## Next Steps
 
-- Read [Component Architecture](../../docs/COMPONENT_QUICK_REFERENCE.md) for adding UI components
+- Read [Component Architecture](../frontend/component-quick-reference.md) for adding UI components
 - Check [Supabase Setup](./supabase-setup.md) for database configuration
 - Review the [Testing Guide](./testing.md) for running and writing tests
 - See [Common Commands](../reference/commands.md) for more CLI commands
@@ -216,6 +216,4 @@ pnpm supabase:logs
 
 ## Getting Help
 
-- Check [Troubleshooting](../troubleshooting/) for common issues
-- Review [Glossary](../reference/glossary.md) for terminology
 - See project [README.md](../../README.md) for overview

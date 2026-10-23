@@ -8,7 +8,6 @@ Documentation for the Next.js frontend application, including component architec
 - **[Component Quick Reference](./component-quick-reference.md)** — 30-second component overview
 - **[Design Tokens](./design-tokens.md)** — Architecture 3-tier, DSFR, nommage des variants
 - **[Icon System](./icon-system.md)** — Icônes : architecture, usage, conventions
-- **[Styling Guide](./styling-guide.md)** — Tailwind CSS v4 + shadcn/ui patterns (coming soon)
 
 ## Tech Stack
 

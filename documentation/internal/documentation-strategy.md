@@ -98,7 +98,6 @@ documentation/
 │   ├── deployment.md
 │   └── [new-guide].md
 ├── architecture/                      # System design & decisions
-│   ├── monorepo-structure.md
 │   ├── tech-stack.md
 │   ├── database-schema.md
 │   ├── authentication.md
@@ -122,9 +121,7 @@ documentation/
 │   ├── environment-variables.md
 │   ├── commands.md
 │   ├── glossary.md
-│   └── [new-reference].md
-└── roadmaps/                          # Project roadmaps
-    └── roadmap-mvp.md
+    └── [new-reference].md
 ```
 
 **Folder Purposes**:
@@ -137,7 +134,6 @@ documentation/
 | `workflows/` | Feature-specific processes | Editorial workflow, quality gating |
 | `troubleshooting/` | Common issues & solutions | Build errors, database issues, component bugs |
 | `reference/` | Quick lookup materials | Commands, variables, glossary, terminology |
-| `roadmaps/` | Project roadmaps & timelines | MVP roadmap, feature roadmaps |
 
 ---
 
@@ -154,8 +150,7 @@ Is this documentation long-term valuable?
          ├─ "What can I call?" → api/
          ├─ "What's the process?" → workflows/
          ├─ "What went wrong?" → troubleshooting/
-         ├─ "What's this called?" → reference/
-         └─ "When will this happen?" → roadmaps/
+         └─ "What's this called?" → reference/
 ```
 
 ---
@@ -479,6 +474,6 @@ Proceed? (yes/no)
 
 ## References
 
-- [Documentation Folder Structure](../documentation/README.md)
-- [Component Strategy](./COMPONENT_STRATEGY.md)
+- [Documentation Folder Structure](../README.md)
+- [Component Strategy](../frontend/component-strategy.md)
 - [Project README](../README.md)
