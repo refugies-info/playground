@@ -5,19 +5,20 @@
       "project": ["scripts/*.ts"]
     },
     "packages/shared": {
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["pino-pretty"]
     },
     "packages/ui": {
-      "project": ["src/**/*.ts", "src/**/*.tsx"]
+      "project": ["src/**/*.ts", "src/**/*.tsx"],
+      "ignoreDependencies": ["@storybook/react", "storybook", "tailwindcss"]
     },
     "apps/frontend": {
-      "project": ["src/**/*.ts", "src/**/*.tsx"]
+      "project": ["src/**/*.ts", "src/**/*.tsx"],
+      "ignoreDependencies": ["@playground/agents", "flag-icons"]
     },
-    "packages/agents": {
-      "entry": ["scripts/*.ts"],
-      "project": ["src/**/*.ts", "scripts/*.ts"]
+    "apps/storybook": {
+      "ignoreDependencies": ["@playground/ui", "@storybook/react"]
     }
   },
-  "ignore": ["node_modules", "dist", "build", ".next", "coverage", ".turbo"],
-  "ignoreDependencies": ["husky", "tsx", "zod"]
+  "ignoreDependencies": ["tsx", "zod"]
 }
