@@ -112,22 +112,3 @@ export interface Document {
 export interface RiMetadata {
   public: "family" | "women" | "youths" | "senior" | "gender";
 }
-
-export interface ContentItem {
-  id: string;
-  title: string;
-  content: string;
-  source: string;
-  complianceStatus: ComplianceStatus | null;
-  workStatus: WorkStatus;
-  onlineStatus: OnlineStatus;
-  date_added: string;
-  metadata: Record<string, unknown>;
-  originalText?: string;
-  languageCode?: string;
-  sourceSystem?: string;
-  sourceRecordId?: string;
-  createdAt?: string;
-  createdBy?: string;
-  updated_at?: string;
-}
