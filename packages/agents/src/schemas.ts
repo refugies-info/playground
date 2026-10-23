@@ -24,7 +24,7 @@ export const NoFrontmatterSchema = z.void();
  * - Layer 2 (publication): strict Typegoose-aligned schema (future PR)
  * - Layer 3 (editor): advisory validation with UI warnings (future PR)
  *
- * @see /docs/architecture/metadata-validation-strategy.md
+ * @see documentation/architecture/metadata-validation-strategy.md
  */
 export const MetadataMetadataSchema = z
   .object({

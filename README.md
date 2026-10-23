@@ -45,7 +45,7 @@ Each stage is designed to be transparent, auditable, and collaborative — ensur
 | **Frontend** | [Next.js (App Router)](https://nextjs.org) | User interface for editors |
 | **Styling** | [Tailwind CSS v4](https://tailwindcss.com) | Utility-first CSS framework |
 | **UI Components** | [shadcn/ui](https://ui.shadcn.com) + [Radix UI](https://www.radix-ui.com) | Accessible, composable component library |
-| **Backend / AI Orchestration** | [Letta Cloud](https://www.letta.com) | Agent-based AI orchestration |
+| **Backend / AI Orchestration** | [Letta](https://www.letta.com) (Cloud in prod, self-hosted locally) + Vercel Workflow | Agent-based AI orchestration |
 | **Database** | [Supabase](https://supabase.com) | Storage for imported / validated content |
 | **AI ↔ DB Bridge** | Letta Custom Tools | Direct Supabase queries via custom Letta tools |
 | **Authentication** | [Supabase Auth](https://supabase.com/docs/guides/auth) | User authentication and role-based access control |
@@ -148,7 +148,7 @@ cp .env.example .env
 # Open http://127.0.0.1:54323 in your browser
 ```
 
-**Full documentation**: See [documentation/supabase.md](./documentation/supabase.md)
+**Full documentation**: See [documentation/guides/local-development.md](./documentation/guides/local-development.md)
 
 **Service URLs**:
 - API: http://127.0.0.1:54321
@@ -161,9 +161,8 @@ cp .env.example .env
 
 Complete guides and architecture documentation available in the [documentation/](./documentation/) directory:
 
-- **[Supabase Local Development](./documentation/supabase.md)** — Setup, configuration, migrations, troubleshooting
+- **[Local Development](./documentation/guides/local-development.md)** — Toolchain, Supabase, env files, commands
 - **[Documentation Index](./documentation/README.md)** — All available guides and resources
-- **[Monorepo Structure](./documentation/guides/monorepo-structure.md)** — Project organization and dependencies
 - **[Testing Guide](./documentation/guides/testing.md)** — How to run and write tests
 
 ---
@@ -206,37 +205,7 @@ This project follows a **design-system-first approach** with clear separation be
 - **Design System** (`/packages/ui`): Centralized, reusable UI primitives and components
 - **Feature Components** (`/apps/frontend/src/components`): Page-specific and feature-specific components
 
-For detailed guidelines on component placement, structure, and best practices, see:
-- **Quick Reference** (30 seconds): [Component Quick Reference](./documentation/frontend/component-quick-reference.md)
-- **Comprehensive Guide**: [Component Strategy](./documentation/frontend/component-strategy.md)
-
----
-
-## 📚 Documentation Strategy
-
-This project maintains comprehensive documentation organized by **tech stack and project domains**, with clear guidelines for LLMs on creating and maintaining documentation.
-
-**Documentation Structure** (`/documentation`):
-- **Frontend** — Next.js, Tailwind CSS, shadcn/ui, component architecture
-- **Database** — Supabase, PostgreSQL, migrations, RLS policies
-- **AI** — Letta Cloud integration, custom tools, agent workflows
-- **Guides** — How-to guides for setup, deployment, development
-- **Architecture** — System design, tech stack, monorepo structure
-- **Reference** — Quick lookup (commands, environment variables, glossary)
-- **Internal** — LLM guidelines and implementation notes
-- **Workflows** — Feature-specific processes
-- **Troubleshooting** — Common issues and solutions
-
-**Key Rules for LLMs**:
-- ✅ Create `.md` files **ONLY** for long-term valuable content
-- ✅ **Always ask permission** before creating documentation
-- ✅ **Strictly respect** the `/documentation` folder structure
-- ❌ No `.md` files at project root or documentation root (except `README.md`)
-- ❌ No `/docs` folder (all documentation goes in `/documentation`)
-
-For detailed guidelines on documentation creation, see [**documentation-strategy.md**](./documentation/internal/documentation-strategy.md).
-
-**Start exploring**: [Documentation Index](./documentation/README.md)
+Rules: [Coding Conventions](./documentation/guides/coding-conventions.md).
 
 ---
 
