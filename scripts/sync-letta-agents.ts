@@ -12,6 +12,11 @@
  * The first run creates the agent and prints the env var to add to .env.
  *
  * Local Letta (pnpm letta:up), LLM on Albert: pnpm agents:sync:local <agent>
+ *
+ * Letta Cloud requires LETTA_AGENT_NAME_PREFIX: agents are matched by name, so
+ * the prefix creates a separate set and never touches agents synced before.
+ *   LETTA_BASE_URL= LETTA_AGENT_NAME_PREFIX=albert- \
+ *     LETTA_AGENT_MODEL=<provider>/<model> pnpm agents:sync
  */
 import "dotenv/config";
 import fs from "node:fs";
@@ -28,6 +33,10 @@ const MIN_BLOCK_LIMIT = 20_000;
 // Overrides agent.json, e.g. an Ollama model on the local server.
 const MODEL_OVERRIDE = process.env.LETTA_AGENT_MODEL;
 const EMBEDDING = process.env.LOCAL_EMBEDDING_MODEL;
+const NAME_PREFIX = process.env.LETTA_AGENT_NAME_PREFIX ?? "";
+const isLocalServer = Boolean(
+  process.env.LETTA_BASE_URL?.match(/localhost|127\.0\.0\.1/),
+);
 
 type AgentDefinition = {
   name: string;
@@ -44,8 +53,10 @@ function readAgentDefinition(folder: string): AgentDefinition {
   const blockFiles = fs
     .readdirSync(path.join(AGENTS_DIR, folder, "blocks"))
     .filter((file) => file.endsWith(".md"));
+  const agentConfig = JSON.parse(readText(folder, "agent.json"));
   return {
-    ...JSON.parse(readText(folder, "agent.json")),
+    ...agentConfig,
+    name: `${NAME_PREFIX}${agentConfig.name}`,
     ...(MODEL_OVERRIDE && { model: MODEL_OVERRIDE }),
     system: readText(folder, "system.md"),
     blocks: blockFiles.map((file) => ({
@@ -131,6 +142,12 @@ async function main() {
     .readdirSync(AGENTS_DIR)
     .filter((folder) => requested.length === 0 || requested.includes(folder));
   if (folders.length === 0) throw new Error(`No agent folder: ${requested}`);
+
+  if (!isLocalServer && !NAME_PREFIX) {
+    throw new Error(
+      "Letta Cloud: set LETTA_AGENT_NAME_PREFIX (e.g. albert-) so existing agents are never overwritten.",
+    );
+  }
 
   const client = createLettaClient();
   for (const folder of folders) {
