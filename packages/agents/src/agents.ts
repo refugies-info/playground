@@ -16,6 +16,7 @@ export const sendMessageToConversation = async (
   client: Letta,
   conversationId: string,
   content: string,
+  overrideModel = LETTA_MODEL_HANDLE,
 ): Promise<{
   content: string;
   usage?: LettaUsage;
@@ -27,7 +28,7 @@ export const sendMessageToConversation = async (
         content: content,
       },
     ],
-    override_model: LETTA_MODEL_HANDLE,
+    override_model: overrideModel,
   });
 
   let finalContent = "";
