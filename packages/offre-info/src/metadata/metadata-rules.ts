@@ -43,16 +43,23 @@ const places = (action: RcoActionDocument): Place[] =>
 
 const unique = <T>(values: T[]) => [...new Set(values)];
 
-export function mapSponsor(action: RcoActionDocument): MappedField[] {
+export function mapBrandTitle(action: RcoActionDocument): MappedField | null {
+  if (!action.intitule_formation) return null;
+  return mapped("titreMarque", action.intitule_formation, {
+    field: "intitule_formation",
+    rawValue: action.intitule_formation,
+  });
+}
+
+export function mapSponsor(action: RcoActionDocument): MappedField | null {
   const name =
     action.organisme_responsable?.nom ??
     action.organisme_responsable?.raison_sociale;
-  if (!name) return [];
-  const source = { field: "organisme_responsable.nom", rawValue: name };
-  return [
-    mapped("mainSponsor", name, source),
-    mapped("titreMarque", name, source),
-  ];
+  if (!name) return null;
+  return mapped("mainSponsor", name, {
+    field: "organisme_responsable.nom",
+    rawValue: name,
+  });
 }
 
 const toRiDepartment = (code: string) =>
@@ -204,7 +211,8 @@ export function mapMetadata(
   today = new Date().toISOString().slice(0, 10),
 ): MappedField[] {
   return [
-    ...mapSponsor(action),
+    mapBrandTitle(action),
+    mapSponsor(action),
     mapLocation(action),
     mapPeriode(action, today),
     mapCommitment(action),

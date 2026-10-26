@@ -1,6 +1,8 @@
 import {
   RCO_SOURCE,
   type RcoActionDocument,
+  toArbitrationDocument,
+  toMetadataDocument,
   toSourceUrl,
 } from "@playground/offre-info";
 import type {
@@ -558,6 +560,12 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     content = injectFrontmatterContent(item.ingestion_markdown);
   }
 
+  const rcoAction =
+    ingestionMetadata.source === RCO_SOURCE &&
+    Array.isArray(ingestionMetadata.sessions)
+      ? (ingestionMetadata as unknown as RcoActionDocument)
+      : null;
+
   // Compliance report from letta_reports
   let complianceReport = "";
   if (ingestionRecord) {
@@ -657,6 +665,8 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     content,
     ingestionContent,
     complianceReport,
+    arbitrationSource: rcoAction ? toArbitrationDocument(rcoAction) : undefined,
+    metadataSource: rcoAction ? toMetadataDocument(rcoAction) : undefined,
     metadata,
     editorialMetadata,
     editorialRecordId: item.editorial_record_id ?? undefined,

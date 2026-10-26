@@ -24,6 +24,7 @@ describe("mapMetadata", () => {
       contact_formation: [{ courriel: "a@b.fr", telfixe: "0102" }],
     });
     expect(values).toMatchObject({
+      titreMarque: "Ouvrir l'école aux parents",
       mainSponsor: "Ecole Test",
       location: ["68 - Haut-Rhin"],
       commitment: { amountDetails: "exactly", hours: [120], timeUnit: "hours" },
