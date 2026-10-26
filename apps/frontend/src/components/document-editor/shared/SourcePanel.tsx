@@ -20,6 +20,19 @@ import { buildRcoSourceUrl } from "@/lib/url-builder";
 import { useDocument } from "../DocumentContext";
 import { useContentContext } from "./ContentContext";
 import { MarkdownViewer } from "./MarkdownViewer";
+import { SourceFields } from "./SourceFields";
+
+// The fiche body already holds the texts: only the practical facts here.
+const EDITORIAL_SOURCE_FIELDS = [
+  "organisme",
+  "info_public_vise",
+  "duree_indicative",
+  "nombre_heures_total",
+  "rythme_formation",
+  "frais_restants",
+  "detail_conditions_prise_en_charge",
+  "sessions",
+];
 
 /**
  * SourcePanel — panneau de comparaison avec le contenu source RCO.
@@ -48,6 +61,14 @@ export function SourcePanel() {
     document?.metadata?.id as string | undefined,
   );
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const metadataSource = document?.metadataSource;
+  const editorialSource =
+    metadataSource &&
+    Object.fromEntries(
+      EDITORIAL_SOURCE_FIELDS.filter((field) => field in metadataSource).map(
+        (field) => [field, metadataSource[field]],
+      ),
+    );
 
   const handleClose = useCallback(() => {
     activatePaddingTransition();
@@ -158,6 +179,12 @@ export function SourcePanel() {
             emptyMessage="Aucun contenu source disponible"
             className="[&_.bn-editor]:!px-10"
           />
+          {editorialSource && (
+            <section className="mx-10 mt-6 border-t border-border pt-6">
+              <h2 className="mb-4 text-lg font-bold">Informations RCO</h2>
+              <SourceFields source={editorialSource} />
+            </section>
+          )}
         </div>
       </div>{" "}
       {/* fin wrapper opacity */}

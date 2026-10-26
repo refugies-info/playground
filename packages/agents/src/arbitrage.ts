@@ -1,4 +1,5 @@
 import type { Letta } from "@letta-ai/letta-client";
+import { RCO_MODEL_HANDLE } from "@playground/shared-types";
 // v4 API (shipped in zod 3.25) for z.toJSONSchema.
 import { z } from "zod/v4";
 import { findOrCreateConversation, sendMessageToConversation } from "./agents";
@@ -117,6 +118,7 @@ async function askAgent<T>(
     client,
     conversationId,
     message,
+    RCO_MODEL_HANDLE,
   );
   const parsed = parseAnswer(first.content, schema);
   if (parsed.success) {
@@ -128,6 +130,7 @@ async function askAgent<T>(
     client,
     conversationId,
     `${FORMAT_REMINDER}\n\nErreur : ${parsed.error.message.slice(0, 1000)}`,
+    RCO_MODEL_HANDLE,
   );
   const reparsed = parseAnswer(retry.content, schema);
   if (!reparsed.success) {
