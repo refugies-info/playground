@@ -36,11 +36,13 @@ export const sendMessageToConversation = async (
   for await (const chunk of stream as AsyncIterable<any>) {
     accumulateUsage(usage, chunk);
     if (chunk.message_type === "assistant_message") {
-      if (typeof chunk.content === "string") {
-        finalContent += chunk.content;
-      } else {
-        finalContent += JSON.stringify(chunk.content);
-      }
+      // Content is either a string or an array of { type: "text", text } parts.
+      finalContent +=
+        typeof chunk.content === "string"
+          ? chunk.content
+          : (chunk.content as { text?: string }[])
+              .map((part) => part.text ?? "")
+              .join("");
     }
   }
 

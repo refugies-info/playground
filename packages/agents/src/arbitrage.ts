@@ -80,8 +80,13 @@ async function askAgent<T>(
     conversationId,
     message,
   );
-  const answer = schema.parse(JSON.parse(extractJson(content)));
-  return { answer, usage, conversationId };
+  const parsed = schema.safeParse(JSON.parse(extractJson(content)));
+  if (!parsed.success) {
+    throw new Error(
+      `${conversationName}: unexpected agent answer (${parsed.error.issues.length} issues): ${content.slice(0, 500)}`,
+    );
+  }
+  return { answer: parsed.data, usage, conversationId };
 }
 
 export const askComplianceAgent = (
