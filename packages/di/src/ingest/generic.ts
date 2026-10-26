@@ -1,5 +1,9 @@
 import { logger } from "@playground/shared-types";
-import type { Database, Json } from "@playground/supabase";
+import type { Database } from "@playground/supabase";
+import {
+  completeIngestionRun,
+  createIngestionRun,
+} from "@playground/supabase/ingestion-runs";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Page } from "../types";
@@ -246,70 +250,6 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
 }
 
 /**
- * Create an ingestion run record to track this ingestion
- */
-async function createIngestionRun(
-  supabase: SupabaseClient<Database>,
-  type: "structures" | "services",
-  options: DiIngestionOptions,
-): Promise<string> {
-  const { data, error } = await supabase
-    .from("ingestion_runs")
-    .insert({
-      source: "di",
-      type,
-      status: "running",
-      options: options as Json,
-    })
-    .select("id")
-    .single();
-
-  if (error || !data) {
-    throw new Error(`Failed to create ingestion run: ${error?.message}`);
-  }
-
-  return data.id;
-}
-
-/**
- * Update ingestion run with final stats
- */
-async function completeIngestionRun(
-  supabase: SupabaseClient<Database>,
-  runId: string,
-  stats: {
-    totalFetched: number;
-    totalInserted: number;
-    totalUpdated: number;
-    totalUnchanged: number;
-    totalErrors: number;
-  },
-  status: "completed" | "failed" = "completed",
-  errorDetails?: unknown,
-): Promise<void> {
-  const { error } = await supabase
-    .from("ingestion_runs")
-    .update({
-      completed_at: new Date().toISOString(),
-      status,
-      total_fetched: stats.totalFetched,
-      total_inserted: stats.totalInserted,
-      total_updated: stats.totalUpdated,
-      total_unchanged: stats.totalUnchanged,
-      total_errors: stats.totalErrors,
-      error_details: (errorDetails ?? null) as Json,
-    })
-    .eq("id", runId);
-
-  if (error) {
-    logger.error(
-      { runId, error: error.message },
-      "Failed to update ingestion run",
-    );
-  }
-}
-
-/**
  * Fetch existing records to check for changes
  */
 async function fetchExistingRecords(
@@ -540,7 +480,11 @@ export async function ingestCarifOrefItems<T extends DiItem>(
   );
 
   // Create ingestion run record
-  const runId = await createIngestionRun(supabase, type, options);
+  const runId = await createIngestionRun(supabase, {
+    source: "di",
+    type,
+    options,
+  });
   logger.info({ runId }, "Created ingestion run");
 
   try {
@@ -636,11 +580,11 @@ export async function insertItems<T extends DiItem>(
   );
 
   // Create a temporary run for legacy compatibility
-  const runId = await createIngestionRun(
-    supabase,
-    tableName === "structures" ? "structures" : "services",
-    {},
-  );
+  const runId = await createIngestionRun(supabase, {
+    source: "di",
+    type: tableName === "structures" ? "structures" : "services",
+    options: {},
+  });
 
   const result = await upsertItems(supabase, items, tableName, itemType, runId);
 

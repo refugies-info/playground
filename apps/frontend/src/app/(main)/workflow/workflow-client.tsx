@@ -13,9 +13,10 @@ import { BoutonFiltre, Button, FiltreDate, SearchInput } from "@playground/ui";
 import { DataTable } from "@playground/ui/composites";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { triggerDiIngestionAction } from "@/app/actions/di";
+import { triggerIngestionAction } from "@/app/actions/ingestion";
 import { AppPaginationControls } from "@/components/common/AppPagination";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import type { IngestionSource } from "@/lib/ingestion-source";
 import { createClient } from "@/lib/supabase/client";
 import { inProgressColumns } from "./columns";
 import { DocumentPreviewDrawer } from "./document-preview-drawer";
@@ -44,6 +45,8 @@ interface WorkflowFilters extends Record<string, string> {
   dateFrom: string;
   dateTo: string;
   modalitesEntreesSorties: string;
+  origin: string;
+  contentPreset: string;
 }
 
 interface WorkflowClientProps {
@@ -55,6 +58,7 @@ interface WorkflowClientProps {
   sortBy: DocumentSortField;
   sortOrder: "asc" | "desc";
   initialFilters: WorkflowFilters;
+  ingestionSource: IngestionSource;
 }
 
 export function WorkflowClient(props: WorkflowClientProps) {
@@ -243,7 +247,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
     setIsDrawerOpen(true);
   };
 
-  const handleRunDiIngestion = async () => {
+  const handleRunIngestion = async () => {
     setIsLoading(true);
     setError(null);
     setWorkflowId(null);
@@ -251,7 +255,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
     setStatus(null);
 
     try {
-      const result = await triggerDiIngestionAction();
+      const result = await triggerIngestionAction();
 
       if (!result.success) {
         setError(result.error || "Unknown error occurred");
@@ -320,6 +324,18 @@ export function WorkflowClient(props: WorkflowClientProps) {
               "Audit Reports": fullResult.audit
                 ? `${fullResult.audit.succeeded}/${fullResult.audit.attempted}`
                 : "N/A",
+            });
+          } else if (fullResult.changes) {
+            setResults({
+              "Ingestion Type": "RCO",
+              "Run Status": fullResult.status,
+              "Actions traitées": String(fullResult.processed),
+              Nouvelles: String(fullResult.changes.new),
+              "Reprises DI": String(fullResult.changes.baseline),
+              "Sessions seules": String(fullResult.changes.sessions_only),
+              "Contenu modifié": String(fullResult.changes.content),
+              Inchangées: String(fullResult.changes.unchanged),
+              Erreurs: String(fullResult.errors.length),
             });
           } else {
             setResults(fullResult);
@@ -540,14 +556,35 @@ export function WorkflowClient(props: WorkflowClientProps) {
             }
           />
 
+          <BoutonFiltre
+            label="Origine"
+            options={[
+              { label: "DI", value: "DI" },
+              { label: "RCO", value: "RCO" },
+            ]}
+            value={filters.origin}
+            onChange={(value) => handleFilterChange("origin", value)}
+          />
+
+          <BoutonFiltre
+            label="Contenu"
+            options={[{ label: "Sans OEPRE", value: "sans-oepre" }]}
+            value={filters.contentPreset}
+            onChange={(value) => handleFilterChange("contentPreset", value)}
+          />
+
           {/* Bouton aligné à droite dans le même conteneur que la recherche */}
           <Button
             className="ml-auto"
-            onClick={handleRunDiIngestion}
+            onClick={handleRunIngestion}
             disabled={isLoading}
             isLoading={isLoading}
           >
-            {isLoading ? "En cours…" : "Lancer l'import DI"}
+            {isLoading
+              ? "En cours…"
+              : props.ingestionSource === "rco"
+                ? "Importer les fiches RCO"
+                : "Lancer l'import DI"}
           </Button>
         </div>
 
