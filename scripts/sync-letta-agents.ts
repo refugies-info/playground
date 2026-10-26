@@ -23,7 +23,10 @@ import fs from "node:fs";
 import path from "node:path";
 import type { Letta } from "@letta-ai/letta-client";
 import { logger } from "@playground/shared-types";
-import { createLettaClient } from "../packages/agents/src/index";
+import {
+  AGENT_RESPONSE_FORMATS,
+  createLettaClient,
+} from "../packages/agents/src/index";
 
 const AGENTS_DIR = path.join(__dirname, "../packages/agents/letta");
 
@@ -43,6 +46,7 @@ type AgentDefinition = {
   model: string;
   envVar: string;
   system: string;
+  responseFormat?: (typeof AGENT_RESPONSE_FORMATS)[string];
   blocks: { label: string; value: string; description: string }[];
 };
 
@@ -59,6 +63,7 @@ function readAgentDefinition(folder: string): AgentDefinition {
     name: `${NAME_PREFIX}${agentConfig.name}`,
     ...(MODEL_OVERRIDE && { model: MODEL_OVERRIDE }),
     system: readText(folder, "system.md"),
+    responseFormat: AGENT_RESPONSE_FORMATS[folder],
     blocks: blockFiles.map((file) => ({
       label: path.basename(file, ".md"),
       value: readText(folder, "blocks", file),
@@ -85,6 +90,7 @@ async function createAgent(client: Letta, definition: AgentDefinition) {
     embedding: EMBEDDING,
     agent_type: "letta_v1_agent",
     system: definition.system,
+    response_format: definition.responseFormat,
     memory_blocks: definition.blocks.map(toBlockFields),
     // Pure judgement agents: no memory editing, no tools.
     include_base_tools: false,
@@ -102,6 +108,7 @@ async function updateAgent(
   await client.agents.update(agentId, {
     model: definition.model,
     system: definition.system,
+    response_format: definition.responseFormat,
   });
 
   const existingBlocks = new Map<string, string>();
