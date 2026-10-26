@@ -18,7 +18,7 @@
     "@types/mdast": "^4.0.4",
     "typescript": "^5.9.3",
     "vite": "6.4.4",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
