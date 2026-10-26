@@ -1,17 +1,17 @@
 import type { WidgetConfigFields } from "@playground/shared-types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { riWebhookRequest } from "./ri-webhook-client";
+import { riWebhookRequest } from "./webhook-client";
 import {
   countRiFilterMatches,
   createRiWidgetConfig,
   getRiDispositifsByIds,
   listRiWidgetConfigs,
   updateRiWidgetConfig,
-} from "./ri-widget-configs";
+} from "./widget-configs";
 
-vi.mock("./ri-webhook-client");
+vi.mock("./webhook-client");
 
-describe("ri-widget-configs", () => {
+describe("ri/widget-configs", () => {
   const request = vi.mocked(riWebhookRequest);
 
   beforeEach(() => {

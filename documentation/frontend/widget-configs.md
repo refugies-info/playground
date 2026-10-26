@@ -5,13 +5,13 @@ Les widgets embarquables sont configurés dans le Playground mais **stockés par
 ## Architecture
 
 ```
-UI (à venir) → widget-config-actions.ts → ri-widget-configs.ts → ri-webhook-client.ts → webhooks RI
+UI (à venir) → widget-config-actions.ts → ri/widget-configs.ts → ri/webhook-client.ts → webhooks RI
 ```
 
 | Fichier | Rôle |
 |---|---|
-| `services/ri-webhook-client.ts` | Appel générique d'un webhook RI (secret partagé, timeout, erreurs typées). Utilisé aussi par `ri-reference-data.ts`. |
-| `services/ri-widget-configs.ts` | Une fonction par endpoint. Sans authentification : l'email de l'éditeur est passé en paramètre. |
+| `services/ri/webhook-client.ts` | Appel générique d'un webhook RI (secret partagé, timeout, erreurs typées). Utilisé aussi par `ri/reference-data.ts`. |
+| `services/ri/widget-configs.ts` | Une fonction par endpoint. Sans authentification : l'email de l'éditeur est passé en paramètre. |
 | `services/widget-config-actions.ts` | Server actions. Chaque action vérifie la session Supabase avant d'utiliser le secret RI, lectures comprises. |
 | `packages/shared/src/types/widget-config.ts` | Types et constantes miroirs du contrat des webhooks. |
 

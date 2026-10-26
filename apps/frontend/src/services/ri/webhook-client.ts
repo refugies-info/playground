@@ -61,7 +61,7 @@ export async function riWebhookRequest<T>(
       ...(body !== undefined && { "Content-Type": "application/json" }),
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
-    signal: AbortSignal.timeout(10_000), // 10s max — évite les timeouts silencieux
+    signal: AbortSignal.timeout(10_000), // 10s max — avoids silent hangs
     ...(revalidateSeconds !== undefined
       ? { next: { revalidate: revalidateSeconds } }
       : { cache: "no-store" as const }),

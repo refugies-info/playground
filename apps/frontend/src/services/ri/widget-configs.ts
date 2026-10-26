@@ -7,24 +7,22 @@ import type {
   WidgetConfigSummary,
   WidgetConfigUpdateInput,
 } from "@playground/shared-types";
-import { riWebhookRequest } from "./ri-webhook-client";
+import { riWebhookRequest } from "./webhook-client";
 
 const WIDGET_CONFIG_PATH = "/api/webhook/widget-config";
+const DISPOSITIF_SEARCH_PATH = "/api/webhook/dispositif/search";
 
 export const searchRiDispositifs = (text: string) =>
-  riWebhookRequest<RiDispositifSummary[]>("/api/webhook/dispositif/search", {
+  riWebhookRequest<RiDispositifSummary[]>(DISPOSITIF_SEARCH_PATH, {
     query: { q: text },
   });
 
 export const getRiDispositifsByIds = async (ids: string[]) =>
   ids.length === 0
     ? []
-    : riWebhookRequest<RiDispositifSummary[]>(
-        "/api/webhook/dispositif/search",
-        {
-          query: { ids: ids.join(",") },
-        },
-      );
+    : riWebhookRequest<RiDispositifSummary[]>(DISPOSITIF_SEARCH_PATH, {
+        query: { ids: ids.join(",") },
+      });
 
 export const countRiFilterMatches = async (filters: WidgetConfigFilters) =>
   (

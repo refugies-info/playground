@@ -11,7 +11,7 @@ import {
 } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
-import type { RiWebhookError } from "./ri-webhook-client";
+import type { RiWebhookError } from "./ri/webhook-client";
 import {
   countRiFilterMatches,
   createRiWidgetConfig,
@@ -20,7 +20,17 @@ import {
   listRiWidgetConfigs,
   searchRiDispositifs,
   updateRiWidgetConfig,
-} from "./ri-widget-configs";
+} from "./ri/widget-configs";
+
+const ACTION_NAMES = {
+  listWidgetConfigs: "listWidgetConfigs",
+  getWidgetConfig: "getWidgetConfig",
+  createWidgetConfig: "createWidgetConfig",
+  updateWidgetConfig: "updateWidgetConfig",
+  searchDispositifs: "searchDispositifs",
+  getDispositifsByIds: "getDispositifsByIds",
+  countFilterMatches: "countFilterMatches",
+} as const;
 
 export type WidgetConfigActionResult<T> =
   | { success: true; data: T }
@@ -31,7 +41,7 @@ export type WidgetConfigActionResult<T> =
     };
 
 async function runAsAuthenticatedUser<T>(
-  actionName: string,
+  actionName: (typeof ACTION_NAMES)[keyof typeof ACTION_NAMES],
   action: (email: string) => Promise<T>,
 ): Promise<WidgetConfigActionResult<T>> {
   const cookieStore = await cookies();
@@ -63,7 +73,7 @@ async function runAsAuthenticatedUser<T>(
 export async function searchDispositifsAction(
   text: string,
 ): Promise<WidgetConfigActionResult<RiDispositifSummary[]>> {
-  return runAsAuthenticatedUser("searchDispositifs", () =>
+  return runAsAuthenticatedUser(ACTION_NAMES.searchDispositifs, () =>
     searchRiDispositifs(text),
   );
 }
@@ -71,7 +81,7 @@ export async function searchDispositifsAction(
 export async function getDispositifsByIdsAction(
   ids: string[],
 ): Promise<WidgetConfigActionResult<RiDispositifSummary[]>> {
-  return runAsAuthenticatedUser("getDispositifsByIds", () =>
+  return runAsAuthenticatedUser(ACTION_NAMES.getDispositifsByIds, () =>
     getRiDispositifsByIds(ids),
   );
 }
@@ -79,7 +89,7 @@ export async function getDispositifsByIdsAction(
 export async function countFilterMatchesAction(
   filters: WidgetConfigFilters,
 ): Promise<WidgetConfigActionResult<number>> {
-  return runAsAuthenticatedUser("countFilterMatches", () =>
+  return runAsAuthenticatedUser(ACTION_NAMES.countFilterMatches, () =>
     countRiFilterMatches(filters),
   );
 }
@@ -87,7 +97,7 @@ export async function countFilterMatchesAction(
 export async function listWidgetConfigsAction(): Promise<
   WidgetConfigActionResult<WidgetConfigSummary[]>
 > {
-  return runAsAuthenticatedUser("listWidgetConfigs", () =>
+  return runAsAuthenticatedUser(ACTION_NAMES.listWidgetConfigs, () =>
     listRiWidgetConfigs(),
   );
 }
@@ -95,7 +105,7 @@ export async function listWidgetConfigsAction(): Promise<
 export async function getWidgetConfigAction(
   id: string,
 ): Promise<WidgetConfigActionResult<WidgetConfig>> {
-  return runAsAuthenticatedUser("getWidgetConfig", () =>
+  return runAsAuthenticatedUser(ACTION_NAMES.getWidgetConfig, () =>
     getRiWidgetConfigById(id),
   );
 }
@@ -103,7 +113,7 @@ export async function getWidgetConfigAction(
 export async function createWidgetConfigAction(
   widgetConfig: WidgetConfigFields,
 ) {
-  return runAsAuthenticatedUser("createWidgetConfig", (email) =>
+  return runAsAuthenticatedUser(ACTION_NAMES.createWidgetConfig, (email) =>
     createRiWidgetConfig(email, widgetConfig),
   );
 }
@@ -112,7 +122,7 @@ export async function updateWidgetConfigAction(
   id: string,
   changes: WidgetConfigUpdateInput,
 ) {
-  return runAsAuthenticatedUser("updateWidgetConfig", (email) =>
+  return runAsAuthenticatedUser(ACTION_NAMES.updateWidgetConfig, (email) =>
     updateRiWidgetConfig(email, id, changes),
   );
 }

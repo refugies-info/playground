@@ -3,7 +3,7 @@ import { DocumentLayout } from "@/components/document-editor/shared";
 import { getCurrentUser } from "@/lib/auth";
 import { getDocumentById } from "@/services/documents";
 import { getProfilesByRoles } from "@/services/profiles";
-import { fetchRiReferenceData } from "@/services/ri-reference-data";
+import { fetchRiReferenceData } from "@/services/ri/reference-data";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

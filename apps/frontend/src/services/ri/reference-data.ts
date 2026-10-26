@@ -1,6 +1,6 @@
 import { logger } from "@playground/shared-types";
 import { unstable_cache } from "next/cache";
-import { riWebhookRequest } from "./ri-webhook-client";
+import { riWebhookRequest } from "./webhook-client";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,7 +36,7 @@ export interface RiReferenceData {
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-const REFERENCE_DATA_REVALIDATE_SECONDS = 86400; // 24h, complément à unstable_cache
+const REFERENCE_DATA_REVALIDATE_SECONDS = 86400; // 24h, complements unstable_cache
 
 function fetchFromRi<T>(path: string): Promise<T[]> {
   return riWebhookRequest<T[]>(path, {
@@ -67,7 +67,7 @@ export const fetchRiReferenceData = unstable_cache(
       const themesMap: Record<string, string> = {};
       const themeColorsMap: Record<string, string> = {};
       for (const t of themes) {
-        // Libellé court préféré ; repli sur le nom complet si absent
+        // Prefer the short label; fall back to the full name
         themesMap[t.id] = t.short || t.name;
         if (t.color) themeColorsMap[t.id] = t.color;
       }
