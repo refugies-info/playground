@@ -269,16 +269,40 @@ const contactDetails = (action: RcoActionDocument) => {
     .join("\n");
 };
 
-const withContactDetails = (how: Accordion[], details: string) => {
-  if (!details) return how;
+// Like the published fiches: "Contacter <organisme>" and "… à <ville>",
+// added by code because the agent never sees the organisation or places.
+const contactTitle = (title: string | undefined, organisation?: string) =>
+  organisation && (!title || title.startsWith("Contacter"))
+    ? `Contacter ${organisation}`
+    : (title ?? "Contacter l'organisme");
+
+const withContactDetails = (
+  how: Accordion[],
+  details: string,
+  organisation?: string,
+) => {
+  if (!details && !organisation) return how;
   const [firstStep, ...otherSteps] = how;
   return [
     {
-      title: firstStep?.title ?? "Contacter l'organisme",
+      title: contactTitle(firstStep?.title, organisation),
       text: [firstStep?.text, details].filter(Boolean).join("\n\n"),
     },
     ...otherSteps,
   ];
+};
+
+const withSingleCity = (title: string, action: RcoActionDocument) => {
+  const cities = [
+    ...new Set(
+      ((mapPlaces(action)?.value ?? []) as Poi[])
+        .map(({ city }) => city)
+        .filter(Boolean),
+    ),
+  ];
+  return cities.length === 1 && !title.includes(String(cities[0]))
+    ? `${title} à ${cities[0]}`
+    : title;
 };
 
 const section = (heading: string, body: string) =>
@@ -293,10 +317,14 @@ export const renderPlainLanguageFiche = (
   const goodToKnow = needsCirGoodToKnow(action)
     ? [...fiche.goodToKnow, CIR_GOOD_TO_KNOW]
     : fiche.goodToKnow;
-  const how = withContactDetails(fiche.how, contactDetails(action));
+  const how = withContactDetails(
+    fiche.how,
+    contactDetails(action),
+    action.organisme_responsable?.nom ?? undefined,
+  );
   const warnings = [...fiche.warnings, ...checkPlainLanguage(fiche, action)];
   const body = [
-    `# ${fiche.title}`,
+    `# ${withSingleCity(fiche.title, action)}`,
     fiche.description,
     ...goodToKnow.map((text) => directive("good-to-know", text)),
     section(

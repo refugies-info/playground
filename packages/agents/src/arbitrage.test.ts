@@ -1,6 +1,10 @@
 import type { Letta } from "@letta-ai/letta-client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { askComplianceAgent } from "./arbitrage";
+import {
+  AGENT_RESPONSE_FORMATS,
+  askComplianceAgent,
+  PlainLanguageAnswerSchema,
+} from "./arbitrage";
 
 const sendMock = vi.fn();
 
@@ -47,5 +51,24 @@ describe("askComplianceAgent", () => {
       askComplianceAgent(client, "agent-1", "fiche-1", ["audience"], {}),
     ).rejects.toThrow(/justification/);
     expect(sendMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("PlainLanguageAnswerSchema", () => {
+  it("keeps an accordion body sent under another key", () => {
+    const answer = PlainLanguageAnswerSchema.parse({
+      title: "Améliorer son français",
+      description: "Des cours.",
+      goodToKnow: [],
+      why: [{ title: "Parler", content: "Parler avec les voisins." }],
+      how: [{ title: "Contacter l'organisme", text: "Appeler." }],
+      otherInfo: [],
+      lexicon: [],
+      warnings: [],
+    });
+    expect(answer.why[0].text).toBe("Parler avec les voisins.");
+    expect(
+      AGENT_RESPONSE_FORMATS["rco-plain-language"].json_schema.schema,
+    ).toBeDefined();
   });
 });
