@@ -132,7 +132,7 @@ async function askAgent<T>(
   const reparsed = parseAnswer(retry.content, schema);
   if (!reparsed.success) {
     throw new Error(
-      `${conversationName}: unexpected agent answer after reminder: ${retry.content.slice(0, 500)}`,
+      `${conversationName}: unexpected agent answer after reminder (${reparsed.error.message.slice(0, 500)}): ${retry.content.slice(0, 500)}`,
     );
   }
   return {
