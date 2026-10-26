@@ -3,6 +3,7 @@ import {
   applyAiDecisions,
   checkCompliance,
   overallVerdict,
+  toArbitrationDocument,
 } from "../src/arbitrage/compliance-rules";
 import {
   createDispositifIndex,
@@ -106,5 +107,20 @@ describe("findDuplicateCandidates", () => {
     const ids = candidates.map((c) => c.id);
     expect(ids[0]).toBe("a");
     expect(ids).not.toContain("b");
+  });
+});
+
+describe("stored sessions without lieu_formation", () => {
+  it("does not crash the arbitration", async () => {
+    const stored = actionWith();
+    const action = {
+      ...stored,
+      sessions: stored.sessions.map(
+        ({ lieu_formation: _omitted, ...session }) => session,
+      ),
+    } as typeof stored;
+    expect(toArbitrationDocument(action).villes).toEqual([]);
+    const index = await createDispositifIndex([]);
+    await expect(findDuplicateCandidates(index, action)).resolves.toEqual([]);
   });
 });

@@ -18,7 +18,11 @@
  */
 
 import { createLettaClient, simplifyContentSync } from "@playground/agents";
-import type { RcoActionDocument } from "@playground/offre-info";
+import {
+  fetchActionDetail,
+  getRcoClientFromEnv,
+  type RcoActionDocument,
+} from "@playground/offre-info";
 import { logger, TYPE_CLEAR_LANGUAGE } from "@playground/shared-types";
 import { FatalError } from "@workflow/errors";
 import matter from "gray-matter";
@@ -228,7 +232,10 @@ export async function forceEditorialStep(
   const { agentId, ...finalContent } =
     service?.origin === "RCO"
       ? await generateRcoPlainLanguage(
-          service.data as unknown as RcoActionDocument,
+          await fetchActionDetail(
+            getRcoClientFromEnv(),
+            service.data as unknown as RcoActionDocument,
+          ),
         )
       : await generateDiEditorial(workflowId, workflow);
 
