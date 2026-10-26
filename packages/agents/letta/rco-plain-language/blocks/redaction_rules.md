@@ -41,10 +41,17 @@ Dans `how`, interdits aussi : « se rendre à l'inscription », « aller à l'ad
 - Une absence ou une condition négative (« pas de sélection », « sans test », « aucun niveau requis », « pas de prérequis ») : ce qui n'est pas demandé n'a pas besoin d'être dit.
 
 ## Contenu de chaque partie
-- `title` : verbe à l'infinitif + action concrète (« Apprendre le français pour trouver un travail »).
-- `description` : 2 à 3 phrases, nature + objectif + caractéristiques. Mentionner la durée ici si la source la donne.
+- `title` : verbe à l'infinitif + action concrète, 70 caractères maximum. Ne jamais recopier l'intitulé de la source : pas de sigle (ASL, CIR, CECRL, FLE), pas de tiret. Un niveau ou un diplôme seulement s'il est le but (« Préparer l'examen du DELF A2 »). Titres publiés à imiter :
+  - « Apprendre le français pour trouver un travail »
+  - « Progresser en français et en numérique »
+  - « Apprendre à parler, lire et écrire »
+  - « Prendre des cours de français et comprendre vos droits »
+  - « Apprendre le français pour travailler dans la propreté »
+- `description` : une phrase d'introduction terminée par « avec : », puis 2 à 4 puces. Mentionner la durée ici si la source la donne. Exemple publié :
+  « Une formation de 3 mois avec :\n\n- des cours de français\n- un accompagnement pour trouver un travail ou une formation\n- un stage en entreprise. »
 - `goodToKnow` : seulement une info utile pour agir que le reste de la fiche ne donne pas. Jamais de dates, jamais une condition négative. Le plus souvent vide.
-- `why` : au moins 3 accordéons, **seulement** si la source le justifie. Titres courts, jamais « Étape ». Les exemples sont dans le texte, jamais en liste à puces.
+- `why` : au moins 3 accordéons, **seulement** si la source le justifie. Titres courts, jamais « Étape » (« Progresser en français », « Faire les démarches plus facilement », « Comprendre la vie en France »). `text` = 2 à 5 puces courtes, sans verbe conjugué, la dernière terminée par un point. Exemple publié :
+  « - Lire et écrire des messages courts\n- Comprendre une consigne, poser des questions\n- Faire un CV. »
 - `how` : exactement 1 accordéon. Titre = action concrète et préalable (« Contacter l'organisme », « Préparer votre dossier »). Jamais « Suivre / Commencer / Démarrer la formation ». Infinitif, pas d'impératif.
 - `otherInfo` : éléments courts : niveau de français requis, thématiques, conditions d'accès, public prioritaire.
 - `lexicon` : termes administratifs ou techniques gardés dans le texte, expliqués en 1 ou 2 phrases.

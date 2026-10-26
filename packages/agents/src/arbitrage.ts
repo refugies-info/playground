@@ -31,7 +31,19 @@ export const MetadataAnswerSchema = z.object({
   ),
 });
 
-const AccordionSchema = z.object({ title: z.string(), text: z.string() });
+// gpt-oss sometimes names the body "content" or "texte": keep it rather than fail.
+const AccordionSchema = z.preprocess(
+  (item) =>
+    item && typeof item === "object" && !("text" in item)
+      ? {
+          ...item,
+          text: Object.entries(item).find(
+            ([key, value]) => key !== "title" && typeof value === "string",
+          )?.[1],
+        }
+      : item,
+  z.object({ title: z.string(), text: z.string() }),
+);
 
 export const PlainLanguageAnswerSchema = z.object({
   title: z.string(),
