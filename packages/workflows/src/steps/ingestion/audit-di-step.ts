@@ -50,7 +50,11 @@ import {
   type LettaUsage,
   parseIngestionResponse,
 } from "@playground/agents";
-import type { RcoActionDocument } from "@playground/offre-info";
+import {
+  fetchActionDetail,
+  getRcoClientFromEnv,
+  type RcoActionDocument,
+} from "@playground/offre-info";
 import {
   LETTA_MODEL_HANDLE,
   logger,
@@ -541,7 +545,10 @@ export async function forceAuditReportStep(workflowId: string) {
     const result =
       record.service?.origin === "RCO"
         ? await arbitrateRcoRecord(
-            record.service.data as unknown as RcoActionDocument,
+            await fetchActionDetail(
+              getRcoClientFromEnv(),
+              record.service.data as unknown as RcoActionDocument,
+            ),
           )
         : await generateForcedDiReport(record.markdown, workflowId);
 

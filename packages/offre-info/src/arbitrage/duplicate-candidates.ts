@@ -66,9 +66,9 @@ export async function createDispositifIndex(
 const actionDepartments = (action: RcoActionDocument): string[] => [
   ...new Set(
     action.sessions.flatMap((session) =>
-      (session.lieu_formation as { departement?: string }[]).map((place) =>
-        String(place.departement),
-      ),
+      (
+        (session.lieu_formation as { departement?: string }[] | undefined) ?? []
+      ).map((place) => String(place.departement)),
     ),
   ),
 ];
