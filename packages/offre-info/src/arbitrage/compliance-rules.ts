@@ -21,7 +21,7 @@ export type ComplianceCriterion =
 // Questions of the "Étape" column on the arbitration page.
 export const CRITERION_LABELS: Record<ComplianceCriterion, string> = {
   agreement: "Dispositif conventionné ?",
-  funder: "Financeur dans le périmètre RI ?",
+  funder: "Financeur dans périmètre RI ?",
   audience: "Public visé conforme ?",
   scheme_type: "Dispositif conforme au périmètre ?",
   sessions: `Durée ≥ ${MIN_SESSION_DAYS} jours ?`,
@@ -166,9 +166,9 @@ export function checkCompliance(
     checkAgreement(action),
     checkFunder(action),
     checkAudience(action),
+    checkSchemeType(),
     checkSessions(action, today),
     checkHours(action),
-    checkSchemeType(),
   ];
 }
 

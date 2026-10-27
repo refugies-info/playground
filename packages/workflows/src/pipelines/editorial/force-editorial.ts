@@ -15,7 +15,10 @@
  * dans le SDK Vercel Workflow au moment de désérialiser `run.returnValue`.
  */
 
-import { forceEditorialStep } from "../../steps/editorial/force-editorial-step";
+import {
+  forceEditorialStep,
+  notifyClearLanguageErrorStep,
+} from "../../steps/editorial/force-editorial-step";
 
 export interface ForceEditorialWorkflowResult {
   content: string;
@@ -24,9 +27,18 @@ export interface ForceEditorialWorkflowResult {
 export async function forceEditorialWorkflow(
   workflowId: string,
   userId: string,
+  model?: string,
 ): Promise<ForceEditorialWorkflowResult> {
   "use workflow";
 
-  const { content } = await forceEditorialStep(workflowId, userId);
-  return { content };
+  try {
+    const { content } = await forceEditorialStep(workflowId, userId, model);
+    return { content };
+  } catch (error) {
+    await notifyClearLanguageErrorStep(
+      workflowId,
+      error instanceof Error ? error.message : String(error),
+    );
+    throw error;
+  }
 }
