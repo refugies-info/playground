@@ -673,6 +673,11 @@ export async function forceAuditReportStep(workflowId: string) {
       );
     }
 
+    const isLastAttempt =
+      error instanceof FatalError ||
+      getStepMetadata().attempt >= forceAuditReportStep.maxRetries + 1;
+    if (!isLastAttempt) throw error;
+
     // FINAL SECURITY: Ensure ingestion_record is no longer 'pending' if we hit an error (RI-1093)
     try {
       await supabase
@@ -689,3 +694,5 @@ export async function forceAuditReportStep(workflowId: string) {
     throw error;
   }
 }
+
+forceAuditReportStep.maxRetries = 3;
