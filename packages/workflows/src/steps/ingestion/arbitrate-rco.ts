@@ -22,8 +22,7 @@ import {
 import {
   actionDepartments,
   applyAiDecisions,
-  type ComplianceCriterion,
-  type CriterionResult,
+  CRITERION_LABELS,
   checkCompliance,
   criteriaForAi,
   type DuplicateCandidate,
@@ -34,6 +33,13 @@ import {
   toCandidate,
   type Verdict,
 } from "@playground/offre-info";
+import {
+  type ArbitrationCriterion,
+  type ArbitrationReport,
+  DUPLICATE_SOURCE_LABELS,
+  DUPLICATE_VERDICT_LABELS,
+  type DuplicateMatch,
+} from "@playground/shared-types";
 import { FatalError } from "@workflow/errors";
 import { getSupabaseClient } from "./utils";
 
@@ -49,25 +55,6 @@ const OVERALL_LABELS: Record<Verdict, string> = {
   refused: "❌ Non conforme",
   ai: "🤖 À arbitrer",
 };
-
-const CRITERION_LABELS: Record<ComplianceCriterion, string> = {
-  agreement: "Conventionnement",
-  funder: "Financeur",
-  audience: "Public visé",
-  sessions: "Sessions",
-  hours: "Volume horaire",
-  scheme_type: "Type de dispositif",
-};
-
-const DUPLICATE_VERDICT_LABELS = {
-  duplicate: "Doublon",
-  ambiguous: "Doublon possible",
-} as const;
-
-const SOURCE_LABELS = {
-  "refugies-info": "Refugies.info",
-  playground: "BOMO",
-} as const;
 
 const CANDIDATE_LIMIT = 10;
 const RI_DUPLICATES_PATH = "/api/agent/dispositifs/duplicates";
@@ -85,49 +72,58 @@ const addUsage = (total: number, usage?: LettaUsage) =>
 const tableCell = (value: string) =>
   value.replaceAll("|", "/").replaceAll("\n", " ");
 
-const complianceTable = (results: CriterionResult[]) =>
+const complianceTable = (criteria: ArbitrationCriterion[]) =>
   [
-    "| Critère | Décision | Raison |",
+    "| Étape | Donnée trouvée & analysée | Décision |",
     "| --- | --- | --- |",
-    ...results.map(
-      ({ criterion, verdict, reason }) =>
-        `| ${CRITERION_LABELS[criterion]} | ${VERDICT_LABELS[verdict]} | ${tableCell(reason)} |`,
+    ...criteria.map(
+      ({ label, verdict, reason }) =>
+        `| ${label} | ${tableCell(reason)} | ${VERDICT_LABELS[verdict]} |`,
     ),
   ].join("\n");
 
-const resolveMatches = (
+const candidateLocation = (candidate: DuplicateCandidate) =>
+  [...candidate.cities, ...candidate.departments].join(", ") ||
+  (candidate.source === "refugies-info" ? "France entière" : "—");
+
+const toDuplicateMatches = (
   candidates: DuplicateCandidate[],
   answer: DuplicateAnswer | null,
-) => {
+): DuplicateMatch[] => {
   const candidatesById = new Map(candidates.map((c) => [c.id, c]));
-  return (answer?.matches ?? []).flatMap((match) => {
+  return (answer?.matches ?? []).flatMap(({ candidateId, verdict, reason }) => {
     // An id the agent made up has no fiche to link to.
-    const candidate = candidatesById.get(match.candidateId);
+    const candidate = candidatesById.get(candidateId);
     return candidate
-      ? [{ ...match, ...candidate, verdict: match.verdict }]
+      ? [
+          {
+            id: candidate.id,
+            source: candidate.source,
+            url: candidate.url,
+            title: candidate.title || "Sans titre",
+            sponsor: candidate.sponsor || "—",
+            location: candidateLocation(candidate),
+            verdict,
+            reason,
+          },
+        ]
       : [];
   });
 };
 
-type ResolvedMatch = ReturnType<typeof resolveMatches>[number];
-
-const duplicateSection = (
-  refusedByRules: boolean,
-  answer: DuplicateAnswer | null,
-  matches: ResolvedMatch[],
-) => {
-  if (refusedByRules) {
+const duplicateSection = (report: ArbitrationReport) => {
+  if (!report.duplicatesChecked) {
     return "Non analysé : la fiche est refusée par les règles de conformité.";
   }
-  if (matches.length === 0) return "Aucun doublon détecté.";
+  if (!report.duplicate) return "Aucun doublon détecté.";
   return [
-    answer?.reason ?? "",
+    report.duplicateSummary ?? "",
     [
-      "| Fiche | Source | Structure | Verdict | Raison |",
-      "| --- | --- | --- | --- | --- |",
-      ...matches.map(
+      "| Fiche | Source | Structure | Localisation | Similarité | Raison |",
+      "| --- | --- | --- | --- | --- | --- |",
+      ...report.duplicates.map(
         (match) =>
-          `| [${tableCell(match.title || "Sans titre")}](${match.url}) | ${SOURCE_LABELS[match.source]} | ${tableCell(match.sponsor || "—")} | ${DUPLICATE_VERDICT_LABELS[match.verdict]} | ${tableCell(match.reason)} |`,
+          `| [${tableCell(match.title)}](${match.url}) | ${DUPLICATE_SOURCE_LABELS[match.source]} | ${tableCell(match.sponsor)} | ${tableCell(match.location)} | ${DUPLICATE_VERDICT_LABELS[match.verdict]} | ${tableCell(match.reason)} |`,
       ),
     ].join("\n"),
   ]
@@ -251,10 +247,19 @@ export async function arbitrateRcoRecord(
     tokens = addUsage(tokens, usage);
   }
 
-  const matches = resolveMatches(candidates, duplicateAnswer);
-  // An ambiguous match is a duplicate until the editorial team says otherwise.
-  const duplicate = matches.length > 0;
   const verdict = overallVerdict(compliance);
+  const duplicates = toDuplicateMatches(candidates, duplicateAnswer);
+  const report: ArbitrationReport = {
+    compliant: verdict === "accepted",
+    duplicate: duplicates.length > 0,
+    duplicatesChecked: !refusedByRules,
+    duplicateSummary: duplicateAnswer?.reason ?? null,
+    criteria: compliance.map((result) => ({
+      ...result,
+      label: CRITERION_LABELS[result.criterion],
+    })),
+    duplicates,
+  };
   return {
     agentId: complianceAgentId,
     tokens,
@@ -264,30 +269,15 @@ export async function arbitrateRcoRecord(
     complianceStatus:
       verdict === "ai"
         ? "error"
-        : verdict === "accepted" && !duplicate
+        : report.compliant && !report.duplicate
           ? "compliant"
           : "non_compliant",
-    metadata: {
-      compliant: verdict === "accepted",
-      duplicate,
-      duplicates: matches.map(
-        ({ id, source, url, title, sponsor, verdict, reason }) => ({
-          id,
-          source,
-          url,
-          title,
-          sponsor,
-          verdict,
-          reason,
-        }),
-      ),
-      criteria: compliance,
-    },
+    metadata: report,
     markdown: [
       `## Analyse de conformité éditoriale : ${OVERALL_LABELS[verdict]}`,
-      complianceTable(compliance),
-      `## Analyse de doublon${duplicate ? " : ❌ Doublon détecté" : ""}`,
-      duplicateSection(refusedByRules, duplicateAnswer, matches),
+      complianceTable(report.criteria),
+      `## Analyse de doublons${report.duplicate ? " : ❌ Doublon détecté" : ""}`,
+      duplicateSection(report),
     ].join("\n\n"),
   };
 }

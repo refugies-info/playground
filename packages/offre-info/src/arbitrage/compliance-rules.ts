@@ -1,3 +1,4 @@
+import type { CriterionVerdict } from "@playground/shared-types";
 import type { RcoActionDocument, RcoSession } from "../document";
 import {
   ACCEPTED_AUDIENCE_CODES,
@@ -7,7 +8,7 @@ import {
 } from "./compliance-config";
 
 // "ai" means the code cannot decide: the criterion goes to the compliance agent.
-export type Verdict = "accepted" | "refused" | "ai";
+export type Verdict = CriterionVerdict;
 
 export type ComplianceCriterion =
   | "agreement"
@@ -16,6 +17,16 @@ export type ComplianceCriterion =
   | "sessions"
   | "hours"
   | "scheme_type";
+
+// Questions of the "Étape" column on the arbitration page.
+export const CRITERION_LABELS: Record<ComplianceCriterion, string> = {
+  agreement: "Dispositif conventionné ?",
+  funder: "Financeur dans le périmètre RI ?",
+  audience: "Public visé conforme ?",
+  scheme_type: "Dispositif conforme au périmètre ?",
+  sessions: `Durée ≥ ${MIN_SESSION_DAYS} jours ?`,
+  hours: `Volume horaire ≥ ${MIN_TOTAL_HOURS}h ?`,
+};
 
 export type CriterionResult = {
   criterion: ComplianceCriterion;

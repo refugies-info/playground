@@ -4,6 +4,7 @@
  */
 
 export * from "./activity-log";
+export * from "./arbitration-report";
 export * from "./content";
 export * from "./date";
 export * from "./date-filter";

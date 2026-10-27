@@ -1,3 +1,5 @@
+import type { ArbitrationReport } from "./arbitration-report";
+
 export type ComplianceStatus =
   | "compliant"
   | "non_compliant"
@@ -54,6 +56,8 @@ export interface Document {
   content: string;
   ingestionContent?: string; // Immutable original content from ingestion_records
   complianceReport?: string; // Markdown content of the compliance report
+  /** RCO only: structured compliance report, for reports generated since RI-1642 */
+  arbitrationReport?: ArbitrationReport;
   /** RCO only: the fiche fields sent to the arbitration agents */
   arbitrationSource?: Record<string, unknown>;
   /** RCO only: the fiche fields sent to the metadata agent */

@@ -6,6 +6,7 @@ import {
   toSourceUrl,
 } from "@playground/offre-info";
 import type {
+  ArbitrationReport,
   ComplianceStatus,
   DateFilterCondition,
   DateFilterType,
@@ -21,6 +22,7 @@ import {
   DEFAULT_DATE_FILTER_CONDITION,
   DEFAULT_DATE_FILTER_TYPE,
   injectFrontmatterContent,
+  isArbitrationReport,
   logger,
   nextIsoDay,
 } from "@playground/shared-types";
@@ -451,8 +453,8 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     created_at: string;
     metadata_report_id: string | null;
     compliance_report:
-      | { markdown: string; created_at?: string }
-      | { markdown: string; created_at?: string }[]
+      | { markdown: string; metadata: Json; created_at?: string }
+      | { markdown: string; metadata: Json; created_at?: string }[]
       | null;
   };
   let ingestionRecord: IngestionWithReports | null = null;
@@ -473,6 +475,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
               metadata_report_id,
               compliance_report:letta_reports!ingestion_records_ingestion_report_id_fkey (
                 markdown,
+                metadata,
                 created_at
               )
             `,
@@ -568,6 +571,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
 
   // Compliance report from letta_reports
   let complianceReport = "";
+  let arbitrationReport: ArbitrationReport | undefined;
   if (ingestionRecord) {
     const lettaReportsData = ingestionRecord.compliance_report;
     if (lettaReportsData) {
@@ -576,6 +580,9 @@ export async function getDocumentById(id: string): Promise<Document | null> {
         : lettaReportsData;
       if (report?.markdown) {
         complianceReport = report.markdown;
+      }
+      if (isArbitrationReport(report?.metadata)) {
+        arbitrationReport = report.metadata;
       }
     }
   }
@@ -665,6 +672,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     content,
     ingestionContent,
     complianceReport,
+    arbitrationReport,
     arbitrationSource: rcoAction ? toArbitrationDocument(rcoAction) : undefined,
     metadataSource: rcoAction ? toMetadataDocument(rcoAction) : undefined,
     metadata,
