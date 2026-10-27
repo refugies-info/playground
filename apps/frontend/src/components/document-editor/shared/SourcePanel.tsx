@@ -16,23 +16,14 @@ import {
 import { Button } from "@playground/ui/primitives";
 import { useCallback, useEffect, useState } from "react";
 import { useSidebar } from "@/contexts/SidebarContext";
-import { buildRcoSourceUrl } from "@/lib/url-builder";
+import {
+  buildLettaConversationUrl,
+  buildRcoSourceUrl,
+} from "@/lib/url-builder";
 import { useDocument } from "../DocumentContext";
 import { useContentContext } from "./ContentContext";
 import { MarkdownViewer } from "./MarkdownViewer";
 import { SourceFields } from "./SourceFields";
-
-// The fiche body already holds the texts: only the practical facts here.
-const EDITORIAL_SOURCE_FIELDS = [
-  "organisme",
-  "info_public_vise",
-  "duree_indicative",
-  "nombre_heures_total",
-  "rythme_formation",
-  "frais_restants",
-  "detail_conditions_prise_en_charge",
-  "sessions",
-];
 
 /**
  * SourcePanel — panneau de comparaison avec le contenu source RCO.
@@ -61,14 +52,13 @@ export function SourcePanel() {
     document?.metadata?.id as string | undefined,
   );
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const metadataSource = document?.metadataSource;
-  const editorialSource =
-    metadataSource &&
-    Object.fromEntries(
-      EDITORIAL_SOURCE_FIELDS.filter((field) => field in metadataSource).map(
-        (field) => [field, metadataSource[field]],
-      ),
-    );
+  const lettaUrl =
+    document?.isAdmin && document.lettaAgentId
+      ? buildLettaConversationUrl(
+          document.lettaAgentId,
+          document.lettaConversationId,
+        )
+      : undefined;
 
   const handleClose = useCallback(() => {
     activatePaddingTransition();
@@ -84,6 +74,11 @@ export function SourcePanel() {
     if (!lienSource) return;
     window.open(lienSource, "_blank", "noopener,noreferrer");
   }, [lienSource]);
+
+  const handleLetta = useCallback(() => {
+    if (!lettaUrl) return;
+    window.open(lettaUrl, "_blank", "noopener,noreferrer");
+  }, [lettaUrl]);
 
   return (
     <div
@@ -135,6 +130,18 @@ export function SourcePanel() {
                 >
                   RCO
                 </Button>
+
+                {lettaUrl && (
+                  <Button
+                    variant="quatrieme"
+                    size="sm"
+                    onClick={handleLetta}
+                    rightIcon={RiExternalLinkLine}
+                    className="border border-border text-[var(--text-action-high-grey)]"
+                  >
+                    Letta
+                  </Button>
+                )}
               </div>
             </PopoverAnchor>
 
@@ -179,10 +186,18 @@ export function SourcePanel() {
             emptyMessage="Aucun contenu source disponible"
             className="[&_.bn-editor]:!px-10"
           />
-          {editorialSource && (
+          {document?.metadataSource && (
             <section className="mx-10 mt-6 border-t border-border pt-6">
               <h2 className="mb-4 text-lg font-bold">Informations RCO</h2>
-              <SourceFields source={editorialSource} />
+              <SourceFields source={document.metadataSource} />
+            </section>
+          )}
+          {document?.editorialNotes && (
+            <section className="mt-6 border-t border-border pt-6">
+              <MarkdownViewer
+                content={document.editorialNotes}
+                className="[&_.bn-editor]:!px-10"
+              />
             </section>
           )}
         </div>
