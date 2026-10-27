@@ -989,6 +989,21 @@ export type Database = {
       get_my_language: { Args: never; Returns: string }
       get_my_role: { Args: never; Returns: string }
       markdown_word_count: { Args: { markdown: string }; Returns: number }
+      search_playground_duplicate_candidates: {
+        Args: {
+          p_exclude_workflow_id: string
+          p_limit?: number
+          p_structure_name: string
+          p_title: string
+        }
+        Returns: {
+          commune: string
+          id: string
+          score: number
+          structure_name: string
+          title: string
+        }[]
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       update_metadata_field: {

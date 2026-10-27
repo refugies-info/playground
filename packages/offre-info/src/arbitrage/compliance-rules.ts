@@ -36,13 +36,9 @@ const daysBetween = (start: string, end: string) =>
 
 export function checkAgreement(action: RcoActionDocument): CriterionResult {
   if (action.conventionnement === true) {
-    return result("agreement", "accepted", "conventionnement = true");
+    return result("agreement", "accepted", "fiche conventionnée");
   }
-  return result(
-    "agreement",
-    "refused",
-    `conventionnement = ${action.conventionnement}`,
-  );
+  return result("agreement", "refused", "fiche non conventionnée");
 }
 
 export function checkFunder(action: RcoActionDocument): CriterionResult {
@@ -51,12 +47,12 @@ export function checkFunder(action: RcoActionDocument): CriterionResult {
     .filter(Boolean);
   const accepted = codes.filter((code) => ACCEPTED_FUNDER_CODES.has(code));
   if (accepted.length > 0) {
-    return result("funder", "accepted", `accepted funder codes: ${accepted}`);
+    return result("funder", "accepted", `financeur accepté : ${accepted}`);
   }
   return result(
     "funder",
     "refused",
-    codes.length ? `no accepted funder code in ${codes}` : "no funder",
+    codes.length ? `aucun financeur accepté parmi ${codes}` : "aucun financeur",
   );
 }
 
@@ -64,16 +60,12 @@ export function checkAudience(action: RcoActionDocument): CriterionResult {
   const codes = (action.code_public_vise as unknown[]).map(String);
   const accepted = codes.filter((code) => ACCEPTED_AUDIENCE_CODES.has(code));
   if (accepted.length > 0) {
-    return result(
-      "audience",
-      "accepted",
-      `accepted audience codes: ${accepted}`,
-    );
+    return result("audience", "accepted", `public visé accepté : ${accepted}`);
   }
   return result(
     "audience",
     "ai",
-    `no accepted audience code in [${codes}], needs a reading of the texts`,
+    `aucun public visé accepté parmi [${codes}], lecture des textes nécessaire`,
   );
 }
 
@@ -100,25 +92,33 @@ export function checkSessions(
     (session) => session.date_debut && session.date_fin,
   );
   if (datedSessions.length === 0) {
-    return result("sessions", "refused", "no session with start and end dates");
+    return result(
+      "sessions",
+      "refused",
+      "aucune session avec dates de début et de fin",
+    );
   }
   const openSessions = datedSessions.filter((session) =>
     isSessionOpen(session, action.modalites_entrees_sorties, today),
   );
   if (openSessions.length === 0) {
-    return result("sessions", "refused", "no session open to new learners");
+    return result(
+      "sessions",
+      "refused",
+      "aucune session ouverte à de nouveaux apprenants",
+    );
   }
   if (!openSessions.some(isSessionLongEnough)) {
     return result(
       "sessions",
       "refused",
-      `open sessions last less than ${MIN_SESSION_DAYS} days`,
+      `les sessions ouvertes durent moins de ${MIN_SESSION_DAYS} jours`,
     );
   }
   return result(
     "sessions",
     "accepted",
-    `${openSessions.length} open session(s) of ${MIN_SESSION_DAYS}+ days`,
+    `${openSessions.length} session(s) ouverte(s) de ${MIN_SESSION_DAYS} jours ou plus`,
   );
 }
 
@@ -131,21 +131,21 @@ const hoursVerdict = (hours: number, source: string) =>
 
 export function checkHours(action: RcoActionDocument): CriterionResult {
   if (typeof action.nombre_heures_total === "number") {
-    return hoursVerdict(action.nombre_heures_total, "nombre_heures_total");
+    return hoursVerdict(action.nombre_heures_total, "nombre d'heures total");
   }
   const text = action.duree_indicative;
   if (typeof text !== "string" || !text.trim()) {
-    return result("hours", "refused", "no hour volume");
+    return result("hours", "refused", "aucun volume horaire");
   }
   const match = text.match(HOURS_IN_TEXT);
-  if (match) return hoursVerdict(Number(match[1]), "duree_indicative");
-  return result("hours", "ai", `unparsable duree_indicative: "${text}"`);
+  if (match) return hoursVerdict(Number(match[1]), "durée indicative");
+  return result("hours", "ai", `durée indicative illisible : « ${text} »`);
 }
 
 // The scheme type (common law, volunteering, single-nationality...) is always
 // a semantic judgement, so the code never decides it.
 export const checkSchemeType = (): CriterionResult =>
-  result("scheme_type", "ai", "semantic judgement against jurisprudence");
+  result("scheme_type", "ai", "jugement à partir de la jurisprudence");
 
 export function checkCompliance(
   action: RcoActionDocument,

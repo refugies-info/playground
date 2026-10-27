@@ -578,6 +578,7 @@ export async function forceAuditReportStep(workflowId: string) {
                 record.service.data as unknown as RcoActionDocument,
               ),
             ),
+            workflowId,
           )
         : await generateForcedDiReport(record.markdown, workflowId);
 
