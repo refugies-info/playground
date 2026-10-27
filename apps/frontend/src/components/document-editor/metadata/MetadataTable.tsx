@@ -3,7 +3,7 @@
  * Generic table for displaying metadata fields
  */
 
-import type { RiReferenceData } from "@/services/ri-reference-data";
+import type { RiReferenceData } from "@/services/ri/reference-data";
 import { MetadataRow } from "./MetadataRow";
 import type { MetadataFieldDef } from "./types";
 

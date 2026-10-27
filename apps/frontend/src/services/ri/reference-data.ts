@@ -1,5 +1,6 @@
 import { logger } from "@playground/shared-types";
 import { unstable_cache } from "next/cache";
+import { riWebhookRequest } from "./webhook-client";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -35,40 +36,12 @@ export interface RiReferenceData {
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-function getConfig() {
-  const baseUrl = process.env.RI_BASE_URL;
-  const secret = process.env.RI_WEBHOOK_SECRET;
+const REFERENCE_DATA_REVALIDATE_SECONDS = 86400; // 24h, complements unstable_cache
 
-  if (!baseUrl || !secret) {
-    throw new Error(
-      "Missing RI_BASE_URL or RI_WEBHOOK_SECRET for reference data fetch",
-    );
-  }
-
-  return { baseUrl: baseUrl.replace(/\/$/, ""), secret };
-}
-
-async function fetchFromRi<T>(path: string): Promise<T[]> {
-  const { baseUrl, secret } = getConfig();
-  const url = `${baseUrl}${path}`;
-
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      "webhook-secret": secret,
-    },
-    signal: AbortSignal.timeout(10_000), // 10s max — évite les timeouts silencieux
-    next: { revalidate: 86400 }, // Next.js fetch cache: 24h (complément à unstable_cache)
+function fetchFromRi<T>(path: string): Promise<T[]> {
+  return riWebhookRequest<T[]>(path, {
+    revalidateSeconds: REFERENCE_DATA_REVALIDATE_SECONDS,
   });
-
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => "");
-    throw new Error(
-      `RI reference data fetch failed: ${response.status} ${errorText}`,
-    );
-  }
-
-  return response.json();
 }
 
 // ---------------------------------------------------------------------------
@@ -94,7 +67,7 @@ export const fetchRiReferenceData = unstable_cache(
       const themesMap: Record<string, string> = {};
       const themeColorsMap: Record<string, string> = {};
       for (const t of themes) {
-        // Libellé court préféré ; repli sur le nom complet si absent
+        // Prefer the short label; fall back to the full name
         themesMap[t.id] = t.short || t.name;
         if (t.color) themeColorsMap[t.id] = t.color;
       }
