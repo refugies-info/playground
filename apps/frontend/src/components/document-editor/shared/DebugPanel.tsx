@@ -80,7 +80,7 @@ export function DebugPanel() {
         <button
           type="button"
           onClick={() => setShowDebug(true)}
-          className="fixed bottom-20 right-6 z-50 p-3 bg-black text-white rounded-full shadow-lg hover:bg-gray-800 transition-all hover:scale-105"
+          className="fixed bottom-29 right-6 z-50 p-3 bg-black text-white rounded-full shadow-lg hover:bg-gray-800 transition-all hover:scale-105"
           title="Toggle Debug Panel (Option+Shift+D)"
         >
           <Bug className="w-5 h-5" />

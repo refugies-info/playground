@@ -111,7 +111,7 @@ frequency.amountDetails:  "minimum" | "maximum" | "approximately" | "exactly"
 \`\`\`yaml
 ---
 metadata_ri:
-  titreMarque: "Formation FLE A1-A2"
+  titreMarque: null
   mainSponsor: null
   abstract: "Formation de français langue étrangère pour débutants."
   theme: "FR"

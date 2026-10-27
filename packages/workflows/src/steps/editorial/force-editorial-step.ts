@@ -203,7 +203,7 @@ async function generateDiEditorial(
     throw new Error("No assistant response received from Letta agent");
   }
 
-  return { agentId, model, ...finalContent };
+  return { agentId, conversationId, model, ...finalContent };
 }
 
 export async function forceEditorialStep(
@@ -240,6 +240,7 @@ export async function forceEditorialStep(
 
   const {
     agentId,
+    conversationId,
     model: usedModel,
     ...finalContent
   } = service?.origin === "RCO"
@@ -251,6 +252,14 @@ export async function forceEditorialStep(
         model,
       )
     : await generateDiEditorial(workflowId, workflow, model);
+
+  // DI links its conversation upfront; RCO only knows it after the call.
+  if (conversationId !== workflow.conversation_id) {
+    await supabase
+      .from("workflows")
+      .update({ conversation_id: conversationId })
+      .eq("id", workflowId);
+  }
 
   // ─── 6. Persist ───────────────────────────────────────────────────────
   const persistResult = await persistEditorialReportStep(

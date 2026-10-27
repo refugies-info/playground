@@ -29,6 +29,7 @@ import {
 import type { Database, Json } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
+import { extractEditorialNotes } from "@/lib/editorial-notes";
 import { extractAuthorProfile } from "./helpers";
 
 /**
@@ -462,13 +463,17 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   // Fetch the active ingestion record, metadata generation flag, and active rewrite
   // in parallel. Compliance and metadata reports are tied to the active ingestion
   // source so pending updates cannot shadow the current fiche.
-  const [ingestionResult, generatingReportResult, activeRunResult] =
-    await Promise.all([
-      item.ingestion_record_id
-        ? supabase
-            .from("ingestion_records")
-            .select(
-              `
+  const [
+    ingestionResult,
+    generatingReportResult,
+    activeRunResult,
+    conversationResult,
+  ] = await Promise.all([
+    item.ingestion_record_id
+      ? supabase
+          .from("ingestion_records")
+          .select(
+            `
               markdown,
               metadata,
               created_at,
@@ -479,31 +484,36 @@ export async function getDocumentById(id: string): Promise<Document | null> {
                 created_at
               )
             `,
-            )
-            .eq("id", item.ingestion_record_id)
-            .single()
-        : Promise.resolve({ data: null, error: null }),
-      // Check if a metadata generation is currently in progress for this workflow.
-      // Used by the UI to restore the loading state after a page refresh.
-      supabase
-        .from("letta_reports")
-        .select("id")
-        .eq("workflow_id", id)
-        .eq("report_type", "metadata")
-        .eq("status", "generating")
-        .maybeSingle(),
-      // Check if an editorial AI rewrite is in progress or pending user decision.
-      // Used by AIFloatingButton to resume via GET /api/editorial-rewrite/[runId].
-      item.editorial_record_id
-        ? supabase
-            .from("editorial_records")
-            .select(
-              "active_run_id, current_editor_id, content_report:letta_reports!editorial_records_content_report_id_fkey (model)",
-            )
-            .eq("id", item.editorial_record_id)
-            .single()
-        : Promise.resolve({ data: null, error: null }),
-    ]);
+          )
+          .eq("id", item.ingestion_record_id)
+          .single()
+      : Promise.resolve({ data: null, error: null }),
+    // Check if a metadata generation is currently in progress for this workflow.
+    // Used by the UI to restore the loading state after a page refresh.
+    supabase
+      .from("letta_reports")
+      .select("id")
+      .eq("workflow_id", id)
+      .eq("report_type", "metadata")
+      .eq("status", "generating")
+      .maybeSingle(),
+    // Check if an editorial AI rewrite is in progress or pending user decision.
+    // Used by AIFloatingButton to resume via GET /api/editorial-rewrite/[runId].
+    item.editorial_record_id
+      ? supabase
+          .from("editorial_records")
+          .select(
+            "active_run_id, current_editor_id, content_report:letta_reports!editorial_records_content_report_id_fkey (model, agent_id, markdown)",
+          )
+          .eq("id", item.editorial_record_id)
+          .single()
+      : Promise.resolve({ data: null, error: null }),
+    supabase
+      .from("workflows")
+      .select("conversation_id")
+      .eq("id", id)
+      .maybeSingle(),
+  ]);
 
   if (ingestionResult.data) {
     ingestionRecord = ingestionResult.data as unknown as IngestionWithReports;
@@ -706,5 +716,10 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     currentEditorId: activeRunData.currentEditorId,
     currentEditorName: currentEditorName,
     editorialModel: activeRunResult.data?.content_report?.model ?? null,
+    editorialNotes: extractEditorialNotes(
+      activeRunResult.data?.content_report?.markdown ?? "",
+    ),
+    lettaAgentId: activeRunResult.data?.content_report?.agent_id,
+    lettaConversationId: conversationResult.data?.conversation_id,
   };
 }

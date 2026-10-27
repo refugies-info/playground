@@ -43,14 +43,6 @@ const places = (action: RcoActionDocument): Place[] =>
 
 const unique = <T>(values: T[]) => [...new Set(values)];
 
-export function mapBrandTitle(action: RcoActionDocument): MappedField | null {
-  if (!action.intitule_formation) return null;
-  return mapped("titreMarque", action.intitule_formation, {
-    field: "intitule_formation",
-    rawValue: action.intitule_formation,
-  });
-}
-
 export function mapSponsor(action: RcoActionDocument): MappedField | null {
   const name =
     action.organisme_responsable?.nom ??
@@ -211,7 +203,6 @@ export function mapMetadata(
   today = new Date().toISOString().slice(0, 10),
 ): MappedField[] {
   return [
-    mapBrandTitle(action),
     mapSponsor(action),
     mapLocation(action),
     mapPeriode(action, today),
