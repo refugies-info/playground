@@ -300,16 +300,14 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
     await clearActiveRunId(runId);
 
-    // Message structuré pour que l'éditorial puisse copier/coller au support.
-    const userMessage = [
-      "L'IA n'a pas pu améliorer le document.",
-      "",
-      `Erreur : ${rawMessage}`,
-      `Run : ${runId}`,
-      `Date : ${new Date().toISOString()}`,
-    ].join("\n");
-
-    return NextResponse.json({ error: userMessage }, { status: 500 });
+    // Details go to #dev via the workflow (notifyClearLanguageErrorStep).
+    return NextResponse.json(
+      {
+        error:
+          "L'IA n'a pas pu améliorer le document. L'équipe technique a été prévenue sur Slack, vous pouvez réessayer si vous le souhaitez.",
+      },
+      { status: 500 },
+    );
   }
 }
 

@@ -38,6 +38,8 @@ interface DocumentData
   currentUserId?: string;
   /** Display name of the currently logged-in user — broadcast on takeover so the previous editor sees who took over */
   currentUserName?: string | null;
+  /** Admins can pick the Letta model of the clear language rewrite */
+  isAdmin?: boolean;
   /** Display name of the user currently holding the edit lock — shown in EditLockDialog */
   currentEditorName?: string | null;
   /** True while an AI metadata generation is in progress — drives MetadataView spinner */

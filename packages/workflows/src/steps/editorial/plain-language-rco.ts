@@ -14,9 +14,13 @@ import {
   renderPlainLanguageFiche,
   toPlainLanguageDocument,
 } from "@playground/offre-info";
+import { RCO_MODEL_HANDLE } from "@playground/shared-types";
 import { FatalError } from "@workflow/errors";
 
-export async function generateRcoPlainLanguage(action: RcoActionDocument) {
+export async function generateRcoPlainLanguage(
+  action: RcoActionDocument,
+  model = RCO_MODEL_HANDLE,
+) {
   const agentId = process.env.RCO_PLAIN_LANGUAGE_AGENT_ID;
   if (!agentId) {
     throw new FatalError(
@@ -29,10 +33,12 @@ export async function generateRcoPlainLanguage(action: RcoActionDocument) {
     agentId,
     action.id,
     toPlainLanguageDocument(action),
+    model,
   );
 
   return {
     agentId,
+    model,
     content: renderPlainLanguageFiche(answer, action),
     usage,
   };

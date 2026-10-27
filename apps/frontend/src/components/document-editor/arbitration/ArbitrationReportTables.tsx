@@ -1,9 +1,14 @@
 import {
   type ArbitrationReport,
+  COMPARED_ELEMENT_LABELS,
+  COMPARED_ELEMENTS,
   type CriterionVerdict,
+  comparedValueHeader,
   DUPLICATE_SOURCE_LABELS,
   DUPLICATE_VERDICT_LABELS,
   type DuplicateMatch,
+  SIMILARITY_LABELS,
+  type Similarity,
 } from "@playground/shared-types";
 import { Badge } from "@playground/ui/primitives";
 import { CircleCheck, CircleHelp, CircleX } from "lucide-react";
@@ -27,9 +32,10 @@ const DECISION_ICONS: Record<CriterionVerdict, ReactNode> = {
   ai: <CircleHelp className="size-5 text-[#b34000]" aria-label="À arbitrer" />,
 };
 
-const SIMILARITY_COLORS: Record<DuplicateMatch["verdict"], string> = {
-  duplicate: "text-[#ce0500]",
-  ambiguous: "text-[#b34000]",
+const SIMILARITY_COLORS: Record<Similarity, string> = {
+  identical: "text-[#ce0500]",
+  close: "text-[#b34000]",
+  different: "text-[#18753c]",
 };
 
 function ReportTable({
@@ -126,36 +132,45 @@ function DuplicateSection({ report }: { report: ArbitrationReport }) {
   return (
     <section className="space-y-6">
       <SectionTitle title="Analyse de doublons" badge={badge} />
-      {report.duplicate && (
-        <ReportTable
-          headers={[
-            "Fiche",
-            "Structure",
-            "Localisation",
-            "Similarité",
-            "Raison",
-          ]}
-        >
-          {report.duplicates.map((match) => (
-            <tr key={`${match.source}-${match.id}`}>
-              <td className={BODY_CELL}>
-                <DuplicateLink match={match} />
-                <p className="text-xs text-[var(--text-mention-grey)]">
-                  {DUPLICATE_SOURCE_LABELS[match.source]}
-                </p>
-              </td>
-              <td className={BODY_CELL}>{match.sponsor}</td>
-              <td className={BODY_CELL}>{match.location}</td>
-              <td
-                className={`${BODY_CELL} ${SIMILARITY_COLORS[match.verdict]}`}
-              >
-                {DUPLICATE_VERDICT_LABELS[match.verdict]}
-              </td>
-              <td className={BODY_CELL}>{match.reason}</td>
-            </tr>
-          ))}
-        </ReportTable>
-      )}
+      {report.duplicates.map((match) => (
+        <div key={`${match.source}-${match.id}`} className="space-y-3">
+          <p className="flex flex-wrap items-center gap-2 text-sm">
+            <DuplicateLink match={match} />
+            <span className="text-[var(--text-mention-grey)]">
+              {DUPLICATE_SOURCE_LABELS[match.source]}
+            </span>
+            <Badge
+              variant={match.verdict === "duplicate" ? "danger" : "warning"}
+            >
+              {DUPLICATE_VERDICT_LABELS[match.verdict]}
+            </Badge>
+          </p>
+          <ReportTable
+            headers={[
+              "Élément comparé",
+              comparedValueHeader(match.source),
+              "Valeur RCO",
+              "Similarité",
+            ]}
+          >
+            {COMPARED_ELEMENTS.map((element) => (
+              <tr key={element}>
+                <td className={`${BODY_CELL} font-medium`}>
+                  {COMPARED_ELEMENT_LABELS[element]}
+                </td>
+                <td className={BODY_CELL}>{match[element]}</td>
+                <td className={BODY_CELL}>{report.rcoValues[element]}</td>
+                <td
+                  className={`${BODY_CELL} ${SIMILARITY_COLORS[match.similarity[element]]}`}
+                >
+                  {SIMILARITY_LABELS[match.similarity[element]]}
+                </td>
+              </tr>
+            ))}
+          </ReportTable>
+          <p className="text-sm">{match.reason}</p>
+        </div>
+      ))}
       <p className="text-sm">
         {!report.duplicatesChecked
           ? "Recherche non effectuée : la fiche est refusée par les règles de conformité."

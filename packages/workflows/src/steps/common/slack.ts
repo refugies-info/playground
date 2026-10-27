@@ -5,7 +5,7 @@ import { logger } from "@playground/shared-types";
  *
  * One webhook per channel, configured by environment variable:
  *   - SLACK_WEBHOOK_LOGS_BOMO → #logs-bomo: successful RCO publications
- *   - SLACK_WEBHOOK_DEV       → #dev: publication, translation and Airtable failures
+ *   - SLACK_WEBHOOK_DEV       → #dev: publication, translation, clear language and Airtable failures
  */
 
 const ENV_WEBHOOK_LOGS_BOMO = "SLACK_WEBHOOK_LOGS_BOMO";
@@ -127,6 +127,24 @@ export async function notifyTranslationPublicationError(params: {
       : [`traduction: \`${params.translationId}\``]),
     ...(params.userEmail ? [`par ${params.userEmail}`] : []),
     `erreur: ${params.errorMessage}`,
+  ].join("\n");
+
+  await postSlackMessage(process.env[ENV_WEBHOOK_DEV], ENV_WEBHOOK_DEV, text);
+}
+
+/** Notifies #dev that a clear language rewrite failed after all retries. */
+export async function notifyClearLanguageError(params: {
+  workflowId: string;
+  errorMessage: string;
+}): Promise<void> {
+  const bomoUrl = getBomoDocumentUrl(params.workflowId);
+  const text = [
+    `:rotating_light: [${getEnvironmentLabel()}] Échec du langage clair`,
+    ...(bomoUrl
+      ? [`fiche BOMO : ${bomoUrl}`]
+      : [`workflow: \`${params.workflowId}\``]),
+    // Letta errors can carry a full stack trace
+    `erreur: ${params.errorMessage.slice(0, 2000)}`,
   ].join("\n");
 
   await postSlackMessage(process.env[ENV_WEBHOOK_DEV], ENV_WEBHOOK_DEV, text);

@@ -11,7 +11,7 @@
  * ```
  * Client (AIFloatingButton)
  *   │
- *   ├─ POST /api/editorial-rewrite { workflowId }
+ *   ├─ POST /api/editorial-rewrite { workflowId, model? }  ← model : admin uniquement
  *   │    ├─ Auth (getUser → getUserProfile → verifyWorkflowPermission)
  *   │    ├─ start(forceEditorialWorkflow) → runId         ← Vercel Workflow
  *   │    ├─ UPDATE editorial_records SET active_run_id = runId
@@ -28,7 +28,7 @@
  * | 200  | `{ runId: string }`           | Workflow démarré               |
  * | 400  | `{ error: string }`           | workflowId manquant            |
  * | 401  | `{ error: string }`           | Non authentifié                |
- * | 403  | `{ error: string }`           | Permission refusée             |
+ * | 403  | `{ error: string }`           | Permission refusée (ou model sans être admin) |
  * | 500  | `{ error: string }`           | Erreur au démarrage            |
  */
 
@@ -44,6 +44,7 @@ import { verifyWorkflowPermission } from "@/services/permission-helper";
 
 const PostBodySchema = z.object({
   workflowId: z.string().uuid(),
+  model: z.string().min(1).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { workflowId } = parsed.data;
+    const { workflowId, model } = parsed.data;
 
     // ─── 2. Auth ──────────────────────────────────────────────────────────
     const [currentUser, cookieStore] = await Promise.all([
@@ -75,9 +76,9 @@ export async function POST(request: NextRequest) {
       currentUser.role ?? undefined,
     );
 
-    if (!hasPermission) {
+    if (!hasPermission || (model && currentUser.role !== "admin")) {
       logger.warn(
-        { userId: currentUser.id, workflowId },
+        { userId: currentUser.id, workflowId, model },
         "[editorial-rewrite] Unauthorized",
       );
       return NextResponse.json(
@@ -183,6 +184,7 @@ export async function POST(request: NextRequest) {
     const result = await start(forceEditorialWorkflow as any, [
       workflowId,
       currentUser.id,
+      model,
     ]);
 
     // ─── 5. Persister le runId dans editorial_records ─────────────────────

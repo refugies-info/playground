@@ -36,9 +36,12 @@ import {
 import {
   type ArbitrationCriterion,
   type ArbitrationReport,
-  DUPLICATE_SOURCE_LABELS,
+  COMPARED_ELEMENT_LABELS,
+  COMPARED_ELEMENTS,
+  comparedValueHeader,
   DUPLICATE_VERDICT_LABELS,
   type DuplicateMatch,
+  SIMILARITY_LABELS,
 } from "@playground/shared-types";
 import { FatalError } from "@workflow/errors";
 import { getSupabaseClient } from "./utils";
@@ -91,25 +94,53 @@ const toDuplicateMatches = (
   answer: DuplicateAnswer | null,
 ): DuplicateMatch[] => {
   const candidatesById = new Map(candidates.map((c) => [c.id, c]));
-  return (answer?.matches ?? []).flatMap(({ candidateId, verdict, reason }) => {
-    // An id the agent made up has no fiche to link to.
-    const candidate = candidatesById.get(candidateId);
-    return candidate
-      ? [
-          {
-            id: candidate.id,
-            source: candidate.source,
-            url: candidate.url,
-            title: candidate.title || "Sans titre",
-            sponsor: candidate.sponsor || "—",
-            location: candidateLocation(candidate),
-            verdict,
-            reason,
-          },
-        ]
-      : [];
-  });
+  return (answer?.matches ?? []).flatMap(
+    ({ candidateId, verdict, reason, similarity }) => {
+      // An id the agent made up has no fiche to link to.
+      const candidate = candidatesById.get(candidateId);
+      return candidate
+        ? [
+            {
+              id: candidate.id,
+              source: candidate.source,
+              url: candidate.url,
+              title: candidate.title || "Sans titre",
+              sponsor: candidate.sponsor || "—",
+              location: candidateLocation(candidate),
+              verdict,
+              reason,
+              similarity,
+            },
+          ]
+        : [];
+    },
+  );
 };
+
+const rcoValues = (
+  action: RcoActionDocument,
+): ArbitrationReport["rcoValues"] => ({
+  sponsor: action.organisme_responsable?.nom || "—",
+  location:
+    [
+      ...new Set(toArbitrationDocument(action).villes.filter(Boolean)),
+      ...actionDepartments(action),
+    ].join(", ") || "—",
+  title: action.nom || "Sans titre",
+});
+
+const comparisonTable = (
+  match: DuplicateMatch,
+  rco: ArbitrationReport["rcoValues"],
+) =>
+  [
+    `| Élément comparé | ${comparedValueHeader(match.source)} | Valeur RCO | Similarité |`,
+    "| --- | --- | --- | --- |",
+    ...COMPARED_ELEMENTS.map(
+      (element) =>
+        `| ${COMPARED_ELEMENT_LABELS[element]} | ${tableCell(match[element])} | ${tableCell(rco[element])} | ${SIMILARITY_LABELS[match.similarity[element]]} |`,
+    ),
+  ].join("\n");
 
 const duplicateSection = (report: ArbitrationReport) => {
   if (!report.duplicatesChecked) {
@@ -118,14 +149,13 @@ const duplicateSection = (report: ArbitrationReport) => {
   if (!report.duplicate) return "Aucun doublon détecté.";
   return [
     report.duplicateSummary ?? "",
-    [
-      "| Fiche | Source | Structure | Localisation | Similarité | Raison |",
-      "| --- | --- | --- | --- | --- | --- |",
-      ...report.duplicates.map(
-        (match) =>
-          `| [${tableCell(match.title)}](${match.url}) | ${DUPLICATE_SOURCE_LABELS[match.source]} | ${tableCell(match.sponsor)} | ${tableCell(match.location)} | ${DUPLICATE_VERDICT_LABELS[match.verdict]} | ${tableCell(match.reason)} |`,
-      ),
-    ].join("\n"),
+    ...report.duplicates.map((match) =>
+      [
+        `### [${match.title}](${match.url}) : ${DUPLICATE_VERDICT_LABELS[match.verdict]}`,
+        match.reason,
+        comparisonTable(match, report.rcoValues),
+      ].join("\n\n"),
+    ),
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -259,6 +289,7 @@ export async function arbitrateRcoRecord(
       label: CRITERION_LABELS[result.criterion],
     })),
     duplicates,
+    rcoValues: rcoValues(action),
   };
   return {
     agentId: complianceAgentId,
