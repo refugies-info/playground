@@ -1,3 +1,4 @@
+import type { DuplicateSource } from "@playground/shared-types";
 import type { RcoActionDocument } from "../document";
 
 // Shape returned by the RI duplicate search endpoint (/api/agent/dispositifs/duplicates).
@@ -10,10 +11,6 @@ export type RiDispositif = {
   mainSponsorNom?: string | null;
   mainSponsorAcronyme?: string | null;
 };
-
-// "refugies-info": published dispositif; "playground": document still being
-// processed in the playground (to process or draft).
-export type DuplicateSource = "refugies-info" | "playground";
 
 export type DuplicateCandidate = {
   id: string;

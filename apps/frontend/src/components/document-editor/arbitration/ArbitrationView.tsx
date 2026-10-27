@@ -12,6 +12,7 @@ import { useMemo, useState } from "react";
 import { toggleWorkflowStatus } from "@/services/document-actions";
 import { useDocument } from "../DocumentContext";
 import { MarkdownViewer } from "../shared/MarkdownViewer";
+import { ArbitrationReportTables } from "./ArbitrationReportTables";
 
 export function ArbitrationView() {
   const router = useRouter();
@@ -128,11 +129,15 @@ export function ArbitrationView() {
           {/* Report content (only shown when not in error state) */}
           {!isError && (
             <div className="  p-6">
-              <MarkdownViewer
-                content={reportContent}
-                loadingMessage="Chargement du rapport..."
-                emptyMessage="Aucun rapport disponible"
-              />
+              {document?.arbitrationReport ? (
+                <ArbitrationReportTables report={document.arbitrationReport} />
+              ) : (
+                <MarkdownViewer
+                  content={reportContent}
+                  loadingMessage="Chargement du rapport..."
+                  emptyMessage="Aucun rapport disponible"
+                />
+              )}
             </div>
           )}
         </div>
