@@ -1,6 +1,6 @@
 # Widget configs
 
-Embeddable widgets are configured in the Playground but **stored by Refugies.info** (`widgetconfigs` collection). The Playground never writes to Mongo directly: it goes through the Refugies.info webhooks, like document publication (see [publish.md](publication/publish.md)).
+Embeddable widgets are configured in the Playground but **stored by Refugies.info** (`widget_config` collection). The Playground never writes to Mongo directly: it goes through the Refugies.info webhooks, like document publication (see [publish.md](publication/publish.md)).
 
 ```
 UI (upcoming) → services/widget-config-actions.ts → services/ri/widget-configs.ts → services/ri/webhook-client.ts → RI webhooks
