@@ -1,7 +1,6 @@
-import { create, insertMultiple, type Orama, search } from "@orama/orama";
 import type { RcoActionDocument } from "../document";
 
-// Shape returned by getDispositifs() in @playground/mongo.
+// Shape returned by the RI duplicate search endpoint (/api/agent/dispositifs/duplicates).
 export type RiDispositif = {
   id: string;
   titreInformatif?: string | null;
@@ -12,12 +11,18 @@ export type RiDispositif = {
   mainSponsorAcronyme?: string | null;
 };
 
+// "refugies-info": published dispositif; "playground": document still being
+// processed in the playground (to process or draft).
+export type DuplicateSource = "refugies-info" | "playground";
+
 export type DuplicateCandidate = {
   id: string;
+  source: DuplicateSource;
   url: string;
   title: string;
   sponsor: string;
   departments: string[];
+  cities: string[];
   score: number;
 };
 
@@ -25,45 +30,32 @@ export type DuplicateCandidate = {
 const DEPARTMENT_PREFIX = /^(\d{2,3}|2A|2B)\s*-/;
 
 const toDepartments = (location: RiDispositif["location"]): string[] =>
-  (Array.isArray(location) ? location : [])
-    .map((place) => place.match(DEPARTMENT_PREFIX)?.[1])
+  (Array.isArray(location) ? location : [location])
+    .map((place) => place?.match(DEPARTMENT_PREFIX)?.[1])
     .filter((department): department is string => Boolean(department));
 
 const join = (...parts: (string | null | undefined)[]) =>
   parts.filter(Boolean).join(" - ");
 
-const toCandidate = (dispositif: RiDispositif) => ({
+const candidateUrl = (source: DuplicateSource, id: string) =>
+  source === "playground"
+    ? `/documents/${id}`
+    : `https://refugies.info/dispositif/${id}`;
+
+export const toCandidate = (
+  dispositif: RiDispositif,
+  source: DuplicateSource,
+) => ({
   id: dispositif.id,
-  url: `https://refugies.info/dispositif/${dispositif.id}`,
+  source,
+  url: candidateUrl(source, dispositif.id),
   title: join(dispositif.titreInformatif, dispositif.titreMarque),
   sponsor: join(dispositif.mainSponsorNom, dispositif.mainSponsorAcronyme),
   departments: toDepartments(dispositif.location),
+  cities: (dispositif.city ?? []).filter(Boolean),
 });
 
-const INDEX_SCHEMA = {
-  id: "string",
-  title: "string",
-  sponsor: "string",
-} as const;
-
-export type DispositifIndex = {
-  index: Orama<typeof INDEX_SCHEMA>;
-  candidatesById: Map<string, Omit<DuplicateCandidate, "score">>;
-};
-
-export async function createDispositifIndex(
-  dispositifs: RiDispositif[],
-): Promise<DispositifIndex> {
-  const index = create({ schema: INDEX_SCHEMA, language: "french" });
-  const candidates = dispositifs.map(toCandidate);
-  await insertMultiple(index, candidates);
-  return {
-    index,
-    candidatesById: new Map(candidates.map((c) => [c.id, c])),
-  };
-}
-
-const actionDepartments = (action: RcoActionDocument): string[] => [
+export const actionDepartments = (action: RcoActionDocument): string[] => [
   ...new Set(
     action.sessions.flatMap((session) =>
       (
@@ -72,35 +64,3 @@ const actionDepartments = (action: RcoActionDocument): string[] => [
     ),
   ),
 ];
-
-// Location is eliminatory: a candidate must be national or share a department.
-const isInSameArea = (candidateDepartments: string[], departments: string[]) =>
-  departments.length === 0 ||
-  candidateDepartments.length === 0 ||
-  candidateDepartments.some((department) => departments.includes(department));
-
-const SEARCH_POOL = 50;
-
-export async function findDuplicateCandidates(
-  { index, candidatesById }: DispositifIndex,
-  action: RcoActionDocument,
-  limit = 10,
-): Promise<DuplicateCandidate[]> {
-  const departments = actionDepartments(action);
-  const results = await search(index, {
-    term: join(action.nom, action.organisme_responsable?.nom),
-    properties: ["title", "sponsor"],
-    boost: { sponsor: 1.5 },
-    tolerance: 1,
-    // 1 = keep documents matching any word, not only all of them.
-    threshold: 1,
-    limit: SEARCH_POOL,
-  });
-  return results.hits
-    .map((hit) => ({
-      ...(candidatesById.get(hit.document.id) as DuplicateCandidate),
-      score: Number(hit.score.toFixed(2)),
-    }))
-    .filter((candidate) => isInSameArea(candidate.departments, departments))
-    .slice(0, limit);
-}
