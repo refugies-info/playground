@@ -42,7 +42,6 @@ import { APIError } from "@letta-ai/letta-client/core/error";
 import {
   accumulateUsage,
   createLettaClient,
-  findOrCreateConversation,
   generateMetadataReport,
   type LettaUsage,
   MetadataMetadataSchema,
@@ -273,11 +272,10 @@ export async function generateDiMetadataReportsStep(runId: string) {
         "▶ Starting metadata generation for record",
       );
 
-      const conversationId = await findOrCreateConversation(
-        lettaClient,
-        agentId,
-        `metadata-${target.workflow_id}`,
-      );
+      const { id: conversationId } = await lettaClient.conversations.create({
+        agent_id: agentId,
+        summary: `metadata-${target.workflow_id}`,
+      });
 
       let finalContent = "";
       const usage: LettaUsage = {};
@@ -526,11 +524,10 @@ export async function forceMetadataReportStep(workflowId: string) {
     }
 
     const lettaClient = createLettaClient();
-    const conversationId = await findOrCreateConversation(
-      lettaClient,
-      agentId,
-      `metadata-${workflowId}`,
-    );
+    const { id: conversationId } = await lettaClient.conversations.create({
+      agent_id: agentId,
+      summary: `metadata-${workflowId}`,
+    });
 
     logger.info(
       { workflowId, ingestionRecordId },

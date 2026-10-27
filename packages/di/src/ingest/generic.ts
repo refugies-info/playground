@@ -330,7 +330,7 @@ async function fetchExistingRecords(
 
     const { data, error } = await supabase
       .from(viewName)
-      .select("di_id, content_hash, version")
+      .select("di_id, data, content_hash, version")
       .in("di_id", batch);
 
     if (error) {
@@ -345,7 +345,10 @@ async function fetchExistingRecords(
       if (record.di_id) {
         existingMap.set(record.di_id, {
           di_id: record.di_id,
-          content_hash: record.content_hash,
+          content_hash:
+            record.data != null
+              ? computeContentHash(record.data)
+              : record.content_hash,
           version: record.version ?? 1,
         });
       }

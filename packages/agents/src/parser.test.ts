@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { extractTranslatedMarkdown, parseAgentResponse } from "./parser";
 import { IngestionMetadataSchema, MetadataMetadataSchema } from "./schemas";
@@ -401,6 +402,45 @@ provenance:
     );
 
     expect(result.status).toBe("error");
+  });
+
+  it("should repair a semi-flat frontmatter with unquoted ': ' values (prod 2026-10-21)", () => {
+    const rawResponse = readFileSync(
+      new URL("./__fixtures__/metadata-semi-flat-yaml.md", import.meta.url),
+      "utf8",
+    );
+
+    const result = parseAgentResponse(
+      rawResponse,
+      agentId,
+      MetadataMetadataSchema,
+    );
+
+    expect(result.status).toBe("complete");
+    expect(result.metadata.metadata_ri).toMatchObject({
+      publicStatus: [
+        "asile",
+        "refugie",
+        "subsidiaire",
+        "temporaire",
+        "apatride",
+      ],
+      price: { values: [0] },
+      periode: { modalitesEntreesSorties: 1 },
+      map: { city: "Évry-Courcouronnes" },
+    });
+    expect(result.metadata.provenance).toContainEqual(
+      expect.objectContaining({
+        key: "age",
+        source: [
+          {
+            field: "conditions_acces",
+            rawValue:
+              "Competences linguistiques a l entree en formation : CECRL : - Oral : A1.1, A1",
+          },
+        ],
+      }),
+    );
   });
 });
 

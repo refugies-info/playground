@@ -1,0 +1,39 @@
+# Replaces Supabase "Automatic branching" (disabled in the dashboard) so that
+# draft PRs don't consume the preview branch quota. Once created, the branch
+# stays linked to the git branch and the GitHub integration keeps applying
+# migrations on each push.
+# SUPABASE_ACCESS_TOKEN is a scoped token: this project only,
+# "Development Branches" read-write, nothing else.
+name: Supabase Preview Branch
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft, closed]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+
+jobs:
+  preview-branch:
+    if: github.head_ref != 'main'
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_API: https://api.supabase.com/v1
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      GIT_BRANCH: ${{ github.head_ref }}
+      SHOULD_EXIST: ${{ github.event.action != 'closed' && !github.event.pull_request.draft }}
+    steps:
+      - name: Create or delete the preview branch
+        run: |
+          api() { curl -sSf -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" "$@"; }
+
+          BRANCH_ID=$(api "$SUPABASE_API/projects/$SUPABASE_PROJECT_REF/branches" \
+            | jq -r --arg git "$GIT_BRANCH" '.[] | select(.git_branch == $git and .is_default == false and .persistent == false) | .id')
+
+          if [ "$SHOULD_EXIST" = "true" ] && [ -z "$BRANCH_ID" ]; then
+            api -X POST "$SUPABASE_API/projects/$SUPABASE_PROJECT_REF/branches" \
+              -d "$(jq -n --arg git "$GIT_BRANCH" '{branch_name: $git, git_branch: $git}')"
+          elif [ "$SHOULD_EXIST" = "false" ] && [ -n "$BRANCH_ID" ]; then
+            api -X DELETE "$SUPABASE_API/branches/$BRANCH_ID"
+          fi
