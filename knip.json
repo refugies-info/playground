@@ -16,22 +16,8 @@
     "packages/agents": {
       "entry": ["scripts/*.ts"],
       "project": ["src/**/*.ts", "scripts/*.ts"]
-    },
-    "packages/rco": {
-      "entry": ["scripts/*.ts"],
-      "project": ["src/**/*.ts", "scripts/*.ts"]
     }
   },
-  "ignore": [
-    "node_modules",
-    "dist",
-    "build",
-    ".next",
-    "coverage",
-    ".turbo",
-    "packages/rco/.velite",
-    "packages/rco/src/lheo-types.ts",
-    "packages/mongo/scripts/test-connection.ts"
-  ],
-  "ignoreDependencies": ["husky", "tsx", "zod", "velite"]
+  "ignore": ["node_modules", "dist", "build", ".next", "coverage", ".turbo"],
+  "ignoreDependencies": ["husky", "tsx", "zod"]
 }
