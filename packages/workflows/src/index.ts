@@ -18,8 +18,6 @@ export { forceMetadataOnlyWorkflow } from "./pipelines/ingestion/force-metadata-
 // =============================================================================
 // Pipelines - Editorial
 // =============================================================================
-export type { ArchiveWorkflowResult } from "./pipelines/publication/archive";
-export { archiveWorkflow } from "./pipelines/publication/archive";
 export type { PublicationWorkflowResult } from "./pipelines/publication/publication";
 export { publicationWorkflow } from "./pipelines/publication/publication";
 export type { TranslationPublicationWorkflowResult } from "./pipelines/publication/translation-publication";

@@ -5,11 +5,9 @@
  * des colonnes `date` Postgres). Les conversions passent par date-fns et non par
  * `new Date("YYYY-MM-DD")`, interprété en UTC : le rendu décalerait d'un jour
  * pour les fuseaux négatifs (Antilles, Amérique…).
- *
- * NB : `toIsoDate` fait doublon avec `dayKey` (@playground/shared-types), que
- * packages/ui ne peut pas importer — il ne dépend pas du paquet shared.
  */
 
+import { dayKey } from "@playground/shared-types";
 import { format, isValid, parse } from "date-fns";
 
 const ISO_FORMAT = "yyyy-MM-dd";
@@ -23,7 +21,7 @@ export function parseIsoDate(value: string): Date | undefined {
 
 /** Date → `YYYY-MM-DD` (chaîne vide si absente). */
 export function toIsoDate(date: Date | undefined): string {
-  return date ? format(date, ISO_FORMAT) : "";
+  return date ? dayKey(date) : "";
 }
 
 /** `YYYY-MM-DD` → `JJ/MM/AAAA` (chaîne vide si vide/invalide). */
