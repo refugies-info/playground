@@ -212,6 +212,18 @@ export const checkPlainLanguage = (
           },
         ]
       : []),
+    ...(fiche.goodToKnow.length > 1
+      ? [
+          {
+            type: "Bon à savoir en trop",
+            field: "Bon à savoir",
+            level: "mineur" as const,
+            detail: `Non publiés : ${fiche.goodToKnow.slice(1).join(" / ")}`,
+            suggestion:
+              "Un seul bon à savoir : déplacer le reste dans la description ou les autres informations.",
+          },
+        ]
+      : []),
     ...(fiche.how.length === 0
       ? [
           {
@@ -314,9 +326,11 @@ export const renderPlainLanguageFiche = (
   action: RcoActionDocument,
 ): string => {
   const fiche = fixFiche(answer);
-  const goodToKnow = needsCirGoodToKnow(action)
-    ? [...fiche.goodToKnow, CIR_GOOD_TO_KNOW]
-    : fiche.goodToKnow;
+  // One good-to-know from the agent, plus the CIR one as a separate block.
+  const goodToKnow = [
+    fiche.goodToKnow[0],
+    needsCirGoodToKnow(action) && CIR_GOOD_TO_KNOW,
+  ].filter((text): text is string => Boolean(text));
   const how = withContactDetails(
     fiche.how,
     contactDetails(action),

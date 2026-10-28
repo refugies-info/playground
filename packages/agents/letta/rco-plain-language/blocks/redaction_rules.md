@@ -49,9 +49,9 @@ Dans `how`, interdits aussi : « se rendre à l'inscription », « aller à l'ad
   - « Apprendre le français pour travailler dans la propreté »
 - `description` : une phrase d'introduction terminée par « avec : », puis 2 à 4 puces. Mentionner la durée ici si la source la donne. Exemple publié :
   « Une formation de 3 mois avec :\n\n- des cours de français\n- un accompagnement pour trouver un travail ou une formation\n- un stage en entreprise. »
-- `goodToKnow` : seulement une info utile pour agir que le reste de la fiche ne donne pas. Jamais de dates, jamais une condition négative. Le plus souvent vide.
-- `why` : au moins 3 accordéons, **seulement** si la source le justifie. Titres courts, jamais « Étape » (« Progresser en français », « Faire les démarches plus facilement », « Comprendre la vie en France »). `text` = 2 à 5 puces courtes, sans verbe conjugué, la dernière terminée par un point. Exemple publié :
-  « - Lire et écrire des messages courts\n- Comprendre une consigne, poser des questions\n- Faire un CV. »
+- `goodToKnow` : seulement une info utile pour agir que le reste de la fiche ne donne pas. Jamais de dates, jamais une condition négative. Le plus souvent vide, **au plus 1 élément** (le code ajoute lui-même le bloc CIR). Public, niveau, durée, conditions ou certification vont dans `description` ou `otherInfo`, pas ici.
+- `why` : au moins 3 accordéons, **seulement** si la source le justifie. Titres courts, jamais « Étape » (« Progresser en français », « Faire les démarches plus facilement », « Comprendre la vie en France »). `text` = 1 ou 2 phrases courtes avec un exemple concret intégré au texte, **jamais de liste à puces**. Exemple :
+  « Comprendre ce que disent les enseignants, par exemple pendant une réunion de parents. »
 - `how` : exactement 1 accordéon. Titre = action concrète et préalable (« Contacter l'organisme », « Préparer votre dossier »). Jamais « Suivre / Commencer / Démarrer la formation ». Infinitif, pas d'impératif.
 - `otherInfo` : éléments courts : niveau de français requis, thématiques, conditions d'accès, public prioritaire.
 - `lexicon` : termes administratifs ou techniques gardés dans le texte, expliqués en 1 ou 2 phrases.

@@ -94,6 +94,21 @@ describe("renderPlainLanguageFiche", () => {
     );
   });
 
+  it("keeps one agent good-to-know, with the CIR one as a separate block", () => {
+    const markdown = renderPlainLanguageFiche(
+      fiche({ goodToKnow: ["Venir avec un stylo.", "Niveau d'entrée : B2"] }),
+      actionOf({
+        intitule_formation:
+          "Actions socio-linguistiques complémentaires au CIR",
+      }),
+    );
+    expect(markdown.match(/:::good-to-know/g)).toHaveLength(2);
+    expect(markdown).toContain(
+      ":::good-to-know\nVenir avec un stylo.\n:::\n\n:::good-to-know\nIl est possible de venir",
+    );
+    expect(markdown).toContain("Non publiés : Niveau d'entrée : B2");
+  });
+
   it("logs forbidden terms, long sentences and missing content as warnings", () => {
     const markdown = renderPlainLanguageFiche(
       fiche({
