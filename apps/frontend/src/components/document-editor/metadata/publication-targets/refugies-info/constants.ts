@@ -23,29 +23,6 @@ export const ABSTRACT_MAX_LENGTH = 200;
 // Time Units
 // =============================================================================
 
-/**
- * Time unit translations (English → French).
- */
-export const TIME_UNIT_LABELS: Record<string, string> = {
-  hour: "heure",
-  hours: "heures",
-  day: "jour",
-  days: "jours",
-  week: "semaine",
-  weeks: "semaines",
-  month: "mois",
-  months: "mois",
-  year: "an",
-  years: "ans",
-};
-
-/**
- * Translates a raw unit to French.
- */
-export function translateUnit(raw: string, fallback = "heures"): string {
-  return TIME_UNIT_LABELS[raw.toLowerCase()] ?? fallback;
-}
-
 /** Time unit options for SelectInput (French labels) */
 export const TIME_UNIT_OPTIONS: readonly { value: string; label: string }[] = [
   { value: "sessions", label: "séances" },
