@@ -20,7 +20,6 @@
     "validate:docs": "tsx scripts/validate-docs.ts",
     "validate:corpus": "tsx scripts/validate-corpus.ts",
     "validate": "pnpm validate:docs && pnpm validate:corpus && pnpm knip",
-    "convert:dispositifs": "tsx scripts/convert-dispositifs.ts",
     "list:agents": "tsx scripts/list-agents.ts",
     "letta:up": "docker compose -f docker-compose.letta.yml up -d",
     "letta:down": "docker compose -f docker-compose.letta.yml down",
