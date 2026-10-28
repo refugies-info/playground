@@ -50,6 +50,42 @@ describe("ri/widget-configs", () => {
     });
   });
 
+  it("creates a thumbnail widget with the content to display", async () => {
+    request.mockResolvedValue({ id: "w2", publicId: "p2" });
+    const widgetConfig: WidgetConfigFields = {
+      internalTitle: "Widget titre de voyage",
+      type: "thumbnail",
+      structureName: "Association Exemple",
+      authorizedDomains: ["exemple.org"],
+      externalTitle: "Demander un titre de voyage",
+      dispositifId: "6a8aa3791f5d9938b6b54ac3",
+      status: "inactive",
+    };
+
+    await createRiWidgetConfig("a@b.fr", widgetConfig);
+
+    expect(request).toHaveBeenCalledWith("/api/webhook/widget-config/create", {
+      method: "POST",
+      body: { email: "a@b.fr", widgetConfig },
+    });
+  });
+
+  it("changes the content displayed by a thumbnail widget", async () => {
+    request.mockResolvedValue({ id: "w2" });
+
+    await updateRiWidgetConfig("a@b.fr", "w2", {
+      dispositifId: "6a8aa3791f5d9938b6b54ac3",
+    });
+
+    expect(request).toHaveBeenCalledWith("/api/webhook/widget-config/update", {
+      method: "PATCH",
+      body: {
+        email: "a@b.fr",
+        widgetConfig: { _id: "w2", dispositifId: "6a8aa3791f5d9938b6b54ac3" },
+      },
+    });
+  });
+
   it("sends the id and only the changed fields on update", async () => {
     request.mockResolvedValue({ id: "w1" });
 
