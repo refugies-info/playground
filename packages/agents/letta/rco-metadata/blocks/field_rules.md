@@ -3,10 +3,27 @@
 Les identifiants et valeurs autorisées sont dans le bloc `knowledge_base`.
 
 ## titreMarque — Titre marque (texte)
-Le nom du programme, s'il apparaît dans le titre (`nom`) ou dans le texte de la fiche : « Prépa clé », « Action socio-linguistique », « Pro'Langue SIAE », « NumériLangue », « NumeriFLE », « CAP sur l'avenir », « Clé Intégration »…
-- Un ou quelques mots, parfois un sigle ou une phrase très courte. Jamais une description (« Formation de français A1 », « Atelier sociolinguistique pour adultes » n'en sont pas).
-- Recopie le nom tel qu'il est écrit. Ne l'invente jamais, ne le reformule pas, ne le construis pas à partir du texte.
-- Pas de nom de programme clairement identifiable → `null`. Mieux vaut `null` qu'un nom inventé.
+Un nom court, tiré du titre (`nom`). Facultatif : si aucune règle ci-dessous ne s'applique, `null`.
+
+Ce que l'équipe édito a publié pour ces débuts de `nom` :
+
+| Le `nom` contient | Titre marque |
+| --- | --- |
+| `PREPA Clés Avenir …` | Le nom recopié, sans les guillemets « » et sans les listes de métiers ou les précisions en fin de nom (« orientation alternance ») |
+| `PRÉPA Clés – Je progresse en français` | Recopié |
+| `ASL` ou `Actions socio-linguistiques complémentaires du CIR`, suivi d'un nom de programme | Le nom du programme seul : « Cap sur l'avenir », « Passeport vers l'intégration », « DU FLaViC » |
+| `ASL` ou `Actions socio-linguistiques complémentaires du CIR`, sans nom de programme | « Action socio-linguistique (ASL) » |
+| `Dispositif formation linguistique - DFL - Action FLE - Lot n° …` | « Dispositif formation linguistique (DFL) - Action FLE » |
+| `Diplôme d'études en langue française …` | « Cours de français et préparation DELF » |
+| `ALPHA : Parler, lire et écrire en français` | « Alpha : parler, lire et écrire en français » |
+| `… à visée professionnelle` | « FLE à visée professionnelle » |
+| `Français Langue d'Intégration` | « Français langue d'intégration » |
+
+Autres cas :
+- Un nom de programme reconnaissable (« Pro'Langue SIAE », « NumériLangue », « Clé Intégration »…) : recopie-le tel qu'il est écrit.
+- Le `nom` décrit seulement la formation, sans programme : un libellé court de la forme « Cours de français et <ce qui s'y ajoute> » (« Cours de français et accompagnement pour le travail »), seulement si le texte le justifie clairement. Sinon `null`.
+- Retire toujours le niveau (`A1`, `B1/B2`), le numéro de lot, la ville et les codes internes (`SSDIC26`, `[HSP Socle]`).
+- 7 mots au plus. N'invente jamais un nom de programme.
 
 ## abstract — En bref (texte)
 Une phrase en français simple, 200 caractères maximum, qui dit ce que la personne va faire ou obtenir. Pas de sigle non expliqué.

@@ -3,6 +3,8 @@ import type { RcoActionDocument, RcoSession } from "../document";
 import {
   ACCEPTED_AUDIENCE_CODES,
   ACCEPTED_FUNDER_CODES,
+  AUDIENCE_LABELS,
+  FUNDER_LABELS,
   MIN_SESSION_DAYS,
   MIN_TOTAL_HOURS,
 } from "./compliance-config";
@@ -45,6 +47,14 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const daysBetween = (start: string, end: string) =>
   (Date.parse(end) - Date.parse(start)) / DAY_MS;
 
+const formatDate = (isoDate: string) =>
+  isoDate.slice(0, 10).split("-").reverse().join("/");
+
+const describeCodes = (codes: string[], labels: Record<string, string>) =>
+  codes
+    .map((code) => (labels[code] ? `${code} (${labels[code]})` : code))
+    .join(", ");
+
 export function checkAgreement(action: RcoActionDocument): CriterionResult {
   if (action.conventionnement === true) {
     return result("agreement", "accepted", "fiche conventionnée");
@@ -58,12 +68,18 @@ export function checkFunder(action: RcoActionDocument): CriterionResult {
     .filter(Boolean);
   const accepted = codes.filter((code) => ACCEPTED_FUNDER_CODES.has(code));
   if (accepted.length > 0) {
-    return result("funder", "accepted", `financeur accepté : ${accepted}`);
+    return result(
+      "funder",
+      "accepted",
+      `financeur accepté : ${describeCodes(accepted, FUNDER_LABELS)}`,
+    );
   }
   return result(
     "funder",
     "refused",
-    codes.length ? `aucun financeur accepté parmi ${codes}` : "aucun financeur",
+    codes.length
+      ? `aucun financeur accepté parmi ${describeCodes(codes, FUNDER_LABELS)}`
+      : "aucun financeur",
   );
 }
 
@@ -71,12 +87,16 @@ export function checkAudience(action: RcoActionDocument): CriterionResult {
   const codes = (action.code_public_vise as unknown[]).map(String);
   const accepted = codes.filter((code) => ACCEPTED_AUDIENCE_CODES.has(code));
   if (accepted.length > 0) {
-    return result("audience", "accepted", `public visé accepté : ${accepted}`);
+    return result(
+      "audience",
+      "accepted",
+      `public visé accepté : ${describeCodes(accepted, AUDIENCE_LABELS)}`,
+    );
   }
   return result(
     "audience",
     "ai",
-    `aucun public visé accepté parmi [${codes}], lecture des textes nécessaire`,
+    `aucun public visé accepté parmi [${describeCodes(codes, AUDIENCE_LABELS)}], lecture des textes nécessaire`,
   );
 }
 
@@ -90,6 +110,12 @@ export const isSessionOpen = (
   permanentEntries === false
     ? String(session.date_debut) >= today
     : String(session.date_fin) >= today;
+
+const entryModeLabel = (permanentEntries: unknown) => {
+  if (permanentEntries === false) return "entrées à dates fixes";
+  if (permanentEntries === true) return "entrées permanentes";
+  return "modalité d'entrée inconnue";
+};
 
 const isSessionLongEnough = (session: RcoSession) =>
   daysBetween(String(session.date_debut), String(session.date_fin)) >=
@@ -109,27 +135,40 @@ export function checkSessions(
       "aucune session avec dates de début et de fin",
     );
   }
+  const permanentEntries = action.modalites_entrees_sorties;
+  const entryMode = entryModeLabel(permanentEntries);
   const openSessions = datedSessions.filter((session) =>
-    isSessionOpen(session, action.modalites_entrees_sorties, today),
+    isSessionOpen(session, permanentEntries, today),
   );
   if (openSessions.length === 0) {
+    const closingDates = datedSessions
+      .map((session) =>
+        formatDate(
+          String(
+            permanentEntries === false ? session.date_debut : session.date_fin,
+          ),
+        ),
+      )
+      .join(", ");
     return result(
       "sessions",
       "refused",
-      "aucune session ouverte à de nouveaux apprenants",
+      permanentEntries === false
+        ? `${entryMode} : aucune session ouverte, déjà commencée le ${closingDates}`
+        : `${entryMode} : aucune session ouverte, terminée le ${closingDates}`,
     );
   }
   if (!openSessions.some(isSessionLongEnough)) {
     return result(
       "sessions",
       "refused",
-      `les sessions ouvertes durent moins de ${MIN_SESSION_DAYS} jours`,
+      `${entryMode} : les sessions ouvertes durent moins de ${MIN_SESSION_DAYS} jours`,
     );
   }
   return result(
     "sessions",
     "accepted",
-    `${openSessions.length} session(s) ouverte(s) de ${MIN_SESSION_DAYS} jours ou plus`,
+    `${entryMode} : ${openSessions.length} session(s) ouverte(s) de ${MIN_SESSION_DAYS} jours ou plus`,
   );
 }
 
@@ -156,7 +195,11 @@ export function checkHours(action: RcoActionDocument): CriterionResult {
 // The scheme type (common law, volunteering, single-nationality...) is always
 // a semantic judgement, so the code never decides it.
 export const checkSchemeType = (): CriterionResult =>
-  result("scheme_type", "ai", "jugement à partir de la jurisprudence");
+  result(
+    "scheme_type",
+    "ai",
+    "l'IA vérifie que le dispositif n'est ni payant, ni ponctuel, ni réservé aux professionnels ou à une seule nationalité",
+  );
 
 export function checkCompliance(
   action: RcoActionDocument,

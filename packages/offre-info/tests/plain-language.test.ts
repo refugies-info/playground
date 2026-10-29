@@ -140,6 +140,23 @@ describe("renderPlainLanguageFiche", () => {
     );
   });
 
+  it("publishes a single how accordion and logs the others", () => {
+    const markdown = renderPlainLanguageFiche(
+      fiche({
+        how: [
+          { title: "Contacter l'école", text: "Envoyer un mail." },
+          { title: "Préparer votre dossier", text: "Rassembler les papiers." },
+        ],
+      }),
+      actionOf(),
+    );
+    const [fichePart, journal = ""] = markdown.split(
+      "### Journal des Avertissements",
+    );
+    expect(fichePart).not.toContain("Préparer votre dossier");
+    expect(journal).toContain("Non publiés : Préparer votre dossier");
+  });
+
   it("keeps a step that is not a contact, and no city when there are several", () => {
     const markdown = renderPlainLanguageFiche(
       fiche({ how: [{ title: "Préparer votre CV", text: "Écrire le CV." }] }),

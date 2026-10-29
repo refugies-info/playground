@@ -9,7 +9,8 @@
  *                               documents to process or in draft (SQL)
  *   [4] rco-duplicates agent  → only when the shortlist is not empty
  *
- * A record refused by the rules never reaches an agent.
+ * A record refused by the rules still gets its open criteria judged, so the
+ * editorial team can contest a refusal, but skips the duplicate search.
  */
 
 import {
@@ -241,12 +242,13 @@ export async function arbitrateRcoRecord(
 
   let compliance = checkCompliance(action);
   const refusedByRules = overallVerdict(compliance) === "refused";
-  if (overallVerdict(compliance) === "ai") {
+  const pendingCriteria = criteriaForAi(compliance);
+  if (pendingCriteria.length > 0) {
     const { answer, usage } = await askComplianceAgent(
       letta,
       complianceAgentId,
       action.id,
-      criteriaForAi(compliance).map((criterion) => criterion.criterion),
+      pendingCriteria.map((criterion) => criterion.criterion),
       document,
     );
     compliance = applyAiDecisions(compliance, answer.decisions);
@@ -278,6 +280,7 @@ export async function arbitrateRcoRecord(
   }
 
   const verdict = overallVerdict(compliance);
+  const unsettled = criteriaForAi(compliance).length > 0;
   const duplicates = toDuplicateMatches(candidates, duplicateAnswer);
   const report: ArbitrationReport = {
     compliant: verdict === "accepted",
@@ -296,13 +299,12 @@ export async function arbitrateRcoRecord(
     tokens,
     rawResponse: JSON.stringify(rawAnswers),
     // An agent that skipped a criterion leaves it "ai": the report is unusable.
-    status: verdict === "ai" ? ("incomplete" as const) : ("complete" as const),
-    complianceStatus:
-      verdict === "ai"
-        ? "error"
-        : report.compliant && !report.duplicate
-          ? "compliant"
-          : "non_compliant",
+    status: unsettled ? ("incomplete" as const) : ("complete" as const),
+    complianceStatus: unsettled
+      ? "error"
+      : report.compliant && !report.duplicate
+        ? "compliant"
+        : "non_compliant",
     metadata: report,
     markdown: [
       `## Analyse de conformité éditoriale : ${OVERALL_LABELS[verdict]}`,

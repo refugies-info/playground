@@ -224,6 +224,21 @@ export const checkPlainLanguage = (
           },
         ]
       : []),
+    ...(fiche.how.length > 1
+      ? [
+          {
+            type: "Accordéons en trop",
+            field: "Comment faire ?",
+            level: "mineur" as const,
+            detail: `Non publiés : ${fiche.how
+              .slice(1)
+              .map(({ title }) => title)
+              .join(" / ")}`,
+            suggestion:
+              "Un seul accordéon : regrouper les étapes dans le premier.",
+          },
+        ]
+      : []),
     ...(fiche.how.length === 0
       ? [
           {
@@ -332,7 +347,7 @@ export const renderPlainLanguageFiche = (
     needsCirGoodToKnow(action) && CIR_GOOD_TO_KNOW,
   ].filter((text): text is string => Boolean(text));
   const how = withContactDetails(
-    fiche.how,
+    fiche.how.slice(0, 1),
     contactDetails(action),
     action.organisme_responsable?.nom ?? undefined,
   );
