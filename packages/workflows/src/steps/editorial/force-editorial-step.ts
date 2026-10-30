@@ -17,7 +17,12 @@
  *   6. Return the rewritten content
  */
 
-import { createLettaClient, simplifyContentSync } from "@playground/agents";
+import {
+  createLettaClient,
+  estimateCarbonImpact,
+  getFailedAgentRun,
+  simplifyContentSync,
+} from "@playground/agents";
 import {
   fetchActionDetail,
   getRcoClientFromEnv,
@@ -26,7 +31,9 @@ import {
 import {
   LETTA_MODEL_HANDLE,
   logger,
+  RCO_MODEL_HANDLE,
   TYPE_CLEAR_LANGUAGE,
+  TYPE_CLEAR_LANGUAGE_ERROR,
 } from "@playground/shared-types";
 import { FatalError } from "@workflow/errors";
 import matter from "gray-matter";
@@ -238,28 +245,63 @@ export async function forceEditorialStep(
       ).data?.service
     : null;
 
-  const {
-    agentId,
-    conversationId,
-    model: usedModel,
-    ...finalContent
-  } = service?.origin === "RCO"
-    ? await generateRcoPlainLanguage(
+  const linkConversation = async (conversationId: string) => {
+    // DI links its conversation upfront; RCO only knows it after the call.
+    if (conversationId === workflow.conversation_id) return;
+    await supabase
+      .from("workflows")
+      .update({ conversation_id: conversationId })
+      .eq("id", workflowId);
+  };
+
+  const isRco = service?.origin === "RCO";
+  const generation = await (isRco
+    ? generateRcoPlainLanguage(
         await fetchActionDetail(
           getRcoClientFromEnv(),
           service.data as unknown as RcoActionDocument,
         ),
         model,
       )
-    : await generateDiEditorial(workflowId, workflow, model);
-
-  // DI links its conversation upfront; RCO only knows it after the call.
-  if (conversationId !== workflow.conversation_id) {
-    await supabase
-      .from("workflows")
-      .update({ conversation_id: conversationId })
-      .eq("id", workflowId);
-  }
+    : generateDiEditorial(workflowId, workflow, model)
+  ).catch(async (error: unknown) => {
+    const failedRun = getFailedAgentRun(error);
+    if (failedRun) {
+      // Keeps the footer (model, tokens, impact) and the Letta link usable.
+      const usedModel =
+        model ?? (isRco ? RCO_MODEL_HANDLE : LETTA_MODEL_HANDLE);
+      await linkConversation(failedRun.conversationId);
+      const { data: report } = await supabase
+        .from("letta_reports")
+        .insert({
+          agent_id: failedRun.agentId,
+          report_type: "editorial",
+          markdown: "",
+          status: "error",
+          raw_response: error instanceof Error ? error.message : String(error),
+          workflow_id: workflowId,
+          token_cost: failedRun.usage?.totalTokens || null,
+          carbon_impact: await estimateCarbonImpact(usedModel, failedRun.usage),
+          model: usedModel,
+        })
+        .select("id")
+        .single();
+      await recordActivity({
+        action: TYPE_CLEAR_LANGUAGE_ERROR,
+        authorId: userId,
+        workflowId,
+        lettaReportId: report?.id,
+      });
+    }
+    throw error;
+  });
+  const {
+    agentId,
+    conversationId,
+    model: usedModel,
+    ...finalContent
+  } = generation;
+  await linkConversation(conversationId);
 
   // ─── 6. Persist ───────────────────────────────────────────────────────
   const persistResult = await persistEditorialReportStep(

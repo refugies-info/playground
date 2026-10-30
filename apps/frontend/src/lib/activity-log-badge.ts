@@ -3,6 +3,7 @@ import {
   TYPE_ARCHIVE,
   TYPE_ASSIGNMENT,
   TYPE_CLEAR_LANGUAGE,
+  TYPE_CLEAR_LANGUAGE_ERROR,
   TYPE_COMPLIANCE_HUMAN,
   TYPE_COMPLIANCE_IA,
   TYPE_NOTE,
@@ -37,7 +38,7 @@ import {
  * notifications : les deux affichent le même événement, ils doivent le
  * représenter pareil.
  *
- * Indexé sur `activity_log_action` (13 valeurs) et non sur le type de
+ * Indexé sur `activity_log_action` (14 valeurs) et non sur le type de
  * notification (5) : c'est la granularité qui distingue une mise à jour simple
  * d'une mise à jour avec verdict de conformité.
  */
@@ -52,6 +53,7 @@ export const TYPE_BADGE: Record<ActivityLogType, TypeBadge> = {
   [TYPE_UPDATE_COMPLIANCE]: { icon: RiAuctionLine },
   [TYPE_ASSIGNMENT]: { icon: RiUserLine },
   [TYPE_CLEAR_LANGUAGE]: { icon: RiFileTextLine },
+  [TYPE_CLEAR_LANGUAGE_ERROR]: { icon: RiFileTextLine, colors: BADGE_ERROR },
   [TYPE_NOTE]: { icon: RiPencilLine },
   [TYPE_TRANSLATION]: { icon: RiTranslate2 },
   [TYPE_TRANSLATION_PRIORITY]: { icon: RiTranslate2 },

@@ -1039,6 +1039,7 @@ export type Database = {
         | "update"
         | "update_compliance"
         | "clear_language"
+        | "clear_language_error"
         | "translation"
         | "translation_error"
         | "translation_priority"
@@ -1187,6 +1188,7 @@ export const Constants = {
         "update",
         "update_compliance",
         "clear_language",
+        "clear_language_error",
         "translation",
         "translation_error",
         "translation_priority",

@@ -59,6 +59,7 @@ export default async function Layout({
     latestIngestionVersion: document.latestIngestionVersion,
     hasPendingIngestionUpdate: document.hasPendingIngestionUpdate,
     activeRunId: document.activeRunId,
+    editorialFailed: document.editorialFailed,
     editorialModel: document.editorialModel,
     editorialTokens: document.editorialTokens,
     editorialCarbonImpact: document.editorialCarbonImpact,

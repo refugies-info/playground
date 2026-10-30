@@ -12,6 +12,18 @@ const ECOLOGITS_PROVIDERS = new Set([
   "google_genai",
 ]);
 
+// Hosts like Albert drop the Hugging Face org: "albert/gpt-oss-120b".
+// ponytail: prefix map, add an entry when a host serves another bare name.
+const HUGGINGFACE_ORGS: Record<string, string> = { "gpt-oss": "openai" };
+
+const toHuggingfaceName = (name: string) => {
+  if (name.includes("/")) return name;
+  const org = Object.entries(HUGGINGFACE_ORGS).find(([prefix]) =>
+    name.startsWith(prefix),
+  )?.[1];
+  return org ? `${org}/${name}` : null;
+};
+
 // "openai/gpt-6-astra" → openai + gpt-6-astra. Open-weight models
 // (".../gpt-oss-120b") are listed under huggingface_hub with their full name.
 // "letta/auto" hides the real model: no estimate.
@@ -22,10 +34,10 @@ export const toEcologitsModel = (handle: string) => {
   if (ECOLOGITS_PROVIDERS.has(provider)) {
     return { provider, model_name: name };
   }
-  return {
-    provider: "huggingface_hub",
-    model_name: name.includes("/") ? name : `${provider}/${name}`,
-  };
+  const huggingfaceName = toHuggingfaceName(name);
+  return huggingfaceName
+    ? { provider: "huggingface_hub", model_name: huggingfaceName }
+    : null;
 };
 
 const KG_TO_G = 1000;

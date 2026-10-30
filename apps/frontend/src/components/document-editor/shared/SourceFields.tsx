@@ -26,26 +26,19 @@ const SOURCE_FIELD_LABELS: Record<string, string> = {
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
+const isEmpty = (value: unknown) =>
+  value === null ||
+  value === undefined ||
+  value === "" ||
+  (Array.isArray(value) && value.length === 0);
+
 // RCO texts are HTML from a third party: shown as plain text, never injected.
-const toReadableText = (
-  value: unknown,
-  labelOf: (key: string) => string,
-  key = "",
-): string => {
-  if (value === null || value === undefined || value === "") return "—";
-  if (Array.isArray(value)) {
-    const items = [
-      ...new Set(value.map((item) => toReadableText(item, labelOf, key))),
-    ];
-    return items.join(value.some(isObject) ? "\n" : ", ");
-  }
-  if (isObject(value))
-    return Object.entries(value)
-      .map(
-        ([nestedKey, item]) =>
-          `${labelOf(nestedKey)} : ${toReadableText(item, labelOf, nestedKey)}`,
-      )
-      .join(" · ");
+const toReadableText = (value: unknown, key: string): string => {
+  if (isEmpty(value)) return "—";
+  if (Array.isArray(value))
+    return [...new Set(value.map((item) => toReadableText(item, key)))].join(
+      ", ",
+    );
   return describeFieldCodes(
     key,
     String(value)
@@ -57,6 +50,48 @@ const toReadableText = (
       .trim(),
   );
 };
+
+function SourceValue({
+  value,
+  field,
+  labelOf,
+}: {
+  value: unknown;
+  field: string;
+  labelOf: (key: string) => string;
+}) {
+  if (isObject(value))
+    return (
+      <dl className="mt-1 space-y-1 border-l-2 border-amber-100 pl-3">
+        {Object.entries(value)
+          .filter(([, item]) => !isEmpty(item))
+          .map(([nestedKey, item]) => (
+            <div key={nestedKey}>
+              <dt className="inline text-gray-500">{labelOf(nestedKey)} : </dt>
+              <dd
+                className={
+                  isObject(item) || Array.isArray(item) ? "" : "inline"
+                }
+              >
+                <SourceValue value={item} field={nestedKey} labelOf={labelOf} />
+              </dd>
+            </div>
+          ))}
+      </dl>
+    );
+  if (Array.isArray(value) && value.some(isObject))
+    return (
+      <ol className="space-y-2">
+        {value.map((item, index) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: static read-only list
+          <li key={index}>
+            <SourceValue value={item} field={field} labelOf={labelOf} />
+          </li>
+        ))}
+      </ol>
+    );
+  return <>{toReadableText(value, field)}</>;
+}
 
 const frenchLabel = (key: string) => SOURCE_FIELD_LABELS[key] ?? key;
 const propertyName = (key: string) => key;
@@ -80,7 +115,7 @@ export function SourceFields({
             {labelOf(field)}
           </dt>
           <dd className="whitespace-pre-line text-gray-900">
-            {toReadableText(value, labelOf, field)}
+            <SourceValue value={value} field={field} labelOf={labelOf} />
           </dd>
         </div>
       ))}

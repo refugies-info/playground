@@ -11,6 +11,11 @@ describe("toEcologitsModel", () => {
       provider: "huggingface_hub",
       model_name: "openai/gpt-oss-120b",
     });
+    expect(toEcologitsModel("albert/gpt-oss-120b")).toEqual({
+      provider: "huggingface_hub",
+      model_name: "openai/gpt-oss-120b",
+    });
+    expect(toEcologitsModel("albert/albert-large")).toBeNull();
     expect(toEcologitsModel("letta/auto")).toBeNull();
   });
 });

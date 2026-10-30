@@ -147,7 +147,7 @@ export function EditionView() {
         lastSyncedContent.current = markdown;
         updateContent(markdown);
 
-        if (process.env.NODE_ENV === "development" && showDebug) {
+        if (showDebug) {
           setDebugBlocks([...editor.document]);
         }
       } catch (error) {
@@ -168,9 +168,9 @@ export function EditionView() {
     setDebugBlocks,
   ]);
 
-  // Sync initial debug state quand le panel s'ouvre (DEV uniquement)
+  // Sync initial debug state quand le panel s'ouvre
   useEffect(() => {
-    if (editor && showDebug && process.env.NODE_ENV === "development") {
+    if (editor && showDebug) {
       setDebugBlocks([...editor.document]);
     }
   }, [editor, showDebug, setDebugBlocks]);
