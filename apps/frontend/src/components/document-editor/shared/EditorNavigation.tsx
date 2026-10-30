@@ -233,6 +233,11 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
 
       <div className="mt-auto px-2 text-sm leading-6 text-[var(--text-mention-grey)] whitespace-nowrap">
         {hasIngestionVersion ? <p>Version : {ingestionVersion}</p> : null}
+        {document.editorialFailed ? (
+          <p className="text-[var(--text-default-error)]">
+            Dernier langage clair : échec
+          </p>
+        ) : null}
         {document.editorialModel ? (
           <p className="whitespace-normal break-all">
             Modèle :<br />
