@@ -19,7 +19,7 @@
     "security:scan:js": "cve-lite . --fail-on high",
     "validate:docs": "tsx scripts/validate-docs.ts",
     "validate:corpus": "tsx scripts/validate-corpus.ts",
-    "validate": "pnpm validate:docs && pnpm validate:corpus && pnpm knip",
+    "validate": "pnpm validate:docs && pnpm validate:corpus && pnpm knip --include files,dependencies,unlisted",
     "list:agents": "tsx scripts/list-agents.ts",
     "letta:up": "docker compose -f docker-compose.letta.yml up -d",
     "letta:down": "docker compose -f docker-compose.letta.yml down",

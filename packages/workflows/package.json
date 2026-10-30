@@ -23,6 +23,7 @@
     "@playground/airtable": "workspace:*",
     "@playground/shared-types": "workspace:*",
     "@playground/supabase": "workspace:*",
+    "@supabase/supabase-js": "2.84.0",
     "@workflow/core": "4.8.9",
     "@workflow/errors": "4.1.4",
     "gray-matter": "^4.0.3"
