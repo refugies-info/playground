@@ -1,232 +1,56 @@
-# Pipeline de Contenu Markdown
+# Markdown Content Pipeline
 
-## Vue d'Ensemble
-
-Le Content Playground utilise une architecture de contenu basée sur des **Directives Markdown** pour stocker et éditer des blocs enrichis tout en restant compatible avec le standard Markdown.
-
-![Schéma de la Pipeline de Contenu](./assets/content_pipeline.png)
-
-Ce document décrit :
-1.  La pipeline technique d'import/export (Playground Architecture)
-2.  Le format de stockage (Markdown et Directives)
-3.  La création de nouveaux blocs
-
----
-
-## 1. Architecture Technique (Playground)
-
-La conversion entre le format de stockage (Markdown + Directive) et le format d'édition (BlockNote JSON) se fait via une pipeline en 5 étapes.
+Editorial content is stored as Markdown enriched with **container directives** (`remark-directive`). The editor (BlockNote) works on JSON blocks; the pipeline converts between the two.
 
 ```mermaid
-flowchart TB
-    subgraph Input["Entrée / Sortie"]
-        MD["Markdown String<br/>(:::directive)"]
-    end
-
-    subgraph Pipeline["Pipeline de Transformation"]
-        Import["Import (markdown/parser.ts)<br/>Markdown → BlockNote"]
-        Export["Export (markdown/serializer.ts)<br/>BlockNote → Markdown"]
-    end
-
-    subgraph Editor["Éditeur"]
-        BN["BlockNote.js<br/>(État JSON)"]
-    end
-
-    MD --> Import
-    Import --> BN
-    BN --> Export
-    Export --> MD
+flowchart LR
+    MD["Markdown + :::directives"] --> N["normalizeMarkdown"] --> P["markdownToBlocks"] --> BN["BlockNote blocks"]
+    BN --> S["blocksToDirectiveMarkdown"] --> MD
+    MD --> PUB["publish / preview payload<br/>(normalized again)"]
 ```
 
-### Fichiers Clés
+## Key Files (`apps/frontend/src`)
 
-| Étape | Fichier | Rôle |
-|-------|---------|------|
-| **Import** | `src/lib/markdown/parser.ts` | Transforme le Markdown brut en blocs BlockNote. Gère le parsing Remark, l'AST et la conversion des directives en blocs typés. |
-| **Schema** | `custom-schema.ts` | Définit les types de blocs supportés (`important`, `goodToKnow`, `toggleListItem` natif). |
-| **Export** | `src/lib/markdown/serializer.ts` | Transforme les blocs BlockNote en Markdown + Directives. |
+| File | Role |
+|------|------|
+| `lib/markdown/parser.ts` | `markdownToBlocks()`: strips YAML frontmatter (`gray-matter`), normalizes fences, parses with `remark-parse` + `remark-gfm` + `remark-directive`, converts AST nodes to BlockNote blocks (`nodeToBlock`, `parseDirective`), then cleans stray `:::` lines (`validateAndFixBlocks`). |
+| `lib/markdown/serializer.ts` | `blocksToDirectiveMarkdown()`: BlockNote blocks → MDAST (`blocksToMdast` / `blockToMdast`) → `remark-stringify`, with a custom `containerDirective` handler for `:::` fences. |
+| `lib/markdown/normalizeMarkdown.ts` | Rewrites directive fences to depth-based lengths (see below). |
+| `components/document-editor/editor/blocks/custom-schema.ts` | BlockNote schema: custom `callout` block (`variant` `important` or `goodToKnow`); toggles use the native `toggleListItem`. |
 
-### Détail des Étapes
+## Supported Directives
 
-#### Pipeline d'Import ( `markdown/parser.ts` )
-1.  **Frontmatter Stripping** : Nettoyage des métadonnées YAML.
-2.  **Unified Parsing** : Utilisation de `remark-parse` + `remark-directive` pour créer l'AST.
-3.  **Node Conversion** (`nodeToBlock`) : Transformation des nœuds AST (paragraphes, listes, directives) en `PartialBlock` BlockNote.
-    *   *Spécificité* : Le contenu texte est traité récursivement (`serializeInline`) pour préserver le gras, l'italique et les liens imbriqués.
-4.  **Inline Serialization** : Conversion du texte riche.
+| Markdown | BlockNote block |
+|----------|-----------------|
+| `:::toggle{title="..."}` | `toggleListItem` (title becomes the inline content) |
+| `:::important` | `callout`, `variant: "important"` |
+| `:::good-to-know` | `callout`, `variant: "goodToKnow"` |
 
-#### Pipeline d'Export ( `markdown/serializer.ts` )
-5.  **Block Dispatcher** (`blockToMarkdown`) : Route chaque bloc vers son sérialiseur.
-    *   `serializeToggle` : Convertit le bloc `toggleListItem` en syntaxe `:::toggle`.
-    *   `serializeContainerBlock` : Convertit `important` et `goodToKnow` en `:::nom-directive`.
-    *   Supporte aussi les tables, images, et listes à puces/numérotées/checklists.
+Tables, images and bullet/numbered/check lists are also handled by both parser and serializer.
 
----
+## Fence Normalization (nesting)
 
-## 2. Normalisation des Directives (Nesting Strategy)
+The editor writes **flat** Markdown: every fence is `:::`, without indentation, so nested directives are ambiguous (which `:::` closes which block?).
 
-### Le Problème : Parsing Ambigu des Fences
+`normalizeMarkdown()` rewrites fences by nesting depth: root = 12 colons, each level one fewer, down to 3. A closing fence must be at least as long as its opening fence, so an inner closing fence can never close an outer block.
 
-Le plugin `remark-directive` repose sur l'**indentation** pour détecter l'imbrication. Or, notre éditeur WYSIWYG (BlockNote) produit du Markdown **à plat** (sans indentation) pour simplifier la gestion des états pendant l'édition en temps réel.
-
-**Exemple problématique (structure plate) :**
 ```markdown
-:::toggle (Root)
-:::important (Child)
-::: (Ferme lequel ? Ambigu !)
-::: (Ferme le Root ?)
+::::::::::::toggle{title="..."}
+:::::::::::important
+Content
+:::::::::::
+::::::::::::
 ```
 
-Sans indication de profondeur, le parser ne sait pas quelle fence de fermeture correspond à quel bloc d'ouverture.
+Best effort: lines inside code blocks (```` ``` ```` / `~~~`) are left untouched, unbalanced fences are left as-is.
 
-### La Solution : Normalisation par Longueur Décroissante
+Normalization runs:
+- on import, inside `markdownToBlocks()`;
+- on output to Réfugiés.info: `publishDocument()` (`services/document-actions.ts`) and the preview payloads in `lib/payload-builder.ts`, which pass `normalizeMarkdown` to `buildRefugiesInfoPayload()` (`packages/shared/src/lib/publication/refugies-info.ts`).
 
-Avant le parsing, nous pré-traitons le Markdown pour attribuer des **longueurs de fence uniques** selon la profondeur d'imbrication :
+## Adding a Directive Block
 
-| Niveau | Longueur | Exemple |
-|--------|----------|---------|
-| Root (niveau 0) | 12 colons | `::::::::::::toggle` |
-| Niveau 1 | 11 colons | `:::::::::::important` |
-| Niveau 2 | 10 colons | `::::::::::tip` |
-| ... | ... | ... |
-| Niveau 9 | 3 colons | `:::note` |
-
-**Pourquoi ça fonctionne ?**
-
-La spec CommonMark stipule qu'une fence de fermeture doit être **au moins aussi longue** que la fence d'ouverture pour fermer un bloc. En rendant les fences intérieures **plus courtes** que les fences extérieures, une fence de fermeture intérieure ne peut **jamais** fermer un bloc extérieur.
-
-**Exemple corrigé :**
-```markdown
-::::::::::::toggle    (Length 12 - Root)
-:::::::::::important  (Length 11 - Child)
-Contenu...
-::::::::::            (Length 10 - ferme Tip si présent, trop court pour Important/Root)
-:::::::::::           (Length 11 - ferme Important)
-::::::::::::          (Length 12 - ferme Root)
-```
-
-### Intégration dans la Pipeline
-
-```mermaid
-flowchart TB
-    subgraph Input["Entrée / Sortie"]
-        MD["Markdown String<br/>(:::directive)"]
-        MDOut["Markdown Sortie<br/>(::::::::::::directive)"]
-    end
-
-    subgraph Pipeline["Pipeline de Transformation"]
-        NormalizeIn["Normalisation Entrée<br/>(normalizeMarkdown.ts)<br/>::: → ::::::::::::"]
-        Import["Import (markdown/parser.ts)<br/>Markdown → BlockNote"]
-        Export["Export (markdown/serializer.ts)<br/>BlockNote → Markdown"]
-        NormalizeOut["Normalisation Sortie<br/>(payload-builder.ts)<br/>::: → ::::::::::::"]
-    end
-
-    subgraph Editor["Éditeur"]
-        BN["BlockNote.js<br/>(État JSON)"]
-    end
-
-    MD --> NormalizeIn
-    NormalizeIn --> Import
-    Import --> BN
-    BN --> Export
-    Export --> NormalizeOut
-    NormalizeOut --> MDOut
-```
-
-### Normalisation en Sortie (Publication / Preview)
-
-Le markdown envoyé à la Main App (refugies.info) via preview ou publication est **également normalisé** pour éviter les problèmes de parsing côté récepteur.
-
-**Pourquoi ?**
-- La Main App utilise probablement aussi `remark-directive` pour parser le contenu
-- Sans normalisation, les directives imbriquées avec des fences `:::` standard seraient ambiguës
-- La normalisation garantit que le contenu reçu peut être parsé correctement
-
-**Où ça se passe ?**
-- Fichier : `src/lib/payload-builder.ts`
-- Fonction : `buildDispositifPayload()`
-- Appel : `normalizeMarkdown(doc.editorialContent)` avant d'inclure le markdown dans le payload
-
-**Exemple de flux :**
-```typescript
-// Dans l'éditeur (stockage)
-editorialContent = ":::toggle\n:::important\nContenu\n:::\n:::"
-
-// Pour la preview/publication (payload-builder.ts)
-const normalizedMarkdown = normalizeMarkdown(editorialContent);
-// → "::::::::::::toggle\n:::::::::::important\nContenu\n::::::::::\n::::::::::::"
-
-// Envoyé à la Main App dans le payload
-{
-  dispositif: {
-    translations: {
-      fr: {
-        content: {
-          markdown: normalizedMarkdown  // ← Normalisé !
-        }
-      }
-    }
-  }
-}
-```
-
-### Fichier Clé
-
-| Fichier | Rôle |
-|---------|------|
-| `src/lib/markdown/normalizeMarkdown.ts` | Pré-processeur qui réécrit les fences `:::` en longueurs décroissantes selon la profondeur d'imbrication. Gère aussi les blocs de code (ignorés pendant la normalisation). |
-
-### Robustesse
-
-La stratégie adopte une approche **"best effort"** :
-- **Fences déséquilibrées** (fermeture sans ouverture) : Laissées telles quelles
-- **Fences non fermées** à la fin du document : Ignorées (le parser gère gracieusement)
-- **Blocs de code** (```) : Contenu préservé, pas de normalisation à l'intérieur
-
----
-
-## 3. Format de Stockage (Directives)
-
-Le système utilise du Markdown standard enrichi de **Directives** pour gérer les composants complexes tout en restant lisible.
-
-### Blocs Supportés
-
-#### 2.1 Toggle (Accordéon)
-Stocké sous forme de directive `:::toggle`. Converti nativement en `toggleListItem` dans l'éditeur.
-```markdown
-:::toggle{title="Titre visible"}
-Contenu caché par défaut.
-- Peut contenir des listes
-- Et du texte enrichi
-:::
-```
-
-#### 2.2 Important
-Bloc de mise en évidence standard.
-```markdown
-:::important
-**Attention** : Ceci est une information cruciale.
-:::
-```
-
-#### 2.3 Bon à savoir (Good To Know)
-Bloc d'information contextuelle.
-```markdown
-:::good-to-know
-Le saviez-vous ? Cette démarche est gratuite.
-:::
-```
-
----
-
-## 4. Ajout d'un Nouveau Bloc
-
-Pour ajouter un nouveau type de bloc (ex: `:::citation`) :
-
-1.  **Définir le Schema** : Créer le composant React et l'ajouter à `custom-schema.ts`.
-2.  **Mettre à jour l'Import (`markdown/parser.ts`)** :
-    *   Ajouter le cas dans `parseDirective()`.
-    *   Mapper `:::citation` vers le type de bloc BlockNote correspondant.
-3.  **Mettre à jour l'Export (`markdown/serializer.ts`)** :
-    *   Ajouter le cas dans `blockToMarkdown()`.
-    *   Créer une fonction `serializeCitation()` si le format est spécifique.
+1. Add the block spec to `custom-schema.ts`.
+2. Map the directive name to the block in `parseDirective()` (`parser.ts`).
+3. Add the block case to `blockToMdast()` (`serializer.ts`), and to the `containerDirective` handler if it needs specific output.
+4. Cover it in `apps/frontend/tests/lib/markdown/parser.test.ts` and `serializer.test.ts`.

@@ -425,7 +425,7 @@ Before committing a migration:
 
 - **Create RLS Policies**: See [RLS Policies Guide](./rls-policies.md)
 - **Seed Test Data**: See [Seed Data Setup](./seed-data.md)
-- **Local Development**: See [Supabase Setup Guide](../guides/supabase-setup.md)
+- **Local Development**: See [Local Development](../guides/local-development.md)
 
 ---
 

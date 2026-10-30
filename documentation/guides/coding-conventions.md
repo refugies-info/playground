@@ -8,7 +8,7 @@ Coding style rules to follow across the monorepo, on top of what Biome enforces 
 
 - **Variables & functions**: `camelCase`.
 - **Files & folders**: `kebab-case`, except React components which keep `PascalCase.tsx` (matching the exported component name).
-- **Types & interfaces**: `PascalCase` (defined in `@playground/shared-types` when shared, see [Component Strategy](../frontend/component-strategy.md)).
+- **Types & interfaces**: `PascalCase` (defined in `@playground/shared-types` when shared).
 - Prefer a descriptive name that is a bit longer over a short, cryptic one.
 
 ## Functional style
@@ -33,9 +33,9 @@ Coding style rules to follow across the monorepo, on top of what Biome enforces 
 
 ## Components
 
-- Use `shadcn/ui` primitives where possible before building a bespoke component (see [Component Strategy](../frontend/component-strategy.md)).
+- Use `shadcn/ui` primitives where possible before building a bespoke component.
 - Keep components free of business logic where practical: they receive what to display via props, do purely presentational reformatting locally, and leave business rules to callers/hooks/API routes.
-- Presentational components (design-system components in `packages/ui`, and generally anything under a `components/` folder) must not fetch or import data themselves — no direct Supabase calls in there. Load data at the page/feature level (or in a hook) and pass it down as props; see [Component Strategy](../frontend/component-strategy.md#keep-design-system-components-stateless).
+- Presentational components (design-system components in `packages/ui`, and generally anything under a `components/` folder) must not fetch or import data themselves — no direct Supabase calls in there. Load data at the page/feature level (or in a hook) and pass it down as props.
 - Prefer several small, focused components over one large one.
 
 ## Data access
