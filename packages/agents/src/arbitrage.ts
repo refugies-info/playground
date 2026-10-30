@@ -133,12 +133,14 @@ async function askAgent<T>(
   message: string,
   schema: z.ZodType<T>,
   model = RCO_MODEL_HANDLE,
+  onConversation?: (conversationId: string) => Promise<void>,
 ): Promise<{ answer: T; usage?: LettaUsage; conversationId: string }> {
   const conversationId = await findOrCreateConversation(
     client,
     agentId,
     conversationName,
   );
+  await onConversation?.(conversationId);
   let usage: LettaUsage | undefined;
   try {
     const first = await sendMessageToConversation(
@@ -239,6 +241,7 @@ export const askPlainLanguageAgent = (
   documentId: string,
   document: unknown,
   model?: string,
+  onConversation?: (conversationId: string) => Promise<void>,
 ) =>
   askAgent(
     client,
@@ -247,4 +250,5 @@ export const askPlainLanguageAgent = (
     asTag("document", document),
     PlainLanguageAnswerSchema,
     model,
+    onConversation,
   );

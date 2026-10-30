@@ -114,7 +114,12 @@ export function DebugPanel() {
         </DrawerHeader>
 
         {/* Content */}
-        <div className="flex-1 flex overflow-hidden font-mono text-sm">
+        {/* The drawer drags from anywhere and blocks text selection: the
+            panes stay selectable, the header still drags it. */}
+        <div
+          className="flex-1 flex overflow-hidden font-mono text-sm select-text"
+          onPointerDown={(event) => event.stopPropagation()}
+        >
           {isComplianceView ? (
             <>
               <SourceFieldsPane

@@ -53,6 +53,18 @@ const EDITOR_MODES = [
   { value: "raw" as const, icon: RiCodeSSlashLine, label: "Markdown" },
 ];
 
+// Admin links to the RCO agent conversation behind each tab.
+const LETTA_COMPLIANCE_AGENTS = [
+  { agent: "compliance", label: "Letta conformité" },
+  { agent: "duplicates", label: "Letta doublons" },
+];
+const LETTA_METADATA_AGENTS = [
+  { agent: "metadata", label: "Letta métadonnées" },
+];
+const LETTA_PLAIN_LANGUAGE_AGENTS = [
+  { agent: "plain-language", label: "Letta langage clair" },
+];
+
 export function EditorNavigation({ from }: EditorNavigationProps) {
   const { document, isRawMarkdownMode, setIsRawMarkdownMode } = useDocument();
   const { hasMetadataErrors } = useMetadata();
@@ -71,6 +83,12 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
   const isMetadataActive = pathname === `${baseUrl}/metadata`;
   const isActivityLogActive = pathname === `${baseUrl}/activity-logs`;
   const isComplianceActive = pathname === `${baseUrl}/compliance`;
+  const rcoActionId = document.rcoApiData?.id;
+  const lettaAgents = isComplianceActive
+    ? LETTA_COMPLIANCE_AGENTS
+    : isMetadataActive
+      ? LETTA_METADATA_AGENTS
+      : LETTA_PLAIN_LANGUAGE_AGENTS;
 
   const ingestionVersion = formatIngestionVersion({
     activeVersion: document.activeIngestionVersion,
@@ -252,6 +270,19 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
             Impact : {formatCarbonImpact(document.editorialCarbonImpact)}
           </p>
         ) : null}
+        {document.isAdmin && typeof rcoActionId === "string"
+          ? lettaAgents.map(({ agent, label }) => (
+              <a
+                key={agent}
+                href={`/api/letta/conversation?agent=${agent}&actionId=${encodeURIComponent(rcoActionId)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block underline"
+              >
+                {label}
+              </a>
+            ))
+          : null}
       </div>
     </div>
   );

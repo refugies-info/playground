@@ -47,6 +47,8 @@ export default async function Layout({
     arbitrationSource: document.arbitrationSource,
     metadataSource: document.metadataSource,
     rcoSource: document.rcoSource,
+    rcoApiData: document.rcoApiData,
+    plainLanguageSource: document.plainLanguageSource,
     metadata: document.metadata, // Merged metadata (ingestion + editorial)
     editorialMetadata: document.editorialMetadata, // Editorial overrides only
     editorialRecordId: document.editorialRecordId, // For Realtime status subscription
