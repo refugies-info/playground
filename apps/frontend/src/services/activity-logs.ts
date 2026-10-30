@@ -1,3 +1,4 @@
+import type { CarbonImpact } from "@playground/shared-types";
 import { type ActivityLogType, logger } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
@@ -32,6 +33,7 @@ export interface ActivityLogEntry {
   /** Optional AI report linked to the activity log. */
   lettaReport?: {
     tokenCost: number | null;
+    carbonImpact: CarbonImpact | null;
     model: string | null;
   };
 }
@@ -58,6 +60,7 @@ export async function getActivityLogs(
       activity,
       letta_report:letta_reports!activity_logs_letta_report_id_fkey (
         token_cost,
+        carbon_impact,
         model
       ),
       author:profiles!activity_logs_author_id_fkey (
@@ -91,6 +94,8 @@ export async function getActivityLogs(
     const lettaReport =
       row.letta_report && typeof row.letta_report === "object"
         ? {
+            carbonImpact:
+              (row.letta_report.carbon_impact as CarbonImpact | null) ?? null,
             tokenCost:
               typeof row.letta_report.token_cost === "number"
                 ? row.letta_report.token_cost

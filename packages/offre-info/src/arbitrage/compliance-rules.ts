@@ -1,4 +1,4 @@
-import type { CriterionVerdict } from "@playground/shared-types";
+import { type CriterionVerdict, describeCodes } from "@playground/shared-types";
 import type { RcoActionDocument, RcoSession } from "../document";
 import {
   ACCEPTED_AUDIENCE_CODES,
@@ -50,11 +50,6 @@ const daysBetween = (start: string, end: string) =>
 const formatDate = (isoDate: string) =>
   isoDate.slice(0, 10).split("-").reverse().join("/");
 
-const describeCodes = (codes: string[], labels: Record<string, string>) =>
-  codes
-    .map((code) => (labels[code] ? `${code} (${labels[code]})` : code))
-    .join(", ");
-
 export function checkAgreement(action: RcoActionDocument): CriterionResult {
   if (action.conventionnement === true) {
     return result("agreement", "accepted", "fiche conventionnée");
@@ -100,16 +95,30 @@ export function checkAudience(action: RcoActionDocument): CriterionResult {
   );
 }
 
-// Fixed entries (false) close once the session has started; permanent (true)
-// or unknown entries stay open until the session ends.
+// A registration period (Q21) keeps a session open until it ends, even once
+// started. Without one, fixed entries (false) close once the session has
+// started; permanent (true) or unknown entries stay open until it ends.
+const closingDate = (session: RcoSession, permanentEntries: unknown) =>
+  String(
+    session.periode_inscription_fin ??
+      (permanentEntries === false ? session.date_debut : session.date_fin),
+  );
+
 export const isSessionOpen = (
   session: RcoSession,
   permanentEntries: unknown,
   today: string,
 ) =>
-  permanentEntries === false
-    ? String(session.date_debut) >= today
-    : String(session.date_fin) >= today;
+  closingDate(session, permanentEntries) >= today &&
+  String(session.date_fin) >= today;
+
+const closedReason = (session: RcoSession, permanentEntries: unknown) => {
+  const date = formatDate(closingDate(session, permanentEntries));
+  if (session.periode_inscription_fin) return `inscriptions closes le ${date}`;
+  return permanentEntries === false
+    ? `déjà commencée le ${date}`
+    : `terminée le ${date}`;
+};
 
 const entryModeLabel = (permanentEntries: unknown) => {
   if (permanentEntries === false) return "entrées à dates fixes";
@@ -141,21 +150,13 @@ export function checkSessions(
     isSessionOpen(session, permanentEntries, today),
   );
   if (openSessions.length === 0) {
-    const closingDates = datedSessions
-      .map((session) =>
-        formatDate(
-          String(
-            permanentEntries === false ? session.date_debut : session.date_fin,
-          ),
-        ),
-      )
+    const closedReasons = datedSessions
+      .map((session) => closedReason(session, permanentEntries))
       .join(", ");
     return result(
       "sessions",
       "refused",
-      permanentEntries === false
-        ? `${entryMode} : aucune session ouverte, déjà commencée le ${closingDates}`
-        : `${entryMode} : aucune session ouverte, terminée le ${closingDates}`,
+      `${entryMode} : aucune session ouverte, ${closedReasons}`,
     );
   }
   if (!openSessions.some(isSessionLongEnough)) {

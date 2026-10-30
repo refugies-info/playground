@@ -77,6 +77,15 @@ describe("checkCompliance", () => {
     expect(verdicts({ modalites_entrees_sorties: true }).sessions).toBe(
       "accepted",
     );
+    expect(
+      verdicts({
+        modalites_entrees_sorties: false,
+        periode_inscription_fin: "2026-11-17",
+      }).sessions,
+    ).toBe("accepted");
+    expect(verdicts({ periode_inscription_fin: "2026-10-01" }).sessions).toBe(
+      "refused",
+    );
   });
 
   it("sends texts to the AI only when codes and numbers are not enough", () => {

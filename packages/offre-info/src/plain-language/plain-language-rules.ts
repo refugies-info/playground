@@ -27,7 +27,10 @@ export type PlainLanguageFiche = {
 };
 
 const MAX_SENTENCE_WORDS = 25;
+// Q25, Q33: the editorial team's bounds for each accordion section.
 const MIN_WHY_ACCORDIONS = 3;
+const MAX_WHY_ACCORDIONS = 4;
+const MAX_HOW_ACCORDIONS = 2;
 
 // Source: agathe/règles_rédaction_langage_clair.md, "Termes interdits".
 const FORBIDDEN_TERMS = [
@@ -161,6 +164,26 @@ const longSentenceWarnings = (
       suggestion: "Couper en deux phrases.",
     }));
 
+const tooManyAccordions = (
+  field: string,
+  accordions: Accordion[],
+  max: number,
+): PlainLanguageWarning[] =>
+  accordions.length > max
+    ? [
+        {
+          type: "Accordéons en trop",
+          field,
+          level: "mineur",
+          detail: `Non publiés : ${accordions
+            .slice(max)
+            .map(({ title }) => title)
+            .join(" / ")}`,
+          suggestion: `${max} accordéons maximum : regrouper ou supprimer les autres.`,
+        },
+      ]
+    : [];
+
 export const checkPlainLanguage = (
   fiche: PlainLanguageFiche,
   action: RcoActionDocument,
@@ -224,21 +247,12 @@ export const checkPlainLanguage = (
           },
         ]
       : []),
-    ...(fiche.how.length > 1
-      ? [
-          {
-            type: "Accordéons en trop",
-            field: "Comment faire ?",
-            level: "mineur" as const,
-            detail: `Non publiés : ${fiche.how
-              .slice(1)
-              .map(({ title }) => title)
-              .join(" / ")}`,
-            suggestion:
-              "Un seul accordéon : regrouper les étapes dans le premier.",
-          },
-        ]
-      : []),
+    ...tooManyAccordions(
+      "Pourquoi c'est intéressant ?",
+      fiche.why,
+      MAX_WHY_ACCORDIONS,
+    ),
+    ...tooManyAccordions("Comment faire ?", fiche.how, MAX_HOW_ACCORDIONS),
     ...(fiche.how.length === 0
       ? [
           {
@@ -347,7 +361,7 @@ export const renderPlainLanguageFiche = (
     needsCirGoodToKnow(action) && CIR_GOOD_TO_KNOW,
   ].filter((text): text is string => Boolean(text));
   const how = withContactDetails(
-    fiche.how.slice(0, 1),
+    fiche.how.slice(0, MAX_HOW_ACCORDIONS),
     contactDetails(action),
     action.organisme_responsable?.nom ?? undefined,
   );
@@ -358,7 +372,7 @@ export const renderPlainLanguageFiche = (
     ...goodToKnow.map((text) => directive("good-to-know", text)),
     section(
       "## Pourquoi c'est intéressant ?",
-      fiche.why.map(toggle).join("\n\n"),
+      fiche.why.slice(0, MAX_WHY_ACCORDIONS).map(toggle).join("\n\n"),
     ),
     section("## Comment faire ?", how.map(toggle).join("\n\n")),
     section("### Autres informations", fiche.otherInfo.join(", ")),

@@ -46,6 +46,7 @@ export default async function Layout({
     arbitrationReport: document.arbitrationReport,
     arbitrationSource: document.arbitrationSource,
     metadataSource: document.metadataSource,
+    rcoSource: document.rcoSource,
     metadata: document.metadata, // Merged metadata (ingestion + editorial)
     editorialMetadata: document.editorialMetadata, // Editorial overrides only
     editorialRecordId: document.editorialRecordId, // For Realtime status subscription
@@ -59,6 +60,8 @@ export default async function Layout({
     hasPendingIngestionUpdate: document.hasPendingIngestionUpdate,
     activeRunId: document.activeRunId,
     editorialModel: document.editorialModel,
+    editorialTokens: document.editorialTokens,
+    editorialCarbonImpact: document.editorialCarbonImpact,
     editorialNotes: document.editorialNotes,
     lettaAgentId: document.lettaAgentId,
     lettaConversationId: document.lettaConversationId,

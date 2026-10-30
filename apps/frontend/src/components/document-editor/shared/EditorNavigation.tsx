@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCarbonImpact } from "@playground/shared-types";
 import { cn } from "@playground/ui";
 import {
   RiCheckLine,
@@ -233,8 +234,17 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
       <div className="mt-auto px-2 text-sm leading-6 text-[var(--text-mention-grey)] whitespace-nowrap">
         {hasIngestionVersion ? <p>Version : {ingestionVersion}</p> : null}
         {document.editorialModel ? (
-          <p className="truncate" title={document.editorialModel}>
-            Modèle : {document.editorialModel}
+          <p className="whitespace-normal break-all">
+            Modèle :<br />
+            {document.editorialModel}
+          </p>
+        ) : null}
+        {document.editorialTokens ? (
+          <p>Tokens : {document.editorialTokens.toLocaleString("fr-FR")}</p>
+        ) : null}
+        {document.editorialCarbonImpact ? (
+          <p title="Estimation EcoLogits, mix électrique français">
+            Impact : {formatCarbonImpact(document.editorialCarbonImpact)}
           </p>
         ) : null}
       </div>

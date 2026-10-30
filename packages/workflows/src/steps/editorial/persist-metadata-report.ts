@@ -1,4 +1,5 @@
 import {
+  estimateCarbonImpact,
   type LettaUsage,
   MetadataMetadataSchema,
   parseAgentResponse,
@@ -70,6 +71,7 @@ export async function persistMetadataReportStep(
         raw_response: result.rawResponse,
         workflow_id: flowId,
         token_cost: usage?.totalTokens ?? null,
+        carbon_impact: await estimateCarbonImpact(model, usage),
         model,
       })
       .select("id")

@@ -37,7 +37,7 @@ Dans `how`, interdits aussi : « se rendre à l'inscription », « aller à l'ad
 - La gratuité ou le prix.
 - Le nom de l'organisme, le nombre de places, le financeur (« financé par l'État », « BOP 104 »…).
 - La zone géographique ou le département (« vérifier que vous habitez dans la bonne zone »).
-- Les dates d'inscription et les dates de session : elles sont déjà affichées à côté de la fiche.
+- Les dates d'inscription et les dates de session : elles sont déjà affichées à côté de la fiche. Seule exception : le « Bon à savoir » peut donner le calendrier d'un programme qui a des dates fixes (voir les exemples).
 - Une absence ou une condition négative (« pas de sélection », « sans test », « aucun niveau requis », « pas de prérequis ») : ce qui n'est pas demandé n'a pas besoin d'être dit.
 
 ## Contenu de chaque partie
@@ -47,12 +47,17 @@ Dans `how`, interdits aussi : « se rendre à l'inscription », « aller à l'ad
   - « Apprendre à parler, lire et écrire »
   - « Prendre des cours de français et comprendre vos droits »
   - « Apprendre le français pour travailler dans la propreté »
-- `description` : une phrase d'introduction terminée par « avec : », puis 2 à 4 puces. Mentionner la durée ici si la source la donne. Exemple publié :
-  « Une formation de 3 mois avec :\n\n- des cours de français\n- un accompagnement pour trouver un travail ou une formation\n- un stage en entreprise. »
-- `goodToKnow` : seulement une info utile pour agir que le reste de la fiche ne donne pas. Jamais de dates, jamais une condition négative. Le plus souvent vide, **au plus 1 élément** (le code ajoute lui-même le bloc CIR). Public, niveau, durée, conditions ou certification vont dans `description` ou `otherInfo`, pas ici.
-- `why` : au moins 3 accordéons, **seulement** si la source le justifie. Titres courts, jamais « Étape » (« Progresser en français », « Faire les démarches plus facilement », « Comprendre la vie en France »). `text` = 1 ou 2 phrases courtes avec un exemple concret intégré au texte, **jamais de liste à puces**. Exemple :
+- `description` : quelques phrases courtes, **une phrase par idée** : la nature de l'action (cours, formation, atelier…), son objectif, ses caractéristiques principales. Mentionner la durée ici si la source la donne. Pas de puces. Exemple :
+  « Une formation de 3 mois pour apprendre le français et trouver un travail. Il y a des cours de français et un accompagnement pour chercher un emploi ou une formation. La formation se termine par un stage en entreprise. »
+- `goodToKnow` : **au plus 1 élément**, souvent vide (le code ajoute lui-même le bloc CIR). Une info utile pour agir que le reste de la fiche ne donne pas : les conditions précises pour s'inscrire, les jours et horaires des cours, ou l'explication d'un mot que la personne doit comprendre pour savoir si la formation est pour elle. Jamais une condition négative. Une liste commence par une phrase terminée par « : », puis une ligne par condition. Exemples validés par l'équipe éditoriale :
+  - « La formation est ouverte aux personnes qui :\n- ont la protection internationale (statut de réfugié, bénéficiaire de la protection subsidiaire, apatride) ou une carte de séjour vie privée vie familiale, ou une carte de séjour salarié ou travailleur temporaire\n- sont en France depuis moins de 5 ans\n- sont accompagnées par France Travail (personnes qui cherchent un travail), ou CAP Emploi (personnes en situation de handicap), ou une Mission locale (jeunes de 16 à 25 ans), ou le programme AGIR (accompagnement global et individualisé des réfugiés). »
+  - « Vous pouvez vous inscrire si vous avez :\n- la protection internationale (statut de réfugié, bénéficiaire de la protection subsidiaire, apatride) ou si vous êtes en France depuis moins de 5 ans\n- un ou plusieurs enfants inscrits à l'école. »
+  - « Le secteur du bâtiment correspond aux chantiers de construction ou de rénovation. Par exemple : faire la maçonnerie ou l'électricité, poser du carrelage ou de la peinture. Cette formation est ouverte aux personnes qui sont en France depuis moins de 5 ans et qui cherchent un travail dans le secteur du BTP (bâtiment et travaux publics). »
+  - « Les cours ont lieu le mardi de 14h à 16h pour les niveaux B1/B2/C1 et le vendredi de 11h à 13h pour les niveaux A1/A2/Alphabétisation. »
+  - « Le programme est organisé du 16 novembre 2026 au 18 mars 2027.\nIl y a 21 heures de cours par semaine, le mardi, le mercredi et le jeudi. »
+- `why` : **3 accordéons minimum, 4 maximum**, seulement ce que la source justifie (le code ne publie pas au-delà de 4). Titres courts, jamais « Étape » (« Progresser en français », « Faire les démarches plus facilement », « Comprendre la vie en France »). `text` = 1 ou 2 phrases courtes avec un exemple concret intégré au texte, **jamais de liste à puces**. Exemple :
   « Comprendre ce que disent les enseignants, par exemple pendant une réunion de parents. »
-- `how` : exactement 1 accordéon. Titre = action concrète et préalable (« Contacter l'organisme », « Préparer votre dossier »). Jamais « Suivre / Commencer / Démarrer la formation ». Infinitif, pas d'impératif.
+- `how` : 1 accordéon, 2 au maximum et rarement (le code ne publie pas au-delà de 2). Titre = action concrète et préalable (« Contacter l'organisme », « Préparer votre dossier »). Jamais « Suivre / Commencer / Démarrer la formation ». Infinitif, pas d'impératif.
 - `otherInfo` : éléments courts : niveau de français requis, thématiques, conditions d'accès, public prioritaire.
 - `lexicon` : termes administratifs ou techniques gardés dans le texte, expliqués en 1 ou 2 phrases.
 
@@ -60,4 +65,4 @@ Dans `how`, interdits aussi : « se rendre à l'inscription », « aller à l'ad
 - Ne jamais extrapoler. Exemple interdit : la source dit « Niveau A2 attendu », écrire « un test vérifie votre niveau A2 » (le test n'existe pas dans la source).
 - Vérifier chaque élément technique (examen TEF/DELF, dates, durée) : ne rien oublier.
 - Durée : en mois plutôt qu'en semaines (« environ 3 mois »). Tout calcul (heures → mois) va dans `warnings` avec la formule utilisée.
-- Pas d'information cherchée hors de la fiche : une adresse ou des horaires absents vont dans `warnings`.
+- Utiliser seulement la fiche : une adresse ou des horaires absents vont dans `warnings`.
