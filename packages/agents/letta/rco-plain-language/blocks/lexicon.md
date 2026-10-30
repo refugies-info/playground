@@ -5,7 +5,6 @@
 | Abroger / Abrogation | Supprimer / Suppression |
 | Accéder à | Chercher / Trouver / Avoir |
 | Accusé de réception | Papier qui prouve que la lettre est arrivée |
-| Acquérir / Acquisition | Avoir |
 | Actualisation | Mise à jour (« Actualiser votre situation ») |
 | Allocataire | Personne qui reçoit une aide (CAF, France Travail) |
 | Allocations | Aides en argent |

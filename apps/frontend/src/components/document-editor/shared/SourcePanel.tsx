@@ -186,10 +186,10 @@ export function SourcePanel() {
             emptyMessage="Aucun contenu source disponible"
             className="[&_.bn-editor]:!px-10"
           />
-          {document?.metadataSource && (
+          {document?.rcoSource && (
             <section className="mx-10 mt-6 border-t border-border pt-6">
               <h2 className="mb-4 text-lg font-bold">Informations RCO</h2>
-              <SourceFields source={document.metadataSource} />
+              <SourceFields source={document.rcoSource} showPropertyNames />
             </section>
           )}
           {document?.editorialNotes && (

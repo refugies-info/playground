@@ -42,6 +42,7 @@ import { APIError } from "@letta-ai/letta-client/core/error";
 import {
   accumulateUsage,
   createLettaClient,
+  estimateCarbonImpact,
   generateMetadataReport,
   type LettaUsage,
   MetadataMetadataSchema,
@@ -324,6 +325,7 @@ export async function generateDiMetadataReportsStep(runId: string) {
           raw_response: parsed.rawResponse ?? null,
           workflow_id: target.workflow_id,
           token_cost: usage?.totalTokens ?? null,
+          carbon_impact: await estimateCarbonImpact(model, usage),
           model,
         })
         .select("id")
@@ -475,7 +477,8 @@ async function generateForcedDiMetadata(
     metadata: parsed.metadata,
     status: parsed.status,
     rawResponse: parsed.rawResponse,
-    tokens: usage.totalTokens ?? 0,
+    usage,
+    model: LETTA_MODEL_HANDLE,
   };
 }
 
@@ -606,7 +609,9 @@ export async function forceMetadataReportStep(workflowId: string) {
         metadata: parsed.metadata as Json,
         status: parsed.status,
         raw_response: parsed.rawResponse ?? null,
-        token_cost: parsed.tokens || null,
+        token_cost: parsed.usage?.totalTokens || null,
+        carbon_impact: await estimateCarbonImpact(parsed.model, parsed.usage),
+        model: parsed.model,
       })
       .eq("id", generatingReportId)
       .select("id")

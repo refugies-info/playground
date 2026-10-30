@@ -91,4 +91,4 @@ export const buildLettaConversationUrl = (
   agentId: string,
   conversationId?: string | null,
 ) =>
-  `https://app.letta.com/agents/${agentId}${conversationId ? `?conversation=${conversationId}` : ""}`;
+  `https://chat.letta.com/chat/${agentId}${conversationId ? `?conversation=${conversationId}` : ""}`;

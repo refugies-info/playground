@@ -4,9 +4,11 @@ import {
   toArbitrationDocument,
   toMetadataDocument,
   toSourceUrl,
+  withoutMarkdownBodyFields,
 } from "@playground/offre-info";
 import type {
   ArbitrationReport,
+  CarbonImpact,
   ComplianceStatus,
   DateFilterCondition,
   DateFilterType,
@@ -503,7 +505,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       ? supabase
           .from("editorial_records")
           .select(
-            "active_run_id, current_editor_id, content_report:letta_reports!editorial_records_content_report_id_fkey (model, agent_id, markdown)",
+            "active_run_id, current_editor_id, content_report:letta_reports!editorial_records_content_report_id_fkey (model, agent_id, markdown, token_cost, carbon_impact)",
           )
           .eq("id", item.editorial_record_id)
           .single()
@@ -687,6 +689,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     arbitrationReport,
     arbitrationSource: rcoAction ? toArbitrationDocument(rcoAction) : undefined,
     metadataSource: rcoAction ? toMetadataDocument(rcoAction) : undefined,
+    rcoSource: rcoAction ? withoutMarkdownBodyFields(rcoAction) : undefined,
     metadata,
     editorialMetadata,
     editorialRecordId: item.editorial_record_id ?? undefined,
@@ -716,6 +719,10 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     currentEditorId: activeRunData.currentEditorId,
     currentEditorName: currentEditorName,
     editorialModel: activeRunResult.data?.content_report?.model ?? null,
+    editorialTokens: activeRunResult.data?.content_report?.token_cost ?? null,
+    editorialCarbonImpact:
+      (activeRunResult.data?.content_report
+        ?.carbon_impact as CarbonImpact | null) ?? null,
     editorialNotes: extractEditorialNotes(
       activeRunResult.data?.content_report?.markdown ?? "",
     ),

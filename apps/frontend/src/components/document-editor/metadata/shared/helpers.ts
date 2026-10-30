@@ -3,6 +3,8 @@
  * Generic utilities for metadata display
  */
 
+import { describeFieldCodes } from "@playground/shared-types";
+
 /**
  * A metadata value counts as "empty" when the AI couldn't fill it or it was
  * cleared: nullish/empty string, empty array, or object with no own keys.
@@ -65,7 +67,10 @@ export function normalizeSourceEntries(
       return [
         {
           key: entry,
-          value: formatSourceValue(resolvePath(diMetadata, entry)),
+          value: describeFieldCodes(
+            entry,
+            formatSourceValue(resolvePath(diMetadata, entry)),
+          ),
         },
       ];
     }
@@ -76,8 +81,11 @@ export function normalizeSourceEntries(
     return [
       {
         key: entry.field,
-        value: formatSourceValue(
-          hasRawValue ? entry.rawValue : resolvePath(diMetadata, entry.field),
+        value: describeFieldCodes(
+          entry.field,
+          formatSourceValue(
+            hasRawValue ? entry.rawValue : resolvePath(diMetadata, entry.field),
+          ),
         ),
       },
     ];
@@ -100,4 +108,31 @@ export function formatSourceValue(value: unknown): string {
     return JSON.stringify(value);
   }
   return String(value);
+}
+
+/**
+ * The AI cites the same text for several fields (objectif_formation under
+ * En bref, Thèmes, Besoins…): only the first row, in display order, shows it.
+ */
+export function withoutRepeatedSources<T extends { source?: unknown }>(
+  rows: T[],
+): T[] {
+  const shown = new Set<string>();
+  return rows.map((row) =>
+    Array.isArray(row.source)
+      ? {
+          ...row,
+          source: row.source.map((entry) => {
+            if (!isRecord(entry) || !Object.hasOwn(entry, "rawValue"))
+              return entry;
+            const id = `${entry.field}|${JSON.stringify(entry.rawValue)}`;
+            if (!shown.has(id)) {
+              shown.add(id);
+              return entry;
+            }
+            return { field: entry.field, rawValue: "voir plus haut" };
+          }),
+        }
+      : row,
+  );
 }

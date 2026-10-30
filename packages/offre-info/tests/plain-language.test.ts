@@ -140,21 +140,26 @@ describe("renderPlainLanguageFiche", () => {
     );
   });
 
-  it("publishes a single how accordion and logs the others", () => {
+  it("publishes at most 2 how and 4 why accordions and logs the others", () => {
+    const accordion = (title: string) => ({ title, text: "Texte." });
     const markdown = renderPlainLanguageFiche(
       fiche({
-        how: [
-          { title: "Contacter l'école", text: "Envoyer un mail." },
-          { title: "Préparer votre dossier", text: "Rassembler les papiers." },
-        ],
+        how: ["Contacter l'école", "Préparer votre dossier", "Venir"].map(
+          accordion,
+        ),
+        why: ["Parler", "Lire", "Écrire", "Compter", "Chanter"].map(accordion),
       }),
       actionOf(),
     );
     const [fichePart, journal = ""] = markdown.split(
       "### Journal des Avertissements",
     );
-    expect(fichePart).not.toContain("Préparer votre dossier");
-    expect(journal).toContain("Non publiés : Préparer votre dossier");
+    expect(fichePart).toContain("Préparer votre dossier");
+    expect(fichePart).toContain('title="Compter"');
+    expect(fichePart).not.toContain('title="Venir"');
+    expect(fichePart).not.toContain('title="Chanter"');
+    expect(journal).toContain("Non publiés : Venir");
+    expect(journal).toContain("Non publiés : Chanter");
   });
 
   it("keeps a step that is not a contact, and no city when there are several", () => {

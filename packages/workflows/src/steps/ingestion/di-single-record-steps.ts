@@ -9,6 +9,7 @@ import { APIError } from "@letta-ai/letta-client/core/error";
 import {
   accumulateUsage,
   createLettaClient,
+  estimateCarbonImpact,
   findOrCreateConversation,
   generateIngestionReport,
   generateMetadataReport,
@@ -169,6 +170,7 @@ export async function diSingleAuditStep(
       raw_response: parsed.rawResponse ?? null,
       workflow_id: workflowId,
       token_cost: usage?.totalTokens ?? null,
+      carbon_impact: await estimateCarbonImpact(model, usage),
       model,
     })
     .select("id")
@@ -346,6 +348,7 @@ export async function diSingleMetadataStep(
       raw_response: parsed.rawResponse ?? null,
       workflow_id: workflowId,
       token_cost: usage?.totalTokens ?? null,
+      carbon_impact: await estimateCarbonImpact(model, usage),
       model,
     })
     .select("id")

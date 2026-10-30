@@ -45,6 +45,7 @@ import { APIError } from "@letta-ai/letta-client/core/error";
 import {
   accumulateUsage,
   createLettaClient,
+  estimateCarbonImpact,
   findOrCreateConversation,
   generateIngestionReport,
   type LettaUsage,
@@ -324,6 +325,7 @@ export async function generateDiAuditReportsStep(runId: string) {
           raw_response: parsed.rawResponse ?? null,
           workflow_id: target.workflow_id,
           token_cost: usage?.totalTokens ?? null,
+          carbon_impact: await estimateCarbonImpact(model, usage),
           model,
         })
         .select("id")
@@ -471,7 +473,8 @@ async function generateForcedDiReport(markdown: string, workflowId: string) {
     metadata: parsed.metadata,
     status: parsed.status,
     rawResponse: parsed.rawResponse,
-    tokens: usage.totalTokens ?? 0,
+    usage,
+    model: LETTA_MODEL_HANDLE,
     // Compliant iff complete + not duplicate (RI-1117, RI-1093)
     complianceStatus:
       parsed.status !== "complete"
@@ -593,8 +596,9 @@ export async function forceAuditReportStep(workflowId: string) {
         status: result.status,
         raw_response: result.rawResponse ?? null,
         workflow_id: workflowId,
-        token_cost: result.tokens || null,
-        model: LETTA_MODEL_HANDLE,
+        token_cost: result.usage?.totalTokens || null,
+        carbon_impact: await estimateCarbonImpact(result.model, result.usage),
+        model: result.model,
       })
       .select("id")
       .single();

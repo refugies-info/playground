@@ -45,6 +45,7 @@ import {
   comparedValueHeader,
   DUPLICATE_VERDICT_LABELS,
   type DuplicateMatch,
+  RCO_MODEL_HANDLE,
   SIMILARITY_LABELS,
 } from "@playground/shared-types";
 import { FatalError } from "@workflow/errors";
@@ -73,8 +74,11 @@ const requiredEnv = (name: string, hint = "pnpm agents:sync") => {
   return value;
 };
 
-const addUsage = (total: number, usage?: LettaUsage) =>
-  total + (usage?.totalTokens ?? 0);
+const addUsage = (total: LettaUsage, usage?: LettaUsage): LettaUsage => ({
+  totalTokens: (total.totalTokens ?? 0) + (usage?.totalTokens ?? 0),
+  completionTokens:
+    (total.completionTokens ?? 0) + (usage?.completionTokens ?? 0),
+});
 
 const tableCell = (value: string) =>
   value.replaceAll("|", "/").replaceAll("\n", " ");
@@ -245,14 +249,14 @@ export async function arbitrateRcoRecord(
   const duplicatesAgentId = requiredEnv("RCO_DUPLICATES_AGENT_ID");
   const letta = createLettaClient();
   const document = toArbitrationDocument(action);
-  let tokens = 0;
+  let usage: LettaUsage = {};
   const rawAnswers: Record<string, unknown> = {};
 
   let compliance = checkCompliance(action);
   const refusedByRules = overallVerdict(compliance) === "refused";
   const pendingCriteria = criteriaForAi(compliance);
   if (pendingCriteria.length > 0) {
-    const { answer, usage } = await askComplianceAgent(
+    const { answer, usage: complianceUsage } = await askComplianceAgent(
       letta,
       complianceAgentId,
       action.id,
@@ -261,7 +265,7 @@ export async function arbitrateRcoRecord(
     );
     compliance = applyAiDecisions(compliance, answer.decisions);
     rawAnswers.compliance = answer;
-    tokens = addUsage(tokens, usage);
+    usage = addUsage(usage, complianceUsage);
   }
 
   let candidates: DuplicateCandidate[] = [];
@@ -275,7 +279,7 @@ export async function arbitrateRcoRecord(
     ).flat();
   }
   if (candidates.length > 0) {
-    const { answer, usage } = await askDuplicatesAgent(
+    const { answer, usage: duplicatesUsage } = await askDuplicatesAgent(
       letta,
       duplicatesAgentId,
       action.id,
@@ -284,7 +288,7 @@ export async function arbitrateRcoRecord(
     );
     duplicateAnswer = answer;
     rawAnswers.duplicates = answer;
-    tokens = addUsage(tokens, usage);
+    usage = addUsage(usage, duplicatesUsage);
   }
 
   const verdict = overallVerdict(compliance);
@@ -304,7 +308,8 @@ export async function arbitrateRcoRecord(
   };
   return {
     agentId: complianceAgentId,
-    tokens,
+    usage,
+    model: RCO_MODEL_HANDLE,
     rawResponse: JSON.stringify(rawAnswers),
     // An agent that skipped a criterion leaves it "ai": the report is unusable.
     status: unsettled ? ("incomplete" as const) : ("complete" as const),

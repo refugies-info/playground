@@ -1,6 +1,6 @@
 import { RI_DEPARTMENTS } from "@playground/shared-types";
 import { isSessionOpen } from "../arbitrage/compliance-rules";
-import type { RcoActionDocument } from "../document";
+import type { RcoActionDocument, RcoSession } from "../document";
 import {
   DISTANCE_LEARNING_CODE,
   ILE_DE_FRANCE_DEPARTMENTS,
@@ -26,9 +26,16 @@ type Place = {
   departement?: string;
   latitude?: number | string;
   longitude?: number | string;
+  courriel?: string;
+  telfixe1?: string;
 };
 
-type Contact = { courriel?: string; telfixe?: string; portable?: string };
+type Contact = {
+  courriel?: string;
+  telfixe?: string;
+  telfixe1?: string;
+  portable?: string;
+};
 
 const mapped = (
   key: MetadataKey,
@@ -36,10 +43,11 @@ const mapped = (
   ...source: MetadataSource[]
 ): MappedField => ({ key, value, source });
 
+const sessionPlaces = (session: RcoSession): Place[] =>
+  (session.lieu_formation as Place[] | undefined) ?? [];
+
 const places = (action: RcoActionDocument): Place[] =>
-  action.sessions.flatMap(
-    (session) => (session.lieu_formation as Place[] | undefined) ?? [],
-  );
+  action.sessions.flatMap(sessionPlaces);
 
 const unique = <T>(values: T[]) => [...new Set(values)];
 
@@ -169,33 +177,59 @@ export const withoutEmpty = (object: Record<string, unknown>) =>
     ),
   );
 
+const firstContact = (contacts: unknown) =>
+  (contacts as Contact[] | undefined)?.[0];
+
+const phoneOf = (contact?: Contact) =>
+  contact?.telfixe ?? contact?.telfixe1 ?? contact?.portable;
+
+// Q20: each value comes from the closest contact that has it.
+const placeContact = (
+  place: Place,
+  session: RcoSession,
+  action: RcoActionDocument,
+) => {
+  const contacts: (Contact | undefined)[] = [
+    place,
+    firstContact(session.contact_session),
+    firstContact(action.contact_formation),
+    action.organisme_responsable?.coordonnees as Contact | undefined,
+  ];
+  return {
+    email: contacts.find((contact) => contact?.courriel)?.courriel,
+    phone: contacts.map(phoneOf).find(Boolean),
+  };
+};
+
 export function mapPlaces(action: RcoActionDocument): MappedField | null {
-  const contact = (action.contact_formation as Contact[] | undefined)?.[0];
   const pois = [
     ...new Map(
-      places(action).map((place) => [
-        `${place.denomination}|${place.adresse_ligne1}|${place.ville}`,
-        withoutEmpty({
-          title: place.denomination,
-          address: [place.adresse_ligne1, place.codepostal]
-            .filter(Boolean)
-            .join(", "),
-          city: place.ville,
-          lat: toCoordinate(place.latitude),
-          lng: toCoordinate(place.longitude),
-          email: contact?.courriel,
-          phone: contact?.telfixe ?? contact?.portable,
-        }),
-      ]),
+      action.sessions.flatMap((session) =>
+        sessionPlaces(session).map(
+          (place) =>
+            [
+              `${place.denomination}|${place.adresse_ligne1}|${place.ville}`,
+              withoutEmpty({
+                title: place.denomination,
+                address: [place.adresse_ligne1, place.codepostal]
+                  .filter(Boolean)
+                  .join(", "),
+                city: place.ville,
+                lat: toCoordinate(place.latitude),
+                lng: toCoordinate(place.longitude),
+                ...placeContact(place, session, action),
+              }),
+            ] as const,
+        ),
+      ),
     ).values(),
   ];
   if (pois.length === 0) return null;
-  return mapped(
-    "map",
-    pois,
-    { field: "sessions[].lieu_formation[]", rawValue: pois.length },
-    { field: "contact_formation[0]", rawValue: contact ?? null },
-  );
+  return mapped("map", pois, {
+    field:
+      "sessions[].lieu_formation[], contacts : lieu → contact_session → contact_formation → organisme_responsable.coordonnees",
+    rawValue: pois.length,
+  });
 }
 
 export function mapMetadata(

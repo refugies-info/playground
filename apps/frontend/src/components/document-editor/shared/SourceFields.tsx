@@ -1,3 +1,4 @@
+import { describeFieldCodes } from "@playground/shared-types";
 import { cn } from "@playground/ui";
 
 const SOURCE_FIELD_LABELS: Record<string, string> = {
@@ -26,44 +27,60 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 // RCO texts are HTML from a third party: shown as plain text, never injected.
-const toReadableText = (value: unknown): string => {
+const toReadableText = (
+  value: unknown,
+  labelOf: (key: string) => string,
+  key = "",
+): string => {
   if (value === null || value === undefined || value === "") return "—";
   if (Array.isArray(value)) {
-    const items = [...new Set(value.map(toReadableText))];
+    const items = [
+      ...new Set(value.map((item) => toReadableText(item, labelOf, key))),
+    ];
     return items.join(value.some(isObject) ? "\n" : ", ");
   }
   if (isObject(value))
     return Object.entries(value)
       .map(
-        ([key, item]) =>
-          `${SOURCE_FIELD_LABELS[key] ?? key} : ${toReadableText(item)}`,
+        ([nestedKey, item]) =>
+          `${labelOf(nestedKey)} : ${toReadableText(item, labelOf, nestedKey)}`,
       )
       .join(" · ");
-  return String(value)
-    .replace(/<\/(p|li|div)>|<br\s*\/?>/gi, "\n")
-    .replace(/<li[^>]*>/gi, "• ")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\n{2,}/g, "\n")
-    .trim();
+  return describeFieldCodes(
+    key,
+    String(value)
+      .replace(/<\/(p|li|div)>|<br\s*\/?>/gi, "\n")
+      .replace(/<li[^>]*>/gi, "• ")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/\n{2,}/g, "\n")
+      .trim(),
+  );
 };
 
+const frenchLabel = (key: string) => SOURCE_FIELD_LABELS[key] ?? key;
+const propertyName = (key: string) => key;
+
+/** `showPropertyNames`: API property names (etat_recrutement) instead of French labels. */
 export function SourceFields({
   source,
   className,
+  showPropertyNames = false,
 }: {
   source: Record<string, unknown>;
   className?: string;
+  showPropertyNames?: boolean;
 }) {
+  const labelOf = showPropertyNames ? propertyName : frenchLabel;
   return (
     <dl className={cn("font-sans space-y-4", className)}>
       {Object.entries(source).map(([field, value]) => (
         <div key={field}>
           <dt className="text-xs font-semibold uppercase tracking-wider text-amber-700">
-            {SOURCE_FIELD_LABELS[field] ?? field}
+            {labelOf(field)}
           </dt>
           <dd className="whitespace-pre-line text-gray-900">
-            {toReadableText(value)}
+            {toReadableText(value, labelOf, field)}
           </dd>
         </div>
       ))}
