@@ -43,8 +43,6 @@ interface DocumentData
   currentUserName?: string | null;
   /** Clear language sections for editors, shown in the source panel */
   editorialNotes?: string;
-  lettaAgentId?: string;
-  lettaConversationId?: string | null;
   /** Admins can pick the Letta model of the clear language rewrite */
   isAdmin?: boolean;
   /** Display name of the user currently holding the edit lock — shown in EditLockDialog */
@@ -117,7 +115,7 @@ export function DocumentProvider({
   //   - the active AI rewrite runId changes (start, cancel, accept, reject)
   //     so the AIFloatingButton resume logic sees an up-to-date activeRunId
   //     (e.g. after revalidatePath following a DELETE, or in multi-tab scenarios).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only re-sync on navigation, new metadata report, activeRunId, or onlineStatus change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only re-sync on navigation, new metadata report, activeRunId, onlineStatus or editorial footer change
   useEffect(() => {
     if (initialData) {
       // Préserver aiSuggestion : c'est un état transient client non présent dans
@@ -141,6 +139,10 @@ export function DocumentProvider({
     initialData?.activeIngestionVersion,
     initialData?.latestIngestionVersion,
     initialData?.hasPendingIngestionUpdate,
+    initialData?.editorialModel,
+    initialData?.editorialTokens,
+    initialData?.editorialCarbonImpact?.gwpMaxGrams,
+    initialData?.editorialFailed,
   ]);
 
   // Update content and mark as dirty (only if content actually changed)

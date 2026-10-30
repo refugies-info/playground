@@ -16,10 +16,7 @@ import {
 import { Button } from "@playground/ui/primitives";
 import { useCallback, useEffect, useState } from "react";
 import { useSidebar } from "@/contexts/SidebarContext";
-import {
-  buildLettaConversationUrl,
-  buildRcoSourceUrl,
-} from "@/lib/url-builder";
+import { buildRcoSourceUrl } from "@/lib/url-builder";
 import { useDocument } from "../DocumentContext";
 import { useContentContext } from "./ContentContext";
 import { MarkdownViewer } from "./MarkdownViewer";
@@ -52,13 +49,6 @@ export function SourcePanel() {
     document?.metadata?.id as string | undefined,
   );
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const lettaUrl =
-    document?.isAdmin && document.lettaAgentId
-      ? buildLettaConversationUrl(
-          document.lettaAgentId,
-          document.lettaConversationId,
-        )
-      : undefined;
 
   const handleClose = useCallback(() => {
     activatePaddingTransition();
@@ -74,11 +64,6 @@ export function SourcePanel() {
     if (!lienSource) return;
     window.open(lienSource, "_blank", "noopener,noreferrer");
   }, [lienSource]);
-
-  const handleLetta = useCallback(() => {
-    if (!lettaUrl) return;
-    window.open(lettaUrl, "_blank", "noopener,noreferrer");
-  }, [lettaUrl]);
 
   return (
     <div
@@ -130,18 +115,6 @@ export function SourcePanel() {
                 >
                   RCO
                 </Button>
-
-                {lettaUrl && (
-                  <Button
-                    variant="quatrieme"
-                    size="sm"
-                    onClick={handleLetta}
-                    rightIcon={RiExternalLinkLine}
-                    className="border border-border text-[var(--text-action-high-grey)]"
-                  >
-                    Letta
-                  </Button>
-                )}
               </div>
             </PopoverAnchor>
 

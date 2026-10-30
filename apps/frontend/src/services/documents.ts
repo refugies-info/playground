@@ -470,7 +470,6 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     ingestionResult,
     generatingReportResult,
     activeRunResult,
-    conversationResult,
     lastEditorialReportResult,
   ] = await Promise.all([
     item.ingestion_record_id
@@ -512,15 +511,10 @@ export async function getDocumentById(id: string): Promise<Document | null> {
           .eq("id", item.editorial_record_id)
           .single()
       : Promise.resolve({ data: null, error: null }),
-    supabase
-      .from("workflows")
-      .select("conversation_id")
-      .eq("id", id)
-      .maybeSingle(),
-    // Last rewrite attempt, failed ones included: footer + Letta link.
+    // Last rewrite attempt, failed ones included: navigation footer.
     supabase
       .from("letta_reports")
-      .select("model, agent_id, token_cost, carbon_impact, status")
+      .select("model, token_cost, carbon_impact, status")
       .eq("workflow_id", id)
       .eq("report_type", "editorial")
       .order("created_at", { ascending: false })
@@ -742,13 +736,5 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     editorialNotes: extractEditorialNotes(
       activeRunResult.data?.content_report?.markdown ?? "",
     ),
-    // No report yet (or the run died before persisting): the configured
-    // agent still opens the conversation linked to the workflow.
-    lettaAgentId:
-      lastEditorialReportResult.data?.agent_id ??
-      (rcoAction
-        ? process.env.RCO_PLAIN_LANGUAGE_AGENT_ID
-        : process.env.PLAYGROUND_AGENT_ID),
-    lettaConversationId: conversationResult.data?.conversation_id,
   };
 }

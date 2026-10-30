@@ -66,8 +66,6 @@ export default async function Layout({
     editorialTokens: document.editorialTokens,
     editorialCarbonImpact: document.editorialCarbonImpact,
     editorialNotes: document.editorialNotes,
-    lettaAgentId: document.lettaAgentId,
-    lettaConversationId: document.lettaConversationId,
     assigneeEmail: document.assigneeEmail,
     assigneeAvatar: document.assigneeAvatar,
     currentEditorId: document.currentEditorId,

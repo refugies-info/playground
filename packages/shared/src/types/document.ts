@@ -126,9 +126,6 @@ export interface Document {
   editorialCarbonImpact?: CarbonImpact | null;
   /** Sections of the last clear language rewrite meant for editors, not readers */
   editorialNotes?: string;
-  /** Letta agent + conversation of the last clear language rewrite */
-  lettaAgentId?: string;
-  lettaConversationId?: string | null;
   /** User ID currently holding the edit lock on this fiche (NULL if free) */
   currentEditorId?: string | null;
   /** Display name of the user currently holding the edit lock on this fiche (NULL if free) */
