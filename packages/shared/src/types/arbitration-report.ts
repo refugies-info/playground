@@ -7,7 +7,8 @@
 // being processed (to process or draft).
 export type DuplicateSource = "refugies-info" | "playground";
 
-// An ambiguous match counts as a duplicate until the editorial team decides.
+// Only a "duplicate" match makes the fiche non-compliant; an "ambiguous" one
+// is listed in the report for the editorial team to check.
 export type DuplicateVerdict = "duplicate" | "ambiguous";
 
 // Elements the duplicates agent compares between the RCO fiche and a candidate.
@@ -32,6 +33,7 @@ export interface DuplicateMatch {
   title: string;
   sponsor: string;
   location: string;
+  status: string;
   verdict: DuplicateVerdict;
   reason: string;
   similarity: Record<ComparedElement, Similarity>;

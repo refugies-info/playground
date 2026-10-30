@@ -1,4 +1,4 @@
-import type { DuplicateSource } from "@playground/shared-types";
+import type { DuplicateMatch, DuplicateSource } from "@playground/shared-types";
 import type { RcoActionDocument } from "../document";
 
 // Shape returned by the RI duplicate search endpoint (/api/agent/dispositifs/duplicates).
@@ -10,6 +10,7 @@ export type RiDispositif = {
   city?: string[] | null;
   mainSponsorNom?: string | null;
   mainSponsorAcronyme?: string | null;
+  status?: string | null;
 };
 
 export type DuplicateCandidate = {
@@ -20,6 +21,7 @@ export type DuplicateCandidate = {
   sponsor: string;
   departments: string[];
   cities: string[];
+  status: string;
   score: number;
 };
 
@@ -50,14 +52,35 @@ export const toCandidate = (
   sponsor: join(dispositif.mainSponsorNom, dispositif.mainSponsorAcronyme),
   departments: toDepartments(dispositif.location),
   cities: (dispositif.city ?? []).filter(Boolean),
+  status: dispositif.status || "—",
 });
 
-export const actionDepartments = (action: RcoActionDocument): string[] => [
+type PlaceField = "departement" | "codepostal" | "ville";
+
+const actionPlaceValues = (
+  action: RcoActionDocument,
+  field: PlaceField,
+): string[] => [
   ...new Set(
     action.sessions.flatMap((session) =>
-      (
-        (session.lieu_formation as { departement?: string }[] | undefined) ?? []
-      ).map((place) => String(place.departement)),
+      ((session.lieu_formation as Partial<Record<PlaceField, string>>[]) ?? [])
+        .map((place) => place[field])
+        .filter((value): value is string => Boolean(value))
+        .map(String),
     ),
   ),
 ];
+
+export const actionDepartments = (action: RcoActionDocument) =>
+  actionPlaceValues(action, "departement");
+
+export const actionPostalCodes = (action: RcoActionDocument) =>
+  actionPlaceValues(action, "codepostal");
+
+export const actionCities = (action: RcoActionDocument) =>
+  actionPlaceValues(action, "ville");
+
+// A doubt only shows in the report: it doesn't make the fiche non-compliant.
+export const hasCertainDuplicate = (
+  matches: Pick<DuplicateMatch, "verdict">[],
+) => matches.some((match) => match.verdict === "duplicate");

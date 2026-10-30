@@ -125,6 +125,8 @@ function DuplicateSection({ report }: { report: ArbitrationReport }) {
     <Badge variant="neutral">Non analysé</Badge>
   ) : report.duplicate ? (
     <Badge variant="danger">Doublon</Badge>
+  ) : report.duplicates.length > 0 ? (
+    <Badge variant="warning">À vérifier</Badge>
   ) : (
     <Badge variant="success">Nouveau</Badge>
   );
@@ -137,7 +139,10 @@ function DuplicateSection({ report }: { report: ArbitrationReport }) {
           <p className="flex flex-wrap items-center gap-2 text-sm">
             <DuplicateLink match={match} />
             <span className="text-[var(--text-mention-grey)]">
-              {DUPLICATE_SOURCE_LABELS[match.source]}
+              {/* Reports stored before the status was added have none. */}
+              {[DUPLICATE_SOURCE_LABELS[match.source], match.status]
+                .filter(Boolean)
+                .join(" · ")}
             </span>
             <Badge
               variant={match.verdict === "duplicate" ? "danger" : "warning"}
@@ -174,7 +179,7 @@ function DuplicateSection({ report }: { report: ArbitrationReport }) {
       <p className="text-sm">
         {!report.duplicatesChecked
           ? "Recherche non effectuée : la fiche est refusée par les règles de conformité."
-          : report.duplicate
+          : report.duplicates.length > 0
             ? report.duplicateSummary
             : "Aucun doublon détecté. La fiche peut être publiée comme nouveau dispositif."}
       </p>

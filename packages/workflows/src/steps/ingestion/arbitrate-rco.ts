@@ -21,12 +21,15 @@ import {
   type LettaUsage,
 } from "@playground/agents";
 import {
+  actionCities,
   actionDepartments,
+  actionPostalCodes,
   applyAiDecisions,
   CRITERION_LABELS,
   checkCompliance,
   criteriaForAi,
   type DuplicateCandidate,
+  hasCertainDuplicate,
   overallVerdict,
   type RcoActionDocument,
   type RiDispositif,
@@ -108,6 +111,7 @@ const toDuplicateMatches = (
               title: candidate.title || "Sans titre",
               sponsor: candidate.sponsor || "—",
               location: candidateLocation(candidate),
+              status: candidate.status,
               verdict,
               reason,
               similarity,
@@ -147,12 +151,12 @@ const duplicateSection = (report: ArbitrationReport) => {
   if (!report.duplicatesChecked) {
     return "Non analysé : la fiche est refusée par les règles de conformité.";
   }
-  if (!report.duplicate) return "Aucun doublon détecté.";
+  if (report.duplicates.length === 0) return "Aucun doublon détecté.";
   return [
     report.duplicateSummary ?? "",
     ...report.duplicates.map((match) =>
       [
-        `### [${match.title}](${match.url}) : ${DUPLICATE_VERDICT_LABELS[match.verdict]}`,
+        `### [${match.title}](${match.url}) (${match.status}) : ${DUPLICATE_VERDICT_LABELS[match.verdict]}`,
         match.reason,
         comparisonTable(match, report.rcoValues),
       ].join("\n\n"),
@@ -169,7 +173,6 @@ async function findRiCandidates(
 ): Promise<DuplicateCandidate[]> {
   const baseUrl = requiredEnv("RI_BASE_URL", "RI webhook").replace(/\/$/, "");
   const secret = requiredEnv("RI_WEBHOOK_SECRET", "RI webhook");
-  const document = toArbitrationDocument(action);
   // ponytail: same contract as riWebhookRequest (apps/frontend, PR #360);
   // reuse it once it lives in a package the workflows can import.
   const response = await fetch(`${baseUrl}${RI_DUPLICATES_PATH}`, {
@@ -179,7 +182,10 @@ async function findRiCandidates(
       title: action.nom,
       description: action.objectif_formation,
       structureName: action.organisme_responsable?.nom,
-      commune: document.villes.find(Boolean),
+      // ponytail: legacy field for an RI not yet deployed, drop once it is.
+      commune: actionCities(action)[0],
+      communes: actionCities(action),
+      postalCodes: actionPostalCodes(action),
       departments: actionDepartments(action),
       limit: CANDIDATE_LIMIT,
     }),
@@ -208,6 +214,7 @@ async function findPlaygroundCandidates(
     {
       p_title: action.nom,
       p_structure_name: action.organisme_responsable?.nom ?? "",
+      p_communes: actionCities(action),
       p_exclude_workflow_id: workflowId,
       p_limit: CANDIDATE_LIMIT,
     },
@@ -222,6 +229,7 @@ async function findPlaygroundCandidates(
         titreInformatif: row.title,
         mainSponsorNom: row.structure_name,
         city: row.commune ? [row.commune] : [],
+        status: row.status,
       },
       "playground",
     ),
@@ -284,7 +292,7 @@ export async function arbitrateRcoRecord(
   const duplicates = toDuplicateMatches(candidates, duplicateAnswer);
   const report: ArbitrationReport = {
     compliant: verdict === "accepted",
-    duplicate: duplicates.length > 0,
+    duplicate: hasCertainDuplicate(duplicates),
     duplicatesChecked: !refusedByRules,
     duplicateSummary: duplicateAnswer?.reason ?? null,
     criteria: compliance.map((result) => ({
@@ -309,7 +317,7 @@ export async function arbitrateRcoRecord(
     markdown: [
       `## Analyse de conformité éditoriale : ${OVERALL_LABELS[verdict]}`,
       complianceTable(report.criteria),
-      `## Analyse de doublons${report.duplicate ? " : ❌ Doublon détecté" : ""}`,
+      `## Analyse de doublons${report.duplicate ? " : ❌ Doublon détecté" : report.duplicates.length > 0 ? " : ⚠️ À vérifier" : ""}`,
       duplicateSection(report),
     ].join("\n\n"),
   };
