@@ -136,15 +136,18 @@ export async function notifyTranslationPublicationError(params: {
 export async function notifyClearLanguageError(params: {
   workflowId: string;
   errorMessage: string;
+  userName?: string;
+  lettaUrl?: string;
 }): Promise<void> {
   const bomoUrl = getBomoDocumentUrl(params.workflowId);
   const text = [
-    `:rotating_light: [${getEnvironmentLabel()}] Échec du langage clair`,
+    `[${getEnvironmentLabel()}] Langage clair non généré${params.userName ? ` (demandé par ${params.userName})` : ""}`,
     ...(bomoUrl
       ? [`fiche BOMO : ${bomoUrl}`]
-      : [`workflow: \`${params.workflowId}\``]),
+      : [`workflow : \`${params.workflowId}\``]),
+    ...(params.lettaUrl ? [`conversation Letta : ${params.lettaUrl}`] : []),
     // Letta errors can carry a full stack trace
-    `erreur: ${params.errorMessage.slice(0, 2000)}`,
+    `\`\`\`${params.errorMessage.slice(0, 2000)}\`\`\``,
   ].join("\n");
 
   await postSlackMessage(process.env[ENV_WEBHOOK_DEV], ENV_WEBHOOK_DEV, text);

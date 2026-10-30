@@ -1,6 +1,6 @@
 "use client";
 
-import { formatCarbonImpact } from "@playground/shared-types";
+import { ECOLOGITS_URL, formatCarbonImpact } from "@playground/shared-types";
 import { cn } from "@playground/ui";
 import {
   RiCheckLine,
@@ -266,8 +266,17 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
           <p>Tokens : {document.editorialTokens.toLocaleString("fr-FR")}</p>
         ) : null}
         {document.editorialCarbonImpact ? (
-          <p title="Estimation EcoLogits, mix électrique français">
-            Impact : {formatCarbonImpact(document.editorialCarbonImpact)}
+          <p>
+            <a
+              href={ECOLOGITS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Estimation haute EcoLogits, mix électrique français"
+              className="underline"
+            >
+              Impact
+            </a>{" "}
+            : {formatCarbonImpact(document.editorialCarbonImpact)}
           </p>
         ) : null}
         {document.isAdmin && typeof rcoActionId === "string"

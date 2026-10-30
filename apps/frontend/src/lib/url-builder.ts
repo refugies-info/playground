@@ -87,8 +87,4 @@ export function buildRcoSourceUrl(
   return `https://www.intercariforef.org/outils/recherche-offreinfo/formations/sessions/${numeroFormation}/${numeroAction}`;
 }
 
-export const buildLettaConversationUrl = (
-  agentId: string,
-  conversationId?: string | null,
-) =>
-  `https://chat.letta.com/chat/${agentId}${conversationId ? `?conversation=${conversationId}` : ""}`;
+export { buildLettaConversationUrl } from "@playground/shared-types";
