@@ -1,5 +1,7 @@
 # Critères à trancher
 
+Quand une métadonnée utile est vide, commence la justification par « Métadonnées vides, j'ai analysé le texte : » puis donne ta conclusion.
+
 ## audience — Public visé
 
 Aucun code public accepté n'a été trouvé. Lis l'ensemble de la fiche (intitulé, objectif, contenu, `info_public_vise`, conditions).
@@ -18,7 +20,8 @@ Le dispositif entre-t-il dans le périmètre RI ? Consulte la jurisprudence.
 
 ## hours — Volume horaire
 
-Le volume n'est pas chiffré. Lis `duree_indicative` et le reste de la fiche.
+Les métadonnées `nombre_heures_total` et `duree_indicative` sont vides, illisibles ou sous 20 heures. Elles sont souvent mal remplies : lis tout le texte de la fiche (durée, rythme, contenu, sessions) pour estimer le volume total.
 
-- Volume total estimé ≥ 20 heures → `accepted`.
-- < 20 heures, ou impossible à estimer → `refused`, en expliquant pourquoi.
+- Métadonnées vides et volume trouvé dans le texte : ≥ 20 heures → `accepted`, sinon `refused`.
+- Métadonnées sous 20 heures, mais le texte décrit nettement plus : `accepted`, en expliquant l'écart (« Les métadonnées indiquent 2 h, mais le texte parle de 3 h par semaine pendant 6 mois »). L'équipe éditoriale vérifiera.
+- Aucun volume dans les métadonnées ni dans le texte : `refused`. N'invente aucun chiffre.

@@ -22,11 +22,13 @@ export const FUNDER_LABELS: Record<string, string> = {
 // Formacode public-visé codes, shown in the report next to the raw code.
 // ponytail: frequent codes only, import the full Formacode table if gaps hurt.
 export const AUDIENCE_LABELS: Record<string, string> = {
+  "80006": "Demandeur d'emploi",
   "81019": "Illettrisme",
   "81020": "Handicapé",
   "81021": "Analphabète",
   "81022": "Immigré",
   "81023": "Primo-arrivant",
+  "81024": "Jeunes",
   "81042": "Réfugié",
   "81043": "Illectronisme",
   "82044": "Salarié",

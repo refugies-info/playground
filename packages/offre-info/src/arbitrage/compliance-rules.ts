@@ -174,10 +174,16 @@ export function checkSessions(
 
 const HOURS_IN_TEXT = /(\d+)\s*h/i;
 
+// Metadata below the threshold is often badly filled in (Q8): the AI checks
+// the text instead of the code refusing outright.
 const hoursVerdict = (hours: number, source: string) =>
   hours >= MIN_TOTAL_HOURS
     ? result("hours", "accepted", `${hours}h (${source})`)
-    : result("hours", "refused", `${hours}h < ${MIN_TOTAL_HOURS}h (${source})`);
+    : result(
+        "hours",
+        "ai",
+        `métadonnées : ${hours}h < ${MIN_TOTAL_HOURS}h (${source}), à vérifier dans le texte`,
+      );
 
 export function checkHours(action: RcoActionDocument): CriterionResult {
   if (typeof action.nombre_heures_total === "number") {
@@ -185,7 +191,11 @@ export function checkHours(action: RcoActionDocument): CriterionResult {
   }
   const text = action.duree_indicative;
   if (typeof text !== "string" || !text.trim()) {
-    return result("hours", "refused", "aucun volume horaire");
+    return result(
+      "hours",
+      "ai",
+      "métadonnées vides, lecture du texte nécessaire",
+    );
   }
   const match = text.match(HOURS_IN_TEXT);
   if (match) return hoursVerdict(Number(match[1]), "durée indicative");
@@ -241,7 +251,7 @@ export const applyAiDecisions = (
       (aiDecision) => aiDecision.criterion === criterion.criterion,
     );
     return criterion.verdict === "ai" && decision
-      ? { ...decision, reason: `AI: ${decision.reason}` }
+      ? { ...decision, reason: `IA : ${decision.reason}` }
       : criterion;
   });
 
@@ -255,6 +265,7 @@ export const toArbitrationDocument = (action: RcoActionDocument) => ({
   conditions_specifiques: action.conditions_specifiques,
   info_public_vise: action.info_public_vise,
   code_public_vise: action.code_public_vise,
+  nombre_heures_total: action.nombre_heures_total,
   duree_indicative: action.duree_indicative,
   villes: action.sessions.flatMap((session) =>
     ((session.lieu_formation as { ville?: string }[] | undefined) ?? []).map(

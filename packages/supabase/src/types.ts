@@ -991,6 +991,7 @@ export type Database = {
       markdown_word_count: { Args: { markdown: string }; Returns: number }
       search_playground_duplicate_candidates: {
         Args: {
+          p_communes?: string[]
           p_exclude_workflow_id: string
           p_limit?: number
           p_structure_name: string
@@ -1000,6 +1001,7 @@ export type Database = {
           commune: string
           id: string
           score: number
+          status: string
           structure_name: string
           title: string
         }[]

@@ -7,7 +7,10 @@ import {
   toArbitrationDocument,
 } from "../src/arbitrage/compliance-rules";
 import {
+  actionCities,
   actionDepartments,
+  actionPostalCodes,
+  hasCertainDuplicate,
   toCandidate,
 } from "../src/arbitrage/duplicate-candidates";
 import { buildActionDocument } from "../src/document";
@@ -47,15 +50,24 @@ describe("checkCompliance", () => {
       verdicts({
         conventionnement: false,
         organisme_financeur: [{ code_financeur: "10" }],
-        nombre_heures_total: 12,
         date_fin: "2026-01-01",
       }),
     ).toMatchObject({
       agreement: "refused",
       funder: "refused",
       sessions: "refused",
-      hours: "refused",
     });
+  });
+
+  it("sends missing or low hours to the AI instead of refusing", () => {
+    expect(verdicts({ nombre_heures_total: 12 }).hours).toBe("ai");
+    expect(
+      verdicts({ nombre_heures_total: null, duree_indicative: null }).hours,
+    ).toBe("ai");
+    expect(
+      toArbitrationDocument(actionWith({ nombre_heures_total: 12 }))
+        .nombre_heures_total,
+    ).toBe(12);
   });
 
   it("closes fixed-entry sessions once started", () => {
@@ -92,6 +104,12 @@ describe("checkCompliance", () => {
     );
     expect(reasons.funder).toContain("19 (État - Ministère de l'intérieur)");
     expect(reasons.audience).toContain("83056 (Tout public)");
+    expect(
+      checkCompliance(
+        actionWith({ code_public_vise: ["80006", "81024"] }),
+        TODAY,
+      ).find((c) => c.criterion === "audience")?.reason,
+    ).toContain("80006 (Demandeur d'emploi), 81024 (Jeunes)");
     expect(reasons.sessions).toBe(
       "entrées à dates fixes : aucune session ouverte, déjà commencée le 21/09/2026",
     );
@@ -116,6 +134,9 @@ describe("checkCompliance", () => {
       { criterion: "scheme_type", verdict: "refused", reason: "OEPRE" },
     ]);
     expect(overallVerdict(settled)).toBe("refused");
+    expect(settled.find((c) => c.criterion === "scheme_type")?.reason).toBe(
+      "IA : OEPRE",
+    );
   });
 });
 
@@ -127,13 +148,36 @@ describe("toCandidate", () => {
       location: ["68 - Haut-Rhin"],
       mainSponsorNom: "France Terre d'Asile",
       mainSponsorAcronyme: "FTDA",
+      status: "Supprimé",
     };
     expect(toCandidate(dispositif, "refugies-info")).toMatchObject({
       url: "https://refugies.info/dispositif/a",
       sponsor: "France Terre d'Asile - FTDA",
       departments: ["68"],
+      status: "Supprimé",
     });
     expect(toCandidate(dispositif, "playground").url).toBe("/documents/a");
+  });
+});
+
+describe("action places", () => {
+  it("lists every distinct city and postal code for the duplicate search", () => {
+    const action = buildActionDocument(
+      [
+        normalizeSession(
+          rawSession({
+            lieu_formation: [
+              { ville: "Paris", codepostal: "75018", departement: "75" },
+              { ville: "Paris", codepostal: "75019", departement: "75" },
+            ],
+          }),
+        ),
+      ],
+      "carif-oref--01_999",
+    );
+    expect(actionCities(action)).toEqual(["Paris"]);
+    expect(actionPostalCodes(action)).toEqual(["75018", "75019"]);
+    expect(actionDepartments(action)).toEqual(["75"]);
   });
 });
 
@@ -148,5 +192,15 @@ describe("stored sessions without lieu_formation", () => {
     } as typeof stored;
     expect(toArbitrationDocument(action).villes).toEqual([]);
     expect(actionDepartments(action)).toEqual([]);
+  });
+});
+
+describe("hasCertainDuplicate", () => {
+  it("ignores ambiguous matches", () => {
+    expect(hasCertainDuplicate([])).toBe(false);
+    expect(hasCertainDuplicate([{ verdict: "ambiguous" }])).toBe(false);
+    expect(
+      hasCertainDuplicate([{ verdict: "ambiguous" }, { verdict: "duplicate" }]),
+    ).toBe(true);
   });
 });
