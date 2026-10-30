@@ -57,27 +57,33 @@ export const sendMessageToConversation = async (
   };
 };
 
+/** Conversation named `name` (stored as its summary), or null. */
+export const findConversation = async (
+  client: Letta,
+  agentId: string,
+  name: string,
+): Promise<string | null> => {
+  // summary_search is a substring match ("metadata-12" also finds
+  // "metadata-123"): keep the exact one. It also lifts the 100-item page cap.
+  const conversations = await client.conversations.list({
+    agent_id: agentId,
+    summary_search: name,
+    limit: 100,
+  });
+  // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
+  const match = (conversations as any[]).find(
+    (c) => c.name === name || c.label === name || c.summary === name,
+  );
+  return match?.id ?? null;
+};
+
 export const findOrCreateConversation = async (
   client: Letta,
   agentId: string,
   name: string,
 ): Promise<string> => {
-  // 1. List conversations
-  const existingConversations = await client.conversations.list({
-    agent_id: agentId,
-    limit: 100,
-  });
-
-  // check if name exists on the object. If typescript complains, we cast to any or check SDK.
-  // Assuming 'name' or 'label' or 'summary' is the property.
-  // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
-  const match = (existingConversations as any[]).find(
-    (c) => c.name === name || c.label === name || c.summary === name,
-  );
-
-  if (match) {
-    return match.id;
-  }
+  const existingId = await findConversation(client, agentId, name);
+  if (existingId) return existingId;
 
   const createParams: ConversationCreateParams = {
     agent_id: agentId,

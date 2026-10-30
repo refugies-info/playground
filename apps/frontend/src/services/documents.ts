@@ -742,7 +742,13 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     editorialNotes: extractEditorialNotes(
       activeRunResult.data?.content_report?.markdown ?? "",
     ),
-    lettaAgentId: lastEditorialReportResult.data?.agent_id,
+    // No report yet (or the run died before persisting): the configured
+    // agent still opens the conversation linked to the workflow.
+    lettaAgentId:
+      lastEditorialReportResult.data?.agent_id ??
+      (rcoAction
+        ? process.env.RCO_PLAIN_LANGUAGE_AGENT_ID
+        : process.env.PLAYGROUND_AGENT_ID),
     lettaConversationId: conversationResult.data?.conversation_id,
   };
 }

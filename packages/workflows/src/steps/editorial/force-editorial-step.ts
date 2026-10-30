@@ -262,6 +262,8 @@ export async function forceEditorialStep(
           service.data as unknown as RcoActionDocument,
         ),
         model,
+        // Linked before the agent answers: a failed run stays reachable.
+        linkConversation,
       )
     : generateDiEditorial(workflowId, workflow, model)
   ).catch(async (error: unknown) => {

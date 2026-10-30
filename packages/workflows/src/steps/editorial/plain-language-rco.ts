@@ -20,6 +20,7 @@ import { FatalError } from "@workflow/errors";
 export async function generateRcoPlainLanguage(
   action: RcoActionDocument,
   model = RCO_MODEL_HANDLE,
+  onConversation?: (conversationId: string) => Promise<void>,
 ) {
   const agentId = process.env.RCO_PLAIN_LANGUAGE_AGENT_ID;
   if (!agentId) {
@@ -34,6 +35,7 @@ export async function generateRcoPlainLanguage(
     action.id,
     toPlainLanguageDocument(action),
     model,
+    onConversation,
   );
 
   return {
