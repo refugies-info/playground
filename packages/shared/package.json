@@ -6,7 +6,8 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./constants/roles": "./src/constants/roles.ts"
+    "./constants/roles": "./src/constants/roles.ts",
+    "./lib/date": "./src/lib/date.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
