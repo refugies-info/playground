@@ -35,12 +35,16 @@ export interface WidgetConfigFilters {
   languages?: ("fr" | "en" | "uk" | "ti" | "ar" | "ps" | "ru" | "fa")[];
 }
 
-export interface WidgetConfigFields {
+interface WidgetConfigCommonFields {
   internalTitle: string;
-  type: WidgetConfigType;
   structureName: string;
   authorizedDomains: string[];
   externalTitle: string;
+  status: WidgetConfigStatus;
+}
+
+export interface ListWidgetConfigFields extends WidgetConfigCommonFields {
+  type: "list";
   description?: string;
   displayDescription: boolean;
   filters: WidgetConfigFilters;
@@ -51,18 +55,30 @@ export interface WidgetConfigFields {
   displayShareModule: boolean;
   displayFilterBar: boolean;
   filterBarOptions: WidgetConfigFilterBarOption[];
-  status: WidgetConfigStatus;
 }
 
-export type WidgetConfigUpdateInput = Partial<WidgetConfigFields>;
+export interface ThumbnailWidgetConfigFields extends WidgetConfigCommonFields {
+  type: "thumbnail";
+  dispositifId: string;
+}
 
-export interface WidgetConfig extends WidgetConfigFields {
+export type WidgetConfigFields =
+  | ListWidgetConfigFields
+  | ThumbnailWidgetConfigFields;
+
+export type WidgetConfigUpdateInput =
+  | Partial<Omit<ListWidgetConfigFields, "type">>
+  | Partial<Omit<ThumbnailWidgetConfigFields, "type">>;
+
+interface WidgetConfigMetadata {
   _id: string;
   publicId: string;
   statusUpdatedAt: string;
   createdAt: string;
   updatedAt: string;
 }
+
+export type WidgetConfig = WidgetConfigFields & WidgetConfigMetadata;
 
 export type WidgetConfigSummary = Pick<
   WidgetConfig,
