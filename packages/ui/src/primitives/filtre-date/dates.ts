@@ -7,7 +7,7 @@
  * pour les fuseaux négatifs (Antilles, Amérique…).
  */
 
-import { dayKey } from "@playground/shared-types";
+import { dayKey } from "@playground/shared-types/lib/date";
 import { format, isValid, parse } from "date-fns";
 
 const ISO_FORMAT = "yyyy-MM-dd";
