@@ -214,5 +214,4 @@ Tailwind utilities always win, even when DSFR applies behavioral rules on `:hove
 ## Related
 
 - [Icon System](./icon-system.md) — DSFR and Remix Icons
-- [Component Strategy](./component-strategy.md) — component organization
 - [DSFR Fondamentaux](https://www.systeme-de-design.gouv.fr/fondamentaux/) — official reference

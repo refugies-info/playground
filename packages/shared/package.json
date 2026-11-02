@@ -6,7 +6,8 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./constants/roles": "./src/constants/roles.ts"
+    "./constants/roles": "./src/constants/roles.ts",
+    "./lib/date": "./src/lib/date.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
@@ -27,7 +28,6 @@
     "remark-directive": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
-    "remark-stringify": "^11.0.0",
     "unified": "^11.0.5",
     "zod": "^3.25.76"
   }

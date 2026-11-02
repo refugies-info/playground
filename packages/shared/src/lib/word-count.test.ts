@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countMarkdownWords, countWords } from "./word-counter";
+import { countMarkdownWords, countWords } from "./word-count";
 
 describe("countWords", () => {
   it("should count words in a simple string", () => {

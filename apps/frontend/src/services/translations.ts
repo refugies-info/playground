@@ -1,4 +1,5 @@
 import {
+  countMarkdownWords,
   extractTitleFromMarkdown,
   extractTitleFromMetadata,
   logger,
@@ -75,16 +76,6 @@ export interface GetTranslationsParams {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   userRole?: string;
-}
-
-/**
- * Simple word count estimation from markdown
- */
-function countWords(markdown: string): number {
-  if (!markdown) return 0;
-  // Remove markdown syntax roughly to get better count?
-  // For now, simple split by whitespace is a good enough approximation for editorial needs
-  return markdown.trim().split(/\s+/).length;
 }
 
 export async function getTranslations(params: GetTranslationsParams) {
@@ -333,7 +324,7 @@ export async function getTranslations(params: GetTranslationsParams) {
         "Sans titre";
 
       // Word count from editorial record (source)
-      const wordCount = countWords(sourceMarkdown);
+      const wordCount = countMarkdownWords(sourceMarkdown);
 
       // Publication URL
       let publicationUrl: string | undefined;

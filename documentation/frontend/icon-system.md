@@ -177,7 +177,7 @@ See [documentation/scripts/sync-dsfr-icons.md](../scripts/sync-dsfr-icons.md) fo
 
 ## Storybook
 
-Stories in `apps/storybook/src/stories/ui/Icon.stories.tsx`:
+Stories in `packages/ui/src/primitives/icon/Icon.stories.tsx`:
 
 - **Playground**: test a single icon with controls (size, aria-label)
 - **Table**: all icons with search and category tabs (Arrows, Buildings, Communication, Custom DSFR, etc.)
@@ -201,4 +201,3 @@ The **Custom DSFR** tab groups icons whose name doesn't start with `Ri`.
 - [Remix Icons](https://remixicon.com/) — full catalogue
 - [DSFR Icons](https://www.systeme-de-design.gouv.fr/fondamentaux/icone/) — official DSFR selection
 - [Sync script](../scripts/sync-dsfr-icons.md)
-- [Component Strategy](./component-strategy.md)

@@ -1,5 +1,9 @@
-import { countMarkdownWords, createAirtableRecord } from "@playground/airtable";
-import { extractTitleFromMarkdown, logger } from "@playground/shared-types";
+import { createAirtableRecord } from "@playground/airtable";
+import {
+  countMarkdownWords,
+  extractTitleFromMarkdown,
+  logger,
+} from "@playground/shared-types";
 import type { StepResult } from "../../types";
 import { notifyAirtableError } from "../common/slack";
 import { getSupabaseClient } from "../common/supabase";

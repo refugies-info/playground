@@ -22,13 +22,6 @@ export interface DocumentPayloadInput {
 export type DispositifPayload = RefugiesInfoPayload;
 
 /**
- * Payload for publishing to refugies.info (includes email)
- */
-export interface PublishPayload extends DispositifPayload {
-  email: string;
-}
-
-/**
  * Build a dispositif payload for preview or publication
  * Follows the exact contract defined by Réfugiés.info
  * @param doc - Document data from the editor
@@ -48,25 +41,6 @@ export async function buildDispositifPayload(
     origin: "RCO",
     normalizeMarkdown,
   });
-}
-
-/**
- * Build a publish payload (includes user email for the webhook)
- * @param doc - Document data from the editor
- * @param email - Email of the authenticated user
- * @returns Structured payload for publication webhook
- */
-export async function buildPublishPayload(
-  doc: DocumentPayloadInput,
-  email: string,
-  status = "Actif",
-): Promise<PublishPayload> {
-  // buildDispositifPayload already normalizes the markdown
-  const basePayload = await buildDispositifPayload(doc, status);
-  return {
-    ...basePayload,
-    email,
-  };
 }
 
 /**

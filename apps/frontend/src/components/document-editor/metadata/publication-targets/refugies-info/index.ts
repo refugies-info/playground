@@ -13,9 +13,7 @@ export {
   PUBLIC_STATUS_OPTIONS,
   PUBLIC_TYPE_OPTIONS,
   TIME_SLOT_OPTIONS,
-  TIME_UNIT_LABELS,
   TIME_UNIT_OPTIONS,
-  translateUnit,
 } from "./constants";
 
 // Field components mapping

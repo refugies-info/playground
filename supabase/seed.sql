@@ -1,7 +1,0 @@
--- Supabase Seed Data
--- This file is kept for backward compatibility.
--- Seed files are now in supabase/seed/ and loaded via config.toml:
---   sql_paths = ["./seed/*.sql"]
---
--- Files are executed in lexicographic order (00_, 02_, 04_, etc.)
--- Run `supabase db reset` to apply migrations + seeds.

@@ -89,7 +89,6 @@ Karfur affiche la preview
 | `apps/frontend/src/lib/payload-builder.ts` | Construction du payload avec FR fallback + traduction |
 | `apps/frontend/src/lib/preview-utils.ts` | Soumission du formulaire POST vers Karfur |
 | `apps/frontend/src/components/translation-editor/TranslationContext.tsx` | Logique métier (auto-save, appel preview) |
-| `apps/frontend/src/components/translation-editor/TranslationActions.tsx` | UI (bouton avec état disabled) |
 | `apps/frontend/src/services/translations.ts` | Récupération des métadonnées source |
 
 ### Prérequis

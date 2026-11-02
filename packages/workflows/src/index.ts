@@ -6,8 +6,6 @@ export type { ForceEditorialWorkflowResult } from "./pipelines/editorial/force-e
 export { forceEditorialWorkflow } from "./pipelines/editorial/force-editorial";
 export type { PersistEditorialWorkflowResult } from "./pipelines/editorial/persist-editorial";
 export { persistEditorialWorkflow } from "./pipelines/editorial/persist-editorial";
-export type { PersistMetadataWorkflowResult } from "./pipelines/editorial/persist-metadata";
-export { persistMetadataWorkflow } from "./pipelines/editorial/persist-metadata";
 export type { ToggleStatusResult } from "./pipelines/editorial/toggle-status";
 export { toggleStatusWorkflow } from "./pipelines/editorial/toggle-status";
 // =============================================================================
@@ -20,8 +18,6 @@ export { forceMetadataOnlyWorkflow } from "./pipelines/ingestion/force-metadata-
 // =============================================================================
 // Pipelines - Editorial
 // =============================================================================
-export type { ArchiveWorkflowResult } from "./pipelines/publication/archive";
-export { archiveWorkflow } from "./pipelines/publication/archive";
 export type { PublicationWorkflowResult } from "./pipelines/publication/publication";
 export { publicationWorkflow } from "./pipelines/publication/publication";
 export type { TranslationPublicationWorkflowResult } from "./pipelines/publication/translation-publication";

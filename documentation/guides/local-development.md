@@ -1,221 +1,53 @@
 # Local Development Setup
 
-Get the Content Playground running on your machine for development.
-
----
-
 ## Prerequisites
 
-- **Node.js** 18+ (check with `node --version`)
-- **pnpm** 8+ (install with `npm install -g pnpm`)
-- **Git** (for cloning the repository)
-- **Docker** (for Supabase local development)
+- **Toolchain**: Node, pnpm and npm versions are pinned in `.prototools` (managed by [proto](https://moonrepo.dev/proto), `auto-install = true`). CI and Vercel builds use the same file.
+- **Docker** (local Supabase, optional local Letta).
+- **Supabase CLI** (`brew install supabase/tap/supabase`): it is not a project dependency, but `pnpm db:migrate` and `pnpm gen:types` call it.
 
----
-
-## Quick Start (5 minutes)
-
-### 1. Clone the Repository
+## Setup
 
 ```bash
-git clone https://github.com/refugies-info/content-playground.git
-cd content-playground
-```
-
-### 2. Install Dependencies
-
-```bash
+git clone git@github.com:refugies-info/playground.git
+cd playground
 pnpm install
+supabase start          # API :54321, DB :54322, Studio :54323, Mailpit :54324
 ```
 
-### 3. Set Up Environment Variables
+`supabase start` applies `supabase/migrations/` and loads the seed files from `supabase/seed/*.sql` (seed users included, see [Seed Data](../database/seed-data.md)).
 
-Copy the example environment file:
+### Environment files
 
-```bash
-cp .env.example .env.local
-```
+There are two env files, each with its own example:
 
-Edit `.env.local` with your local configuration (see [Environment Variables](../reference/environment-variables.md)).
+| File | Read by | Template |
+|------|---------|----------|
+| `.env` (repo root) | `scripts/*` (`dotenv/config`), root scripts such as `di:cron` and `storybook:publish` | `.env.example` |
+| `apps/frontend/.env` | Next.js app (server actions, API routes, workflows run inside it) | `apps/frontend/.env.example` |
 
-### 4. Start Supabase Locally
+Fill the Supabase keys from the `supabase start` output. Letta settings (cloud free model, cloud prod agents, or self-hosted) are explained in `.env.example` and in [Local Letta Development](../ai/local-letta-dev.md). Full list: [Environment Variables](../reference/environment-variables.md).
 
-```bash
-pnpm supabase:start
-```
-
-This starts the local Supabase instance. You'll see output with:
-
-- API URL (usually `http://localhost:54321`)
-- Anon key
-- Service role key
-
-Save these for your `.env.local` file.
-
-### 5. Run the Development Server
+### Run
 
 ```bash
 pnpm dev
 ```
 
-The frontend will be available at `http://localhost:3000`.
+- Frontend: `http://localhost:3001` (`apps/frontend` runs `next dev -p 3001`; `site_url` in `supabase/config.toml` matches).
+- `pnpm dev` also runs `dev:workflow` (`workflow inspect runs --web`), the Vercel Workflow runs inspector.
 
----
+## Everyday commands
 
-## Development Workflow
+| Command | What it does |
+|---------|--------------|
+| `pnpm check:types` | Type check all workspaces (turbo) |
+| `pnpm lint` / `pnpm format` | Biome check + fix / format |
+| `pnpm test` | Vitest in every workspace (turbo), see [Testing Guide](./testing.md) |
+| `pnpm db:migrate` | Apply pending migrations, keep local data (`supabase migration up`) |
+| `npx supabase db reset` | Rebuild the local DB from migrations + seed |
+| `pnpm gen:types` | Regenerate `packages/supabase/src/types.ts` from the local DB |
+| `pnpm --filter @playground/frontend dev` | Run only the frontend |
+| `supabase stop` | Stop local Supabase |
 
-### Running Commands
-
-```bash
-# Start all services
-pnpm dev
-
-# Run type checking
-pnpm check:types
-
-# Run linting
-pnpm lint
-
-# Format code
-pnpm format
-
-# Build for production
-pnpm build
-```
-
-### Running Tests
-
-We use **Vitest** for unit testing and **Turborepo** to orchestrate them across the monorepo.
-
-```bash
-# Run all tests (all packages)
-pnpm test
-
-# Run tests in watch mode for a specific package
-cd apps/frontend
-pnpm test
-```
-
-For more details, see the [Testing Guide](./testing.md).
-
-### Working with Supabase
-
-```bash
-# Start local Supabase
-pnpm supabase:start
-
-# Stop local Supabase
-pnpm supabase:stop
-
-# Reset database to initial state
-pnpm supabase:reset
-
-# View Supabase logs
-pnpm supabase:logs
-
-# Access Supabase Studio (web UI)
-# Available at http://localhost:54323 after starting
-```
-
-### Monorepo Structure
-
-The project uses **Turborepo** for monorepo management:
-
-```
-/apps/frontend        # Next.js frontend application
-/packages/ui          # Design system components (@playground/ui)
-/packages/shared      # Shared types and utilities
-```
-
-Run tasks in specific workspaces:
-
-```bash
-# Run dev in frontend only
-pnpm --filter @refugies/frontend dev
-
-# Run check:types in all packages
-pnpm check:types
-```
-
----
-
-## Debugging
-
-### Frontend Debugging
-
-1. Open `http://localhost:3000` in your browser
-2. Open DevTools (F12)
-3. Check Console for errors
-4. Use React DevTools extension for component inspection
-
-### Supabase Debugging
-
-1. Access Supabase Studio at `http://localhost:54323`
-2. View database tables, RLS policies, and logs
-3. Test queries directly in the SQL editor
-
-### TypeScript Errors
-
-```bash
-# Check for TypeScript errors
-pnpm check:types
-
-# Fix formatting issues
-pnpm format
-```
-
----
-
-## Common Issues
-
-**Port already in use?**
-
-```bash
-# Kill process on port 3000
-lsof -ti:3000 | xargs kill -9
-
-# Kill process on port 54321 (Supabase)
-lsof -ti:54321 | xargs kill -9
-```
-
-**Dependencies not installing?**
-
-```bash
-# Clear pnpm cache
-pnpm store prune
-
-# Reinstall
-rm -rf node_modules pnpm-lock.yaml
-pnpm install
-```
-
-**Supabase won't start?**
-
-```bash
-# Check Docker is running
-docker ps
-
-# Reset Supabase
-pnpm supabase:reset
-
-# View logs
-pnpm supabase:logs
-```
-
----
-
-## Next Steps
-
-- Read [Component Architecture](../../docs/COMPONENT_QUICK_REFERENCE.md) for adding UI components
-- Check [Supabase Setup](./supabase-setup.md) for database configuration
-- Review the [Testing Guide](./testing.md) for running and writing tests
-- See [Common Commands](../reference/commands.md) for more CLI commands
-- Review [Environment Variables](../reference/environment-variables.md) for configuration options
-
----
-
-## Getting Help
-
-- Check [Troubleshooting](../troubleshooting/) for common issues
-- Review [Glossary](../reference/glossary.md) for terminology
-- See project [README.md](../../README.md) for overview
+Migration rules: [Migrations & Best Practices](../database/migrations.md).

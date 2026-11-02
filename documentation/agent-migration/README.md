@@ -45,7 +45,7 @@ There is **no firm date** for the legacy API shutdown, but it is **imminent**. T
 ## Two agent implementations coexist (15 June 2026)
 
 1. **Legacy Letta agent (production, the origin of this migration)** — `@playground/agents` package consuming `@letta-ai/letta-client@1.10.2`. It powers the ingestion, editorial and translation workflows of the Next.js frontend. It consumes **markdown + YAML frontmatter** from the Data Inclusion API.
-2. **RCO XML agent skeleton (`.agents/`, `.commands/`, `.skills/`)** — archived from the repository on 15 June 2026 (see appendix C of the inventory). RCO is not an active production source; the `packages/rco/src/` helpers are kept for a possible future reactivation.
+2. **RCO XML agent skeleton (`.agents/`, `.commands/`, `.skills/`)** — archived from the repository on 15 June 2026 (see appendix C of the inventory). RCO came back through the offre-info JSON API (`packages/offre-info`); the old Lhéo XML package `packages/rco` was deleted (RI-1639).
 
 Appendix C of the inventory gives the detail; the audit of 18/09/2026 (§3.5) has since clarified which of these resources actually exist in production. That audit is **dated**: API facts change quickly (§3.4-e), so it will have to be re-verified before implementation.
 

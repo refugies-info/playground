@@ -19,8 +19,7 @@
     "security:scan:js": "cve-lite . --fail-on high",
     "validate:docs": "tsx scripts/validate-docs.ts",
     "validate:corpus": "tsx scripts/validate-corpus.ts",
-    "validate": "pnpm validate:docs && pnpm validate:corpus && pnpm knip",
-    "convert:dispositifs": "tsx scripts/convert-dispositifs.ts",
+    "validate": "pnpm validate:docs && pnpm validate:corpus && pnpm knip --include files,dependencies,unlisted",
     "list:agents": "tsx scripts/list-agents.ts",
     "letta:up": "docker compose -f docker-compose.letta.yml up -d",
     "letta:down": "docker compose -f docker-compose.letta.yml down",
@@ -29,16 +28,11 @@
     "letta:sync": "docker compose -f docker-compose.letta.yml restart letta && sleep 10",
     "letta:init": "pnpm letta:up && pnpm letta:pull && pnpm letta:sync && LETTA_BASE_URL=http://localhost:8283 pnpm agents:create-local",
     "agents:create-local": "tsx scripts/create-local-agents.ts",
-    "generate:json": "tsx scripts/generate-json.ts",
-    "generate:md": "tsx scripts/generate-md.ts",
-    "copy:schema": "tsx scripts/copy-schema.ts",
     "db:migrate": "supabase migration up",
     "di:ingest": "tsx scripts/ingest-di.ts",
     "di:extract": "tsx scripts/extract-random-records.ts",
     "di:cron": "dotenv -e .env -- sh -c 'curl -s -X GET http://localhost:3001/api/cron/di-ingestion -H \"Authorization: Bearer $CRON_SECRET\" | jq .'",
     "gen:types": "pnpm --filter @playground/supabase gen:types",
-    "seed:ingestion": "tsx scripts/seed-ingestion.ts",
-    "seed:sync": "supabase db dump --local --data-only --file supabase/seed.sql",
     "storybook": "pnpm --filter @playground/storybook storybook",
     "storybook:publish": "dotenv -e .env -- pnpm --filter @playground/storybook chromatic",
     "storybook:test": "pnpm --filter @playground/storybook test",
@@ -49,12 +43,12 @@
     "@playground/shared-types": "workspace:*",
     "@playground/supabase": "workspace:*",
     "@refugies-info/di": "workspace:*",
-    "@types/js-yaml": "^4.0.9",
     "@workflow/cli": "4.2.10",
     "@workflow/next": "4.0.10",
     "commander": "^14.0.3",
     "cve-lite-cli": "1.34.0",
     "dotenv": "^17.4.2",
+    "dotenv-cli": "^11.0.0",
     "husky": "^9.1.7",
     "knip": "^6.41.0",
     "lint-staged": "^16.4.0",
@@ -68,10 +62,6 @@
     ]
   },
   "dependencies": {
-    "gray-matter": "^4.0.3",
-    "rehype-stringify": "^10.0.1",
-    "remark-parse": "^11.0.0",
-    "remark-rehype": "^11.1.2",
-    "unified": "^11.0.5"
+    "gray-matter": "^4.0.3"
   }
 }

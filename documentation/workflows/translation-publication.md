@@ -115,9 +115,3 @@ Adds `error_message` column and status CHECK constraint.
 ### 20260217071000_enable_realtime_publication_records.sql
 
 Enables Realtime on `publication_records` table for INSERT events.
-
-## Related Documentation
-
-- [Webhook Integration](../api/webhooks.md) - Webhook payloads and endpoints
-- [Realtime Setup](../database/realtime.md) - Supabase Realtime configuration
-- [Translation Editor](../frontend/translation-editor.md) - Frontend components

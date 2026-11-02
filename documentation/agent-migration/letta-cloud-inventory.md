@@ -62,7 +62,7 @@
 | `/translate`         | Traduction multilingue | `packages/workflows/.../generate-translation.ts`     | Markdown traduit                              |
 
 > Constantes : `packages/agents/src/prompts.ts` (`AUDIT_SLASH_COMMAND`, `REDACTION_SLASH_COMMAND`, `METADATA_SLASH_COMMAND`, `TRANSLATE_SLASH_COMMAND`).
-> Constante `@deprecated` à supprimer : `INGESTION_AGENT_HEADING` (`packages/agents/src/prompts.ts`).
+> Constante `@deprecated` `INGESTION_AGENT_HEADING` supprimée (RI-1639).
 >
 > ⚠️ **Mécanisme d'injection (corrigé suite à l'audit live du 15 juin 2026)** : les **6 agents de prod** ont un `system` prompt réduit à un `base_instructions` quasi-générique (~1.7 ko pour les traducteurs, 4.1 ko pour Agathe qui ajoute une section MemFS) — **aucun** ne contient le prompt éditorial playground. La logique éditoriale est injectée à l'**appel** depuis le code de `packages/agents/src/{ingestion,simplification,metadata}.ts` via les constantes `*_SLASH_COMMAND` (envoyées comme premier message utilisateur avec tool calls), et depuis les **ressources fichiers gelées** (cf. A.4) pour les parties structurantes. Conséquence pour la migration : ces constantes TS doivent migrer telles quelles vers les skills/commands Letta Code, et la "vraie" personnalité de l'agent vit dans le code, pas dans le dashboard.
 
@@ -97,7 +97,7 @@
 #### `search_ri_duplicate_dispositifs`
 
 - **État actuel** : ⚠️ **client HTTP** appelé par l'agent Letta Cloud. Ce n'est pas un outil self-contained : l'agent appelle une **API ad-hoc du repo karfur** (cf. contrainte 3) qui retourne une liste de candidats doublons probables, puis l'agent LLM analyse et qualifie ces candidats.
-- **Référence** : `packages/agents/prompts/duplicates.md` (§ `## 📂 Base de connaissances`). Le prompt décrit la stratégie de matching fuzzy + sémantique, mais le matching "machine" est délégué à l'API karfur.
+- **Référence** : `packages/agents/prompts/duplicates.md` (§ `0. SOURCE OBLIGATOIRE`). L'appel à l'outil est obligatoire et aucun fichier (`dispositifs.yaml`, `structures.json`) n'est utilisé ; le prompt décrit la qualification fuzzy + sémantique des candidats, le matching "machine" est délégué à l'API karfur.
 - **Comportement effectif** :
   1. L'agent Letta reçoit un document Carif-Oref.
   2. L'agent appelle le tool `search_ri_duplicate_dispositifs` en passant des métadonnées extraites du document.
@@ -113,10 +113,8 @@
 | Fichier                                       | Usage                                                                  | Statut        |
 | --------------------------------------------- | ---------------------------------------------------------------------- | ------------- |
 | `packages/agents/prompts/compliance.md`       | Bloc mémoire `compliance` (base_instructions + section `<compliance>`) | Commit dans le repo (gelé côté Letta Cloud) |
-| `packages/agents/prompts/duplicates.md`       | Bloc mémoire `doublons` (base_instructions + section `<doublons>`)     | Commit dans le repo (gelé côté Letta Cloud) |
+| `packages/agents/prompts/duplicates.md`       | Bloc mémoire `doublons` (contenu de la section `<doublons>`)            | Commit dans le repo, à reporter à la main dans Letta Cloud |
 | `packages/agents/src/metadata-schema-spec.ts` | Constante `METADATA_SCHEMA_SPEC` (TS + YAML + 7 règles métier)         | Commit dans le repo (gelé côté Letta Cloud) |
-| `packages/agents/samples/dispositifs.json`    | Échantillon pour tests unitaires                                       | Commit dans le repo |
-| `packages/agents/samples/dispositifs.yaml`    | Échantillon pour tests unitaires (format YAML)                          | Commit dans le repo |
 
 ### A.7 Code applicatif (clients & workflows)
 
@@ -264,7 +262,6 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 | Script                                     | Rôle                                                                                  |
 | ------------------------------------------ | ------------------------------------------------------------------------------------- |
 | `.skills/metadata/scripts/map-metadata.ts` | Lit un XML RCO, applique des règles de mapping, produit un frontmatter YAML `metadata_ri` |
-| `packages/rco/src/lheo.ts` (helper)        | `parseLheoXml()` — parser XML Lhéo utilisé par `map-metadata.ts`                       |
 
 ### B.6 Ressources / données de référence (archivé)
 
@@ -272,8 +269,6 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 | ------------------------------------------------------------------------ | -------------------------------------------------------------------- |
 | `.skills/metadata/SKILL.md`                                              | Description du skill + table de conversion `public`                  |
 | `.skills/metadata/scripts/map-metadata.ts` (constantes inline)           | Tables de conversion `PUBLIC_STATUS_MAP`, `FINANCEURS_PUBLICS`, `FRENCH_LEVELS` |
-| `packages/rco/src/lheo-types.ts`                                         | Types TypeScript du format Lhéo                                      |
-| `packages/rco/src/lheo.ts`                                               | Parser Lhéo                                                           |
 
 > 📌 **Référence manquante résolue** : la SKILL.md archivée mentionnait `ressources_metadatas/base-connaissance.md` qui n'existait pas dans le repo. L'archive supprime la question — la référence est partie avec le fichier. Si RCO redevient pertinent, recréer la base ou mettre à jour la skill.
 
@@ -301,7 +296,7 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 ### C.2 Format d'entrée : décision actée
 
 - **Flux de production (actuel)** : **markdown (YAML frontmatter + corps texte)**, issu de l'API Data Inclusion (structures + services). C'est ce que consomme `packages/agents/` et que les workflows envoient à l'agent Letta Cloud.
-- **Flux RCO (futur)** : **RCO XML (Lhéo)**, qui redeviendra pertinent à terme. Les helpers `packages/rco/src/{lheo,lheo-types}.ts` sont conservés pour cette reprise ; les anciennes commands/skills RCO (`.commands/*.md`, `.skills/metadata/`) ont été **archivées** (cf. Annexe C) et devront être recréées le jour où RCO redevient actif.
+- **Flux RCO** : l'ancien format **RCO XML (Lhéo)** est abandonné. RCO a été réactivé via l'API JSON offre-info (`packages/offre-info`) ; le paquet XML `packages/rco` a été supprimé (RI-1639). Les anciennes commands/skills RCO (`.commands/*.md`, `.skills/metadata/`) restent **archivées** (cf. Annexe C).
 
 > **Décision (post-archive, 15 juin 2026)** : la migration cible **uniquement le flux markdown**. Les nouveaux skills Letta Code de la prod (audit, redaction, metadata, translate) consommeront du **markdown** et utiliseront les helpers existants dans `packages/agents/`. La famille RCO XML est **hors-scope** et n'est plus maintenue dans le repo — elle pourra être réintroduite comme nouvelle famille le jour où RCO redevient pertinent (avec `git checkout` des fichiers archivés comme point de départ).
 
@@ -341,7 +336,6 @@ Le setup Letta Code _historique_ avait 5 blocs (cf. Section B.2) — **archivés
 ### Production (Letta Cloud)
 - `packages/agents/src/{clients,agents,ingestion,simplification,metadata,parser,schemas,types,prompts,index}.ts`
 - `packages/agents/prompts/{compliance,duplicates}.md`
-- `packages/agents/samples/{dispositifs.json,dispositifs.yaml}`
 - `packages/agents/src/metadata-schema-spec.ts`
 - `packages/shared/src/constants/languages.ts`
 - `packages/workflows/src/pipelines/ingestion/di-ingestion.ts` _(cron pipeline)_
@@ -362,7 +356,7 @@ Le setup Letta Code _historique_ avait 5 blocs (cf. Section B.2) — **archivés
 - ~~`.commands/{audit,redaction,metadata,pipeline}.md`~~
 - ~~`.skills/metadata/SKILL.md`~~
 - ~~`.skills/metadata/scripts/map-metadata.ts`~~
-- `packages/rco/src/{lheo,lheo-types}.ts` (helper, conservé pour la future reprise RCO)
+- ~~`packages/rco/src/{lheo,lheo-types}.ts`~~ (supprimé, RI-1639)
 
 ### Documentation produite
 - `documentation/agent-migration/README.md`
@@ -479,7 +473,7 @@ Tous supprimés via `git rm -rf`. **Aucune perte d'historique** : les fichiers r
 
 ### C.3 Ce qui n'a PAS été archivé
 
-- **`packages/rco/src/{lheo,lheo-types}.ts`** — helpers XML Lhéo, conservés. Le pattern RCO peut être réactivé et réutilisera ces helpers.
+- ~~**`packages/rco/src/{lheo,lheo-types}.ts`**~~ — helpers XML Lhéo, conservés à l'époque puis supprimés : RCO a été réactivé via l'API JSON offre-info (`packages/offre-info`) ; le paquet XML `packages/rco` a été supprimé (RI-1639).
 - **Les 3 blocs mémoire du projet `project-pZvdCSjhJ7Fgmi66gqgy`** sur Letta Cloud (cf. Annexe B.4) — non touchés, car ils sont côté Letta Cloud (pas le repo). À nettoyer séparément (suivi suggéré : nouvelle issue Linear).
 - **La référence à `ressources_metadatas/base-connaissance.md`** dans la SKILL.md archivée — la référence est partie avec le fichier. Plus de question à se poser.
 
@@ -501,7 +495,6 @@ Si RCO redevient pertinent (par ex. Lhéo est de nouveau une source d'ingestion)
 git log --oneline --all -- .agents/ .commands/ .skills/ | head
 git checkout <commit-hash> -- .agents/ .commands/ .skills/
 
-# Référencer aussi `packages/rco/src/lheo.ts` (toujours présent)
 ```
 
 Ou plus simple : cloner une version du repo d'avant l'archive. Le `git log` rend l'opération triviale.

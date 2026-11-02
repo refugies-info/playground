@@ -109,3 +109,9 @@ Chaque exécution du cron claime au maximum `MAX_EDITORIAL_BACKLOG` records cand
 ## Claim atomique
 
 Le step `claimDiAuditTargetsStep` utilise le RPC Supabase `claim_di_audit_targets` qui pose un `FOR UPDATE SKIP LOCKED` pour éviter les doublons en cas de runs concurrents. Le RPC reclaim aussi les records "zombies" (stuck en `pending` depuis plus de 10 minutes).
+
+## Lancer en local
+
+- `pnpm di:ingest [--type services|structures] [--limit N]` : ingère les structures/services DI (`scripts/ingest-di.ts`, `DI_API_KEY` dans le `.env` racine).
+- `pnpm tsx scripts/create-di-ingestion-records.ts [runId]` : crée les `ingestion_records` (`origin = 'DI'`) d'un run, le dernier par défaut.
+- `pnpm di:cron` : appelle `/api/cron/di-ingestion` sur le serveur local (port 3001, `CRON_SECRET`).
