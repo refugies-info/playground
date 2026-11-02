@@ -8,6 +8,15 @@ UI (upcoming) → services/widget-config-actions.ts → services/ri/widget-confi
 
 Payloads and defaults are documented in `documentation/client/webhooks.md` (Karfu'R repository, sections 7 and 8). Config reuses `RI_BASE_URL` and `RI_WEBHOOK_SECRET`.
 
+## Widget types
+
+The fields of a config depend on its `type`, which cannot be changed once the widget is created (`WidgetConfigFields` is a union in `@playground/shared-types`):
+
+- `list`: title, description, filters, manually added or excluded contents, page size, sort and display options.
+- `thumbnail`: a single content, chosen by `dispositifId`, with the common fields only (`internalTitle`, `structureName`, `authorizedDomains`, `externalTitle`, `status`).
+
+RI rejects a field that does not belong to the type of the widget.
+
 ## Things to know
 
 - Every server action checks the Supabase session before using the RI secret, reads included.
