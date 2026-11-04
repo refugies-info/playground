@@ -19,7 +19,7 @@ indexing:
   include:
     - "**/*.md"
   exclude:
-    - "CHANGELOG.md"   # Pas pertinent pour l'index qmd
+    - "CHANGELOG.md" # Pas pertinent pour l'index qmd
     - "node_modules/**"
 
 consumers:

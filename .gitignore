@@ -75,3 +75,6 @@ storybook-static/
 
 # LLMs
 logs/
+
+# SWC plugin cache (downloaded by @swc/core at install time)
+.swc/

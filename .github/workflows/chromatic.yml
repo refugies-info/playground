@@ -20,7 +20,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0  # Required by Chromatic to compare builds
+          fetch-depth: 0 # Required by Chromatic to compare builds
 
       - name: Setup toolchain
         uses: moonrepo/setup-toolchain@v0

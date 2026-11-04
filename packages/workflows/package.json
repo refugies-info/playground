@@ -18,20 +18,20 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@letta-ai/letta-client": "1.10.2",
+    "@letta-ai/letta-client": "1.12.1",
     "@playground/agents": "workspace:*",
     "@playground/airtable": "workspace:*",
     "@playground/shared-types": "workspace:*",
     "@playground/supabase": "workspace:*",
     "@supabase/supabase-js": "2.84.0",
-    "@workflow/core": "4.8.9",
-    "@workflow/errors": "4.1.4",
+    "@workflow/core": "4.8.15",
+    "@workflow/errors": "4.2.2",
     "gray-matter": "^4.0.3"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
     "typescript": "^5.9.3",
-    "vite": "6.4.4",
+    "vite": "6.4.5",
     "vitest": "^4.1.12"
   }
 }
