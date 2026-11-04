@@ -1,5 +1,5 @@
 import matter from "gray-matter";
-import type { ZodSchema, ZodVoid } from "zod";
+import { type ZodSchema, ZodVoid } from "zod";
 import type { LettaMetadata, LettaReportResult, LettaUsage } from "./types";
 
 /**
@@ -220,8 +220,7 @@ function extractValidContent(content: string): string {
  * Checks if the schema is the NoFrontmatterSchema (z.void()).
  */
 function isNoFrontmatterSchema(schema?: ZodSchema): schema is ZodVoid {
-  // biome-ignore lint/suspicious/noExplicitAny: Accessing internal Zod type name
-  return (schema as any)?._def?.typeName === "ZodVoid";
+  return schema instanceof ZodVoid;
 }
 
 /**

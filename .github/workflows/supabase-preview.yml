@@ -8,7 +8,15 @@ name: Supabase Preview Branch
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft, closed]
+    types:
+      [
+        opened,
+        reopened,
+        synchronize,
+        ready_for_review,
+        converted_to_draft,
+        closed,
+      ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref }}

@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { extractTranslatedMarkdown, parseAgentResponse } from "./parser";
-import { IngestionMetadataSchema, MetadataMetadataSchema } from "./schemas";
+import {
+  IngestionMetadataSchema,
+  MetadataMetadataSchema,
+  NoFrontmatterSchema,
+} from "./schemas";
 
 describe("parseAgentResponse", () => {
   const agentId = "test-agent";
@@ -63,6 +67,46 @@ carif_oref_url: https://example.com
     );
     expect(result.status).toBe("complete");
     expect(result.metadata.compliant).toBe(true);
+  });
+});
+
+describe("parseAgentResponse with NoFrontmatterSchema", () => {
+  const agentId = "test-agent";
+
+  it("should return editorial content as-is when there is no frontmatter (regression, zod 4)", () => {
+    const rawResponse = `Voici le rapport éditorial reformulé.
+
+# Titre de la fiche
+
+Contenu éditorial sans frontmatter.`;
+
+    const result = parseAgentResponse(
+      rawResponse,
+      agentId,
+      NoFrontmatterSchema,
+    );
+
+    expect(result.status).toBe("complete");
+    expect(result.content).toBe(rawResponse);
+  });
+
+  it("should accept editorial content that carries frontmatter without failing z.void() validation (regression, zod 4)", () => {
+    const rawResponse = `---
+title: Rapport éditorial
+---
+
+# Titre de la fiche
+
+Contenu éditorial.`;
+
+    const result = parseAgentResponse(
+      rawResponse,
+      agentId,
+      NoFrontmatterSchema,
+    );
+
+    expect(result.status).toBe("complete");
+    expect(result.content).toContain("# Titre de la fiche");
   });
 });
 
