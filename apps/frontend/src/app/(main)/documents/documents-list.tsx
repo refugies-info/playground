@@ -62,6 +62,12 @@ export function DocumentsList({
 }: DocumentsListProps) {
   const router = useRouter();
 
+  const documentHref = (row: { id: string }) => {
+    const search = window.location.search.substring(1);
+    const query = search ? `?from=${encodeURIComponent(search)}` : "";
+    return `/documents/${row.id}${query}`;
+  };
+
   // Use the shared hook for filter state + URL sync
   const { filters, updateFilter, updateFilters } = useUrlFilters({
     basePath: "/documents",
@@ -271,11 +277,8 @@ export function DocumentsList({
           columns={columns}
           data={documents}
           pageSize={pageSize}
-          onRowClick={(row) => {
-            const search = window.location.search.substring(1);
-            const query = search ? `?from=${encodeURIComponent(search)}` : "";
-            router.push(`/documents/${row.id}${query}`);
-          }}
+          getRowHref={documentHref}
+          onRowClick={(row) => router.push(documentHref(row))}
           manualPagination
           manualSorting
           sortBy={sortBy}

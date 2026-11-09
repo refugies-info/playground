@@ -269,9 +269,8 @@ export function TranslationsList({
           columns={visibleColumns}
           data={initialTranslations}
           pageSize={pageSize}
-          onRowClick={(row) => {
-            router.push(`/translations/${row.id}`);
-          }}
+          getRowHref={(row) => `/translations/${row.id}`}
+          onRowClick={(row) => router.push(`/translations/${row.id}`)}
           manualPagination
           manualSorting
           sortBy={initialSorting.sortBy}

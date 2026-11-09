@@ -28,6 +28,8 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   pageSize?: number;
   onRowClick?: (row: TData) => void;
+  /** Renders the row as a real link (new tab via Ctrl/Cmd+click, middle-click, context menu). */
+  getRowHref?: (row: TData) => string;
   manualPagination?: boolean;
   manualSorting?: boolean;
   sortBy?: string;
@@ -41,6 +43,7 @@ export function DataTable<TData, TValue>({
   data,
   pageSize = 10,
   onRowClick,
+  getRowHref,
   manualPagination = false,
   manualSorting = false,
   sortBy,
@@ -153,12 +156,16 @@ export function DataTable<TData, TValue>({
                 tabIndex={onRowClick ? 0 : undefined}
                 className={[
                   onRowClick ? "cursor-pointer" : undefined,
+                  // Stretched row link: the row anchors the overlay, buttons stay clickable above it.
+                  getRowHref
+                    ? "relative [&_button]:relative [&_button]:z-10"
+                    : undefined,
                   getRowClassName ? getRowClassName(row.original) : undefined,
                 ]
                   .filter(Boolean)
                   .join(" ")}
               >
-                {row.getVisibleCells().map((cell) => {
+                {row.getVisibleCells().map((cell, cellIndex) => {
                   const fixedSize =
                     cell.column.getSize() !== 150
                       ? cell.column.getSize()
@@ -177,6 +184,25 @@ export function DataTable<TData, TValue>({
                       }}
                       className={metaClassName}
                     >
+                      {getRowHref && cellIndex === 0 && (
+                        <a
+                          href={getRowHref(row.original)}
+                          tabIndex={-1}
+                          className="absolute inset-0"
+                          onClick={(event) => {
+                            const opensElsewhere =
+                              event.ctrlKey || event.metaKey || event.shiftKey;
+                            if (opensElsewhere) {
+                              event.stopPropagation();
+                            } else if (onRowClick) {
+                              // Plain click: let the row handler do client-side navigation.
+                              event.preventDefault();
+                            }
+                          }}
+                        >
+                          <span className="sr-only">Ouvrir</span>
+                        </a>
+                      )}
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),

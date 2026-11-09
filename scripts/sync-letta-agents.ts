@@ -1,13 +1,16 @@
 /**
- * Pushes the agent definitions of packages/agents/letta/<name>/ to Letta.
- * git is the source of truth, so every run overwrites what is on Letta:
+ * Pushes the agent definitions of packages/agents/letta/<name>/ to Letta:
  *   agent.json  → name, model, env var holding the agent id
- *   system.md   → system prompt
- *   blocks/*.md → one read-only memory block per file (label = file name)
+ *   system.md   → system prompt (overwritten on every run)
+ *   blocks/*.md → one memory block per file (label = file name)
+ *
+ * Blocks stay editable in the Letta ADE: once a block exists on Letta, its
+ * content is kept. Pass --overwrite-blocks to replace it with the git content.
  *
  * Usage:
- *   pnpm agents:sync                  # every agent folder
- *   pnpm agents:sync rco-compliance   # one agent
+ *   pnpm agents:sync                                    # every agent folder
+ *   pnpm agents:sync rco-compliance                     # one agent
+ *   pnpm agents:sync rco-compliance --overwrite-blocks  # git wins on blocks
  *
  * The first run creates the agent and prints the env var to add to .env.
  *
@@ -67,14 +70,16 @@ function readAgentDefinition(folder: string): AgentDefinition {
     blocks: blockFiles.map((file) => ({
       label: path.basename(file, ".md"),
       value: readText(folder, "blocks", file),
-      description: `Synced from git (packages/agents/letta/${folder}/blocks/${file}). Do not edit.`,
+      description: `Seeded from git (packages/agents/letta/${folder}/blocks/${file}).`,
     })),
   };
 }
 
+const OVERWRITE_BLOCKS = process.argv.includes("--overwrite-blocks");
+
 const toBlockFields = (block: AgentDefinition["blocks"][number]) => ({
   ...block,
-  read_only: true,
+  read_only: false,
   limit: Math.max(MIN_BLOCK_LIMIT, block.value.length),
 });
 
@@ -118,9 +123,11 @@ async function updateAgent(
 
   for (const block of definition.blocks) {
     if (existingBlocks.has(block.label)) {
+      const { value, limit, ...settings } = toBlockFields(block);
       await client.agents.blocks.update(block.label, {
         agent_id: agentId,
-        ...toBlockFields(block),
+        ...(OVERWRITE_BLOCKS ? { value, limit } : {}),
+        ...settings,
       });
     } else {
       const created = await client.blocks.create(toBlockFields(block));
@@ -144,7 +151,9 @@ async function updateAgent(
 }
 
 async function main() {
-  const requested = process.argv.slice(2);
+  const requested = process.argv
+    .slice(2)
+    .filter((argument) => !argument.startsWith("--"));
   const folders = fs
     .readdirSync(AGENTS_DIR)
     .filter((folder) => requested.length === 0 || requested.includes(folder));

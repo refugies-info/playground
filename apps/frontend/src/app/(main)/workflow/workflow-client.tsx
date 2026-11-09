@@ -615,6 +615,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
               columns={columns}
               data={documents}
               pageSize={pageSize}
+              getRowHref={(row) => `/documents/${row.id}`}
               onRowClick={(row) => router.push(`/documents/${row.id}`)}
               manualPagination
               manualSorting
