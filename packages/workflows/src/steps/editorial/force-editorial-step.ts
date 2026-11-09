@@ -383,7 +383,7 @@ export async function notifyClearLanguageErrorStep(
   await notifyClearLanguageError({
     workflowId,
     errorMessage,
-    userName: profile?.username || profile?.email || undefined,
+    userName: profile?.username || profile?.email?.split("@")[0] || undefined,
     lettaUrl: report?.agent_id
       ? buildLettaConversationUrl(report.agent_id, workflow?.conversation_id)
       : undefined,

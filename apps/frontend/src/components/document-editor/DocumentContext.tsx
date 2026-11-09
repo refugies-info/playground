@@ -143,6 +143,8 @@ export function DocumentProvider({
     initialData?.editorialTokens,
     initialData?.editorialCarbonImpact?.gwpMaxGrams,
     initialData?.editorialFailed,
+    initialData?.hasMetadataRun,
+    initialData?.hasEditorialRun,
   ]);
 
   // Update content and mark as dirty (only if content actually changed)

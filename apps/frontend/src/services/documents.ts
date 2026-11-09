@@ -471,6 +471,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     generatingReportResult,
     activeRunResult,
     lastEditorialReportResult,
+    lastMetadataReportResult,
   ] = await Promise.all([
     item.ingestion_record_id
       ? supabase
@@ -518,6 +519,14 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       .eq("workflow_id", id)
       .eq("report_type", "editorial")
       .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    // Any metadata attempt, failed ones included: Letta conversation link.
+    supabase
+      .from("letta_reports")
+      .select("id")
+      .eq("workflow_id", id)
+      .eq("report_type", "metadata")
       .limit(1)
       .maybeSingle(),
   ]);
@@ -703,6 +712,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     editorialMetadata,
     editorialRecordId: item.editorial_record_id ?? undefined,
     isMetadataGenerating: !!generatingReportResult.data,
+    hasMetadataRun: !!lastMetadataReportResult.data,
     metadataReport: metadataReportValue,
     publishedUrl,
     publicationStatus: latestPublication?.status,
@@ -727,6 +737,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     activeRunId: activeRunData.activeRunId,
     currentEditorId: activeRunData.currentEditorId,
     currentEditorName: currentEditorName,
+    hasEditorialRun: !!lastEditorialReportResult.data,
     editorialFailed: lastEditorialReportResult.data?.status === "error",
     editorialModel: lastEditorialReportResult.data?.model ?? null,
     editorialTokens: lastEditorialReportResult.data?.token_cost ?? null,

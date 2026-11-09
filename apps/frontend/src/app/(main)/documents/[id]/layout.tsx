@@ -54,6 +54,8 @@ export default async function Layout({
     editorialRecordId: document.editorialRecordId, // For Realtime status subscription
     metadataReport: document.metadataReport, // AI-generated metadata report
     isMetadataGenerating: document.isMetadataGenerating, // Spinner state for MetadataView
+    hasMetadataRun: document.hasMetadataRun,
+    hasEditorialRun: document.hasEditorialRun,
     referenceData, // Themes & needs ID→name lookups from RI
     publishedUrl: document.publishedUrl,
     publicationRemoteId: document.publicationRemoteId,
