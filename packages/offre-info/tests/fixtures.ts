@@ -1,0 +1,38 @@
+export const rawSession = (overrides: Record<string, unknown> = {}) => ({
+  id: "01_AL2747301_AL1954732GE1954732",
+  numero_formation: "01_AL27473",
+  numero_action: "01_AL1954732",
+  numero_session: "GE1954732",
+  intitule_formation: "Ouvrir l'école aux parents",
+  objectif_formation: "<p>Améliorer le français</p>",
+  contenu_formation: "Trois axes<br/>Langue",
+  date_debut: "2025-09-01",
+  date_fin: "2027-01-31",
+  datemaj: "2026-02-13",
+  conventionnement: true,
+  nombre_heures_total: 120,
+  etat_recrutement: 1,
+  code_public_vise: ["81023"],
+  lieu_formation: [
+    {
+      ville: "Mulhouse",
+      departement: "68",
+      latitude: "47.757",
+      longitude: "7.32342",
+    },
+  ],
+  organisme_responsable: {
+    siret: "00000000000001",
+    nom: "Ecole Test",
+    raison_sociale: "Etablissement scolaire",
+    coordonnees: {
+      "adresse-ligne1": "1 rue Test",
+      "code-INSEE-commune": "68224",
+      latitude: "47.757",
+      longitude: "7.32342",
+    },
+    contact: [],
+  },
+  organisme_financeur: [{ code_financeur: "19" }],
+  ...overrides,
+});

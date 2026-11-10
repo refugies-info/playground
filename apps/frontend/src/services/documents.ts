@@ -63,6 +63,9 @@ const DOCUMENT_PREVIEW_FIELDS_SELECT = `
   ingestion_metadata
 `;
 
+// RCO spells it with "-" or "–", "école" or "Ecole", with or without "OEPRE".
+const OEPRE_TITLE_PATTERNS = ["%ouvrir l_cole aux parents%", "%OEPRE%"];
+
 export interface GetDocumentsParams {
   page?: number;
   pageSize?: number;
@@ -88,6 +91,10 @@ export interface GetDocumentsParams {
   searchInContent?: boolean;
   /** Filter by entry type: "0" (dates fixes) or "1" (a tout moment) */
   modalitesEntreesSorties?: string | null;
+  /** Filter by source of the active ingestion version: "DI" or "RCO" */
+  origin?: string | null;
+  /** Hide "Ouvrir l'école aux parents pour la réussite des enfants - OEPRE" fiches */
+  excludeOepre?: boolean;
   /** Include large markdown/json fields. Used by /workflow preview drawer only. */
   includePreviewFields?: boolean;
 }
@@ -110,6 +117,8 @@ export async function getDocuments(params: GetDocumentsParams) {
     searchField,
     searchInContent = false,
     modalitesEntreesSorties,
+    origin,
+    excludeOepre = false,
     includePreviewFields = false,
   } = params;
 
@@ -199,6 +208,16 @@ export async function getDocuments(params: GetDocumentsParams) {
   // Filter by entry type (modalités d'entrées/sorties)
   if (modalitesEntreesSorties) {
     query = query.eq("modalites_entrees_sorties", modalitesEntreesSorties);
+  }
+
+  if (origin === "DI" || origin === "RCO") {
+    query = query.eq("origin", origin);
+  }
+
+  if (excludeOepre) {
+    for (const pattern of OEPRE_TITLE_PATTERNS) {
+      query = query.not("title", "ilike", pattern);
+    }
   }
 
   // Multi-column text search (title, external_id, structure_name, commune).

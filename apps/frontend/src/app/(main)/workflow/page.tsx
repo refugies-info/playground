@@ -4,6 +4,7 @@ import {
   parseDocumentSortField,
   parseSearchField,
 } from "@playground/shared-types";
+import { getIngestionSource } from "@/lib/ingestion-source";
 import { getQueryParam } from "@/lib/search-params";
 import { getDocuments } from "@/services/documents";
 import { WorkflowClient } from "./workflow-client";
@@ -47,6 +48,8 @@ export default async function WorkflowPage(props: PageProps) {
   const modalitesEntreesSorties = getQueryParam(
     searchParams.modalitesEntreesSorties,
   );
+  const origin = getQueryParam(searchParams.origin);
+  const contentPreset = getQueryParam(searchParams.contentPreset);
 
   // Parse and validate sort parameters (server-side sort).
   const sortBy = parseDocumentSortField(
@@ -59,6 +62,7 @@ export default async function WorkflowPage(props: PageProps) {
       ? sortOrderParam
       : "asc";
 
+  const ingestionSource = getIngestionSource();
   const {
     data: inProgressDocuments,
     total,
@@ -77,6 +81,8 @@ export default async function WorkflowPage(props: PageProps) {
     dateFrom,
     dateTo,
     modalitesEntreesSorties,
+    origin,
+    excludeOepre: contentPreset === "sans-oepre",
     includePreviewFields: true,
   });
 
@@ -97,7 +103,10 @@ export default async function WorkflowPage(props: PageProps) {
         dateFrom,
         dateTo,
         modalitesEntreesSorties,
+        origin,
+        contentPreset,
       }}
+      ingestionSource={ingestionSource}
     />
   );
 }

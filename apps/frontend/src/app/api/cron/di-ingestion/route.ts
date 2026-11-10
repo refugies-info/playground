@@ -1,7 +1,10 @@
 import { logger } from "@playground/shared-types";
+import { getSupabaseAdmin } from "@playground/supabase";
+import { findRunningIngestion } from "@playground/supabase/ingestion-runs";
 import { diIngestionWorkflow } from "@playground/workflows";
 import { start } from "@workflow/core/runtime";
 import { NextResponse } from "next/server";
+import { getIngestionSource } from "@/lib/ingestion-source";
 import { buildWorkflowDashboardUrl } from "@/lib/workflow-utils";
 
 export const runtime = "nodejs";
@@ -29,6 +32,17 @@ export async function GET(request: Request) {
   }
 
   try {
+    if (getIngestionSource() !== "di") {
+      return NextResponse.json({
+        message: "DI ingestion disabled: active source is RCO",
+      });
+    }
+    if (await findRunningIngestion(getSupabaseAdmin())) {
+      return NextResponse.json(
+        { message: "An ingestion is already running" },
+        { status: 409 },
+      );
+    }
     const result = await start(diIngestionWorkflow, []);
     const dashboardUrl = buildWorkflowDashboardUrl(result.runId);
     return NextResponse.json({
