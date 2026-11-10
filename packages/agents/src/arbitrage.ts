@@ -19,8 +19,19 @@ export const DuplicateAnswerSchema = z.object({
   reason: z.string(),
 });
 
+export const MetadataAnswerSchema = z.object({
+  fields: z.array(
+    z.object({
+      key: z.string(),
+      value: z.unknown(),
+      source: z.array(z.object({ field: z.string(), rawValue: z.unknown() })),
+    }),
+  ),
+});
+
 export type ComplianceAnswer = z.infer<typeof ComplianceAnswerSchema>;
 export type DuplicateAnswer = z.infer<typeof DuplicateAnswerSchema>;
+export type MetadataAnswer = z.infer<typeof MetadataAnswerSchema>;
 
 // Untrusted data must not close our delimiters and pose as instructions.
 const asTag = (tag: string, value: unknown) =>
@@ -79,4 +90,19 @@ export const askDuplicatesAgent = (
     `duplicates-${documentId}`,
     [asTag("document", document), asTag("candidates", candidates)].join("\n\n"),
     DuplicateAnswerSchema,
+  );
+
+export const askMetadataAgent = (
+  client: Letta,
+  agentId: string,
+  documentId: string,
+  fields: string[],
+  document: unknown,
+) =>
+  askAgent(
+    client,
+    agentId,
+    `metadata-${documentId}`,
+    [asTag("fields", fields), asTag("document", document)].join("\n\n"),
+    MetadataAnswerSchema,
   );

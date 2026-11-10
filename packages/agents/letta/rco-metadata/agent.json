@@ -1,0 +1,5 @@
+{
+  "name": "rco-metadata",
+  "model": "letta/letta-free",
+  "envVar": "RCO_METADATA_AGENT_ID"
+}
