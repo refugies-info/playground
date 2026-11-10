@@ -46,6 +46,9 @@ importers:
       "@biomejs/biome":
         specifier: 2.6.3
         version: 2.6.3
+      "@letta-ai/letta-client":
+        specifier: 1.12.1
+        version: 1.12.1
       "@playground/shared-types":
         specifier: workspace:*
         version: link:packages/shared
@@ -351,9 +354,6 @@ importers:
       "@supabase/supabase-js":
         specifier: 2.84.0
         version: 2.84.0
-      json-stable-stringify:
-        specifier: ^1.3.0
-        version: 1.3.0
       yaml:
         specifier: ^2.9.1
         version: 2.9.1

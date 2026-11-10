@@ -42,6 +42,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.3",
+    "@letta-ai/letta-client": "1.12.1",
     "@playground/shared-types": "workspace:*",
     "@playground/supabase": "workspace:*",
     "@refugies-info/di": "workspace:*",
