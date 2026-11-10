@@ -35,7 +35,7 @@ const getServiceDeduplicateKey = (service: Service): string => {
 };
 
 /**
- * Ingest carif-oref services from Data Inclusion API into the di_services table
+ * Ingest carif-oref services from Data Inclusion API into the services table
  *
  * @param supabase - Supabase client with admin privileges
  * @param options - Ingestion options (pageSize, limit, onProgress callback)
@@ -68,7 +68,7 @@ export async function ingestCarifOrefServices(
   const result = await ingestCarifOrefItems<Service>(
     supabase,
     (params) => diClient.getServices(params),
-    "di_services",
+    "services",
     "services",
     optionsWithExtra,
   );

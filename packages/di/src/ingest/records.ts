@@ -12,11 +12,11 @@ export async function processIngestionRecords(
 ) {
   logger.info({ runId }, "Finding services without ingestion records");
 
-  // 1. Build a map of known di_service UUIDs by di_id (stable API ID)
-  // di_id is used instead of di_service_id (UUID) because each new version
-  // of a service gets a new UUID — di_id remains stable across versions.
-  // We store a Set of ALL known UUIDs per di_id to avoid false positives
-  // when multiple ingestion_records exist for the same di_id (duplicates).
+  // 1. Build a map of known service UUIDs by origin_id (stable API ID)
+  // origin_id is used instead of service_id (UUID) because each new version
+  // of a service gets a new UUID — origin_id remains stable across versions.
+  // We store a Set of ALL known UUIDs per origin_id to avoid false positives
+  // when multiple ingestion_records exist for the same origin_id (duplicates).
   const knownUuidsByDiId = new Map<string, Set<string>>();
   let irPage = 0;
   let irHasMore = true;
@@ -24,8 +24,8 @@ export async function processIngestionRecords(
   while (irHasMore) {
     const { data: existing, error: existingError } = await supabase
       .from("ingestion_records")
-      .select("id, di_service_id, di_services(di_id)")
-      .not("di_service_id", "is", null)
+      .select("id, service_id, services(origin_id)")
+      .not("service_id", "is", null)
       .range(irPage * FETCH_PAGE_SIZE, (irPage + 1) * FETCH_PAGE_SIZE - 1);
 
     if (existingError) throw new Error(existingError.message);
@@ -36,13 +36,13 @@ export async function processIngestionRecords(
     }
 
     for (const record of existing) {
-      const diServices = Array.isArray(record.di_services)
-        ? record.di_services[0]
-        : (record.di_services as { di_id: string } | null);
-      const diId = diServices?.di_id;
-      if (diId && record.di_service_id) {
+      const diServices = Array.isArray(record.services)
+        ? record.services[0]
+        : (record.services as { origin_id: string } | null);
+      const diId = diServices?.origin_id;
+      if (diId && record.service_id) {
         const uuids = knownUuidsByDiId.get(diId) ?? new Set<string>();
-        uuids.add(record.di_service_id);
+        uuids.add(record.service_id);
         knownUuidsByDiId.set(diId, uuids);
       }
     }
@@ -57,16 +57,15 @@ export async function processIngestionRecords(
   );
 
   // 2. Fetch latest version of each service and detect new/updated ones
-  // di_services_latest returns exactly one row per di_id (highest version),
+  // services_latest returns exactly one row per origin_id (highest version),
   // so we never process outdated duplicates.
-  let allServices: Database["public"]["Views"]["di_services_latest"]["Row"][] =
-    [];
+  let allServices: Database["public"]["Views"]["services_latest"]["Row"][] = [];
   let page = 0;
   let hasMore = true;
 
   while (hasMore) {
     const { data: services, error: servicesError } = await supabase
-      .from("di_services_latest")
+      .from("services_latest")
       .select("*")
       .range(page * FETCH_PAGE_SIZE, (page + 1) * FETCH_PAGE_SIZE - 1);
 
@@ -78,11 +77,11 @@ export async function processIngestionRecords(
     }
 
     // Keep only:
-    // - New services (di_id not in map)
-    // - Updated services (di_id known but this UUID never seen = new version)
+    // - New services (origin_id not in map)
+    // - Updated services (origin_id known but this UUID never seen = new version)
     const newOrUpdatedServices = services.filter((s) => {
-      if (!s.id || !s.di_id) return false;
-      const knownUuids = knownUuidsByDiId.get(s.di_id);
+      if (!s.id || !s.origin_id) return false;
+      const knownUuids = knownUuidsByDiId.get(s.origin_id);
       if (!knownUuids) return true; // new service
       return !knownUuids.has(s.id); // UUID never seen = updated service
     });
@@ -115,7 +114,7 @@ export async function processIngestionRecords(
 
   // Extract unique structure IDs
   const structureIds = [
-    ...new Set(allServices.map((s) => s.di_structure_id).filter(Boolean)),
+    ...new Set(allServices.map((s) => s.structure_id).filter(Boolean)),
   ] as string[];
 
   logger.info(
@@ -137,15 +136,15 @@ export async function processIngestionRecords(
     );
 
     const { data: structures, error: structuresError } = await supabase
-      .from("di_structures_latest")
+      .from("structures_latest")
       .select("*")
-      .in("di_id", batch);
+      .in("origin_id", batch);
 
     if (structuresError) throw new Error(structuresError.message);
 
     for (const structure of structures || []) {
-      if (structure.di_id) {
-        structureMap.set(structure.di_id, structure);
+      if (structure.origin_id) {
+        structureMap.set(structure.origin_id, structure);
       }
     }
   }
@@ -159,12 +158,12 @@ export async function processIngestionRecords(
   const ingestionInserts = [];
 
   for (const service of allServices) {
-    if (!service.di_structure_id) continue;
+    if (!service.structure_id) continue;
 
-    const structure = structureMap.get(service.di_structure_id);
+    const structure = structureMap.get(service.structure_id);
     if (!structure) {
       logger.warn(
-        { serviceId: service.id, structureId: service.di_structure_id },
+        { serviceId: service.id, structureId: service.structure_id },
         "Structure not found for service",
       );
       continue;
@@ -182,9 +181,8 @@ export async function processIngestionRecords(
     };
 
     ingestionInserts.push({
-      origin: "DI",
-      di_service_id: service.id,
-      di_structure_id: structure.id,
+      service_id: service.id,
+      structure_id: structure.id,
       markdown,
       metadata: metadataWithStructure as Json,
       // version is handled by trigger now!
