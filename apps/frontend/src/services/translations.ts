@@ -13,6 +13,7 @@ import {
 } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { mapProfileDto, type Profile } from "@/lib/profile";
+import { toSearchOrFilters, toSearchPatterns } from "@/lib/search-patterns";
 import { buildPublicationUrl } from "@/lib/url-builder";
 
 // Limit of security if we have a lot of rows returns
@@ -164,30 +165,35 @@ export async function getTranslations(params: GetTranslationsParams) {
 
   // Search by title: titles live in editorial_records.metadata, not in translation_records.
   // Two-step: find matching editorial_record IDs, then restrict to those.
-  if (search) {
-    const term = `%${search}%`;
-    // Quote the value so reserved chars (, ( )) in the term are treated
-    // literally by PostgREST's .or() parser instead of breaking it.
-    const orTerm = `"${term.replace(/"/g, '\\"')}"`;
+  if (search && toSearchPatterns(search).length > 0) {
     const empty = { data: [], total: 0, page, pageSize, totalPages: 0 };
+    const findEditorialIds = () => {
+      let editorialQuery = supabase.from("editorial_records").select("id");
+      for (const wordFilter of toSearchOrFilters(
+        ["metadata->>title", "metadata->>nom"],
+        search,
+      )) {
+        editorialQuery = editorialQuery.or(wordFilter);
+      }
+      return editorialQuery.limit(SEARCH_ID_MATCH_LIMIT);
+    };
+    const findWorkflowIds = (columns: string[]) => {
+      let workflowQuery = supabase.from("workflows_enriched").select("id");
+      for (const wordFilter of toSearchOrFilters(columns, search)) {
+        workflowQuery = workflowQuery.or(wordFilter);
+      }
+      return workflowQuery.limit(SEARCH_ID_MATCH_LIMIT);
+    };
 
     if (searchField === "title") {
       // Titles live in editorial_records.metadata (title/nom).
-      const { data: matchingEditorial } = await supabase
-        .from("editorial_records")
-        .select("id")
-        .or(`metadata->>title.ilike.${orTerm},metadata->>nom.ilike.${orTerm}`)
-        .limit(SEARCH_ID_MATCH_LIMIT);
+      const { data: matchingEditorial } = await findEditorialIds();
       const editorialIds = (matchingEditorial ?? []).map((r) => r.id);
       if (editorialIds.length === 0) return empty;
       query = query.in("editorial_record_id", editorialIds);
     } else if (searchField === "structure_name" || searchField === "commune") {
       // structure_name/commune live on workflows_enriched — match, then restrict by workflow_id.
-      const { data: matchingWf } = await supabase
-        .from("workflows_enriched")
-        .select("id")
-        .ilike(searchField, term)
-        .limit(SEARCH_ID_MATCH_LIMIT);
+      const { data: matchingWf } = await findWorkflowIds([searchField]);
       const workflowIds = (matchingWf ?? [])
         .map((r) => r.id)
         .filter((id): id is string => typeof id === "string");
@@ -197,18 +203,8 @@ export async function getTranslations(params: GetTranslationsParams) {
       // No scope → search all sources: title (metadata) OR structure_name OR commune.
       const [{ data: matchingEditorial }, { data: matchingWf }] =
         await Promise.all([
-          supabase
-            .from("editorial_records")
-            .select("id")
-            .or(
-              `metadata->>title.ilike.${orTerm},metadata->>nom.ilike.${orTerm}`,
-            )
-            .limit(SEARCH_ID_MATCH_LIMIT),
-          supabase
-            .from("workflows_enriched")
-            .select("id")
-            .or(`structure_name.ilike.${orTerm},commune.ilike.${orTerm}`)
-            .limit(SEARCH_ID_MATCH_LIMIT),
+          findEditorialIds(),
+          findWorkflowIds(["structure_name", "commune"]),
         ]);
       const editorialIds = (matchingEditorial ?? []).map((r) => r.id);
       const workflowIds = (matchingWf ?? [])

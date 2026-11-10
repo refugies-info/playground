@@ -33,6 +33,7 @@ import type { Database, Json } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { extractEditorialNotes } from "@/lib/editorial-notes";
+import { toSearchOrFilters } from "@/lib/search-patterns";
 import { extractAuthorProfile } from "./helpers";
 
 /**
@@ -235,29 +236,21 @@ export async function getDocuments(params: GetDocumentsParams) {
 
   // Multi-column text search (title, external_id, structure_name, commune).
   // When searchInContent, also match editorial/ingestion markdown (heavier scan).
-  // Uses ilike for case-insensitive substring matching.
+  // Every word must match one of the columns (accent/case-insensitive).
   if (search) {
-    const term = `%${search}%`;
-    if (searchField) {
-      // Scoped: match only the selected column.
-      query = query.ilike(searchField, term);
-    } else {
-      // Search-all (default): title, external_id, structure_name, commune.
-      const columns = [
-        "title",
-        "external_id",
-        "structure_name",
-        "commune",
-        ...(searchInContent
-          ? ["editorial_markdown", "ingestion_markdown"]
-          : []),
-      ];
-      // Quote the value so reserved chars (, ( )) in the term are treated
-      // literally by PostgREST's .or() parser instead of breaking it.
-      const orTerm = `"${term.replace(/"/g, '\\"')}"`;
-      query = query.or(
-        columns.map((col) => `${col}.ilike.${orTerm}`).join(","),
-      );
+    const columns = searchField
+      ? [searchField]
+      : [
+          "title",
+          "external_id",
+          "structure_name",
+          "commune",
+          ...(searchInContent
+            ? ["editorial_markdown", "ingestion_markdown"]
+            : []),
+        ];
+    for (const wordFilter of toSearchOrFilters(columns, search)) {
+      query = query.or(wordFilter);
     }
   }
 
