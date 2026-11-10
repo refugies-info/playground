@@ -22,6 +22,21 @@ import { useContentContext } from "./ContentContext";
 import { MarkdownViewer } from "./MarkdownViewer";
 import { SourceFields } from "./SourceFields";
 
+const HIDDEN_SOURCE_FIELDS = new Set([
+  "id",
+  "nom",
+  "source",
+  "code_nsf",
+  "code_rome",
+]);
+
+const visibleSourceFields = (source: Record<string, unknown>) =>
+  Object.fromEntries(
+    Object.entries(source).filter(
+      ([field]) => !HIDDEN_SOURCE_FIELDS.has(field),
+    ),
+  );
+
 /**
  * SourcePanel — panneau de comparaison avec le contenu source RCO.
  *
@@ -157,12 +172,15 @@ export function SourcePanel() {
             content={document?.ingestionContent ?? ""}
             loadingMessage="Chargement du contenu source..."
             emptyMessage="Aucun contenu source disponible"
-            className="[&_.bn-editor]:!px-10"
+            className="[&_.bn-editor]:!px-10 [&_[data-content-type=heading]]:![--level:28px] [&_[data-content-type=heading]]:![line-height:normal]"
           />
           {document?.rcoSource && (
             <section className="mx-10 mt-6 border-t border-border pt-6">
               <h2 className="mb-4 text-lg font-bold">Informations RCO</h2>
-              <SourceFields source={document.rcoSource} showPropertyNames />
+              <SourceFields
+                source={visibleSourceFields(document.rcoSource)}
+                showPropertyNames
+              />
             </section>
           )}
           {document?.editorialNotes && (

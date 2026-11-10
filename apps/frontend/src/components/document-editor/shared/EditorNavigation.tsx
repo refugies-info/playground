@@ -30,6 +30,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { formatDateFr } from "@/lib/format-date";
 import { formatIngestionVersion } from "@/lib/format-ingestion-version";
 import { useDocumentActions } from "../actions";
 import { useDocument } from "../DocumentContext";
@@ -94,6 +95,10 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
       : document.hasEditorialRun
         ? LETTA_PLAIN_LANGUAGE_AGENTS
         : [];
+
+  const llmModel = isMetadataActive
+    ? document.metadataModel
+    : document.editorialModel;
 
   const ingestionVersion = formatIngestionVersion({
     activeVersion: document.activeIngestionVersion,
@@ -254,22 +259,20 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
         )}
       </div>
 
-      {/* Bloc Informations — @figma node 6153-21089 */}
+      {/* Bloc Informations — @figma node 6153-21089. <div> lines: DSFR forces <p> to 16px */}
       <div className="mt-auto flex flex-col items-start gap-3 rounded-xl bg-[var(--background-alt-blue-france)] p-4 text-xs leading-5 text-[var(--text-disabled-grey)]">
         <p className="text-sm font-medium leading-6 text-[var(--text-title-blue-france)]">
           Informations
         </p>
-        {hasIngestionVersion ? <p>Version {ingestionVersion}</p> : null}
+        {hasIngestionVersion ? <div>Version {ingestionVersion}</div> : null}
         {document.editorialFailed ? (
-          <p className="text-[var(--text-default-error)]">
+          <div className="text-[var(--text-default-error)]">
             Dernier langage clair : échec
-          </p>
+          </div>
         ) : null}
-        {document.editorialModel ? (
-          <p className="break-all">LLM {document.editorialModel}</p>
-        ) : null}
+        {llmModel ? <div className="break-all">LLM {llmModel}</div> : null}
         {document.editorialCarbonImpact ? (
-          <p>
+          <div>
             <a
               href={ECOLOGITS_URL}
               target="_blank"
@@ -280,10 +283,15 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
               Impact
             </a>{" "}
             {formatCarbonImpact(document.editorialCarbonImpact)}
-          </p>
+          </div>
         ) : null}
-        {document.editorialTokens ? (
-          <p>Tokens {document.editorialTokens.toLocaleString("fr-FR")}</p>
+        {document.totalTokens ? (
+          <div>
+            Tokens {document.totalTokens.toLocaleString("fr-FR")}
+            {document.totalTokensSince
+              ? ` depuis le ${formatDateFr(document.totalTokensSince)}`
+              : null}
+          </div>
         ) : null}
         {document.isAdmin &&
         typeof rcoActionId === "string" &&
@@ -298,12 +306,10 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
                 href={`/api/letta/conversation?agent=${agent}&actionId=${encodeURIComponent(rcoActionId)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={buttonVariants({
-                  variant: "quatrieme",
-                  size: "sm",
-                  className:
-                    "border border-border bg-[var(--background-default-grey)] text-[var(--text-action-high-grey)]",
-                })}
+                className={cn(
+                  buttonVariants({ variant: "quatrieme", size: "sm" }),
+                  "border border-border bg-[var(--background-default-grey)] text-[var(--text-action-high-grey)]",
+                )}
               >
                 {label}
                 <RiExternalLinkLine size={16} aria-hidden />

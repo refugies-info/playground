@@ -5,7 +5,6 @@ import { BlockNoteView } from "@blocknote/mantine";
 import { SuggestionMenuController } from "@blocknote/react";
 import { useEffect, useRef, useState } from "react";
 import { getCustomSlashMenuItems } from "./slash-menu-config";
-import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { logger } from "@playground/shared-types";
 

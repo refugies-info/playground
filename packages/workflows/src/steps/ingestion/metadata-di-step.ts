@@ -56,7 +56,7 @@ import {
 import { LETTA_MODEL_HANDLE, logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
 import { getStepMetadata } from "@workflow/core";
-import { FatalError } from "@workflow/errors";
+import { FatalError, RetryableError } from "@workflow/errors";
 import { z } from "zod";
 import { generateRcoMetadata } from "./metadata-rco";
 import { getSupabaseClient, runWithConcurrency } from "./utils";
@@ -710,6 +710,12 @@ export async function forceMetadataReportStep(workflowId: string) {
       );
     }
 
+    // Albert's rate limit surfaces as a stream error: an immediate retry hits it again.
+    if (error instanceof Error && error.message.includes("(429)")) {
+      throw new RetryableError("Albert rate limited on metadata", {
+        retryAfter: "1m",
+      });
+    }
     throw error;
   }
 }

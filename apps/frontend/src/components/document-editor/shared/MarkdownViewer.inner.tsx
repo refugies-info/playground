@@ -3,7 +3,6 @@
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
 import { useEffect } from "react";
-import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { cn } from "@playground/ui/utils";
 

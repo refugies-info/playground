@@ -35,8 +35,16 @@ tr[data-empty-warning]:has(+ tr[data-empty-warning]) > td[data-metadata-value] {
   border-bottom-style: hidden;
 }
 
-/* BlockNote editor styles */
+/* BlockNote editor styles — doubled class beats BlockNote's Inter default */
+.bn-container.bn-container {
+  --bn-font-family: Marianne, arial, sans-serif;
+}
+
 .bn-container {
+  .bn-default-styles {
+    font-family: var(--bn-font-family);
+  }
+
   a {
     @apply underline text-blue-800;
   }

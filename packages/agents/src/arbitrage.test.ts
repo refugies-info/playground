@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AGENT_RESPONSE_FORMATS,
   askComplianceAgent,
+  askMetadataAgent,
   PlainLanguageAnswerSchema,
 } from "./arbitrage";
 
@@ -10,7 +11,10 @@ const sendMock = vi.fn();
 
 const client = {
   conversations: {
-    list: async () => [{ id: "conv-1", summary: "compliance-fiche-1" }],
+    list: async () => [
+      { id: "conv-1", summary: "compliance-fiche-1" },
+      { id: "conv-2", summary: "metadata-fiche-1" },
+    ],
     messages: { create: (...args: unknown[]) => sendMock(...args) },
   },
 } as unknown as Letta;
@@ -70,5 +74,43 @@ describe("PlainLanguageAnswerSchema", () => {
     expect(
       AGENT_RESPONSE_FORMATS["rco-plain-language"].json_schema.schema,
     ).toBeDefined();
+  });
+});
+
+describe("askMetadataAgent", () => {
+  beforeEach(() => sendMock.mockReset());
+
+  // Shapes gpt-oss returned on preview (2026-11-09).
+  it.each([
+    [
+      "a bare array",
+      '[\n  {\n    "field": "titreMarque",\n    "value": "BOOST FLE",\n    "source": "nom: \\"ASL - BOOST FLE\\""\n  },\n  {\n    "field": "frenchLevel",\n    "value": ["A2"],\n    "source": "nom: A2"\n  }\n]',
+    ],
+    [
+      "field instead of key",
+      '{"fields":[{"field":"titreMarque","value":"BOOST FLE","source":"nom: \\"ASL - BOOST FLE\\""},{"field":"frenchLevel","value":["A2"],"source":"nom: A2"}]}',
+    ],
+  ])("accepts %s without a reminder", async (_, content) => {
+    sendMock.mockResolvedValueOnce(answering(content));
+    const { answer } = await askMetadataAgent(
+      client,
+      "agent-1",
+      "fiche-1",
+      [],
+      {},
+    );
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    expect(answer.fields).toEqual([
+      {
+        key: "titreMarque",
+        value: "BOOST FLE",
+        source: [{ field: "nom", rawValue: '"ASL - BOOST FLE"' }],
+      },
+      {
+        key: "frenchLevel",
+        value: ["A2"],
+        source: [{ field: "nom", rawValue: "A2" }],
+      },
+    ]);
   });
 });

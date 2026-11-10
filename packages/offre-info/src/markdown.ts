@@ -84,7 +84,7 @@ export function actionToMarkdown(
   const frontmatter = stringify({ ...action, structure }).trim();
   const body = [
     `# ${action.nom}`,
-    toPlainText(action.objectif_formation),
+    section("Objectif", action.objectif_formation),
     section("Contenu", action.contenu_formation),
     section("Résultats attendus", action.resultat_attendus),
     section("Conditions d'accès", action.conditions_specifiques),

@@ -472,6 +472,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     activeRunResult,
     lastEditorialReportResult,
     lastMetadataReportResult,
+    tokenCostsResult,
   ] = await Promise.all([
     item.ingestion_record_id
       ? supabase
@@ -521,14 +522,21 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    // Any metadata attempt, failed ones included: Letta conversation link.
+    // Last metadata attempt, failed ones included: Letta link and model.
     supabase
       .from("letta_reports")
-      .select("id")
+      .select("model")
       .eq("workflow_id", id)
       .eq("report_type", "metadata")
+      .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("letta_reports")
+      .select("token_cost, created_at")
+      .eq("workflow_id", id)
+      .not("token_cost", "is", null)
+      .order("created_at", { ascending: true }),
   ]);
 
   if (ingestionResult.data) {
@@ -714,6 +722,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     isMetadataGenerating: !!generatingReportResult.data,
     hasMetadataRun: !!lastMetadataReportResult.data,
     metadataReport: metadataReportValue,
+    metadataModel: lastMetadataReportResult.data?.model ?? null,
     publishedUrl,
     publicationStatus: latestPublication?.status,
     publicationRemoteId: latestPublication?.remote_id,
@@ -740,7 +749,12 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     hasEditorialRun: !!lastEditorialReportResult.data,
     editorialFailed: lastEditorialReportResult.data?.status === "error",
     editorialModel: lastEditorialReportResult.data?.model ?? null,
-    editorialTokens: lastEditorialReportResult.data?.token_cost ?? null,
+    totalTokens:
+      tokenCostsResult.data?.reduce(
+        (total, report) => total + (report.token_cost ?? 0),
+        0,
+      ) || null,
+    totalTokensSince: tokenCostsResult.data?.[0]?.created_at ?? null,
     editorialCarbonImpact:
       (lastEditorialReportResult.data?.carbon_impact as CarbonImpact | null) ??
       null,
