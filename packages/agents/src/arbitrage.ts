@@ -29,9 +29,31 @@ export const MetadataAnswerSchema = z.object({
   ),
 });
 
+const AccordionSchema = z.object({ title: z.string(), text: z.string() });
+
+export const PlainLanguageAnswerSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  goodToKnow: z.array(z.string()),
+  why: z.array(AccordionSchema),
+  how: z.array(AccordionSchema),
+  otherInfo: z.array(z.string()),
+  lexicon: z.array(z.object({ term: z.string(), definition: z.string() })),
+  warnings: z.array(
+    z.object({
+      type: z.string(),
+      field: z.string(),
+      level: z.enum(["majeur", "moyen", "mineur", "faible"]),
+      detail: z.string(),
+      suggestion: z.string(),
+    }),
+  ),
+});
+
 export type ComplianceAnswer = z.infer<typeof ComplianceAnswerSchema>;
 export type DuplicateAnswer = z.infer<typeof DuplicateAnswerSchema>;
 export type MetadataAnswer = z.infer<typeof MetadataAnswerSchema>;
+export type PlainLanguageAnswer = z.infer<typeof PlainLanguageAnswerSchema>;
 
 // Untrusted data must not close our delimiters and pose as instructions.
 const asTag = (tag: string, value: unknown) =>
@@ -105,4 +127,18 @@ export const askMetadataAgent = (
     `metadata-${documentId}`,
     [asTag("fields", fields), asTag("document", document)].join("\n\n"),
     MetadataAnswerSchema,
+  );
+
+export const askPlainLanguageAgent = (
+  client: Letta,
+  agentId: string,
+  documentId: string,
+  document: unknown,
+) =>
+  askAgent(
+    client,
+    agentId,
+    `plain-language-${documentId}`,
+    asTag("document", document),
+    PlainLanguageAnswerSchema,
   );

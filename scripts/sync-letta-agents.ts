@@ -11,9 +11,7 @@
  *
  * The first run creates the agent and prints the env var to add to .env.
  *
- * Free trial on the local Letta + Ollama stack (pnpm letta:up):
- *   LETTA_BASE_URL=http://localhost:8283 LETTA_AGENT_MODEL=ollama/qwen2.5:7b \
- *   LOCAL_EMBEDDING_MODEL=ollama/nomic-embed-text:latest pnpm agents:sync
+ * Local Letta (pnpm letta:up), LLM on Albert: pnpm agents:sync:local <agent>
  */
 import "dotenv/config";
 import fs from "node:fs";

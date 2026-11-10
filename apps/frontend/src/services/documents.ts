@@ -1,3 +1,8 @@
+import {
+  RCO_SOURCE,
+  type RcoActionDocument,
+  toSourceUrl,
+} from "@playground/offre-info";
 import type {
   ComplianceStatus,
   DateFilterCondition,
@@ -536,6 +541,10 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   if (ingestionMetadata.id) metadata.id = ingestionMetadata.id;
   if (ingestionMetadata.structure_id)
     metadata.structure_id = ingestionMetadata.structure_id;
+  if (ingestionMetadata.source === RCO_SOURCE && !metadata.lien_source)
+    metadata.lien_source = toSourceUrl(
+      ingestionMetadata as unknown as RcoActionDocument,
+    );
 
   // Content with frontmatter injection for DI records
   let content = item.editorial_markdown || item.ingestion_markdown || "";
