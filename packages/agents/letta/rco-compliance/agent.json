@@ -1,0 +1,5 @@
+{
+  "name": "rco-compliance",
+  "model": "letta/letta-free",
+  "envVar": "RCO_COMPLIANCE_AGENT_ID"
+}

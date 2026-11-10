@@ -28,6 +28,7 @@
     "letta:sync": "docker compose -f docker-compose.letta.yml restart letta && sleep 10",
     "letta:init": "pnpm letta:up && pnpm letta:pull && pnpm letta:sync && LETTA_BASE_URL=http://localhost:8283 pnpm agents:create-local",
     "agents:create-local": "tsx scripts/create-local-agents.ts",
+    "agents:sync": "tsx scripts/sync-letta-agents.ts",
     "db:migrate": "supabase migration up",
     "di:ingest": "tsx scripts/ingest-di.ts",
     "di:extract": "tsx scripts/extract-random-records.ts",
