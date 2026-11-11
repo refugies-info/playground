@@ -5,10 +5,6 @@ import { useEffect, useState } from "react";
 
 type ModelOption = { label: string; value: string };
 
-/**
- * Admin-only Letta model choice, preset to the model the env forces on this
- * document (RCO_MODEL_HANDLE for RCO fiches, LETTA_MODEL_HANDLE otherwise).
- */
 export function useLettaModelPicker(isAdmin: boolean, isRco: boolean) {
   const [modelOptions, setModelOptions] = useState<ModelOption[]>([]);
   const [selectedModel, setSelectedModel] = useState("");

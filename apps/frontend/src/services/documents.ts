@@ -234,7 +234,6 @@ export async function getDocuments(params: GetDocumentsParams) {
 
   // Multi-column text search (title, external_id, structure_name, commune).
   // When searchInContent, also match editorial/ingestion markdown (heavier scan).
-  // Every word must match one of the columns (accent/case-insensitive).
   if (search) {
     const columns = searchField
       ? [searchField]

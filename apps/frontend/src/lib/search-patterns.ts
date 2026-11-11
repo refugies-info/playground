@@ -17,10 +17,6 @@ const toWordPattern = (word: string): string =>
     )
     .join("");
 
-/**
- * Splits a free-text search into accent-insensitive regex patterns (one per word),
- * so word order, punctuation and dashes ("-" vs "–") no longer break matching.
- */
 export const toSearchPatterns = (search: string): string[] =>
   search
     .split(/[^\p{L}\p{N}_'’-]+/u)
@@ -28,10 +24,7 @@ export const toSearchPatterns = (search: string): string[] =>
     .filter(Boolean)
     .map(toWordPattern);
 
-/**
- * One PostgREST `.or()` filter per word: each word must match at least one column.
- * Chain them with `.or()` to AND the words together.
- */
+// Chain the filters with `.or()` to AND the words together.
 export const toSearchOrFilters = (
   columns: readonly string[],
   search: string,

@@ -341,15 +341,8 @@ export async function getEditorialContent(
   }
 }
 
-/**
- * Starts a metadata-only re-generation for a single document and returns its
- * run ID at once: the client follows it with getMetadataRunStatus, so step
- * retries (minutes) never hit the server action timeout.
- *
- * Unlike forceArbitrationAction (app/actions/di.ts), this skips the audit step.
- *
- * @param model - Letta model handle, admins only (default: env-forced model).
- */
+// Returns the run ID at once: step retries take minutes, longer than the
+// server action timeout, so the client polls getMetadataRunStatus.
 export async function triggerForceMetadataOnly(
   workflowId: string,
   model?: string,
@@ -379,7 +372,6 @@ export async function triggerForceMetadataOnly(
   }
 }
 
-/** Status of a metadata run started by triggerForceMetadataOnly. */
 export async function getMetadataRunStatus(
   workflowId: string,
   runId: string,

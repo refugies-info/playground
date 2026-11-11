@@ -258,7 +258,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
         )}
       </div>
 
-      {/* Bloc Informations — @figma node 6153-21089. <div> lines: DSFR forces <p> to 16px */}
+      {/* <div> lines: DSFR forces <p> to 16px */}
       <div className="mt-auto flex flex-col items-start gap-3 rounded-xl bg-[var(--background-alt-blue-france)] p-4 text-xs leading-5 text-[var(--text-disabled-grey)]">
         <p className="text-sm font-medium leading-6 text-[var(--text-title-blue-france)]">
           Informations

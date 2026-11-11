@@ -289,7 +289,6 @@ interface MetadataContextValue {
   /** Last failed attempt while the workflow retries (null if none) */
   retryMessage: string | null;
 
-  /** Trigger AI metadata generation (or regeneration), optional model handle */
   handleGenerate: (model?: string) => Promise<void>;
 }
 
@@ -378,7 +377,6 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [isGenerating, runId, document?.id, router]);
 
-  /** Start AI metadata generation (or regeneration), then poll the run */
   const handleGenerate = useCallback(
     async (model?: string) => {
       if (!document?.id) return;

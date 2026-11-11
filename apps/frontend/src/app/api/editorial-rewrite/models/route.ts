@@ -1,11 +1,3 @@
-/**
- * GET /api/editorial-rewrite/models
- *
- * Liste les modèles Letta disponibles pour relancer le langage clair ou les
- * métadonnées avec un modèle choisi, et les modèles forcés par l'env
- * (présélectionnés). Réservé aux admins.
- */
-
 import { createLettaClient } from "@playground/agents";
 import {
   LETTA_MODEL_HANDLE,
