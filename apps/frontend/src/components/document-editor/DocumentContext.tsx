@@ -41,9 +41,7 @@ interface DocumentData
   currentUserId?: string;
   /** Display name of the currently logged-in user — broadcast on takeover so the previous editor sees who took over */
   currentUserName?: string | null;
-  /** Clear language sections for editors, shown in the source panel */
   editorialNotes?: string;
-  /** Admins can pick the Letta model of the clear language rewrite */
   isAdmin?: boolean;
   /** Display name of the user currently holding the edit lock — shown in EditLockDialog */
   currentEditorName?: string | null;

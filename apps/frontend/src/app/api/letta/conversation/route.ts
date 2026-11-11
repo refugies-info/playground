@@ -1,11 +1,5 @@
-/**
- * GET /api/letta/conversation?agent=metadata&actionId=…
- *
- * Opens the last Letta conversation of an RCO agent for one fiche. Resolved
- * by name at click time, so a run that failed before persisting anything
- * stays reachable. Réservé aux admins.
- */
-
+// Resolved by name at click time, so a run that failed before persisting
+// anything stays reachable.
 import { createLettaClient, findConversation } from "@playground/agents";
 import { logger } from "@playground/shared-types";
 import { type NextRequest, NextResponse } from "next/server";
