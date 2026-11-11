@@ -10,7 +10,6 @@ import {
   type RcoChange,
 } from "./change";
 import { toOriginId } from "./config";
-import { compareWithDiVersion, type DiComparisonRow } from "./di-comparison";
 import {
   buildActionDocument,
   pickReferenceSession,
@@ -34,17 +33,6 @@ type PlannedAction = {
   hash: string;
   structure: RcoStructureDocument;
   change: RcoChange;
-  changedFields: string[];
-  diComparison?: DiComparisonRow[];
-};
-
-export type RcoActionOutcome = {
-  numeroAction: string;
-  change: RcoChange | "error";
-  // Top-level fields that differ from the previous RCO version.
-  changedFields?: string[];
-  // Baseline only: common fields of the DI version next to the RCO values.
-  diComparison?: DiComparisonRow[];
 };
 
 export type RcoBatchResult = {
@@ -53,8 +41,6 @@ export type RcoBatchResult = {
   structuresWritten: number;
   ingestionRecordsCreated: number;
   errors: Array<{ numeroAction: string; error: string }>;
-  // One entry per processed action, so the UI can link each one to its fiche.
-  outcomes: RcoActionOutcome[];
 };
 
 export const emptyRcoBatchResult = (): RcoBatchResult => ({
@@ -63,19 +49,6 @@ export const emptyRcoBatchResult = (): RcoBatchResult => ({
   structuresWritten: 0,
   ingestionRecordsCreated: 0,
   errors: [],
-  outcomes: [],
-});
-
-const toOutcome = ({
-  numeroAction,
-  change,
-  changedFields,
-  diComparison,
-}: PlannedAction): RcoActionOutcome => ({
-  numeroAction,
-  change,
-  changedFields,
-  diComparison,
 });
 
 // A DI previous version has another shape: diffing it would list every field.
@@ -268,7 +241,6 @@ export async function ingestRcoActions(
         numeroAction,
         error: "organisme_responsable without siret",
       });
-      result.outcomes.push({ numeroAction, change: "error" });
       continue;
     }
 
@@ -290,11 +262,6 @@ export async function ingestRcoActions(
       hash: computeContentHash(document),
       structure: buildStructureDocument(organisme, structureId),
       change,
-      changedFields,
-      diComparison:
-        change === "baseline"
-          ? compareWithDiVersion(previous?.data, document)
-          : undefined,
     });
   }
 
@@ -308,10 +275,7 @@ export async function ingestRcoActions(
   result.structuresWritten = written;
 
   const changed = planned.filter(({ change }) => change !== "unchanged");
-  if (changed.length === 0) {
-    result.outcomes.push(...planned.map(toOutcome));
-    return result;
-  }
+  if (changed.length === 0) return result;
   try {
     result.ingestionRecordsCreated = await writeServiceVersions(
       supabase,
@@ -319,20 +283,12 @@ export async function ingestRcoActions(
       uuidByOriginId,
       runId,
     );
-    result.outcomes.push(...planned.map(toOutcome));
   } catch (error) {
     result.errors.push(
       ...changed.map(({ numeroAction }) => ({
         numeroAction,
         error: errorMessage(error),
       })),
-    );
-    result.outcomes.push(
-      ...planned.map((action) =>
-        action.change === "unchanged"
-          ? toOutcome(action)
-          : { numeroAction: action.numeroAction, change: "error" as const },
-      ),
     );
   }
   return result;

@@ -5,7 +5,6 @@ export * from "./arbitrage/duplicate-candidates";
 export * from "./change";
 export * from "./client";
 export * from "./config";
-export * from "./di-comparison";
 export * from "./document";
 export * from "./ingest";
 export * from "./markdown";
