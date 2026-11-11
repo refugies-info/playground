@@ -1,15 +1,6 @@
-/**
- * @file pipelines/ingestion/rco-ingestion.ts
- *
- * RCO ingestion, kept separate from diIngestionWorkflow so the source can be
- * switched back to DI. Imports every action matching the catalogue criteria
- * from /recherche only: the detail (/offre) is read when a fiche is arbitrated.
- *
- * Flow:
- *   [1] createRcoRunStep    → ingestion_runs row ("running" lock)
- *   [2] ingestRcoStep       → /recherche (all pages) + structures/services/records
- *   [3] completeRcoRunStep  → completed | failed
- */
+// Kept separate from diIngestionWorkflow so the source can be switched back
+// to DI. Only /recherche is read here: the detail (/offre) is read when a
+// fiche is arbitrated.
 
 import {
   completeRcoRunStep,
