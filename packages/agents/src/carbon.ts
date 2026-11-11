@@ -13,7 +13,6 @@ const ECOLOGITS_PROVIDERS = new Set([
 ]);
 
 // Hosts like Albert drop the Hugging Face org: "albert/gpt-oss-120b".
-// ponytail: prefix map, add an entry when a host serves another bare name.
 const HUGGINGFACE_ORGS: Record<string, string> = { "gpt-oss": "openai" };
 
 const toHuggingfaceName = (name: string) => {
