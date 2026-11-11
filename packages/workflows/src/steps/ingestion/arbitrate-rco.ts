@@ -3,10 +3,11 @@
  *
  * Arbitration of one RCO record, called by forceAuditReportStep.
  *
- *   [1] checkCompliance          → deterministic rules (no AI)
- *   [2] rco-compliance agent     → only the criteria the rules left open
- *   [3] findDuplicateCandidates  → Orama shortlist of RI dispositifs (no AI)
- *   [4] rco-duplicates agent     → only when the shortlist is not empty
+ *   [1] checkCompliance       → deterministic rules (no AI)
+ *   [2] rco-compliance agent  → only the criteria the rules left open
+ *   [3] duplicate shortlist   → RI dispositifs (RI endpoint) + playground
+ *                               documents to process or in draft (SQL)
+ *   [4] rco-duplicates agent  → only when the shortlist is not empty
  *
  * A record refused by the rules never reaches an agent.
  */
@@ -18,64 +19,189 @@ import {
   type DuplicateAnswer,
   type LettaUsage,
 } from "@playground/agents";
-import dispositifsSnapshot from "@playground/agents/samples/dispositifs.json";
 import {
+  actionDepartments,
   applyAiDecisions,
-  type CriterionResult,
+  CRITERION_LABELS,
   checkCompliance,
-  createDispositifIndex,
   criteriaForAi,
   type DuplicateCandidate,
-  findDuplicateCandidates,
   overallVerdict,
   type RcoActionDocument,
   type RiDispositif,
   toArbitrationDocument,
+  toCandidate,
+  type Verdict,
 } from "@playground/offre-info";
+import {
+  type ArbitrationCriterion,
+  type ArbitrationReport,
+  DUPLICATE_SOURCE_LABELS,
+  DUPLICATE_VERDICT_LABELS,
+  type DuplicateMatch,
+} from "@playground/shared-types";
 import { FatalError } from "@workflow/errors";
+import { getSupabaseClient } from "./utils";
 
-const VERDICT_ICONS = { accepted: "✅", refused: "❌", ai: "🤖" } as const;
-
-const requiredEnv = (name: string) => {
-  const value = process.env[name];
-  if (!value) throw new FatalError(`${name} is not defined (pnpm agents:sync)`);
-  return value;
+// The editorial team reads the report: French only.
+const VERDICT_LABELS: Record<Verdict, string> = {
+  accepted: "✅ Validé",
+  refused: "❌ Refusé",
+  ai: "🤖 À arbitrer",
 };
 
-// ponytail: Dec 2025 snapshot of RI dispositifs, read getDispositifs() from
-// @playground/mongo once MONGODB_URI is available to the workflows.
-const dispositifIndex = createDispositifIndex(
-  dispositifsSnapshot as RiDispositif[],
-);
+const OVERALL_LABELS: Record<Verdict, string> = {
+  accepted: "✅ Conforme",
+  refused: "❌ Non conforme",
+  ai: "🤖 À arbitrer",
+};
+
+const CANDIDATE_LIMIT = 10;
+const RI_DUPLICATES_PATH = "/api/agent/dispositifs/duplicates";
+const RI_TIMEOUT_MS = 10_000;
+
+const requiredEnv = (name: string, hint = "pnpm agents:sync") => {
+  const value = process.env[name];
+  if (!value) throw new FatalError(`${name} is not defined (${hint})`);
+  return value;
+};
 
 const addUsage = (total: number, usage?: LettaUsage) =>
   total + (usage?.totalTokens ?? 0);
 
-const complianceTable = (results: CriterionResult[]) =>
+const tableCell = (value: string) =>
+  value.replaceAll("|", "/").replaceAll("\n", " ");
+
+const complianceTable = (criteria: ArbitrationCriterion[]) =>
   [
-    "| Critère | Décision | Raison |",
+    "| Étape | Donnée trouvée & analysée | Décision |",
     "| --- | --- | --- |",
-    ...results.map(
-      ({ criterion, verdict, reason }) =>
-        `| ${criterion} | ${VERDICT_ICONS[verdict]} ${verdict} | ${reason.replaceAll("|", "/")} |`,
+    ...criteria.map(
+      ({ label, verdict, reason }) =>
+        `| ${label} | ${tableCell(reason)} | ${VERDICT_LABELS[verdict]} |`,
     ),
   ].join("\n");
 
-const duplicateSection = (
+const candidateLocation = (candidate: DuplicateCandidate) =>
+  [...candidate.cities, ...candidate.departments].join(", ") ||
+  (candidate.source === "refugies-info" ? "France entière" : "—");
+
+const toDuplicateMatches = (
   candidates: DuplicateCandidate[],
   answer: DuplicateAnswer | null,
-) => {
-  if (candidates.length === 0) return "Aucun dispositif RI proche.";
-  const conclusion = answer
-    ? `**${answer.duplicate ? `Doublon de ${answer.dispositifId}` : "Pas de doublon"}** — ${answer.reason}`
-    : "Non analysé : la fiche est refusée par les règles.";
-  const list = candidates
-    .map((c) => `- [${c.title}](${c.url}) · ${c.sponsor || "?"}`)
-    .join("\n");
-  return `${conclusion}\n\nCandidats présélectionnés :\n\n${list}`;
+): DuplicateMatch[] => {
+  const candidatesById = new Map(candidates.map((c) => [c.id, c]));
+  return (answer?.matches ?? []).flatMap(({ candidateId, verdict, reason }) => {
+    // An id the agent made up has no fiche to link to.
+    const candidate = candidatesById.get(candidateId);
+    return candidate
+      ? [
+          {
+            id: candidate.id,
+            source: candidate.source,
+            url: candidate.url,
+            title: candidate.title || "Sans titre",
+            sponsor: candidate.sponsor || "—",
+            location: candidateLocation(candidate),
+            verdict,
+            reason,
+          },
+        ]
+      : [];
+  });
 };
 
-export async function arbitrateRcoRecord(action: RcoActionDocument) {
+const duplicateSection = (report: ArbitrationReport) => {
+  if (!report.duplicatesChecked) {
+    return "Non analysé : la fiche est refusée par les règles de conformité.";
+  }
+  if (!report.duplicate) return "Aucun doublon détecté.";
+  return [
+    report.duplicateSummary ?? "",
+    [
+      "| Fiche | Source | Structure | Localisation | Similarité | Raison |",
+      "| --- | --- | --- | --- | --- | --- |",
+      ...report.duplicates.map(
+        (match) =>
+          `| [${tableCell(match.title)}](${match.url}) | ${DUPLICATE_SOURCE_LABELS[match.source]} | ${tableCell(match.sponsor)} | ${tableCell(match.location)} | ${DUPLICATE_VERDICT_LABELS[match.verdict]} | ${tableCell(match.reason)} |`,
+      ),
+    ].join("\n"),
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+};
+
+type RiDuplicateCandidate = RiDispositif & { score: number };
+
+async function findRiCandidates(
+  action: RcoActionDocument,
+): Promise<DuplicateCandidate[]> {
+  const baseUrl = requiredEnv("RI_BASE_URL", "RI webhook").replace(/\/$/, "");
+  const secret = requiredEnv("RI_WEBHOOK_SECRET", "RI webhook");
+  const document = toArbitrationDocument(action);
+  // ponytail: same contract as riWebhookRequest (apps/frontend, PR #360);
+  // reuse it once it lives in a package the workflows can import.
+  const response = await fetch(`${baseUrl}${RI_DUPLICATES_PATH}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "webhook-secret": secret },
+    body: JSON.stringify({
+      title: action.nom,
+      description: action.objectif_formation,
+      structureName: action.organisme_responsable?.nom,
+      commune: document.villes.find(Boolean),
+      departments: actionDepartments(action),
+      limit: CANDIDATE_LIMIT,
+    }),
+    signal: AbortSignal.timeout(RI_TIMEOUT_MS),
+  });
+  if (!response.ok) {
+    throw new Error(
+      `RI duplicate search failed: ${response.status} ${await response.text().catch(() => "")}`,
+    );
+  }
+  const { candidates } = (await response.json()) as {
+    candidates: RiDuplicateCandidate[];
+  };
+  return candidates.map((candidate) => ({
+    ...toCandidate(candidate, "refugies-info"),
+    score: candidate.score,
+  }));
+}
+
+async function findPlaygroundCandidates(
+  action: RcoActionDocument,
+  workflowId: string,
+): Promise<DuplicateCandidate[]> {
+  const { data, error } = await getSupabaseClient().rpc(
+    "search_playground_duplicate_candidates",
+    {
+      p_title: action.nom,
+      p_structure_name: action.organisme_responsable?.nom ?? "",
+      p_exclude_workflow_id: workflowId,
+      p_limit: CANDIDATE_LIMIT,
+    },
+  );
+  if (error) {
+    throw new Error(`Playground duplicate search failed: ${error.message}`);
+  }
+  return data.map((row) => ({
+    ...toCandidate(
+      {
+        id: row.id,
+        titreInformatif: row.title,
+        mainSponsorNom: row.structure_name,
+        city: row.commune ? [row.commune] : [],
+      },
+      "playground",
+    ),
+    score: row.score,
+  }));
+}
+
+export async function arbitrateRcoRecord(
+  action: RcoActionDocument,
+  workflowId: string,
+) {
   const complianceAgentId = requiredEnv("RCO_COMPLIANCE_AGENT_ID");
   const duplicatesAgentId = requiredEnv("RCO_DUPLICATES_AGENT_ID");
   const letta = createLettaClient();
@@ -98,12 +224,17 @@ export async function arbitrateRcoRecord(action: RcoActionDocument) {
     tokens = addUsage(tokens, usage);
   }
 
-  const candidates = await findDuplicateCandidates(
-    await dispositifIndex,
-    action,
-  );
+  let candidates: DuplicateCandidate[] = [];
   let duplicateAnswer: DuplicateAnswer | null = null;
-  if (candidates.length > 0 && !refusedByRules) {
+  if (!refusedByRules) {
+    candidates = (
+      await Promise.all([
+        findRiCandidates(action),
+        findPlaygroundCandidates(action, workflowId),
+      ])
+    ).flat();
+  }
+  if (candidates.length > 0) {
     const { answer, usage } = await askDuplicatesAgent(
       letta,
       duplicatesAgentId,
@@ -117,7 +248,18 @@ export async function arbitrateRcoRecord(action: RcoActionDocument) {
   }
 
   const verdict = overallVerdict(compliance);
-  const duplicate = duplicateAnswer?.duplicate ?? false;
+  const duplicates = toDuplicateMatches(candidates, duplicateAnswer);
+  const report: ArbitrationReport = {
+    compliant: verdict === "accepted",
+    duplicate: duplicates.length > 0,
+    duplicatesChecked: !refusedByRules,
+    duplicateSummary: duplicateAnswer?.reason ?? null,
+    criteria: compliance.map((result) => ({
+      ...result,
+      label: CRITERION_LABELS[result.criterion],
+    })),
+    duplicates,
+  };
   return {
     agentId: complianceAgentId,
     tokens,
@@ -127,20 +269,15 @@ export async function arbitrateRcoRecord(action: RcoActionDocument) {
     complianceStatus:
       verdict === "ai"
         ? "error"
-        : verdict === "accepted" && !duplicate
+        : report.compliant && !report.duplicate
           ? "compliant"
           : "non_compliant",
-    metadata: {
-      compliant: verdict === "accepted",
-      duplicate,
-      duplicateOf: duplicateAnswer?.dispositifId ?? null,
-      criteria: compliance,
-    },
+    metadata: report,
     markdown: [
-      `## Conformité éditoriale : ${VERDICT_ICONS[verdict]} ${verdict}`,
-      complianceTable(compliance),
-      "## Doublons",
-      duplicateSection(candidates, duplicateAnswer),
+      `## Analyse de conformité éditoriale : ${OVERALL_LABELS[verdict]}`,
+      complianceTable(report.criteria),
+      `## Analyse de doublons${report.duplicate ? " : ❌ Doublon détecté" : ""}`,
+      duplicateSection(report),
     ].join("\n\n"),
   };
 }

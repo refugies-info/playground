@@ -43,6 +43,7 @@ export default async function Layout({
     editorialContent: document.content, // Current working version (editorial or ingestion)
     ingestionContent: document.ingestionContent, // Immutable original from ingestion_records
     complianceReport: document.complianceReport,
+    arbitrationReport: document.arbitrationReport,
     arbitrationSource: document.arbitrationSource,
     metadataSource: document.metadataSource,
     metadata: document.metadata, // Merged metadata (ingestion + editorial)

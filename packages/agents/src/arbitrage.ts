@@ -16,8 +16,13 @@ export const ComplianceAnswerSchema = z.object({
 });
 
 export const DuplicateAnswerSchema = z.object({
-  duplicate: z.boolean(),
-  dispositifId: z.string().nullable(),
+  matches: z.array(
+    z.object({
+      candidateId: z.string(),
+      verdict: z.enum(["duplicate", "ambiguous"]),
+      reason: z.string(),
+    }),
+  ),
   reason: z.string(),
 });
 

@@ -6,8 +6,8 @@ import {
   toArbitrationDocument,
 } from "../src/arbitrage/compliance-rules";
 import {
-  createDispositifIndex,
-  findDuplicateCandidates,
+  actionDepartments,
+  toCandidate,
 } from "../src/arbitrage/duplicate-candidates";
 import { buildActionDocument } from "../src/document";
 import { normalizeSession } from "../src/normalize";
@@ -87,31 +87,26 @@ describe("checkCompliance", () => {
   });
 });
 
-describe("findDuplicateCandidates", () => {
-  it("shortlists dispositifs by title and sponsor in the same area", async () => {
-    const index = await createDispositifIndex([
-      {
-        id: "a",
-        titreInformatif: "Ouvrir l'école aux parents pour la réussite",
-        location: ["68 - Haut-Rhin"],
-        mainSponsorNom: "Ecole Test",
-      },
-      {
-        id: "b",
-        titreInformatif: "Ouvrir l'école aux parents",
-        location: ["75 - Paris"],
-      },
-      { id: "c", titreInformatif: "Passer le permis", location: "france" },
-    ]);
-    const candidates = await findDuplicateCandidates(index, actionWith());
-    const ids = candidates.map((c) => c.id);
-    expect(ids[0]).toBe("a");
-    expect(ids).not.toContain("b");
+describe("toCandidate", () => {
+  it("links RI dispositifs to refugies.info and playground documents to BOMO", () => {
+    const dispositif = {
+      id: "a",
+      titreInformatif: "Cours de FLE",
+      location: ["68 - Haut-Rhin"],
+      mainSponsorNom: "France Terre d'Asile",
+      mainSponsorAcronyme: "FTDA",
+    };
+    expect(toCandidate(dispositif, "refugies-info")).toMatchObject({
+      url: "https://refugies.info/dispositif/a",
+      sponsor: "France Terre d'Asile - FTDA",
+      departments: ["68"],
+    });
+    expect(toCandidate(dispositif, "playground").url).toBe("/documents/a");
   });
 });
 
 describe("stored sessions without lieu_formation", () => {
-  it("does not crash the arbitration", async () => {
+  it("does not crash the arbitration", () => {
     const stored = actionWith();
     const action = {
       ...stored,
@@ -120,7 +115,6 @@ describe("stored sessions without lieu_formation", () => {
       ),
     } as typeof stored;
     expect(toArbitrationDocument(action).villes).toEqual([]);
-    const index = await createDispositifIndex([]);
-    await expect(findDuplicateCandidates(index, action)).resolves.toEqual([]);
+    expect(actionDepartments(action)).toEqual([]);
   });
 });
