@@ -17,7 +17,6 @@ export const FUNDER_LABELS: Record<string, string> = {
 };
 
 // Formacode public-visé codes.
-// ponytail: frequent codes only, import the full Formacode table if gaps hurt.
 export const AUDIENCE_LABELS: Record<string, string> = {
   "80006": "Demandeur d'emploi",
   "81019": "Illettrisme",
