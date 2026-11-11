@@ -50,7 +50,13 @@ import {
   type LettaUsage,
   parseIngestionResponse,
 } from "@playground/agents";
-import type { RcoActionDocument } from "@playground/offre-info";
+import {
+  actionToMarkdown,
+  fetchActionDetail,
+  getRcoClientFromEnv,
+  type RcoActionDocument,
+  type RcoStructureDocument,
+} from "@playground/offre-info";
 import {
   LETTA_MODEL_HANDLE,
   logger,
@@ -476,6 +482,29 @@ async function generateForcedDiReport(markdown: string, workflowId: string) {
   };
 }
 
+type RcoIngestionMetadata = RcoActionDocument & {
+  structure: RcoStructureDocument;
+};
+
+// The import only reads /recherche, so the fiche text (objectif, contenu…)
+// first exists here. Saved before the verdict so every fiche keeps its content.
+async function saveRcoActionDetail(
+  ingestionRecordId: string,
+  stored: RcoIngestionMetadata,
+  detail: RcoActionDocument,
+): Promise<RcoActionDocument> {
+  const { error } = await getSupabaseClient()
+    .from("ingestion_records")
+    .update({
+      markdown: actionToMarkdown(detail, stored.structure),
+      metadata: { ...detail, structure: stored.structure } as unknown as Json,
+    })
+    .eq("id", ingestionRecordId);
+  if (error)
+    throw new Error(`Failed to save RCO action detail: ${error.message}`);
+  return detail;
+}
+
 /**
  * Workflow step that forces generation of an audit report for a specific workflow,
  * bypassing normal batch collection. Used primarily for manual arbitration/retry.
@@ -524,7 +553,7 @@ export async function forceAuditReportStep(workflowId: string) {
   // 2. Fetch Ingestion Record
   const { data: record, error: recordError } = await supabase
     .from("ingestion_records")
-    .select("id, markdown, service:services(origin, data)")
+    .select("id, markdown, metadata, service:services(origin, data)")
     .eq("id", ingestionRecordId)
     .single();
 
@@ -541,7 +570,14 @@ export async function forceAuditReportStep(workflowId: string) {
     const result =
       record.service?.origin === "RCO"
         ? await arbitrateRcoRecord(
-            record.service.data as unknown as RcoActionDocument,
+            await saveRcoActionDetail(
+              ingestionRecordId,
+              record.metadata as unknown as RcoIngestionMetadata,
+              await fetchActionDetail(
+                getRcoClientFromEnv(),
+                record.service.data as unknown as RcoActionDocument,
+              ),
+            ),
           )
         : await generateForcedDiReport(record.markdown, workflowId);
 
@@ -637,6 +673,11 @@ export async function forceAuditReportStep(workflowId: string) {
       );
     }
 
+    const isLastAttempt =
+      error instanceof FatalError ||
+      getStepMetadata().attempt >= forceAuditReportStep.maxRetries + 1;
+    if (!isLastAttempt) throw error;
+
     // FINAL SECURITY: Ensure ingestion_record is no longer 'pending' if we hit an error (RI-1093)
     try {
       await supabase
@@ -653,3 +694,5 @@ export async function forceAuditReportStep(workflowId: string) {
     throw error;
   }
 }
+
+forceAuditReportStep.maxRetries = 3;

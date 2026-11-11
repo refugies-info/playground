@@ -1,5 +1,7 @@
 import type { Letta } from "@letta-ai/letta-client";
-import { z } from "zod";
+import { RCO_MODEL_HANDLE } from "@playground/shared-types";
+// v4 API (shipped in zod 3.25) for z.toJSONSchema.
+import { z } from "zod/v4";
 import { findOrCreateConversation, sendMessageToConversation } from "./agents";
 import type { LettaUsage } from "./types";
 
@@ -29,7 +31,19 @@ export const MetadataAnswerSchema = z.object({
   ),
 });
 
-const AccordionSchema = z.object({ title: z.string(), text: z.string() });
+// gpt-oss sometimes names the body "content" or "texte": keep it rather than fail.
+const AccordionSchema = z.preprocess(
+  (item) =>
+    item && typeof item === "object" && !("text" in item)
+      ? {
+          ...item,
+          text: Object.entries(item).find(
+            ([key, value]) => key !== "title" && typeof value === "string",
+          )?.[1],
+        }
+      : item,
+  z.object({ title: z.string(), text: z.string() }),
+);
 
 export const PlainLanguageAnswerSchema = z.object({
   title: z.string(),
@@ -50,6 +64,26 @@ export const PlainLanguageAnswerSchema = z.object({
   ),
 });
 
+const toResponseFormat = (name: string, schema: z.ZodType, strict = true) => ({
+  type: "json_schema" as const,
+  json_schema: { name, strict, schema: z.toJSONSchema(schema) },
+});
+
+// Pushed by agents:sync: the provider constrains the answer to the schema.
+// Metadata values are free-form (`{}` schema), which strict mode rejects.
+export const AGENT_RESPONSE_FORMATS: Record<
+  string,
+  ReturnType<typeof toResponseFormat>
+> = {
+  "rco-compliance": toResponseFormat("compliance", ComplianceAnswerSchema),
+  "rco-duplicates": toResponseFormat("duplicates", DuplicateAnswerSchema),
+  "rco-metadata": toResponseFormat("metadata", MetadataAnswerSchema, false),
+  "rco-plain-language": toResponseFormat(
+    "plain_language",
+    PlainLanguageAnswerSchema,
+  ),
+};
+
 export type ComplianceAnswer = z.infer<typeof ComplianceAnswerSchema>;
 export type DuplicateAnswer = z.infer<typeof DuplicateAnswerSchema>;
 export type MetadataAnswer = z.infer<typeof MetadataAnswerSchema>;
@@ -63,6 +97,23 @@ const asTag = (tag: string, value: unknown) =>
 const extractJson = (content: string) =>
   content.slice(content.indexOf("{"), content.lastIndexOf("}") + 1);
 
+const parseAnswer = <T>(content: string, schema: z.ZodType<T>) => {
+  try {
+    return schema.safeParse(JSON.parse(extractJson(content)));
+  } catch (error) {
+    return { success: false as const, error: error as Error };
+  }
+};
+
+const FORMAT_REMINDER =
+  "Ta réponse ne respecte pas le format attendu. Réponds à nouveau, uniquement avec l'objet JSON décrit dans le bloc `output_format` (mêmes clés, mêmes types), sans texte autour.";
+
+const addUsage = (a?: LettaUsage, b?: LettaUsage): LettaUsage => ({
+  promptTokens: (a?.promptTokens ?? 0) + (b?.promptTokens ?? 0),
+  completionTokens: (a?.completionTokens ?? 0) + (b?.completionTokens ?? 0),
+  totalTokens: (a?.totalTokens ?? 0) + (b?.totalTokens ?? 0),
+});
+
 async function askAgent<T>(
   client: Letta,
   agentId: string,
@@ -75,13 +126,35 @@ async function askAgent<T>(
     agentId,
     conversationName,
   );
-  const { content, usage } = await sendMessageToConversation(
+  const first = await sendMessageToConversation(
     client,
     conversationId,
     message,
+    RCO_MODEL_HANDLE,
   );
-  const answer = schema.parse(JSON.parse(extractJson(content)));
-  return { answer, usage, conversationId };
+  const parsed = parseAnswer(first.content, schema);
+  if (parsed.success) {
+    return { answer: parsed.data, usage: first.usage, conversationId };
+  }
+
+  // The prod model sometimes drifts from output_format: one reminder, then fail.
+  const retry = await sendMessageToConversation(
+    client,
+    conversationId,
+    `${FORMAT_REMINDER}\n\nErreur : ${parsed.error.message.slice(0, 1000)}`,
+    RCO_MODEL_HANDLE,
+  );
+  const reparsed = parseAnswer(retry.content, schema);
+  if (!reparsed.success) {
+    throw new Error(
+      `${conversationName}: unexpected agent answer after reminder (${reparsed.error.message.slice(0, 500)}): ${retry.content.slice(0, 500)}`,
+    );
+  }
+  return {
+    answer: reparsed.data,
+    usage: addUsage(first.usage, retry.usage),
+    conversationId,
+  };
 }
 
 export const askComplianceAgent = (

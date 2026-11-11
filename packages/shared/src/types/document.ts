@@ -54,6 +54,10 @@ export interface Document {
   content: string;
   ingestionContent?: string; // Immutable original content from ingestion_records
   complianceReport?: string; // Markdown content of the compliance report
+  /** RCO only: the fiche fields sent to the arbitration agents */
+  arbitrationSource?: Record<string, unknown>;
+  /** RCO only: the fiche fields sent to the metadata agent */
+  metadataSource?: Record<string, unknown>;
   metadata: Record<string, unknown>;
   /** Metadata from editorial_records only (user edits) */
   editorialMetadata?: Record<string, unknown>;

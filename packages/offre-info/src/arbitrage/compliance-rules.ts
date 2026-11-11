@@ -203,7 +203,7 @@ export const toArbitrationDocument = (action: RcoActionDocument) => ({
   code_public_vise: action.code_public_vise,
   duree_indicative: action.duree_indicative,
   villes: action.sessions.flatMap((session) =>
-    (session.lieu_formation as { ville?: string }[]).map(
+    ((session.lieu_formation as { ville?: string }[] | undefined) ?? []).map(
       (place) => place.ville,
     ),
   ),

@@ -14,11 +14,13 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useDocument } from "@/components/document-editor/DocumentContext";
 import { getEditorialContent } from "@/services/document-actions";
+import { SourceFields } from "./SourceFields";
 
 export function DebugPanel() {
   const { document, showDebug, setShowDebug, debugBlocks } = useDocument();
   const pathname = usePathname();
   const isMetadataView = pathname?.endsWith("/metadata");
+  const isComplianceView = pathname?.endsWith("/compliance");
 
   const [serverContent, setServerContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -113,24 +115,41 @@ export function DebugPanel() {
 
         {/* Content */}
         <div className="flex-1 flex overflow-hidden font-mono text-sm">
-          {isMetadataView ? (
+          {isComplianceView ? (
             <>
-              {/* DB Metadata */}
-              <div className="flex-1 flex flex-col border-r relative group">
-                <div className="px-4 py-2 bg-gray-100 border-b font-semibold text-xs tracking-wider text-pink-500 uppercase flex justify-between items-center">
-                  <span>ingestion_record metadata</span>
-                  <span className="bg-gray-200 px-2 py-0.5 rounded text-[10px] text-gray-600">
-                    {JSON.stringify(document?.metadata || {}).length} chars
-                  </span>
+              <SourceFieldsPane
+                title="Ce que l'IA a lu pour arbitrer (RCO)"
+                source={document?.arbitrationSource}
+              />
+              <SourcePane
+                title="ingestion_record markdown"
+                value={document?.ingestionContent || ""}
+              />
+            </>
+          ) : isMetadataView ? (
+            <>
+              {document?.metadataSource ? (
+                <SourceFieldsPane
+                  title="Ce que l'IA a lu pour les métadonnées (RCO)"
+                  source={document.metadataSource}
+                />
+              ) : (
+                <div className="flex-1 flex flex-col border-r relative group">
+                  <div className="px-4 py-2 bg-gray-100 border-b font-semibold text-xs tracking-wider text-pink-500 uppercase flex justify-between items-center">
+                    <span>metadata (ingestion + editorial)</span>
+                    <span className="bg-gray-200 px-2 py-0.5 rounded text-[10px] text-gray-600">
+                      {JSON.stringify(document?.metadata || {}).length} chars
+                    </span>
+                  </div>
+                  <div className="flex-1 relative bg-gray-50/50">
+                    <textarea
+                      className="w-full h-full p-4 resize-none focus:outline-none bg-transparent text-pink-900"
+                      value={JSON.stringify(document?.metadata || {}, null, 2)}
+                      readOnly
+                    />
+                  </div>
                 </div>
-                <div className="flex-1 relative bg-gray-50/50">
-                  <textarea
-                    className="w-full h-full p-4 resize-none focus:outline-none bg-transparent text-pink-900"
-                    value={JSON.stringify(document?.metadata || {}, null, 2)}
-                    readOnly
-                  />
-                </div>
-              </div>
+              )}
 
               {/* LLM Metadata */}
               <div className="flex-1 flex flex-col border-r relative group">
@@ -253,5 +272,44 @@ export function DebugPanel() {
         </div>
       </DrawerContent>
     </Drawer>
+  );
+}
+
+function SourcePane({ title, value }: { title: string; value: string }) {
+  return (
+    <div className="flex-1 flex flex-col border-r last:border-r-0">
+      <div className="px-4 py-2 bg-amber-50 border-b font-semibold text-xs tracking-wider text-amber-700 uppercase flex justify-between items-center">
+        <span>{title}</span>
+        <span className="bg-amber-100 px-2 py-0.5 rounded text-[10px]">
+          {value.length} chars
+        </span>
+      </div>
+      <textarea
+        className="w-full h-full p-4 resize-none focus:outline-none bg-amber-50/10 text-amber-950"
+        value={value}
+        readOnly
+      />
+    </div>
+  );
+}
+
+function SourceFieldsPane({
+  title,
+  source,
+}: {
+  title: string;
+  source?: Record<string, unknown>;
+}) {
+  return (
+    <div className="flex-1 flex flex-col border-r overflow-hidden">
+      <div className="px-4 py-2 bg-amber-50 border-b font-semibold text-xs tracking-wider text-amber-700 uppercase">
+        {title}
+      </div>
+      {source ? (
+        <SourceFields source={source} className="flex-1 overflow-auto p-4" />
+      ) : (
+        <p className="p-4 font-sans text-gray-500">Pas une fiche RCO.</p>
+      )}
+    </div>
   );
 }

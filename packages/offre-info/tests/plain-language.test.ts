@@ -51,9 +51,11 @@ describe("renderPlainLanguageFiche", () => {
       fiche(),
       actionOf({ url_formation: "https://carif.example/f" }),
     );
-    expect(markdown.startsWith("---\n---\n\n# Apprendre le français")).toBe(
-      true,
-    );
+    expect(
+      markdown.startsWith(
+        "---\n---\n\n# Apprendre le français pour aider vos enfants à Mulhouse\n",
+      ),
+    ).toBe(true);
     expect(markdown).toContain(
       "## Pourquoi c'est intéressant ?\n\n:::toggle{title=\"Parler avec l'école\"}\nComprendre les enseignants.\n:::",
     );
@@ -119,8 +121,21 @@ describe("renderPlainLanguageFiche", () => {
     expect(journal).toContain("Aucune démarche décrite.");
     expect(journal).toContain("Donnée manquante");
     expect(markdown).toContain(
-      '## Comment faire ?\n\n:::toggle{title="Contacter l\'organisme"}\n- Adresse : Mulhouse\n:::',
+      '## Comment faire ?\n\n:::toggle{title="Contacter Ecole Test"}\n- Adresse : Mulhouse\n:::',
     );
+  });
+
+  it("keeps a step that is not a contact, and no city when there are several", () => {
+    const markdown = renderPlainLanguageFiche(
+      fiche({ how: [{ title: "Préparer votre CV", text: "Écrire le CV." }] }),
+      actionOf({
+        lieu_formation: [{ ville: "Mulhouse" }, { ville: "Colmar" }],
+      }),
+    );
+    expect(markdown).toContain(
+      "# Apprendre le français pour aider vos enfants\n",
+    );
+    expect(markdown).toContain('title="Préparer votre CV"');
   });
 
   it("ends the first step with the Lieux contact and rebuilds the source URL", () => {
