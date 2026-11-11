@@ -16,10 +16,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { triggerIngestionAction } from "@/app/actions/ingestion";
 import { AppPaginationControls } from "@/components/common/AppPagination";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import type { IngestionRunSummary } from "@/lib/ingestion-run";
 import type { IngestionSource } from "@/lib/ingestion-source";
 import { createClient } from "@/lib/supabase/client";
 import { inProgressColumns } from "./columns";
 import { DocumentPreviewDrawer } from "./document-preview-drawer";
+import { LatestIngestionRunCard } from "./latest-ingestion-run-card";
 
 // Duration must match the Tailwind animation duration used in getRowClassName (duration-1000)
 const HIGHLIGHT_ANIMATION_DURATION_MS = 1000;
@@ -59,6 +61,7 @@ interface WorkflowClientProps {
   sortOrder: "asc" | "desc";
   initialFilters: WorkflowFilters;
   ingestionSource: IngestionSource;
+  latestIngestionRun: IngestionRunSummary | null;
 }
 
 export function WorkflowClient(props: WorkflowClientProps) {
@@ -285,6 +288,8 @@ export function WorkflowClient(props: WorkflowClientProps) {
       }
       const data = await response.json();
       setStatus(data.status);
+      // Reloads the latest run card from ingestion_runs.
+      router.refresh();
 
       if (data.status === "completed" && data.output) {
         const [resultMap, ...values] = data.output;
@@ -511,6 +516,9 @@ export function WorkflowClient(props: WorkflowClientProps) {
       </div>
 
       <div>
+        {props.latestIngestionRun && (
+          <LatestIngestionRunCard run={props.latestIngestionRun} />
+        )}
         <div className="mb-6 flex flex-wrap items-end gap-4">
           <SearchInput
             value={filters.search}

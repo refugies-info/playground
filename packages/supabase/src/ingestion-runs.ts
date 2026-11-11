@@ -76,6 +76,19 @@ export async function completeIngestionRun(
   }
 }
 
+export async function saveIngestionCheckpoint(
+  supabase: Supabase,
+  runId: string,
+  checkpoint: unknown,
+): Promise<void> {
+  const { error } = await supabase
+    .from("ingestion_runs")
+    .update({ checkpoint: checkpoint as Json })
+    .eq("id", runId);
+  if (error)
+    throw new Error(`Failed to save ingestion checkpoint: ${error.message}`);
+}
+
 export async function findRunningIngestion(
   supabase: Supabase,
 ): Promise<{ id: string; source: string } | null> {

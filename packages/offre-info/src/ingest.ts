@@ -247,13 +247,12 @@ export async function ingestRcoActions(
     const document = buildActionDocument(sessions, structureId);
     const change = classifyChange(previous, document);
     result.changes[change]++;
-    if (DIFFABLE_CHANGES.has(change)) {
+    const changedFields = DIFFABLE_CHANGES.has(change)
+      ? changedFieldPaths(previous?.data, document)
+      : [];
+    if (changedFields.length > 0) {
       logger.info(
-        {
-          numeroAction,
-          change,
-          changedFields: changedFieldPaths(previous?.data, document),
-        },
+        { numeroAction, change, changedFields },
         "RCO action changed",
       );
     }
