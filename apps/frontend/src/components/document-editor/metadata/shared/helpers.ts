@@ -109,30 +109,3 @@ export function formatSourceValue(value: unknown): string {
   }
   return String(value);
 }
-
-/**
- * The AI cites the same text for several fields (objectif_formation under
- * En bref, Thèmes, Besoins…): only the first row, in display order, shows it.
- */
-export function withoutRepeatedSources<T extends { source?: unknown }>(
-  rows: T[],
-): T[] {
-  const shown = new Set<string>();
-  return rows.map((row) =>
-    Array.isArray(row.source)
-      ? {
-          ...row,
-          source: row.source.map((entry) => {
-            if (!isRecord(entry) || !Object.hasOwn(entry, "rawValue"))
-              return entry;
-            const id = `${entry.field}|${JSON.stringify(entry.rawValue)}`;
-            if (!shown.has(id)) {
-              shown.add(id);
-              return entry;
-            }
-            return { field: entry.field, rawValue: "voir plus haut" };
-          }),
-        }
-      : row,
-  );
-}

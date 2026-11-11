@@ -5,7 +5,6 @@
 
 import type { RiReferenceData } from "@/services/ri/reference-data";
 import { MetadataRow } from "./MetadataRow";
-import { withoutRepeatedSources } from "./shared/helpers";
 import type { MetadataFieldDef } from "./types";
 
 // =============================================================================
@@ -47,12 +46,7 @@ export function MetadataTable({
   if (!report) return null;
 
   const { metadata_ri, provenance } = report;
-  const provenanceInDisplayOrder = fields.flatMap(
-    (field) => provenance?.find((p) => p.key === field.riKey) ?? [],
-  );
-  const provenanceByKey = new Map(
-    withoutRepeatedSources(provenanceInDisplayOrder).map((p) => [p.key, p]),
-  );
+  const provenanceByKey = new Map(provenance?.map((p) => [p.key, p]));
 
   return (
     <div className="border border-[var(--border-default-grey)] bg-white">
