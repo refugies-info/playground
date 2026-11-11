@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  mapIngestionRunSummary,
-  rcoOutcomeActionNumbers,
-} from "./ingestion-run";
+import { mapIngestionRunSummary } from "./ingestion-run";
 
 const row = {
   id: "run-1",
@@ -28,29 +25,13 @@ const row = {
       structuresWritten: 4,
       ingestionRecordsCreated: 3,
       errors: [{ numeroAction: "B", error: "boom" }],
-      outcomes: [
-        {
-          numeroAction: "A",
-          change: "baseline",
-          diComparison: [
-            { field: "Titre", di: "Ancien", rco: "Nouveau", same: false },
-          ],
-        },
-        { numeroAction: "B", change: "error" },
-        {
-          numeroAction: "C",
-          change: "content",
-          changedFields: ["nombre_heures_total", "sessions"],
-        },
-      ],
     },
   },
 };
 
 describe("mapIngestionRunSummary", () => {
   it("exposes the RCO change breakdown from the checkpoint", () => {
-    const documents = new Map([["A", { id: "wf-a", title: "Fiche A" }]]);
-    expect(mapIngestionRunSummary(row, documents)).toEqual({
+    expect(mapIngestionRunSummary(row)).toEqual({
       id: "run-1",
       source: "rco",
       status: "completed",
@@ -75,31 +56,6 @@ describe("mapIngestionRunSummary", () => {
         ingestionRecordsCreated: 3,
         errors: [{ numeroAction: "B", error: "boom" }],
       },
-      actions: [
-        {
-          numeroAction: "A",
-          change: "baseline",
-          document: { id: "wf-a", title: "Fiche A" },
-          changedFields: [],
-          diComparison: [
-            { field: "Titre", di: "Ancien", rco: "Nouveau", same: false },
-          ],
-        },
-        {
-          numeroAction: "B",
-          change: "error",
-          document: null,
-          changedFields: [],
-          diComparison: [],
-        },
-        {
-          numeroAction: "C",
-          change: "content",
-          document: null,
-          changedFields: ["nombre_heures_total", "sessions"],
-          diComparison: [],
-        },
-      ],
     });
   });
 
@@ -112,7 +68,6 @@ describe("mapIngestionRunSummary", () => {
       checkpoint: null,
     });
     expect(summary.rco).toBeNull();
-    expect(summary.actions).toEqual([]);
     expect(summary.counts.fetched).toBe(30);
   });
 
@@ -122,16 +77,5 @@ describe("mapIngestionRunSummary", () => {
       checkpoint: { totals: "x" },
     });
     expect(summary.rco).toBeNull();
-  });
-});
-
-describe("rcoOutcomeActionNumbers", () => {
-  it("lists action numbers of a checkpoint written before outcomes existed", () => {
-    const { outcomes: _, ...totals } = row.checkpoint.totals;
-    expect(rcoOutcomeActionNumbers({ ...row.checkpoint, totals })).toEqual([]);
-  });
-
-  it("lists action numbers from outcomes", () => {
-    expect(rcoOutcomeActionNumbers(row.checkpoint)).toEqual(["A", "B", "C"]);
   });
 });

@@ -30,30 +30,8 @@ const RcoCheckpointSchema = z.object({
     structuresWritten: z.number(),
     ingestionRecordsCreated: z.number(),
     errors: z.array(z.object({ numeroAction: z.string(), error: z.string() })),
-    // Absent from checkpoints written before per-action outcomes existed.
-    outcomes: z
-      .array(
-        z.object({
-          numeroAction: z.string(),
-          change: z.string(),
-          changedFields: z.array(z.string()).default([]),
-          diComparison: z
-            .array(
-              z.object({
-                field: z.string(),
-                di: z.string().nullable(),
-                rco: z.string().nullable(),
-                same: z.boolean(),
-              }),
-            )
-            .default([]),
-        }),
-      )
-      .default([]),
   }),
 });
-
-const withoutOutcomes = ({ outcomes: _, ...totals }: RcoTotals) => totals;
 
 export type IngestionRunSummary = {
   id: string;
@@ -68,35 +46,13 @@ export type IngestionRunSummary = {
     unchanged: number;
     errors: number;
   };
-  rco: Omit<RcoTotals, "outcomes"> | null;
-  actions: IngestionRunAction[];
+  rco: RcoTotals | null;
 };
 
 type RcoTotals = z.infer<typeof RcoCheckpointSchema>["totals"];
 
-export type IngestionRunDocument = { id: string; title: string | null };
-
-export type IngestionRunAction = {
-  numeroAction: string;
-  change: string;
-  document: IngestionRunDocument | null;
-  changedFields: string[];
-  diComparison: DiComparisonRow[];
-};
-
-export type DiComparisonRow =
-  RcoTotals["outcomes"][number]["diComparison"][number];
-
-export function rcoOutcomeActionNumbers(checkpoint: unknown): string[] {
-  const parsed = RcoCheckpointSchema.safeParse(checkpoint);
-  return parsed.success
-    ? parsed.data.totals.outcomes.map(({ numeroAction }) => numeroAction)
-    : [];
-}
-
 export function mapIngestionRunSummary(
   row: IngestionRunRow,
-  documentsByActionNumber: Map<string, IngestionRunDocument> = new Map(),
 ): IngestionRunSummary {
   const checkpoint = RcoCheckpointSchema.safeParse(row.checkpoint);
   return {
@@ -112,17 +68,6 @@ export function mapIngestionRunSummary(
       unchanged: row.total_unchanged,
       errors: row.total_errors,
     },
-    rco: checkpoint.success ? withoutOutcomes(checkpoint.data.totals) : null,
-    actions: checkpoint.success
-      ? checkpoint.data.totals.outcomes.map(
-          ({ numeroAction, change, changedFields, diComparison }) => ({
-            numeroAction,
-            change,
-            document: documentsByActionNumber.get(numeroAction) ?? null,
-            changedFields,
-            diComparison,
-          }),
-        )
-      : [],
+    rco: checkpoint.success ? checkpoint.data.totals : null,
   };
 }
