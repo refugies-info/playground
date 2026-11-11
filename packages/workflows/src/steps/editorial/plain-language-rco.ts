@@ -28,7 +28,7 @@ export async function generateRcoPlainLanguage(
     );
   }
 
-  const { answer, usage } = await askPlainLanguageAgent(
+  const { answer, usage, conversationId } = await askPlainLanguageAgent(
     createLettaClient(),
     agentId,
     action.id,
@@ -38,6 +38,7 @@ export async function generateRcoPlainLanguage(
 
   return {
     agentId,
+    conversationId,
     model,
     content: renderPlainLanguageFiche(answer, action),
     usage,

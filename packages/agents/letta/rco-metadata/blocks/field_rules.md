@@ -2,6 +2,12 @@
 
 Les identifiants et valeurs autorisées sont dans le bloc `knowledge_base`.
 
+## titreMarque — Titre marque (texte)
+Le nom du programme, s'il apparaît dans le titre (`nom`) ou dans le texte de la fiche : « Prépa clé », « Action socio-linguistique », « Pro'Langue SIAE », « NumériLangue », « NumeriFLE », « CAP sur l'avenir », « Clé Intégration »…
+- Un ou quelques mots, parfois un sigle ou une phrase très courte. Jamais une description (« Formation de français A1 », « Atelier sociolinguistique pour adultes » n'en sont pas).
+- Recopie le nom tel qu'il est écrit. Ne l'invente jamais, ne le reformule pas, ne le construis pas à partir du texte.
+- Pas de nom de programme clairement identifiable → `null`. Mieux vaut `null` qu'un nom inventé.
+
 ## abstract — En bref (texte)
 Une phrase en français simple, 200 caractères maximum, qui dit ce que la personne va faire ou obtenir. Pas de sigle non expliqué.
 
@@ -48,5 +54,5 @@ Valeurs, et **aucune autre** : `acte naissance`, `titre sejour`, `cir`, `bank ac
 ## location — Départements
 Demandé seulement si aucun lieu n'a de département. `"online"` si la formation est entièrement à distance, sinon `null`.
 
-## mainSponsor, titreMarque, periode, map
+## mainSponsor, periode, map
 Demandés seulement si l'API ne les fournit pas : réponds `null`.

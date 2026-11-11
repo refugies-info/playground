@@ -13,6 +13,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { removeEditorialNotes } from "@/lib/editorial-notes";
 
 // Extend or adapt the shared Document type for the editor context
 interface DocumentData
@@ -38,6 +39,10 @@ interface DocumentData
   currentUserId?: string;
   /** Display name of the currently logged-in user — broadcast on takeover so the previous editor sees who took over */
   currentUserName?: string | null;
+  /** Clear language sections for editors, shown in the source panel */
+  editorialNotes?: string;
+  lettaAgentId?: string;
+  lettaConversationId?: string | null;
   /** Admins can pick the Letta model of the clear language rewrite */
   isAdmin?: boolean;
   /** Display name of the user currently holding the edit lock — shown in EditLockDialog */
@@ -156,7 +161,7 @@ export function DocumentProvider({
       ...document,
       // Preserve immutable ingestionContent
       ingestionContent: document.ingestionContent,
-      aiSuggestion: suggestion,
+      aiSuggestion: removeEditorialNotes(suggestion),
     });
   };
 

@@ -86,3 +86,9 @@ export function buildRcoSourceUrl(
   const numeroFormation = legacyKey.slice(0, -actionSuffix.length);
   return `https://www.intercariforef.org/outils/recherche-offreinfo/formations/sessions/${numeroFormation}/${numeroAction}`;
 }
+
+export const buildLettaConversationUrl = (
+  agentId: string,
+  conversationId?: string | null,
+) =>
+  `https://app.letta.com/agents/${agentId}${conversationId ? `?conversation=${conversationId}` : ""}`;
