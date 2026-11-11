@@ -55,14 +55,14 @@ export interface SimplifyContentResult {
  *
  * @param client - The Letta client instance
  * @param markdownContent - Markdown with frontmatter (from editorial_records)
- * @param client - The Letta client instance
- * @param markdownContent - Markdown with frontmatter (from editorial_records)
  * @param conversationId - The conversation ID to use
+ * @param model - Letta model handle forced on this request
  */
 export const simplifyContent = async function* (
   client: Letta,
   markdownContent: string,
   conversationId: string,
+  model = LETTA_MODEL_HANDLE,
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK stream yields various message types
 ): AsyncGenerator<any> {
   if (!conversationId) {
@@ -94,7 +94,7 @@ ${sanitizedContent}
         content: messageContent,
       },
     ],
-    override_model: LETTA_MODEL_HANDLE,
+    override_model: model,
   });
 
   logger.info(
@@ -155,6 +155,7 @@ export async function simplifyContentSync(
   client: Letta,
   markdownContent: string,
   conversationId: string,
+  model = LETTA_MODEL_HANDLE,
 ): Promise<SimplifyContentResult> {
   const startTime = Date.now();
 
@@ -175,6 +176,7 @@ export async function simplifyContentSync(
     client,
     markdownContent,
     conversationId,
+    model,
   )) {
     accumulateUsage(usage, chunk);
 

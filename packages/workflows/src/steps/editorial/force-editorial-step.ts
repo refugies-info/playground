@@ -23,10 +23,15 @@ import {
   getRcoClientFromEnv,
   type RcoActionDocument,
 } from "@playground/offre-info";
-import { logger, TYPE_CLEAR_LANGUAGE } from "@playground/shared-types";
+import {
+  LETTA_MODEL_HANDLE,
+  logger,
+  TYPE_CLEAR_LANGUAGE,
+} from "@playground/shared-types";
 import { FatalError } from "@workflow/errors";
 import matter from "gray-matter";
 import { recordActivity } from "../common/activity-log";
+import { notifyClearLanguageError } from "../common/slack";
 import { getSupabaseClient } from "../common/supabase";
 import {
   type PersistEditorialReportResult,
@@ -55,6 +60,7 @@ export interface ForceEditorialStepResult {
  *
  * @param workflowId - The workflow (document) ID
  * @param userId - The profile id of the human who triggered the rewrite
+ * @param model - Admin-chosen Letta model handle; agent default when omitted
  */
 type EditorialWorkflow = {
   conversation_id: string | null;
@@ -65,6 +71,7 @@ type EditorialWorkflow = {
 async function generateDiEditorial(
   workflowId: string,
   workflow: EditorialWorkflow,
+  model = LETTA_MODEL_HANDLE,
 ) {
   const supabase = getSupabaseClient();
 
@@ -189,18 +196,20 @@ async function generateDiEditorial(
     lettaClient,
     fullContent,
     conversationId,
+    model,
   );
 
   if (!finalContent.content) {
     throw new Error("No assistant response received from Letta agent");
   }
 
-  return { agentId, ...finalContent };
+  return { agentId, model, ...finalContent };
 }
 
 export async function forceEditorialStep(
   workflowId: string,
   userId: string,
+  model?: string,
 ): Promise<ForceEditorialStepResult> {
   "use step";
 
@@ -229,15 +238,19 @@ export async function forceEditorialStep(
       ).data?.service
     : null;
 
-  const { agentId, ...finalContent } =
-    service?.origin === "RCO"
-      ? await generateRcoPlainLanguage(
-          await fetchActionDetail(
-            getRcoClientFromEnv(),
-            service.data as unknown as RcoActionDocument,
-          ),
-        )
-      : await generateDiEditorial(workflowId, workflow);
+  const {
+    agentId,
+    model: usedModel,
+    ...finalContent
+  } = service?.origin === "RCO"
+    ? await generateRcoPlainLanguage(
+        await fetchActionDetail(
+          getRcoClientFromEnv(),
+          service.data as unknown as RcoActionDocument,
+        ),
+        model,
+      )
+    : await generateDiEditorial(workflowId, workflow, model);
 
   // ─── 6. Persist ───────────────────────────────────────────────────────
   const persistResult = await persistEditorialReportStep(
@@ -245,6 +258,7 @@ export async function forceEditorialStep(
     agentId,
     finalContent.content,
     finalContent.usage,
+    usedModel,
   );
 
   if (!persistResult.success || !persistResult.data) {
@@ -281,3 +295,12 @@ export async function forceEditorialStep(
 
 // Allow retries for transient Letta Cloud failures
 forceEditorialStep.maxRetries = 2;
+
+export async function notifyClearLanguageErrorStep(
+  workflowId: string,
+  errorMessage: string,
+): Promise<void> {
+  "use step";
+
+  await notifyClearLanguageError({ workflowId, errorMessage });
+}

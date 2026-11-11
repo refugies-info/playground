@@ -58,12 +58,14 @@ export default async function Layout({
     latestIngestionVersion: document.latestIngestionVersion,
     hasPendingIngestionUpdate: document.hasPendingIngestionUpdate,
     activeRunId: document.activeRunId,
+    editorialModel: document.editorialModel,
     assigneeEmail: document.assigneeEmail,
     assigneeAvatar: document.assigneeAvatar,
     currentEditorId: document.currentEditorId,
     currentEditorName: document.currentEditorName,
     currentUserId: currentUser.id,
     currentUserName: currentUser.username,
+    isAdmin: currentUser.role === "admin",
   };
 
   return (

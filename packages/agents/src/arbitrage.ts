@@ -15,12 +15,19 @@ export const ComplianceAnswerSchema = z.object({
   ),
 });
 
+const Similarity = z.enum(["identical", "close", "different"]);
+
 export const DuplicateAnswerSchema = z.object({
   matches: z.array(
     z.object({
       candidateId: z.string(),
       verdict: z.enum(["duplicate", "ambiguous"]),
       reason: z.string(),
+      similarity: z.object({
+        sponsor: Similarity,
+        location: Similarity,
+        title: Similarity,
+      }),
     }),
   ),
   reason: z.string(),
@@ -125,6 +132,7 @@ async function askAgent<T>(
   conversationName: string,
   message: string,
   schema: z.ZodType<T>,
+  model = RCO_MODEL_HANDLE,
 ): Promise<{ answer: T; usage?: LettaUsage; conversationId: string }> {
   const conversationId = await findOrCreateConversation(
     client,
@@ -135,7 +143,7 @@ async function askAgent<T>(
     client,
     conversationId,
     message,
-    RCO_MODEL_HANDLE,
+    model,
   );
   const parsed = parseAnswer(first.content, schema);
   if (parsed.success) {
@@ -147,7 +155,7 @@ async function askAgent<T>(
     client,
     conversationId,
     `${FORMAT_REMINDER}\n\nErreur : ${parsed.error.message.slice(0, 1000)}`,
-    RCO_MODEL_HANDLE,
+    model,
   );
   const reparsed = parseAnswer(retry.content, schema);
   if (!reparsed.success) {
@@ -212,6 +220,7 @@ export const askPlainLanguageAgent = (
   agentId: string,
   documentId: string,
   document: unknown,
+  model?: string,
 ) =>
   askAgent(
     client,
@@ -219,4 +228,5 @@ export const askPlainLanguageAgent = (
     `plain-language-${documentId}`,
     asTag("document", document),
     PlainLanguageAnswerSchema,
+    model,
   );

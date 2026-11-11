@@ -42,23 +42,19 @@ export function useUrlFilters<T extends Record<string, string>>({
   const router = useRouter();
   const [filters, setFilters] = useState<T>(initialFilters);
 
-  // Track if this is the initial mount (skip URL sync on first render)
-  const isInitialMount = useRef(true);
+  // Filters already reflected in the URL; the server-provided ones on mount,
+  // so a page set in the URL is not reset to 1.
+  const syncedFiltersRef = useRef(filters);
 
   // Track if a clear operation is pending (navigate to basePath without params)
   const pendingClearRef = useRef(false);
 
-  // Set isInitialMount to false after the first render
-  useEffect(() => {
-    isInitialMount.current = false;
-  }, []);
-
   // Sync filters to URL when they change (effect-based, not in setState)
   useEffect(() => {
-    // Skip on initial mount — URL already contains the filters from server
-    if (isInitialMount.current) {
+    if (syncedFiltersRef.current === filters) {
       return;
     }
+    syncedFiltersRef.current = filters;
 
     // If clear was requested, navigate to basePath without params
     if (pendingClearRef.current) {

@@ -230,11 +230,14 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
         )}
       </div>
 
-      {hasIngestionVersion ? (
-        <div className="mt-auto px-2 text-sm leading-6 text-[var(--text-mention-grey)] whitespace-nowrap">
-          Version : {ingestionVersion}
-        </div>
-      ) : null}
+      <div className="mt-auto px-2 text-sm leading-6 text-[var(--text-mention-grey)] whitespace-nowrap">
+        {hasIngestionVersion ? <p>Version : {ingestionVersion}</p> : null}
+        {document.editorialModel ? (
+          <p className="truncate" title={document.editorialModel}>
+            Modèle : {document.editorialModel}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -638,11 +638,12 @@ export function WorkflowClient(props: WorkflowClientProps) {
             />
 
             {totalPages > 1 && (
-              <div className="flex justify-end py-4">
+              <div className="flex justify-center py-4">
                 <AppPaginationControls
                   currentPage={currentPage}
                   pageSize={pageSize}
                   totalCount={totalCount}
+                  numbered
                 />
               </div>
             )}

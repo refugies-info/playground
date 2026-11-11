@@ -497,7 +497,9 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       item.editorial_record_id
         ? supabase
             .from("editorial_records")
-            .select("active_run_id, current_editor_id")
+            .select(
+              "active_run_id, current_editor_id, content_report:letta_reports!editorial_records_content_report_id_fkey (model)",
+            )
             .eq("id", item.editorial_record_id)
             .single()
         : Promise.resolve({ data: null, error: null }),
@@ -703,5 +705,6 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     activeRunId: activeRunData.activeRunId,
     currentEditorId: activeRunData.currentEditorId,
     currentEditorName: currentEditorName,
+    editorialModel: activeRunResult.data?.content_report?.model ?? null,
   };
 }
