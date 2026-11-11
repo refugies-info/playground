@@ -15,11 +15,7 @@ import { CircleCheck, CircleHelp, CircleX } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-/**
- * Compliance and duplicate tables of an RCO arbitration report.
- *
- * @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/BOMO?node-id=2631-15905
- */
+// @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/BOMO?node-id=2631-15905
 
 const HEADER_CELL = "px-4 py-3 text-left text-sm font-medium text-[#000091]";
 const BODY_CELL = "px-4 py-3 align-top text-sm";
