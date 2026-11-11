@@ -18,7 +18,7 @@ import {
   type RcoActionDocument,
   toMetadataDocument,
 } from "@playground/offre-info";
-import { validateField } from "@playground/shared-types";
+import { RCO_MODEL_HANDLE, validateField } from "@playground/shared-types";
 import { FatalError } from "@workflow/errors";
 
 type ProvenanceStatus = "valid" | "missing" | "warning";
@@ -123,7 +123,8 @@ export async function generateRcoMetadata(action: RcoActionDocument) {
 
   return {
     agentId,
-    tokens: usage?.totalTokens ?? 0,
+    usage,
+    model: RCO_MODEL_HANDLE,
     rawResponse: JSON.stringify(answer),
     status: "complete" as const,
     metadata: {

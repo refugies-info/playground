@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { isEmptyValue, normalizeSourceEntries } from "./helpers";
+import {
+  isEmptyValue,
+  normalizeSourceEntries,
+  withoutRepeatedSources,
+} from "./helpers";
 
 describe("isEmptyValue", () => {
   it("treats nullish and empty string as empty", () => {
@@ -57,5 +61,32 @@ describe("normalizeSourceEntries", () => {
         {},
       ),
     ).toEqual([]);
+  });
+});
+
+describe("withoutRepeatedSources", () => {
+  it("shows a cited text once, in display order", () => {
+    const objectif = { field: "objectif_formation", rawValue: "Apprendre" };
+    const rows = withoutRepeatedSources([
+      { key: "abstract", source: [objectif] },
+      { key: "theme", source: [objectif] },
+    ]);
+    expect(rows[0].source).toEqual([objectif]);
+    expect(rows[1].source).toEqual([
+      { field: "objectif_formation", rawValue: "voir plus haut" },
+    ]);
+  });
+});
+
+describe("normalizeSourceEntries code labels", () => {
+  it("labels the RCO codes", () => {
+    expect(
+      normalizeSourceEntries(
+        [{ field: "code_public_vise", rawValue: ["81023", "99999"] }],
+        {},
+      ),
+    ).toEqual([
+      { key: "code_public_vise", value: "81023 (Primo-arrivant), 99999" },
+    ]);
   });
 });

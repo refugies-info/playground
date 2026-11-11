@@ -61,6 +61,22 @@ const contactSection = (action: RcoActionDocument): string => {
   return lines.length ? `## Coordonnées\n\n${lines.join("\n\n")}` : "";
 };
 
+// Fields the markdown body already shows: the source panel lists the others.
+const MARKDOWN_BODY_FIELDS = [
+  "objectif_formation",
+  "contenu_formation",
+  "resultat_attendus",
+  "conditions_specifiques",
+  "contact_formation",
+] as const;
+
+export const withoutMarkdownBodyFields = (action: RcoActionDocument) =>
+  Object.fromEntries(
+    Object.entries(action).filter(
+      ([field]) => !(MARKDOWN_BODY_FIELDS as readonly string[]).includes(field),
+    ),
+  );
+
 export function actionToMarkdown(
   action: RcoActionDocument,
   structure: RcoStructureDocument,

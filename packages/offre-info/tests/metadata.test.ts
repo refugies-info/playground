@@ -91,3 +91,39 @@ describe("mapMetadata", () => {
     });
   });
 });
+
+describe("mapPlaces contacts", () => {
+  it("takes each value from the closest contact that has it", () => {
+    const [place] = valuesOf({
+      lieu_formation: [{ ville: "Mulhouse", telfixe1: "0300" }],
+      contact_session: [{ courriel: "session@b.fr", telfixe: "0200" }],
+      contact_formation: [{ courriel: "formation@b.fr" }],
+    }).values.map as Record<string, unknown>[];
+    expect(place).toMatchObject({ phone: "0300", email: "session@b.fr" });
+  });
+
+  it("falls back to the organisme", () => {
+    const [place] = valuesOf({
+      organisme_responsable: {
+        nom: "Ecole Test",
+        coordonnees: { telfixe1: "0100", courriel: "orga@b.fr" },
+      },
+    }).values.map as Record<string, unknown>[];
+    expect(place).toMatchObject({ phone: "0100", email: "orga@b.fr" });
+  });
+});
+
+describe("periode", () => {
+  it("keeps a started session while registration is open (Q21)", () => {
+    const started = {
+      modalites_entrees_sorties: false,
+      date_debut: "2026-10-01",
+      date_fin: "2026-12-10",
+    };
+    expect(valuesOf(started).values.periode).toMatchObject({ items: null });
+    expect(
+      valuesOf({ ...started, periode_inscription_fin: "2026-11-17" }).values
+        .periode,
+    ).toMatchObject({ items: [{ startDate: "2026-10-01T00:00:00.000Z" }] });
+  });
+});

@@ -139,36 +139,54 @@ async function askAgent<T>(
     agentId,
     conversationName,
   );
-  const first = await sendMessageToConversation(
-    client,
-    conversationId,
-    message,
-    model,
-  );
-  const parsed = parseAnswer(first.content, schema);
-  if (parsed.success) {
-    return { answer: parsed.data, usage: first.usage, conversationId };
-  }
+  let usage: LettaUsage | undefined;
+  try {
+    const first = await sendMessageToConversation(
+      client,
+      conversationId,
+      message,
+      model,
+    );
+    usage = first.usage;
+    const parsed = parseAnswer(first.content, schema);
+    if (parsed.success) {
+      return { answer: parsed.data, usage, conversationId };
+    }
 
-  // The prod model sometimes drifts from output_format: one reminder, then fail.
-  const retry = await sendMessageToConversation(
-    client,
-    conversationId,
-    `${FORMAT_REMINDER}\n\nErreur : ${parsed.error.message.slice(0, 1000)}`,
-    model,
-  );
-  const reparsed = parseAnswer(retry.content, schema);
-  if (!reparsed.success) {
-    throw new Error(
-      `${conversationName}: unexpected agent answer after reminder (${reparsed.error.message.slice(0, 500)}): ${retry.content.slice(0, 500)}`,
+    // The prod model sometimes drifts from output_format: one reminder, then fail.
+    const retry = await sendMessageToConversation(
+      client,
+      conversationId,
+      `${FORMAT_REMINDER}\n\nErreur : ${parsed.error.message.slice(0, 1000)}`,
+      model,
+    );
+    usage = addUsage(usage, retry.usage);
+    const reparsed = parseAnswer(retry.content, schema);
+    if (!reparsed.success) {
+      throw new Error(
+        `${conversationName}: unexpected agent answer after reminder (${reparsed.error.message.slice(0, 500)}): ${retry.content.slice(0, 500)}`,
+      );
+    }
+    return { answer: reparsed.data, usage, conversationId };
+  } catch (error) {
+    // Lets the caller keep a trace of the failed run (Letta link, tokens).
+    throw Object.assign(
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        failedRun: { agentId, conversationId, usage } satisfies FailedAgentRun,
+      },
     );
   }
-  return {
-    answer: reparsed.data,
-    usage: addUsage(first.usage, retry.usage),
-    conversationId,
-  };
 }
+
+export type FailedAgentRun = {
+  agentId: string;
+  conversationId: string;
+  usage?: LettaUsage;
+};
+
+export const getFailedAgentRun = (error: unknown) =>
+  (error as { failedRun?: FailedAgentRun } | null)?.failedRun;
 
 export const askComplianceAgent = (
   client: Letta,

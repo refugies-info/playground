@@ -1,4 +1,5 @@
 import {
+  estimateCarbonImpact,
   type LettaUsage,
   NoFrontmatterSchema,
   parseAgentResponse,
@@ -68,6 +69,7 @@ export async function persistEditorialReportStep(
         raw_response: result.rawResponse,
         workflow_id: flowId,
         token_cost: usage?.totalTokens ?? null,
+        carbon_impact: await estimateCarbonImpact(model, usage),
         model,
       })
       .select("id")

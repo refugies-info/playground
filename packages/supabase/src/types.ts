@@ -333,6 +333,7 @@ export type Database = {
       letta_reports: {
         Row: {
           agent_id: string
+          carbon_impact: Json | null
           created_at: string
           id: string
           markdown: string
@@ -347,6 +348,7 @@ export type Database = {
         }
         Insert: {
           agent_id: string
+          carbon_impact?: Json | null
           created_at?: string
           id?: string
           markdown: string
@@ -361,6 +363,7 @@ export type Database = {
         }
         Update: {
           agent_id?: string
+          carbon_impact?: Json | null
           created_at?: string
           id?: string
           markdown?: string
@@ -1074,6 +1077,7 @@ export type Database = {
         | "update"
         | "update_compliance"
         | "clear_language"
+        | "clear_language_error"
         | "translation"
         | "translation_error"
         | "translation_priority"
@@ -1764,6 +1768,7 @@ export const Constants = {
         "update",
         "update_compliance",
         "clear_language",
+        "clear_language_error",
         "translation",
         "translation_error",
         "translation_priority",

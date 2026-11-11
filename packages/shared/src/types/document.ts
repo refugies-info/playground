@@ -1,3 +1,4 @@
+import type { CarbonImpact } from "../lib/carbon";
 import type { ArbitrationReport } from "./arbitration-report";
 
 export type ComplianceStatus =
@@ -62,6 +63,12 @@ export interface Document {
   arbitrationSource?: Record<string, unknown>;
   /** RCO only: the fiche fields sent to the metadata agent */
   metadataSource?: Record<string, unknown>;
+  /** RCO only: every field the API returned for the fiche */
+  rcoSource?: Record<string, unknown>;
+  /** RCO only: the fiche exactly as the API returned it (debug panel) */
+  rcoApiData?: Record<string, unknown>;
+  /** RCO only: the fiche fields sent to the plain language agent */
+  plainLanguageSource?: Record<string, unknown>;
   metadata: Record<string, unknown>;
   /** Metadata from editorial_records only (user edits) */
   editorialMetadata?: Record<string, unknown>;
@@ -113,6 +120,10 @@ export interface Document {
   activeRunId?: string;
   /** Letta model handle of the last clear language rewrite */
   editorialModel?: string | null;
+  /** The last clear language rewrite failed: model/tokens are the failed run's */
+  editorialFailed?: boolean;
+  editorialTokens?: number | null;
+  editorialCarbonImpact?: CarbonImpact | null;
   /** Sections of the last clear language rewrite meant for editors, not readers */
   editorialNotes?: string;
   /** Letta agent + conversation of the last clear language rewrite */

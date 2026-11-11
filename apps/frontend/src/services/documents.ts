@@ -3,10 +3,13 @@ import {
   type RcoActionDocument,
   toArbitrationDocument,
   toMetadataDocument,
+  toPlainLanguageDocument,
   toSourceUrl,
+  withoutMarkdownBodyFields,
 } from "@playground/offre-info";
 import type {
   ArbitrationReport,
+  CarbonImpact,
   ComplianceStatus,
   DateFilterCondition,
   DateFilterType,
@@ -468,6 +471,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     generatingReportResult,
     activeRunResult,
     conversationResult,
+    lastEditorialReportResult,
   ] = await Promise.all([
     item.ingestion_record_id
       ? supabase
@@ -503,7 +507,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       ? supabase
           .from("editorial_records")
           .select(
-            "active_run_id, current_editor_id, content_report:letta_reports!editorial_records_content_report_id_fkey (model, agent_id, markdown)",
+            "active_run_id, current_editor_id, content_report:letta_reports!editorial_records_content_report_id_fkey (markdown)",
           )
           .eq("id", item.editorial_record_id)
           .single()
@@ -512,6 +516,15 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       .from("workflows")
       .select("conversation_id")
       .eq("id", id)
+      .maybeSingle(),
+    // Last rewrite attempt, failed ones included: footer + Letta link.
+    supabase
+      .from("letta_reports")
+      .select("model, agent_id, token_cost, carbon_impact, status")
+      .eq("workflow_id", id)
+      .eq("report_type", "editorial")
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle(),
   ]);
 
@@ -687,6 +700,11 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     arbitrationReport,
     arbitrationSource: rcoAction ? toArbitrationDocument(rcoAction) : undefined,
     metadataSource: rcoAction ? toMetadataDocument(rcoAction) : undefined,
+    rcoSource: rcoAction ? withoutMarkdownBodyFields(rcoAction) : undefined,
+    rcoApiData: rcoAction ?? undefined,
+    plainLanguageSource: rcoAction
+      ? toPlainLanguageDocument(rcoAction)
+      : undefined,
     metadata,
     editorialMetadata,
     editorialRecordId: item.editorial_record_id ?? undefined,
@@ -715,11 +733,16 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     activeRunId: activeRunData.activeRunId,
     currentEditorId: activeRunData.currentEditorId,
     currentEditorName: currentEditorName,
-    editorialModel: activeRunResult.data?.content_report?.model ?? null,
+    editorialFailed: lastEditorialReportResult.data?.status === "error",
+    editorialModel: lastEditorialReportResult.data?.model ?? null,
+    editorialTokens: lastEditorialReportResult.data?.token_cost ?? null,
+    editorialCarbonImpact:
+      (lastEditorialReportResult.data?.carbon_impact as CarbonImpact | null) ??
+      null,
     editorialNotes: extractEditorialNotes(
       activeRunResult.data?.content_report?.markdown ?? "",
     ),
-    lettaAgentId: activeRunResult.data?.content_report?.agent_id,
+    lettaAgentId: lastEditorialReportResult.data?.agent_id,
     lettaConversationId: conversationResult.data?.conversation_id,
   };
 }

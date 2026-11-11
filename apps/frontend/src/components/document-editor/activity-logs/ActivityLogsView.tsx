@@ -4,6 +4,7 @@ import {
   ACTIVITY_LOG_TYPES,
   type ActivityLogType,
   dayKey,
+  formatCarbonImpact,
   LANGUAGES,
   TYPE_ASSIGNMENT,
   TYPE_COMPLIANCE_HUMAN,
@@ -108,13 +109,16 @@ function formatAiConsumption(entry: ActivityLogEntry): string | null {
   if (!report) return null;
 
   const model = report.model?.trim();
-  const tokenCost = report.tokenCost?.toLocaleString("fr-FR");
+  const details = [
+    report.tokenCost != null &&
+      `${report.tokenCost.toLocaleString("fr-FR")} tokens`,
+    report.carbonImpact && formatCarbonImpact(report.carbonImpact),
+  ]
+    .filter(Boolean)
+    .join(", ");
 
-  if (!model && tokenCost == null) return null;
-  if (!model) return `${tokenCost} tokens`;
-  if (tokenCost == null) return model;
-
-  return `${model} (${tokenCost} tokens)`;
+  if (!model) return details || null;
+  return details ? `${model} (${details})` : model;
 }
 
 export function ActivityLogsView({

@@ -31,6 +31,8 @@ interface DocumentData
   metadata?: Record<string, unknown>;
   /** RCO only: the fiche fields sent to the metadata agent */
   metadataSource?: Record<string, unknown>;
+  /** RCO only: every field the API returned for the fiche */
+  rcoSource?: Record<string, unknown>;
   /** Metadata from editorial_records only (user edits) */
   editorialMetadata?: Record<string, unknown>;
   /** ID of the editorial_record — used for Realtime status subscription */
