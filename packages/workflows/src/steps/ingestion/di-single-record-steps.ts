@@ -8,9 +8,9 @@
 import { APIError } from "@letta-ai/letta-client/core/error";
 import {
   accumulateUsage,
+  createConversation,
   createLettaClient,
   estimateCarbonImpact,
-  findOrCreateConversation,
   generateIngestionReport,
   generateMetadataReport,
   type LettaUsage,
@@ -109,7 +109,7 @@ export async function diSingleAuditStep(
     "▶ Starting single audit Letta call",
   );
 
-  const conversationId = await findOrCreateConversation(
+  const conversationId = await createConversation(
     lettaClient,
     agentId,
     `compliance-${workflowId}`,
@@ -282,7 +282,7 @@ export async function diSingleMetadataStep(
     "▶ Starting single metadata Letta call",
   );
 
-  const conversationId = await findOrCreateConversation(
+  const conversationId = await createConversation(
     lettaClient,
     agentId,
     `metadata-${workflowId}`,

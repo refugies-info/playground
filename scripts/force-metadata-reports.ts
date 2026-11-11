@@ -25,8 +25,8 @@
 import * as path from "node:path";
 import * as readline from "node:readline";
 import {
+  createConversation,
   createLettaClient,
-  findOrCreateConversation,
   generateMetadataReport,
   MetadataMetadataSchema,
   parseAgentResponse,
@@ -342,7 +342,7 @@ async function main() {
         "▶ Starting metadata generation",
       );
 
-      const conversationId = await findOrCreateConversation(
+      const conversationId = await createConversation(
         lettaClient,
         agentId,
         `forced-metadata-${target.workflowId}-${RUN_TIMESTAMP}`,

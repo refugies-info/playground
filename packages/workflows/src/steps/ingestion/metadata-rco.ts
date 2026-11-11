@@ -89,7 +89,10 @@ const metadataTable = (rows: (Provenance & { origin: string })[]) =>
     ),
   ].join("\n");
 
-export async function generateRcoMetadata(action: RcoActionDocument) {
+export async function generateRcoMetadata(
+  action: RcoActionDocument,
+  model = RCO_MODEL_HANDLE,
+) {
   const agentId = process.env.RCO_METADATA_AGENT_ID;
   if (!agentId) {
     throw new FatalError(
@@ -105,6 +108,7 @@ export async function generateRcoMetadata(action: RcoActionDocument) {
     action.id,
     keysForAi,
     toMetadataDocument(action),
+    model,
   );
 
   // Only the requested keys, each exactly once: a missing answer means null.
@@ -135,7 +139,7 @@ export async function generateRcoMetadata(action: RcoActionDocument) {
   return {
     agentId,
     usage,
-    model: RCO_MODEL_HANDLE,
+    model,
     rawResponse: JSON.stringify(answer),
     status: "complete" as const,
     metadata: {

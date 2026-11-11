@@ -5,9 +5,10 @@
 
 "use client";
 
-import { Button } from "@playground/ui/primitives";
+import { BoutonFiltre, Button } from "@playground/ui/primitives";
 import { Loader2 } from "lucide-react";
 import { useDocument } from "../DocumentContext";
+import { useLettaModelPicker } from "../shared/use-letta-model-picker";
 import { useMetadata } from "./MetadataContext";
 import { MetadataTable } from "./MetadataTable";
 import { METADATA_FIELDS_RI } from "./publication-targets/refugies-info";
@@ -18,8 +19,28 @@ import { METADATA_FIELDS_RI } from "./publication-targets/refugies-info";
 
 export function MetadataView() {
   const { document } = useDocument();
-  const { isGenerating, isGeneratingOnLoad, generationError, handleGenerate } =
-    useMetadata();
+  const {
+    isGenerating,
+    isGeneratingOnLoad,
+    generationError,
+    retryMessage,
+    handleGenerate,
+  } = useMetadata();
+  const { modelOptions, selectedModel, setSelectedModel } = useLettaModelPicker(
+    !!document?.isAdmin,
+    !!document?.rcoApiData,
+  );
+  const generate = () => handleGenerate(selectedModel || undefined);
+  const modelPicker =
+    modelOptions.length > 0 ? (
+      <BoutonFiltre
+        label="Modèle LLM"
+        options={modelOptions}
+        value={selectedModel}
+        onChange={setSelectedModel}
+        className="max-w-64"
+      />
+    ) : null;
 
   if (!document) {
     return <div className="p-4">Document non trouvé</div>;
@@ -61,6 +82,11 @@ export function MetadataView() {
               ? "Une génération est déjà en cours. La page se mettra à jour automatiquement une fois le travail de l'IA terminé."
               : "L'IA analyse les données pour pré-remplir les métadonnées."}
           </p>
+          {retryMessage ? (
+            <p className="mt-4 text-xs text-[var(--text-default-warning)] break-words">
+              Nouvelle tentative en cours. {retryMessage.slice(0, 300)}
+            </p>
+          ) : null}
         </div>
       </div>
     );
@@ -80,9 +106,12 @@ export function MetadataView() {
             rencontré une erreur. Relancez la génération pour pré-remplir les
             métadonnées.
           </p>
-          <Button onClick={handleGenerate} className="w-full">
-            Générer les métadonnées
-          </Button>
+          <div className="flex flex-col items-center gap-3">
+            {modelPicker}
+            <Button onClick={generate} className="w-full">
+              Générer les métadonnées
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -113,9 +142,10 @@ export function MetadataView() {
       {/* Regenerate button — visible only when a report already exists */}
       <div className="px-10 py-3 border-t flex items-center gap-3 bg-gray-50">
         <div className="flex items-center gap-3">
-          <Button size="sm" onClick={handleGenerate}>
+          <Button size="sm" onClick={generate}>
             Régénérer les métadonnées
           </Button>
+          {modelPicker}
         </div>
         <p className="text-xs text-gray-600">
           Relancer un rapport pour mettre à jour les métadonnées.

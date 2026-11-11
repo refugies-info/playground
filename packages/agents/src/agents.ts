@@ -57,7 +57,7 @@ export const sendMessageToConversation = async (
   };
 };
 
-/** Conversation named `name` (stored as its summary), or null. */
+/** Latest conversation named `name` (stored as its summary), or null. */
 export const findConversation = async (
   client: Letta,
   agentId: string,
@@ -69,6 +69,8 @@ export const findConversation = async (
     agent_id: agentId,
     summary_search: name,
     limit: 100,
+    order: "desc",
+    order_by: "created_at",
   });
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
   const match = (conversations as any[]).find(
@@ -77,20 +79,17 @@ export const findConversation = async (
   return match?.id ?? null;
 };
 
-export const findOrCreateConversation = async (
+// One conversation per run: a reused one replays every past fiche, reminder
+// and admin chat to the model, which then copies or argues with old answers.
+export const createConversation = async (
   client: Letta,
   agentId: string,
   name: string,
 ): Promise<string> => {
-  const existingId = await findConversation(client, agentId, name);
-  if (existingId) return existingId;
-
   const createParams: ConversationCreateParams = {
     agent_id: agentId,
     summary: name,
   };
-
   const newConversation = await client.conversations.create(createParams);
-
   return newConversation.id;
 };

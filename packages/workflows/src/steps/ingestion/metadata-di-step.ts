@@ -436,6 +436,7 @@ async function generateForcedDiMetadata(
   markdown: string,
   workflowId: string,
   agentId: string,
+  model = LETTA_MODEL_HANDLE,
 ) {
   const lettaClient = createLettaClient();
   const { id: conversationId } = await lettaClient.conversations.create({
@@ -449,6 +450,7 @@ async function generateForcedDiMetadata(
     lettaClient,
     markdown,
     conversationId,
+    model,
   )) {
     accumulateUsage(usage, chunk);
     if (chunk.message_type === "assistant_message") {
@@ -478,7 +480,7 @@ async function generateForcedDiMetadata(
     status: parsed.status,
     rawResponse: parsed.rawResponse,
     usage,
-    model: LETTA_MODEL_HANDLE,
+    model,
   };
 }
 
@@ -488,10 +490,14 @@ async function generateForcedDiMetadata(
  *
  * @param workflowId - The ID of the workflow to force metadata for.
  */
-export async function forceMetadataReportStep(workflowId: string) {
+export async function forceMetadataReportStep(
+  workflowId: string,
+  model?: string,
+) {
   "use step";
 
   const supabase = getSupabaseClient();
+  const { attempt } = getStepMetadata();
 
   // 0. Resolve agent ID early — needed for the "generating" sentinel insert.
   const agentId =
@@ -506,6 +512,7 @@ export async function forceMetadataReportStep(workflowId: string) {
   // 0.1 Guard: block concurrent generation for this workflow.
   // If a "generating" report already exists, another request is in flight —
   // abort immediately to avoid a 409 conflict from the Letta API.
+  // A retry finds its own sentinel, kept "generating" by the failed attempt.
   const { data: existingGenerating } = await supabase
     .from("letta_reports")
     .select("id")
@@ -514,7 +521,7 @@ export async function forceMetadataReportStep(workflowId: string) {
     .eq("status", "generating")
     .maybeSingle();
 
-  if (existingGenerating) {
+  if (existingGenerating && attempt === 1) {
     throw new FatalError(
       `Metadata generation already in progress for workflow ${workflowId}`,
     );
@@ -525,21 +532,22 @@ export async function forceMetadataReportStep(workflowId: string) {
   // and prevents concurrent calls from racing into the Letta API.
   // The report will be updated (not replaced) once generation completes.
   // The model is the agent's actual handle (cached per process) — TEC-65.
-  const model = LETTA_MODEL_HANDLE;
   const { data: generatingReport, error: generatingInsertError } =
-    await supabase
-      .from("letta_reports")
-      .insert({
-        agent_id: agentId,
-        report_type: "metadata",
-        status: "generating",
-        markdown: "",
-        metadata: {} as Json,
-        workflow_id: workflowId,
-        model,
-      })
-      .select("id")
-      .single();
+    existingGenerating
+      ? { data: existingGenerating, error: null }
+      : await supabase
+          .from("letta_reports")
+          .insert({
+            agent_id: agentId,
+            report_type: "metadata",
+            status: "generating",
+            markdown: "",
+            metadata: {} as Json,
+            workflow_id: workflowId,
+            model: model ?? LETTA_MODEL_HANDLE,
+          })
+          .select("id")
+          .single();
 
   if (generatingInsertError || !generatingReport) {
     throw new Error(
@@ -596,8 +604,14 @@ export async function forceMetadataReportStep(workflowId: string) {
               getRcoClientFromEnv(),
               record.service.data as unknown as RcoActionDocument,
             ),
+            model,
           )
-        : await generateForcedDiMetadata(record.markdown, workflowId, agentId);
+        : await generateForcedDiMetadata(
+            record.markdown,
+            workflowId,
+            agentId,
+            model,
+          );
 
     // UPDATE the "generating" report with the final result.
     // Triggers a Realtime UPDATE event on the UI to unblock the spinner.
@@ -693,15 +707,20 @@ export async function forceMetadataReportStep(workflowId: string) {
       );
     }
 
-    // UPDATE the "generating" report to "error" status.
-    // Triggers a Realtime UPDATE event on the UI to unblock the spinner.
+    // Between attempts the sentinel stays "generating" (the UI keeps waiting
+    // and shows why it retries); only the last attempt marks it "error".
+    const isLastAttempt =
+      error instanceof FatalError ||
+      attempt >= forceMetadataReportStep.maxRetries + 1;
+    const message = error instanceof Error ? error.message : String(error);
     try {
       await supabase
         .from("letta_reports")
-        .update({
-          status: "error",
-          raw_response: error instanceof Error ? error.message : String(error),
-        })
+        .update(
+          isLastAttempt
+            ? { status: "error", raw_response: message }
+            : { raw_response: `Tentative ${attempt} échouée : ${message}` },
+        )
         .eq("id", generatingReportId);
     } catch (dbError) {
       logger.error(
@@ -719,3 +738,5 @@ export async function forceMetadataReportStep(workflowId: string) {
     throw error;
   }
 }
+
+forceMetadataReportStep.maxRetries = 3;

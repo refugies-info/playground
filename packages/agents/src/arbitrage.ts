@@ -2,7 +2,7 @@ import type { Letta } from "@letta-ai/letta-client";
 import { RCO_MODEL_HANDLE } from "@playground/shared-types";
 // v4 API (shipped in zod 3.25) for z.toJSONSchema.
 import { z } from "zod/v4";
-import { findOrCreateConversation, sendMessageToConversation } from "./agents";
+import { createConversation, sendMessageToConversation } from "./agents";
 import type { LettaUsage } from "./types";
 
 export const ComplianceAnswerSchema = z.object({
@@ -164,7 +164,7 @@ async function askAgent<T>(
   model = RCO_MODEL_HANDLE,
   onConversation?: (conversationId: string) => Promise<void>,
 ): Promise<{ answer: T; usage?: LettaUsage; conversationId: string }> {
-  const conversationId = await findOrCreateConversation(
+  const conversationId = await createConversation(
     client,
     agentId,
     conversationName,
@@ -255,6 +255,7 @@ export const askMetadataAgent = (
   documentId: string,
   fields: string[],
   document: unknown,
+  model?: string,
 ) =>
   askAgent(
     client,
@@ -262,6 +263,7 @@ export const askMetadataAgent = (
     `metadata-${documentId}`,
     [asTag("fields", fields), asTag("document", document)].join("\n\n"),
     MetadataAnswerSchema,
+    model,
   );
 
 export const askPlainLanguageAgent = (

@@ -11,6 +11,7 @@ import { RiCheckLine, RiCloseLine } from "@remixicon/react";
 import { useEffect, useRef, useState } from "react";
 import { useDocumentActions } from "../actions";
 import { useDocument } from "../DocumentContext";
+import { useLettaModelPicker } from "./use-letta-model-picker";
 
 /**
  * Appel GET /api/editorial-rewrite/[runId] — attend le résultat du workflow.
@@ -88,11 +89,10 @@ export function AIFloatingButton() {
   const { saveDocument } = useDocumentActions();
 
   const [error, setError] = useState<string | null>(null);
-  const [modelOptions, setModelOptions] = useState<
-    { label: string; value: string }[]
-  >([]);
-  // Empty = agent default model
-  const [selectedModel, setSelectedModel] = useState("");
+  const { modelOptions, selectedModel, setSelectedModel } = useLettaModelPicker(
+    !!document?.isAdmin,
+    !!document?.rcoApiData,
+  );
   const abortControllerRef = useRef<AbortController | null>(null);
   const runIdRef = useRef<string | null>(null);
 
@@ -277,22 +277,6 @@ export function AIFloatingButton() {
   }, [document?.activeRunId]);
 
   const isAdmin = !!document?.isAdmin;
-  useEffect(() => {
-    if (!isAdmin) return;
-    fetch("/api/editorial-rewrite/models")
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const { models } = (await res.json()) as {
-          models: { handle: string; name: string }[];
-        };
-        setModelOptions(
-          models.map((model) => ({ label: model.name, value: model.handle })),
-        );
-      })
-      .catch((err) => {
-        logger.warn({ err }, "[AIFloatingButton] Letta models unavailable");
-      });
-  }, [isAdmin]);
 
   // ─── Render ────────────────────────────────────────────────────────────
   const isDisabled =

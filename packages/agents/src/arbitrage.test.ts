@@ -11,10 +11,9 @@ const sendMock = vi.fn();
 
 const client = {
   conversations: {
-    list: async () => [
-      { id: "conv-1", summary: "compliance-fiche-1" },
-      { id: "conv-2", summary: "metadata-fiche-1" },
-    ],
+    create: async ({ summary }: { summary: string }) => ({
+      id: `conv-${summary}`,
+    }),
     messages: { create: (...args: unknown[]) => sendMock(...args) },
   },
 } as unknown as Letta;

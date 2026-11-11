@@ -342,99 +342,31 @@ export async function getEditorialContent(
 }
 
 /**
- * Triggers a metadata-only re-generation for a single document.
+ * Starts a metadata-only re-generation for a single document and returns its
+ * run ID at once: the client follows it with getMetadataRunStatus, so step
+ * retries (minutes) never hit the server action timeout.
  *
- * Unlike forceArbitrationAction (app/actions/di.ts), this skips the audit step entirely.
- * Use after re-training the metadata AI agent (Agathe) to regenerate
- * metadata on documents that already have a report.
+ * Unlike forceArbitrationAction (app/actions/di.ts), this skips the audit step.
  *
- * @param workflowId - The ID of the workflow to regenerate metadata for.
- * @returns Object indicating success/failure and the workflow run ID.
+ * @param model - Letta model handle, admins only (default: env-forced model).
  */
-export async function triggerForceMetadataOnly(workflowId: string): Promise<{
-  success: boolean;
-  workflowRunId?: string;
-  error?: string;
-}> {
+export async function triggerForceMetadataOnly(
+  workflowId: string,
+  model?: string,
+): Promise<{ success: boolean; workflowRunId?: string; error?: string }> {
   try {
     const auth = await getAuthorizedSession(workflowId, "modify");
     if (auth.errorResponse) return auth.errorResponse;
-
-    if (!forceMetadataOnlyWorkflow) {
-      logger.error("forceMetadataOnlyWorkflow is undefined - cannot start");
-      return {
-        success: false,
-        error: "Workflow non disponible",
-      };
+    if (model && auth.user.role !== "admin") {
+      return { success: false, error: "Choix du modèle réservé aux admins" };
     }
 
-    const result = await start(forceMetadataOnlyWorkflow, [workflowId]);
-
+    const result = await start(forceMetadataOnlyWorkflow, [workflowId, model]);
     logger.info(
-      { workflowRunId: result.runId, workflowId },
-      "Force metadata only workflow started — waiting for completion",
+      { workflowRunId: result.runId, workflowId, model },
+      "Force metadata only workflow started",
     );
-
-    // We intentionally wait for the workflow to complete here rather than
-    // returning immediately and relying on Supabase Realtime to notify the UI.
-    //
-    // Why not Realtime?
-    // - Supabase Realtime local is unreliable: the service repeatedly hits
-    //   idle_shutdown and CHANNEL_ERROR loops due to a distributed clustering
-    //   bug in the current image (Zero region nodes for us-east-1).
-    // - Even in production, subscribing to letta_reports UPDATEs for a single
-    //   user action is overkill — it adds Realtime infra complexity (RLS,
-    //   REPLICA IDENTITY, publication setup) for a feature that doesn't need
-    //   real-time multi-user sync. The generation is triggered by one user and
-    //   awaited by that same user in the same session.
-    //
-    // The async/await approach is simpler and more robust:
-    // the Server Action blocks until done, then the client calls router.refresh().
-    //
-    // Safety: Vercel Pro has a 60s timeout. We cap at 55s to fail gracefully
-    // with a clear message rather than letting Vercel kill the connection.
-    const run = getRun(result.runId);
-    const startTime = Date.now();
-    const MAX_WAIT_MS = 55_000;
-    let finalStatus = await run.status;
-    while (finalStatus === "pending" || finalStatus === "running") {
-      if (Date.now() - startTime > MAX_WAIT_MS) {
-        logger.warn(
-          {
-            workflowRunId: result.runId,
-            workflowId,
-            elapsedMs: Date.now() - startTime,
-          },
-          "Metadata generation timed out waiting for workflow",
-        );
-        return {
-          success: false,
-          error:
-            "La génération a pris trop de temps. Elle continue en arrière-plan — rafraîchissez la page dans quelques instants.",
-        };
-      }
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      finalStatus = await run.status;
-    }
-
-    logger.info(
-      { workflowRunId: result.runId, workflowId, finalStatus },
-      "Force metadata only workflow completed",
-    );
-
-    revalidatePath("/documents/[id]", "page");
-
-    if (finalStatus !== "completed") {
-      return {
-        success: false,
-        error: "La régénération a échoué. Vérifiez les logs et réessayez.",
-      };
-    }
-
-    return {
-      success: true,
-      workflowRunId: result.runId,
-    };
+    return { success: true, workflowRunId: result.runId };
   } catch (error) {
     logger.error(
       error,
@@ -444,5 +376,20 @@ export async function triggerForceMetadataOnly(workflowId: string): Promise<{
       success: false,
       error: "Erreur inattendue lors du démarrage de la régénération",
     };
+  }
+}
+
+/** Status of a metadata run started by triggerForceMetadataOnly. */
+export async function getMetadataRunStatus(
+  workflowId: string,
+  runId: string,
+): Promise<{ status?: string; error?: string }> {
+  const auth = await getAuthorizedSession(workflowId, "modify");
+  if (auth.errorResponse) return { error: auth.errorResponse.error };
+  try {
+    return { status: await getRun(runId).status };
+  } catch (error) {
+    logger.error({ error, runId }, "Failed to read metadata run status");
+    return { error: "Statut du run indisponible" };
   }
 }

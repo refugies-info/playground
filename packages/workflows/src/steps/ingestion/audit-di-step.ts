@@ -44,9 +44,9 @@
 import { APIError } from "@letta-ai/letta-client/core/error";
 import {
   accumulateUsage,
+  createConversation,
   createLettaClient,
   estimateCarbonImpact,
-  findOrCreateConversation,
   generateIngestionReport,
   type LettaUsage,
   parseIngestionResponse,
@@ -283,7 +283,7 @@ export async function generateDiAuditReportsStep(runId: string) {
   // context mixing). runWithConcurrency limits simultaneous LLM calls.
   const results = await runWithConcurrency(
     targets.map((target) => async () => {
-      const conversationId = await findOrCreateConversation(
+      const conversationId = await createConversation(
         lettaClient,
         agentId,
         `compliance-${target.workflow_id}`,
@@ -438,7 +438,7 @@ async function generateForcedDiReport(markdown: string, workflowId: string) {
   }
 
   const lettaClient = createLettaClient();
-  const conversationId = await findOrCreateConversation(
+  const conversationId = await createConversation(
     lettaClient,
     agentId,
     `compliance-${workflowId}`,
