@@ -104,9 +104,7 @@ export interface GetDocumentsParams {
   searchInContent?: boolean;
   /** Filter by entry type: "0" (dates fixes) or "1" (a tout moment) */
   modalitesEntreesSorties?: string | null;
-  /** Filter by source of the active ingestion version: "DI" or "RCO" */
   origin?: string | null;
-  /** Hide "Ouvrir l'école aux parents pour la réussite des enfants - OEPRE" fiches */
   excludeOepre?: boolean;
   /** Include large markdown/json fields. Used by /workflow preview drawer only. */
   includePreviewFields?: boolean;

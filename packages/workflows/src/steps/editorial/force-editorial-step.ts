@@ -58,18 +58,6 @@ export interface ForceEditorialStepResult {
   persistResult: PersistEditorialReportResult;
 }
 
-/**
- * Durable workflow step that calls the Letta editorial agent and persists the result.
- *
- * Unlike the old SSE route, this step:
- * - Has no timeout pressure (Vercel Workflow steps can run for minutes)
- * - Automatically retries on transient failures
- * - Always persists the result, even if the client disconnects
- *
- * @param workflowId - The workflow (document) ID
- * @param userId - The profile id of the human who triggered the rewrite
- * @param model - Admin-chosen Letta model handle; agent default when omitted
- */
 type EditorialWorkflow = {
   conversation_id: string | null;
   editorial_record_id: string | null;
@@ -214,6 +202,18 @@ async function generateDiEditorial(
   return { agentId, conversationId, model, ...finalContent };
 }
 
+/**
+ * Durable workflow step that calls the Letta editorial agent and persists the result.
+ *
+ * Unlike the old SSE route, this step:
+ * - Has no timeout pressure (Vercel Workflow steps can run for minutes)
+ * - Automatically retries on transient failures
+ * - Always persists the result, even if the client disconnects
+ *
+ * @param workflowId - The workflow (document) ID
+ * @param userId - The profile id of the human who triggered the rewrite
+ * @param model - Admin-chosen Letta model handle; agent default when omitted
+ */
 export async function forceEditorialStep(
   workflowId: string,
   userId: string,

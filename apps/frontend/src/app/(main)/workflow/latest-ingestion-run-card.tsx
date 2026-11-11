@@ -1,6 +1,6 @@
 import { Badge, type BadgeProps } from "@playground/ui/primitives";
+import type { ReactNode } from "react";
 import { formatDateFr, formatTimeFr } from "@/lib/format-date";
-
 import type { IngestionRunSummary } from "@/lib/ingestion-run";
 
 type BadgeVariant = NonNullable<BadgeProps["variant"]>;
@@ -38,7 +38,17 @@ function Stat({
   );
 }
 
-export function LatestIngestionRunCard({ run }: { run: IngestionRunSummary }) {
+export function LatestIngestionRunCard({
+  run,
+  notice,
+}: {
+  run: IngestionRunSummary | null;
+  notice?: ReactNode;
+}) {
+  if (!run) {
+    return notice ? <section className="mb-8">{notice}</section> : null;
+  }
+
   const badge = STATUS_BADGES[run.status] ?? {
     label: run.status,
     variant: "neutral" as const,
@@ -46,6 +56,7 @@ export function LatestIngestionRunCard({ run }: { run: IngestionRunSummary }) {
 
   return (
     <section className="mb-8 border-b border-gray-200 pb-6">
+      {notice && <div className="mb-3">{notice}</div>}
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="text-lg font-semibold text-gray-900">
           Dernier import {run.source.toUpperCase()}
