@@ -172,7 +172,7 @@ export function SourcePanel() {
             content={document?.ingestionContent ?? ""}
             loadingMessage="Chargement du contenu source..."
             emptyMessage="Aucun contenu source disponible"
-            className="[&_.bn-editor]:!px-10 [&_[data-content-type=heading]]:![--level:28px] [&_[data-content-type=heading]]:![line-height:normal]"
+            className="[&_.bn-editor]:!px-10 [&_[data-content-type=heading]]:![--level:28px] [&_[data-content-type=heading]_:is(h1,h2,h3)]:![line-height:normal]"
           />
           {document?.rcoSource && (
             <section className="mx-10 mt-6 border-t border-border pt-6">
