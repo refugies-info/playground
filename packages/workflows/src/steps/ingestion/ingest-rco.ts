@@ -1,10 +1,3 @@
-/**
- * @file ingest-rco.ts
- *
- * Steps of the RCO (API Offre Info) ingestion. No AI involved: search,
- * change detection and DI continuity are deterministic.
- */
-
 import {
   emptyRcoBatchResult,
   getRcoClientFromEnv,
