@@ -78,9 +78,10 @@ export function WorkflowClient(props: WorkflowClientProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [workflowId, setWorkflowId] = useState<string | null>(null);
-  const [results, setResults] = useState<Record<string, unknown> | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
+  const [launch, setLaunch] = useState<{
+    workflowId: string;
+    dashboardUrl?: string;
+  } | null>(null);
   const [arbitrationLoading, setArbitrationLoading] = useState<string | null>(
     null,
   );
@@ -253,102 +254,26 @@ export function WorkflowClient(props: WorkflowClientProps) {
   const handleRunIngestion = async () => {
     setIsLoading(true);
     setError(null);
-    setWorkflowId(null);
-    setResults(null);
-    setStatus(null);
+    setLaunch(null);
 
     try {
       const result = await triggerIngestionAction();
 
       if (!result.success) {
-        setError(result.error || "Unknown error occurred");
+        setError(result.error ?? "Échec du lancement de l'import");
       } else {
-        setWorkflowId(result.workflowId || null);
-        if (result.dashboardUrl) {
-          // Optional: Open dashboard in new tab
-          // window.open(result.dashboardUrl, '_blank');
-        }
+        setLaunch({
+          workflowId: result.workflowId ?? "",
+          dashboardUrl: result.dashboardUrl,
+        });
+        router.refresh();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(
+        err instanceof Error ? err.message : "Échec du lancement de l'import",
+      );
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // ... rest of functions ...
-
-  const handleRefreshStatus = async () => {
-    if (!workflowId) return;
-    // Implementation for status refresh if needed
-    try {
-      const response = await fetch(`/api/workflow/${workflowId}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch workflow status");
-      }
-      const data = await response.json();
-      setStatus(data.status);
-      // Reloads the latest run card from ingestion_runs.
-      router.refresh();
-
-      if (data.status === "completed" && data.output) {
-        const [resultMap, ...values] = data.output;
-
-        if (resultMap && typeof resultMap === "object") {
-          // biome-ignore lint/suspicious/noExplicitAny: Recursive reconstruction
-          const reconstruct = (val: any): any => {
-            if (typeof val === "number") return values[val - 1];
-            if (Array.isArray(val)) return val.map(reconstruct);
-            if (val && typeof val === "object") {
-              // biome-ignore lint/suspicious/noExplicitAny: Recursive reconstruction
-              const res: any = {};
-              for (const k in val) {
-                res[k] = reconstruct(val[k]);
-              }
-              return res;
-            }
-            return val;
-          };
-
-          const fullResult = reconstruct(resultMap);
-
-          if (fullResult.ingestion) {
-            setResults({
-              ...fullResult.files,
-              "Ingestion Status": fullResult.ingestion.status,
-              "Ingestion Record ID":
-                fullResult.ingestion.ingestionRecordId || "N/A",
-            });
-          } else if (fullResult.structures && fullResult.services) {
-            setResults({
-              "Ingestion Type": "Data Inclusion",
-              "Structures Fetched": String(fullResult.structures.totalFetched),
-              "Services Fetched": String(fullResult.services.totalFetched),
-              "Services Inserted": String(fullResult.services.totalInserted),
-              "Services Updated": String(fullResult.services.totalUpdated),
-              "Audit Reports": fullResult.audit
-                ? `${fullResult.audit.succeeded}/${fullResult.audit.attempted}`
-                : "N/A",
-            });
-          } else if (fullResult.changes) {
-            setResults({
-              "Ingestion Type": "RCO",
-              "Run Status": fullResult.status,
-              "Actions traitées": String(fullResult.processed),
-              Nouvelles: String(fullResult.changes.new),
-              "Reprises DI": String(fullResult.changes.baseline),
-              "Sessions seules": String(fullResult.changes.sessions_only),
-              "Contenu modifié": String(fullResult.changes.content),
-              Inchangées: String(fullResult.changes.unchanged),
-              Erreurs: String(fullResult.errors.length),
-            });
-          } else {
-            setResults(fullResult);
-          }
-        }
-      }
-    } catch (err) {
-      logger.error(err, "Error refreshing status");
     }
   };
 
@@ -415,110 +340,34 @@ export function WorkflowClient(props: WorkflowClientProps) {
 
   return (
     <div className="w-full flex flex-col">
-      <div className="container mx-auto max-w-4xl">
-        {error && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-            <h3 className="font-bold mb-2">Error</h3>
-            <p>{error}</p>
-          </div>
-        )}
-
-        {workflowId && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-bold mb-2">Workflow Started</h3>
-                <p>
-                  Workflow ID:{" "}
-                  <code className="bg-green-100 px-2 py-1 rounded">
-                    {workflowId}
-                  </code>
-                </p>
-                {status && (
-                  <p className="mt-2">
-                    Status:{" "}
-                    <span
-                      className={`font-semibold ${
-                        status === "completed"
-                          ? "text-green-600"
-                          : status === "failed"
-                            ? "text-red-600"
-                            : "text-blue-600"
-                      }`}
-                    >
-                      {status}
-                    </span>
-                  </p>
-                )}
-              </div>
-              <Button
-                variant="tertiaire"
-                size="sm"
-                onClick={handleRefreshStatus}
-              >
-                Refresh Status
-              </Button>
-            </div>
-            <p className="mt-2 text-sm">
-              Check the{" "}
-              <a
-                href="http://localhost:3456"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline font-semibold"
-              >
-                Workflow Dashboard
-              </a>{" "}
-              (if enabled) or server logs for progress.
-            </p>
-          </div>
-        )}
-
-        {results && (
-          <div className="mt-8">
-            <h2 className="text-2xl font-bold mb-4">Results</h2>
-            <div className="grid gap-4">
-              {Object.entries(results).map(([key, value]) => (
-                <div
-                  key={key}
-                  className="p-4 border rounded-lg bg-white dark:bg-gray-800 shadow-sm"
-                >
-                  <h3 className="font-semibold text-lg mb-2">{key}</h3>
-                  <div className="flex items-center justify-between">
-                    <code className="text-sm bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded break-all">
-                      {value as string}
-                    </code>
-                    {(typeof value === "string" && value.startsWith("Error")) ||
-                    value === "error" ||
-                    value === "failed" ? (
-                      <span className="text-red-500 text-sm font-medium">
-                        Failed
-                      </span>
-                    ) : (typeof value === "string" &&
-                        value.startsWith("success")) ||
-                      (key.includes("Status") && value === "success") ? (
-                      <span className="text-green-500 text-sm font-medium">
-                        Success
-                      </span>
-                    ) : (
-                      <span className="text-gray-500 text-sm">Info</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="mt-4 text-sm text-gray-500">
-              Files have been saved to the <code>output</code> directory in the
-              project root.
-            </p>
-          </div>
-        )}
-      </div>
-
       <div>
-        {props.latestIngestionRun && (
-          <LatestIngestionRunCard run={props.latestIngestionRun} />
-        )}
+        <LatestIngestionRunCard
+          run={props.latestIngestionRun}
+          notice={
+            error ? (
+              <p className="text-sm text-red-700">{error}</p>
+            ) : (
+              launch && (
+                <p className="text-sm text-gray-600">
+                  Import lancé ({launch.workflowId})
+                  {launch.dashboardUrl && (
+                    <>
+                      {" · "}
+                      <a
+                        href={launch.dashboardUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline"
+                      >
+                        Suivre dans le dashboard
+                      </a>
+                    </>
+                  )}
+                </p>
+              )
+            )
+          }
+        />
         <div className="mb-6 flex flex-wrap items-end gap-4">
           <SearchInput
             value={filters.search}
