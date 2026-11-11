@@ -42,8 +42,6 @@ const requiredEnv = (name: string) => {
   return value;
 };
 
-// ponytail: Dec 2025 snapshot of RI dispositifs, read getDispositifs() from
-// @playground/mongo once MONGODB_URI is available to the workflows.
 const dispositifIndex = createDispositifIndex(
   dispositifsSnapshot as RiDispositif[],
 );
