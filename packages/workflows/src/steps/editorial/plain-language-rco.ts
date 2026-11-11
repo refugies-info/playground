@@ -1,13 +1,3 @@
-/**
- * @file plain-language-rco.ts
- *
- * Plain-language rewrite of one RCO record, called by forceEditorialStep.
- *
- *   [1] toPlainLanguageDocument   → useful API texts, HTML stripped (no AI)
- *   [2] rco-plain-language agent  → the texts only, as JSON
- *   [3] renderPlainLanguageFiche  → RI structure, typography, rule checks
- */
-
 import { askPlainLanguageAgent, createLettaClient } from "@playground/agents";
 import {
   type RcoActionDocument,
