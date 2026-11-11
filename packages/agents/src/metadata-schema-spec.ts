@@ -126,9 +126,11 @@ metadata_ri:
   commitment:
     amountDetails: "exactly"
     hours: [20]
-    timeUnit: "week"
+    timeUnit: "weeks"
   frequency:
+    amountDetails: "exactly"
     hours: 4
+    timeUnit: "hours"
     frequencyUnit: "week"
   periode:
     modalitesEntreesSorties: 0
@@ -136,7 +138,7 @@ metadata_ri:
       - startDate: "2025-09-01"
         endDate: "2025-12-20"
   timeSlots: ["morning"]
-  location: ["75", "92"]
+  location: ["75 - Paris", "92 - Hauts-de-Seine"]
   conditions: null
   map: null
 ---

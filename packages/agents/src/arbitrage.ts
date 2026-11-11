@@ -2,7 +2,7 @@ import type { Letta } from "@letta-ai/letta-client";
 import { RCO_MODEL_HANDLE } from "@playground/shared-types";
 // v4 API (shipped in zod 3.25) for z.toJSONSchema.
 import { z } from "zod/v4";
-import { findOrCreateConversation, sendMessageToConversation } from "./agents";
+import { createConversation, sendMessageToConversation } from "./agents";
 import type { LettaUsage } from "./types";
 
 export const ComplianceAnswerSchema = z.object({
@@ -33,15 +33,34 @@ export const DuplicateAnswerSchema = z.object({
   reason: z.string(),
 });
 
-export const MetadataAnswerSchema = z.object({
-  fields: z.array(
-    z.object({
-      key: z.string(),
-      value: z.unknown(),
-      source: z.array(z.object({ field: z.string(), rawValue: z.unknown() })),
-    }),
-  ),
-});
+// gpt-oss sometimes answers a bare array, "field" for "key", or a "field: value" source.
+const toMetadataSource = (source: unknown) => {
+  if (typeof source !== "string") return source;
+  const [, field, rawValue] =
+    source.match(/^([\w.[\]]+)\s*:\s*([\s\S]*)$/) ?? [];
+  return [field ? { field, rawValue } : { field: "texte", rawValue: source }];
+};
+
+const MetadataFieldSchema = z.preprocess(
+  (item) =>
+    item && typeof item === "object"
+      ? {
+          ...item,
+          key: "key" in item ? item.key : (item as { field?: unknown }).field,
+          source: toMetadataSource((item as { source?: unknown }).source),
+        }
+      : item,
+  z.object({
+    key: z.string(),
+    value: z.unknown(),
+    source: z.array(z.object({ field: z.string(), rawValue: z.unknown() })),
+  }),
+);
+
+export const MetadataAnswerSchema = z.preprocess(
+  (answer) => (Array.isArray(answer) ? { fields: answer } : answer),
+  z.object({ fields: z.array(MetadataFieldSchema) }),
+);
 
 // gpt-oss sometimes names the body "content" or "texte": keep it rather than fail.
 const AccordionSchema = z.preprocess(
@@ -106,12 +125,22 @@ const asTag = (tag: string, value: unknown) =>
   `<${tag}>\n${JSON.stringify(value, null, 2).replaceAll(`</${tag}>`, "")}\n</${tag}>`;
 
 // Models sometimes wrap JSON in a ``` fence despite the instructions.
-const extractJson = (content: string) =>
-  content.slice(content.indexOf("{"), content.lastIndexOf("}") + 1);
+const extractJson = (content: string, open: string, close: string) =>
+  content.slice(content.indexOf(open), content.lastIndexOf(close) + 1);
+
+const parseJson = (content: string): unknown => {
+  try {
+    return JSON.parse(extractJson(content, "{", "}"));
+  } catch (error) {
+    // A bare array answer: "{...},{...}" alone is not valid JSON.
+    if (!content.trimStart().startsWith("[")) throw error;
+    return JSON.parse(extractJson(content, "[", "]"));
+  }
+};
 
 const parseAnswer = <T>(content: string, schema: z.ZodType<T>) => {
   try {
-    return schema.safeParse(JSON.parse(extractJson(content)));
+    return schema.safeParse(parseJson(content));
   } catch (error) {
     return { success: false as const, error: error as Error };
   }
@@ -135,7 +164,7 @@ async function askAgent<T>(
   model = RCO_MODEL_HANDLE,
   onConversation?: (conversationId: string) => Promise<void>,
 ): Promise<{ answer: T; usage?: LettaUsage; conversationId: string }> {
-  const conversationId = await findOrCreateConversation(
+  const conversationId = await createConversation(
     client,
     agentId,
     conversationName,
@@ -226,6 +255,7 @@ export const askMetadataAgent = (
   documentId: string,
   fields: string[],
   document: unknown,
+  model?: string,
 ) =>
   askAgent(
     client,
@@ -233,6 +263,7 @@ export const askMetadataAgent = (
     `metadata-${documentId}`,
     [asTag("fields", fields), asTag("document", document)].join("\n\n"),
     MetadataAnswerSchema,
+    model,
   );
 
 export const askPlainLanguageAgent = (

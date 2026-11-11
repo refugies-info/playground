@@ -33,7 +33,7 @@ Une phrase en français simple, 200 caractères maximum, qui dit ce que la perso
 Le thème qui correspond le mieux à l'objectif de la fiche. Une formation de français → « Apprendre le français ».
 
 ## secondaryThemes — Thèmes secondaires (liste d'`ID_theme`)
-Seulement s'ils sont clairement présents. Jamais le thème principal. Sinon `null`.
+Des `ID_theme` uniquement, jamais d'`ID_need`. Seulement s'ils sont clairement présents. Jamais le thème principal. Sinon `null`.
 
 ## needs — Besoins (liste d'`ID_need`)
 Un à trois besoins, choisis **uniquement parmi ceux du thème principal ou des thèmes secondaires** retenus (colonne `ID_theme`).
@@ -52,7 +52,7 @@ Valeurs : `alpha`, `A1`, `A2`, `B1`, `B2`, `C1`, `C2`. Les niveaux **visés ou r
 `{"type":"lessThan"|"moreThan"|"between","ages":[...]}`. « plus de 16 ans » → `{"type":"moreThan","ages":[16]}`, « 16 à 25 ans » → `{"type":"between","ages":[16,25]}`. « Majeur » → `moreThan` 18. Sinon `null`.
 
 ## frequency — Fréquence (objet)
-`{"amountDetails":"minimum"|"maximum"|"approximately"|"exactly","hours":<nombre>,"frequencyUnit":"session"|"day"|"week"|"month"|"trimester"|"semester"|"year"}`. `hours` est un nombre, pas une liste. « 12 h par semaine » → `{"amountDetails":"exactly","hours":12,"frequencyUnit":"week"}`. Sinon `null`.
+`{"amountDetails":"minimum"|"maximum"|"approximately"|"exactly","hours":<nombre>,"timeUnit":"sessions"|"hours"|"half-days"|"days"|"weeks"|"months"|"trimesters"|"semesters"|"years","frequencyUnit":"session"|"day"|"week"|"month"|"trimester"|"semester"|"year"}`. `hours` est un nombre, pas une liste. `timeUnit` = unité de la quantité (pluriel), `frequencyUnit` = période (singulier). « 12 h par semaine » → `{"amountDetails":"exactly","hours":12,"timeUnit":"hours","frequencyUnit":"week"}`. Sinon `null`.
 
 ## commitment — Durée totale (objet)
 Demandé seulement quand `nombre_heures_total` est absent. `{"amountDetails":"minimum"|"maximum"|"approximately"|"exactly"|"between","hours":[<nombre>],"timeUnit":"sessions"|"hours"|"half-days"|"days"|"weeks"|"months"|"trimesters"|"semesters"|"years"}`. « 6 mois » → `{"amountDetails":"approximately","hours":[6],"timeUnit":"months"}`.
@@ -70,7 +70,7 @@ Valeurs, et **aucune autre** : `acte naissance`, `titre sejour`, `cir`, `bank ac
 - Une condition hors liste (« être majeur », « habiter le département ») est ignorée. Aucune → `null`.
 
 ## location — Départements
-Demandé seulement si aucun lieu n'a de département. `"online"` si la formation est entièrement à distance, sinon `null`.
+Demandé seulement si aucun lieu n'a de département. `"online"` si la formation est entièrement à distance, sinon `null`. N'utilise jamais `"france"`.
 
 ## mainSponsor, periode, map
 Demandés seulement si l'API ne les fournit pas : réponds `null`.

@@ -8,10 +8,13 @@
 
 import { forceMetadataReportStep } from "../../steps/ingestion/metadata-di-step";
 
-export async function forceMetadataOnlyWorkflow(workflowId: string) {
+export async function forceMetadataOnlyWorkflow(
+  workflowId: string,
+  model?: string,
+) {
   "use workflow";
 
-  const metadataResult = await forceMetadataReportStep(workflowId);
+  const metadataResult = await forceMetadataReportStep(workflowId, model);
 
   return { metadata: metadataResult };
 }

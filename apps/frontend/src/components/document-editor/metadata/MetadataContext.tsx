@@ -21,7 +21,10 @@ import {
   useReducer,
   useState,
 } from "react";
-import { triggerForceMetadataOnly } from "@/services/document-actions";
+import {
+  getMetadataRunStatus,
+  triggerForceMetadataOnly,
+} from "@/services/document-actions";
 import { saveMetadataFieldAction } from "@/services/metadata-actions";
 import { useDocument } from "../DocumentContext";
 
@@ -283,9 +286,14 @@ interface MetadataContextValue {
   /** Error message from the last generation attempt (null if none) */
   generationError: string | null;
 
-  /** Trigger AI metadata generation (or regeneration) */
-  handleGenerate: () => Promise<void>;
+  /** Last failed attempt while the workflow retries (null if none) */
+  retryMessage: string | null;
+
+  /** Trigger AI metadata generation (or regeneration), optional model handle */
+  handleGenerate: (model?: string) => Promise<void>;
 }
+
+const RUN_FINISHED_STATUSES = new Set(["completed", "failed", "cancelled"]);
 
 const MetadataContext = createContext<MetadataContextValue | undefined>(
   undefined,
@@ -314,57 +322,84 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     document?.isMetadataGenerating ?? false,
   );
   const [generationError, setGenerationError] = useState<string | null>(null);
-
-  // ---------------------------------------------------------------------------
-  // Edge case: page loaded while a generation was already in progress
-  // (another tab triggered it). Poll every 3s until the sentinel clears.
-  // Normal flow (handleGenerate) uses async/await and doesn't need this.
-  // ---------------------------------------------------------------------------
+  // Why the workflow is retrying, read from the "generating" sentinel.
+  const [retryMessage, setRetryMessage] = useState<string | null>(null);
+  // Run started from this tab; null = generation found in progress at load.
+  const [runId, setRunId] = useState<string | null>(null);
   const isGeneratingOnLoad = document?.isMetadataGenerating ?? false;
+
+  // Poll until the run ends. Step retries keep the sentinel "generating", so
+  // a generation found at load ends when the latest report leaves that state.
   useEffect(() => {
-    if (!isGeneratingOnLoad || !document?.id) return;
-
+    if (!isGenerating || !document?.id) return;
+    const workflowId = document.id;
     const supabase = createSupabaseBrowserClient();
-    const interval = setInterval(async () => {
-      const { data } = await supabase
+
+    const poll = async () => {
+      const { data: latest } = await supabase
         .from("letta_reports")
-        .select("id, status")
-        .eq("workflow_id", document.id)
+        .select("status, raw_response")
+        .eq("workflow_id", workflowId)
         .eq("report_type", "metadata")
-        .eq("status", "generating")
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
+      setRetryMessage(
+        latest?.status === "generating" ? (latest.raw_response ?? null) : null,
+      );
 
-      // No more "generating" report → generation finished
-      if (!data) {
-        clearInterval(interval);
-        setIsGenerating(false);
-        router.refresh();
+      let finished = latest?.status !== "generating";
+      let failed = latest?.status === "error";
+      if (runId) {
+        const { status, error } = await getMetadataRunStatus(workflowId, runId);
+        if (error) {
+          setGenerationError(error);
+          setIsGenerating(false);
+          return;
+        }
+        finished = !!status && RUN_FINISHED_STATUSES.has(status);
+        failed = status !== "completed";
       }
-    }, 3000);
+      if (!finished) return;
 
-    return () => clearInterval(interval);
-  }, [isGeneratingOnLoad, document?.id, router]);
-
-  /** Trigger AI metadata generation (or regeneration) */
-  const handleGenerate = useCallback(async () => {
-    if (!document?.id) return;
-    setIsGenerating(true);
-    setGenerationError(null);
-    try {
-      // triggerForceMetadataOnly waits for the workflow to complete server-side.
-      // No Realtime subscription needed — we just await the Server Action.
-      const result = await triggerForceMetadataOnly(document.id);
-      if (!result.success) {
-        setGenerationError(result.error ?? "Erreur lors de la génération");
-      } else {
-        router.refresh();
+      if (failed) {
+        setGenerationError(
+          latest?.status === "error" && latest.raw_response
+            ? `La régénération a échoué : ${latest.raw_response.slice(0, 300)}`
+            : "La régénération a échoué. Vérifiez les logs et réessayez.",
+        );
       }
-    } catch {
-      setGenerationError("Erreur inattendue");
-    } finally {
+      setRunId(null);
       setIsGenerating(false);
-    }
-  }, [document?.id, router]);
+      router.refresh();
+    };
+
+    const interval = setInterval(poll, 3000);
+    return () => clearInterval(interval);
+  }, [isGenerating, runId, document?.id, router]);
+
+  /** Start AI metadata generation (or regeneration), then poll the run */
+  const handleGenerate = useCallback(
+    async (model?: string) => {
+      if (!document?.id) return;
+      setIsGenerating(true);
+      setGenerationError(null);
+      setRetryMessage(null);
+      try {
+        const result = await triggerForceMetadataOnly(document.id, model);
+        if (!result.success || !result.workflowRunId) {
+          setGenerationError(result.error ?? "Erreur lors de la génération");
+          setIsGenerating(false);
+          return;
+        }
+        setRunId(result.workflowRunId);
+      } catch {
+        setGenerationError("Erreur inattendue");
+        setIsGenerating(false);
+      }
+    },
+    [document?.id],
+  );
 
   /** Base metadata from letta_report (AI), memoized */
   const baseMetadata = useMemo(
@@ -728,6 +763,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       isGenerating,
       isGeneratingOnLoad,
       generationError,
+      retryMessage,
       handleGenerate,
     }),
     [
@@ -752,6 +788,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       isGenerating,
       isGeneratingOnLoad,
       generationError,
+      retryMessage,
       handleGenerate,
     ],
   );

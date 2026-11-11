@@ -4,8 +4,10 @@ import {
   parseDocumentSortField,
   parseSearchField,
 } from "@playground/shared-types";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { getIngestionSource } from "@/lib/ingestion-source";
-import { getQueryParam } from "@/lib/search-params";
+import { getQueryParam, WORKFLOW_FILTERS_COOKIE } from "@/lib/search-params";
 import { getDocuments } from "@/services/documents";
 import { getLatestIngestionRun } from "@/services/ingestion-runs";
 import { WorkflowClient } from "./workflow-client";
@@ -20,6 +22,9 @@ const MAX_PAGE_SIZE = 100;
 
 export default async function WorkflowPage(props: PageProps) {
   const searchParams = await props.searchParams;
+  const savedQuery = (await cookies()).get(WORKFLOW_FILTERS_COOKIE)?.value;
+  if (Object.keys(searchParams).length === 0 && savedQuery)
+    redirect(`/workflow?${savedQuery}`);
   const page =
     typeof searchParams.page === "string"
       ? Number.parseInt(searchParams.page, 10) || 1

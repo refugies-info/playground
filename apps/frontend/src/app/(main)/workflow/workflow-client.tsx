@@ -11,13 +11,14 @@ import {
 } from "@playground/shared-types";
 import { BoutonFiltre, Button, FiltreDate, SearchInput } from "@playground/ui";
 import { DataTable } from "@playground/ui/composites";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { triggerIngestionAction } from "@/app/actions/ingestion";
 import { AppPaginationControls } from "@/components/common/AppPagination";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import type { IngestionRunSummary } from "@/lib/ingestion-run";
 import type { IngestionSource } from "@/lib/ingestion-source";
+import { WORKFLOW_FILTERS_COOKIE } from "@/lib/search-params";
 import { createClient } from "@/lib/supabase/client";
 import { inProgressColumns } from "./columns";
 import { DocumentPreviewDrawer } from "./document-preview-drawer";
@@ -96,6 +97,14 @@ export function WorkflowClient(props: WorkflowClientProps) {
       basePath: "/workflow",
       initialFilters,
     });
+
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const query = new URLSearchParams(searchParams);
+    query.delete("page");
+    // biome-ignore lint/suspicious/noDocumentCookie: Cookie Store API is async and missing from older Safari
+    document.cookie = `${WORKFLOW_FILTERS_COOKIE}=${encodeURIComponent(query.toString())}; path=/workflow; max-age=31536000; samesite=lax`;
+  }, [searchParams]);
 
   // Track documents locally to detect changes for animation
   const [documents, setDocuments] = useState(inProgressDocuments);
@@ -614,6 +623,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
               columns={columns}
               data={documents}
               pageSize={pageSize}
+              getRowHref={(row) => `/documents/${row.id}`}
               onRowClick={(row) => router.push(`/documents/${row.id}`)}
               manualPagination
               manualSorting

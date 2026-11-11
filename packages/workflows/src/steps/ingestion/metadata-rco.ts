@@ -51,21 +51,32 @@ const toProvenance = (
   source,
 });
 
+// Too long a text is kept for the editor to shorten: the editor flags it.
+const KEPT_WHEN_INVALID: ReadonlySet<MetadataKey> = new Set(["abstract"]);
+
 // An agent value that breaks the RI schema would block the editor: drop it.
 const validateAiField = (field: MappedField) => {
   const result = validateField(field.key, field.value);
-  return result.success
-    ? {
-        field: { ...field, value: result.data },
-        provenance: toProvenance(field),
-      }
-    : {
-        field: { ...field, value: null },
-        provenance: {
-          ...toProvenance({ ...field, value: null }, "warning"),
-          value: `Valeur IA rejetée : ${result.error}`,
-        },
-      };
+  if (result.success)
+    return {
+      field: { ...field, value: result.data },
+      provenance: toProvenance(field),
+    };
+  if (KEPT_WHEN_INVALID.has(field.key))
+    return {
+      field,
+      provenance: {
+        ...toProvenance(field, "warning"),
+        value: `${displayValue(field.value)} (${result.error})`,
+      },
+    };
+  return {
+    field: { ...field, value: null },
+    provenance: {
+      ...toProvenance({ ...field, value: null }, "warning"),
+      value: `Valeur IA rejetée : ${result.error}`,
+    },
+  };
 };
 
 const metadataTable = (rows: (Provenance & { origin: string })[]) =>
@@ -78,7 +89,10 @@ const metadataTable = (rows: (Provenance & { origin: string })[]) =>
     ),
   ].join("\n");
 
-export async function generateRcoMetadata(action: RcoActionDocument) {
+export async function generateRcoMetadata(
+  action: RcoActionDocument,
+  model = RCO_MODEL_HANDLE,
+) {
   const agentId = process.env.RCO_METADATA_AGENT_ID;
   if (!agentId) {
     throw new FatalError(
@@ -94,6 +108,7 @@ export async function generateRcoMetadata(action: RcoActionDocument) {
     action.id,
     keysForAi,
     toMetadataDocument(action),
+    model,
   );
 
   // Only the requested keys, each exactly once: a missing answer means null.
@@ -124,7 +139,7 @@ export async function generateRcoMetadata(action: RcoActionDocument) {
   return {
     agentId,
     usage,
-    model: RCO_MODEL_HANDLE,
+    model,
     rawResponse: JSON.stringify(answer),
     status: "complete" as const,
     metadata: {

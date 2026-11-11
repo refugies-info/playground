@@ -1,7 +1,7 @@
 import {
+  createConversation,
   createLettaClient,
   extractTranslatedMarkdown,
-  findOrCreateConversation,
   sendMessageToConversation,
   TRANSLATE_SLASH_COMMAND,
 } from "@playground/agents";
@@ -132,7 +132,7 @@ export async function generateTranslationStep(
 
     let conversationId: string;
     try {
-      conversationId = await findOrCreateConversation(
+      conversationId = await createConversation(
         client,
         agentId,
         conversationName,

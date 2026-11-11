@@ -17,8 +17,7 @@ import { RI_DEPARTMENTS } from "@playground/shared-types";
 // Field limits
 // =============================================================================
 
-/** Maximum characters for the "En bref" (abstract) field */
-export const ABSTRACT_MAX_LENGTH = 200;
+export { ABSTRACT_MAX_LENGTH } from "@playground/shared-types";
 
 // =============================================================================
 // Time Units

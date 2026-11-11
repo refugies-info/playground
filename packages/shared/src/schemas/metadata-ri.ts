@@ -122,6 +122,8 @@ export const PoiSchema = z.object({
 });
 
 /** Full Metadata RI Schema */
+export const ABSTRACT_MAX_LENGTH = 200;
+
 export const MetadataRiSchema = z.object({
   // Identity
   titreMarque: z
@@ -137,6 +139,9 @@ export const MetadataRiSchema = z.object({
     .nullish(),
   abstract: z
     .string({ message: "Le résumé doit être une chaîne de caractères" })
+    .max(ABSTRACT_MAX_LENGTH, {
+      message: `Le résumé ne doit pas dépasser ${ABSTRACT_MAX_LENGTH} caractères`,
+    })
     .nullish(),
 
   // Themes & Needs

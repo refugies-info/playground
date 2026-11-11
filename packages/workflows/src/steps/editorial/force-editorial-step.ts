@@ -101,6 +101,21 @@ async function generateDiEditorial(
 
   const lettaClient = createLettaClient();
 
+  // A stored conversation stays bound to the agent it was created on: after a
+  // PLAYGROUND_AGENT_ID change, old fiches would keep talking to the old agent.
+  if (conversationId) {
+    const conversation = await lettaClient.conversations
+      .retrieve(conversationId)
+      .catch(() => null);
+    if (conversation?.agent_id !== agentId) {
+      logger.info(
+        { workflowId, conversationId, agentId: conversation?.agent_id },
+        "[forceEditorialStep] Conversation missing or on another agent — recreating",
+      );
+      conversationId = null;
+    }
+  }
+
   if (!conversationId) {
     logger.info({ workflowId }, "[forceEditorialStep] Creating conversation");
     const conversation = await lettaClient.conversations.create({

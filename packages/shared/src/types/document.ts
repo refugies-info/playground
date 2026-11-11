@@ -122,11 +122,13 @@ export interface Document {
   hasMetadataRun?: boolean;
   /** At least one clear language rewrite was attempted (Letta conversation exists) */
   hasEditorialRun?: boolean;
+  metadataModel?: string | null;
   /** Letta model handle of the last clear language rewrite */
   editorialModel?: string | null;
   /** The last clear language rewrite failed: model/tokens are the failed run's */
   editorialFailed?: boolean;
-  editorialTokens?: number | null;
+  totalTokens?: number | null;
+  totalTokensSince?: string | null;
   editorialCarbonImpact?: CarbonImpact | null;
   /** Sections of the last clear language rewrite meant for editors, not readers */
   editorialNotes?: string;

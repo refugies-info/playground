@@ -33,6 +33,7 @@ import type { Database, Json } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { extractEditorialNotes } from "@/lib/editorial-notes";
+import { toSearchOrFilters } from "@/lib/search-patterns";
 import { extractAuthorProfile } from "./helpers";
 
 /**
@@ -235,29 +236,21 @@ export async function getDocuments(params: GetDocumentsParams) {
 
   // Multi-column text search (title, external_id, structure_name, commune).
   // When searchInContent, also match editorial/ingestion markdown (heavier scan).
-  // Uses ilike for case-insensitive substring matching.
+  // Every word must match one of the columns (accent/case-insensitive).
   if (search) {
-    const term = `%${search}%`;
-    if (searchField) {
-      // Scoped: match only the selected column.
-      query = query.ilike(searchField, term);
-    } else {
-      // Search-all (default): title, external_id, structure_name, commune.
-      const columns = [
-        "title",
-        "external_id",
-        "structure_name",
-        "commune",
-        ...(searchInContent
-          ? ["editorial_markdown", "ingestion_markdown"]
-          : []),
-      ];
-      // Quote the value so reserved chars (, ( )) in the term are treated
-      // literally by PostgREST's .or() parser instead of breaking it.
-      const orTerm = `"${term.replace(/"/g, '\\"')}"`;
-      query = query.or(
-        columns.map((col) => `${col}.ilike.${orTerm}`).join(","),
-      );
+    const columns = searchField
+      ? [searchField]
+      : [
+          "title",
+          "external_id",
+          "structure_name",
+          "commune",
+          ...(searchInContent
+            ? ["editorial_markdown", "ingestion_markdown"]
+            : []),
+        ];
+    for (const wordFilter of toSearchOrFilters(columns, search)) {
+      query = query.or(wordFilter);
     }
   }
 
@@ -472,6 +465,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     activeRunResult,
     lastEditorialReportResult,
     lastMetadataReportResult,
+    tokenCostsResult,
   ] = await Promise.all([
     item.ingestion_record_id
       ? supabase
@@ -521,14 +515,21 @@ export async function getDocumentById(id: string): Promise<Document | null> {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    // Any metadata attempt, failed ones included: Letta conversation link.
+    // Last metadata attempt, failed ones included: Letta link and model.
     supabase
       .from("letta_reports")
-      .select("id")
+      .select("model")
       .eq("workflow_id", id)
       .eq("report_type", "metadata")
+      .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("letta_reports")
+      .select("token_cost, created_at")
+      .eq("workflow_id", id)
+      .not("token_cost", "is", null)
+      .order("created_at", { ascending: true }),
   ]);
 
   if (ingestionResult.data) {
@@ -714,6 +715,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     isMetadataGenerating: !!generatingReportResult.data,
     hasMetadataRun: !!lastMetadataReportResult.data,
     metadataReport: metadataReportValue,
+    metadataModel: lastMetadataReportResult.data?.model ?? null,
     publishedUrl,
     publicationStatus: latestPublication?.status,
     publicationRemoteId: latestPublication?.remote_id,
@@ -740,7 +742,12 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     hasEditorialRun: !!lastEditorialReportResult.data,
     editorialFailed: lastEditorialReportResult.data?.status === "error",
     editorialModel: lastEditorialReportResult.data?.model ?? null,
-    editorialTokens: lastEditorialReportResult.data?.token_cost ?? null,
+    totalTokens:
+      tokenCostsResult.data?.reduce(
+        (total, report) => total + (report.token_cost ?? 0),
+        0,
+      ) || null,
+    totalTokensSince: tokenCostsResult.data?.[0]?.created_at ?? null,
     editorialCarbonImpact:
       (lastEditorialReportResult.data?.carbon_impact as CarbonImpact | null) ??
       null,
