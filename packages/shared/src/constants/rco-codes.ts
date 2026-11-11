@@ -1,6 +1,4 @@
-// Labels of the RCO codes, shown next to the raw code in the arbitration
-// report and the metadata source.
-// LHEO dict-financeurs, shown in the report next to the raw code.
+// LHEO dict-financeurs.
 export const FUNDER_LABELS: Record<string, string> = {
   "0": "Autre",
   "2": "Conseil régional",
@@ -18,7 +16,7 @@ export const FUNDER_LABELS: Record<string, string> = {
   "19": "État - Ministère de l'intérieur",
 };
 
-// Formacode public-visé codes, shown in the report next to the raw code.
+// Formacode public-visé codes.
 // ponytail: frequent codes only, import the full Formacode table if gaps hurt.
 export const AUDIENCE_LABELS: Record<string, string> = {
   "80006": "Demandeur d'emploi",

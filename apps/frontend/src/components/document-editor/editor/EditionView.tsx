@@ -167,7 +167,6 @@ export function EditionView() {
     setDebugBlocks,
   ]);
 
-  // Sync initial debug state quand le panel s'ouvre
   useEffect(() => {
     if (editor && showDebug) {
       setDebugBlocks([...editor.document]);

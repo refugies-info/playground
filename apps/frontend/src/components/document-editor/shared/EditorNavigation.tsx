@@ -56,7 +56,6 @@ const EDITOR_MODES = [
   { value: "raw" as const, icon: RiCodeSSlashLine, label: "Markdown" },
 ];
 
-// Admin links to the RCO agent conversation behind each tab.
 const LETTA_COMPLIANCE_AGENTS = [
   { agent: "compliance", label: "Conformité" },
   { agent: "duplicates", label: "Doublons" },
