@@ -66,7 +66,6 @@ const fetchCachedRiReferenceData = unstable_cache(
     const themesMap: Record<string, string> = {};
     const themeColorsMap: Record<string, string> = {};
     for (const t of themes) {
-      // Prefer the short label; fall back to the full name
       themesMap[t.id] = t.short || t.name;
       if (t.color) themeColorsMap[t.id] = t.color;
     }
