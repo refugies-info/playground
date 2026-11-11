@@ -1,8 +1,7 @@
-# Local Letta dev stack — free agent runtime backed by a local LLM (Ollama).
+# Local Letta dev stack — LLM on Albert (ALBERT_API_KEY / ALBERT_BASE_URL), Ollama for embeddings only.
 #
 # Start:   docker compose -f docker-compose.letta.yml up -d
 # Pull models (first run):  pnpm letta:pull
-#          (or: docker compose -f docker-compose.letta.yml exec ollama ollama pull gemma3:1b)
 # Letta UI / API: http://localhost:8283  (set LETTA_BASE_URL=http://localhost:8283 in .env)
 # Stop:    docker compose -f docker-compose.letta.yml down
 #
