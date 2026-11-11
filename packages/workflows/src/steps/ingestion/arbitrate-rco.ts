@@ -1,8 +1,4 @@
 /**
- * @file arbitrate-rco.ts
- *
- * Arbitration of one RCO record, called by forceAuditReportStep.
- *
  *   [1] checkCompliance       → deterministic rules (no AI)
  *   [2] rco-compliance agent  → only the criteria the rules left open
  *   [3] duplicate shortlist   → RI dispositifs (RI endpoint) + playground

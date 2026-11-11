@@ -1,13 +1,3 @@
-/**
- * @file metadata-rco.ts
- *
- * Metadata of one RCO record, called by forceMetadataReportStep.
- *
- *   [1] mapMetadata          → fields read from the API codes and figures (no AI)
- *   [2] rco-metadata agent   → only the fields the code left open
- *   [3] validateField        → an AI value that breaks the RI schema is dropped
- */
-
 import { askMetadataAgent, createLettaClient } from "@playground/agents";
 import {
   type MappedField,
