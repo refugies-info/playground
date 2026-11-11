@@ -6,12 +6,7 @@ import {
 } from "../icons";
 import { Button } from "../primitives/button/Button";
 
-/**
- * Pagination numérotée — calquée sur le DSFR (première, précédente, numéros
- * avec ellipses, suivante, dernière).
- *
- * @see https://www.systeme-de-design.gouv.fr/version-courante/fr/composants/pagination/design-de-la-pagination
- */
+// @see https://www.systeme-de-design.gouv.fr/version-courante/fr/composants/pagination/design-de-la-pagination
 export interface PaginationControlsProps {
   currentPage: number;
   totalPages: number;

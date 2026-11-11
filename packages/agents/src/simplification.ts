@@ -56,7 +56,6 @@ export interface SimplifyContentResult {
  * @param client - The Letta client instance
  * @param markdownContent - Markdown with frontmatter (from editorial_records)
  * @param conversationId - The conversation ID to use
- * @param model - Letta model handle forced on this request
  */
 export const simplifyContent = async function* (
   client: Letta,
