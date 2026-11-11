@@ -135,8 +135,6 @@ async function findRiCandidates(
   const baseUrl = requiredEnv("RI_BASE_URL", "RI webhook").replace(/\/$/, "");
   const secret = requiredEnv("RI_WEBHOOK_SECRET", "RI webhook");
   const document = toArbitrationDocument(action);
-  // ponytail: same contract as riWebhookRequest (apps/frontend, PR #360);
-  // reuse it once it lives in a package the workflows can import.
   const response = await fetch(`${baseUrl}${RI_DUPLICATES_PATH}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "webhook-secret": secret },
