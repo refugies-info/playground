@@ -42,7 +42,6 @@ const addBatchResult = (
   ingestionRecordsCreated:
     total.ingestionRecordsCreated + batch.ingestionRecordsCreated,
   errors: [...total.errors, ...batch.errors],
-  outcomes: [...total.outcomes, ...batch.outcomes],
 });
 
 const toRunStats = (totals: RcoBatchResult) => ({
@@ -90,9 +89,9 @@ export async function ingestRcoStep(runId: string): Promise<RcoBatchResult> {
       "✔ RCO batch ingested",
     );
   }
-  // Read by the latest run card; outcomes stay out of the workflow event log.
+  // Read by the latest run card.
   await saveIngestionCheckpoint(supabase, runId, { totals });
-  return { ...totals, outcomes: [] };
+  return totals;
 }
 
 export async function completeRcoRunStep(

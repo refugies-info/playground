@@ -474,10 +474,6 @@ export function WorkflowClient(props: WorkflowClientProps) {
           </div>
         )}
 
-        {props.latestIngestionRun && (
-          <LatestIngestionRunCard run={props.latestIngestionRun} />
-        )}
-
         {results && (
           <div className="mt-8">
             <h2 className="text-2xl font-bold mb-4">Results</h2>
@@ -520,6 +516,9 @@ export function WorkflowClient(props: WorkflowClientProps) {
       </div>
 
       <div>
+        {props.latestIngestionRun && (
+          <LatestIngestionRunCard run={props.latestIngestionRun} />
+        )}
         <div className="mb-6 flex flex-wrap items-end gap-4">
           <SearchInput
             value={filters.search}
