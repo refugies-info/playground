@@ -17,7 +17,6 @@ export type IngestionRunRow = Pick<
   | "checkpoint"
 >;
 
-// Written by the RCO workflow at the end of the run (see ingestRcoStep).
 const RcoCheckpointSchema = z.object({
   totals: z.object({
     changes: z.object({
