@@ -37,6 +37,7 @@ export async function forceEditorialWorkflow(
   } catch (error) {
     await notifyClearLanguageErrorStep(
       workflowId,
+      userId,
       error instanceof Error ? error.message : String(error),
     );
     throw error;

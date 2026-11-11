@@ -29,6 +29,7 @@ import {
   type RcoActionDocument,
 } from "@playground/offre-info";
 import {
+  buildLettaConversationUrl,
   LETTA_MODEL_HANDLE,
   logger,
   RCO_MODEL_HANDLE,
@@ -262,6 +263,8 @@ export async function forceEditorialStep(
           service.data as unknown as RcoActionDocument,
         ),
         model,
+        // Linked before the agent answers: a failed run stays reachable.
+        linkConversation,
       )
     : generateDiEditorial(workflowId, workflow, model)
   ).catch(async (error: unknown) => {
@@ -349,9 +352,40 @@ forceEditorialStep.maxRetries = 2;
 
 export async function notifyClearLanguageErrorStep(
   workflowId: string,
+  userId: string,
   errorMessage: string,
 ): Promise<void> {
   "use step";
 
-  await notifyClearLanguageError({ workflowId, errorMessage });
+  const supabase = getSupabaseClient();
+  const [{ data: profile }, { data: workflow }, { data: report }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("username, email")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase
+        .from("workflows")
+        .select("conversation_id")
+        .eq("id", workflowId)
+        .maybeSingle(),
+      // Only a failed agent run leaves a report with its agent id.
+      supabase
+        .from("letta_reports")
+        .select("agent_id")
+        .eq("workflow_id", workflowId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+  await notifyClearLanguageError({
+    workflowId,
+    errorMessage,
+    userName: profile?.username || profile?.email?.split("@")[0] || undefined,
+    lettaUrl: report?.agent_id
+      ? buildLettaConversationUrl(report.agent_id, workflow?.conversation_id)
+      : undefined,
+  });
 }

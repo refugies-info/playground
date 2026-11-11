@@ -21,6 +21,7 @@ Ce que l'équipe édito a publié pour ces débuts de `nom` :
 
 Autres cas :
 - Un nom de programme reconnaissable (« Pro'Langue SIAE », « NumériLangue », « Clé Intégration »…) : recopie-le tel qu'il est écrit.
+- Un sigle de discipline suivi d'une description (« FLE : Progresser en français », « Français : se perfectionner ») n'est pas un nom de programme : ne le recopie pas, applique la règle suivante.
 - Le `nom` décrit seulement la formation, sans programme : un libellé court de la forme « Cours de français et <ce qui s'y ajoute> » (« Cours de français et accompagnement pour le travail »), seulement si le texte le justifie clairement. Sinon `null`.
 - Retire toujours le niveau (`A1`, `B1/B2`), le numéro de lot, la ville et les codes internes (`SSDIC26`, `[HSP Socle]`).
 - 7 mots au plus. N'invente jamais un nom de programme.

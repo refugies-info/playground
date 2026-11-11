@@ -470,8 +470,8 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     ingestionResult,
     generatingReportResult,
     activeRunResult,
-    conversationResult,
     lastEditorialReportResult,
+    lastMetadataReportResult,
   ] = await Promise.all([
     item.ingestion_record_id
       ? supabase
@@ -512,18 +512,21 @@ export async function getDocumentById(id: string): Promise<Document | null> {
           .eq("id", item.editorial_record_id)
           .single()
       : Promise.resolve({ data: null, error: null }),
-    supabase
-      .from("workflows")
-      .select("conversation_id")
-      .eq("id", id)
-      .maybeSingle(),
-    // Last rewrite attempt, failed ones included: footer + Letta link.
+    // Last rewrite attempt, failed ones included: navigation footer.
     supabase
       .from("letta_reports")
-      .select("model, agent_id, token_cost, carbon_impact, status")
+      .select("model, token_cost, carbon_impact, status")
       .eq("workflow_id", id)
       .eq("report_type", "editorial")
       .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    // Any metadata attempt, failed ones included: Letta conversation link.
+    supabase
+      .from("letta_reports")
+      .select("id")
+      .eq("workflow_id", id)
+      .eq("report_type", "metadata")
       .limit(1)
       .maybeSingle(),
   ]);
@@ -709,6 +712,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     editorialMetadata,
     editorialRecordId: item.editorial_record_id ?? undefined,
     isMetadataGenerating: !!generatingReportResult.data,
+    hasMetadataRun: !!lastMetadataReportResult.data,
     metadataReport: metadataReportValue,
     publishedUrl,
     publicationStatus: latestPublication?.status,
@@ -733,6 +737,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     activeRunId: activeRunData.activeRunId,
     currentEditorId: activeRunData.currentEditorId,
     currentEditorName: currentEditorName,
+    hasEditorialRun: !!lastEditorialReportResult.data,
     editorialFailed: lastEditorialReportResult.data?.status === "error",
     editorialModel: lastEditorialReportResult.data?.model ?? null,
     editorialTokens: lastEditorialReportResult.data?.token_cost ?? null,
@@ -742,7 +747,5 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     editorialNotes: extractEditorialNotes(
       activeRunResult.data?.content_report?.markdown ?? "",
     ),
-    lettaAgentId: lastEditorialReportResult.data?.agent_id,
-    lettaConversationId: conversationResult.data?.conversation_id,
   };
 }

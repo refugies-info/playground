@@ -6,7 +6,7 @@ import {
   PopoverAnchor,
   PopoverContent,
 } from "@playground/ui/overlays";
-import { Button, PapaIA } from "@playground/ui/primitives";
+import { BoutonFiltre, Button, PapaIA } from "@playground/ui/primitives";
 import { RiCheckLine, RiCloseLine } from "@remixicon/react";
 import { useEffect, useRef, useState } from "react";
 import { useDocumentActions } from "../actions";
@@ -88,10 +88,11 @@ export function AIFloatingButton() {
   const { saveDocument } = useDocumentActions();
 
   const [error, setError] = useState<string | null>(null);
-  const [models, setModels] = useState<{ handle: string; name: string }[]>([]);
+  const [modelOptions, setModelOptions] = useState<
+    { label: string; value: string }[]
+  >([]);
   // Empty = agent default model
   const [selectedModel, setSelectedModel] = useState("");
-  const [modelsError, setModelsError] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const runIdRef = useRef<string | null>(null);
 
@@ -281,11 +282,15 @@ export function AIFloatingButton() {
     fetch("/api/editorial-rewrite/models")
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        setModels((await res.json()).models);
+        const { models } = (await res.json()) as {
+          models: { handle: string; name: string }[];
+        };
+        setModelOptions(
+          models.map((model) => ({ label: model.name, value: model.handle })),
+        );
       })
       .catch((err) => {
         logger.warn({ err }, "[AIFloatingButton] Letta models unavailable");
-        setModelsError(true);
       });
   }, [isAdmin]);
 
@@ -294,7 +299,7 @@ export function AIFloatingButton() {
     !document?.editorialContent || document?.complianceStatus !== "compliant";
 
   return (
-    <div className="fixed bottom-6 right-6 z-20 flex flex-col items-end gap-2">
+    <div className="fixed bottom-6 right-6 z-20 flex items-center gap-2">
       <Popover
         open={hasSuggestion || !!error}
         onOpenChange={(open) => {
@@ -371,23 +376,14 @@ export function AIFloatingButton() {
           )}
         </PopoverContent>
       </Popover>
-      {isAdmin ? (
-        <select
-          aria-label="Modèle du langage clair"
+      {isAdmin && modelOptions.length > 0 ? (
+        <BoutonFiltre
+          label="Modèle LLM"
+          options={modelOptions}
           value={selectedModel}
-          onChange={(e) => setSelectedModel(e.target.value)}
-          disabled={isProcessing || modelsError}
-          className="max-w-48 rounded-md border border-[var(--border-default-grey)] bg-white px-2 py-1 text-xs"
-        >
-          <option value="">
-            {modelsError ? "Modèles indisponibles" : "Modèle par défaut"}
-          </option>
-          {models.map((model) => (
-            <option key={model.handle} value={model.handle}>
-              {model.name}
-            </option>
-          ))}
-        </select>
+          onChange={setSelectedModel}
+          className="max-w-64"
+        />
       ) : null}
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { formatCarbonImpact } from "@playground/shared-types";
+import { ECOLOGITS_URL, formatCarbonImpact } from "@playground/shared-types";
 import { cn } from "@playground/ui";
 import {
   RiCheckLine,
@@ -8,6 +8,7 @@ import {
   RiCodeSSlashLine,
   RiDatabaseLine,
   RiDeleteBinLine,
+  RiExternalLinkLine,
   RiFileTextLine,
   RiHammerLine,
   RiNewspaperLine,
@@ -22,6 +23,7 @@ import {
 import {
   BoutonMenu,
   Button,
+  buttonVariants,
   IndicationConformite,
   SegmentedControl,
 } from "@playground/ui/primitives";
@@ -53,6 +55,16 @@ const EDITOR_MODES = [
   { value: "raw" as const, icon: RiCodeSSlashLine, label: "Markdown" },
 ];
 
+// Admin links to the RCO agent conversation behind each tab.
+const LETTA_COMPLIANCE_AGENTS = [
+  { agent: "compliance", label: "Conformité" },
+  { agent: "duplicates", label: "Doublons" },
+];
+const LETTA_METADATA_AGENTS = [{ agent: "metadata", label: "Métadonnées" }];
+const LETTA_PLAIN_LANGUAGE_AGENTS = [
+  { agent: "plain-language", label: "Langage clair" },
+];
+
 export function EditorNavigation({ from }: EditorNavigationProps) {
   const { document, isRawMarkdownMode, setIsRawMarkdownMode } = useDocument();
   const { hasMetadataErrors } = useMetadata();
@@ -71,6 +83,17 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
   const isMetadataActive = pathname === `${baseUrl}/metadata`;
   const isActivityLogActive = pathname === `${baseUrl}/activity-logs`;
   const isComplianceActive = pathname === `${baseUrl}/compliance`;
+  const rcoActionId = document.rcoApiData?.id;
+  // No conversation link before the agent has been called at least once.
+  const lettaAgents = isComplianceActive
+    ? LETTA_COMPLIANCE_AGENTS
+    : isMetadataActive
+      ? document.hasMetadataRun
+        ? LETTA_METADATA_AGENTS
+        : []
+      : document.hasEditorialRun
+        ? LETTA_PLAIN_LANGUAGE_AGENTS
+        : [];
 
   const ingestionVersion = formatIngestionVersion({
     activeVersion: document.activeIngestionVersion,
@@ -231,26 +254,62 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
         )}
       </div>
 
-      <div className="mt-auto px-2 text-sm leading-6 text-[var(--text-mention-grey)] whitespace-nowrap">
-        {hasIngestionVersion ? <p>Version : {ingestionVersion}</p> : null}
+      {/* Bloc Informations — @figma node 6153-21089 */}
+      <div className="mt-auto flex flex-col items-start gap-3 rounded-xl bg-[var(--background-alt-blue-france)] p-4 text-xs leading-5 text-[var(--text-disabled-grey)]">
+        <p className="text-sm font-medium leading-6 text-[var(--text-title-blue-france)]">
+          Informations
+        </p>
+        {hasIngestionVersion ? <p>Version {ingestionVersion}</p> : null}
         {document.editorialFailed ? (
           <p className="text-[var(--text-default-error)]">
             Dernier langage clair : échec
           </p>
         ) : null}
         {document.editorialModel ? (
-          <p className="whitespace-normal break-all">
-            Modèle :<br />
-            {document.editorialModel}
+          <p className="break-all">LLM {document.editorialModel}</p>
+        ) : null}
+        {document.editorialCarbonImpact ? (
+          <p>
+            <a
+              href={ECOLOGITS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Estimation haute EcoLogits, mix électrique français"
+              className="hover:underline"
+            >
+              Impact
+            </a>{" "}
+            {formatCarbonImpact(document.editorialCarbonImpact)}
           </p>
         ) : null}
         {document.editorialTokens ? (
-          <p>Tokens : {document.editorialTokens.toLocaleString("fr-FR")}</p>
+          <p>Tokens {document.editorialTokens.toLocaleString("fr-FR")}</p>
         ) : null}
-        {document.editorialCarbonImpact ? (
-          <p title="Estimation EcoLogits, mix électrique français">
-            Impact : {formatCarbonImpact(document.editorialCarbonImpact)}
-          </p>
+        {document.isAdmin &&
+        typeof rcoActionId === "string" &&
+        lettaAgents.length > 0 ? (
+          <>
+            <p className="text-sm font-medium leading-6 text-[var(--text-title-blue-france)]">
+              Conversations Letta
+            </p>
+            {lettaAgents.map(({ agent, label }) => (
+              <a
+                key={agent}
+                href={`/api/letta/conversation?agent=${agent}&actionId=${encodeURIComponent(rcoActionId)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={buttonVariants({
+                  variant: "quatrieme",
+                  size: "sm",
+                  className:
+                    "border border-border bg-[var(--background-default-grey)] text-[var(--text-action-high-grey)]",
+                })}
+              >
+                {label}
+                <RiExternalLinkLine size={16} aria-hidden />
+              </a>
+            ))}
+          </>
         ) : null}
       </div>
     </div>

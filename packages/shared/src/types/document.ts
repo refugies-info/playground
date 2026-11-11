@@ -118,6 +118,10 @@ export interface Document {
   hasPendingIngestionUpdate?: boolean;
   /** Vercel Workflow runId when an AI editorial rewrite is in progress or waiting for user decision */
   activeRunId?: string;
+  /** At least one metadata generation was attempted (Letta conversation exists) */
+  hasMetadataRun?: boolean;
+  /** At least one clear language rewrite was attempted (Letta conversation exists) */
+  hasEditorialRun?: boolean;
   /** Letta model handle of the last clear language rewrite */
   editorialModel?: string | null;
   /** The last clear language rewrite failed: model/tokens are the failed run's */
@@ -126,9 +130,6 @@ export interface Document {
   editorialCarbonImpact?: CarbonImpact | null;
   /** Sections of the last clear language rewrite meant for editors, not readers */
   editorialNotes?: string;
-  /** Letta agent + conversation of the last clear language rewrite */
-  lettaAgentId?: string;
-  lettaConversationId?: string | null;
   /** User ID currently holding the edit lock on this fiche (NULL if free) */
   currentEditorId?: string | null;
   /** Display name of the user currently holding the edit lock on this fiche (NULL if free) */

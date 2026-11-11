@@ -47,11 +47,15 @@ export default async function Layout({
     arbitrationSource: document.arbitrationSource,
     metadataSource: document.metadataSource,
     rcoSource: document.rcoSource,
+    rcoApiData: document.rcoApiData,
+    plainLanguageSource: document.plainLanguageSource,
     metadata: document.metadata, // Merged metadata (ingestion + editorial)
     editorialMetadata: document.editorialMetadata, // Editorial overrides only
     editorialRecordId: document.editorialRecordId, // For Realtime status subscription
     metadataReport: document.metadataReport, // AI-generated metadata report
     isMetadataGenerating: document.isMetadataGenerating, // Spinner state for MetadataView
+    hasMetadataRun: document.hasMetadataRun,
+    hasEditorialRun: document.hasEditorialRun,
     referenceData, // Themes & needs ID→name lookups from RI
     publishedUrl: document.publishedUrl,
     publicationRemoteId: document.publicationRemoteId,
@@ -64,8 +68,6 @@ export default async function Layout({
     editorialTokens: document.editorialTokens,
     editorialCarbonImpact: document.editorialCarbonImpact,
     editorialNotes: document.editorialNotes,
-    lettaAgentId: document.lettaAgentId,
-    lettaConversationId: document.lettaConversationId,
     assigneeEmail: document.assigneeEmail,
     assigneeAvatar: document.assigneeAvatar,
     currentEditorId: document.currentEditorId,
