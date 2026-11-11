@@ -169,8 +169,6 @@ async function findRiCandidates(
 ): Promise<DuplicateCandidate[]> {
   const baseUrl = requiredEnv("RI_BASE_URL", "RI webhook").replace(/\/$/, "");
   const secret = requiredEnv("RI_WEBHOOK_SECRET", "RI webhook");
-  // ponytail: same contract as riWebhookRequest (apps/frontend, PR #360);
-  // reuse it once it lives in a package the workflows can import.
   const response = await fetch(`${baseUrl}${RI_DUPLICATES_PATH}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "webhook-secret": secret },
@@ -178,7 +176,6 @@ async function findRiCandidates(
       title: action.nom,
       description: action.objectif_formation,
       structureName: action.organisme_responsable?.nom,
-      // ponytail: legacy field for an RI not yet deployed, drop once it is.
       commune: actionCities(action)[0],
       communes: actionCities(action),
       postalCodes: actionPostalCodes(action),
