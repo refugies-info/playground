@@ -254,13 +254,13 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
       </div>
 
       {/* Bloc Informations — @figma node 6153-21089 */}
-      <div className="mt-auto flex flex-col items-start gap-3 rounded-xl bg-[var(--background-alt-blue-france)] p-4 text-xs leading-5 text-[var(--text-disabled-grey)]">
-        <p className="text-sm font-medium leading-6 text-[var(--text-title-blue-france)]">
+      <div className="mt-auto flex flex-col items-start gap-3 rounded-xl bg-(--background-alt-blue-france) p-4 text-xs leading-5 text-(--text-disabled-grey)">
+        <p className="text-sm font-medium leading-6 text-(--text-title-blue-france)">
           Informations
         </p>
         {hasIngestionVersion ? <p>Version {ingestionVersion}</p> : null}
         {document.editorialFailed ? (
-          <p className="text-[var(--text-default-error)]">
+          <p className="text-(--text-default-error)">
             Dernier langage clair : échec
           </p>
         ) : null}
@@ -288,7 +288,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
         typeof rcoActionId === "string" &&
         lettaAgents.length > 0 ? (
           <>
-            <p className="text-sm font-medium leading-6 text-[var(--text-title-blue-france)]">
+            <p className="text-sm font-medium leading-6 text-(--text-title-blue-france)">
               Conversations Letta
             </p>
             {lettaAgents.map(({ agent, label }) => (
@@ -301,7 +301,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
                   variant: "quatrieme",
                   size: "sm",
                   className:
-                    "border border-border bg-[var(--background-default-grey)] text-[var(--text-action-high-grey)]",
+                    "border border-border bg-(--background-default-grey) text-(--text-action-high-grey)",
                 })}
               >
                 {label}
