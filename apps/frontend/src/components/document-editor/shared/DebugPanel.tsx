@@ -278,14 +278,14 @@ export function DebugPanel() {
 function SourcePane({ title, value }: { title: string; value: string }) {
   return (
     <div className="flex-1 flex flex-col border-r last:border-r-0">
-      <div className="px-4 py-2 bg-amber-50 border-b font-semibold text-xs tracking-wider text-amber-700 uppercase flex justify-between items-center">
+      <div className="px-4 py-2 bg-(--background-contrast-warning) border-b font-semibold text-xs tracking-wider text-(--text-default-warning) uppercase flex justify-between items-center">
         <span>{title}</span>
-        <span className="bg-amber-100 px-2 py-0.5 rounded text-[10px]">
+        <span className="bg-(--background-contrast-warning-hover) px-2 py-0.5 rounded text-[10px]">
           {value.length} chars
         </span>
       </div>
       <textarea
-        className="w-full h-full p-4 resize-none focus:outline-none bg-amber-50/10 text-amber-950"
+        className="w-full h-full p-4 resize-none focus:outline-none bg-transparent text-(--text-default-grey)"
         value={value}
         readOnly
       />
@@ -302,13 +302,15 @@ function SourceFieldsPane({
 }) {
   return (
     <div className="flex-1 flex flex-col border-r overflow-hidden">
-      <div className="px-4 py-2 bg-amber-50 border-b font-semibold text-xs tracking-wider text-amber-700 uppercase">
+      <div className="px-4 py-2 bg-(--background-contrast-warning) border-b font-semibold text-xs tracking-wider text-(--text-default-warning) uppercase">
         {title}
       </div>
       {source ? (
         <SourceFields source={source} className="flex-1 overflow-auto p-4" />
       ) : (
-        <p className="p-4 font-sans text-gray-500">Pas une fiche RCO.</p>
+        <p className="p-4 font-sans text-(--text-mention-grey)">
+          Pas une fiche RCO.
+        </p>
       )}
     </div>
   );
