@@ -475,7 +475,6 @@ async function generateForcedDiReport(markdown: string, workflowId: string) {
     rawResponse: parsed.rawResponse,
     usage,
     model: LETTA_MODEL_HANDLE,
-    // Compliant iff complete + not duplicate (RI-1117, RI-1093)
     complianceStatus:
       parsed.status !== "complete"
         ? "error"

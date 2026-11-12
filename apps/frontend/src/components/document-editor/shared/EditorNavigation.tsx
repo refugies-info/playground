@@ -259,13 +259,13 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
       </div>
 
       {/* <div> lines: DSFR forces <p> to 16px */}
-      <div className="mt-auto flex flex-col items-start gap-3 rounded-xl bg-[var(--background-alt-blue-france)] p-4 text-xs leading-5 text-[var(--text-disabled-grey)]">
-        <p className="text-sm font-medium leading-6 text-[var(--text-title-blue-france)]">
+      <div className="mt-auto flex flex-col items-start gap-3 rounded-xl bg-(--background-alt-blue-france) p-4 text-xs leading-5 text-(--text-disabled-grey)">
+        <p className="text-sm font-medium leading-6 text-(--text-title-blue-france)">
           Informations
         </p>
         {hasIngestionVersion ? <div>Version {ingestionVersion}</div> : null}
         {document.editorialFailed ? (
-          <div className="text-[var(--text-default-error)]">
+          <div className="text-(--text-default-error)">
             Dernier langage clair : échec
           </div>
         ) : null}
@@ -296,7 +296,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
         typeof rcoActionId === "string" &&
         lettaAgents.length > 0 ? (
           <>
-            <p className="text-sm font-medium leading-6 text-[var(--text-title-blue-france)]">
+            <p className="text-sm font-medium leading-6 text-(--text-title-blue-france)">
               Conversations Letta
             </p>
             {lettaAgents.map(({ agent, label }) => (
@@ -307,7 +307,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
                 rel="noopener noreferrer"
                 className={cn(
                   buttonVariants({ variant: "quatrieme", size: "sm" }),
-                  "border border-border bg-[var(--background-default-grey)] text-[var(--text-action-high-grey)]",
+                  "border border-border bg-(--background-default-grey) text-(--text-action-high-grey)",
                 )}
               >
                 {label}
