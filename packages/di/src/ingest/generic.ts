@@ -61,7 +61,7 @@ export type DiItem = { id: string; nom: string; source: string };
  * Existing record info from database
  */
 interface ExistingRecord {
-  di_id: string;
+  origin_id: string;
   content_hash: string | null;
   version: number;
 }
@@ -314,13 +314,11 @@ async function completeIngestionRun(
  */
 async function fetchExistingRecords(
   supabase: SupabaseClient<Database>,
-  tableName: "di_structures" | "di_services",
+  tableName: "structures" | "services",
   diIds: string[],
 ): Promise<Map<string, ExistingRecord>> {
   const viewName =
-    tableName === "di_structures"
-      ? "di_structures_latest"
-      : "di_services_latest";
+    tableName === "structures" ? "structures_latest" : "services_latest";
 
   // Fetch in batches to avoid query size limits
   const existingMap = new Map<string, ExistingRecord>();
@@ -330,8 +328,8 @@ async function fetchExistingRecords(
 
     const { data, error } = await supabase
       .from(viewName)
-      .select("di_id, data, content_hash, version")
-      .in("di_id", batch);
+      .select("origin_id, data, content_hash, version")
+      .in("origin_id", batch);
 
     if (error) {
       logger.warn(
@@ -342,9 +340,9 @@ async function fetchExistingRecords(
     }
 
     for (const record of data ?? []) {
-      if (record.di_id) {
-        existingMap.set(record.di_id, {
-          di_id: record.di_id,
+      if (record.origin_id) {
+        existingMap.set(record.origin_id, {
+          origin_id: record.origin_id,
           content_hash:
             record.data != null
               ? computeContentHash(record.data)
@@ -367,7 +365,7 @@ async function fetchExistingRecords(
 async function upsertItems<T extends DiItem>(
   supabase: SupabaseClient<Database>,
   items: T[],
-  tableName: "di_structures" | "di_services",
+  tableName: "structures" | "services",
   itemType: string,
   runId: string,
 ): Promise<{
@@ -532,12 +530,12 @@ export async function ingestCarifOrefItems<T extends DiItem>(
       sources: string[];
     } & Record<string, unknown>,
   ) => Promise<Page<T>>,
-  tableName: "di_structures" | "di_services",
+  tableName: "structures" | "services",
   itemType: string,
   options: DiIngestionOptions = {},
 ): Promise<DiIngestionResult> {
   const startTime = Date.now();
-  const type = tableName === "di_structures" ? "structures" : "services";
+  const type = tableName === "structures" ? "structures" : "services";
 
   logger.info(
     { source: SOURCE_CARIF_OREF },
