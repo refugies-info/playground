@@ -59,10 +59,10 @@ export function SourceFields({
     <dl className={cn("font-sans space-y-4", className)}>
       {Object.entries(source).map(([field, value]) => (
         <div key={field}>
-          <dt className="text-xs font-semibold uppercase tracking-wider text-amber-700">
+          <dt className="text-xs font-semibold uppercase tracking-wider text-(--text-default-warning)">
             {SOURCE_FIELD_LABELS[field] ?? field}
           </dt>
-          <dd className="whitespace-pre-line text-gray-900">
+          <dd className="whitespace-pre-line text-(--text-default-grey)">
             {toReadableText(value)}
           </dd>
         </div>
