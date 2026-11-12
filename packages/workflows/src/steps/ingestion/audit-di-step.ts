@@ -340,7 +340,6 @@ export async function generateDiAuditReportsStep(runId: string) {
         );
       }
 
-      // Set compliance_status on ingestion_records — compliant iff complete + not duplicate (RI-1117, RI-1093)
       const complianceStatus =
         parsed.status !== "complete"
           ? "error"
