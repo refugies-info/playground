@@ -345,10 +345,10 @@ export function WorkflowClient(props: WorkflowClientProps) {
           run={props.latestIngestionRun}
           notice={
             error ? (
-              <p className="text-sm text-red-700">{error}</p>
+              <p className="text-sm text-(--text-default-error)">{error}</p>
             ) : (
               launch && (
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-(--text-mention-grey)">
                   Import lancé ({launch.workflowId})
                   {launch.dashboardUrl && (
                     <>
