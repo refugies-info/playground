@@ -11,9 +11,6 @@ import {
 export async function rcoIngestionWorkflow() {
   "use workflow";
 
-  // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
-  console.log("🚀 RCO ingestion started");
-
   const runId = await createRcoRunStep();
   try {
     const totals = await ingestRcoStep(runId);
