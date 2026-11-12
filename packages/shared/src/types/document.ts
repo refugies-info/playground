@@ -82,7 +82,7 @@ export interface Document {
   structureName?: string;
   sessionStartDate?: string;
   sessionEndDate?: string | null;
-  sourceSystem: "RCO" | "DI";
+  sourceSystem: "RCO" | "DI" | null;
   updated_at: string;
   assigneeEmail?: string;
   assigneeAvatar?: string;
