@@ -62,12 +62,14 @@ function SourceValue({
 }) {
   if (isObject(value))
     return (
-      <dl className="mt-1 space-y-1 border-l-2 border-amber-100 pl-3">
+      <dl className="mt-1 space-y-1 border-l-2 border-(--border-default-grey) pl-3">
         {Object.entries(value)
           .filter(([, item]) => !isEmpty(item))
           .map(([nestedKey, item]) => (
             <div key={nestedKey}>
-              <dt className="inline text-gray-500">{labelOf(nestedKey)} : </dt>
+              <dt className="inline text-(--text-mention-grey)">
+                {labelOf(nestedKey)} :{" "}
+              </dt>
               <dd
                 className={
                   isObject(item) || Array.isArray(item) ? "" : "inline"
@@ -111,10 +113,10 @@ export function SourceFields({
     <dl className={cn("font-sans space-y-4", className)}>
       {Object.entries(source).map(([field, value]) => (
         <div key={field}>
-          <dt className="text-xs font-semibold uppercase tracking-wider text-amber-700">
+          <dt className="text-xs font-semibold uppercase tracking-wider text-(--text-default-warning)">
             {labelOf(field)}
           </dt>
-          <dd className="whitespace-pre-line text-gray-900">
+          <dd className="whitespace-pre-line text-(--text-default-grey)">
             <SourceValue value={value} field={field} labelOf={labelOf} />
           </dd>
         </div>
