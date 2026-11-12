@@ -25,12 +25,12 @@ function Stat({
   alert?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1 border-l border-gray-200 pl-4 first:border-l-0 first:pl-0">
-      <dt className="order-2 text-xs font-medium uppercase tracking-wide text-gray-500">
+    <div className="flex flex-col gap-1 border-l border-(--border-default-grey) pl-4 first:border-l-0 first:pl-0">
+      <dt className="order-2 text-xs font-medium uppercase tracking-wide text-(--text-mention-grey)">
         {label}
       </dt>
       <dd
-        className={`order-1 text-3xl font-bold leading-none tabular-nums ${alert && value > 0 ? "text-red-700" : "text-gray-900"}`}
+        className={`order-1 text-3xl font-bold leading-none tabular-nums ${alert && value > 0 ? "text-(--text-default-error)" : "text-(--text-title-grey)"}`}
       >
         {value.toLocaleString("fr-FR")}
       </dd>
@@ -55,14 +55,14 @@ export function LatestIngestionRunCard({
   };
 
   return (
-    <section className="mb-8 border-b border-gray-200 pb-6">
+    <section className="mb-8 border-b border-(--border-default-grey) pb-6">
       {notice && <div className="mb-3">{notice}</div>}
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-lg font-semibold text-(--text-title-grey)">
           Dernier import {run.source.toUpperCase()}
         </h2>
         <Badge variant={badge.variant}>{badge.label}</Badge>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-(--text-mention-grey)">
           {formatDateTime(run.createdAt)} → {formatDateTime(run.completedAt)}
         </p>
       </div>
@@ -97,13 +97,15 @@ export function LatestIngestionRunCard({
 
       {run.rco && run.rco.errors.length > 0 && (
         <details className="mt-3 text-sm">
-          <summary className="cursor-pointer text-red-700">
+          <summary className="cursor-pointer text-(--text-default-error)">
             Voir les erreurs ({run.rco.errors.length})
           </summary>
           <ul className="mt-2 space-y-1">
             {run.rco.errors.map(({ numeroAction, error }) => (
               <li key={`${numeroAction}:${error}`}>
-                <code className="bg-gray-100 px-1 rounded">{numeroAction}</code>{" "}
+                <code className="bg-(--background-alt-grey) px-1 rounded">
+                  {numeroAction}
+                </code>{" "}
                 {error}
               </li>
             ))}

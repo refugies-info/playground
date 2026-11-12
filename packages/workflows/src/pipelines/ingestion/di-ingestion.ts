@@ -21,8 +21,6 @@ export async function diIngestionWorkflow() {
   "use workflow";
 
   const startedAt = Date.now();
-  // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
-  console.log("🚀 DI Ingestion Workflow started");
 
   // 1. Ingest Structures
   const structuresResult = await ingestStructuresStep();
@@ -32,30 +30,13 @@ export async function diIngestionWorkflow() {
 
   // 3. Process records (only if new data)
   if (servicesResult.runId) {
-    // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
-    console.log(
-      `▶ [3/4] New data detected (runId: ${servicesResult.runId}) — processing records`,
-    );
     await processRecordsStep(servicesResult.runId);
-  } else {
-    // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
-    console.log(
-      "⏭ [3/4] No new data — skipping record processing, fan-out will still run for pending records",
-    );
   }
 
   //Skip Letta working
   // 4. Fan-out — always run to process pending records
-  // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
-  // console.log(
-  //   "▶ [4/4] Fan-out: claiming records and spawning child workflows...",
-  // );
   // const fanOutResult = await fanOutDiRecordsStep(
   //   servicesResult.runId ?? "no-new-data",
-  // );
-  // // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
-  // console.log(
-  //   `✔ [4/4] Fan-out complete — ${fanOutResult.spawned} child workflow(s) spawned`,
   // );
 
   const durationMs = Date.now() - startedAt;
