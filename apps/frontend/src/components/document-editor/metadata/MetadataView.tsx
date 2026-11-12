@@ -83,7 +83,7 @@ export function MetadataView() {
               : "L'IA analyse les données pour pré-remplir les métadonnées."}
           </p>
           {retryMessage ? (
-            <p className="mt-4 text-xs text-[var(--text-default-warning)] break-words">
+            <p className="mt-4 text-xs text-(--text-default-warning) break-words">
               Nouvelle tentative en cours. {retryMessage.slice(0, 300)}
             </p>
           ) : null}
