@@ -466,7 +466,6 @@ async function generateForcedDiReport(markdown: string, workflowId: string) {
     status: parsed.status,
     rawResponse: parsed.rawResponse,
     tokens: usage.totalTokens ?? 0,
-    // Compliant iff complete + not duplicate (RI-1117, RI-1093)
     complianceStatus:
       parsed.status !== "complete"
         ? "error"
