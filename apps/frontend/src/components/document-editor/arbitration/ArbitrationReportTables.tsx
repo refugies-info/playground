@@ -17,21 +17,35 @@ import type { ReactNode } from "react";
 
 // @figma https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/BOMO?node-id=2631-15905
 
-const HEADER_CELL = "px-4 py-3 text-left text-sm font-medium text-[#000091]";
+const HEADER_CELL =
+  "px-4 py-3 text-left text-sm font-medium text-(--text-title-blue-france)";
 const BODY_CELL = "px-4 py-3 align-top text-sm";
 
 const DECISION_ICONS: Record<CriterionVerdict, ReactNode> = {
   accepted: (
-    <CircleCheck className="size-5 text-[#18753c]" aria-label="Validé" />
+    <CircleCheck
+      className="size-5 text-(--text-default-success)"
+      aria-label="Validé"
+    />
   ),
-  refused: <CircleX className="size-5 text-[#ce0500]" aria-label="Refusé" />,
-  ai: <CircleHelp className="size-5 text-[#b34000]" aria-label="À arbitrer" />,
+  refused: (
+    <CircleX
+      className="size-5 text-(--text-default-error)"
+      aria-label="Refusé"
+    />
+  ),
+  ai: (
+    <CircleHelp
+      className="size-5 text-(--text-default-warning)"
+      aria-label="À arbitrer"
+    />
+  ),
 };
 
 const SIMILARITY_COLORS: Record<Similarity, string> = {
-  identical: "text-[#ce0500]",
-  close: "text-[#b34000]",
-  different: "text-[#18753c]",
+  identical: "text-(--text-default-error)",
+  close: "text-(--text-default-warning)",
+  different: "text-(--text-default-success)",
 };
 
 function ReportTable({
@@ -42,10 +56,10 @@ function ReportTable({
   children: ReactNode;
 }) {
   return (
-    <div className="border border-[var(--border-default-grey)] bg-white overflow-x-auto">
+    <div className="border border-(--border-default-grey) bg-white overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
-          <tr className="bg-[var(--background-action-low-blue-france)]">
+          <tr className="bg-(--background-action-low-blue-france)">
             {headers.map((header) => (
               <th key={header} className={HEADER_CELL}>
                 {header}
@@ -53,7 +67,7 @@ function ReportTable({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-[var(--border-default-grey)]">
+        <tbody className="divide-y divide-(--border-default-grey)">
           {children}
         </tbody>
       </table>
@@ -104,7 +118,8 @@ function ComplianceSection({ report }: { report: ArbitrationReport }) {
 }
 
 function DuplicateLink({ match }: { match: DuplicateMatch }) {
-  const className = "text-[#000091] underline underline-offset-2";
+  const className =
+    "text-(--text-action-high-blue-france) underline underline-offset-2";
   return match.source === "playground" ? (
     <Link href={match.url} className={className}>
       {match.title}
@@ -134,7 +149,7 @@ function DuplicateSection({ report }: { report: ArbitrationReport }) {
         <div key={`${match.source}-${match.id}`} className="space-y-3">
           <p className="flex flex-wrap items-center gap-2 text-sm">
             <DuplicateLink match={match} />
-            <span className="text-[var(--text-mention-grey)]">
+            <span className="text-(--text-mention-grey)">
               {/* Reports stored before the status was added have none. */}
               {[DUPLICATE_SOURCE_LABELS[match.source], match.status]
                 .filter(Boolean)
