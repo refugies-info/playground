@@ -11,6 +11,7 @@ import {
 } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
+import { buildDuplicate } from "@/lib/widget-list";
 import type { RiWebhookError } from "./ri/webhook-client";
 import {
   countRiFilterMatches,
@@ -27,6 +28,7 @@ const ACTION_NAMES = {
   getWidgetConfig: "getWidgetConfig",
   createWidgetConfig: "createWidgetConfig",
   updateWidgetConfig: "updateWidgetConfig",
+  duplicateWidgetConfig: "duplicateWidgetConfig",
   searchDispositifs: "searchDispositifs",
   getDispositifsByIds: "getDispositifsByIds",
   countFilterMatches: "countFilterMatches",
@@ -124,5 +126,16 @@ export async function updateWidgetConfigAction(
 ) {
   return runAsAuthenticatedUser(ACTION_NAMES.updateWidgetConfig, (email) =>
     updateRiWidgetConfig(email, id, changes),
+  );
+}
+
+export async function duplicateWidgetConfigAction(id: string) {
+  return runAsAuthenticatedUser(
+    ACTION_NAMES.duplicateWidgetConfig,
+    async (email) =>
+      createRiWidgetConfig(
+        email,
+        buildDuplicate(await getRiWidgetConfigById(id)),
+      ),
   );
 }

@@ -34,6 +34,8 @@ interface DataTableProps<TData, TValue> {
   sortOrder?: "asc" | "desc";
   onSortChange?: (sortBy: string, sortOrder: "asc" | "desc") => void;
   getRowClassName?: (row: TData) => string | undefined;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -47,6 +49,8 @@ export function DataTable<TData, TValue>({
   sortOrder,
   onSortChange,
   getRowClassName,
+  emptyTitle = "Aucune fiche trouvée",
+  emptyDescription = "Essayez d'ajuster vos filtres ou critères de recherche",
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>(
     sortBy && sortOrder ? [{ id: sortBy, desc: sortOrder === "desc" }] : [],
@@ -191,10 +195,10 @@ export function DataTable<TData, TValue>({
               <TableCell colSpan={columns.length} className="h-24 text-center">
                 <div className="flex flex-col items-center justify-center py-8">
                   <p className="text-gray-500 text-lg font-medium">
-                    Aucune fiche trouvée
+                    {emptyTitle}
                   </p>
                   <p className="text-gray-400 text-sm mt-1">
-                    Essayez d'ajuster vos filtres ou critères de recherche
+                    {emptyDescription}
                   </p>
                 </div>
               </TableCell>
