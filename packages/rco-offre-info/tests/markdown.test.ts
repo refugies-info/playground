@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildActionDocument } from "../src/mapping/document";
-import { actionToMarkdown } from "../src/mapping/markdown";
-import { normalizeSession } from "../src/mapping/normalize";
-import { buildStructureDocument } from "../src/mapping/structure";
+import { normalizeSession } from "../src/api/normalize";
+import { buildActionDocument } from "../src/lheo/document";
+import { actionToMarkdown } from "../src/lheo/markdown";
+import { buildStructureDocument } from "../src/lheo/structure";
 import { rawSession } from "./fixtures";
 
 describe("actionToMarkdown", () => {

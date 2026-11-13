@@ -1,5 +1,5 @@
-import { type RcoActionDocument, toSourceUrl } from "../mapping/document";
-import { toPlainText } from "../mapping/markdown";
+import { type RcoActionDocument, toSourceUrl } from "../document";
+import { toPlainText } from "../markdown";
 import { mapPlaces, withoutEmpty } from "../metadata/metadata-rules";
 
 // The rco-plain-language agent only writes the texts: the code owns the fiche

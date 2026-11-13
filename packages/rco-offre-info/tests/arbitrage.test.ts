@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
+import { normalizeSession } from "../src/api/normalize";
 import {
   applyAiDecisions,
   checkCompliance,
   criteriaForAi,
   overallVerdict,
   toArbitrationDocument,
-} from "../src/arbitrage/compliance-rules";
+} from "../src/lheo/arbitrage/compliance-rules";
 import {
   actionCities,
   actionDepartments,
   actionPostalCodes,
   hasCertainDuplicate,
   toCandidate,
-} from "../src/arbitrage/duplicate-candidates";
-import { buildActionDocument } from "../src/mapping/document";
-import { normalizeSession } from "../src/mapping/normalize";
+} from "../src/lheo/arbitrage/duplicate-candidates";
+import { buildActionDocument } from "../src/lheo/document";
 import { rawSession } from "./fixtures";
 
 const TODAY = "2026-10-19";

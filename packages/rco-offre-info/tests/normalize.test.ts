@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeSession } from "../src/mapping/normalize";
+import { normalizeSession } from "../src/api/normalize";
 import { rawSession } from "./fixtures";
 
 describe("normalizeSession", () => {

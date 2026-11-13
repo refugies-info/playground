@@ -1,6 +1,6 @@
 import { RI_DEPARTMENTS } from "@playground/shared-types";
 import { isSessionOpen } from "../arbitrage/compliance-rules";
-import type { RcoActionDocument, RcoSession } from "../mapping/document";
+import type { RcoActionDocument, RcoSession } from "../document";
 import {
   DISTANCE_LEARNING_CODE,
   ILE_DE_FRANCE_DEPARTMENTS,

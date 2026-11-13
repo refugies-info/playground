@@ -1,11 +1,8 @@
 import { z } from "zod";
-import {
-  buildActionDocument,
-  type RcoActionDocument,
-} from "../mapping/document";
-import { normalizeSession } from "../mapping/normalize";
+import { buildActionDocument, type RcoActionDocument } from "../lheo/document";
 import type { SessionOffre } from "../types";
 import type { RcoClient } from "./client";
+import { normalizeSession } from "./normalize";
 
 export async function fetchActionSessions(
   client: RcoClient,

@@ -1,7 +1,7 @@
 import { computeContentHash } from "@playground/supabase/ingestion-runs";
 import { describe, expect, it } from "vitest";
-import { buildActionDocument } from "../src/mapping/document";
-import { normalizeSession } from "../src/mapping/normalize";
+import { normalizeSession } from "../src/api/normalize";
+import { buildActionDocument } from "../src/lheo/document";
 import { rawSession } from "./fixtures";
 
 const first = normalizeSession(rawSession());

@@ -1,5 +1,7 @@
 import { askMetadataAgent, createLettaClient } from "@playground/agents";
 import {
+  fetchActionDetail,
+  getRcoClientFromEnv,
   type MappedField,
   METADATA_LABELS,
   type MetadataKey,
@@ -8,7 +10,7 @@ import {
   type RcoActionDocument,
   toMetadataDocument,
 } from "@playground/rco-offre-info";
-import { RCO_MODEL_HANDLE, validateField } from "@playground/shared-types";
+import { SOURCE_MODEL_HANDLE, validateField } from "@playground/shared-types";
 import { FatalError } from "@workflow/errors";
 
 type ProvenanceStatus = "valid" | "missing" | "warning";
@@ -79,10 +81,17 @@ const metadataTable = (rows: (Provenance & { origin: string })[]) =>
     ),
   ].join("\n");
 
-export async function generateRcoMetadata(
-  action: RcoActionDocument,
-  model = RCO_MODEL_HANDLE,
-) {
+export async function generateRcoMetadata({
+  serviceData,
+  model = SOURCE_MODEL_HANDLE,
+}: {
+  serviceData: unknown;
+  model?: string;
+}) {
+  const action = await fetchActionDetail(
+    getRcoClientFromEnv(),
+    serviceData as RcoActionDocument,
+  );
   const agentId = process.env.RCO_METADATA_AGENT_ID;
   if (!agentId) {
     throw new FatalError(

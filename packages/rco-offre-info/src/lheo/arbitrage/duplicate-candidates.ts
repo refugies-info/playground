@@ -1,5 +1,5 @@
 import type { DuplicateMatch, DuplicateSource } from "@playground/shared-types";
-import type { RcoActionDocument } from "../mapping/document";
+import type { RcoActionDocument } from "../document";
 
 // Shape returned by the RI duplicate search endpoint (/api/agent/dispositifs/duplicates).
 export type RiDispositif = {

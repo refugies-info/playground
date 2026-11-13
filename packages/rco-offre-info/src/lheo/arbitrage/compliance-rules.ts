@@ -1,5 +1,5 @@
 import { type CriterionVerdict, describeCodes } from "@playground/shared-types";
-import type { RcoActionDocument, RcoSession } from "../mapping/document";
+import type { RcoActionDocument, RcoSession } from "../document";
 import {
   ACCEPTED_AUDIENCE_CODES,
   ACCEPTED_FUNDER_CODES,

@@ -3,18 +3,18 @@
 // fiche is arbitrated.
 
 import {
-  completeRcoRunStep,
-  createRcoRunStep,
-  ingestRcoStep,
-} from "../../steps/ingestion/ingest-rco";
+  completeSourceRunStep,
+  createSourceRunStep,
+  ingestSourceStep,
+} from "../../steps/ingestion/ingest-source";
 
 export async function rcoIngestionWorkflow() {
   "use workflow";
 
-  const runId = await createRcoRunStep();
+  const runId = await createSourceRunStep("rco");
   try {
-    const totals = await ingestRcoStep(runId);
-    await completeRcoRunStep(runId, "completed", totals);
+    const totals = await ingestSourceStep("rco", runId);
+    await completeSourceRunStep("rco", runId, "completed", totals);
     // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
     console.log(
       JSON.stringify({ msg: "🏁 RCO ingestion completed", runId, ...totals }),
@@ -22,7 +22,13 @@ export async function rcoIngestionWorkflow() {
     return { runId, status: "completed" as const, ...totals };
   } catch (error) {
     // Frees the "running" lock.
-    await completeRcoRunStep(runId, "failed", undefined, String(error));
+    await completeSourceRunStep(
+      "rco",
+      runId,
+      "failed",
+      undefined,
+      String(error),
+    );
     throw error;
   }
 }

@@ -20,14 +20,18 @@ import {
   actionCities,
   actionDepartments,
   actionPostalCodes,
+  actionToMarkdown,
   applyAiDecisions,
   CRITERION_LABELS,
   checkCompliance,
   criteriaForAi,
   type DuplicateCandidate,
+  fetchActionDetail,
+  getRcoClientFromEnv,
   hasCertainDuplicate,
   overallVerdict,
   type RcoActionDocument,
+  type RcoStructureDocument,
   type RiDispositif,
   toArbitrationDocument,
   toCandidate,
@@ -41,11 +45,12 @@ import {
   comparedValueHeader,
   DUPLICATE_VERDICT_LABELS,
   type DuplicateMatch,
-  RCO_MODEL_HANDLE,
   SIMILARITY_LABELS,
+  SOURCE_MODEL_HANDLE,
 } from "@playground/shared-types";
+import type { Json } from "@playground/supabase";
 import { FatalError } from "@workflow/errors";
-import { getSupabaseClient } from "./utils";
+import { getSupabaseClient } from "../../ingestion/utils";
 
 // The editorial team reads the report: French only.
 const VERDICT_LABELS: Record<Verdict, string> = {
@@ -234,10 +239,48 @@ async function findPlaygroundCandidates(
   }));
 }
 
-export async function arbitrateRcoRecord(
-  action: RcoActionDocument,
-  workflowId: string,
-) {
+type RcoIngestionMetadata = RcoActionDocument & {
+  structure: RcoStructureDocument;
+};
+
+// The import only reads /recherche, so the fiche text (objectif, contenu…)
+// first exists here. Saved before the verdict so every fiche keeps its content.
+async function saveRcoActionDetail(
+  ingestionRecordId: string,
+  stored: RcoIngestionMetadata,
+  detail: RcoActionDocument,
+): Promise<RcoActionDocument> {
+  const { error } = await getSupabaseClient()
+    .from("ingestion_records")
+    .update({
+      markdown: actionToMarkdown(detail, stored.structure),
+      metadata: { ...detail, structure: stored.structure } as unknown as Json,
+    })
+    .eq("id", ingestionRecordId);
+  if (error)
+    throw new Error(`Failed to save RCO action detail: ${error.message}`);
+  return detail;
+}
+
+export async function arbitrateRcoRecord({
+  ingestionRecordId,
+  metadata,
+  serviceData,
+  workflowId,
+}: {
+  ingestionRecordId: string;
+  metadata: unknown;
+  serviceData: unknown;
+  workflowId: string;
+}) {
+  const action = await saveRcoActionDetail(
+    ingestionRecordId,
+    metadata as RcoIngestionMetadata,
+    await fetchActionDetail(
+      getRcoClientFromEnv(),
+      serviceData as RcoActionDocument,
+    ),
+  );
   const complianceAgentId = requiredEnv("RCO_COMPLIANCE_AGENT_ID");
   const duplicatesAgentId = requiredEnv("RCO_DUPLICATES_AGENT_ID");
   const letta = createLettaClient();
@@ -302,7 +345,7 @@ export async function arbitrateRcoRecord(
   return {
     agentId: complianceAgentId,
     usage,
-    model: RCO_MODEL_HANDLE,
+    model: SOURCE_MODEL_HANDLE,
     rawResponse: JSON.stringify(rawAnswers),
     // An agent that skipped a criterion leaves it "ai": the report is unusable.
     status: unsettled ? ("incomplete" as const) : ("complete" as const),

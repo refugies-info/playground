@@ -7,6 +7,6 @@ export const LETTA_MODEL_NAME =
 export const LETTA_MODEL_HANDLE =
   process.env.LETTA_MODEL_HANDLE ?? "letta/auto"; // "anthropic/claude-sonnet-5-5";
 
-// Forced on the RCO agents only, to try a model without touching DI/translation.
-export const RCO_MODEL_HANDLE =
+// Default model of the source agents (RCO today), set apart from DI/translation.
+export const SOURCE_MODEL_HANDLE =
   process.env.RCO_MODEL_HANDLE || LETTA_MODEL_HANDLE;

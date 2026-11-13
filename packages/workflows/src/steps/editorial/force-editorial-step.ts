@@ -7,7 +7,7 @@
  * The Letta agent can take as long as it needs (1–3 minutes is normal).
  *
  * Flow:
- *   RCO record → generateRcoPlainLanguage (plain-language-rco.ts), then 5–6.
+ *   RCO record → source.generatePlainLanguage (sources/), then 5–6.
  *   DI record:
  *   1. Validate/recreate Letta conversation
  *   2. Cancel any active runs on the conversation
@@ -24,15 +24,9 @@ import {
   simplifyContentSync,
 } from "@playground/agents";
 import {
-  fetchActionDetail,
-  getRcoClientFromEnv,
-  type RcoActionDocument,
-} from "@playground/rco-offre-info";
-import {
   buildLettaConversationUrl,
   LETTA_MODEL_HANDLE,
   logger,
-  RCO_MODEL_HANDLE,
   TYPE_CLEAR_LANGUAGE,
   TYPE_CLEAR_LANGUAGE_ERROR,
 } from "@playground/shared-types";
@@ -41,11 +35,11 @@ import matter from "gray-matter";
 import { recordActivity } from "../common/activity-log";
 import { notifyClearLanguageError } from "../common/slack";
 import { getSupabaseClient } from "../common/supabase";
+import { getEditorialSource } from "../sources";
 import {
   type PersistEditorialReportResult,
   persistEditorialReportStep,
 } from "./persist-editorial-report";
-import { generateRcoPlainLanguage } from "./plain-language-rco";
 
 // Conversation ID validation pattern (UUID v4 with conv- prefix)
 const CONV_ID_PATTERN =
@@ -270,24 +264,20 @@ export async function forceEditorialStep(
       .eq("id", workflowId);
   };
 
-  const isRco = service?.origin === "RCO";
-  const generation = await (isRco
-    ? generateRcoPlainLanguage(
-        await fetchActionDetail(
-          getRcoClientFromEnv(),
-          service.data as unknown as RcoActionDocument,
-        ),
+  const source = getEditorialSource(service?.origin);
+  const generation = await (source
+    ? source.generatePlainLanguage({
+        serviceData: service?.data,
         model,
         // Linked before the agent answers: a failed run stays reachable.
         linkConversation,
-      )
+      })
     : generateDiEditorial(workflowId, workflow, model)
   ).catch(async (error: unknown) => {
     const failedRun = getFailedAgentRun(error);
     if (failedRun) {
       // Keeps the footer (model, tokens, impact) and the Letta link usable.
-      const usedModel =
-        model ?? (isRco ? RCO_MODEL_HANDLE : LETTA_MODEL_HANDLE);
+      const usedModel = model ?? source?.defaultModel ?? LETTA_MODEL_HANDLE;
       await linkConversation(failedRun.conversationId);
       const { data: report } = await supabase
         .from("letta_reports")

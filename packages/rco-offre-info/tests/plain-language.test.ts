@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildActionDocument } from "../src/mapping/document";
-import { normalizeSession } from "../src/mapping/normalize";
+import { normalizeSession } from "../src/api/normalize";
+import { buildActionDocument } from "../src/lheo/document";
 import {
   type PlainLanguageFiche,
   renderPlainLanguageFiche,
   toPlainLanguageDocument,
-} from "../src/plain-language/plain-language-rules";
+} from "../src/lheo/plain-language/plain-language-rules";
 import { rawSession } from "./fixtures";
 
 const actionOf = (overrides: Record<string, unknown> = {}) =>
