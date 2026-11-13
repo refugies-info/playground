@@ -15,7 +15,7 @@ import "dotenv/config";
 
 import { logger } from "@playground/shared-types";
 import { getSupabaseAdmin } from "@playground/supabase";
-import { processIngestionRecords } from "@refugies-info/di";
+import { processDiIngestionRecords } from "@refugies-info/di";
 
 async function main() {
   logger.info("=== DI Ingestion Records Test ===");
@@ -79,7 +79,7 @@ async function main() {
   logger.info("Processing ingestion records...");
 
   try {
-    await processIngestionRecords(supabase, runId);
+    await processDiIngestionRecords(supabase, runId);
     logger.info("✅ Successfully processed ingestion records");
   } catch (error) {
     logger.error(

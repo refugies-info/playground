@@ -6,7 +6,7 @@ import {
   type RcoActionSessions,
   type RcoBatchResult,
   searchActionSessions,
-} from "@playground/offre-info";
+} from "@playground/rco-offre-info";
 import { logger } from "@playground/shared-types";
 import {
   completeIngestionRun,

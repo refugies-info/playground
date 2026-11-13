@@ -49,7 +49,7 @@ interface WorkflowFilters extends Record<string, string> {
   dateTo: string;
   modalitesEntreesSorties: string;
   origin: string;
-  contentPreset: string;
+  excludedContent: string;
 }
 
 interface WorkflowClientProps {
@@ -434,9 +434,9 @@ export function WorkflowClient(props: WorkflowClientProps) {
 
           <BoutonFiltre
             label="Contenu"
-            options={[{ label: "Sans OEPRE", value: "sans-oepre" }]}
-            value={filters.contentPreset}
-            onChange={(value) => handleFilterChange("contentPreset", value)}
+            options={[{ label: "Sans OEPRE", value: "oepre" }]}
+            value={filters.excludedContent}
+            onChange={(value) => handleFilterChange("excludedContent", value)}
           />
 
           {/* Bouton aligné à droite dans le même conteneur que la recherche */}

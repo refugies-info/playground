@@ -57,7 +57,7 @@ import {
   getRcoClientFromEnv,
   type RcoActionDocument,
   type RcoStructureDocument,
-} from "@playground/offre-info";
+} from "@playground/rco-offre-info";
 import {
   LETTA_MODEL_HANDLE,
   logger,

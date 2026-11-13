@@ -7,7 +7,7 @@ import {
   metadataKeysForAi,
   type RcoActionDocument,
   toMetadataDocument,
-} from "@playground/offre-info";
+} from "@playground/rco-offre-info";
 import { RCO_MODEL_HANDLE, validateField } from "@playground/shared-types";
 import { FatalError } from "@workflow/errors";
 

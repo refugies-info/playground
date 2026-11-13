@@ -6,7 +6,7 @@ import {
   toPlainLanguageDocument,
   toSourceUrl,
   withoutMarkdownBodyFields,
-} from "@playground/offre-info";
+} from "@playground/rco-offre-info";
 import type {
   ArbitrationReport,
   CarbonImpact,
@@ -77,8 +77,11 @@ const DOCUMENT_PREVIEW_FIELDS_SELECT = `
   ingestion_metadata
 `;
 
-// RCO spells it with "-" or "–", "école" or "Ecole", with or without "OEPRE".
-const OEPRE_TITLE_PATTERNS = ["%ouvrir l_cole aux parents%", "%OEPRE%"];
+// Content family -> title patterns excluded by the `excludedContent` filter.
+const EXCLUDED_CONTENT_TITLE_PATTERNS: Record<string, readonly string[]> = {
+  // RCO spells it with "-" or "–", "école" or "Ecole", with or without "OEPRE".
+  oepre: ["%ouvrir l_cole aux parents%", "%OEPRE%"],
+};
 
 export interface GetDocumentsParams {
   page?: number;
@@ -106,7 +109,8 @@ export interface GetDocumentsParams {
   /** Filter by entry type: "0" (dates fixes) or "1" (a tout moment) */
   modalitesEntreesSorties?: string | null;
   origin?: string | null;
-  excludeOepre?: boolean;
+  /** Content families to hide, keys of EXCLUDED_CONTENT_TITLE_PATTERNS; unknown keys are ignored. */
+  excludedContent?: string[];
   /** Include large markdown/json fields. Used by /workflow preview drawer only. */
   includePreviewFields?: boolean;
 }
@@ -130,7 +134,7 @@ export async function getDocuments(params: GetDocumentsParams) {
     searchInContent = false,
     modalitesEntreesSorties,
     origin,
-    excludeOepre = false,
+    excludedContent = [],
     includePreviewFields = false,
   } = params;
 
@@ -226,10 +230,10 @@ export async function getDocuments(params: GetDocumentsParams) {
     query = query.eq("origin", origin);
   }
 
-  if (excludeOepre) {
-    for (const pattern of OEPRE_TITLE_PATTERNS) {
-      query = query.not("title", "ilike", pattern);
-    }
+  for (const pattern of excludedContent.flatMap(
+    (key) => EXCLUDED_CONTENT_TITLE_PATTERNS[key] ?? [],
+  )) {
+    query = query.not("title", "ilike", pattern);
   }
 
   // Multi-column text search (title, external_id, structure_name, commune).
