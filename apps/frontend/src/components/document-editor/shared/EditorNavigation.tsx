@@ -1,6 +1,9 @@
 "use client";
 
-import { ECOLOGITS_URL, formatCarbonImpact } from "@playground/shared-types";
+import {
+  ECOLOGITS_SITE_URL,
+  formatCarbonImpact,
+} from "@playground/shared-types";
 import { cn } from "@playground/ui";
 import {
   RiCheckLine,
@@ -273,7 +276,7 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
         {document.editorialCarbonImpact ? (
           <div>
             <a
-              href={ECOLOGITS_URL}
+              href={ECOLOGITS_SITE_URL}
               target="_blank"
               rel="noopener noreferrer"
               title="Estimation haute EcoLogits, mix électrique français"
