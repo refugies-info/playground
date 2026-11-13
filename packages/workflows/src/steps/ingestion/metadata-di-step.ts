@@ -52,7 +52,7 @@ import {
   fetchActionDetail,
   getRcoClientFromEnv,
   type RcoActionDocument,
-} from "@playground/offre-info";
+} from "@playground/rco-offre-info";
 import { LETTA_MODEL_HANDLE, logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
 import { getStepMetadata } from "@workflow/core";

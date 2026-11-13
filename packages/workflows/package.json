@@ -21,7 +21,7 @@
     "@letta-ai/letta-client": "1.12.1",
     "@playground/agents": "workspace:*",
     "@playground/airtable": "workspace:*",
-    "@playground/offre-info": "workspace:*",
+    "@playground/rco-offre-info": "workspace:*",
     "@playground/shared-types": "workspace:*",
     "@playground/supabase": "workspace:*",
     "@supabase/supabase-js": "2.84.0",

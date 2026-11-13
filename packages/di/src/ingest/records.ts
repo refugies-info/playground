@@ -6,7 +6,7 @@ import { diRecordToIngestionRecord } from "./transform";
 const BATCH_SIZE = 100;
 const FETCH_PAGE_SIZE = 1000; // Supabase default limit
 
-export async function processIngestionRecords(
+export async function processDiIngestionRecords(
   supabase: SupabaseClient<Database>,
   runId: string,
 ) {

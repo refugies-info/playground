@@ -38,7 +38,7 @@ import { logger } from "@playground/shared-types";
 import {
   ingestCarifOrefServices,
   ingestCarifOrefStructures,
-  processIngestionRecords,
+  processDiIngestionRecords,
 } from "@refugies-info/di";
 import { getSupabaseClient } from "./utils";
 
@@ -113,6 +113,6 @@ export async function processRecordsStep(runId: string) {
   }
   const supabase = getSupabaseClient();
   logger.info({ runId }, "▶ [3/4] Processing ingestion records...");
-  await processIngestionRecords(supabase, runId);
+  await processDiIngestionRecords(supabase, runId);
   logger.info({ runId }, "✔ [3/4] Ingestion records processed");
 }

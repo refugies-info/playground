@@ -3,7 +3,7 @@ import {
   type RcoActionDocument,
   renderPlainLanguageFiche,
   toPlainLanguageDocument,
-} from "@playground/offre-info";
+} from "@playground/rco-offre-info";
 import { RCO_MODEL_HANDLE } from "@playground/shared-types";
 import { FatalError } from "@workflow/errors";
 

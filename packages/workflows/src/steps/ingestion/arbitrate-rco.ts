@@ -32,7 +32,7 @@ import {
   toArbitrationDocument,
   toCandidate,
   type Verdict,
-} from "@playground/offre-info";
+} from "@playground/rco-offre-info";
 import {
   type ArbitrationCriterion,
   type ArbitrationReport,

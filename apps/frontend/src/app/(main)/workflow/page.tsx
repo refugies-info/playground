@@ -38,24 +38,23 @@ export default async function WorkflowPage(props: PageProps) {
     MAX_PAGE_SIZE,
   );
 
-  const search = getQueryParam(searchParams.search);
-  const searchField = parseSearchField(getQueryParam(searchParams.searchField));
-  // Filtre de date composite : type + condition + une ou deux dates.
-  // Les parsers rejettent les valeurs hors énumération d'une URL bricolée.
-  const dateFilterType = parseDateFilterType(
-    getQueryParam(searchParams.dateType),
-  );
-  const dateFilterCondition = parseDateFilterCondition(
-    getQueryParam(searchParams.dateCondition),
-  );
-  const dateFrom = getQueryParam(searchParams.dateFrom);
-  const dateTo = getQueryParam(searchParams.dateTo);
-  // Type d'entrée : "0" (dates fixes) ou "1" (à tout moment).
-  const modalitesEntreesSorties = getQueryParam(
-    searchParams.modalitesEntreesSorties,
-  );
-  const origin = getQueryParam(searchParams.origin);
-  const contentPreset = getQueryParam(searchParams.contentPreset);
+  // Parsers reject values outside their enum (hand-crafted URLs).
+  const filters = {
+    search: getQueryParam(searchParams.search),
+    searchField: parseSearchField(getQueryParam(searchParams.searchField)),
+    dateFilterType: parseDateFilterType(getQueryParam(searchParams.dateType)),
+    dateFilterCondition: parseDateFilterCondition(
+      getQueryParam(searchParams.dateCondition),
+    ),
+    dateFrom: getQueryParam(searchParams.dateFrom),
+    dateTo: getQueryParam(searchParams.dateTo),
+    // "0" (dates fixes) or "1" (à tout moment).
+    modalitesEntreesSorties: getQueryParam(
+      searchParams.modalitesEntreesSorties,
+    ),
+    origin: getQueryParam(searchParams.origin),
+    excludedContent: getQueryParam(searchParams.excludedContent),
+  };
 
   // Parse and validate sort parameters (server-side sort).
   const sortBy = parseDocumentSortField(
@@ -77,16 +76,9 @@ export default async function WorkflowPage(props: PageProps) {
         complianceStatus: ["pending", "error", null], // Include pending, error, and NULL (unevaluated)
         sortBy,
         sortOrder,
-        search,
-        searchField,
+        ...filters,
+        excludedContent: filters.excludedContent.split(","),
         searchInContent: true, // texte étendu : titre, structure, commune, id + markdown
-        dateFilterType,
-        dateFilterCondition,
-        dateFrom,
-        dateTo,
-        modalitesEntreesSorties,
-        origin,
-        excludeOepre: contentPreset === "sans-oepre",
         includePreviewFields: true,
       }),
       getLatestIngestionRun(ingestionSource),
@@ -102,15 +94,15 @@ export default async function WorkflowPage(props: PageProps) {
       sortBy={sortBy}
       sortOrder={sortOrder}
       initialFilters={{
-        search,
-        searchField: searchField ?? "",
-        dateType: dateFilterType ?? "",
-        dateCondition: dateFilterCondition ?? "",
-        dateFrom,
-        dateTo,
-        modalitesEntreesSorties,
-        origin,
-        contentPreset,
+        search: filters.search,
+        searchField: filters.searchField ?? "",
+        dateType: filters.dateFilterType ?? "",
+        dateCondition: filters.dateFilterCondition ?? "",
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
+        modalitesEntreesSorties: filters.modalitesEntreesSorties,
+        origin: filters.origin,
+        excludedContent: filters.excludedContent,
       }}
       ingestionSource={ingestionSource}
       latestIngestionRun={latestIngestionRun}

@@ -27,7 +27,7 @@ import {
   fetchActionDetail,
   getRcoClientFromEnv,
   type RcoActionDocument,
-} from "@playground/offre-info";
+} from "@playground/rco-offre-info";
 import {
   buildLettaConversationUrl,
   LETTA_MODEL_HANDLE,
