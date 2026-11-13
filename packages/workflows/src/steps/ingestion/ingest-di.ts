@@ -40,7 +40,7 @@ import {
   ingestCarifOrefStructures,
   processDiIngestionRecords,
 } from "@refugies-info/di";
-import { getSupabaseClient } from "./utils";
+import { getSupabaseClient } from "../common/supabase";
 
 /**
  * Step 1: Ingest structures from the CARIF-OREF API.

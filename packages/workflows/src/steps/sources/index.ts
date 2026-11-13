@@ -1,3 +1,4 @@
+// Keyed by the fiche's `services.origin` ("RCO"), not the ingestion run source key used in steps/ingestion/ingest-source.ts.
 import { SOURCE_MODEL_HANDLE } from "@playground/shared-types";
 import { arbitrateRcoRecord } from "./rco/arbitrate";
 import { generateRcoMetadata } from "./rco/metadata";

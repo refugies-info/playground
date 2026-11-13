@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
   saveIngestionCheckpoint: vi.fn(),
 }));
 
-vi.mock("../src/steps/ingestion/utils", () => ({
+vi.mock("../src/steps/common/supabase", () => ({
   getSupabaseClient: () => mocks.supabase,
 }));
 vi.mock("@playground/supabase/ingestion-runs", async (importOriginal) => ({

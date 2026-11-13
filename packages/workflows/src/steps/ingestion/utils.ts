@@ -1,21 +1,4 @@
-import { getSupabaseAdmin } from "@playground/supabase";
-
-/**
- * Step 1: Ingest services from the CARIF-OREF API.
- *
- * @returns A Supabase client configured with service role key.
- * @throws If SUPABASE_SERVICE_ROLE_KEY is missing.
- */
-export function getSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!key) {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not defined");
-  }
-
-  return getSupabaseAdmin(url, key);
-}
+import { getSupabaseClient } from "../common/supabase";
 
 const DI_FETCH_PAGE_SIZE = 1000;
 

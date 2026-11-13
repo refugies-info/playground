@@ -31,7 +31,8 @@ import { start } from "@workflow/core/runtime";
 import { FatalError, RetryableError } from "@workflow/errors";
 import { diSingleRecordWorkflow } from "../../pipelines/ingestion/di-single-record";
 import { recordActivity } from "../common/activity-log";
-import { fetchAllDiServiceIds, getSupabaseClient } from "./utils";
+import { getSupabaseClient } from "../common/supabase";
+import { fetchAllDiServiceIds } from "./utils";
 
 // =============================================================================
 // Config

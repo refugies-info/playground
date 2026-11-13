@@ -38,7 +38,7 @@ vi.mock("@playground/rco-offre-info", async (importOriginal) => ({
   getRcoClientFromEnv: () => ({}),
   fetchActionDetail: mocks.fetchActionDetail,
 }));
-vi.mock("../src/steps/ingestion/utils", () => ({
+vi.mock("../src/steps/common/supabase", () => ({
   getSupabaseClient: () => ({ from: () => ({ update: mocks.update }) }),
 }));
 

@@ -48,9 +48,9 @@ import {
   SIMILARITY_LABELS,
   SOURCE_MODEL_HANDLE,
 } from "@playground/shared-types";
-import type { Json } from "@playground/supabase";
+import type { Database, Json } from "@playground/supabase";
 import { FatalError } from "@workflow/errors";
-import { getSupabaseClient } from "../../ingestion/utils";
+import { getSupabaseClient } from "../../common/supabase";
 
 // The editorial team reads the report: French only.
 const VERDICT_LABELS: Record<Verdict, string> = {
@@ -207,6 +207,9 @@ async function findRiCandidates(
   }));
 }
 
+type PlaygroundCandidateRow =
+  Database["public"]["Functions"]["search_playground_duplicate_candidates"]["Returns"][number];
+
 async function findPlaygroundCandidates(
   action: RcoActionDocument,
   workflowId: string,
@@ -224,7 +227,7 @@ async function findPlaygroundCandidates(
   if (error) {
     throw new Error(`Playground duplicate search failed: ${error.message}`);
   }
-  return data.map((row) => ({
+  return data.map((row: PlaygroundCandidateRow) => ({
     ...toCandidate(
       {
         id: row.id,

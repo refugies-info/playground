@@ -70,6 +70,8 @@ export {
   diSingleMetadataStep,
   fanOutDiRecordsStep,
 } from "./steps/ingestion/di-single-record-steps";
+export * from "./steps/ingestion/force-audit-step";
+export * from "./steps/ingestion/force-metadata-step";
 export * from "./steps/ingestion/ingest-di";
 export * from "./steps/ingestion/metadata-di-step";
 // =============================================================================

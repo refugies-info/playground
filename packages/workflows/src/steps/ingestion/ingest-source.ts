@@ -6,7 +6,7 @@ import {
   saveIngestionCheckpoint,
 } from "@playground/supabase/ingestion-runs";
 import { FatalError } from "@workflow/errors";
-import { getSupabaseClient } from "./utils";
+import { getSupabaseClient } from "../common/supabase";
 
 const PROVIDERS = { rco: rcoProvider } as const;
 
