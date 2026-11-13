@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildActionDocument } from "../src/mapping/document";
-import { normalizeSession } from "../src/mapping/normalize";
-import { mapMetadata, metadataKeysForAi } from "../src/metadata/metadata-rules";
+import { normalizeSession } from "../src/api/normalize";
+import { buildActionDocument } from "../src/lheo/document";
+import {
+  mapMetadata,
+  metadataKeysForAi,
+} from "../src/lheo/metadata/metadata-rules";
 import { rawSession } from "./fixtures";
 
 const TODAY = "2026-10-19";

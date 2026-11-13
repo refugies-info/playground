@@ -1,11 +1,11 @@
 import { computeContentHash } from "@playground/supabase/ingestion-runs";
 import { describe, expect, it } from "vitest";
+import { normalizeSession } from "../src/api/normalize";
 import type { RcoActionSessions } from "../src/api/search";
 import { toOriginId } from "../src/config";
 import { ingestRcoActions } from "../src/ingest";
-import { buildActionDocument } from "../src/mapping/document";
-import { normalizeSession } from "../src/mapping/normalize";
-import { buildStructureDocument } from "../src/mapping/structure";
+import { buildActionDocument } from "../src/lheo/document";
+import { buildStructureDocument } from "../src/lheo/structure";
 import { rawSession } from "./fixtures";
 
 type Row = Record<string, unknown>;

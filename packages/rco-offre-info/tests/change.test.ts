@@ -1,13 +1,13 @@
 import { computeContentHash } from "@playground/supabase/ingestion-runs";
 import { describe, expect, it } from "vitest";
+import { normalizeSession } from "../src/api/normalize";
 import {
   changedFieldPaths,
   changedTopLevelFields,
   classifyChange,
   createsIngestionRecord,
-} from "../src/mapping/change";
-import { buildActionDocument } from "../src/mapping/document";
-import { normalizeSession } from "../src/mapping/normalize";
+} from "../src/lheo/change";
+import { buildActionDocument } from "../src/lheo/document";
 import { rawSession } from "./fixtures";
 
 const build = (overrides: Record<string, unknown> = {}) =>

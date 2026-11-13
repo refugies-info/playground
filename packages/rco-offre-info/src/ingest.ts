@@ -10,18 +10,18 @@ import {
   createsIngestionRecord,
   type PreviousService,
   type RcoChange,
-} from "./mapping/change";
+} from "./lheo/change";
 import {
   buildActionDocument,
   pickReferenceSession,
   type RcoActionDocument,
-} from "./mapping/document";
-import { actionToMarkdown } from "./mapping/markdown";
+} from "./lheo/document";
+import { actionToMarkdown } from "./lheo/markdown";
 import {
   buildStructureDocument,
   type RcoStructureDocument,
   resolveStructureId,
-} from "./mapping/structure";
+} from "./lheo/structure";
 
 type Supabase = SupabaseClient<Database>;
 

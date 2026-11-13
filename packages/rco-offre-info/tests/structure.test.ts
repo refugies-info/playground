@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildStructureDocument,
   resolveStructureId,
-} from "../src/mapping/structure";
+} from "../src/lheo/structure";
 
 const structureIdBySiret = new Map([["111", "carif-oref--01_999"]]);
 

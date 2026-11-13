@@ -7,9 +7,9 @@ import {
   RCO_SEARCH_FIELDS,
   RCO_SEARCH_PAGE_LIMIT,
 } from "../config";
-import { normalizeSession } from "../mapping/normalize";
 import type { SessionOffre } from "../types";
 import type { RcoClient } from "./client";
+import { normalizeSession } from "./normalize";
 
 export type RcoActionSessions = {
   numeroAction: string;
