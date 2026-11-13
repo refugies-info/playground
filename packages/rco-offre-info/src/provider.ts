@@ -49,7 +49,7 @@ export type RcoBatchResult = {
   errors: Array<{ numeroAction: string; error: string }>;
 };
 
-export const emptyRcoBatchResult = (): RcoBatchResult => ({
+const emptyRcoBatchResult = (): RcoBatchResult => ({
   processed: 0,
   changes: { new: 0, unchanged: 0, baseline: 0, sessions_only: 0, content: 0 },
   structuresWritten: 0,

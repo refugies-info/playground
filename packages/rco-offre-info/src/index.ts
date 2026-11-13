@@ -1,17 +1,47 @@
-export * from "./api/action";
-export * from "./api/client";
-export * from "./api/normalize";
-export * from "./api/search";
-export * from "./config";
-export * from "./lheo/arbitrage/compliance-config";
-export * from "./lheo/arbitrage/compliance-rules";
-export * from "./lheo/arbitrage/duplicate-candidates";
-export * from "./lheo/change";
-export * from "./lheo/document";
-export * from "./lheo/markdown";
-export * from "./lheo/metadata/metadata-config";
-export * from "./lheo/metadata/metadata-rules";
-export * from "./lheo/plain-language/plain-language-rules";
-export * from "./lheo/structure";
-export * from "./provider";
-export * from "./types";
+export { fetchActionDetail } from "./api/action";
+export { getRcoClientFromEnv } from "./api/client";
+export { normalizeSession } from "./api/normalize";
+export { RCO_SOURCE } from "./config";
+export {
+  applyAiDecisions,
+  CRITERION_LABELS,
+  checkCompliance,
+  criteriaForAi,
+  overallVerdict,
+  toArbitrationDocument,
+  type Verdict,
+} from "./lheo/arbitrage/compliance-rules";
+export {
+  actionCities,
+  actionDepartments,
+  actionPostalCodes,
+  type DuplicateCandidate,
+  hasCertainDuplicate,
+  type RiDispositif,
+  toCandidate,
+} from "./lheo/arbitrage/duplicate-candidates";
+export {
+  buildActionDocument,
+  type RcoActionDocument,
+  toSourceUrl,
+} from "./lheo/document";
+export {
+  actionToMarkdown,
+  withoutMarkdownBodyFields,
+} from "./lheo/markdown";
+export {
+  METADATA_LABELS,
+  type MetadataKey,
+} from "./lheo/metadata/metadata-config";
+export {
+  type MappedField,
+  mapMetadata,
+  metadataKeysForAi,
+  toMetadataDocument,
+} from "./lheo/metadata/metadata-rules";
+export {
+  renderPlainLanguageFiche,
+  toPlainLanguageDocument,
+} from "./lheo/plain-language/plain-language-rules";
+export type { RcoStructureDocument } from "./lheo/structure";
+export { type RcoBatchResult, rcoProvider } from "./provider";

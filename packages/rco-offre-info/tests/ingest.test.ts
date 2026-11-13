@@ -16,7 +16,7 @@ type Call = {
   rows?: Row[];
 };
 
-// Mimics only the chains ingest.ts makes: select().in(), insert().select(), delete().in().
+// Mimics only the chains the generic writer makes: select().in(), insert().select(), delete().in().
 function fakeSupabase(tables: Record<string, Row[]>, failingInsert?: string) {
   const calls: Call[] = [];
   let uuid = 0;
