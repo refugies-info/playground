@@ -74,6 +74,7 @@ interface WidgetConfigMetadata {
   _id: string;
   publicId: string;
   statusUpdatedAt: string;
+  lastTrafficAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -88,7 +89,10 @@ export type WidgetConfigSummary = Pick<
   | "type"
   | "status"
   | "structureName"
+  | "createdAt"
   | "updatedAt"
+  | "statusUpdatedAt"
+  | "lastTrafficAt"
 >;
 
 export interface CreatedWidgetConfigResponse {

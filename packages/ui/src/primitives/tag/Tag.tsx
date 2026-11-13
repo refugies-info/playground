@@ -14,6 +14,7 @@ import { cn } from "../../utils";
  *   archive     → Gris désactivé     (background-disabled-grey)
  *   a-relire    → Violet glycine     (purple-glycine-925-125)
  *   publie      → Vert succès plein  (background-flat-success)
+ *   attention   → Orange d'alerte    (background-flat-warning)
  *   na          → Tiret gris         (pas de fond)
  *
  * Toutes les couleurs référencent les variables DSFR directement.
@@ -62,6 +63,13 @@ const tagVariants = cva(
           "rounded-full px-3 h-6 text-xs",
         ].join(" "),
 
+        // Orange d'alerte (widget inactif) : background/flat/warning + texte inversé
+        attention: [
+          "bg-[var(--background-flat-warning)]",
+          "text-[var(--text-inverted-grey)]",
+          "rounded-full px-3 h-6 text-xs",
+        ].join(" "),
+
         // Figma : pas de fond, texte tiret, text/disabled-grey bold
         na: [
           "text-[var(--text-disabled-grey)]",
@@ -83,6 +91,7 @@ export const TAG_LABELS: Record<TagStatus, string> = {
   archive: "Archivé",
   "a-relire": "À relire",
   publie: "Publié",
+  attention: "Attention",
   na: "—",
 };
 

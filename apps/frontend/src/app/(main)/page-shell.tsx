@@ -13,9 +13,14 @@ const PAGE_TITLES: Record<string, string> = {
 
 /**
  * Pages liste qui reçoivent le padding Figma mais gèrent leur propre h1
- * (titre dynamique selon le rôle, ex. /translations).
+ * (titre dynamique selon le rôle, ex. /translations, ou titre dans la même ligne
+ * que d'autres éléments, ex. /widgets).
  */
-const PADDED_PATHS = new Set([...Object.keys(PAGE_TITLES), "/translations"]);
+const PADDED_PATHS = new Set([
+  ...Object.keys(PAGE_TITLES),
+  "/translations",
+  "/widgets",
+]);
 
 interface PageShellProps {
   children: React.ReactNode;
@@ -26,7 +31,7 @@ interface PageShellProps {
  * sur toutes les pages liste, et le h1 uniquement pour les titres statiques.
  *
  * - Pages éditeur (/documents/[id], /translations/[id]) : pass-through, aucun wrapper.
- * - /translations : padding uniquement — le composant gère son propre h1 dynamique.
+ * - /translations, /widgets : padding uniquement — le composant gère son propre h1.
  * - /documents, /users, /workflow : padding + h1.
  */
 export function PageShell({ children }: PageShellProps) {
