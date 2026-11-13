@@ -2,10 +2,10 @@ import type { RcoBatchResult } from "@playground/rco-offre-info";
 import { FatalError } from "@workflow/errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  completeRcoRunStep,
-  createRcoRunStep,
-  ingestRcoStep,
-} from "../src/steps/ingestion/ingest-rco";
+  completeSourceRunStep,
+  createSourceRunStep,
+  ingestSourceStep,
+} from "../src/steps/ingestion/ingest-source";
 
 type Totals = RcoBatchResult;
 
@@ -42,14 +42,14 @@ vi.mock("@playground/rco-offre-info", async (importOriginal) => {
   };
 });
 const steps = {
-  create: () => createRcoRunStep(),
-  ingest: (runId: string) => ingestRcoStep(runId),
+  create: () => createSourceRunStep("rco"),
+  ingest: (runId: string) => ingestSourceStep("rco", runId),
   complete: (
     runId: string,
     status: "completed" | "failed",
     totals?: Totals,
     failure?: string,
-  ) => completeRcoRunStep(runId, status, totals, failure),
+  ) => completeSourceRunStep("rco", runId, status, totals, failure),
 };
 // ---
 
