@@ -4,7 +4,6 @@ import { computeContentHash } from "@playground/supabase/ingestion-runs";
 import {
   fetchLatestServices,
   fetchStructureIdsBySiret,
-  type IngestionProvider,
   type ServiceVersion,
   writeServiceVersions,
   writeStructures,
@@ -199,14 +198,13 @@ async function ingestRcoActions(
   return result;
 }
 
-export const rcoProvider: IngestionProvider<RcoActionSessions, RcoBatchResult> =
-  {
-    runSource: "rco",
-    fetchAll: () => searchActionSessions(getRcoClientFromEnv()),
-    isFatalError: isRcoAuthError,
-    ingestBatch: ingestRcoActions,
-    emptyResult: emptyRcoBatchResult,
-    addResult: addBatchResult,
-    toRunStats,
-    errorsOf: (result) => result.errors,
-  };
+// Shape checked against IngestionProvider where the workflow registers it.
+export const rcoProvider = {
+  fetchAll: () => searchActionSessions(getRcoClientFromEnv()),
+  isFatalError: isRcoAuthError,
+  ingestBatch: ingestRcoActions,
+  emptyResult: emptyRcoBatchResult,
+  addResult: addBatchResult,
+  toRunStats,
+  errorsOf: (result: RcoBatchResult) => result.errors,
+};

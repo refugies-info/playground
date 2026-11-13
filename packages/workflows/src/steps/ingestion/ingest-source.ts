@@ -1,14 +1,38 @@
 import { rcoProvider } from "@playground/rco-offre-info";
 import { logger } from "@playground/shared-types";
+import type { Database } from "@playground/supabase";
 import {
   completeIngestionRun,
   createIngestionRun,
+  type IngestionRunStats,
   saveIngestionCheckpoint,
 } from "@playground/supabase/ingestion-runs";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { FatalError } from "@workflow/errors";
 import { getSupabaseClient } from "../common/supabase";
 
-const PROVIDERS = { rco: rcoProvider } as const;
+// What an external source must provide to be ingested by the steps below.
+// The batch result stays the provider's own shape: it is stored as the run
+// checkpoint and read back by the latest run card.
+export type IngestionProvider<Item = unknown, Result = unknown> = {
+  fetchAll(): Promise<Item[]>;
+  isFatalError(error: unknown): boolean;
+  ingestBatch(
+    supabase: SupabaseClient<Database>,
+    items: Item[],
+    runId: string,
+  ): Promise<Result>;
+  emptyResult(): Result;
+  addResult(total: Result, batch: Result): Result;
+  toRunStats(result: Result): IngestionRunStats;
+  errorsOf(result: Result): unknown[];
+};
+
+// Keyed by `ingestion_runs.source`.
+const PROVIDERS = { rco: rcoProvider } satisfies Record<
+  string,
+  IngestionProvider
+>;
 
 export type IngestionSourceKey = keyof typeof PROVIDERS;
 type SourceResult = Awaited<
@@ -23,7 +47,7 @@ export async function createSourceRunStep(
 ): Promise<string> {
   "use step";
   return createIngestionRun(getSupabaseClient(), {
-    source: PROVIDERS[source].runSource,
+    source,
     type: "services",
     options: {},
   });
@@ -58,7 +82,7 @@ export async function ingestSourceStep(
     );
     totals = provider.addResult(totals, batch);
     logger.info(
-      { runId, processed: batch.processed, changes: batch.changes },
+      { runId, ...provider.toRunStats(batch) },
       `✔ ${source.toUpperCase()} batch ingested`,
     );
   }

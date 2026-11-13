@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { computeContentHash, type IngestionRunStats } from "./ingestion-runs";
+import { computeContentHash } from "./ingestion-runs";
 import type { Database, Json } from "./types";
 
 type Supabase = SupabaseClient<Database>;
@@ -19,21 +19,6 @@ export type ServiceVersion = {
   structure: { id: string };
   // Called after the services insert: a throw leaves the same rows as before.
   toIngestionRecord: (() => { markdown: string; metadata: Json }) | null;
-};
-
-export type IngestionProvider<Item, Result> = {
-  runSource: "rco";
-  fetchAll: () => Promise<Item[]>;
-  isFatalError: (error: unknown) => boolean;
-  ingestBatch: (
-    supabase: Supabase,
-    items: Item[],
-    runId: string,
-  ) => Promise<Result>;
-  emptyResult: () => Result;
-  addResult: (total: Result, batch: Result) => Result;
-  toRunStats: (result: Result) => IngestionRunStats;
-  errorsOf: (result: Result) => unknown[];
 };
 
 const toVersionRow = (
