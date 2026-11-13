@@ -2,6 +2,8 @@
 
 TypeScript client for the [Data Inclusion API](https://api.data.inclusion.gouv.fr/).
 
+Kept as a fallback (`INGESTION_SOURCE=di`): the main source is the RCO API in `packages/rco-offre-info`. The `CarifOref` in function names here means DI records filtered on `source = "carif-oref"`, not a call to the Carif-Oref API itself.
+
 ## Environment Variables
 
 The client requires the following environment variables in the **root `.env`** file:
