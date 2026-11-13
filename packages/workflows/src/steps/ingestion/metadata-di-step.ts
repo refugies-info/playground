@@ -48,17 +48,12 @@ import {
   MetadataMetadataSchema,
   parseAgentResponse,
 } from "@playground/agents";
-import {
-  fetchActionDetail,
-  getRcoClientFromEnv,
-  type RcoActionDocument,
-} from "@playground/rco-offre-info";
 import { LETTA_MODEL_HANDLE, logger } from "@playground/shared-types";
 import type { Json } from "@playground/supabase";
 import { getStepMetadata } from "@workflow/core";
 import { FatalError, RetryableError } from "@workflow/errors";
 import { z } from "zod";
-import { generateRcoMetadata } from "./metadata-rco";
+import { getEditorialSource } from "../sources";
 import { getSupabaseClient, runWithConcurrency } from "./utils";
 
 // =============================================================================
@@ -597,21 +592,18 @@ export async function forceMetadataReportStep(
       "Starting forced metadata generation",
     );
 
-    const parsed =
-      record.service?.origin === "RCO"
-        ? await generateRcoMetadata(
-            await fetchActionDetail(
-              getRcoClientFromEnv(),
-              record.service.data as unknown as RcoActionDocument,
-            ),
-            model,
-          )
-        : await generateForcedDiMetadata(
-            record.markdown,
-            workflowId,
-            agentId,
-            model,
-          );
+    const source = getEditorialSource(record.service?.origin);
+    const parsed = source
+      ? await source.generateMetadata({
+          serviceData: record.service?.data,
+          model,
+        })
+      : await generateForcedDiMetadata(
+          record.markdown,
+          workflowId,
+          agentId,
+          model,
+        );
 
     // UPDATE the "generating" report with the final result.
     // Triggers a Realtime UPDATE event on the UI to unblock the spinner.

@@ -1,5 +1,5 @@
 import type { Letta } from "@letta-ai/letta-client";
-import { RCO_MODEL_HANDLE } from "@playground/shared-types";
+import { SOURCE_MODEL_HANDLE } from "@playground/shared-types";
 // v4 API (shipped in zod 3.25) for z.toJSONSchema.
 import { z } from "zod/v4";
 import { createConversation, sendMessageToConversation } from "./agents";
@@ -161,7 +161,7 @@ async function askAgent<T>(
   conversationName: string,
   message: string,
   schema: z.ZodType<T>,
-  model = RCO_MODEL_HANDLE,
+  model = SOURCE_MODEL_HANDLE,
   onConversation?: (conversationId: string) => Promise<void>,
 ): Promise<{ answer: T; usage?: LettaUsage; conversationId: string }> {
   const conversationId = await createConversation(

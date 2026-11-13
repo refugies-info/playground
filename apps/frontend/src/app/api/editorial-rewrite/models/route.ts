@@ -2,7 +2,7 @@ import { createLettaClient } from "@playground/agents";
 import {
   LETTA_MODEL_HANDLE,
   logger,
-  RCO_MODEL_HANDLE,
+  SOURCE_MODEL_HANDLE,
 } from "@playground/shared-types";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
@@ -16,7 +16,7 @@ export async function GET() {
   try {
     const models = await createLettaClient().models.list();
     return NextResponse.json({
-      defaultModels: { rco: RCO_MODEL_HANDLE, di: LETTA_MODEL_HANDLE },
+      defaultModels: { rco: SOURCE_MODEL_HANDLE, di: LETTA_MODEL_HANDLE },
       models: models
         .filter((model) => model.handle)
         .map((model) => ({
