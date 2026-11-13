@@ -1,4 +1,5 @@
-import { RCO_SOURCE, toOriginId } from "../config";
+import { CARIF_OREF_SOURCE } from "@playground/shared-types";
+import { toOriginId } from "../config";
 import type { SessionOffre } from "../types";
 
 // Fields that vary per session. Everything else describes the action itself,
@@ -76,7 +77,7 @@ export function buildActionDocument(
     ...actionFields,
     id: toOriginId(reference.numero_action),
     nom: reference.intitule_formation ?? reference.numero_action,
-    source: RCO_SOURCE,
+    source: CARIF_OREF_SOURCE,
     structure_id: structureId,
     sessions: sessions
       .map(pickSessionFields)

@@ -2,7 +2,6 @@ export { computeContentHash } from "@playground/supabase/ingestion-runs";
 
 const DEFAULT_PAGE_SIZE = Number(process.env.DI_PAGE_SIZE) || 100;
 const DEFAULT_BATCH_SIZE = 100;
-const SOURCE_CARIF_OREF = "carif-oref";
 
 export interface DiIngestionOptions<T = any> {
   /** Number of items per API page (default: 100) */
@@ -21,4 +20,4 @@ export interface DiIngestionOptions<T = any> {
   excludeAllDuplicates?: boolean;
 }
 
-export { DEFAULT_BATCH_SIZE, DEFAULT_PAGE_SIZE, SOURCE_CARIF_OREF };
+export { DEFAULT_BATCH_SIZE, DEFAULT_PAGE_SIZE };

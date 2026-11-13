@@ -1,4 +1,4 @@
-import { logger } from "@playground/shared-types";
+import { CARIF_OREF_SOURCE, logger } from "@playground/shared-types";
 import type { Database } from "@playground/supabase";
 import {
   completeIngestionRun,
@@ -12,7 +12,6 @@ import {
   DEFAULT_BATCH_SIZE,
   DEFAULT_PAGE_SIZE,
   type DiIngestionOptions,
-  SOURCE_CARIF_OREF,
 } from "./shared";
 
 /**
@@ -35,7 +34,6 @@ import {
   DEFAULT_BATCH_SIZE,
   DEFAULT_PAGE_SIZE,
   type DiIngestionOptions,
-  SOURCE_CARIF_OREF,
 } from "./shared";
 
 /**
@@ -108,7 +106,7 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
 
   logger.info(
     {
-      source: SOURCE_CARIF_OREF,
+      source: CARIF_OREF_SOURCE,
       pageSize,
       limit: limit ?? "unlimited",
       excludeAllDuplicates,
@@ -121,7 +119,7 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
       const data = await fetchFn({
         page: currentPage,
         size: pageSize,
-        sources: [SOURCE_CARIF_OREF],
+        sources: [CARIF_OREF_SOURCE],
         ...extraQueryParams,
       });
 
@@ -478,7 +476,7 @@ export async function ingestCarifOrefItems<T extends DiItem>(
   const type = tableName === "structures" ? "structures" : "services";
 
   logger.info(
-    { source: SOURCE_CARIF_OREF },
+    { source: CARIF_OREF_SOURCE },
     `=== Starting DI ${itemType} ingestion ===`,
   );
 

@@ -1,7 +1,6 @@
 export { fetchActionDetail } from "./api/action";
 export { getRcoClientFromEnv } from "./api/client";
 export { normalizeSession } from "./api/normalize";
-export { RCO_SOURCE } from "./config";
 export {
   applyAiDecisions,
   CRITERION_LABELS,

@@ -1,7 +1,6 @@
 import type { SessionOffreField } from "./types";
 
 export const RCO_DEFAULT_BASE_URL = "https://api-offreinfo.intercariforef.org";
-export const RCO_SOURCE = "carif-oref";
 export const RCO_ORIGIN_PREFIX = "carif-oref--";
 
 export const RCO_FORMACODES = ["15235", "15281", "15043", "15242"] as const;

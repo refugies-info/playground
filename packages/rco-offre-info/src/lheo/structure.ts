@@ -1,4 +1,5 @@
-import { RCO_ORIGIN_PREFIX, RCO_SOURCE } from "../config";
+import { CARIF_OREF_SOURCE } from "@playground/shared-types";
+import { RCO_ORIGIN_PREFIX } from "../config";
 import type { OrganismeResponsable } from "../types";
 
 export type RcoStructureDocument = {
@@ -36,7 +37,7 @@ export function buildStructureDocument(
   return {
     id,
     nom: organisme.nom ?? organisme.raison_sociale ?? id,
-    source: RCO_SOURCE,
+    source: CARIF_OREF_SOURCE,
     siret: organisme.siret ?? null,
     raison_sociale: organisme.raison_sociale ?? null,
     numero_activite: organisme.numero_activite ?? null,

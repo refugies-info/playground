@@ -1,5 +1,4 @@
 import {
-  RCO_SOURCE,
   type RcoActionDocument,
   toArbitrationDocument,
   toMetadataDocument,
@@ -21,6 +20,7 @@ import type {
   WorkStatus,
 } from "@playground/shared-types";
 import {
+  CARIF_OREF_SOURCE,
   DATE_FILTER_COLUMNS,
   DEFAULT_DATE_FILTER_CONDITION,
   DEFAULT_DATE_FILTER_TYPE,
@@ -578,7 +578,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   if (ingestionMetadata.id) metadata.id = ingestionMetadata.id;
   if (ingestionMetadata.structure_id)
     metadata.structure_id = ingestionMetadata.structure_id;
-  if (ingestionMetadata.source === RCO_SOURCE && !metadata.lien_source)
+  if (ingestionMetadata.source === CARIF_OREF_SOURCE && !metadata.lien_source)
     metadata.lien_source = toSourceUrl(
       ingestionMetadata as unknown as RcoActionDocument,
     );
@@ -594,7 +594,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   }
 
   const rcoAction =
-    ingestionMetadata.source === RCO_SOURCE &&
+    ingestionMetadata.source === CARIF_OREF_SOURCE &&
     Array.isArray(ingestionMetadata.sessions)
       ? (ingestionMetadata as unknown as RcoActionDocument)
       : null;
