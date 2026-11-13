@@ -6,7 +6,8 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./ingestion-runs": "./src/ingestion-runs.ts"
+    "./ingestion-runs": "./src/ingestion-runs.ts",
+    "./source-ingestion": "./src/source-ingestion.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

@@ -29,12 +29,18 @@ vi.mock("@playground/supabase/ingestion-runs", async (importOriginal) => ({
 }));
 
 // --- Source under test: the only block that changes when the code moves ---
-vi.mock("@playground/rco-offre-info", async (importOriginal) => ({
-  ...(await importOriginal<object>()),
-  getRcoClientFromEnv: () => ({}),
-  searchActionSessions: mocks.fetchAll,
-  ingestRcoActions: mocks.ingestBatch,
-}));
+vi.mock("@playground/rco-offre-info", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@playground/rco-offre-info")>();
+  return {
+    ...actual,
+    rcoProvider: {
+      ...actual.rcoProvider,
+      fetchAll: mocks.fetchAll,
+      ingestBatch: mocks.ingestBatch,
+    },
+  };
+});
 const steps = {
   create: () => createRcoRunStep(),
   ingest: (runId: string) => ingestRcoStep(runId),

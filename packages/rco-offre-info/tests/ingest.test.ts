@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import { normalizeSession } from "../src/api/normalize";
 import type { RcoActionSessions } from "../src/api/search";
 import { toOriginId } from "../src/config";
-import { ingestRcoActions } from "../src/ingest";
 import { buildActionDocument } from "../src/lheo/document";
 import { buildStructureDocument } from "../src/lheo/structure";
+import { rcoProvider } from "../src/provider";
 import { rawSession } from "./fixtures";
 
 type Row = Record<string, unknown>;
@@ -62,7 +62,9 @@ function fakeSupabase(tables: Record<string, Row[]>, failingInsert?: string) {
     return query;
   };
   return {
-    client: { from } as unknown as Parameters<typeof ingestRcoActions>[0],
+    client: { from } as unknown as Parameters<
+      typeof rcoProvider.ingestBatch
+    >[0],
     calls,
   };
 }
@@ -163,7 +165,7 @@ const seed = {
 describe("ingestRcoActions", () => {
   it("writes every change kind", async () => {
     const { client, calls } = fakeSupabase(seed);
-    const result = await ingestRcoActions(client, ALL_ACTIONS, "run-1");
+    const result = await rcoProvider.ingestBatch(client, ALL_ACTIONS, "run-1");
     expect(result.changes).toEqual({
       new: 2,
       unchanged: 1,
@@ -182,14 +184,18 @@ describe("ingestRcoActions", () => {
 
   it("rolls back services when ingestion_records fails", async () => {
     const { client, calls } = fakeSupabase(seed, "ingestion_records");
-    const result = await ingestRcoActions(client, [ACTION_NEW], "run-1");
+    const result = await rcoProvider.ingestBatch(client, [ACTION_NEW], "run-1");
     expect(calls.at(-1)).toMatchObject({ table: "services", op: "delete" });
     expect({ result, calls }).toMatchSnapshot();
   });
 
   it("skips the services insert when nothing changed", async () => {
     const { client, calls } = fakeSupabase(seed);
-    const result = await ingestRcoActions(client, [ACTION_UNCHANGED], "run-1");
+    const result = await rcoProvider.ingestBatch(
+      client,
+      [ACTION_UNCHANGED],
+      "run-1",
+    );
     expect(
       calls.some(({ table, op }) => table === "services" && op === "insert"),
     ).toBe(false);
@@ -198,7 +204,7 @@ describe("ingestRcoActions", () => {
 
   it("does nothing for an empty batch", async () => {
     const { client, calls } = fakeSupabase(seed);
-    const result = await ingestRcoActions(client, [], "run-1");
+    const result = await rcoProvider.ingestBatch(client, [], "run-1");
     expect(result.processed).toBe(0);
     expect(calls).toEqual([]);
   });
