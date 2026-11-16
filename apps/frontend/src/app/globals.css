@@ -49,6 +49,15 @@ tr[data-empty-warning]:has(+ tr[data-empty-warning]) > td[data-metadata-value] {
     @apply underline text-blue-800;
   }
 
+  /* BlockNote defaults are 3em / 2em */
+  [data-content-type="heading"]:not([data-level]),
+  [data-content-type="heading"][data-level="1"] {
+    --level: 28px;
+  }
+  [data-content-type="heading"][data-level="2"] {
+    --level: 24px;
+  }
+
   [data-node-type="blockContainer"]:has([data-content-type="toggleListItem"]) {
     @apply relative p-2;
     &::after {
