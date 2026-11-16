@@ -22,6 +22,7 @@ export function EditionView() {
     isRawMarkdownMode,
     setDebugBlocks,
     showDebug,
+    isSourceOpen,
   } = useDocument();
   const [rawMarkdown, setRawMarkdown] = useState("");
   const [editor, setEditor] = useState<CustomEditor | null>(null);
@@ -248,7 +249,8 @@ export function EditionView() {
 
   return (
     <div className="w-full bg-white">
-      <div className="p-10">
+      {/* pt-[65px] = source panel header + its pt-2, so both titles start level */}
+      <div className={isSourceOpen ? "p-10 pt-[65px]" : "p-10"}>
         <div className="max-w-[800px] mx-auto w-full">
           {isRawMarkdownMode ? (
             <RawMarkdownView
