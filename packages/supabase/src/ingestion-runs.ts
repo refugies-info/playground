@@ -14,11 +14,7 @@ export type IngestionRunStats = {
   totalErrors: number;
 };
 
-export type IngestionRunStatus =
-  | "running"
-  | "completed"
-  | "failed"
-  | "interrupted";
+export type IngestionRunStatus = "running" | "completed" | "failed";
 
 // A run still "running" after this delay is considered crashed.
 const RUNNING_RUN_TIMEOUT_MS = 3 * 60 * 60 * 1000;

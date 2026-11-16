@@ -114,7 +114,8 @@ export const isSessionOpen = (
 
 const closedReason = (session: RcoSession, permanentEntries: unknown) => {
   const date = formatDate(closingDate(session, permanentEntries));
-  if (session.periode_inscription_fin) return `inscriptions closes le ${date}`;
+  if (session.periode_inscription_fin)
+    return `inscriptions clôturées le ${date}`;
   return permanentEntries === false
     ? `déjà commencée le ${date}`
     : `terminée le ${date}`;

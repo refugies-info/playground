@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { normalizeSession } from "../src/api/normalize";
 import { buildActionDocument } from "../src/lheo/document";
 import {
+  fixTypography,
   type PlainLanguageFiche,
   renderPlainLanguageFiche,
   toPlainLanguageDocument,
@@ -189,6 +190,18 @@ describe("renderPlainLanguageFiche", () => {
     );
     expect(markdown).toContain(
       "https://www.intercariforef.org/offreinfo/01_AL27473/01_AL1954732/GE1954732/",
+    );
+  });
+});
+
+describe("fixTypography", () => {
+  it("fixes prose but leaves links and emails intact", () => {
+    expect(
+      fixTypography(
+        "Écrire un courriel à jean_dupont@mon-site.fr -- voir https://a.fr/fiche_01--b",
+      ),
+    ).toBe(
+      "Écrire un mail à jean_dupont@mon-site.fr - voir https://a.fr/fiche_01--b",
     );
   });
 });

@@ -2,6 +2,7 @@ import {
   RCO_DEFAULT_BASE_URL,
   RCO_DEFAULT_MAX_REQUESTS_PER_SECOND,
   RCO_MAX_RETRIES,
+  RCO_REQUEST_TIMEOUT_MS,
   RCO_RETRYABLE_STATUSES,
 } from "../config";
 
@@ -73,6 +74,7 @@ export function createRcoClient({
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
         },
+        signal: AbortSignal.timeout(RCO_REQUEST_TIMEOUT_MS),
       });
       if (response.ok) return response.json();
       if (response.status === 404) return null;

@@ -95,7 +95,11 @@ export const needsCirGoodToKnow = (action: RcoActionDocument) =>
     (text) => CIR_TRIGGER.test(String(text ?? "")),
   );
 
-export const fixTypography = (text: string) =>
+// Links and emails stay untouched: "_" or "--" are valid inside them.
+const LINK_OR_EMAIL =
+  /(https?:\/\/\S+|www\.\S+|[\w.+-]+@[\w-]+(?:\.[\w-]+)+)/gi;
+
+const fixProse = (text: string) =>
   text
     .replace(/\p{Extended_Pictographic}️?/gu, "")
     .replace(/—/g, "–")
@@ -105,7 +109,13 @@ export const fixTypography = (text: string) =>
     .replace(
       /France Travail(?!\s*\(anciennement)/g,
       "France Travail (anciennement Pôle emploi)",
-    )
+    );
+
+export const fixTypography = (text: string) =>
+  text
+    .split(LINK_OR_EMAIL)
+    .map((part, index) => (index % 2 === 1 ? part : fixProse(part)))
+    .join("")
     .trim();
 
 const fixFiche = (fiche: PlainLanguageFiche): PlainLanguageFiche => {

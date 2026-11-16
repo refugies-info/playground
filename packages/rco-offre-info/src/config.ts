@@ -78,4 +78,5 @@ export const toOriginId = (numeroAction: string): string =>
   `${RCO_ORIGIN_PREFIX}${numeroAction}`;
 
 export const RCO_MAX_RETRIES = 3;
+export const RCO_REQUEST_TIMEOUT_MS = 30_000;
 export const RCO_RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);

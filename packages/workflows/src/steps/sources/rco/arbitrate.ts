@@ -10,6 +10,7 @@
  */
 
 import {
+  addUsage,
   askComplianceAgent,
   askDuplicatesAgent,
   createLettaClient,
@@ -74,12 +75,6 @@ const requiredEnv = (name: string, hint = "pnpm agents:sync") => {
   if (!value) throw new FatalError(`${name} is not defined (${hint})`);
   return value;
 };
-
-const addUsage = (total: LettaUsage, usage?: LettaUsage): LettaUsage => ({
-  totalTokens: (total.totalTokens ?? 0) + (usage?.totalTokens ?? 0),
-  completionTokens:
-    (total.completionTokens ?? 0) + (usage?.completionTokens ?? 0),
-});
 
 const tableCell = (value: string) =>
   value.replaceAll("|", "/").replaceAll("\n", " ");

@@ -149,7 +149,7 @@ const parseAnswer = <T>(content: string, schema: z.ZodType<T>) => {
 const FORMAT_REMINDER =
   "Ta réponse ne respecte pas le format attendu. Réponds à nouveau, uniquement avec l'objet JSON décrit dans le bloc `output_format` (mêmes clés, mêmes types), sans texte autour.";
 
-const addUsage = (a?: LettaUsage, b?: LettaUsage): LettaUsage => ({
+export const addUsage = (a?: LettaUsage, b?: LettaUsage): LettaUsage => ({
   promptTokens: (a?.promptTokens ?? 0) + (b?.promptTokens ?? 0),
   completionTokens: (a?.completionTokens ?? 0) + (b?.completionTokens ?? 0),
   totalTokens: (a?.totalTokens ?? 0) + (b?.totalTokens ?? 0),

@@ -8,10 +8,12 @@ import {
   rcoIngestionWorkflow,
 } from "@playground/workflows";
 import { start } from "@workflow/core/runtime";
+import { assertAdmin } from "@/lib/authz";
 import { getIngestionSource } from "@/lib/ingestion-source";
 import { buildWorkflowDashboardUrl } from "@/lib/workflow-utils";
 
 async function startActiveSourceWorkflow() {
+  await assertAdmin();
   const supabase = getSupabaseAdmin();
   const running = await findRunningIngestion(supabase);
   if (running) {
