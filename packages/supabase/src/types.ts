@@ -949,6 +949,7 @@ export type Database = {
           report_created_at: string | null
           session_end_date: string | null
           session_start_date: string | null
+          source_migrated_at: string | null
           structure_name: string | null
           title: string | null
           updated_at: string | null
@@ -1066,6 +1067,14 @@ export type Database = {
           session_start_date: string
         }[]
       }
+      workflow_source_migrated_at: {
+        Args: {
+          service_origin: Database["public"]["Enums"]["origin"]
+          service_origin_id: string
+          service_version: number
+        }
+        Returns: string
+      }
     }
     Enums: {
       activity_log_action:
@@ -1075,6 +1084,7 @@ export type Database = {
         | "publication_langue"
         | "archive"
         | "update"
+        | "source_migration"
         | "update_compliance"
         | "clear_language"
         | "clear_language_error"
@@ -1766,6 +1776,7 @@ export const Constants = {
         "publication_langue",
         "archive",
         "update",
+        "source_migration",
         "update_compliance",
         "clear_language",
         "clear_language_error",

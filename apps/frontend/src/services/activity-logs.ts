@@ -1,5 +1,9 @@
-import type { CarbonImpact } from "@playground/shared-types";
-import { type ActivityLogType, logger } from "@playground/shared-types";
+import type { CarbonImpact, SourceSystem } from "@playground/shared-types";
+import {
+  type ActivityLogType,
+  isSourceSystem,
+  logger,
+} from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { mapProfileDto } from "@/lib/profile";
@@ -30,6 +34,7 @@ export interface ActivityLogEntry {
   complianceStatus: string | null;
   /** Free-form note text carried in the payload (note). */
   note: string | null;
+  sourceMigration: { from: SourceSystem; to: SourceSystem } | null;
   /** Optional AI report linked to the activity log. */
   lettaReport?: {
     tokenCost: number | null;
@@ -91,6 +96,10 @@ export async function getActivityLogs(
         ? activity.complianceStatus
         : null;
     const note = typeof activity.note === "string" ? activity.note : null;
+    const sourceMigration =
+      isSourceSystem(activity.from) && isSourceSystem(activity.to)
+        ? { from: activity.from, to: activity.to }
+        : null;
     const lettaReport =
       row.letta_report && typeof row.letta_report === "object"
         ? {
@@ -119,6 +128,7 @@ export async function getActivityLogs(
       language,
       complianceStatus,
       note,
+      sourceMigration,
       lettaReport,
     };
   });

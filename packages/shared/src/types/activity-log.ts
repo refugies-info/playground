@@ -19,6 +19,7 @@ export const TYPE_PUBLICATION = "publication";
 export const TYPE_PUBLICATION_LANGUE = "publication_langue";
 export const TYPE_ARCHIVE = "archive";
 export const TYPE_UPDATE = "update";
+export const TYPE_SOURCE_MIGRATION = "source_migration";
 export const TYPE_UPDATE_COMPLIANCE = "update_compliance";
 export const TYPE_CLEAR_LANGUAGE = "clear_language";
 export const TYPE_CLEAR_LANGUAGE_ERROR = "clear_language_error";
@@ -58,6 +59,11 @@ export const ACTIVITY_LOG_TYPES = [
     value: TYPE_UPDATE,
     label: "Mise à jour",
     display: "%s a récupéré une nouvelle version pour cette fiche",
+  },
+  {
+    value: TYPE_SOURCE_MIGRATION,
+    label: "Migration de source",
+    display: "Ce dispositif a été migré de l'API %s vers l'API %s",
   },
   {
     value: TYPE_UPDATE_COMPLIANCE,

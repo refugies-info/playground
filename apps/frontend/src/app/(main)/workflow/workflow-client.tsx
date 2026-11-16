@@ -8,6 +8,7 @@ import {
   type DocumentSortField,
   logger,
   SEARCH_SCOPE_OPTIONS,
+  SOURCE_FILTER_OPTIONS,
 } from "@playground/shared-types";
 import { BoutonFiltre, Button, FiltreDate, SearchInput } from "@playground/ui";
 import { DataTable } from "@playground/ui/composites";
@@ -423,11 +424,8 @@ export function WorkflowClient(props: WorkflowClientProps) {
           />
 
           <BoutonFiltre
-            label="Origine"
-            options={[
-              { label: "DI", value: "DI" },
-              { label: "RCO", value: "RCO" },
-            ]}
+            label="Source"
+            options={SOURCE_FILTER_OPTIONS}
             value={filters.origin}
             onChange={(value) => handleFilterChange("origin", value)}
           />

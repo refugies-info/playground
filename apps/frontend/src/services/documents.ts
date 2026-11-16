@@ -26,6 +26,7 @@ import {
   DEFAULT_DATE_FILTER_TYPE,
   injectFrontmatterContent,
   isArbitrationReport,
+  isSourceSystem,
   logger,
   nextIsoDay,
 } from "@playground/shared-types";
@@ -67,7 +68,8 @@ const DOCUMENT_LIST_SELECT = `
   ingestion_word_count,
   active_ingestion_version,
   latest_ingestion_version,
-  has_pending_ingestion_update
+  has_pending_ingestion_update,
+  source_migrated_at
 `;
 
 const DOCUMENT_PREVIEW_FIELDS_SELECT = `
@@ -226,7 +228,7 @@ export async function getDocuments(params: GetDocumentsParams) {
     query = query.eq("modalites_entrees_sorties", modalitesEntreesSorties);
   }
 
-  if (origin === "DI" || origin === "RCO") {
+  if (isSourceSystem(origin)) {
     query = query.eq("origin", origin);
   }
 
@@ -390,6 +392,7 @@ export async function getDocuments(params: GetDocumentsParams) {
         sessionStartDate: item.session_start_date ?? undefined,
         sessionEndDate: item.session_end_date ?? null,
         sourceSystem: item.origin ?? "DI",
+        sourceMigratedAt: item.source_migrated_at ?? null,
         updated_at: item.updated_at || "",
         editorialRecordId: item.editorial_record_id ?? undefined,
         assigneeEmail,
@@ -728,6 +731,7 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     sessionStartDate: item.session_start_date ?? undefined,
     sessionEndDate: item.session_end_date ?? null,
     sourceSystem: item.origin ?? "DI",
+    sourceMigratedAt: item.source_migrated_at ?? null,
     updated_at: item.updated_at ?? "",
     assigneeEmail,
     assigneeRole,

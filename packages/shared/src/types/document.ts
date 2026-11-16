@@ -1,3 +1,4 @@
+import type { SourceSystem } from "../constants/sources";
 import type { CarbonImpact } from "../lib/carbon";
 import type { ArbitrationReport } from "./arbitration-report";
 
@@ -97,7 +98,8 @@ export interface Document {
   structureName?: string;
   sessionStartDate?: string;
   sessionEndDate?: string | null;
-  sourceSystem: "RCO" | "DI";
+  sourceSystem: SourceSystem;
+  sourceMigratedAt?: string | null;
   updated_at: string;
   assigneeEmail?: string;
   assigneeAvatar?: string;
