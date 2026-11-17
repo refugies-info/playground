@@ -9,8 +9,8 @@ import {
   createExternalIdRawColumn,
   createIngestionVersionColumn,
   createModalitesEntreesSortiesColumn,
-  createOriginColumn,
   createSessionPeriodColumn,
+  createSourceColumn,
   createStructureNameColumn,
   createTitleColumn,
   createWordCountColumn,
@@ -18,7 +18,6 @@ import {
 
 export const inProgressColumns: ColumnDef<Document>[] = [
   createExternalIdRawColumn(),
-  { ...createOriginColumn(), size: 80 },
   createComplianceStatusColumn(),
   { ...createIngestionVersionColumn(), size: 80 },
   createWordCountColumn(),
@@ -33,4 +32,5 @@ export const inProgressColumns: ColumnDef<Document>[] = [
     getValue: (doc) => doc.date_added,
     showTime: true,
   }),
+  { ...createSourceColumn(), size: 121 },
 ];

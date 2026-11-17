@@ -6,6 +6,7 @@ import {
   DATE_FILTER_TYPE_OPTIONS,
   DEFAULT_DATE_FILTER_CONDITION,
   SEARCH_SCOPE_OPTIONS,
+  SOURCE_FILTER_OPTIONS,
 } from "@playground/shared-types";
 import {
   BoutonFiltre,
@@ -46,6 +47,7 @@ interface DocumentsListProps {
     search: string;
     searchField: string;
     modalitesEntreesSorties?: string;
+    origin?: string;
   };
   initialAuthors: Profile[];
 }
@@ -260,6 +262,13 @@ export function DocumentsList({
           ]}
           value={filters.modalitesEntreesSorties || ""}
           onChange={(value) => updateFilter("modalitesEntreesSorties", value)}
+        />
+
+        <BoutonFiltre
+          label="Source"
+          options={SOURCE_FILTER_OPTIONS}
+          value={filters.origin || ""}
+          onChange={(value) => updateFilter("origin", value)}
         />
 
         <BoutonFiltre

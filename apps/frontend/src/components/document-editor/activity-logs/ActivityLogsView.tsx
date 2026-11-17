@@ -6,11 +6,13 @@ import {
   dayKey,
   formatCarbonImpact,
   LANGUAGES,
+  SOURCE_SYSTEM_LABELS,
   TYPE_ASSIGNMENT,
   TYPE_COMPLIANCE_HUMAN,
   TYPE_COMPLIANCE_IA,
   TYPE_NOTE,
   TYPE_PUBLICATION_LANGUE,
+  TYPE_SOURCE_MIGRATION,
   TYPE_TRANSLATION_ERROR,
   TYPE_UPDATE_COMPLIANCE,
 } from "@playground/shared-types";
@@ -87,6 +89,15 @@ function formatActivityText(entry: ActivityLogEntry): string {
     case TYPE_PUBLICATION_LANGUE:
       // "%s a publié la fiche en %s"
       values = [author, langLabel];
+      break;
+    case TYPE_SOURCE_MIGRATION:
+      // "Ce dispositif a été migré de l'API %s vers l'API %s"
+      values = entry.sourceMigration
+        ? [
+            SOURCE_SYSTEM_LABELS[entry.sourceMigration.from],
+            SOURCE_SYSTEM_LABELS[entry.sourceMigration.to],
+          ]
+        : [];
       break;
     case TYPE_TRANSLATION_ERROR:
       // "La traduction en %s n'a pas fonctionné"

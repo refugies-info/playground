@@ -488,6 +488,11 @@ function serializeInlineRecursive(
       });
     }
 
+    // Hard break ("  \n"): BlockNote renders "\n" in text as <br>
+    if (node.type === "break") {
+      return { type: "text", text: "\n", styles: { ...parentStyles } };
+    }
+
     if (node.type === "inlineCode") {
       // Inline code is usually a leaf node in Markdown, but we treat it as styled text
       return {

@@ -12,6 +12,7 @@ import {
   ModalitesEntreesSortiesCell,
   OnlineStatusCell,
   SessionPeriodCell,
+  SourceCell,
 } from "@/components/documents/cells";
 import { createTextColumn } from "@/lib/column-factories";
 import type { Profile } from "@/lib/profile";
@@ -204,19 +205,24 @@ export const createSessionPeriodColumn = (): ColumnDef<Document> => ({
   ),
 });
 
+export const createSourceColumn = (): ColumnDef<Document> => ({
+  accessorKey: "sourceSystem",
+  header: ({ column }) => (
+    <DataTableColumnHeader column={column} title="Source" />
+  ),
+  cell: ({ row }) => (
+    <SourceCell
+      source={row.original.sourceSystem}
+      migratedAt={row.original.sourceMigratedAt}
+    />
+  ),
+  // No server-side sort field for the source.
+  enableSorting: false,
+});
+
 // =============================================================================
 // Workflow-specific Factories (/workflow table)
 // =============================================================================
-
-export const createOriginColumn = (): ColumnDef<Document> => ({
-  ...createTextColumn<Document>({
-    accessorKey: "sourceSystem",
-    title: "Origine",
-    getValue: (doc) => doc.sourceSystem,
-  }),
-  // No server-side sort field for origin.
-  enableSorting: false,
-});
 
 export const createExternalIdRawColumn = (): ColumnDef<Document> => ({
   id: "externalId",

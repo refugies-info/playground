@@ -88,6 +88,7 @@ export default async function DocumentsPage(props: PageProps) {
     modalitesEntreesSorties: getQueryParam(
       searchParams.modalitesEntreesSorties,
     ),
+    origin: getQueryParam(searchParams.origin),
   };
 
   const [result, editorsList] = await Promise.all([
@@ -111,6 +112,7 @@ export default async function DocumentsPage(props: PageProps) {
     modalitesEntreesSorties: getQueryParam(
       searchParams.modalitesEntreesSorties,
     ),
+    origin: getQueryParam(searchParams.origin),
   };
 
   return (
