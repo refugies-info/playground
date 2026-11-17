@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  ECOLOGITS_SITE_URL,
+  formatCarbonImpact,
+} from "@playground/shared-types";
 import { cn } from "@playground/ui";
 import {
   RiCheckLine,
@@ -7,6 +11,7 @@ import {
   RiCodeSSlashLine,
   RiDatabaseLine,
   RiDeleteBinLine,
+  RiExternalLinkLine,
   RiFileTextLine,
   RiHammerLine,
   RiNewspaperLine,
@@ -21,12 +26,14 @@ import {
 import {
   BoutonMenu,
   Button,
+  buttonVariants,
   IndicationConformite,
   SegmentedControl,
 } from "@playground/ui/primitives";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { formatDateFr } from "@/lib/format-date";
 import { formatIngestionVersion } from "@/lib/format-ingestion-version";
 import { useDocumentActions } from "../actions";
 import { useDocument } from "../DocumentContext";
@@ -52,6 +59,15 @@ const EDITOR_MODES = [
   { value: "raw" as const, icon: RiCodeSSlashLine, label: "Markdown" },
 ];
 
+const LETTA_COMPLIANCE_AGENTS = [
+  { agent: "compliance", label: "Conformité" },
+  { agent: "duplicates", label: "Doublons" },
+];
+const LETTA_METADATA_AGENTS = [{ agent: "metadata", label: "Métadonnées" }];
+const LETTA_PLAIN_LANGUAGE_AGENTS = [
+  { agent: "plain-language", label: "Langage clair" },
+];
+
 export function EditorNavigation({ from }: EditorNavigationProps) {
   const { document, isRawMarkdownMode, setIsRawMarkdownMode } = useDocument();
   const { hasMetadataErrors } = useMetadata();
@@ -70,6 +86,21 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
   const isMetadataActive = pathname === `${baseUrl}/metadata`;
   const isActivityLogActive = pathname === `${baseUrl}/activity-logs`;
   const isComplianceActive = pathname === `${baseUrl}/compliance`;
+  const rcoActionId = document.rcoApiData?.id;
+  // No conversation link before the agent has been called at least once.
+  const lettaAgents = isComplianceActive
+    ? LETTA_COMPLIANCE_AGENTS
+    : isMetadataActive
+      ? document.hasMetadataRun
+        ? LETTA_METADATA_AGENTS
+        : []
+      : document.hasEditorialRun
+        ? LETTA_PLAIN_LANGUAGE_AGENTS
+        : [];
+
+  const llmModel = isMetadataActive
+    ? document.metadataModel
+    : document.editorialModel;
 
   const ingestionVersion = formatIngestionVersion({
     activeVersion: document.activeIngestionVersion,
@@ -230,11 +261,65 @@ export function EditorNavigation({ from }: EditorNavigationProps) {
         )}
       </div>
 
-      {hasIngestionVersion ? (
-        <div className="mt-auto px-2 text-sm leading-6 text-[var(--text-mention-grey)] whitespace-nowrap">
-          Version : {ingestionVersion}
-        </div>
-      ) : null}
+      {/* <div> lines: DSFR forces <p> to 16px */}
+      <div className="mt-auto flex flex-col items-start gap-3 rounded-xl bg-(--background-alt-blue-france) p-4 text-xs leading-5 text-(--text-disabled-grey)">
+        <p className="text-sm font-medium leading-6 text-(--text-title-blue-france)">
+          Informations
+        </p>
+        {hasIngestionVersion ? <div>Version {ingestionVersion}</div> : null}
+        {document.editorialFailed ? (
+          <div className="text-(--text-default-error)">
+            Dernier langage clair : échec
+          </div>
+        ) : null}
+        {llmModel ? <div className="break-all">LLM {llmModel}</div> : null}
+        {document.editorialCarbonImpact ? (
+          <div>
+            <a
+              href={ECOLOGITS_SITE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Estimation haute EcoLogits, mix électrique français"
+              className="hover:underline"
+            >
+              Impact
+            </a>{" "}
+            {formatCarbonImpact(document.editorialCarbonImpact)}
+          </div>
+        ) : null}
+        {document.totalTokens ? (
+          <div>
+            Tokens {document.totalTokens.toLocaleString("fr-FR")}
+            {document.totalTokensSince
+              ? ` depuis le ${formatDateFr(document.totalTokensSince)}`
+              : null}
+          </div>
+        ) : null}
+        {document.isAdmin &&
+        typeof rcoActionId === "string" &&
+        lettaAgents.length > 0 ? (
+          <>
+            <p className="text-sm font-medium leading-6 text-(--text-title-blue-france)">
+              Conversations Letta
+            </p>
+            {lettaAgents.map(({ agent, label }) => (
+              <a
+                key={agent}
+                href={`/api/letta/conversation?agent=${agent}&actionId=${encodeURIComponent(rcoActionId)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  buttonVariants({ variant: "quatrieme", size: "sm" }),
+                  "border border-border bg-(--background-default-grey) text-(--text-action-high-grey)",
+                )}
+              >
+                {label}
+                <RiExternalLinkLine size={16} aria-hidden />
+              </a>
+            ))}
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

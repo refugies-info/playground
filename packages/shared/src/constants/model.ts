@@ -6,3 +6,7 @@ export const LETTA_MODEL_NAME =
 // Direct Anthropic handles use hyphens; dotted ones are OpenRouter.
 export const LETTA_MODEL_HANDLE =
   process.env.LETTA_MODEL_HANDLE ?? "letta/auto"; // "anthropic/claude-sonnet-5-5";
+
+// Default model of the source agents (RCO today), set apart from DI/translation.
+export const SOURCE_MODEL_HANDLE =
+  process.env.RCO_MODEL_HANDLE || LETTA_MODEL_HANDLE;

@@ -13,6 +13,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { removeEditorialNotes } from "@/lib/editorial-notes";
 
 // Extend or adapt the shared Document type for the editor context
 interface DocumentData
@@ -28,6 +29,10 @@ interface DocumentData
   workStatus: WorkStatus | null;
   onlineStatus: OnlineStatus;
   metadata?: Record<string, unknown>;
+  /** RCO only: the fiche fields sent to the metadata agent */
+  metadataSource?: Record<string, unknown>;
+  /** RCO only: every field the API returned for the fiche */
+  rcoSource?: Record<string, unknown>;
   /** Metadata from editorial_records only (user edits) */
   editorialMetadata?: Record<string, unknown>;
   /** ID of the editorial_record — used for Realtime status subscription */
@@ -36,6 +41,8 @@ interface DocumentData
   currentUserId?: string;
   /** Display name of the currently logged-in user — broadcast on takeover so the previous editor sees who took over */
   currentUserName?: string | null;
+  editorialNotes?: string;
+  isAdmin?: boolean;
   /** Display name of the user currently holding the edit lock — shown in EditLockDialog */
   currentEditorName?: string | null;
   /** True while an AI metadata generation is in progress — drives MetadataView spinner */
@@ -106,7 +113,7 @@ export function DocumentProvider({
   //   - the active AI rewrite runId changes (start, cancel, accept, reject)
   //     so the AIFloatingButton resume logic sees an up-to-date activeRunId
   //     (e.g. after revalidatePath following a DELETE, or in multi-tab scenarios).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only re-sync on navigation, new metadata report, activeRunId, or onlineStatus change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only re-sync on navigation, new metadata report, activeRunId, onlineStatus or editorial footer change
   useEffect(() => {
     if (initialData) {
       // Préserver aiSuggestion : c'est un état transient client non présent dans
@@ -130,6 +137,13 @@ export function DocumentProvider({
     initialData?.activeIngestionVersion,
     initialData?.latestIngestionVersion,
     initialData?.hasPendingIngestionUpdate,
+    initialData?.editorialModel,
+    initialData?.totalTokens,
+    initialData?.metadataModel,
+    initialData?.editorialCarbonImpact?.gwpMaxGrams,
+    initialData?.editorialFailed,
+    initialData?.hasMetadataRun,
+    initialData?.hasEditorialRun,
   ]);
 
   // Update content and mark as dirty (only if content actually changed)
@@ -152,7 +166,7 @@ export function DocumentProvider({
       ...document,
       // Preserve immutable ingestionContent
       ingestionContent: document.ingestionContent,
-      aiSuggestion: suggestion,
+      aiSuggestion: removeEditorialNotes(suggestion),
     });
   };
 

@@ -16,6 +16,7 @@ export const sendMessageToConversation = async (
   client: Letta,
   conversationId: string,
   content: string,
+  overrideModel = LETTA_MODEL_HANDLE,
 ): Promise<{
   content: string;
   usage?: LettaUsage;
@@ -27,7 +28,7 @@ export const sendMessageToConversation = async (
         content: content,
       },
     ],
-    override_model: LETTA_MODEL_HANDLE,
+    override_model: overrideModel,
   });
 
   let finalContent = "";
@@ -36,11 +37,13 @@ export const sendMessageToConversation = async (
   for await (const chunk of stream as AsyncIterable<any>) {
     accumulateUsage(usage, chunk);
     if (chunk.message_type === "assistant_message") {
-      if (typeof chunk.content === "string") {
-        finalContent += chunk.content;
-      } else {
-        finalContent += JSON.stringify(chunk.content);
-      }
+      // Content is either a string or an array of { type: "text", text } parts.
+      finalContent +=
+        typeof chunk.content === "string"
+          ? chunk.content
+          : (chunk.content as { text?: string }[])
+              .map((part) => part.text ?? "")
+              .join("");
     }
   }
 
@@ -54,34 +57,39 @@ export const sendMessageToConversation = async (
   };
 };
 
-export const findOrCreateConversation = async (
+/** Latest conversation named `name` (stored as its summary), or null. */
+export const findConversation = async (
+  client: Letta,
+  agentId: string,
+  name: string,
+): Promise<string | null> => {
+  // summary_search is a substring match ("metadata-12" also finds
+  // "metadata-123"): keep the exact one. It also lifts the 100-item page cap.
+  const conversations = await client.conversations.list({
+    agent_id: agentId,
+    summary_search: name,
+    limit: 100,
+    order: "desc",
+    order_by: "created_at",
+  });
+  // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
+  const match = (conversations as any[]).find(
+    (c) => c.name === name || c.label === name || c.summary === name,
+  );
+  return match?.id ?? null;
+};
+
+// One conversation per run: a reused one replays every past fiche, reminder
+// and admin chat to the model, which then copies or argues with old answers.
+export const createConversation = async (
   client: Letta,
   agentId: string,
   name: string,
 ): Promise<string> => {
-  // 1. List conversations
-  const existingConversations = await client.conversations.list({
-    agent_id: agentId,
-    limit: 100,
-  });
-
-  // check if name exists on the object. If typescript complains, we cast to any or check SDK.
-  // Assuming 'name' or 'label' or 'summary' is the property.
-  // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around
-  const match = (existingConversations as any[]).find(
-    (c) => c.name === name || c.label === name || c.summary === name,
-  );
-
-  if (match) {
-    return match.id;
-  }
-
   const createParams: ConversationCreateParams = {
     agent_id: agentId,
     summary: name,
   };
-
   const newConversation = await client.conversations.create(createParams);
-
   return newConversation.id;
 };

@@ -8,8 +8,9 @@
 import { APIError } from "@letta-ai/letta-client/core/error";
 import {
   accumulateUsage,
+  createConversation,
   createLettaClient,
-  findOrCreateConversation,
+  estimateCarbonImpact,
   generateIngestionReport,
   generateMetadataReport,
   type LettaUsage,
@@ -30,7 +31,8 @@ import { start } from "@workflow/core/runtime";
 import { FatalError, RetryableError } from "@workflow/errors";
 import { diSingleRecordWorkflow } from "../../pipelines/ingestion/di-single-record";
 import { recordActivity } from "../common/activity-log";
-import { fetchAllDiServiceIds, getSupabaseClient } from "./utils";
+import { getSupabaseClient } from "../common/supabase";
+import { fetchAllDiServiceIds } from "./utils";
 
 // =============================================================================
 // Config
@@ -108,7 +110,7 @@ export async function diSingleAuditStep(
     "▶ Starting single audit Letta call",
   );
 
-  const conversationId = await findOrCreateConversation(
+  const conversationId = await createConversation(
     lettaClient,
     agentId,
     `compliance-${workflowId}`,
@@ -169,6 +171,7 @@ export async function diSingleAuditStep(
       raw_response: parsed.rawResponse ?? null,
       workflow_id: workflowId,
       token_cost: usage?.totalTokens ?? null,
+      carbon_impact: await estimateCarbonImpact(model, usage),
       model,
     })
     .select("id")
@@ -280,7 +283,7 @@ export async function diSingleMetadataStep(
     "▶ Starting single metadata Letta call",
   );
 
-  const conversationId = await findOrCreateConversation(
+  const conversationId = await createConversation(
     lettaClient,
     agentId,
     `metadata-${workflowId}`,
@@ -346,6 +349,7 @@ export async function diSingleMetadataStep(
       raw_response: parsed.rawResponse ?? null,
       workflow_id: workflowId,
       token_cost: usage?.totalTokens ?? null,
+      carbon_impact: await estimateCarbonImpact(model, usage),
       model,
     })
     .select("id")

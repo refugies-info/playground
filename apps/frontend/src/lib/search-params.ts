@@ -11,3 +11,5 @@
  */
 export const getQueryParam = (value: string | string[] | undefined): string =>
   (Array.isArray(value) ? value[0] : value) ?? "";
+
+export const WORKFLOW_FILTERS_COOKIE = "workflow-filters";

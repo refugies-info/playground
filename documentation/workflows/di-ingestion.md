@@ -73,6 +73,7 @@ Quand un nouvel `ingestion_record` DI est créé :
 | `active_ingestion_version` | `1` | Version active / acceptée. |
 | `latest_ingestion_version` | `4` | Dernière version disponible. |
 | `has_pending_ingestion_update` | `true` | Indique qu'une version plus récente existe. |
+| `source_migrated_at` | `2026-11-01T…` | Date du passage à la source active (ex. DI → RCO, même `origin_id`) ; `null` si la fiche n'a jamais changé de source. Affichée « Migré le … » dans la colonne Source (Importer et Fiches) ; le passage est aussi tracé dans le journal d'activités (`source_migration`, posé par trigger quand la version active change de source). |
 
 Toutes les données principales de `workflows_enriched` (`ingestion_markdown`, `ingestion_metadata`, `compliance_status`, `ingestion_report_id`, dates de session, nombre de mots) restent basées sur la **source active** (`workflows.ingestion_record_id`). `latest_ingestion_record_id` sert uniquement à détecter et afficher une version plus récente tant qu'elle n'est pas acceptée.
 

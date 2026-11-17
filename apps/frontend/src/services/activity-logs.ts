@@ -1,4 +1,9 @@
-import { type ActivityLogType, logger } from "@playground/shared-types";
+import type { CarbonImpact, SourceSystem } from "@playground/shared-types";
+import {
+  type ActivityLogType,
+  isSourceSystem,
+  logger,
+} from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
 import { mapProfileDto } from "@/lib/profile";
@@ -29,9 +34,11 @@ export interface ActivityLogEntry {
   complianceStatus: string | null;
   /** Free-form note text carried in the payload (note). */
   note: string | null;
+  sourceMigration: { from: SourceSystem; to: SourceSystem } | null;
   /** Optional AI report linked to the activity log. */
   lettaReport?: {
     tokenCost: number | null;
+    carbonImpact: CarbonImpact | null;
     model: string | null;
   };
 }
@@ -58,6 +65,7 @@ export async function getActivityLogs(
       activity,
       letta_report:letta_reports!activity_logs_letta_report_id_fkey (
         token_cost,
+        carbon_impact,
         model
       ),
       author:profiles!activity_logs_author_id_fkey (
@@ -88,9 +96,15 @@ export async function getActivityLogs(
         ? activity.complianceStatus
         : null;
     const note = typeof activity.note === "string" ? activity.note : null;
+    const sourceMigration =
+      isSourceSystem(activity.from) && isSourceSystem(activity.to)
+        ? { from: activity.from, to: activity.to }
+        : null;
     const lettaReport =
       row.letta_report && typeof row.letta_report === "object"
         ? {
+            carbonImpact:
+              (row.letta_report.carbon_impact as CarbonImpact | null) ?? null,
             tokenCost:
               typeof row.letta_report.token_cost === "number"
                 ? row.letta_report.token_cost
@@ -114,6 +128,7 @@ export async function getActivityLogs(
       language,
       complianceStatus,
       note,
+      sourceMigration,
       lettaReport,
     };
   });

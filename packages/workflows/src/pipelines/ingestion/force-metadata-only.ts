@@ -6,12 +6,15 @@
  * Used after re-training the metadata AI agent (Agathe).
  */
 
-import { forceMetadataReportStep } from "../../steps/ingestion/metadata-di-step";
+import { forceMetadataReportStep } from "../../steps/ingestion/force-metadata-step";
 
-export async function forceMetadataOnlyWorkflow(workflowId: string) {
+export async function forceMetadataOnlyWorkflow(
+  workflowId: string,
+  model?: string,
+) {
   "use workflow";
 
-  const metadataResult = await forceMetadataReportStep(workflowId);
+  const metadataResult = await forceMetadataReportStep(workflowId, model);
 
   return { metadata: metadataResult };
 }

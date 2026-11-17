@@ -3,6 +3,8 @@
  * Generic utilities for metadata display
  */
 
+import { describeFieldCodes } from "@playground/shared-types";
+
 /**
  * A metadata value counts as "empty" when the AI couldn't fill it or it was
  * cleared: nullish/empty string, empty array, or object with no own keys.
@@ -65,7 +67,10 @@ export function normalizeSourceEntries(
       return [
         {
           key: entry,
-          value: formatSourceValue(resolvePath(diMetadata, entry)),
+          value: describeFieldCodes(
+            entry,
+            formatSourceValue(resolvePath(diMetadata, entry)),
+          ),
         },
       ];
     }
@@ -76,8 +81,11 @@ export function normalizeSourceEntries(
     return [
       {
         key: entry.field,
-        value: formatSourceValue(
-          hasRawValue ? entry.rawValue : resolvePath(diMetadata, entry.field),
+        value: describeFieldCodes(
+          entry.field,
+          formatSourceValue(
+            hasRawValue ? entry.rawValue : resolvePath(diMetadata, entry.field),
+          ),
         ),
       },
     ];

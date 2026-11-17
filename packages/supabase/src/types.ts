@@ -91,6 +91,13 @@ export type Database = {
             foreignKeyName: "activity_logs_workflow_id_fkey"
             columns: ["workflow_id"]
             isOneToOne: false
+            referencedRelation: "rco_session_updates_pending"
+            referencedColumns: ["workflow_id"]
+          },
+          {
+            foreignKeyName: "activity_logs_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
             referencedRelation: "workflows"
             referencedColumns: ["id"]
           },
@@ -99,97 +106,6 @@ export type Database = {
             columns: ["workflow_id"]
             isOneToOne: false
             referencedRelation: "workflows_enriched"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      di_services: {
-        Row: {
-          content_hash: string | null
-          created_at: string
-          data: Json | null
-          di_id: string | null
-          di_structure_id: string | null
-          id: string
-          ingestion_run_id: string | null
-          raw_data: string
-          updated_at: string
-          version: number
-        }
-        Insert: {
-          content_hash?: string | null
-          created_at?: string
-          data?: Json | null
-          di_id?: string | null
-          di_structure_id?: string | null
-          id?: string
-          ingestion_run_id?: string | null
-          raw_data: string
-          updated_at?: string
-          version?: number
-        }
-        Update: {
-          content_hash?: string | null
-          created_at?: string
-          data?: Json | null
-          di_id?: string | null
-          di_structure_id?: string | null
-          id?: string
-          ingestion_run_id?: string | null
-          raw_data?: string
-          updated_at?: string
-          version?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "di_services_ingestion_run_id_fkey"
-            columns: ["ingestion_run_id"]
-            isOneToOne: false
-            referencedRelation: "ingestion_runs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      di_structures: {
-        Row: {
-          content_hash: string | null
-          created_at: string
-          data: Json | null
-          di_id: string | null
-          id: string
-          ingestion_run_id: string | null
-          raw_data: string
-          updated_at: string
-          version: number
-        }
-        Insert: {
-          content_hash?: string | null
-          created_at?: string
-          data?: Json | null
-          di_id?: string | null
-          id?: string
-          ingestion_run_id?: string | null
-          raw_data: string
-          updated_at?: string
-          version?: number
-        }
-        Update: {
-          content_hash?: string | null
-          created_at?: string
-          data?: Json | null
-          di_id?: string | null
-          id?: string
-          ingestion_run_id?: string | null
-          raw_data?: string
-          updated_at?: string
-          version?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "di_structures_ingestion_run_id_fkey"
-            columns: ["ingestion_run_id"]
-            isOneToOne: false
-            referencedRelation: "ingestion_runs"
             referencedColumns: ["id"]
           },
         ]
@@ -275,75 +191,76 @@ export type Database = {
         Row: {
           compliance_status: string | null
           created_at: string
-          di_service_id: string | null
-          di_structure_id: string | null
           id: string
           ingestion_report_id: string | null
           markdown: string
           metadata: Json
           metadata_report_id: string | null
-          origin: string
-          rco_record_id: string | null
+          service_id: string | null
+          structure_id: string | null
           updated_at: string
           version: number | null
         }
         Insert: {
           compliance_status?: string | null
           created_at?: string
-          di_service_id?: string | null
-          di_structure_id?: string | null
           id?: string
           ingestion_report_id?: string | null
           markdown: string
           metadata: Json
           metadata_report_id?: string | null
-          origin?: string
-          rco_record_id?: string | null
+          service_id?: string | null
+          structure_id?: string | null
           updated_at?: string
           version?: number | null
         }
         Update: {
           compliance_status?: string | null
           created_at?: string
-          di_service_id?: string | null
-          di_structure_id?: string | null
           id?: string
           ingestion_report_id?: string | null
           markdown?: string
           metadata?: Json
           metadata_report_id?: string | null
-          origin?: string
-          rco_record_id?: string | null
+          service_id?: string | null
+          structure_id?: string | null
           updated_at?: string
           version?: number | null
         }
         Relationships: [
           {
             foreignKeyName: "ingestion_records_di_service_id_fkey"
-            columns: ["di_service_id"]
+            columns: ["service_id"]
             isOneToOne: false
-            referencedRelation: "di_services"
+            referencedRelation: "rco_session_updates_pending"
+            referencedColumns: ["latest_service_id"]
+          },
+          {
+            foreignKeyName: "ingestion_records_di_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ingestion_records_di_service_id_fkey"
-            columns: ["di_service_id"]
+            columns: ["service_id"]
             isOneToOne: false
-            referencedRelation: "di_services_latest"
+            referencedRelation: "services_latest"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ingestion_records_di_structure_id_fkey"
-            columns: ["di_structure_id"]
+            columns: ["structure_id"]
             isOneToOne: false
-            referencedRelation: "di_structures"
+            referencedRelation: "structures"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ingestion_records_di_structure_id_fkey"
-            columns: ["di_structure_id"]
+            columns: ["structure_id"]
             isOneToOne: false
-            referencedRelation: "di_structures_latest"
+            referencedRelation: "structures_latest"
             referencedColumns: ["id"]
           },
           {
@@ -360,17 +277,11 @@ export type Database = {
             referencedRelation: "letta_reports"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "ingestion_records_rco_record_id_fkey"
-            columns: ["rco_record_id"]
-            isOneToOne: false
-            referencedRelation: "rco_records"
-            referencedColumns: ["id"]
-          },
         ]
       }
       ingestion_runs: {
         Row: {
+          checkpoint: Json | null
           completed_at: string | null
           created_at: string
           error_details: Json | null
@@ -386,6 +297,7 @@ export type Database = {
           type: string
         }
         Insert: {
+          checkpoint?: Json | null
           completed_at?: string | null
           created_at?: string
           error_details?: Json | null
@@ -401,6 +313,7 @@ export type Database = {
           type: string
         }
         Update: {
+          checkpoint?: Json | null
           completed_at?: string | null
           created_at?: string
           error_details?: Json | null
@@ -420,6 +333,7 @@ export type Database = {
       letta_reports: {
         Row: {
           agent_id: string
+          carbon_impact: Json | null
           created_at: string
           id: string
           markdown: string
@@ -434,6 +348,7 @@ export type Database = {
         }
         Insert: {
           agent_id: string
+          carbon_impact?: Json | null
           created_at?: string
           id?: string
           markdown: string
@@ -448,6 +363,7 @@ export type Database = {
         }
         Update: {
           agent_id?: string
+          carbon_impact?: Json | null
           created_at?: string
           id?: string
           markdown?: string
@@ -461,6 +377,13 @@ export type Database = {
           workflow_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "letta_reports_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "rco_session_updates_pending"
+            referencedColumns: ["workflow_id"]
+          },
           {
             foreignKeyName: "letta_reports_workflow_id_fkey"
             columns: ["workflow_id"]
@@ -646,6 +569,13 @@ export type Database = {
             foreignKeyName: "publication_records_workflow_id_fkey"
             columns: ["workflow_id"]
             isOneToOne: false
+            referencedRelation: "rco_session_updates_pending"
+            referencedColumns: ["workflow_id"]
+          },
+          {
+            foreignKeyName: "publication_records_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
             referencedRelation: "workflows"
             referencedColumns: ["id"]
           },
@@ -658,41 +588,102 @@ export type Database = {
           },
         ]
       }
-      rco_records: {
+      services: {
         Row: {
+          content_hash: string | null
           created_at: string
+          data: Json | null
           id: string
-          metadata: Json
-          source_created_at: string
-          source_raw: string
-          source_updated_at: string
-          training_action_id: string
-          training_offer_id: string
+          ingestion_run_id: string | null
+          origin: Database["public"]["Enums"]["origin"]
+          origin_id: string | null
+          raw_data: string
+          structure_id: string | null
           updated_at: string
+          version: number
         }
         Insert: {
+          content_hash?: string | null
           created_at?: string
+          data?: Json | null
           id?: string
-          metadata: Json
-          source_created_at: string
-          source_raw: string
-          source_updated_at: string
-          training_action_id: string
-          training_offer_id: string
+          ingestion_run_id?: string | null
+          origin?: Database["public"]["Enums"]["origin"]
+          origin_id?: string | null
+          raw_data: string
+          structure_id?: string | null
           updated_at?: string
+          version?: number
         }
         Update: {
+          content_hash?: string | null
           created_at?: string
+          data?: Json | null
           id?: string
-          metadata?: Json
-          source_created_at?: string
-          source_raw?: string
-          source_updated_at?: string
-          training_action_id?: string
-          training_offer_id?: string
+          ingestion_run_id?: string | null
+          origin?: Database["public"]["Enums"]["origin"]
+          origin_id?: string | null
+          raw_data?: string
+          structure_id?: string | null
           updated_at?: string
+          version?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "di_services_ingestion_run_id_fkey"
+            columns: ["ingestion_run_id"]
+            isOneToOne: false
+            referencedRelation: "ingestion_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      structures: {
+        Row: {
+          content_hash: string | null
+          created_at: string
+          data: Json | null
+          id: string
+          ingestion_run_id: string | null
+          origin: Database["public"]["Enums"]["origin"]
+          origin_id: string | null
+          raw_data: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          ingestion_run_id?: string | null
+          origin?: Database["public"]["Enums"]["origin"]
+          origin_id?: string | null
+          raw_data: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          ingestion_run_id?: string | null
+          origin?: Database["public"]["Enums"]["origin"]
+          origin_id?: string | null
+          raw_data?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "di_structures_ingestion_run_id_fkey"
+            columns: ["ingestion_run_id"]
+            isOneToOne: false
+            referencedRelation: "ingestion_runs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       translation_records: {
         Row: {
@@ -776,6 +767,13 @@ export type Database = {
             foreignKeyName: "translation_records_workflow_id_fkey"
             columns: ["workflow_id"]
             isOneToOne: false
+            referencedRelation: "rco_session_updates_pending"
+            referencedColumns: ["workflow_id"]
+          },
+          {
+            foreignKeyName: "translation_records_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
             referencedRelation: "workflows"
             referencedColumns: ["id"]
           },
@@ -797,7 +795,6 @@ export type Database = {
           id: string
           ingestion_record_id: string | null
           latest_ingestion_record_id: string | null
-          rco_record_id: string | null
           updated_at: string
           vercel_hook_token: string | null
           vercel_workflow_id: string | null
@@ -810,7 +807,6 @@ export type Database = {
           id?: string
           ingestion_record_id?: string | null
           latest_ingestion_record_id?: string | null
-          rco_record_id?: string | null
           updated_at?: string
           vercel_hook_token?: string | null
           vercel_workflow_id?: string | null
@@ -823,7 +819,6 @@ export type Database = {
           id?: string
           ingestion_record_id?: string | null
           latest_ingestion_record_id?: string | null
-          rco_record_id?: string | null
           updated_at?: string
           vercel_hook_token?: string | null
           vercel_workflow_id?: string | null
@@ -844,13 +839,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "status_rco_record_id_fkey"
-            columns: ["rco_record_id"]
-            isOneToOne: false
-            referencedRelation: "rco_records"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "workflows_assignee_id_fkey"
             columns: ["assignee_id"]
             isOneToOne: false
@@ -868,16 +856,33 @@ export type Database = {
       }
     }
     Views: {
-      di_services_latest: {
+      rco_session_updates_pending: {
+        Row: {
+          active_origin: Database["public"]["Enums"]["origin"] | null
+          active_service_version: number | null
+          active_sessions: Json | null
+          ingested_at: string | null
+          latest_service_id: string | null
+          latest_service_version: number | null
+          latest_sessions: Json | null
+          numero_action: string | null
+          origin_id: string | null
+          title: string | null
+          workflow_id: string | null
+        }
+        Relationships: []
+      }
+      services_latest: {
         Row: {
           content_hash: string | null
           created_at: string | null
           data: Json | null
-          di_id: string | null
-          di_structure_id: string | null
           id: string | null
           ingestion_run_id: string | null
+          origin: Database["public"]["Enums"]["origin"] | null
+          origin_id: string | null
           raw_data: string | null
+          structure_id: string | null
           updated_at: string | null
           version: number | null
         }
@@ -891,14 +896,15 @@ export type Database = {
           },
         ]
       }
-      di_structures_latest: {
+      structures_latest: {
         Row: {
           content_hash: string | null
           created_at: string | null
           data: Json | null
-          di_id: string | null
           id: string | null
           ingestion_run_id: string | null
+          origin: Database["public"]["Enums"]["origin"] | null
+          origin_id: string | null
           raw_data: string | null
           updated_at: string | null
           version: number | null
@@ -930,37 +936,25 @@ export type Database = {
           editorial_record_id: string | null
           external_id: string | null
           has_pending_ingestion_update: boolean | null
-          has_publication_history: boolean | null
           id: string | null
           ingestion_created_at: string | null
           ingestion_markdown: string | null
           ingestion_metadata: Json | null
           ingestion_record_id: string | null
-          ingestion_report_id: string | null
           ingestion_word_count: number | null
           latest_ingestion_version: number | null
           latest_publication: Json | null
           modalites_entrees_sorties: string | null
-          quality_score: number | null
-          raw_online_status: string | null
-          raw_work_status: string | null
-          rco_record_id: string | null
+          origin: Database["public"]["Enums"]["origin"] | null
           report_created_at: string | null
           session_end_date: string | null
           session_start_date: string | null
+          source_migrated_at: string | null
           structure_name: string | null
           title: string | null
           updated_at: string | null
-          workflow_assignee_id: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "ingestion_records_ingestion_report_id_fkey"
-            columns: ["ingestion_report_id"]
-            isOneToOne: false
-            referencedRelation: "letta_reports"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "status_editorial_record_id_fkey"
             columns: ["editorial_record_id"]
@@ -973,20 +967,6 @@ export type Database = {
             columns: ["ingestion_record_id"]
             isOneToOne: false
             referencedRelation: "ingestion_records"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "status_rco_record_id_fkey"
-            columns: ["rco_record_id"]
-            isOneToOne: false
-            referencedRelation: "rco_records"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "workflows_assignee_id_fkey"
-            columns: ["workflow_assignee_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1012,6 +992,24 @@ export type Database = {
       }
       get_my_language: { Args: never; Returns: string }
       get_my_role: { Args: never; Returns: string }
+      markdown_word_count: { Args: { markdown: string }; Returns: number }
+      search_playground_duplicate_candidates: {
+        Args: {
+          p_communes?: string[]
+          p_exclude_workflow_id: string
+          p_limit?: number
+          p_structure_name: string
+          p_title: string
+        }
+        Returns: {
+          commune: string
+          id: string
+          score: number
+          status: string
+          structure_name: string
+          title: string
+        }[]
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       update_metadata_field: {
@@ -1032,6 +1030,51 @@ export type Database = {
         }
         Returns: undefined
       }
+      workflow_archive_date: {
+        Args: {
+          compliance_status: string
+          editorial_archived_at: string
+          editorial_updated_at: string
+          ingestion_report_id: string
+          online_status: string
+          workflow_id: string
+        }
+        Returns: {
+          archived_at: string
+          archived_at_is_approximate: boolean
+        }[]
+      }
+      workflow_commune: {
+        Args: {
+          editorial_metadata: Json
+          ingestion_metadata: Json
+          origin: string
+        }
+        Returns: string
+      }
+      workflow_modalites_entrees_sorties: {
+        Args: {
+          editorial_metadata: Json
+          ingestion_metadata: Json
+          origin: string
+        }
+        Returns: string
+      }
+      workflow_session_period: {
+        Args: { ingestion_metadata: Json; origin: string }
+        Returns: {
+          session_end_date: string
+          session_start_date: string
+        }[]
+      }
+      workflow_source_migrated_at: {
+        Args: {
+          service_origin: Database["public"]["Enums"]["origin"]
+          service_origin_id: string
+          service_version: number
+        }
+        Returns: string
+      }
     }
     Enums: {
       activity_log_action:
@@ -1041,13 +1084,16 @@ export type Database = {
         | "publication_langue"
         | "archive"
         | "update"
+        | "source_migration"
         | "update_compliance"
         | "clear_language"
+        | "clear_language_error"
         | "translation"
         | "translation_error"
         | "translation_priority"
         | "assignment"
         | "note"
+      origin: "RCO" | "DI"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1730,14 +1776,17 @@ export const Constants = {
         "publication_langue",
         "archive",
         "update",
+        "source_migration",
         "update_compliance",
         "clear_language",
+        "clear_language_error",
         "translation",
         "translation_error",
         "translation_priority",
         "assignment",
         "note",
       ],
+      origin: ["RCO", "DI"],
     },
   },
   storage: {

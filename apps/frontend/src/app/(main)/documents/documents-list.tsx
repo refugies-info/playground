@@ -6,6 +6,7 @@ import {
   DATE_FILTER_TYPE_OPTIONS,
   DEFAULT_DATE_FILTER_CONDITION,
   SEARCH_SCOPE_OPTIONS,
+  SOURCE_FILTER_OPTIONS,
 } from "@playground/shared-types";
 import {
   BoutonFiltre,
@@ -46,6 +47,7 @@ interface DocumentsListProps {
     search: string;
     searchField: string;
     modalitesEntreesSorties?: string;
+    origin?: string;
   };
   initialAuthors: Profile[];
 }
@@ -61,6 +63,12 @@ export function DocumentsList({
   initialAuthors,
 }: DocumentsListProps) {
   const router = useRouter();
+
+  const documentHref = (row: { id: string }) => {
+    const search = window.location.search.substring(1);
+    const query = search ? `?from=${encodeURIComponent(search)}` : "";
+    return `/documents/${row.id}${query}`;
+  };
 
   // Use the shared hook for filter state + URL sync
   const { filters, updateFilter, updateFilters } = useUrlFilters({
@@ -257,6 +265,13 @@ export function DocumentsList({
         />
 
         <BoutonFiltre
+          label="Source"
+          options={SOURCE_FILTER_OPTIONS}
+          value={filters.origin || ""}
+          onChange={(value) => updateFilter("origin", value)}
+        />
+
+        <BoutonFiltre
           label="Conformité"
           options={[
             { label: "Conforme", value: "compliant" },
@@ -271,11 +286,8 @@ export function DocumentsList({
           columns={columns}
           data={documents}
           pageSize={pageSize}
-          onRowClick={(row) => {
-            const search = window.location.search.substring(1);
-            const query = search ? `?from=${encodeURIComponent(search)}` : "";
-            router.push(`/documents/${row.id}${query}`);
-          }}
+          getRowHref={documentHref}
+          onRowClick={(row) => router.push(documentHref(row))}
           manualPagination
           manualSorting
           sortBy={sortBy}

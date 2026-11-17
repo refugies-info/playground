@@ -1,4 +1,5 @@
 import {
+  estimateCarbonImpact,
   type LettaUsage,
   NoFrontmatterSchema,
   parseAgentResponse,
@@ -31,6 +32,7 @@ export interface PersistEditorialReportResult {
  * @param agentId - The Letta agent ID that generated the response
  * @param responseContent - The raw response content from the agent
  * @param usage - Optional usage statistics (tokens)
+ * @param model - Letta model handle that produced the response
  * @returns Result with report ID and linking status
  */
 export async function persistEditorialReportStep(
@@ -38,6 +40,7 @@ export async function persistEditorialReportStep(
   agentId: string,
   responseContent: string,
   usage?: LettaUsage,
+  model = LETTA_MODEL_HANDLE,
 ): Promise<StepResult<PersistEditorialReportResult>> {
   "use step";
 
@@ -45,8 +48,6 @@ export async function persistEditorialReportStep(
 
   try {
     const supabase = getSupabaseClient();
-
-    const model = LETTA_MODEL_HANDLE;
 
     // Parse editorial response - no frontmatter expected for editorial reports
     const result = parseAgentResponse(
@@ -68,6 +69,7 @@ export async function persistEditorialReportStep(
         raw_response: result.rawResponse,
         workflow_id: flowId,
         token_cost: usage?.totalTokens ?? null,
+        carbon_impact: await estimateCarbonImpact(model, usage),
         model,
       })
       .select("id")

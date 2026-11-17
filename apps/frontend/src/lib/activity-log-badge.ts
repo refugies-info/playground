@@ -3,11 +3,13 @@ import {
   TYPE_ARCHIVE,
   TYPE_ASSIGNMENT,
   TYPE_CLEAR_LANGUAGE,
+  TYPE_CLEAR_LANGUAGE_ERROR,
   TYPE_COMPLIANCE_HUMAN,
   TYPE_COMPLIANCE_IA,
   TYPE_NOTE,
   TYPE_PUBLICATION,
   TYPE_PUBLICATION_LANGUE,
+  TYPE_SOURCE_MIGRATION,
   TYPE_TRANSLATION,
   TYPE_TRANSLATION_ERROR,
   TYPE_TRANSLATION_PRIORITY,
@@ -37,7 +39,7 @@ import {
  * notifications : les deux affichent le même événement, ils doivent le
  * représenter pareil.
  *
- * Indexé sur `activity_log_action` (13 valeurs) et non sur le type de
+ * Indexé sur `activity_log_action` et non sur le type de
  * notification (5) : c'est la granularité qui distingue une mise à jour simple
  * d'une mise à jour avec verdict de conformité.
  */
@@ -52,11 +54,13 @@ export const TYPE_BADGE: Record<ActivityLogType, TypeBadge> = {
   [TYPE_UPDATE_COMPLIANCE]: { icon: RiAuctionLine },
   [TYPE_ASSIGNMENT]: { icon: RiUserLine },
   [TYPE_CLEAR_LANGUAGE]: { icon: RiFileTextLine },
+  [TYPE_CLEAR_LANGUAGE_ERROR]: { icon: RiFileTextLine, colors: BADGE_ERROR },
   [TYPE_NOTE]: { icon: RiPencilLine },
   [TYPE_TRANSLATION]: { icon: RiTranslate2 },
   [TYPE_TRANSLATION_PRIORITY]: { icon: RiTranslate2 },
   [TYPE_TRANSLATION_ERROR]: { icon: RiTranslate2 },
   [TYPE_UPDATE]: { icon: RiGlobalLine, colors: BADGE_INFO },
+  [TYPE_SOURCE_MIGRATION]: { icon: RiGlobalLine, colors: BADGE_INFO },
   [TYPE_PUBLICATION]: { icon: RiGlobalLine, colors: BADGE_SUCCESS },
   [TYPE_PUBLICATION_LANGUE]: { icon: RiGlobalLine, colors: BADGE_SUCCESS },
   [TYPE_ARCHIVE]: { icon: RiGlobalLine, colors: BADGE_ERROR },

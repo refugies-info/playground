@@ -8,17 +8,22 @@ import {
   type DocumentSortField,
   logger,
   SEARCH_SCOPE_OPTIONS,
+  SOURCE_FILTER_OPTIONS,
 } from "@playground/shared-types";
 import { BoutonFiltre, Button, FiltreDate, SearchInput } from "@playground/ui";
 import { DataTable } from "@playground/ui/composites";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { triggerDiIngestionAction } from "@/app/actions/di";
+import { triggerIngestionAction } from "@/app/actions/ingestion";
 import { AppPaginationControls } from "@/components/common/AppPagination";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import type { IngestionRunSummary } from "@/lib/ingestion-run";
+import type { IngestionSource } from "@/lib/ingestion-source";
+import { WORKFLOW_FILTERS_COOKIE } from "@/lib/search-params";
 import { createClient } from "@/lib/supabase/client";
 import { inProgressColumns } from "./columns";
 import { DocumentPreviewDrawer } from "./document-preview-drawer";
+import { LatestIngestionRunCard } from "./latest-ingestion-run-card";
 
 // Duration must match the Tailwind animation duration used in getRowClassName (duration-1000)
 const HIGHLIGHT_ANIMATION_DURATION_MS = 1000;
@@ -44,6 +49,8 @@ interface WorkflowFilters extends Record<string, string> {
   dateFrom: string;
   dateTo: string;
   modalitesEntreesSorties: string;
+  origin: string;
+  excludedContent: string;
 }
 
 interface WorkflowClientProps {
@@ -55,6 +62,8 @@ interface WorkflowClientProps {
   sortBy: DocumentSortField;
   sortOrder: "asc" | "desc";
   initialFilters: WorkflowFilters;
+  ingestionSource: IngestionSource;
+  latestIngestionRun: IngestionRunSummary | null;
 }
 
 export function WorkflowClient(props: WorkflowClientProps) {
@@ -71,7 +80,10 @@ export function WorkflowClient(props: WorkflowClientProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [workflowId, setWorkflowId] = useState<string | null>(null);
+  const [launch, setLaunch] = useState<{
+    workflowId: string;
+    dashboardUrl?: string;
+  } | null>(null);
   const [arbitrationLoading, setArbitrationLoading] = useState<string | null>(
     null,
   );
@@ -87,6 +99,14 @@ export function WorkflowClient(props: WorkflowClientProps) {
       basePath: "/workflow",
       initialFilters,
     });
+
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const query = new URLSearchParams(searchParams);
+    query.delete("page");
+    // biome-ignore lint/suspicious/noDocumentCookie: Cookie Store API is async and missing from older Safari
+    document.cookie = `${WORKFLOW_FILTERS_COOKIE}=${encodeURIComponent(query.toString())}; path=/workflow; max-age=31536000; samesite=lax`;
+  }, [searchParams]);
 
   // Track documents locally to detect changes for animation
   const [documents, setDocuments] = useState(inProgressDocuments);
@@ -241,25 +261,27 @@ export function WorkflowClient(props: WorkflowClientProps) {
     setIsDrawerOpen(true);
   };
 
-  const handleRunDiIngestion = async () => {
+  const handleRunIngestion = async () => {
     setIsLoading(true);
     setError(null);
-    setWorkflowId(null);
+    setLaunch(null);
 
     try {
-      const result = await triggerDiIngestionAction();
+      const result = await triggerIngestionAction();
 
       if (!result.success) {
-        setError(result.error || "Unknown error occurred");
+        setError(result.error ?? "Échec du lancement de l'import");
       } else {
-        setWorkflowId(result.workflowId || null);
-        if (result.dashboardUrl) {
-          // Optional: Open dashboard in new tab
-          // window.open(result.dashboardUrl, '_blank');
-        }
+        setLaunch({
+          workflowId: result.workflowId ?? "",
+          dashboardUrl: result.dashboardUrl,
+        });
+        router.refresh();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(
+        err instanceof Error ? err.message : "Échec du lancement de l'import",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -328,44 +350,34 @@ export function WorkflowClient(props: WorkflowClientProps) {
 
   return (
     <div className="w-full flex flex-col">
-      <div className="container mx-auto max-w-4xl">
-        {error && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-            <h3 className="font-bold mb-2">Error</h3>
-            <p>{error}</p>
-          </div>
-        )}
-
-        {workflowId && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-bold mb-2">Workflow Started</h3>
-                <p>
-                  Workflow ID:{" "}
-                  <code className="bg-green-100 px-2 py-1 rounded">
-                    {workflowId}
-                  </code>
-                </p>
-              </div>
-            </div>
-            <p className="mt-2 text-sm">
-              Check the{" "}
-              <a
-                href="http://localhost:3456"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline font-semibold"
-              >
-                Workflow Dashboard
-              </a>{" "}
-              (if enabled) or server logs for progress.
-            </p>
-          </div>
-        )}
-      </div>
-
       <div>
+        <LatestIngestionRunCard
+          run={props.latestIngestionRun}
+          notice={
+            error ? (
+              <p className="text-sm text-(--text-default-error)">{error}</p>
+            ) : (
+              launch && (
+                <p className="text-sm text-(--text-mention-grey)">
+                  Import lancé ({launch.workflowId})
+                  {launch.dashboardUrl && (
+                    <>
+                      {" · "}
+                      <a
+                        href={launch.dashboardUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline"
+                      >
+                        Suivre dans le dashboard
+                      </a>
+                    </>
+                  )}
+                </p>
+              )
+            )
+          }
+        />
         <div className="mb-6 flex flex-wrap items-end gap-4">
           <SearchInput
             value={filters.search}
@@ -411,14 +423,32 @@ export function WorkflowClient(props: WorkflowClientProps) {
             }
           />
 
+          <BoutonFiltre
+            label="Source"
+            options={SOURCE_FILTER_OPTIONS}
+            value={filters.origin}
+            onChange={(value) => handleFilterChange("origin", value)}
+          />
+
+          <BoutonFiltre
+            label="Contenu"
+            options={[{ label: "Sans OEPRE", value: "oepre" }]}
+            value={filters.excludedContent}
+            onChange={(value) => handleFilterChange("excludedContent", value)}
+          />
+
           {/* Bouton aligné à droite dans le même conteneur que la recherche */}
           <Button
             className="ml-auto"
-            onClick={handleRunDiIngestion}
+            onClick={handleRunIngestion}
             disabled={isLoading}
             isLoading={isLoading}
           >
-            {isLoading ? "En cours…" : "Lancer l'import DI"}
+            {isLoading
+              ? "En cours…"
+              : props.ingestionSource === "rco"
+                ? "Importer les fiches RCO"
+                : "Lancer l'import DI"}
           </Button>
         </div>
 
@@ -440,6 +470,7 @@ export function WorkflowClient(props: WorkflowClientProps) {
               columns={columns}
               data={documents}
               pageSize={pageSize}
+              getRowHref={(row) => `/documents/${row.id}`}
               onRowClick={(row) => router.push(`/documents/${row.id}`)}
               manualPagination
               manualSorting
@@ -464,11 +495,12 @@ export function WorkflowClient(props: WorkflowClientProps) {
             />
 
             {totalPages > 1 && (
-              <div className="flex justify-end py-4">
+              <div className="flex justify-center py-4">
                 <AppPaginationControls
                   currentPage={currentPage}
                   pageSize={pageSize}
                   totalCount={totalCount}
+                  numbered
                 />
               </div>
             )}

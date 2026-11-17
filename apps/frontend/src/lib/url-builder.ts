@@ -86,3 +86,5 @@ export function buildRcoSourceUrl(
   const numeroFormation = legacyKey.slice(0, -actionSuffix.length);
   return `https://www.intercariforef.org/outils/recherche-offreinfo/formations/sessions/${numeroFormation}/${numeroAction}`;
 }
+
+export { buildLettaConversationUrl } from "@playground/shared-types";

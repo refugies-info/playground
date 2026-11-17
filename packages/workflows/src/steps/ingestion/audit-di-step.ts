@@ -16,7 +16,7 @@
  *         ├── [4] generateDiAuditReportsStep  ◄── THIS FILE
  *         │         │
  *         │         ├── fetchAllDiServiceIds()
- *         │         │         └── Paginate di_services table
+ *         │         │         └── Paginate services table
  *         │         │
  *         │         └── fetchDiAuditTargets()
  *         │                   ├── RPC: count_di_audit_candidates (for reporting)
@@ -44,8 +44,9 @@
 import { APIError } from "@letta-ai/letta-client/core/error";
 import {
   accumulateUsage,
+  createConversation,
   createLettaClient,
-  findOrCreateConversation,
+  estimateCarbonImpact,
   generateIngestionReport,
   type LettaUsage,
   parseIngestionResponse,
@@ -61,11 +62,8 @@ import { getStepMetadata } from "@workflow/core";
 import { FatalError } from "@workflow/errors";
 import { z } from "zod";
 import { recordActivity } from "../common/activity-log";
-import {
-  fetchAllDiServiceIds,
-  getSupabaseClient,
-  runWithConcurrency,
-} from "./utils";
+import { getSupabaseClient } from "../common/supabase";
+import { fetchAllDiServiceIds, runWithConcurrency } from "./utils";
 
 // =============================================================================
 // Config
@@ -274,7 +272,7 @@ export async function generateDiAuditReportsStep(runId: string) {
   // context mixing). runWithConcurrency limits simultaneous LLM calls.
   const results = await runWithConcurrency(
     targets.map((target) => async () => {
-      const conversationId = await findOrCreateConversation(
+      const conversationId = await createConversation(
         lettaClient,
         agentId,
         `compliance-${target.workflow_id}`,
@@ -316,6 +314,7 @@ export async function generateDiAuditReportsStep(runId: string) {
           raw_response: parsed.rawResponse ?? null,
           workflow_id: target.workflow_id,
           token_cost: usage?.totalTokens ?? null,
+          carbon_impact: await estimateCarbonImpact(model, usage),
           model,
         })
         .select("id")
@@ -338,7 +337,6 @@ export async function generateDiAuditReportsStep(runId: string) {
         );
       }
 
-      // Set compliance_status on ingestion_records — compliant iff complete + not duplicate (RI-1117, RI-1093)
       const complianceStatus =
         parsed.status !== "complete"
           ? "error"
@@ -413,223 +411,4 @@ export async function generateDiAuditReportsStep(runId: string) {
     totalCandidates,
     skipped,
   };
-}
-
-// 3 retries by default (same as workflow default, made explicit for documentation)
-generateDiAuditReportsStep.maxRetries = 3;
-
-/**
- * Workflow step that forces generation of an audit report for a specific workflow,
- * bypassing normal batch collection. Used primarily for manual arbitration/retry.
- *
- * @param workflowId - The ID of the workflow to force audit for.
- */
-export async function forceAuditReportStep(workflowId: string) {
-  "use step";
-
-  const supabase = getSupabaseClient();
-
-  // 1. Fetch workflow to get ingestion_record_id
-  const { data: workflow, error: workflowError } = await supabase
-    .from("workflows")
-    .select("ingestion_record_id, latest_ingestion_record_id")
-    .eq("id", workflowId)
-    .single();
-
-  if (workflowError || !workflow?.ingestion_record_id) {
-    logger.error(
-      { workflowId, error: workflowError },
-      "Workflow or Ingestion Record not found for forced audit",
-    );
-    throw new Error("Workflow or Ingestion Record not found");
-  }
-
-  const ingestionRecordId = workflow.ingestion_record_id;
-
-  // A previous version exists when the workflow's latest source differs from
-  // its active one — the forced audit then records an update verdict rather
-  // than a first-time compliance verdict.
-  const hasPreviousVersion =
-    workflow.latest_ingestion_record_id != null &&
-    workflow.latest_ingestion_record_id !== ingestionRecordId;
-
-  // Set compliance status to pending on ingestion_records (RI-1093)
-  // Include updated_at to ensure zombie reclamation works correctly
-  await supabase
-    .from("ingestion_records")
-    .update({
-      compliance_status: "pending",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", ingestionRecordId);
-
-  // 2. Fetch Ingestion Record
-  const { data: record, error: recordError } = await supabase
-    .from("ingestion_records")
-    .select("id, markdown")
-    .eq("id", ingestionRecordId)
-    .single();
-
-  if (recordError || !record) {
-    throw new Error(`Ingestion Record not found: ${recordError?.message}`);
-  }
-
-  const agentId = process.env.PLAYGROUND_AGENT_ID;
-  if (!agentId) {
-    throw new FatalError("PLAYGROUND_AGENT_ID is not defined");
-  }
-
-  const lettaClient = createLettaClient();
-  // Resolve the agent's actual model handle (cached per process) — TEC-65
-  const model = LETTA_MODEL_HANDLE;
-  const conversationId = await findOrCreateConversation(
-    lettaClient,
-    agentId,
-    `compliance-${workflowId}`,
-  );
-
-  logger.info(
-    { workflowId, ingestionRecordId },
-    "Starting forced arbitration audit",
-  );
-
-  let finalContent = "";
-  const usage: LettaUsage = {};
-
-  try {
-    for await (const chunk of generateIngestionReport(
-      lettaClient,
-      record.markdown,
-      conversationId,
-    )) {
-      accumulateUsage(usage, chunk);
-      if (chunk.message_type === "assistant_message") {
-        if (typeof chunk.content !== "string") {
-          throw new Error(
-            `Expected assistant message content to be a string, but got ${typeof chunk.content}`,
-          );
-        }
-        finalContent += chunk.content;
-      }
-    }
-
-    if (!finalContent) {
-      throw new Error("No assistant response received for ingestion report");
-    }
-
-    const parsed = parseIngestionResponse(finalContent, agentId, usage);
-
-    // Insert Report
-    const { data: report, error: reportError } = await supabase
-      .from("letta_reports")
-      .insert({
-        agent_id: agentId,
-        report_type: "ingestion",
-        markdown: parsed.content,
-        metadata: parsed.metadata as Json,
-        status: parsed.status,
-        raw_response: parsed.rawResponse ?? null,
-        workflow_id: workflowId,
-        token_cost: usage?.totalTokens ?? null,
-        model,
-      })
-      .select("id")
-      .single();
-
-    if (reportError || !report) {
-      throw new Error(
-        `Failed to insert letta_report: ${reportError?.message ?? "unknown error"}`,
-      );
-    }
-
-    // Link Report to Ingestion Record
-    const { error: updateError } = await supabase
-      .from("ingestion_records")
-      .update({ ingestion_report_id: report.id })
-      .eq("id", ingestionRecordId);
-
-    if (updateError) {
-      throw new Error(
-        `Failed to link ingestion_report to ingestion_record: ${updateError.message}`,
-      );
-    }
-
-    // Set compliance_status on ingestion_records — compliant iff complete + not duplicate (RI-1117, RI-1093)
-    const finalComplianceStatus =
-      parsed.status !== "complete"
-        ? "error"
-        : parsed.metadata.compliant && !parsed.metadata.duplicate
-          ? "compliant"
-          : "non_compliant";
-
-    const { error: finalStatusError } = await supabase
-      .from("ingestion_records")
-      .update({ compliance_status: finalComplianceStatus })
-      .eq("id", ingestionRecordId);
-
-    if (finalStatusError) {
-      logger.error(
-        { error: finalStatusError, ingestionRecordId },
-        "Failed to update ingestion_record final status",
-      );
-      throw new Error(
-        `Failed to update compliance status: ${finalStatusError.message}`,
-      );
-    }
-
-    // Compliance verdict with PapaIA (update if a previous version exists)
-    await recordActivity({
-      action: hasPreviousVersion ? TYPE_UPDATE_COMPLIANCE : TYPE_COMPLIANCE_IA,
-      workflowId,
-      lettaReportId: report.id,
-      activity: {
-        complianceStatus: finalComplianceStatus,
-        ingestionRecordId,
-        compliant: Boolean(parsed.metadata.compliant),
-        duplicate: Boolean(parsed.metadata.duplicate),
-      },
-    });
-
-    logger.info(
-      {
-        workflowId,
-        reportId: report.id,
-        complianceStatus: finalComplianceStatus,
-      },
-      "Forced arbitration audit completed successfully",
-    );
-
-    return {
-      success: true,
-      reportId: report.id,
-      complianceStatus: finalComplianceStatus,
-    };
-  } catch (error) {
-    if (error instanceof APIError) {
-      logger.error(
-        { status: error.status, body: error.error },
-        "Letta API error generating forced ingestion report",
-      );
-    } else {
-      logger.error(
-        { error, ingestionRecordId },
-        "Error generating forced ingestion report",
-      );
-    }
-
-    // FINAL SECURITY: Ensure ingestion_record is no longer 'pending' if we hit an error (RI-1093)
-    try {
-      await supabase
-        .from("ingestion_records")
-        .update({ compliance_status: "error" })
-        .eq("id", ingestionRecordId);
-    } catch (dbError) {
-      logger.error(
-        { dbError, ingestionRecordId },
-        "Failed to force error status on catch",
-      );
-    }
-
-    throw error;
-  }
 }

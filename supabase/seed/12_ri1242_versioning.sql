@@ -40,7 +40,7 @@ VALUES
   )
 ON CONFLICT DO NOTHING;
 
-INSERT INTO public.di_structures (
+INSERT INTO public.structures (
   id,
   created_at,
   updated_at,
@@ -67,9 +67,9 @@ VALUES (
 )
 ON CONFLICT DO NOTHING;
 
--- Services are inserted with stable Data Inclusion IDs. The di_services trigger
+-- Services are inserted with stable Data Inclusion IDs. The services trigger
 -- keeps versions coherent when the same di_id appears more than once.
-INSERT INTO public.di_services (
+INSERT INTO public.services (
   id,
   created_at,
   updated_at,
@@ -216,9 +216,8 @@ INSERT INTO public.ingestion_records (
   updated_at,
   markdown,
   metadata,
-  di_service_id,
-  di_structure_id,
-  origin,
+  service_id,
+  structure_id,
   compliance_status
 )
 VALUES
@@ -230,7 +229,6 @@ VALUES
     '{"id":"carif-oref--ri1242-first-import","title":"RI-1242 - premier import","commune":"Paris","structure_id":"carif-oref--ri1242-structure"}'::jsonb,
     '12420000-0000-4000-8000-000000000101',
     '12420000-0000-4000-8000-000000000010',
-    'DI',
     'compliant'
   ),
   (
@@ -241,7 +239,6 @@ VALUES
     '{"id":"carif-oref--ri1242-auto-update","title":"RI-1242 - auto update v1","commune":"Lyon","structure_id":"carif-oref--ri1242-structure"}'::jsonb,
     '12420000-0000-4000-8000-000000000201',
     '12420000-0000-4000-8000-000000000010',
-    'DI',
     'compliant'
   ),
   (
@@ -252,7 +249,6 @@ VALUES
     '{"id":"carif-oref--ri1242-auto-update","title":"RI-1242 - auto update v2","commune":"Lyon","structure_id":"carif-oref--ri1242-structure"}'::jsonb,
     '12420000-0000-4000-8000-000000000202',
     '12420000-0000-4000-8000-000000000010',
-    'DI',
     'compliant'
   ),
   (
@@ -263,7 +259,6 @@ VALUES
     '{"id":"carif-oref--ri1242-pending-update","title":"RI-1242 - pending v1","commune":"Marseille","structure_id":"carif-oref--ri1242-structure"}'::jsonb,
     '12420000-0000-4000-8000-000000000301',
     '12420000-0000-4000-8000-000000000010',
-    'DI',
     'compliant'
   )
 ON CONFLICT DO NOTHING;
@@ -433,9 +428,8 @@ INSERT INTO public.ingestion_records (
   updated_at,
   markdown,
   metadata,
-  di_service_id,
-  di_structure_id,
-  origin,
+  service_id,
+  structure_id,
   compliance_status
 )
 VALUES
@@ -447,7 +441,6 @@ VALUES
     '{"id":"carif-oref--ri1242-pending-update","title":"RI-1242 - pending v2","commune":"Marseille","structure_id":"carif-oref--ri1242-structure"}'::jsonb,
     '12420000-0000-4000-8000-000000000302',
     '12420000-0000-4000-8000-000000000010',
-    'DI',
     'compliant'
   ),
   (
@@ -458,7 +451,6 @@ VALUES
     '{"id":"carif-oref--ri1242-pending-unaudited","title":"RI-1242 - pending unaudited v1","commune":"Nantes","structure_id":"carif-oref--ri1242-structure"}'::jsonb,
     '12420000-0000-4000-8000-000000000401',
     '12420000-0000-4000-8000-000000000010',
-    'DI',
     'compliant'
   )
 ON CONFLICT DO NOTHING;
@@ -498,9 +490,8 @@ INSERT INTO public.ingestion_records (
   updated_at,
   markdown,
   metadata,
-  di_service_id,
-  di_structure_id,
-  origin,
+  service_id,
+  structure_id,
   compliance_status
 )
 VALUES (
@@ -511,7 +502,6 @@ VALUES (
   '{"id":"carif-oref--ri1242-pending-unaudited","title":"RI-1242 - pending unaudited v2","commune":"Nantes","structure_id":"carif-oref--ri1242-structure"}'::jsonb,
   '12420000-0000-4000-8000-000000000402',
   '12420000-0000-4000-8000-000000000010',
-  'DI',
   NULL
 )
 ON CONFLICT DO NOTHING;

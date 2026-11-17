@@ -12,6 +12,7 @@ import {
   ModalitesEntreesSortiesCell,
   OnlineStatusCell,
   SessionPeriodCell,
+  SourceCell,
 } from "@/components/documents/cells";
 import { createTextColumn } from "@/lib/column-factories";
 import type { Profile } from "@/lib/profile";
@@ -202,6 +203,21 @@ export const createSessionPeriodColumn = (): ColumnDef<Document> => ({
       endDate={row.original.sessionEndDate}
     />
   ),
+});
+
+export const createSourceColumn = (): ColumnDef<Document> => ({
+  accessorKey: "sourceSystem",
+  header: ({ column }) => (
+    <DataTableColumnHeader column={column} title="Source" />
+  ),
+  cell: ({ row }) => (
+    <SourceCell
+      source={row.original.sourceSystem}
+      migratedAt={row.original.sourceMigratedAt}
+    />
+  ),
+  // No server-side sort field for the source.
+  enableSorting: false,
 });
 
 // =============================================================================

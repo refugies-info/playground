@@ -5,8 +5,8 @@
  * Runs audit then metadata for a specific workflowId when the audit result is compliant.
  */
 
-import { forceAuditReportStep } from "../../steps/ingestion/audit-di-step";
-import { forceMetadataReportStep } from "../../steps/ingestion/metadata-di-step";
+import { forceAuditReportStep } from "../../steps/ingestion/force-audit-step";
+import { forceMetadataReportStep } from "../../steps/ingestion/force-metadata-step";
 
 export async function forceArbitrationWorkflow(workflowId: string) {
   "use workflow";

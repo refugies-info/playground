@@ -14,11 +14,13 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useDocument } from "@/components/document-editor/DocumentContext";
 import { getEditorialContent } from "@/services/document-actions";
+import { SourceFields } from "./SourceFields";
 
 export function DebugPanel() {
   const { document, showDebug, setShowDebug, debugBlocks } = useDocument();
   const pathname = usePathname();
   const isMetadataView = pathname?.endsWith("/metadata");
+  const isComplianceView = pathname?.endsWith("/compliance");
 
   const [serverContent, setServerContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -78,7 +80,7 @@ export function DebugPanel() {
         <button
           type="button"
           onClick={() => setShowDebug(true)}
-          className="fixed bottom-20 right-6 z-50 p-3 bg-black text-white rounded-full shadow-lg hover:bg-gray-800 transition-all hover:scale-105"
+          className="fixed bottom-29 right-6 z-50 p-3 bg-black text-white rounded-full shadow-lg hover:bg-gray-800 transition-all hover:scale-105"
           title="Toggle Debug Panel (Option+Shift+D)"
         >
           <Bug className="w-5 h-5" />
@@ -112,25 +114,59 @@ export function DebugPanel() {
         </DrawerHeader>
 
         {/* Content */}
-        <div className="flex-1 flex overflow-hidden font-mono text-sm">
-          {isMetadataView ? (
+        {/* The drawer drags from anywhere and blocks text selection: the
+            panes stay selectable, the header still drags it. */}
+        <div
+          className="flex-1 flex overflow-hidden font-mono text-sm select-text"
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          {isComplianceView ? (
             <>
-              {/* DB Metadata */}
-              <div className="flex-1 flex flex-col border-r relative group">
-                <div className="px-4 py-2 bg-gray-100 border-b font-semibold text-xs tracking-wider text-pink-500 uppercase flex justify-between items-center">
-                  <span>ingestion_record metadata</span>
-                  <span className="bg-gray-200 px-2 py-0.5 rounded text-[10px] text-gray-600">
-                    {JSON.stringify(document?.metadata || {}).length} chars
-                  </span>
-                </div>
-                <div className="flex-1 relative bg-gray-50/50">
-                  <textarea
-                    className="w-full h-full p-4 resize-none focus:outline-none bg-transparent text-pink-900"
-                    value={JSON.stringify(document?.metadata || {}, null, 2)}
-                    readOnly
+              <SourceFieldsPane
+                title="Ce que l'IA a lu pour arbitrer (RCO)"
+                source={document?.arbitrationSource}
+              />
+              <SourceFieldsPane
+                title="Données API RCO (complètes)"
+                source={document?.rcoApiData}
+                showPropertyNames
+              />
+              <SourcePane
+                title="ingestion_record markdown"
+                value={document?.ingestionContent || ""}
+              />
+            </>
+          ) : isMetadataView ? (
+            <>
+              {document?.metadataSource ? (
+                <>
+                  <SourceFieldsPane
+                    title="Ce que l'IA a lu pour les métadonnées (RCO)"
+                    source={document.metadataSource}
                   />
+                  <SourceFieldsPane
+                    title="Données API RCO (complètes)"
+                    source={document.rcoApiData}
+                    showPropertyNames
+                  />
+                </>
+              ) : (
+                <div className="flex-1 flex flex-col border-r relative group">
+                  <div className="px-4 py-2 bg-gray-100 border-b font-semibold text-xs tracking-wider text-pink-500 uppercase flex justify-between items-center">
+                    <span>metadata (ingestion + editorial)</span>
+                    <span className="bg-gray-200 px-2 py-0.5 rounded text-[10px] text-gray-600">
+                      {JSON.stringify(document?.metadata || {}).length} chars
+                    </span>
+                  </div>
+                  <div className="flex-1 relative bg-gray-50/50">
+                    <textarea
+                      className="w-full h-full p-4 resize-none focus:outline-none bg-transparent text-pink-900"
+                      value={JSON.stringify(document?.metadata || {}, null, 2)}
+                      readOnly
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* LLM Metadata */}
               <div className="flex-1 flex flex-col border-r relative group">
@@ -155,7 +191,7 @@ export function DebugPanel() {
               {/* Editorial Record Metadata */}
               <div className="flex-1 flex flex-col">
                 <div className="px-4 py-2 bg-blue-50 border-b font-semibold text-xs tracking-wider text-blue-600 uppercase flex justify-between items-center">
-                  <span>editorial_record metadata</span>
+                  <span>editorial_record metadata (modifs manuelles)</span>
                   <span className="bg-blue-100 px-2 py-0.5 rounded text-[10px] text-blue-700">
                     {JSON.stringify(document?.editorialMetadata || {}).length}{" "}
                     chars
@@ -176,6 +212,20 @@ export function DebugPanel() {
             </>
           ) : (
             <>
+              {document?.plainLanguageSource && (
+                <>
+                  <SourceFieldsPane
+                    title="Ce que l'IA a lu pour le langage clair (RCO)"
+                    source={document.plainLanguageSource}
+                    showPropertyNames
+                  />
+                  <SourceFieldsPane
+                    title="Données API RCO (complètes)"
+                    source={document.rcoApiData}
+                    showPropertyNames
+                  />
+                </>
+              )}
               {/* Server Side */}
               <div className="flex-1 flex flex-col border-r relative group">
                 <div className="px-4 py-2 bg-gray-100 border-b font-semibold text-xs uppercase tracking-wider text-gray-500 flex justify-between items-center">
@@ -253,5 +303,52 @@ export function DebugPanel() {
         </div>
       </DrawerContent>
     </Drawer>
+  );
+}
+
+function SourcePane({ title, value }: { title: string; value: string }) {
+  return (
+    <div className="flex-1 flex flex-col border-r last:border-r-0">
+      <div className="px-4 py-2 bg-(--background-contrast-warning) border-b font-semibold text-xs tracking-wider text-(--text-default-warning) uppercase flex justify-between items-center">
+        <span>{title}</span>
+        <span className="bg-(--background-contrast-warning-hover) px-2 py-0.5 rounded text-[10px]">
+          {value.length} chars
+        </span>
+      </div>
+      <textarea
+        className="w-full h-full p-4 resize-none focus:outline-none bg-transparent text-(--text-default-grey)"
+        value={value}
+        readOnly
+      />
+    </div>
+  );
+}
+
+function SourceFieldsPane({
+  title,
+  source,
+  showPropertyNames,
+}: {
+  title: string;
+  source?: Record<string, unknown>;
+  showPropertyNames?: boolean;
+}) {
+  return (
+    <div className="flex-1 flex flex-col border-r overflow-hidden">
+      <div className="px-4 py-2 bg-(--background-contrast-warning) border-b font-semibold text-xs tracking-wider text-(--text-default-warning) uppercase">
+        {title}
+      </div>
+      {source ? (
+        <SourceFields
+          source={source}
+          showPropertyNames={showPropertyNames}
+          className="flex-1 overflow-auto p-4"
+        />
+      ) : (
+        <p className="p-4 font-sans text-(--text-mention-grey)">
+          Pas une fiche RCO.
+        </p>
+      )}
+    </div>
   );
 }

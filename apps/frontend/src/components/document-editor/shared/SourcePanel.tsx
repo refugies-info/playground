@@ -20,6 +20,22 @@ import { buildRcoSourceUrl } from "@/lib/url-builder";
 import { useDocument } from "../DocumentContext";
 import { useContentContext } from "./ContentContext";
 import { MarkdownViewer } from "./MarkdownViewer";
+import { SourceFields } from "./SourceFields";
+
+const HIDDEN_SOURCE_FIELDS = new Set([
+  "id",
+  "nom",
+  "source",
+  "code_nsf",
+  "code_rome",
+]);
+
+const visibleSourceFields = (source: Record<string, unknown>) =>
+  Object.fromEntries(
+    Object.entries(source).filter(
+      ([field]) => !HIDDEN_SOURCE_FIELDS.has(field),
+    ),
+  );
 
 /**
  * SourcePanel — panneau de comparaison avec le contenu source RCO.
@@ -158,6 +174,23 @@ export function SourcePanel() {
             emptyMessage="Aucun contenu source disponible"
             className="[&_.bn-editor]:!px-10"
           />
+          {document?.rcoSource && (
+            <section className="mx-10 mt-6 border-t border-border pt-6">
+              <h2 className="mb-4 text-lg font-bold">Informations RCO</h2>
+              <SourceFields
+                source={visibleSourceFields(document.rcoSource)}
+                showPropertyNames
+              />
+            </section>
+          )}
+          {document?.editorialNotes && (
+            <section className="mt-6 border-t border-border pt-6">
+              <MarkdownViewer
+                content={document.editorialNotes}
+                className="[&_.bn-editor]:!px-10"
+              />
+            </section>
+          )}
         </div>
       </div>{" "}
       {/* fin wrapper opacity */}

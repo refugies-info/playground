@@ -15,6 +15,7 @@ export { diIngestionWorkflow } from "./pipelines/ingestion/di-ingestion";
 export { diSingleRecordWorkflow } from "./pipelines/ingestion/di-single-record";
 export { forceArbitrationWorkflow } from "./pipelines/ingestion/force-arbitration";
 export { forceMetadataOnlyWorkflow } from "./pipelines/ingestion/force-metadata-only";
+export { rcoIngestionWorkflow } from "./pipelines/ingestion/rco-ingestion";
 // =============================================================================
 // Pipelines - Editorial
 // =============================================================================
@@ -69,6 +70,8 @@ export {
   diSingleMetadataStep,
   fanOutDiRecordsStep,
 } from "./steps/ingestion/di-single-record-steps";
+export * from "./steps/ingestion/force-audit-step";
+export * from "./steps/ingestion/force-metadata-step";
 export * from "./steps/ingestion/ingest-di";
 export * from "./steps/ingestion/metadata-di-step";
 // =============================================================================

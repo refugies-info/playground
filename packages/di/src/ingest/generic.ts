@@ -1,5 +1,9 @@
-import { logger } from "@playground/shared-types";
-import type { Database, Json } from "@playground/supabase";
+import { CARIF_OREF_SOURCE, logger } from "@playground/shared-types";
+import type { Database } from "@playground/supabase";
+import {
+  completeIngestionRun,
+  createIngestionRun,
+} from "@playground/supabase/ingestion-runs";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Page } from "../types";
@@ -8,7 +12,6 @@ import {
   DEFAULT_BATCH_SIZE,
   DEFAULT_PAGE_SIZE,
   type DiIngestionOptions,
-  SOURCE_CARIF_OREF,
 } from "./shared";
 
 /**
@@ -31,7 +34,6 @@ import {
   DEFAULT_BATCH_SIZE,
   DEFAULT_PAGE_SIZE,
   type DiIngestionOptions,
-  SOURCE_CARIF_OREF,
 } from "./shared";
 
 /**
@@ -61,7 +63,7 @@ export type DiItem = { id: string; nom: string; source: string };
  * Existing record info from database
  */
 interface ExistingRecord {
-  di_id: string;
+  origin_id: string;
   content_hash: string | null;
   version: number;
 }
@@ -104,7 +106,7 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
 
   logger.info(
     {
-      source: SOURCE_CARIF_OREF,
+      source: CARIF_OREF_SOURCE,
       pageSize,
       limit: limit ?? "unlimited",
       excludeAllDuplicates,
@@ -117,7 +119,7 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
       const data = await fetchFn({
         page: currentPage,
         size: pageSize,
-        sources: [SOURCE_CARIF_OREF],
+        sources: [CARIF_OREF_SOURCE],
         ...extraQueryParams,
       });
 
@@ -246,81 +248,15 @@ export async function fetchAllCarifOrefItems<T extends DiItem>(
 }
 
 /**
- * Create an ingestion run record to track this ingestion
- */
-async function createIngestionRun(
-  supabase: SupabaseClient<Database>,
-  type: "structures" | "services",
-  options: DiIngestionOptions,
-): Promise<string> {
-  const { data, error } = await supabase
-    .from("ingestion_runs")
-    .insert({
-      source: "di",
-      type,
-      status: "running",
-      options: options as Json,
-    })
-    .select("id")
-    .single();
-
-  if (error || !data) {
-    throw new Error(`Failed to create ingestion run: ${error?.message}`);
-  }
-
-  return data.id;
-}
-
-/**
- * Update ingestion run with final stats
- */
-async function completeIngestionRun(
-  supabase: SupabaseClient<Database>,
-  runId: string,
-  stats: {
-    totalFetched: number;
-    totalInserted: number;
-    totalUpdated: number;
-    totalUnchanged: number;
-    totalErrors: number;
-  },
-  status: "completed" | "failed" = "completed",
-  errorDetails?: unknown,
-): Promise<void> {
-  const { error } = await supabase
-    .from("ingestion_runs")
-    .update({
-      completed_at: new Date().toISOString(),
-      status,
-      total_fetched: stats.totalFetched,
-      total_inserted: stats.totalInserted,
-      total_updated: stats.totalUpdated,
-      total_unchanged: stats.totalUnchanged,
-      total_errors: stats.totalErrors,
-      error_details: (errorDetails ?? null) as Json,
-    })
-    .eq("id", runId);
-
-  if (error) {
-    logger.error(
-      { runId, error: error.message },
-      "Failed to update ingestion run",
-    );
-  }
-}
-
-/**
  * Fetch existing records to check for changes
  */
 async function fetchExistingRecords(
   supabase: SupabaseClient<Database>,
-  tableName: "di_structures" | "di_services",
+  tableName: "structures" | "services",
   diIds: string[],
 ): Promise<Map<string, ExistingRecord>> {
   const viewName =
-    tableName === "di_structures"
-      ? "di_structures_latest"
-      : "di_services_latest";
+    tableName === "structures" ? "structures_latest" : "services_latest";
 
   // Fetch in batches to avoid query size limits
   const existingMap = new Map<string, ExistingRecord>();
@@ -330,8 +266,8 @@ async function fetchExistingRecords(
 
     const { data, error } = await supabase
       .from(viewName)
-      .select("di_id, data, content_hash, version")
-      .in("di_id", batch);
+      .select("origin_id, data, content_hash, version")
+      .in("origin_id", batch);
 
     if (error) {
       logger.warn(
@@ -342,9 +278,9 @@ async function fetchExistingRecords(
     }
 
     for (const record of data ?? []) {
-      if (record.di_id) {
-        existingMap.set(record.di_id, {
-          di_id: record.di_id,
+      if (record.origin_id) {
+        existingMap.set(record.origin_id, {
+          origin_id: record.origin_id,
           content_hash:
             record.data != null
               ? computeContentHash(record.data)
@@ -367,7 +303,7 @@ async function fetchExistingRecords(
 async function upsertItems<T extends DiItem>(
   supabase: SupabaseClient<Database>,
   items: T[],
-  tableName: "di_structures" | "di_services",
+  tableName: "structures" | "services",
   itemType: string,
   runId: string,
 ): Promise<{
@@ -532,20 +468,24 @@ export async function ingestCarifOrefItems<T extends DiItem>(
       sources: string[];
     } & Record<string, unknown>,
   ) => Promise<Page<T>>,
-  tableName: "di_structures" | "di_services",
+  tableName: "structures" | "services",
   itemType: string,
   options: DiIngestionOptions = {},
 ): Promise<DiIngestionResult> {
   const startTime = Date.now();
-  const type = tableName === "di_structures" ? "structures" : "services";
+  const type = tableName === "structures" ? "structures" : "services";
 
   logger.info(
-    { source: SOURCE_CARIF_OREF },
+    { source: CARIF_OREF_SOURCE },
     `=== Starting DI ${itemType} ingestion ===`,
   );
 
   // Create ingestion run record
-  const runId = await createIngestionRun(supabase, type, options);
+  const runId = await createIngestionRun(supabase, {
+    source: "di",
+    type,
+    options,
+  });
   logger.info({ runId }, "Created ingestion run");
 
   try {

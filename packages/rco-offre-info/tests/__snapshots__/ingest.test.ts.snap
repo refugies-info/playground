@@ -1,0 +1,1871 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ingestRcoActions > rolls back services when ingestion_records fails 1`] = `
+{
+  "calls": [
+    {
+      "filter": [
+        "origin_id",
+        [
+          "carif-oref--A-new",
+        ],
+      ],
+      "op": "select",
+      "table": "services_latest",
+    },
+    {
+      "filter": [
+        "data->>siret",
+        [
+          "00000000000002",
+        ],
+      ],
+      "op": "select",
+      "table": "structures_latest",
+    },
+    {
+      "filter": [
+        "origin_id",
+        [
+          "carif-oref--siret-00000000000002",
+        ],
+      ],
+      "op": "select",
+      "table": "structures_latest",
+    },
+    {
+      "op": "insert",
+      "rows": [
+        {
+          "content_hash": "1213eb923719e865f3bc231b7b598871b7cc531f",
+          "data": {
+            "contact": [],
+            "coordonnees": {
+              "adresse_ligne1": "1 rue Test",
+              "code_INSEE_commune": "68224",
+              "latitude": 47.757,
+              "longitude": 7.32342,
+            },
+            "id": "carif-oref--siret-00000000000002",
+            "nom": "Ecole Test",
+            "numero_activite": null,
+            "raison_sociale": "Etablissement scolaire",
+            "siret": "00000000000002",
+            "source": "carif-oref",
+          },
+          "ingestion_run_id": "run-1",
+          "origin": "RCO",
+          "raw_data": "{"id":"carif-oref--siret-00000000000002","nom":"Ecole Test","source":"carif-oref","siret":"00000000000002","raison_sociale":"Etablissement scolaire","numero_activite":null,"coordonnees":{"adresse_ligne1":"1 rue Test","code_INSEE_commune":"68224","latitude":47.757,"longitude":7.32342},"contact":[]}",
+        },
+      ],
+      "table": "structures",
+    },
+    {
+      "op": "insert",
+      "rows": [
+        {
+          "content_hash": "4ef4f25859517a8cb365db0a60817bb96ece5c4a",
+          "data": {
+            "acces_handicapes": null,
+            "blocs_competences": [],
+            "certifiante": null,
+            "certification": [],
+            "code_formacode": [],
+            "code_modalite_pedagogique": [],
+            "code_niveau_entree": null,
+            "code_niveau_sortie": null,
+            "code_nsf": [],
+            "code_perimetre_recrutement": null,
+            "code_public_vise": [
+              "81023",
+            ],
+            "code_rome": [],
+            "conditions_specifiques": null,
+            "contact_formation": [],
+            "contenu_formation": "Trois axes<br/>Langue",
+            "conventionnement": true,
+            "detail_conditions_prise_en_charge": null,
+            "duree_conventionnee": null,
+            "duree_cycle": null,
+            "duree_indicative": null,
+            "equipement": [],
+            "extra_contrat_apprentissage": null,
+            "extra_contrat_professionnalisation": null,
+            "financeur_info_public_vise": null,
+            "frais_restants": null,
+            "hebergement": null,
+            "id": "carif-oref--A-new",
+            "info_public_vise": null,
+            "intitule_formation": "Ouvrir l'école aux parents",
+            "modalites_alternance": null,
+            "modalites_enseignement": null,
+            "modalites_entrees_sorties": null,
+            "modalites_recrutement": null,
+            "niveau_entree_obligatoire": null,
+            "nom": "Ouvrir l'école aux parents",
+            "nombre_heures_centre": null,
+            "nombre_heures_entreprise": null,
+            "nombre_heures_total": 120,
+            "numero_action": "A-new",
+            "numero_formation": "01_AL27473",
+            "objectif_formation": "<p>Améliorer le français</p>",
+            "objectif_general_formation": null,
+            "organisme_financeur": [
+              {
+                "code_financeur": "19",
+              },
+            ],
+            "organisme_formateur": [],
+            "organisme_responsable": {
+              "contact": [],
+              "coordonnees": {
+                "adresse_ligne1": "1 rue Test",
+                "code_INSEE_commune": "68224",
+                "latitude": 47.757,
+                "longitude": 7.32342,
+              },
+              "nom": "Ecole Test",
+              "raison_sociale": "Etablissement scolaire",
+              "siret": "00000000000002",
+            },
+            "parcours_de_formation": null,
+            "positionnement": null,
+            "prise_en_charge_frais_possible": null,
+            "prix_horaire_TTC": null,
+            "prix_total_TTC": null,
+            "restauration": null,
+            "resultat_attendus": null,
+            "rythme_formation": null,
+            "session_reference_certification": [],
+            "sessions": [
+              {
+                "adresse_inscription": null,
+                "contact_session": [],
+                "cycles": [],
+                "date_debut": "2025-09-01",
+                "date_fin": "2027-01-31",
+                "datecrea": null,
+                "datemaj": "2026-02-13",
+                "etat_recrutement": 1,
+                "id": "id-A-new",
+                "lieu_formation": [
+                  {
+                    "departement": "68",
+                    "latitude": 47.757,
+                    "longitude": 7.32342,
+                    "ville": "Mulhouse",
+                  },
+                ],
+                "modalites_inscription": null,
+                "numero_session": "GE1954732",
+                "periode_inscription_debut": null,
+                "periode_inscription_fin": null,
+                "recrutements": [],
+                "url_session": null,
+              },
+            ],
+            "source": "carif-oref",
+            "structure_id": "carif-oref--siret-00000000000002",
+            "transport": null,
+            "url_action": null,
+            "url_formation": null,
+          },
+          "ingestion_run_id": "run-1",
+          "origin": "RCO",
+          "raw_data": "{"numero_formation":"01_AL27473","numero_action":"A-new","url_formation":null,"url_action":null,"intitule_formation":"Ouvrir l'école aux parents","objectif_formation":"<p>Améliorer le français</p>","contenu_formation":"Trois axes<br/>Langue","resultat_attendus":null,"parcours_de_formation":null,"objectif_general_formation":null,"positionnement":null,"certifiante":null,"conventionnement":true,"extra_contrat_apprentissage":null,"extra_contrat_professionnalisation":null,"modalites_enseignement":null,"modalites_entrees_sorties":null,"modalites_alternance":null,"modalites_recrutement":null,"conditions_specifiques":null,"detail_conditions_prise_en_charge":null,"niveau_entree_obligatoire":null,"prise_en_charge_frais_possible":null,"prix_horaire_TTC":null,"prix_total_TTC":null,"duree_indicative":null,"rythme_formation":null,"duree_conventionnee":null,"duree_cycle":null,"code_modalite_pedagogique":[],"frais_restants":null,"nombre_heures_centre":null,"nombre_heures_entreprise":null,"nombre_heures_total":120,"code_niveau_entree":null,"code_niveau_sortie":null,"info_public_vise":null,"code_public_vise":["81023"],"code_perimetre_recrutement":null,"organisme_responsable":{"siret":"00000000000002","nom":"Ecole Test","raison_sociale":"Etablissement scolaire","coordonnees":{"adresse_ligne1":"1 rue Test","code_INSEE_commune":"68224","latitude":47.757,"longitude":7.32342},"contact":[]},"organisme_formateur":[],"restauration":null,"hebergement":null,"transport":null,"acces_handicapes":null,"equipement":[],"contact_formation":[],"code_formacode":[],"code_rome":[],"code_nsf":[],"certification":[],"blocs_competences":[],"session_reference_certification":[],"organisme_financeur":[{"code_financeur":"19"}],"financeur_info_public_vise":null,"id":"carif-oref--A-new","nom":"Ouvrir l'école aux parents","source":"carif-oref","structure_id":"carif-oref--siret-00000000000002","sessions":[{"id":"id-A-new","numero_session":"GE1954732","url_session":null,"date_debut":"2025-09-01","date_fin":"2027-01-31","etat_recrutement":1,"periode_inscription_debut":null,"periode_inscription_fin":null,"modalites_inscription":null,"recrutements":[],"cycles":[],"contact_session":[],"lieu_formation":[{"ville":"Mulhouse","departement":"68","latitude":47.757,"longitude":7.32342}],"adresse_inscription":null,"datecrea":null,"datemaj":"2026-02-13"}]}",
+        },
+      ],
+      "table": "services",
+    },
+    {
+      "op": "insert",
+      "rows": [
+        {
+          "markdown": "---
+numero_formation: 01_AL27473
+numero_action: A-new
+url_formation: null
+url_action: null
+intitule_formation: Ouvrir l'école aux parents
+objectif_formation: <p>Améliorer le français</p>
+contenu_formation: Trois axes<br/>Langue
+resultat_attendus: null
+parcours_de_formation: null
+objectif_general_formation: null
+positionnement: null
+certifiante: null
+conventionnement: true
+extra_contrat_apprentissage: null
+extra_contrat_professionnalisation: null
+modalites_enseignement: null
+modalites_entrees_sorties: null
+modalites_alternance: null
+modalites_recrutement: null
+conditions_specifiques: null
+detail_conditions_prise_en_charge: null
+niveau_entree_obligatoire: null
+prise_en_charge_frais_possible: null
+prix_horaire_TTC: null
+prix_total_TTC: null
+duree_indicative: null
+rythme_formation: null
+duree_conventionnee: null
+duree_cycle: null
+code_modalite_pedagogique: []
+frais_restants: null
+nombre_heures_centre: null
+nombre_heures_entreprise: null
+nombre_heures_total: 120
+code_niveau_entree: null
+code_niveau_sortie: null
+info_public_vise: null
+code_public_vise:
+  - "81023"
+code_perimetre_recrutement: null
+organisme_responsable:
+  siret: "00000000000002"
+  nom: Ecole Test
+  raison_sociale: Etablissement scolaire
+  coordonnees: &a1
+    adresse_ligne1: 1 rue Test
+    code_INSEE_commune: "68224"
+    latitude: 47.757
+    longitude: 7.32342
+  contact: &a2 []
+organisme_formateur: []
+restauration: null
+hebergement: null
+transport: null
+acces_handicapes: null
+equipement: []
+contact_formation: []
+code_formacode: []
+code_rome: []
+code_nsf: []
+certification: []
+blocs_competences: []
+session_reference_certification: []
+organisme_financeur:
+  - code_financeur: "19"
+financeur_info_public_vise: null
+id: carif-oref--A-new
+nom: Ouvrir l'école aux parents
+source: carif-oref
+structure_id: carif-oref--siret-00000000000002
+sessions:
+  - id: id-A-new
+    numero_session: GE1954732
+    url_session: null
+    date_debut: 2025-09-01
+    date_fin: 2027-01-31
+    etat_recrutement: 1
+    periode_inscription_debut: null
+    periode_inscription_fin: null
+    modalites_inscription: null
+    recrutements: []
+    cycles: []
+    contact_session: []
+    lieu_formation:
+      - ville: Mulhouse
+        departement: "68"
+        latitude: 47.757
+        longitude: 7.32342
+    adresse_inscription: null
+    datecrea: null
+    datemaj: 2026-02-13
+structure:
+  id: carif-oref--siret-00000000000002
+  nom: Ecole Test
+  source: carif-oref
+  siret: "00000000000002"
+  raison_sociale: Etablissement scolaire
+  numero_activite: null
+  coordonnees: *a1
+  contact: *a2
+---
+
+# Ouvrir l'école aux parents
+
+## Objectif
+
+Améliorer le français
+
+## Contenu
+
+Trois axes
+Langue",
+          "metadata": {
+            "acces_handicapes": null,
+            "blocs_competences": [],
+            "certifiante": null,
+            "certification": [],
+            "code_formacode": [],
+            "code_modalite_pedagogique": [],
+            "code_niveau_entree": null,
+            "code_niveau_sortie": null,
+            "code_nsf": [],
+            "code_perimetre_recrutement": null,
+            "code_public_vise": [
+              "81023",
+            ],
+            "code_rome": [],
+            "conditions_specifiques": null,
+            "contact_formation": [],
+            "contenu_formation": "Trois axes<br/>Langue",
+            "conventionnement": true,
+            "detail_conditions_prise_en_charge": null,
+            "duree_conventionnee": null,
+            "duree_cycle": null,
+            "duree_indicative": null,
+            "equipement": [],
+            "extra_contrat_apprentissage": null,
+            "extra_contrat_professionnalisation": null,
+            "financeur_info_public_vise": null,
+            "frais_restants": null,
+            "hebergement": null,
+            "id": "carif-oref--A-new",
+            "info_public_vise": null,
+            "intitule_formation": "Ouvrir l'école aux parents",
+            "modalites_alternance": null,
+            "modalites_enseignement": null,
+            "modalites_entrees_sorties": null,
+            "modalites_recrutement": null,
+            "niveau_entree_obligatoire": null,
+            "nom": "Ouvrir l'école aux parents",
+            "nombre_heures_centre": null,
+            "nombre_heures_entreprise": null,
+            "nombre_heures_total": 120,
+            "numero_action": "A-new",
+            "numero_formation": "01_AL27473",
+            "objectif_formation": "<p>Améliorer le français</p>",
+            "objectif_general_formation": null,
+            "organisme_financeur": [
+              {
+                "code_financeur": "19",
+              },
+            ],
+            "organisme_formateur": [],
+            "organisme_responsable": {
+              "contact": [],
+              "coordonnees": {
+                "adresse_ligne1": "1 rue Test",
+                "code_INSEE_commune": "68224",
+                "latitude": 47.757,
+                "longitude": 7.32342,
+              },
+              "nom": "Ecole Test",
+              "raison_sociale": "Etablissement scolaire",
+              "siret": "00000000000002",
+            },
+            "parcours_de_formation": null,
+            "positionnement": null,
+            "prise_en_charge_frais_possible": null,
+            "prix_horaire_TTC": null,
+            "prix_total_TTC": null,
+            "restauration": null,
+            "resultat_attendus": null,
+            "rythme_formation": null,
+            "session_reference_certification": [],
+            "sessions": [
+              {
+                "adresse_inscription": null,
+                "contact_session": [],
+                "cycles": [],
+                "date_debut": "2025-09-01",
+                "date_fin": "2027-01-31",
+                "datecrea": null,
+                "datemaj": "2026-02-13",
+                "etat_recrutement": 1,
+                "id": "id-A-new",
+                "lieu_formation": [
+                  {
+                    "departement": "68",
+                    "latitude": 47.757,
+                    "longitude": 7.32342,
+                    "ville": "Mulhouse",
+                  },
+                ],
+                "modalites_inscription": null,
+                "numero_session": "GE1954732",
+                "periode_inscription_debut": null,
+                "periode_inscription_fin": null,
+                "recrutements": [],
+                "url_session": null,
+              },
+            ],
+            "source": "carif-oref",
+            "structure": {
+              "contact": [],
+              "coordonnees": {
+                "adresse_ligne1": "1 rue Test",
+                "code_INSEE_commune": "68224",
+                "latitude": 47.757,
+                "longitude": 7.32342,
+              },
+              "id": "carif-oref--siret-00000000000002",
+              "nom": "Ecole Test",
+              "numero_activite": null,
+              "raison_sociale": "Etablissement scolaire",
+              "siret": "00000000000002",
+              "source": "carif-oref",
+            },
+            "structure_id": "carif-oref--siret-00000000000002",
+            "transport": null,
+            "url_action": null,
+            "url_formation": null,
+          },
+          "service_id": "services-uuid-2",
+          "structure_id": "structures-uuid-1",
+        },
+      ],
+      "table": "ingestion_records",
+    },
+    {
+      "filter": [
+        "id",
+        [
+          "services-uuid-2",
+        ],
+      ],
+      "op": "delete",
+      "table": "services",
+    },
+  ],
+  "result": {
+    "changes": {
+      "baseline": 0,
+      "content": 0,
+      "new": 1,
+      "sessions_only": 0,
+      "unchanged": 0,
+    },
+    "errors": [
+      {
+        "error": "ingestion_records insert failed: ingestion_records down",
+        "numeroAction": "A-new",
+      },
+    ],
+    "ingestionRecordsCreated": 0,
+    "processed": 1,
+    "structuresWritten": 1,
+  },
+}
+`;
+
+exports[`ingestRcoActions > skips the services insert when nothing changed 1`] = `
+{
+  "calls": [
+    {
+      "filter": [
+        "origin_id",
+        [
+          "carif-oref--A-unchanged",
+        ],
+      ],
+      "op": "select",
+      "table": "services_latest",
+    },
+    {
+      "filter": [
+        "data->>siret",
+        [
+          "00000000000001",
+        ],
+      ],
+      "op": "select",
+      "table": "structures_latest",
+    },
+    {
+      "filter": [
+        "origin_id",
+        [
+          "carif-oref--siret-00000000000001",
+        ],
+      ],
+      "op": "select",
+      "table": "structures_latest",
+    },
+  ],
+  "result": {
+    "changes": {
+      "baseline": 0,
+      "content": 0,
+      "new": 0,
+      "sessions_only": 0,
+      "unchanged": 1,
+    },
+    "errors": [],
+    "ingestionRecordsCreated": 0,
+    "processed": 1,
+    "structuresWritten": 0,
+  },
+}
+`;
+
+exports[`ingestRcoActions > writes every change kind 1`] = `
+{
+  "calls": [
+    {
+      "filter": [
+        "origin_id",
+        [
+          "carif-oref--A-new",
+          "carif-oref--A-unchanged",
+          "carif-oref--A-baseline",
+          "carif-oref--A-sessions",
+          "carif-oref--A-content",
+          "carif-oref--A-nosiret",
+          "carif-oref--A-notconv",
+        ],
+      ],
+      "op": "select",
+      "table": "services_latest",
+    },
+    {
+      "filter": [
+        "data->>siret",
+        [
+          "00000000000002",
+          "00000000000001",
+        ],
+      ],
+      "op": "select",
+      "table": "structures_latest",
+    },
+    {
+      "filter": [
+        "origin_id",
+        [
+          "carif-oref--siret-00000000000002",
+          "carif-oref--siret-00000000000001",
+        ],
+      ],
+      "op": "select",
+      "table": "structures_latest",
+    },
+    {
+      "op": "insert",
+      "rows": [
+        {
+          "content_hash": "1213eb923719e865f3bc231b7b598871b7cc531f",
+          "data": {
+            "contact": [],
+            "coordonnees": {
+              "adresse_ligne1": "1 rue Test",
+              "code_INSEE_commune": "68224",
+              "latitude": 47.757,
+              "longitude": 7.32342,
+            },
+            "id": "carif-oref--siret-00000000000002",
+            "nom": "Ecole Test",
+            "numero_activite": null,
+            "raison_sociale": "Etablissement scolaire",
+            "siret": "00000000000002",
+            "source": "carif-oref",
+          },
+          "ingestion_run_id": "run-1",
+          "origin": "RCO",
+          "raw_data": "{"id":"carif-oref--siret-00000000000002","nom":"Ecole Test","source":"carif-oref","siret":"00000000000002","raison_sociale":"Etablissement scolaire","numero_activite":null,"coordonnees":{"adresse_ligne1":"1 rue Test","code_INSEE_commune":"68224","latitude":47.757,"longitude":7.32342},"contact":[]}",
+        },
+      ],
+      "table": "structures",
+    },
+    {
+      "op": "insert",
+      "rows": [
+        {
+          "content_hash": "4ef4f25859517a8cb365db0a60817bb96ece5c4a",
+          "data": {
+            "acces_handicapes": null,
+            "blocs_competences": [],
+            "certifiante": null,
+            "certification": [],
+            "code_formacode": [],
+            "code_modalite_pedagogique": [],
+            "code_niveau_entree": null,
+            "code_niveau_sortie": null,
+            "code_nsf": [],
+            "code_perimetre_recrutement": null,
+            "code_public_vise": [
+              "81023",
+            ],
+            "code_rome": [],
+            "conditions_specifiques": null,
+            "contact_formation": [],
+            "contenu_formation": "Trois axes<br/>Langue",
+            "conventionnement": true,
+            "detail_conditions_prise_en_charge": null,
+            "duree_conventionnee": null,
+            "duree_cycle": null,
+            "duree_indicative": null,
+            "equipement": [],
+            "extra_contrat_apprentissage": null,
+            "extra_contrat_professionnalisation": null,
+            "financeur_info_public_vise": null,
+            "frais_restants": null,
+            "hebergement": null,
+            "id": "carif-oref--A-new",
+            "info_public_vise": null,
+            "intitule_formation": "Ouvrir l'école aux parents",
+            "modalites_alternance": null,
+            "modalites_enseignement": null,
+            "modalites_entrees_sorties": null,
+            "modalites_recrutement": null,
+            "niveau_entree_obligatoire": null,
+            "nom": "Ouvrir l'école aux parents",
+            "nombre_heures_centre": null,
+            "nombre_heures_entreprise": null,
+            "nombre_heures_total": 120,
+            "numero_action": "A-new",
+            "numero_formation": "01_AL27473",
+            "objectif_formation": "<p>Améliorer le français</p>",
+            "objectif_general_formation": null,
+            "organisme_financeur": [
+              {
+                "code_financeur": "19",
+              },
+            ],
+            "organisme_formateur": [],
+            "organisme_responsable": {
+              "contact": [],
+              "coordonnees": {
+                "adresse_ligne1": "1 rue Test",
+                "code_INSEE_commune": "68224",
+                "latitude": 47.757,
+                "longitude": 7.32342,
+              },
+              "nom": "Ecole Test",
+              "raison_sociale": "Etablissement scolaire",
+              "siret": "00000000000002",
+            },
+            "parcours_de_formation": null,
+            "positionnement": null,
+            "prise_en_charge_frais_possible": null,
+            "prix_horaire_TTC": null,
+            "prix_total_TTC": null,
+            "restauration": null,
+            "resultat_attendus": null,
+            "rythme_formation": null,
+            "session_reference_certification": [],
+            "sessions": [
+              {
+                "adresse_inscription": null,
+                "contact_session": [],
+                "cycles": [],
+                "date_debut": "2025-09-01",
+                "date_fin": "2027-01-31",
+                "datecrea": null,
+                "datemaj": "2026-02-13",
+                "etat_recrutement": 1,
+                "id": "id-A-new",
+                "lieu_formation": [
+                  {
+                    "departement": "68",
+                    "latitude": 47.757,
+                    "longitude": 7.32342,
+                    "ville": "Mulhouse",
+                  },
+                ],
+                "modalites_inscription": null,
+                "numero_session": "GE1954732",
+                "periode_inscription_debut": null,
+                "periode_inscription_fin": null,
+                "recrutements": [],
+                "url_session": null,
+              },
+            ],
+            "source": "carif-oref",
+            "structure_id": "carif-oref--siret-00000000000002",
+            "transport": null,
+            "url_action": null,
+            "url_formation": null,
+          },
+          "ingestion_run_id": "run-1",
+          "origin": "RCO",
+          "raw_data": "{"numero_formation":"01_AL27473","numero_action":"A-new","url_formation":null,"url_action":null,"intitule_formation":"Ouvrir l'école aux parents","objectif_formation":"<p>Améliorer le français</p>","contenu_formation":"Trois axes<br/>Langue","resultat_attendus":null,"parcours_de_formation":null,"objectif_general_formation":null,"positionnement":null,"certifiante":null,"conventionnement":true,"extra_contrat_apprentissage":null,"extra_contrat_professionnalisation":null,"modalites_enseignement":null,"modalites_entrees_sorties":null,"modalites_alternance":null,"modalites_recrutement":null,"conditions_specifiques":null,"detail_conditions_prise_en_charge":null,"niveau_entree_obligatoire":null,"prise_en_charge_frais_possible":null,"prix_horaire_TTC":null,"prix_total_TTC":null,"duree_indicative":null,"rythme_formation":null,"duree_conventionnee":null,"duree_cycle":null,"code_modalite_pedagogique":[],"frais_restants":null,"nombre_heures_centre":null,"nombre_heures_entreprise":null,"nombre_heures_total":120,"code_niveau_entree":null,"code_niveau_sortie":null,"info_public_vise":null,"code_public_vise":["81023"],"code_perimetre_recrutement":null,"organisme_responsable":{"siret":"00000000000002","nom":"Ecole Test","raison_sociale":"Etablissement scolaire","coordonnees":{"adresse_ligne1":"1 rue Test","code_INSEE_commune":"68224","latitude":47.757,"longitude":7.32342},"contact":[]},"organisme_formateur":[],"restauration":null,"hebergement":null,"transport":null,"acces_handicapes":null,"equipement":[],"contact_formation":[],"code_formacode":[],"code_rome":[],"code_nsf":[],"certification":[],"blocs_competences":[],"session_reference_certification":[],"organisme_financeur":[{"code_financeur":"19"}],"financeur_info_public_vise":null,"id":"carif-oref--A-new","nom":"Ouvrir l'école aux parents","source":"carif-oref","structure_id":"carif-oref--siret-00000000000002","sessions":[{"id":"id-A-new","numero_session":"GE1954732","url_session":null,"date_debut":"2025-09-01","date_fin":"2027-01-31","etat_recrutement":1,"periode_inscription_debut":null,"periode_inscription_fin":null,"modalites_inscription":null,"recrutements":[],"cycles":[],"contact_session":[],"lieu_formation":[{"ville":"Mulhouse","departement":"68","latitude":47.757,"longitude":7.32342}],"adresse_inscription":null,"datecrea":null,"datemaj":"2026-02-13"}]}",
+        },
+        {
+          "content_hash": "9676ce518ac18e2cd37b3607c18328dfcdea716c",
+          "data": {
+            "acces_handicapes": null,
+            "blocs_competences": [],
+            "certifiante": null,
+            "certification": [],
+            "code_formacode": [],
+            "code_modalite_pedagogique": [],
+            "code_niveau_entree": null,
+            "code_niveau_sortie": null,
+            "code_nsf": [],
+            "code_perimetre_recrutement": null,
+            "code_public_vise": [
+              "81023",
+            ],
+            "code_rome": [],
+            "conditions_specifiques": null,
+            "contact_formation": [],
+            "contenu_formation": "Trois axes<br/>Langue",
+            "conventionnement": true,
+            "detail_conditions_prise_en_charge": null,
+            "duree_conventionnee": null,
+            "duree_cycle": null,
+            "duree_indicative": null,
+            "equipement": [],
+            "extra_contrat_apprentissage": null,
+            "extra_contrat_professionnalisation": null,
+            "financeur_info_public_vise": null,
+            "frais_restants": null,
+            "hebergement": null,
+            "id": "carif-oref--A-baseline",
+            "info_public_vise": null,
+            "intitule_formation": "Ouvrir l'école aux parents",
+            "modalites_alternance": null,
+            "modalites_enseignement": null,
+            "modalites_entrees_sorties": null,
+            "modalites_recrutement": null,
+            "niveau_entree_obligatoire": null,
+            "nom": "Ouvrir l'école aux parents",
+            "nombre_heures_centre": null,
+            "nombre_heures_entreprise": null,
+            "nombre_heures_total": 120,
+            "numero_action": "A-baseline",
+            "numero_formation": "01_AL27473",
+            "objectif_formation": "<p>Améliorer le français</p>",
+            "objectif_general_formation": null,
+            "organisme_financeur": [
+              {
+                "code_financeur": "19",
+              },
+            ],
+            "organisme_formateur": [],
+            "organisme_responsable": {
+              "contact": [],
+              "coordonnees": {
+                "adresse_ligne1": "1 rue Test",
+                "code_INSEE_commune": "68224",
+                "latitude": 47.757,
+                "longitude": 7.32342,
+              },
+              "nom": "Ecole Test",
+              "raison_sociale": "Etablissement scolaire",
+              "siret": "00000000000001",
+            },
+            "parcours_de_formation": null,
+            "positionnement": null,
+            "prise_en_charge_frais_possible": null,
+            "prix_horaire_TTC": null,
+            "prix_total_TTC": null,
+            "restauration": null,
+            "resultat_attendus": null,
+            "rythme_formation": null,
+            "session_reference_certification": [],
+            "sessions": [
+              {
+                "adresse_inscription": null,
+                "contact_session": [],
+                "cycles": [],
+                "date_debut": "2025-09-01",
+                "date_fin": "2027-01-31",
+                "datecrea": null,
+                "datemaj": "2026-02-13",
+                "etat_recrutement": 1,
+                "id": "id-A-baseline",
+                "lieu_formation": [
+                  {
+                    "departement": "68",
+                    "latitude": 47.757,
+                    "longitude": 7.32342,
+                    "ville": "Mulhouse",
+                  },
+                ],
+                "modalites_inscription": null,
+                "numero_session": "GE1954732",
+                "periode_inscription_debut": null,
+                "periode_inscription_fin": null,
+                "recrutements": [],
+                "url_session": null,
+              },
+            ],
+            "source": "carif-oref",
+            "structure_id": "carif-oref--siret-00000000000001",
+            "transport": null,
+            "url_action": null,
+            "url_formation": null,
+          },
+          "ingestion_run_id": "run-1",
+          "origin": "RCO",
+          "raw_data": "{"numero_formation":"01_AL27473","numero_action":"A-baseline","url_formation":null,"url_action":null,"intitule_formation":"Ouvrir l'école aux parents","objectif_formation":"<p>Améliorer le français</p>","contenu_formation":"Trois axes<br/>Langue","resultat_attendus":null,"parcours_de_formation":null,"objectif_general_formation":null,"positionnement":null,"certifiante":null,"conventionnement":true,"extra_contrat_apprentissage":null,"extra_contrat_professionnalisation":null,"modalites_enseignement":null,"modalites_entrees_sorties":null,"modalites_alternance":null,"modalites_recrutement":null,"conditions_specifiques":null,"detail_conditions_prise_en_charge":null,"niveau_entree_obligatoire":null,"prise_en_charge_frais_possible":null,"prix_horaire_TTC":null,"prix_total_TTC":null,"duree_indicative":null,"rythme_formation":null,"duree_conventionnee":null,"duree_cycle":null,"code_modalite_pedagogique":[],"frais_restants":null,"nombre_heures_centre":null,"nombre_heures_entreprise":null,"nombre_heures_total":120,"code_niveau_entree":null,"code_niveau_sortie":null,"info_public_vise":null,"code_public_vise":["81023"],"code_perimetre_recrutement":null,"organisme_responsable":{"siret":"00000000000001","nom":"Ecole Test","raison_sociale":"Etablissement scolaire","coordonnees":{"adresse_ligne1":"1 rue Test","code_INSEE_commune":"68224","latitude":47.757,"longitude":7.32342},"contact":[]},"organisme_formateur":[],"restauration":null,"hebergement":null,"transport":null,"acces_handicapes":null,"equipement":[],"contact_formation":[],"code_formacode":[],"code_rome":[],"code_nsf":[],"certification":[],"blocs_competences":[],"session_reference_certification":[],"organisme_financeur":[{"code_financeur":"19"}],"financeur_info_public_vise":null,"id":"carif-oref--A-baseline","nom":"Ouvrir l'école aux parents","source":"carif-oref","structure_id":"carif-oref--siret-00000000000001","sessions":[{"id":"id-A-baseline","numero_session":"GE1954732","url_session":null,"date_debut":"2025-09-01","date_fin":"2027-01-31","etat_recrutement":1,"periode_inscription_debut":null,"periode_inscription_fin":null,"modalites_inscription":null,"recrutements":[],"cycles":[],"contact_session":[],"lieu_formation":[{"ville":"Mulhouse","departement":"68","latitude":47.757,"longitude":7.32342}],"adresse_inscription":null,"datecrea":null,"datemaj":"2026-02-13"}]}",
+        },
+        {
+          "content_hash": "24acfdaffabc5b52c0aeaaac91570a7d2984c978",
+          "data": {
+            "acces_handicapes": null,
+            "blocs_competences": [],
+            "certifiante": null,
+            "certification": [],
+            "code_formacode": [],
+            "code_modalite_pedagogique": [],
+            "code_niveau_entree": null,
+            "code_niveau_sortie": null,
+            "code_nsf": [],
+            "code_perimetre_recrutement": null,
+            "code_public_vise": [
+              "81023",
+            ],
+            "code_rome": [],
+            "conditions_specifiques": null,
+            "contact_formation": [],
+            "contenu_formation": "Trois axes<br/>Langue",
+            "conventionnement": true,
+            "detail_conditions_prise_en_charge": null,
+            "duree_conventionnee": null,
+            "duree_cycle": null,
+            "duree_indicative": null,
+            "equipement": [],
+            "extra_contrat_apprentissage": null,
+            "extra_contrat_professionnalisation": null,
+            "financeur_info_public_vise": null,
+            "frais_restants": null,
+            "hebergement": null,
+            "id": "carif-oref--A-sessions",
+            "info_public_vise": null,
+            "intitule_formation": "Ouvrir l'école aux parents",
+            "modalites_alternance": null,
+            "modalites_enseignement": null,
+            "modalites_entrees_sorties": null,
+            "modalites_recrutement": null,
+            "niveau_entree_obligatoire": null,
+            "nom": "Ouvrir l'école aux parents",
+            "nombre_heures_centre": null,
+            "nombre_heures_entreprise": null,
+            "nombre_heures_total": 120,
+            "numero_action": "A-sessions",
+            "numero_formation": "01_AL27473",
+            "objectif_formation": "<p>Améliorer le français</p>",
+            "objectif_general_formation": null,
+            "organisme_financeur": [
+              {
+                "code_financeur": "19",
+              },
+            ],
+            "organisme_formateur": [],
+            "organisme_responsable": {
+              "contact": [],
+              "coordonnees": {
+                "adresse_ligne1": "1 rue Test",
+                "code_INSEE_commune": "68224",
+                "latitude": 47.757,
+                "longitude": 7.32342,
+              },
+              "nom": "Ecole Test",
+              "raison_sociale": "Etablissement scolaire",
+              "siret": "00000000000001",
+            },
+            "parcours_de_formation": null,
+            "positionnement": null,
+            "prise_en_charge_frais_possible": null,
+            "prix_horaire_TTC": null,
+            "prix_total_TTC": null,
+            "restauration": null,
+            "resultat_attendus": null,
+            "rythme_formation": null,
+            "session_reference_certification": [],
+            "sessions": [
+              {
+                "adresse_inscription": null,
+                "contact_session": [],
+                "cycles": [],
+                "date_debut": "2025-09-01",
+                "date_fin": "2027-01-31",
+                "datecrea": null,
+                "datemaj": "2026-02-13",
+                "etat_recrutement": 1,
+                "id": "id-A-sessions",
+                "lieu_formation": [
+                  {
+                    "departement": "68",
+                    "latitude": 47.757,
+                    "longitude": 7.32342,
+                    "ville": "Mulhouse",
+                  },
+                ],
+                "modalites_inscription": null,
+                "numero_session": "GE1954732",
+                "periode_inscription_debut": null,
+                "periode_inscription_fin": null,
+                "recrutements": [],
+                "url_session": null,
+              },
+            ],
+            "source": "carif-oref",
+            "structure_id": "carif-oref--siret-00000000000001",
+            "transport": null,
+            "url_action": null,
+            "url_formation": null,
+          },
+          "ingestion_run_id": "run-1",
+          "origin": "RCO",
+          "raw_data": "{"numero_formation":"01_AL27473","numero_action":"A-sessions","url_formation":null,"url_action":null,"intitule_formation":"Ouvrir l'école aux parents","objectif_formation":"<p>Améliorer le français</p>","contenu_formation":"Trois axes<br/>Langue","resultat_attendus":null,"parcours_de_formation":null,"objectif_general_formation":null,"positionnement":null,"certifiante":null,"conventionnement":true,"extra_contrat_apprentissage":null,"extra_contrat_professionnalisation":null,"modalites_enseignement":null,"modalites_entrees_sorties":null,"modalites_alternance":null,"modalites_recrutement":null,"conditions_specifiques":null,"detail_conditions_prise_en_charge":null,"niveau_entree_obligatoire":null,"prise_en_charge_frais_possible":null,"prix_horaire_TTC":null,"prix_total_TTC":null,"duree_indicative":null,"rythme_formation":null,"duree_conventionnee":null,"duree_cycle":null,"code_modalite_pedagogique":[],"frais_restants":null,"nombre_heures_centre":null,"nombre_heures_entreprise":null,"nombre_heures_total":120,"code_niveau_entree":null,"code_niveau_sortie":null,"info_public_vise":null,"code_public_vise":["81023"],"code_perimetre_recrutement":null,"organisme_responsable":{"siret":"00000000000001","nom":"Ecole Test","raison_sociale":"Etablissement scolaire","coordonnees":{"adresse_ligne1":"1 rue Test","code_INSEE_commune":"68224","latitude":47.757,"longitude":7.32342},"contact":[]},"organisme_formateur":[],"restauration":null,"hebergement":null,"transport":null,"acces_handicapes":null,"equipement":[],"contact_formation":[],"code_formacode":[],"code_rome":[],"code_nsf":[],"certification":[],"blocs_competences":[],"session_reference_certification":[],"organisme_financeur":[{"code_financeur":"19"}],"financeur_info_public_vise":null,"id":"carif-oref--A-sessions","nom":"Ouvrir l'école aux parents","source":"carif-oref","structure_id":"carif-oref--siret-00000000000001","sessions":[{"id":"id-A-sessions","numero_session":"GE1954732","url_session":null,"date_debut":"2025-09-01","date_fin":"2027-01-31","etat_recrutement":1,"periode_inscription_debut":null,"periode_inscription_fin":null,"modalites_inscription":null,"recrutements":[],"cycles":[],"contact_session":[],"lieu_formation":[{"ville":"Mulhouse","departement":"68","latitude":47.757,"longitude":7.32342}],"adresse_inscription":null,"datecrea":null,"datemaj":"2026-02-13"}]}",
+        },
+        {
+          "content_hash": "b7f3874148bfdd8c5e2f4e0a9161de4a2601da6d",
+          "data": {
+            "acces_handicapes": null,
+            "blocs_competences": [],
+            "certifiante": null,
+            "certification": [],
+            "code_formacode": [],
+            "code_modalite_pedagogique": [],
+            "code_niveau_entree": null,
+            "code_niveau_sortie": null,
+            "code_nsf": [],
+            "code_perimetre_recrutement": null,
+            "code_public_vise": [
+              "81023",
+            ],
+            "code_rome": [],
+            "conditions_specifiques": null,
+            "contact_formation": [],
+            "contenu_formation": "Trois axes<br/>Langue",
+            "conventionnement": true,
+            "detail_conditions_prise_en_charge": null,
+            "duree_conventionnee": null,
+            "duree_cycle": null,
+            "duree_indicative": null,
+            "equipement": [],
+            "extra_contrat_apprentissage": null,
+            "extra_contrat_professionnalisation": null,
+            "financeur_info_public_vise": null,
+            "frais_restants": null,
+            "hebergement": null,
+            "id": "carif-oref--A-content",
+            "info_public_vise": null,
+            "intitule_formation": "Ouvrir l'école aux parents",
+            "modalites_alternance": null,
+            "modalites_enseignement": null,
+            "modalites_entrees_sorties": null,
+            "modalites_recrutement": null,
+            "niveau_entree_obligatoire": null,
+            "nom": "Ouvrir l'école aux parents",
+            "nombre_heures_centre": null,
+            "nombre_heures_entreprise": null,
+            "nombre_heures_total": 120,
+            "numero_action": "A-content",
+            "numero_formation": "01_AL27473",
+            "objectif_formation": "<p>Améliorer le français</p>",
+            "objectif_general_formation": null,
+            "organisme_financeur": [
+              {
+                "code_financeur": "19",
+              },
+            ],
+            "organisme_formateur": [],
+            "organisme_responsable": {
+              "contact": [],
+              "coordonnees": {
+                "adresse_ligne1": "1 rue Test",
+                "code_INSEE_commune": "68224",
+                "latitude": 47.757,
+                "longitude": 7.32342,
+              },
+              "nom": "Ecole Test",
+              "raison_sociale": "Etablissement scolaire",
+              "siret": "00000000000001",
+            },
+            "parcours_de_formation": null,
+            "positionnement": null,
+            "prise_en_charge_frais_possible": null,
+            "prix_horaire_TTC": null,
+            "prix_total_TTC": null,
+            "restauration": null,
+            "resultat_attendus": null,
+            "rythme_formation": null,
+            "session_reference_certification": [],
+            "sessions": [
+              {
+                "adresse_inscription": null,
+                "contact_session": [],
+                "cycles": [],
+                "date_debut": "2025-09-01",
+                "date_fin": "2027-01-31",
+                "datecrea": null,
+                "datemaj": "2026-02-13",
+                "etat_recrutement": 1,
+                "id": "id-A-content",
+                "lieu_formation": [
+                  {
+                    "departement": "68",
+                    "latitude": 47.757,
+                    "longitude": 7.32342,
+                    "ville": "Mulhouse",
+                  },
+                ],
+                "modalites_inscription": null,
+                "numero_session": "GE1954732",
+                "periode_inscription_debut": null,
+                "periode_inscription_fin": null,
+                "recrutements": [],
+                "url_session": null,
+              },
+            ],
+            "source": "carif-oref",
+            "structure_id": "carif-oref--siret-00000000000001",
+            "transport": null,
+            "url_action": null,
+            "url_formation": null,
+          },
+          "ingestion_run_id": "run-1",
+          "origin": "RCO",
+          "raw_data": "{"numero_formation":"01_AL27473","numero_action":"A-content","url_formation":null,"url_action":null,"intitule_formation":"Ouvrir l'école aux parents","objectif_formation":"<p>Améliorer le français</p>","contenu_formation":"Trois axes<br/>Langue","resultat_attendus":null,"parcours_de_formation":null,"objectif_general_formation":null,"positionnement":null,"certifiante":null,"conventionnement":true,"extra_contrat_apprentissage":null,"extra_contrat_professionnalisation":null,"modalites_enseignement":null,"modalites_entrees_sorties":null,"modalites_alternance":null,"modalites_recrutement":null,"conditions_specifiques":null,"detail_conditions_prise_en_charge":null,"niveau_entree_obligatoire":null,"prise_en_charge_frais_possible":null,"prix_horaire_TTC":null,"prix_total_TTC":null,"duree_indicative":null,"rythme_formation":null,"duree_conventionnee":null,"duree_cycle":null,"code_modalite_pedagogique":[],"frais_restants":null,"nombre_heures_centre":null,"nombre_heures_entreprise":null,"nombre_heures_total":120,"code_niveau_entree":null,"code_niveau_sortie":null,"info_public_vise":null,"code_public_vise":["81023"],"code_perimetre_recrutement":null,"organisme_responsable":{"siret":"00000000000001","nom":"Ecole Test","raison_sociale":"Etablissement scolaire","coordonnees":{"adresse_ligne1":"1 rue Test","code_INSEE_commune":"68224","latitude":47.757,"longitude":7.32342},"contact":[]},"organisme_formateur":[],"restauration":null,"hebergement":null,"transport":null,"acces_handicapes":null,"equipement":[],"contact_formation":[],"code_formacode":[],"code_rome":[],"code_nsf":[],"certification":[],"blocs_competences":[],"session_reference_certification":[],"organisme_financeur":[{"code_financeur":"19"}],"financeur_info_public_vise":null,"id":"carif-oref--A-content","nom":"Ouvrir l'école aux parents","source":"carif-oref","structure_id":"carif-oref--siret-00000000000001","sessions":[{"id":"id-A-content","numero_session":"GE1954732","url_session":null,"date_debut":"2025-09-01","date_fin":"2027-01-31","etat_recrutement":1,"periode_inscription_debut":null,"periode_inscription_fin":null,"modalites_inscription":null,"recrutements":[],"cycles":[],"contact_session":[],"lieu_formation":[{"ville":"Mulhouse","departement":"68","latitude":47.757,"longitude":7.32342}],"adresse_inscription":null,"datecrea":null,"datemaj":"2026-02-13"}]}",
+        },
+        {
+          "content_hash": "be20bcc31fb3b8cb9b2a77f64face191ade12fe6",
+          "data": {
+            "acces_handicapes": null,
+            "blocs_competences": [],
+            "certifiante": null,
+            "certification": [],
+            "code_formacode": [],
+            "code_modalite_pedagogique": [],
+            "code_niveau_entree": null,
+            "code_niveau_sortie": null,
+            "code_nsf": [],
+            "code_perimetre_recrutement": null,
+            "code_public_vise": [
+              "81023",
+            ],
+            "code_rome": [],
+            "conditions_specifiques": null,
+            "contact_formation": [],
+            "contenu_formation": "Trois axes<br/>Langue",
+            "conventionnement": false,
+            "detail_conditions_prise_en_charge": null,
+            "duree_conventionnee": null,
+            "duree_cycle": null,
+            "duree_indicative": null,
+            "equipement": [],
+            "extra_contrat_apprentissage": null,
+            "extra_contrat_professionnalisation": null,
+            "financeur_info_public_vise": null,
+            "frais_restants": null,
+            "hebergement": null,
+            "id": "carif-oref--A-notconv",
+            "info_public_vise": null,
+            "intitule_formation": "Ouvrir l'école aux parents",
+            "modalites_alternance": null,
+            "modalites_enseignement": null,
+            "modalites_entrees_sorties": null,
+            "modalites_recrutement": null,
+            "niveau_entree_obligatoire": null,
+            "nom": "Ouvrir l'école aux parents",
+            "nombre_heures_centre": null,
+            "nombre_heures_entreprise": null,
+            "nombre_heures_total": 120,
+            "numero_action": "A-notconv",
+            "numero_formation": "01_AL27473",
+            "objectif_formation": "<p>Améliorer le français</p>",
+            "objectif_general_formation": null,
+            "organisme_financeur": [
+              {
+                "code_financeur": "19",
+              },
+            ],
+            "organisme_formateur": [],
+            "organisme_responsable": {
+              "contact": [],
+              "coordonnees": {
+                "adresse_ligne1": "1 rue Test",
+                "code_INSEE_commune": "68224",
+                "latitude": 47.757,
+                "longitude": 7.32342,
+              },
+              "nom": "Ecole Test",
+              "raison_sociale": "Etablissement scolaire",
+              "siret": "00000000000001",
+            },
+            "parcours_de_formation": null,
+            "positionnement": null,
+            "prise_en_charge_frais_possible": null,
+            "prix_horaire_TTC": null,
+            "prix_total_TTC": null,
+            "restauration": null,
+            "resultat_attendus": null,
+            "rythme_formation": null,
+            "session_reference_certification": [],
+            "sessions": [
+              {
+                "adresse_inscription": null,
+                "contact_session": [],
+                "cycles": [],
+                "date_debut": "2025-09-01",
+                "date_fin": "2027-01-31",
+                "datecrea": null,
+                "datemaj": "2026-02-13",
+                "etat_recrutement": 1,
+                "id": "id-A-notconv",
+                "lieu_formation": [
+                  {
+                    "departement": "68",
+                    "latitude": 47.757,
+                    "longitude": 7.32342,
+                    "ville": "Mulhouse",
+                  },
+                ],
+                "modalites_inscription": null,
+                "numero_session": "GE1954732",
+                "periode_inscription_debut": null,
+                "periode_inscription_fin": null,
+                "recrutements": [],
+                "url_session": null,
+              },
+            ],
+            "source": "carif-oref",
+            "structure_id": "carif-oref--siret-00000000000001",
+            "transport": null,
+            "url_action": null,
+            "url_formation": null,
+          },
+          "ingestion_run_id": "run-1",
+          "origin": "RCO",
+          "raw_data": "{"numero_formation":"01_AL27473","numero_action":"A-notconv","url_formation":null,"url_action":null,"intitule_formation":"Ouvrir l'école aux parents","objectif_formation":"<p>Améliorer le français</p>","contenu_formation":"Trois axes<br/>Langue","resultat_attendus":null,"parcours_de_formation":null,"objectif_general_formation":null,"positionnement":null,"certifiante":null,"conventionnement":false,"extra_contrat_apprentissage":null,"extra_contrat_professionnalisation":null,"modalites_enseignement":null,"modalites_entrees_sorties":null,"modalites_alternance":null,"modalites_recrutement":null,"conditions_specifiques":null,"detail_conditions_prise_en_charge":null,"niveau_entree_obligatoire":null,"prise_en_charge_frais_possible":null,"prix_horaire_TTC":null,"prix_total_TTC":null,"duree_indicative":null,"rythme_formation":null,"duree_conventionnee":null,"duree_cycle":null,"code_modalite_pedagogique":[],"frais_restants":null,"nombre_heures_centre":null,"nombre_heures_entreprise":null,"nombre_heures_total":120,"code_niveau_entree":null,"code_niveau_sortie":null,"info_public_vise":null,"code_public_vise":["81023"],"code_perimetre_recrutement":null,"organisme_responsable":{"siret":"00000000000001","nom":"Ecole Test","raison_sociale":"Etablissement scolaire","coordonnees":{"adresse_ligne1":"1 rue Test","code_INSEE_commune":"68224","latitude":47.757,"longitude":7.32342},"contact":[]},"organisme_formateur":[],"restauration":null,"hebergement":null,"transport":null,"acces_handicapes":null,"equipement":[],"contact_formation":[],"code_formacode":[],"code_rome":[],"code_nsf":[],"certification":[],"blocs_competences":[],"session_reference_certification":[],"organisme_financeur":[{"code_financeur":"19"}],"financeur_info_public_vise":null,"id":"carif-oref--A-notconv","nom":"Ouvrir l'école aux parents","source":"carif-oref","structure_id":"carif-oref--siret-00000000000001","sessions":[{"id":"id-A-notconv","numero_session":"GE1954732","url_session":null,"date_debut":"2025-09-01","date_fin":"2027-01-31","etat_recrutement":1,"periode_inscription_debut":null,"periode_inscription_fin":null,"modalites_inscription":null,"recrutements":[],"cycles":[],"contact_session":[],"lieu_formation":[{"ville":"Mulhouse","departement":"68","latitude":47.757,"longitude":7.32342}],"adresse_inscription":null,"datecrea":null,"datemaj":"2026-02-13"}]}",
+        },
+      ],
+      "table": "services",
+    },
+    {
+      "op": "insert",
+      "rows": [
+        {
+          "markdown": "---
+numero_formation: 01_AL27473
+numero_action: A-new
+url_formation: null
+url_action: null
+intitule_formation: Ouvrir l'école aux parents
+objectif_formation: <p>Améliorer le français</p>
+contenu_formation: Trois axes<br/>Langue
+resultat_attendus: null
+parcours_de_formation: null
+objectif_general_formation: null
+positionnement: null
+certifiante: null
+conventionnement: true
+extra_contrat_apprentissage: null
+extra_contrat_professionnalisation: null
+modalites_enseignement: null
+modalites_entrees_sorties: null
+modalites_alternance: null
+modalites_recrutement: null
+conditions_specifiques: null
+detail_conditions_prise_en_charge: null
+niveau_entree_obligatoire: null
+prise_en_charge_frais_possible: null
+prix_horaire_TTC: null
+prix_total_TTC: null
+duree_indicative: null
+rythme_formation: null
+duree_conventionnee: null
+duree_cycle: null
+code_modalite_pedagogique: []
+frais_restants: null
+nombre_heures_centre: null
+nombre_heures_entreprise: null
+nombre_heures_total: 120
+code_niveau_entree: null
+code_niveau_sortie: null
+info_public_vise: null
+code_public_vise:
+  - "81023"
+code_perimetre_recrutement: null
+organisme_responsable:
+  siret: "00000000000002"
+  nom: Ecole Test
+  raison_sociale: Etablissement scolaire
+  coordonnees: &a1
+    adresse_ligne1: 1 rue Test
+    code_INSEE_commune: "68224"
+    latitude: 47.757
+    longitude: 7.32342
+  contact: &a2 []
+organisme_formateur: []
+restauration: null
+hebergement: null
+transport: null
+acces_handicapes: null
+equipement: []
+contact_formation: []
+code_formacode: []
+code_rome: []
+code_nsf: []
+certification: []
+blocs_competences: []
+session_reference_certification: []
+organisme_financeur:
+  - code_financeur: "19"
+financeur_info_public_vise: null
+id: carif-oref--A-new
+nom: Ouvrir l'école aux parents
+source: carif-oref
+structure_id: carif-oref--siret-00000000000002
+sessions:
+  - id: id-A-new
+    numero_session: GE1954732
+    url_session: null
+    date_debut: 2025-09-01
+    date_fin: 2027-01-31
+    etat_recrutement: 1
+    periode_inscription_debut: null
+    periode_inscription_fin: null
+    modalites_inscription: null
+    recrutements: []
+    cycles: []
+    contact_session: []
+    lieu_formation:
+      - ville: Mulhouse
+        departement: "68"
+        latitude: 47.757
+        longitude: 7.32342
+    adresse_inscription: null
+    datecrea: null
+    datemaj: 2026-02-13
+structure:
+  id: carif-oref--siret-00000000000002
+  nom: Ecole Test
+  source: carif-oref
+  siret: "00000000000002"
+  raison_sociale: Etablissement scolaire
+  numero_activite: null
+  coordonnees: *a1
+  contact: *a2
+---
+
+# Ouvrir l'école aux parents
+
+## Objectif
+
+Améliorer le français
+
+## Contenu
+
+Trois axes
+Langue",
+          "metadata": {
+            "acces_handicapes": null,
+            "blocs_competences": [],
+            "certifiante": null,
+            "certification": [],
+            "code_formacode": [],
+            "code_modalite_pedagogique": [],
+            "code_niveau_entree": null,
+            "code_niveau_sortie": null,
+            "code_nsf": [],
+            "code_perimetre_recrutement": null,
+            "code_public_vise": [
+              "81023",
+            ],
+            "code_rome": [],
+            "conditions_specifiques": null,
+            "contact_formation": [],
+            "contenu_formation": "Trois axes<br/>Langue",
+            "conventionnement": true,
+            "detail_conditions_prise_en_charge": null,
+            "duree_conventionnee": null,
+            "duree_cycle": null,
+            "duree_indicative": null,
+            "equipement": [],
+            "extra_contrat_apprentissage": null,
+            "extra_contrat_professionnalisation": null,
+            "financeur_info_public_vise": null,
+            "frais_restants": null,
+            "hebergement": null,
+            "id": "carif-oref--A-new",
+            "info_public_vise": null,
+            "intitule_formation": "Ouvrir l'école aux parents",
+            "modalites_alternance": null,
+            "modalites_enseignement": null,
+            "modalites_entrees_sorties": null,
+            "modalites_recrutement": null,
+            "niveau_entree_obligatoire": null,
+            "nom": "Ouvrir l'école aux parents",
+            "nombre_heures_centre": null,
+            "nombre_heures_entreprise": null,
+            "nombre_heures_total": 120,
+            "numero_action": "A-new",
+            "numero_formation": "01_AL27473",
+            "objectif_formation": "<p>Améliorer le français</p>",
+            "objectif_general_formation": null,
+            "organisme_financeur": [
+              {
+                "code_financeur": "19",
+              },
+            ],
+            "organisme_formateur": [],
+            "organisme_responsable": {
+              "contact": [],
+              "coordonnees": {
+                "adresse_ligne1": "1 rue Test",
+                "code_INSEE_commune": "68224",
+                "latitude": 47.757,
+                "longitude": 7.32342,
+              },
+              "nom": "Ecole Test",
+              "raison_sociale": "Etablissement scolaire",
+              "siret": "00000000000002",
+            },
+            "parcours_de_formation": null,
+            "positionnement": null,
+            "prise_en_charge_frais_possible": null,
+            "prix_horaire_TTC": null,
+            "prix_total_TTC": null,
+            "restauration": null,
+            "resultat_attendus": null,
+            "rythme_formation": null,
+            "session_reference_certification": [],
+            "sessions": [
+              {
+                "adresse_inscription": null,
+                "contact_session": [],
+                "cycles": [],
+                "date_debut": "2025-09-01",
+                "date_fin": "2027-01-31",
+                "datecrea": null,
+                "datemaj": "2026-02-13",
+                "etat_recrutement": 1,
+                "id": "id-A-new",
+                "lieu_formation": [
+                  {
+                    "departement": "68",
+                    "latitude": 47.757,
+                    "longitude": 7.32342,
+                    "ville": "Mulhouse",
+                  },
+                ],
+                "modalites_inscription": null,
+                "numero_session": "GE1954732",
+                "periode_inscription_debut": null,
+                "periode_inscription_fin": null,
+                "recrutements": [],
+                "url_session": null,
+              },
+            ],
+            "source": "carif-oref",
+            "structure": {
+              "contact": [],
+              "coordonnees": {
+                "adresse_ligne1": "1 rue Test",
+                "code_INSEE_commune": "68224",
+                "latitude": 47.757,
+                "longitude": 7.32342,
+              },
+              "id": "carif-oref--siret-00000000000002",
+              "nom": "Ecole Test",
+              "numero_activite": null,
+              "raison_sociale": "Etablissement scolaire",
+              "siret": "00000000000002",
+              "source": "carif-oref",
+            },
+            "structure_id": "carif-oref--siret-00000000000002",
+            "transport": null,
+            "url_action": null,
+            "url_formation": null,
+          },
+          "service_id": "services-uuid-2",
+          "structure_id": "structures-uuid-1",
+        },
+        {
+          "markdown": "---
+numero_formation: 01_AL27473
+numero_action: A-baseline
+url_formation: null
+url_action: null
+intitule_formation: Ouvrir l'école aux parents
+objectif_formation: <p>Améliorer le français</p>
+contenu_formation: Trois axes<br/>Langue
+resultat_attendus: null
+parcours_de_formation: null
+objectif_general_formation: null
+positionnement: null
+certifiante: null
+conventionnement: true
+extra_contrat_apprentissage: null
+extra_contrat_professionnalisation: null
+modalites_enseignement: null
+modalites_entrees_sorties: null
+modalites_alternance: null
+modalites_recrutement: null
+conditions_specifiques: null
+detail_conditions_prise_en_charge: null
+niveau_entree_obligatoire: null
+prise_en_charge_frais_possible: null
+prix_horaire_TTC: null
+prix_total_TTC: null
+duree_indicative: null
+rythme_formation: null
+duree_conventionnee: null
+duree_cycle: null
+code_modalite_pedagogique: []
+frais_restants: null
+nombre_heures_centre: null
+nombre_heures_entreprise: null
+nombre_heures_total: 120
+code_niveau_entree: null
+code_niveau_sortie: null
+info_public_vise: null
+code_public_vise:
+  - "81023"
+code_perimetre_recrutement: null
+organisme_responsable:
+  siret: "00000000000001"
+  nom: Ecole Test
+  raison_sociale: Etablissement scolaire
+  coordonnees: &a1
+    adresse_ligne1: 1 rue Test
+    code_INSEE_commune: "68224"
+    latitude: 47.757
+    longitude: 7.32342
+  contact: &a2 []
+organisme_formateur: []
+restauration: null
+hebergement: null
+transport: null
+acces_handicapes: null
+equipement: []
+contact_formation: []
+code_formacode: []
+code_rome: []
+code_nsf: []
+certification: []
+blocs_competences: []
+session_reference_certification: []
+organisme_financeur:
+  - code_financeur: "19"
+financeur_info_public_vise: null
+id: carif-oref--A-baseline
+nom: Ouvrir l'école aux parents
+source: carif-oref
+structure_id: carif-oref--siret-00000000000001
+sessions:
+  - id: id-A-baseline
+    numero_session: GE1954732
+    url_session: null
+    date_debut: 2025-09-01
+    date_fin: 2027-01-31
+    etat_recrutement: 1
+    periode_inscription_debut: null
+    periode_inscription_fin: null
+    modalites_inscription: null
+    recrutements: []
+    cycles: []
+    contact_session: []
+    lieu_formation:
+      - ville: Mulhouse
+        departement: "68"
+        latitude: 47.757
+        longitude: 7.32342
+    adresse_inscription: null
+    datecrea: null
+    datemaj: 2026-02-13
+structure:
+  id: carif-oref--siret-00000000000001
+  nom: Ecole Test
+  source: carif-oref
+  siret: "00000000000001"
+  raison_sociale: Etablissement scolaire
+  numero_activite: null
+  coordonnees: *a1
+  contact: *a2
+---
+
+# Ouvrir l'école aux parents
+
+## Objectif
+
+Améliorer le français
+
+## Contenu
+
+Trois axes
+Langue",
+          "metadata": {
+            "acces_handicapes": null,
+            "blocs_competences": [],
+            "certifiante": null,
+            "certification": [],
+            "code_formacode": [],
+            "code_modalite_pedagogique": [],
+            "code_niveau_entree": null,
+            "code_niveau_sortie": null,
+            "code_nsf": [],
+            "code_perimetre_recrutement": null,
+            "code_public_vise": [
+              "81023",
+            ],
+            "code_rome": [],
+            "conditions_specifiques": null,
+            "contact_formation": [],
+            "contenu_formation": "Trois axes<br/>Langue",
+            "conventionnement": true,
+            "detail_conditions_prise_en_charge": null,
+            "duree_conventionnee": null,
+            "duree_cycle": null,
+            "duree_indicative": null,
+            "equipement": [],
+            "extra_contrat_apprentissage": null,
+            "extra_contrat_professionnalisation": null,
+            "financeur_info_public_vise": null,
+            "frais_restants": null,
+            "hebergement": null,
+            "id": "carif-oref--A-baseline",
+            "info_public_vise": null,
+            "intitule_formation": "Ouvrir l'école aux parents",
+            "modalites_alternance": null,
+            "modalites_enseignement": null,
+            "modalites_entrees_sorties": null,
+            "modalites_recrutement": null,
+            "niveau_entree_obligatoire": null,
+            "nom": "Ouvrir l'école aux parents",
+            "nombre_heures_centre": null,
+            "nombre_heures_entreprise": null,
+            "nombre_heures_total": 120,
+            "numero_action": "A-baseline",
+            "numero_formation": "01_AL27473",
+            "objectif_formation": "<p>Améliorer le français</p>",
+            "objectif_general_formation": null,
+            "organisme_financeur": [
+              {
+                "code_financeur": "19",
+              },
+            ],
+            "organisme_formateur": [],
+            "organisme_responsable": {
+              "contact": [],
+              "coordonnees": {
+                "adresse_ligne1": "1 rue Test",
+                "code_INSEE_commune": "68224",
+                "latitude": 47.757,
+                "longitude": 7.32342,
+              },
+              "nom": "Ecole Test",
+              "raison_sociale": "Etablissement scolaire",
+              "siret": "00000000000001",
+            },
+            "parcours_de_formation": null,
+            "positionnement": null,
+            "prise_en_charge_frais_possible": null,
+            "prix_horaire_TTC": null,
+            "prix_total_TTC": null,
+            "restauration": null,
+            "resultat_attendus": null,
+            "rythme_formation": null,
+            "session_reference_certification": [],
+            "sessions": [
+              {
+                "adresse_inscription": null,
+                "contact_session": [],
+                "cycles": [],
+                "date_debut": "2025-09-01",
+                "date_fin": "2027-01-31",
+                "datecrea": null,
+                "datemaj": "2026-02-13",
+                "etat_recrutement": 1,
+                "id": "id-A-baseline",
+                "lieu_formation": [
+                  {
+                    "departement": "68",
+                    "latitude": 47.757,
+                    "longitude": 7.32342,
+                    "ville": "Mulhouse",
+                  },
+                ],
+                "modalites_inscription": null,
+                "numero_session": "GE1954732",
+                "periode_inscription_debut": null,
+                "periode_inscription_fin": null,
+                "recrutements": [],
+                "url_session": null,
+              },
+            ],
+            "source": "carif-oref",
+            "structure": {
+              "contact": [],
+              "coordonnees": {
+                "adresse_ligne1": "1 rue Test",
+                "code_INSEE_commune": "68224",
+                "latitude": 47.757,
+                "longitude": 7.32342,
+              },
+              "id": "carif-oref--siret-00000000000001",
+              "nom": "Ecole Test",
+              "numero_activite": null,
+              "raison_sociale": "Etablissement scolaire",
+              "siret": "00000000000001",
+              "source": "carif-oref",
+            },
+            "structure_id": "carif-oref--siret-00000000000001",
+            "transport": null,
+            "url_action": null,
+            "url_formation": null,
+          },
+          "service_id": "services-uuid-3",
+          "structure_id": "structure-known-uuid",
+        },
+        {
+          "markdown": "---
+numero_formation: 01_AL27473
+numero_action: A-content
+url_formation: null
+url_action: null
+intitule_formation: Ouvrir l'école aux parents
+objectif_formation: <p>Améliorer le français</p>
+contenu_formation: Trois axes<br/>Langue
+resultat_attendus: null
+parcours_de_formation: null
+objectif_general_formation: null
+positionnement: null
+certifiante: null
+conventionnement: true
+extra_contrat_apprentissage: null
+extra_contrat_professionnalisation: null
+modalites_enseignement: null
+modalites_entrees_sorties: null
+modalites_alternance: null
+modalites_recrutement: null
+conditions_specifiques: null
+detail_conditions_prise_en_charge: null
+niveau_entree_obligatoire: null
+prise_en_charge_frais_possible: null
+prix_horaire_TTC: null
+prix_total_TTC: null
+duree_indicative: null
+rythme_formation: null
+duree_conventionnee: null
+duree_cycle: null
+code_modalite_pedagogique: []
+frais_restants: null
+nombre_heures_centre: null
+nombre_heures_entreprise: null
+nombre_heures_total: 120
+code_niveau_entree: null
+code_niveau_sortie: null
+info_public_vise: null
+code_public_vise:
+  - "81023"
+code_perimetre_recrutement: null
+organisme_responsable:
+  siret: "00000000000001"
+  nom: Ecole Test
+  raison_sociale: Etablissement scolaire
+  coordonnees: &a1
+    adresse_ligne1: 1 rue Test
+    code_INSEE_commune: "68224"
+    latitude: 47.757
+    longitude: 7.32342
+  contact: &a2 []
+organisme_formateur: []
+restauration: null
+hebergement: null
+transport: null
+acces_handicapes: null
+equipement: []
+contact_formation: []
+code_formacode: []
+code_rome: []
+code_nsf: []
+certification: []
+blocs_competences: []
+session_reference_certification: []
+organisme_financeur:
+  - code_financeur: "19"
+financeur_info_public_vise: null
+id: carif-oref--A-content
+nom: Ouvrir l'école aux parents
+source: carif-oref
+structure_id: carif-oref--siret-00000000000001
+sessions:
+  - id: id-A-content
+    numero_session: GE1954732
+    url_session: null
+    date_debut: 2025-09-01
+    date_fin: 2027-01-31
+    etat_recrutement: 1
+    periode_inscription_debut: null
+    periode_inscription_fin: null
+    modalites_inscription: null
+    recrutements: []
+    cycles: []
+    contact_session: []
+    lieu_formation:
+      - ville: Mulhouse
+        departement: "68"
+        latitude: 47.757
+        longitude: 7.32342
+    adresse_inscription: null
+    datecrea: null
+    datemaj: 2026-02-13
+structure:
+  id: carif-oref--siret-00000000000001
+  nom: Ecole Test
+  source: carif-oref
+  siret: "00000000000001"
+  raison_sociale: Etablissement scolaire
+  numero_activite: null
+  coordonnees: *a1
+  contact: *a2
+---
+
+# Ouvrir l'école aux parents
+
+## Objectif
+
+Améliorer le français
+
+## Contenu
+
+Trois axes
+Langue",
+          "metadata": {
+            "acces_handicapes": null,
+            "blocs_competences": [],
+            "certifiante": null,
+            "certification": [],
+            "code_formacode": [],
+            "code_modalite_pedagogique": [],
+            "code_niveau_entree": null,
+            "code_niveau_sortie": null,
+            "code_nsf": [],
+            "code_perimetre_recrutement": null,
+            "code_public_vise": [
+              "81023",
+            ],
+            "code_rome": [],
+            "conditions_specifiques": null,
+            "contact_formation": [],
+            "contenu_formation": "Trois axes<br/>Langue",
+            "conventionnement": true,
+            "detail_conditions_prise_en_charge": null,
+            "duree_conventionnee": null,
+            "duree_cycle": null,
+            "duree_indicative": null,
+            "equipement": [],
+            "extra_contrat_apprentissage": null,
+            "extra_contrat_professionnalisation": null,
+            "financeur_info_public_vise": null,
+            "frais_restants": null,
+            "hebergement": null,
+            "id": "carif-oref--A-content",
+            "info_public_vise": null,
+            "intitule_formation": "Ouvrir l'école aux parents",
+            "modalites_alternance": null,
+            "modalites_enseignement": null,
+            "modalites_entrees_sorties": null,
+            "modalites_recrutement": null,
+            "niveau_entree_obligatoire": null,
+            "nom": "Ouvrir l'école aux parents",
+            "nombre_heures_centre": null,
+            "nombre_heures_entreprise": null,
+            "nombre_heures_total": 120,
+            "numero_action": "A-content",
+            "numero_formation": "01_AL27473",
+            "objectif_formation": "<p>Améliorer le français</p>",
+            "objectif_general_formation": null,
+            "organisme_financeur": [
+              {
+                "code_financeur": "19",
+              },
+            ],
+            "organisme_formateur": [],
+            "organisme_responsable": {
+              "contact": [],
+              "coordonnees": {
+                "adresse_ligne1": "1 rue Test",
+                "code_INSEE_commune": "68224",
+                "latitude": 47.757,
+                "longitude": 7.32342,
+              },
+              "nom": "Ecole Test",
+              "raison_sociale": "Etablissement scolaire",
+              "siret": "00000000000001",
+            },
+            "parcours_de_formation": null,
+            "positionnement": null,
+            "prise_en_charge_frais_possible": null,
+            "prix_horaire_TTC": null,
+            "prix_total_TTC": null,
+            "restauration": null,
+            "resultat_attendus": null,
+            "rythme_formation": null,
+            "session_reference_certification": [],
+            "sessions": [
+              {
+                "adresse_inscription": null,
+                "contact_session": [],
+                "cycles": [],
+                "date_debut": "2025-09-01",
+                "date_fin": "2027-01-31",
+                "datecrea": null,
+                "datemaj": "2026-02-13",
+                "etat_recrutement": 1,
+                "id": "id-A-content",
+                "lieu_formation": [
+                  {
+                    "departement": "68",
+                    "latitude": 47.757,
+                    "longitude": 7.32342,
+                    "ville": "Mulhouse",
+                  },
+                ],
+                "modalites_inscription": null,
+                "numero_session": "GE1954732",
+                "periode_inscription_debut": null,
+                "periode_inscription_fin": null,
+                "recrutements": [],
+                "url_session": null,
+              },
+            ],
+            "source": "carif-oref",
+            "structure": {
+              "contact": [],
+              "coordonnees": {
+                "adresse_ligne1": "1 rue Test",
+                "code_INSEE_commune": "68224",
+                "latitude": 47.757,
+                "longitude": 7.32342,
+              },
+              "id": "carif-oref--siret-00000000000001",
+              "nom": "Ecole Test",
+              "numero_activite": null,
+              "raison_sociale": "Etablissement scolaire",
+              "siret": "00000000000001",
+              "source": "carif-oref",
+            },
+            "structure_id": "carif-oref--siret-00000000000001",
+            "transport": null,
+            "url_action": null,
+            "url_formation": null,
+          },
+          "service_id": "services-uuid-5",
+          "structure_id": "structure-known-uuid",
+        },
+      ],
+      "table": "ingestion_records",
+    },
+  ],
+  "result": {
+    "changes": {
+      "baseline": 1,
+      "content": 1,
+      "new": 2,
+      "sessions_only": 1,
+      "unchanged": 1,
+    },
+    "errors": [
+      {
+        "error": "organisme_responsable without siret",
+        "numeroAction": "A-nosiret",
+      },
+    ],
+    "ingestionRecordsCreated": 3,
+    "processed": 7,
+    "structuresWritten": 1,
+  },
+}
+`;

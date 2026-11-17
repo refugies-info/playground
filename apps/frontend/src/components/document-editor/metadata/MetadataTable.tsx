@@ -46,7 +46,7 @@ export function MetadataTable({
   if (!report) return null;
 
   const { metadata_ri, provenance } = report;
-  const provenanceByKey = new Map(provenance?.map((p) => [p.key, p]) ?? []);
+  const provenanceByKey = new Map(provenance?.map((p) => [p.key, p]));
 
   return (
     <div className="border border-[var(--border-default-grey)] bg-white">

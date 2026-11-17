@@ -1,4 +1,14 @@
+import {
+  type RcoActionDocument,
+  toArbitrationDocument,
+  toMetadataDocument,
+  toPlainLanguageDocument,
+  toSourceUrl,
+  withoutMarkdownBodyFields,
+} from "@playground/rco-offre-info";
 import type {
+  ArbitrationReport,
+  CarbonImpact,
   ComplianceStatus,
   DateFilterCondition,
   DateFilterType,
@@ -10,16 +20,21 @@ import type {
   WorkStatus,
 } from "@playground/shared-types";
 import {
+  CARIF_OREF_SOURCE,
   DATE_FILTER_COLUMNS,
   DEFAULT_DATE_FILTER_CONDITION,
   DEFAULT_DATE_FILTER_TYPE,
   injectFrontmatterContent,
+  isArbitrationReport,
+  isSourceSystem,
   logger,
   nextIsoDay,
 } from "@playground/shared-types";
 import type { Database, Json } from "@playground/supabase";
 import { createSupabaseServerClient } from "@playground/supabase";
 import { cookies } from "next/headers";
+import { extractEditorialNotes } from "@/lib/editorial-notes";
+import { toSearchOrFilters } from "@/lib/search-patterns";
 import { extractAuthorProfile } from "./helpers";
 
 /**
@@ -44,7 +59,7 @@ const DOCUMENT_LIST_SELECT = `
   structure_name,
   session_start_date,
   session_end_date,
-  rco_record_id,
+  origin,
   assignee_email,
   assignee_profile,
   commune,
@@ -53,7 +68,8 @@ const DOCUMENT_LIST_SELECT = `
   ingestion_word_count,
   active_ingestion_version,
   latest_ingestion_version,
-  has_pending_ingestion_update
+  has_pending_ingestion_update,
+  source_migrated_at
 `;
 
 const DOCUMENT_PREVIEW_FIELDS_SELECT = `
@@ -62,6 +78,12 @@ const DOCUMENT_PREVIEW_FIELDS_SELECT = `
   ingestion_markdown,
   ingestion_metadata
 `;
+
+// Content family -> title patterns excluded by the `excludedContent` filter.
+const EXCLUDED_CONTENT_TITLE_PATTERNS: Record<string, readonly string[]> = {
+  // RCO spells it with "-" or "–", "école" or "Ecole", with or without "OEPRE".
+  oepre: ["%ouvrir l_cole aux parents%", "%OEPRE%"],
+};
 
 export interface GetDocumentsParams {
   page?: number;
@@ -88,6 +110,9 @@ export interface GetDocumentsParams {
   searchInContent?: boolean;
   /** Filter by entry type: "0" (dates fixes) or "1" (a tout moment) */
   modalitesEntreesSorties?: string | null;
+  origin?: string | null;
+  /** Content families to hide, keys of EXCLUDED_CONTENT_TITLE_PATTERNS; unknown keys are ignored. */
+  excludedContent?: string[];
   /** Include large markdown/json fields. Used by /workflow preview drawer only. */
   includePreviewFields?: boolean;
 }
@@ -110,6 +135,8 @@ export async function getDocuments(params: GetDocumentsParams) {
     searchField,
     searchInContent = false,
     modalitesEntreesSorties,
+    origin,
+    excludedContent = [],
     includePreviewFields = false,
   } = params;
 
@@ -201,31 +228,32 @@ export async function getDocuments(params: GetDocumentsParams) {
     query = query.eq("modalites_entrees_sorties", modalitesEntreesSorties);
   }
 
+  if (isSourceSystem(origin)) {
+    query = query.eq("origin", origin);
+  }
+
+  for (const pattern of excludedContent.flatMap(
+    (key) => EXCLUDED_CONTENT_TITLE_PATTERNS[key] ?? [],
+  )) {
+    query = query.not("title", "ilike", pattern);
+  }
+
   // Multi-column text search (title, external_id, structure_name, commune).
   // When searchInContent, also match editorial/ingestion markdown (heavier scan).
-  // Uses ilike for case-insensitive substring matching.
   if (search) {
-    const term = `%${search}%`;
-    if (searchField) {
-      // Scoped: match only the selected column.
-      query = query.ilike(searchField, term);
-    } else {
-      // Search-all (default): title, external_id, structure_name, commune.
-      const columns = [
-        "title",
-        "external_id",
-        "structure_name",
-        "commune",
-        ...(searchInContent
-          ? ["editorial_markdown", "ingestion_markdown"]
-          : []),
-      ];
-      // Quote the value so reserved chars (, ( )) in the term are treated
-      // literally by PostgREST's .or() parser instead of breaking it.
-      const orTerm = `"${term.replace(/"/g, '\\"')}"`;
-      query = query.or(
-        columns.map((col) => `${col}.ilike.${orTerm}`).join(","),
-      );
+    const columns = searchField
+      ? [searchField]
+      : [
+          "title",
+          "external_id",
+          "structure_name",
+          "commune",
+          ...(searchInContent
+            ? ["editorial_markdown", "ingestion_markdown"]
+            : []),
+        ];
+    for (const wordFilter of toSearchOrFilters(columns, search)) {
+      query = query.or(wordFilter);
     }
   }
 
@@ -363,7 +391,8 @@ export async function getDocuments(params: GetDocumentsParams) {
         structureName: item.structure_name ?? undefined,
         sessionStartDate: item.session_start_date ?? undefined,
         sessionEndDate: item.session_end_date ?? null,
-        sourceSystem: item.rco_record_id ? "RCO" : "DI",
+        sourceSystem: item.origin,
+        sourceMigratedAt: item.source_migrated_at ?? null,
         updated_at: item.updated_at || "",
         editorialRecordId: item.editorial_record_id ?? undefined,
         assigneeEmail,
@@ -398,7 +427,9 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   // Use enriched view for single document too
   const { data, error } = await supabase
     .from("workflows_enriched")
-    .select("*")
+    .select(
+      `${DOCUMENT_LIST_SELECT},${DOCUMENT_PREVIEW_FIELDS_SELECT},editorial_record_id,ingestion_record_id`,
+    )
     .eq("id", id)
     .single();
 
@@ -423,8 +454,8 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     created_at: string;
     metadata_report_id: string | null;
     compliance_report:
-      | { markdown: string; created_at?: string }
-      | { markdown: string; created_at?: string }[]
+      | { markdown: string; metadata: Json; created_at?: string }
+      | { markdown: string; metadata: Json; created_at?: string }[]
       | null;
   };
   let ingestionRecord: IngestionWithReports | null = null;
@@ -432,45 +463,78 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   // Fetch the active ingestion record, metadata generation flag, and active rewrite
   // in parallel. Compliance and metadata reports are tied to the active ingestion
   // source so pending updates cannot shadow the current fiche.
-  const [ingestionResult, generatingReportResult, activeRunResult] =
-    await Promise.all([
-      item.ingestion_record_id
-        ? supabase
-            .from("ingestion_records")
-            .select(
-              `
+  const [
+    ingestionResult,
+    generatingReportResult,
+    activeRunResult,
+    lastEditorialReportResult,
+    lastMetadataReportResult,
+    tokenCostsResult,
+  ] = await Promise.all([
+    item.ingestion_record_id
+      ? supabase
+          .from("ingestion_records")
+          .select(
+            `
               markdown,
               metadata,
               created_at,
               metadata_report_id,
               compliance_report:letta_reports!ingestion_records_ingestion_report_id_fkey (
                 markdown,
+                metadata,
                 created_at
               )
             `,
-            )
-            .eq("id", item.ingestion_record_id)
-            .single()
-        : Promise.resolve({ data: null, error: null }),
-      // Check if a metadata generation is currently in progress for this workflow.
-      // Used by the UI to restore the loading state after a page refresh.
-      supabase
-        .from("letta_reports")
-        .select("id")
-        .eq("workflow_id", id)
-        .eq("report_type", "metadata")
-        .eq("status", "generating")
-        .maybeSingle(),
-      // Check if an editorial AI rewrite is in progress or pending user decision.
-      // Used by AIFloatingButton to resume via GET /api/editorial-rewrite/[runId].
-      item.editorial_record_id
-        ? supabase
-            .from("editorial_records")
-            .select("active_run_id, current_editor_id")
-            .eq("id", item.editorial_record_id)
-            .single()
-        : Promise.resolve({ data: null, error: null }),
-    ]);
+          )
+          .eq("id", item.ingestion_record_id)
+          .single()
+      : Promise.resolve({ data: null, error: null }),
+    // Check if a metadata generation is currently in progress for this workflow.
+    // Used by the UI to restore the loading state after a page refresh.
+    supabase
+      .from("letta_reports")
+      .select("id")
+      .eq("workflow_id", id)
+      .eq("report_type", "metadata")
+      .eq("status", "generating")
+      .maybeSingle(),
+    // Check if an editorial AI rewrite is in progress or pending user decision.
+    // Used by AIFloatingButton to resume via GET /api/editorial-rewrite/[runId].
+    item.editorial_record_id
+      ? supabase
+          .from("editorial_records")
+          .select(
+            "active_run_id, current_editor_id, content_report:letta_reports!editorial_records_content_report_id_fkey (markdown)",
+          )
+          .eq("id", item.editorial_record_id)
+          .single()
+      : Promise.resolve({ data: null, error: null }),
+    // Last rewrite attempt, failed ones included: navigation footer.
+    supabase
+      .from("letta_reports")
+      .select("model, token_cost, carbon_impact, status")
+      .eq("workflow_id", id)
+      .eq("report_type", "editorial")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    // Last metadata attempt, failed ones included: Letta link and model.
+    supabase
+      .from("letta_reports")
+      .select("model")
+      .eq("workflow_id", id)
+      .eq("report_type", "metadata")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("letta_reports")
+      .select("token_cost, created_at")
+      .eq("workflow_id", id)
+      .not("token_cost", "is", null)
+      .order("created_at", { ascending: true }),
+  ]);
 
   if (ingestionResult.data) {
     ingestionRecord = ingestionResult.data as unknown as IngestionWithReports;
@@ -517,6 +581,10 @@ export async function getDocumentById(id: string): Promise<Document | null> {
   if (ingestionMetadata.id) metadata.id = ingestionMetadata.id;
   if (ingestionMetadata.structure_id)
     metadata.structure_id = ingestionMetadata.structure_id;
+  if (ingestionMetadata.source === CARIF_OREF_SOURCE && !metadata.lien_source)
+    metadata.lien_source = toSourceUrl(
+      ingestionMetadata as unknown as RcoActionDocument,
+    );
 
   // Content with frontmatter injection for DI records
   let content = item.editorial_markdown || item.ingestion_markdown || "";
@@ -528,8 +596,15 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     content = injectFrontmatterContent(item.ingestion_markdown);
   }
 
+  const rcoAction =
+    ingestionMetadata.source === CARIF_OREF_SOURCE &&
+    Array.isArray(ingestionMetadata.sessions)
+      ? (ingestionMetadata as unknown as RcoActionDocument)
+      : null;
+
   // Compliance report from letta_reports
   let complianceReport = "";
+  let arbitrationReport: ArbitrationReport | undefined;
   if (ingestionRecord) {
     const lettaReportsData = ingestionRecord.compliance_report;
     if (lettaReportsData) {
@@ -538,6 +613,9 @@ export async function getDocumentById(id: string): Promise<Document | null> {
         : lettaReportsData;
       if (report?.markdown) {
         complianceReport = report.markdown;
+      }
+      if (isArbitrationReport(report?.metadata)) {
+        arbitrationReport = report.metadata;
       }
     }
   }
@@ -627,11 +705,21 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     content,
     ingestionContent,
     complianceReport,
+    arbitrationReport,
+    arbitrationSource: rcoAction ? toArbitrationDocument(rcoAction) : undefined,
+    metadataSource: rcoAction ? toMetadataDocument(rcoAction) : undefined,
+    rcoSource: rcoAction ? withoutMarkdownBodyFields(rcoAction) : undefined,
+    rcoApiData: rcoAction ?? undefined,
+    plainLanguageSource: rcoAction
+      ? toPlainLanguageDocument(rcoAction)
+      : undefined,
     metadata,
     editorialMetadata,
     editorialRecordId: item.editorial_record_id ?? undefined,
     isMetadataGenerating: !!generatingReportResult.data,
+    hasMetadataRun: !!lastMetadataReportResult.data,
     metadataReport: metadataReportValue,
+    metadataModel: lastMetadataReportResult.data?.model ?? null,
     publishedUrl,
     publicationStatus: latestPublication?.status,
     publicationRemoteId: latestPublication?.remote_id,
@@ -642,7 +730,8 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     structureName: item.structure_name ?? undefined,
     sessionStartDate: item.session_start_date ?? undefined,
     sessionEndDate: item.session_end_date ?? null,
-    sourceSystem: item.rco_record_id ? "RCO" : "DI",
+    sourceSystem: item.origin,
+    sourceMigratedAt: item.source_migrated_at ?? null,
     updated_at: item.updated_at ?? "",
     assigneeEmail,
     assigneeRole,
@@ -655,5 +744,20 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     activeRunId: activeRunData.activeRunId,
     currentEditorId: activeRunData.currentEditorId,
     currentEditorName: currentEditorName,
+    hasEditorialRun: !!lastEditorialReportResult.data,
+    editorialFailed: lastEditorialReportResult.data?.status === "error",
+    editorialModel: lastEditorialReportResult.data?.model ?? null,
+    totalTokens:
+      tokenCostsResult.data?.reduce(
+        (total, report) => total + (report.token_cost ?? 0),
+        0,
+      ) || null,
+    totalTokensSince: tokenCostsResult.data?.[0]?.created_at ?? null,
+    editorialCarbonImpact:
+      (lastEditorialReportResult.data?.carbon_impact as CarbonImpact | null) ??
+      null,
+    editorialNotes: extractEditorialNotes(
+      activeRunResult.data?.content_report?.markdown ?? "",
+    ),
   };
 }

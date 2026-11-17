@@ -23,6 +23,7 @@ export const generateMetadataReport = async function* (
   client: Letta,
   markdownContent: string,
   conversationId: string,
+  model = LETTA_MODEL_HANDLE,
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK stream yields various message types
 ): AsyncGenerator<any> {
   // Secure the prompt against injection by strictly isolating untrusted markdown content
@@ -42,7 +43,7 @@ ${sanitizedContent}
         content: messageContent,
       },
     ],
-    override_model: LETTA_MODEL_HANDLE,
+    override_model: model,
   });
 
   // biome-ignore lint/suspicious/noExplicitAny: Letta SDK types work-around

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { extractDiff, mergeMetadata } from "../src/lib/metadata";
+import { ABSTRACT_MAX_LENGTH, validateField } from "../src/schemas/metadata-ri";
 
 describe("mergeMetadata", () => {
   it("should return base when no overrides", () => {
@@ -282,5 +283,14 @@ describe("mergeMetadata + extractDiff integration", () => {
         details: "month",
       },
     });
+  });
+});
+
+describe("validateField abstract", () => {
+  it("rejects an abstract longer than the RI editor allows", () => {
+    expect(
+      validateField("abstract", "a".repeat(ABSTRACT_MAX_LENGTH)).success,
+    ).toBe(true);
+    expect(validateField("abstract", "a".repeat(352)).success).toBe(false);
   });
 });

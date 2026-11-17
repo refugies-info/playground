@@ -35,7 +35,7 @@ Helper scripts:
 | Command                  | Does                                              |
 | ------------------------ | ------------------------------------------------- |
 | `pnpm letta:up`          | start Letta + Ollama (detached)                   |
-| `pnpm letta:pull`        | pull `qwen2.5:0.5b` + `nomic-embed-text`          |
+| `pnpm letta:pull`        | pull `nomic-embed-text` (embeddings)              |
 | `pnpm letta:sync`        | restart Letta so it discovers newly pulled models |
 | `pnpm letta:logs`        | tail server logs                                  |
 | `pnpm letta:down`        | stop the stack                                    |
@@ -50,19 +50,14 @@ Helper scripts:
 pnpm letta:up
 ```
 
-### 2. Pull a local model
+### 2. Pull the embedding model
 
-`qwen2.5:0.5b` is the default — ~400MB, runs on modest hardware. Use a larger
-model (`qwen2.5:3b`, `qwen2.5:7b`, `llama3.1:8b`, …) for better quality.
+The LLM is Albert's `openai-proxy/gpt-oss-120b` (set `ALBERT_API_KEY` in the
+root `.env`, see `docker-compose.letta.yml`). Ollama only serves embeddings.
 
 ```bash
 pnpm letta:pull
 ```
-
-> ⚠️ Letta agents need a **tool-capable** model (function calling). `gemma3:1b`
-> has no `tools` capability and is silently dropped — you'll see
-> `Synced 0 LLM models` in the logs and `Handle ... not found, must be one of []`
-> when creating agents. Check a model with `ollama show <model>` → `Capabilities`.
 
 > ⚠️ **Do not use `letta/letta-free` on the self-hosted server.** For free *and* prod-grade
 > quality, use **Letta Cloud** (`LETTA_BASE_URL=https://api.letta.com`) with a

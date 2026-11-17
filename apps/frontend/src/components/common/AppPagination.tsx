@@ -1,12 +1,14 @@
 "use client";
 
-import { Pagination } from "@playground/ui/composites";
+import { Pagination, PaginationControls } from "@playground/ui/composites";
 import { usePathname, useRouter } from "next/navigation";
 
 interface AppPaginationControlsProps {
   currentPage: number;
   pageSize: number;
   totalCount: number;
+  /** DSFR numbered pagination (page links) instead of the compact range. */
+  numbered?: boolean;
   className?: string;
 }
 
@@ -14,6 +16,7 @@ export function AppPaginationControls({
   currentPage,
   pageSize,
   totalCount,
+  numbered = false,
   className,
 }: AppPaginationControlsProps) {
   const router = useRouter();
@@ -25,7 +28,14 @@ export function AppPaginationControls({
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  return (
+  return numbered ? (
+    <PaginationControls
+      currentPage={currentPage}
+      totalPages={Math.ceil(totalCount / pageSize)}
+      onPageChange={handlePageChange}
+      className={className}
+    />
+  ) : (
     <Pagination
       currentPage={currentPage}
       pageSize={pageSize}

@@ -6,11 +6,12 @@ import {
   PopoverAnchor,
   PopoverContent,
 } from "@playground/ui/overlays";
-import { Button, PapaIA } from "@playground/ui/primitives";
+import { BoutonFiltre, Button, PapaIA } from "@playground/ui/primitives";
 import { RiCheckLine, RiCloseLine } from "@remixicon/react";
 import { useEffect, useRef, useState } from "react";
 import { useDocumentActions } from "../actions";
 import { useDocument } from "../DocumentContext";
+import { useLettaModelPicker } from "./use-letta-model-picker";
 
 /**
  * Appel GET /api/editorial-rewrite/[runId] — attend le résultat du workflow.
@@ -43,7 +44,7 @@ async function awaitResult(
  * │ default │            │  loading   │             │  popover   │
  * └─────────┘            └────────────┘             └────────────┘
  *                          │    ↑                     │         │
- *                    click │    │ Relancer        Annuler   Remplacer
+ *                    click │    │ Réessayer       Annuler   Remplacer
  *                          ↓    │                     │         │
  *                        ┌──────────┐                 ↓         ↓
  *                        │  Erreur  │            ┌─────────┐ ┌──────────┐
@@ -88,6 +89,10 @@ export function AIFloatingButton() {
   const { saveDocument } = useDocumentActions();
 
   const [error, setError] = useState<string | null>(null);
+  const { modelOptions, selectedModel, setSelectedModel } = useLettaModelPicker(
+    !!document?.isAdmin,
+    !!document?.rcoApiData,
+  );
   const abortControllerRef = useRef<AbortController | null>(null);
   const runIdRef = useRef<string | null>(null);
 
@@ -120,7 +125,10 @@ export function AIFloatingButton() {
       const startRes = await fetch("/api/editorial-rewrite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workflowId: document.id }),
+        body: JSON.stringify({
+          workflowId: document.id,
+          model: selectedModel || undefined,
+        }),
         signal: controller.signal,
       });
 
@@ -268,12 +276,14 @@ export function AIFloatingButton() {
     };
   }, [document?.activeRunId]);
 
+  const isAdmin = !!document?.isAdmin;
+
   // ─── Render ────────────────────────────────────────────────────────────
   const isDisabled =
     !document?.editorialContent || document?.complianceStatus !== "compliant";
 
   return (
-    <div className="fixed bottom-6 right-6 z-20">
+    <div className="fixed bottom-6 right-6 z-20 flex items-center gap-2">
       <Popover
         open={hasSuggestion || !!error}
         onOpenChange={(open) => {
@@ -311,15 +321,6 @@ export function AIFloatingButton() {
               </p>
               <div className="flex gap-4">
                 <Button
-                  variant="tertiaire"
-                  size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(error).catch(() => {});
-                  }}
-                >
-                  Copier
-                </Button>
-                <Button
                   variant="primaire"
                   size="sm"
                   onClick={() => {
@@ -327,7 +328,7 @@ export function AIFloatingButton() {
                     handleGenerate();
                   }}
                 >
-                  Relancer
+                  Réessayer
                 </Button>
               </div>
             </>
@@ -359,6 +360,15 @@ export function AIFloatingButton() {
           )}
         </PopoverContent>
       </Popover>
+      {isAdmin && modelOptions.length > 0 ? (
+        <BoutonFiltre
+          label="Modèle LLM"
+          options={modelOptions}
+          value={selectedModel}
+          onChange={setSelectedModel}
+          className="max-w-64"
+        />
+      ) : null}
     </div>
   );
 }

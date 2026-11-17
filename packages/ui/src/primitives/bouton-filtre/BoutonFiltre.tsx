@@ -85,6 +85,7 @@ function BoutonFiltre({
           sideOffset={4}
           className={cn(
             "z-50 min-w-[124px] rounded-lg border bg-white p-2 shadow-md",
+            "max-h-(--radix-popover-content-available-height) overflow-y-auto",
             "border-[var(--border-default-grey,#DDDDDD)]",
             "animate-in fade-in-0 zoom-in-95",
           )}

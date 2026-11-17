@@ -46,6 +46,9 @@ importers:
       "@biomejs/biome":
         specifier: 2.6.3
         version: 2.6.3
+      "@letta-ai/letta-client":
+        specifier: 1.12.1
+        version: 1.12.1
       "@playground/shared-types":
         specifier: workspace:*
         version: link:packages/shared
@@ -109,6 +112,9 @@ importers:
       "@playground/cloudinary":
         specifier: workspace:*
         version: link:../../packages/cloudinary
+      "@playground/rco-offre-info":
+        specifier: workspace:*
+        version: link:../../packages/rco-offre-info
       "@playground/sentry":
         specifier: workspace:*
         version: link:../../packages/sentry
@@ -348,9 +354,6 @@ importers:
       "@supabase/supabase-js":
         specifier: 2.84.0
         version: 2.84.0
-      json-stable-stringify:
-        specifier: ^1.3.0
-        version: 1.3.0
       yaml:
         specifier: ^2.9.1
         version: 2.9.1
@@ -366,6 +369,34 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.12
+        version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(@vitest/browser-playwright@4.1.12)(@vitest/coverage-v8@3.2.7)(jsdom@27.4.0)(vite@6.4.5(@types/node@24.19.2)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+
+  packages/rco-offre-info:
+    dependencies:
+      "@playground/shared-types":
+        specifier: workspace:*
+        version: link:../shared
+      "@playground/supabase":
+        specifier: workspace:*
+        version: link:../supabase
+      "@supabase/supabase-js":
+        specifier: 2.84.0
+        version: 2.84.0
+      yaml:
+        specifier: ^2.9.0
+        version: 2.9.1
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
+    devDependencies:
+      "@types/node":
+        specifier: ^24.13.3
+        version: 24.19.2
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.11
         version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(@vitest/browser-playwright@4.1.12)(@vitest/coverage-v8@3.2.7)(jsdom@27.4.0)(vite@6.4.5(@types/node@24.19.2)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/sentry:
@@ -422,6 +453,9 @@ importers:
       "@supabase/supabase-js":
         specifier: 2.84.0
         version: 2.84.0
+      json-stable-stringify:
+        specifier: ^1.3.0
+        version: 1.3.0
     devDependencies:
       "@types/node":
         specifier: ^24.19.2
@@ -511,6 +545,9 @@ importers:
       "@playground/airtable":
         specifier: workspace:*
         version: link:../airtable
+      "@playground/rco-offre-info":
+        specifier: workspace:*
+        version: link:../rco-offre-info
       "@playground/shared-types":
         specifier: workspace:*
         version: link:../shared
@@ -11489,6 +11526,12 @@ packages:
       }
     engines: { node: ">=12.20" }
 
+  zod@3.25.76:
+    resolution:
+      {
+        integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==,
+      }
+
   zod@4.6.7:
     resolution:
       {
@@ -18523,6 +18566,8 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   yocto-queue@1.2.2: {}
+
+  zod@3.25.76: {}
 
   zod@4.6.7: {}
 

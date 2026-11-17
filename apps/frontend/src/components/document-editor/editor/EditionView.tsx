@@ -5,7 +5,6 @@ import { BlockNoteView } from "@blocknote/mantine";
 import { SuggestionMenuController } from "@blocknote/react";
 import { useEffect, useRef, useState } from "react";
 import { getCustomSlashMenuItems } from "./slash-menu-config";
-import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { logger } from "@playground/shared-types";
 
@@ -23,6 +22,7 @@ export function EditionView() {
     isRawMarkdownMode,
     setDebugBlocks,
     showDebug,
+    isSourceOpen,
   } = useDocument();
   const [rawMarkdown, setRawMarkdown] = useState("");
   const [editor, setEditor] = useState<CustomEditor | null>(null);
@@ -147,7 +147,7 @@ export function EditionView() {
         lastSyncedContent.current = markdown;
         updateContent(markdown);
 
-        if (process.env.NODE_ENV === "development" && showDebug) {
+        if (showDebug) {
           setDebugBlocks([...editor.document]);
         }
       } catch (error) {
@@ -168,9 +168,8 @@ export function EditionView() {
     setDebugBlocks,
   ]);
 
-  // Sync initial debug state quand le panel s'ouvre (DEV uniquement)
   useEffect(() => {
-    if (editor && showDebug && process.env.NODE_ENV === "development") {
+    if (editor && showDebug) {
       setDebugBlocks([...editor.document]);
     }
   }, [editor, showDebug, setDebugBlocks]);
@@ -250,7 +249,8 @@ export function EditionView() {
 
   return (
     <div className="w-full bg-white">
-      <div className="p-10">
+      {/* pt-[65px] = source panel header + its pt-2, so both titles start level */}
+      <div className={isSourceOpen ? "p-10 pt-[65px]" : "p-10"}>
         <div className="max-w-[800px] mx-auto w-full">
           {isRawMarkdownMode ? (
             <RawMarkdownView

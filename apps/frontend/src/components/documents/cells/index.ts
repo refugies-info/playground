@@ -4,6 +4,7 @@ export { IngestionVersionCell } from "./IngestionVersionCell";
 export { ModalitesEntreesSortiesCell } from "./ModalitesEntreesSortiesCell";
 export { OnlineStatusCell } from "./OnlineStatusCell";
 export { SessionPeriodCell } from "./SessionPeriodCell";
+export { SourceCell } from "./SourceCell";
 export type {
   TranslationWorkStatus,
   WorkStatusCellProps,

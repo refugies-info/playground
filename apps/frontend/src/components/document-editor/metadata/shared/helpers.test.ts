@@ -59,3 +59,16 @@ describe("normalizeSourceEntries", () => {
     ).toEqual([]);
   });
 });
+
+describe("normalizeSourceEntries code labels", () => {
+  it("labels the RCO codes", () => {
+    expect(
+      normalizeSourceEntries(
+        [{ field: "code_public_vise", rawValue: ["81023", "99999"] }],
+        {},
+      ),
+    ).toEqual([
+      { key: "code_public_vise", value: "81023 (Primo-arrivant), 99999" },
+    ]);
+  });
+});

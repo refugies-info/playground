@@ -19,8 +19,10 @@ export const TYPE_PUBLICATION = "publication";
 export const TYPE_PUBLICATION_LANGUE = "publication_langue";
 export const TYPE_ARCHIVE = "archive";
 export const TYPE_UPDATE = "update";
+export const TYPE_SOURCE_MIGRATION = "source_migration";
 export const TYPE_UPDATE_COMPLIANCE = "update_compliance";
 export const TYPE_CLEAR_LANGUAGE = "clear_language";
+export const TYPE_CLEAR_LANGUAGE_ERROR = "clear_language_error";
 export const TYPE_TRANSLATION = "translation";
 export const TYPE_TRANSLATION_ERROR = "translation_error";
 export const TYPE_TRANSLATION_PRIORITY = "translation_priority";
@@ -59,6 +61,11 @@ export const ACTIVITY_LOG_TYPES = [
     display: "%s a récupéré une nouvelle version pour cette fiche",
   },
   {
+    value: TYPE_SOURCE_MIGRATION,
+    label: "Migration de source",
+    display: "Ce dispositif a été migré de l'API %s vers l'API %s",
+  },
+  {
     value: TYPE_UPDATE_COMPLIANCE,
     label: "Mise à jour avec conformité",
     display:
@@ -68,6 +75,11 @@ export const ACTIVITY_LOG_TYPES = [
     value: TYPE_CLEAR_LANGUAGE,
     label: "Langage clair",
     display: "%s a actionné le langage clair",
+  },
+  {
+    value: TYPE_CLEAR_LANGUAGE_ERROR,
+    label: "Erreur de langage clair",
+    display: "Le langage clair actionné par %s n'a pas fonctionné",
   },
   {
     value: TYPE_TRANSLATION,
