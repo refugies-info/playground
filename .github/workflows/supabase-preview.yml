@@ -63,8 +63,10 @@ jobs:
           api() { curl -sSf -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" "$@"; }
           vercel() { curl -sSf -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" "$@"; }
 
+          # GET /branches/{id} only reports the project health; migration status is on the list endpoint.
           for _ in $(seq 60); do
-            STATUS=$(api "$SUPABASE_API/branches/$BRANCH_ID" | jq -r '.status')
+            BRANCH=$(api "$SUPABASE_API/projects/$SUPABASE_PROJECT_REF/branches" | jq -c --arg id "$BRANCH_ID" '.[] | select(.id == $id)')
+            STATUS=$(jq -r '.status' <<< "$BRANCH")
             echo "Supabase branch status: $STATUS"
             case "$STATUS" in
               MIGRATIONS_PASSED|FUNCTIONS_DEPLOYED) break ;;
@@ -74,8 +76,7 @@ jobs:
           done
           case "$STATUS" in MIGRATIONS_PASSED|FUNCTIONS_DEPLOYED) ;; *) exit 1 ;; esac
 
-          BRANCH_REF=$(api "$SUPABASE_API/projects/$SUPABASE_PROJECT_REF/branches" \
-            | jq -r --arg id "$BRANCH_ID" '.[] | select(.id == $id) | .project_ref')
+          BRANCH_REF=$(jq -r '.project_ref' <<< "$BRANCH")
           KEYS=$(api "$SUPABASE_API/projects/$BRANCH_REF/api-keys?reveal=true")
           PUBLISHABLE_KEY=$(jq -r '(map(select(.type == "publishable")) + map(select(.name == "anon")))[0].api_key' <<< "$KEYS")
           SERVICE_ROLE_KEY=$(jq -r '(map(select(.type == "secret")) + map(select(.name == "service_role")))[0].api_key' <<< "$KEYS")
