@@ -15,9 +15,9 @@ import {
 import { Button } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { buildWidgetDraft, MAX_WIDGET_FIELD_LENGTH } from "@/lib/widget-form";
 import { WIDGET_TYPE_OPTIONS } from "@/lib/widget-list";
-
-const MAX_FIELD_LENGTH = 50;
+import { createWidgetConfigAction } from "@/services/widget-config-actions";
 
 export function CreateWidgetPopover() {
   const router = useRouter();
@@ -25,6 +25,8 @@ export function CreateWidgetPopover() {
   const [title, setTitle] = useState("");
   const [structureName, setStructureName] = useState("");
   const [type, setType] = useState<WidgetConfigType | "">("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const canConfirm =
     title.trim() !== "" && structureName.trim() !== "" && type !== "";
@@ -34,18 +36,25 @@ export function CreateWidgetPopover() {
       setTitle("");
       setStructureName("");
       setType("");
+      setError(null);
     }
     setOpen(nextOpen);
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!canConfirm) return;
-    const params = new URLSearchParams({
-      title: title.trim(),
-      structureName: structureName.trim(),
-    });
-    router.push(`/widgets/new/${type}?${params}`);
+    if (!canConfirm || isCreating) return;
+    setIsCreating(true);
+    setError(null);
+    const result = await createWidgetConfigAction(
+      buildWidgetDraft(type, { title, structureName }),
+    );
+    if (!result.success) {
+      setIsCreating(false);
+      setError(result.error);
+      return;
+    }
+    router.push(`/widgets/${result.data.id}`);
   };
 
   return (
@@ -61,7 +70,7 @@ export function CreateWidgetPopover() {
               variant="dsfr"
               value={title}
               onChange={setTitle}
-              maxLength={MAX_FIELD_LENGTH}
+              maxLength={MAX_WIDGET_FIELD_LENGTH}
               required
             />
             <TextInput
@@ -69,7 +78,7 @@ export function CreateWidgetPopover() {
               variant="dsfr"
               value={structureName}
               onChange={setStructureName}
-              maxLength={MAX_FIELD_LENGTH}
+              maxLength={MAX_WIDGET_FIELD_LENGTH}
               required
             />
             <div className="space-y-1">
@@ -86,6 +95,11 @@ export function CreateWidgetPopover() {
               />
             </div>
           </div>
+          {error && (
+            <p role="alert" className="text-sm text-(--text-default-error)">
+              {error}
+            </p>
+          )}
           <div className="flex w-full justify-end gap-[10px]">
             <Button
               type="button"
@@ -103,6 +117,7 @@ export function CreateWidgetPopover() {
               size="sm"
               rightIcon={RiCheckLine}
               disabled={!canConfirm}
+              isLoading={isCreating}
             >
               Confirmer
             </Button>
