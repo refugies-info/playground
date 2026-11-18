@@ -13,6 +13,7 @@ import {
 } from "@playground/ui";
 import {
   RiAccountCircleLine,
+  RiCodeSSlashLine,
   RiDownloadLine,
   RiFileTextLine,
   RiLogoutBoxRLine,
@@ -162,6 +163,17 @@ export function AppSidebar({
           active={pathname === "/users"}
           iconOnly={isCollapsed}
           href="/users"
+          linkComponent={Link}
+        />
+      )}
+
+      {isAdmin && (
+        <BoutonMenu
+          icon={RiCodeSSlashLine}
+          label="Widgets"
+          active={pathname?.startsWith("/widgets") ?? false}
+          iconOnly={isCollapsed}
+          href="/widgets"
           linkComponent={Link}
         />
       )}

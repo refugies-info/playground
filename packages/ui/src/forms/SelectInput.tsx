@@ -6,27 +6,36 @@ import { cn } from "../utils";
 /**
  * Variants for the SelectInput component.
  */
-const selectInputVariants = cva(
-  "w-full outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0",
-  {
-    variants: {
-      variant: {
-        default:
-          "rounded-md border border-gray-300 bg-white px-3 py-2 text-sm disabled:bg-gray-50 disabled:text-gray-500",
-        inline:
-          "bg-transparent px-1 py-0.5 text-inherit focus:bg-white focus:ring-1 focus:ring-blue-300",
-      },
-      hasError: {
-        true: "border-red-500 focus:ring-red-500",
-        false: "",
-      },
+const selectInputVariants = cva("w-full", {
+  variants: {
+    variant: {
+      // DSFR "Liste déroulante" : chevron, fond et focus viennent de `.fr-select`
+      default: "fr-select text-[14px]",
+      inline:
+        "outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 bg-transparent px-1 py-0.5 text-inherit focus:bg-white focus:ring-1 focus:ring-blue-300",
     },
-    defaultVariants: {
-      variant: "default",
-      hasError: false,
+    hasError: {
+      true: "",
+      false: "",
     },
   },
-);
+  compoundVariants: [
+    {
+      variant: "default",
+      hasError: true,
+      className: "shadow-[inset_0_-2px_0_0_var(--border-plain-error)]",
+    },
+    {
+      variant: "inline",
+      hasError: true,
+      className: "border-red-500 focus:ring-red-500",
+    },
+  ],
+  defaultVariants: {
+    variant: "default",
+    hasError: false,
+  },
+});
 
 export interface SelectInputProps
   extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "onChange">,
@@ -56,7 +65,7 @@ export interface SelectInputProps
  * @description
  * Uses the native `<select>` element for simplicity and accessibility.
  * Two variants available:
- * - `default`: Standard bordered select for forms
+ * - `default`: DSFR "Liste déroulante" (grey field, chevron), native list
  * - `inline`: Transparent background for inline editing
  *
  * @example

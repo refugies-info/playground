@@ -23,6 +23,7 @@
 /* DSFR dans son propre layer — ses règles comportementales ne peuvent
  * plus écraser les utilities Tailwind */
 @import "@gouvfr/dsfr/dist/core/core.css" layer(dsfr);
+@import "@gouvfr/dsfr/dist/component/select/select.css" layer(dsfr);
 
 @import "./tailwind-theme.css";
 @import "./tailwind-animations.css";
