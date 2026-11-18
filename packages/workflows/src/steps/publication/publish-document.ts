@@ -68,21 +68,21 @@ async function getWorkflowDiId(
     .from("workflows")
     // FK hint required: workflows has two FKs to ingestion_records (active + latest)
     .select(
-      "ingestion_records!status_ingestion_record_id_fkey(di_services(di_id))",
+      "ingestion_records!status_ingestion_record_id_fkey(services(origin_id))",
     )
     .eq("id", workflowId)
     .maybeSingle();
 
   if (error) {
-    logger.error({ error, workflowId }, "Error fetching di_id for origin_id");
+    logger.error({ error, workflowId }, "Error fetching service origin_id");
     return undefined;
   }
 
   const ingestionRecord = workflow?.ingestion_records as unknown as
-    | { di_services: { di_id: string | null } | null }
+    | { services: { origin_id: string | null } | null }
     | undefined;
 
-  return ingestionRecord?.di_services?.di_id ?? undefined;
+  return ingestionRecord?.services?.origin_id ?? undefined;
 }
 
 /**

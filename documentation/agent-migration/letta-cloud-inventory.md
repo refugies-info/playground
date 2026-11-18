@@ -296,7 +296,7 @@ Ces étapes sont **plus anciennes** (avant l'introduction de la fan-out) et rest
 ### C.2 Format d'entrée : décision actée
 
 - **Flux de production (actuel)** : **markdown (YAML frontmatter + corps texte)**, issu de l'API Data Inclusion (structures + services). C'est ce que consomme `packages/agents/` et que les workflows envoient à l'agent Letta Cloud.
-- **Flux RCO** : l'ancien format **RCO XML (Lhéo)** est abandonné. RCO a été réactivé via l'API JSON offre-info (`packages/offre-info`) ; le paquet XML `packages/rco` a été supprimé (RI-1639). Les anciennes commands/skills RCO (`.commands/*.md`, `.skills/metadata/`) restent **archivées** (cf. Annexe C).
+- **Flux RCO** : l'ancien format **RCO XML (Lhéo)** est abandonné. RCO a été réactivé via l'API JSON offre-info (`packages/rco-offre-info`) ; le paquet XML `packages/rco` a été supprimé (RI-1639). Les anciennes commands/skills RCO (`.commands/*.md`, `.skills/metadata/`) restent **archivées** (cf. Annexe C).
 
 > **Décision (post-archive, 15 juin 2026)** : la migration cible **uniquement le flux markdown**. Les nouveaux skills Letta Code de la prod (audit, redaction, metadata, translate) consommeront du **markdown** et utiliseront les helpers existants dans `packages/agents/`. La famille RCO XML est **hors-scope** et n'est plus maintenue dans le repo — elle pourra être réintroduite comme nouvelle famille le jour où RCO redevient pertinent (avec `git checkout` des fichiers archivés comme point de départ).
 
@@ -473,7 +473,7 @@ Tous supprimés via `git rm -rf`. **Aucune perte d'historique** : les fichiers r
 
 ### C.3 Ce qui n'a PAS été archivé
 
-- ~~**`packages/rco/src/{lheo,lheo-types}.ts`**~~ — helpers XML Lhéo, conservés à l'époque puis supprimés : RCO a été réactivé via l'API JSON offre-info (`packages/offre-info`) ; le paquet XML `packages/rco` a été supprimé (RI-1639).
+- ~~**`packages/rco/src/{lheo,lheo-types}.ts`**~~ — helpers XML Lhéo, conservés à l'époque puis supprimés : RCO a été réactivé via l'API JSON offre-info (`packages/rco-offre-info`) ; le paquet XML `packages/rco` a été supprimé (RI-1639).
 - **Les 3 blocs mémoire du projet `project-pZvdCSjhJ7Fgmi66gqgy`** sur Letta Cloud (cf. Annexe B.4) — non touchés, car ils sont côté Letta Cloud (pas le repo). À nettoyer séparément (suivi suggéré : nouvelle issue Linear).
 - **La référence à `ressources_metadatas/base-connaissance.md`** dans la SKILL.md archivée — la référence est partie avec le fichier. Plus de question à se poser.
 

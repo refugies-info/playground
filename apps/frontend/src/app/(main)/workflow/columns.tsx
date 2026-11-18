@@ -10,6 +10,7 @@ import {
   createIngestionVersionColumn,
   createModalitesEntreesSortiesColumn,
   createSessionPeriodColumn,
+  createSourceColumn,
   createStructureNameColumn,
   createTitleColumn,
   createWordCountColumn,
@@ -31,4 +32,5 @@ export const inProgressColumns: ColumnDef<Document>[] = [
     getValue: (doc) => doc.date_added,
     showTime: true,
   }),
+  { ...createSourceColumn(), size: 121 },
 ];

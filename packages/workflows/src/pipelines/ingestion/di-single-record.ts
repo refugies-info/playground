@@ -20,11 +20,6 @@ export async function diSingleRecordWorkflow(
 ) {
   "use workflow";
 
-  // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
-  console.log(
-    `▶ diSingleRecordWorkflow started for record ${ingestionRecordId}`,
-  );
-
   // 1. Audit (sets compliance_status + ingestion_report_id)
   const auditResult = await diSingleAuditStep(
     ingestionRecordId,
@@ -38,11 +33,6 @@ export async function diSingleRecordWorkflow(
   // version can be fully assessed without replacing the workflow active source.
   if (auditResult.complianceStatus === "compliant") {
     await diSingleMetadataStep(ingestionRecordId, workflowId, markdown);
-  } else {
-    // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope
-    console.log(
-      `↷ Skipping metadata for record ${ingestionRecordId} (${auditResult.complianceStatus}${hasPreviousVersion ? ", pending update / has previous update" : ""})`,
-    );
   }
 
   // biome-ignore lint/suspicious/noConsole: pino cannot be used in "use workflow" scope

@@ -1,8 +1,7 @@
-# Local Letta dev stack — free agent runtime backed by a local LLM (Ollama).
+# Local Letta dev stack — LLM on Albert (ALBERT_API_KEY / ALBERT_BASE_URL), Ollama for embeddings only.
 #
 # Start:   docker compose -f docker-compose.letta.yml up -d
 # Pull models (first run):  pnpm letta:pull
-#          (or: docker compose -f docker-compose.letta.yml exec ollama ollama pull gemma3:1b)
 # Letta UI / API: http://localhost:8283  (set LETTA_BASE_URL=http://localhost:8283 in .env)
 # Stop:    docker compose -f docker-compose.letta.yml down
 #
@@ -33,6 +32,10 @@ services:
       # No external LLM/embedding keys needed for local-only mode.
       # SECURE=false leaves the server auth-less (fine for localhost dev).
       SECURE: "false"
+      # Optional OpenAI-compatible provider, e.g. Albert (ALBERT_API_KEY in the
+      # root .env). Its models show up as openai/<model>.
+      OPENAI_API_KEY: ${ALBERT_API_KEY:-}
+      OPENAI_BASE_URL: ${ALBERT_BASE_URL:-https://albert.api.etalab.gouv.fr/v1}
     volumes:
       - letta_data:/root/.letta
     restart: unless-stopped

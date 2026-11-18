@@ -1,0 +1,5 @@
+{
+  "name": "rco-plain-language",
+  "model": "letta/letta-free",
+  "envVar": "RCO_PLAIN_LANGUAGE_AGENT_ID"
+}

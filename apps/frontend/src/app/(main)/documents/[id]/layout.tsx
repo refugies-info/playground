@@ -43,11 +43,19 @@ export default async function Layout({
     editorialContent: document.content, // Current working version (editorial or ingestion)
     ingestionContent: document.ingestionContent, // Immutable original from ingestion_records
     complianceReport: document.complianceReport,
+    arbitrationReport: document.arbitrationReport,
+    arbitrationSource: document.arbitrationSource,
+    metadataSource: document.metadataSource,
+    rcoSource: document.rcoSource,
+    rcoApiData: document.rcoApiData,
+    plainLanguageSource: document.plainLanguageSource,
     metadata: document.metadata, // Merged metadata (ingestion + editorial)
     editorialMetadata: document.editorialMetadata, // Editorial overrides only
     editorialRecordId: document.editorialRecordId, // For Realtime status subscription
     metadataReport: document.metadataReport, // AI-generated metadata report
     isMetadataGenerating: document.isMetadataGenerating, // Spinner state for MetadataView
+    hasMetadataRun: document.hasMetadataRun,
+    hasEditorialRun: document.hasEditorialRun,
     referenceData, // Themes & needs ID→name lookups from RI
     publishedUrl: document.publishedUrl,
     publicationRemoteId: document.publicationRemoteId,
@@ -55,12 +63,20 @@ export default async function Layout({
     latestIngestionVersion: document.latestIngestionVersion,
     hasPendingIngestionUpdate: document.hasPendingIngestionUpdate,
     activeRunId: document.activeRunId,
+    editorialFailed: document.editorialFailed,
+    editorialModel: document.editorialModel,
+    metadataModel: document.metadataModel,
+    totalTokens: document.totalTokens,
+    totalTokensSince: document.totalTokensSince,
+    editorialCarbonImpact: document.editorialCarbonImpact,
+    editorialNotes: document.editorialNotes,
     assigneeEmail: document.assigneeEmail,
     assigneeAvatar: document.assigneeAvatar,
     currentEditorId: document.currentEditorId,
     currentEditorName: document.currentEditorName,
     currentUserId: currentUser.id,
     currentUserName: currentUser.username,
+    isAdmin: currentUser.role === "admin",
   };
 
   return (

@@ -84,6 +84,7 @@ export async function markdownToBlocks(
   const normalizedContent = normalizeMarkdown(contentWithoutFrontmatter.trim());
 
   const processor = unified()
+    .use(disableIndentedCode)
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkDirective);
@@ -98,6 +99,14 @@ export async function markdownToBlocks(
   );
 
   return validateAndFixBlocks(blocks);
+}
+
+// Imported sources (HTML→MD) often indent plain text by 4+ spaces, which CommonMark
+// would turn into code blocks. Only fenced code (```) is a real code block here.
+function disableIndentedCode(this: ReturnType<typeof unified>) {
+  const data = this.data();
+  data.micromarkExtensions ??= [];
+  data.micromarkExtensions.push({ disable: { null: ["codeIndented"] } });
 }
 
 /**
@@ -477,6 +486,11 @@ function serializeInlineRecursive(
         ...parentStyles,
         strike: true,
       });
+    }
+
+    // Hard break ("  \n"): BlockNote renders "\n" in text as <br>
+    if (node.type === "break") {
+      return { type: "text", text: "\n", styles: { ...parentStyles } };
     }
 
     if (node.type === "inlineCode") {

@@ -38,4 +38,26 @@ describe("sendMessageToConversation", () => {
       expect.objectContaining({ override_model: LETTA_MODEL_HANDLE }),
     );
   });
+
+  it("joins the text of array content parts", async () => {
+    createMock.mockResolvedValue(
+      streamOf([
+        {
+          message_type: "assistant_message",
+          content: [
+            { type: "text", text: '{"title":' },
+            { type: "text", text: '"Bonjour"}' },
+          ],
+        },
+      ]),
+    );
+
+    const { content } = await sendMessageToConversation(
+      client,
+      "conv-1",
+      "Bonjour",
+    );
+
+    expect(content).toBe('{"title":"Bonjour"}');
+  });
 });

@@ -7,6 +7,8 @@
  * The Letta agent can take as long as it needs (1–3 minutes is normal).
  *
  * Flow:
+ *   RCO record → source.generatePlainLanguage (sources/), then 5–6.
+ *   DI record:
  *   1. Validate/recreate Letta conversation
  *   2. Cancel any active runs on the conversation
  *   3. Fetch content + metadata (editorial_record → ingestion_record fallback)
@@ -15,12 +17,25 @@
  *   6. Return the rewritten content
  */
 
-import { createLettaClient, simplifyContentSync } from "@playground/agents";
-import { logger, TYPE_CLEAR_LANGUAGE } from "@playground/shared-types";
+import {
+  createLettaClient,
+  estimateCarbonImpact,
+  getFailedAgentRun,
+  simplifyContentSync,
+} from "@playground/agents";
+import {
+  buildLettaConversationUrl,
+  LETTA_MODEL_HANDLE,
+  logger,
+  TYPE_CLEAR_LANGUAGE,
+  TYPE_CLEAR_LANGUAGE_ERROR,
+} from "@playground/shared-types";
 import { FatalError } from "@workflow/errors";
 import matter from "gray-matter";
 import { recordActivity } from "../common/activity-log";
+import { notifyClearLanguageError } from "../common/slack";
 import { getSupabaseClient } from "../common/supabase";
+import { getEditorialSource } from "../sources";
 import {
   type PersistEditorialReportResult,
   persistEditorialReportStep,
@@ -37,41 +52,22 @@ export interface ForceEditorialStepResult {
   persistResult: PersistEditorialReportResult;
 }
 
-/**
- * Durable workflow step that calls the Letta editorial agent and persists the result.
- *
- * Unlike the old SSE route, this step:
- * - Has no timeout pressure (Vercel Workflow steps can run for minutes)
- * - Automatically retries on transient failures
- * - Always persists the result, even if the client disconnects
- *
- * @param workflowId - The workflow (document) ID
- * @param userId - The profile id of the human who triggered the rewrite
- */
-export async function forceEditorialStep(
-  workflowId: string,
-  userId: string,
-): Promise<ForceEditorialStepResult> {
-  "use step";
+type EditorialWorkflow = {
+  conversation_id: string | null;
+  editorial_record_id: string | null;
+  ingestion_record_id: string | null;
+};
 
+async function generateDiEditorial(
+  workflowId: string,
+  workflow: EditorialWorkflow,
+  model = LETTA_MODEL_HANDLE,
+) {
   const supabase = getSupabaseClient();
 
   const agentId = process.env.PLAYGROUND_AGENT_ID;
   if (!agentId) {
     throw new FatalError("PLAYGROUND_AGENT_ID is not defined");
-  }
-
-  // ─── 1. Fetch workflow ────────────────────────────────────────────────
-  const { data: workflow, error: workflowError } = await supabase
-    .from("workflows")
-    .select("conversation_id, editorial_record_id, ingestion_record_id")
-    .eq("id", workflowId)
-    .single();
-
-  if (workflowError || !workflow) {
-    throw new FatalError(
-      `Workflow not found: ${workflowError?.message ?? "no data"}`,
-    );
   }
 
   // ─── 2. Validate / create conversation ────────────────────────────────
@@ -86,6 +82,21 @@ export async function forceEditorialStep(
   }
 
   const lettaClient = createLettaClient();
+
+  // A stored conversation stays bound to the agent it was created on: after a
+  // PLAYGROUND_AGENT_ID change, old fiches would keep talking to the old agent.
+  if (conversationId) {
+    const conversation = await lettaClient.conversations
+      .retrieve(conversationId)
+      .catch(() => null);
+    if (conversation?.agent_id !== agentId) {
+      logger.info(
+        { workflowId, conversationId, agentId: conversation?.agent_id },
+        "[forceEditorialStep] Conversation missing or on another agent — recreating",
+      );
+      conversationId = null;
+    }
+  }
 
   if (!conversationId) {
     logger.info({ workflowId }, "[forceEditorialStep] Creating conversation");
@@ -190,11 +201,115 @@ export async function forceEditorialStep(
     lettaClient,
     fullContent,
     conversationId,
+    model,
   );
 
   if (!finalContent.content) {
     throw new Error("No assistant response received from Letta agent");
   }
+
+  return { agentId, conversationId, model, ...finalContent };
+}
+
+/**
+ * Durable workflow step that calls the Letta editorial agent and persists the result.
+ *
+ * Unlike the old SSE route, this step:
+ * - Has no timeout pressure (Vercel Workflow steps can run for minutes)
+ * - Automatically retries on transient failures
+ * - Always persists the result, even if the client disconnects
+ *
+ * @param workflowId - The workflow (document) ID
+ * @param userId - The profile id of the human who triggered the rewrite
+ * @param model - Admin-chosen Letta model handle; agent default when omitted
+ */
+export async function forceEditorialStep(
+  workflowId: string,
+  userId: string,
+  model?: string,
+): Promise<ForceEditorialStepResult> {
+  "use step";
+
+  const supabase = getSupabaseClient();
+
+  // ─── 1. Fetch workflow ────────────────────────────────────────────────
+  const { data: workflow, error: workflowError } = await supabase
+    .from("workflows")
+    .select("conversation_id, editorial_record_id, ingestion_record_id")
+    .eq("id", workflowId)
+    .single();
+
+  if (workflowError || !workflow) {
+    throw new FatalError(
+      `Workflow not found: ${workflowError?.message ?? "no data"}`,
+    );
+  }
+
+  const service = workflow.ingestion_record_id
+    ? (
+        await supabase
+          .from("ingestion_records")
+          .select("service:services(origin, data)")
+          .eq("id", workflow.ingestion_record_id)
+          .single<{ service: { origin: string; data: unknown } | null }>()
+      ).data?.service
+    : null;
+
+  const linkConversation = async (conversationId: string) => {
+    // DI links its conversation upfront; RCO only knows it after the call.
+    if (conversationId === workflow.conversation_id) return;
+    await supabase
+      .from("workflows")
+      .update({ conversation_id: conversationId })
+      .eq("id", workflowId);
+  };
+
+  const source = getEditorialSource(service?.origin);
+  const generation = await (source
+    ? source.generatePlainLanguage({
+        serviceData: service?.data,
+        model,
+        // Linked before the agent answers: a failed run stays reachable.
+        linkConversation,
+      })
+    : generateDiEditorial(workflowId, workflow, model)
+  ).catch(async (error: unknown) => {
+    const failedRun = getFailedAgentRun(error);
+    if (failedRun) {
+      // Keeps the footer (model, tokens, impact) and the Letta link usable.
+      const usedModel = model ?? source?.defaultModel ?? LETTA_MODEL_HANDLE;
+      await linkConversation(failedRun.conversationId);
+      const { data: report } = await supabase
+        .from("letta_reports")
+        .insert({
+          agent_id: failedRun.agentId,
+          report_type: "editorial",
+          markdown: "",
+          status: "error",
+          raw_response: error instanceof Error ? error.message : String(error),
+          workflow_id: workflowId,
+          token_cost: failedRun.usage?.totalTokens || null,
+          carbon_impact: await estimateCarbonImpact(usedModel, failedRun.usage),
+          model: usedModel,
+        })
+        .select("id")
+        .single();
+      await recordActivity({
+        action: TYPE_CLEAR_LANGUAGE_ERROR,
+        authorId: userId,
+        workflowId,
+        lettaReportId: report?.id,
+      });
+    }
+    throw error;
+  });
+  const {
+    agentId,
+    conversationId,
+    model: usedModel,
+    ...finalContent
+  } = generation;
+  await linkConversation(conversationId);
 
   // ─── 6. Persist ───────────────────────────────────────────────────────
   const persistResult = await persistEditorialReportStep(
@@ -202,6 +317,7 @@ export async function forceEditorialStep(
     agentId,
     finalContent.content,
     finalContent.usage,
+    usedModel,
   );
 
   if (!persistResult.success || !persistResult.data) {
@@ -238,3 +354,43 @@ export async function forceEditorialStep(
 
 // Allow retries for transient Letta Cloud failures
 forceEditorialStep.maxRetries = 2;
+
+export async function notifyClearLanguageErrorStep(
+  workflowId: string,
+  userId: string,
+  errorMessage: string,
+): Promise<void> {
+  "use step";
+
+  const supabase = getSupabaseClient();
+  const [{ data: profile }, { data: workflow }, { data: report }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("username, email")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase
+        .from("workflows")
+        .select("conversation_id")
+        .eq("id", workflowId)
+        .maybeSingle(),
+      // Only a failed agent run leaves a report with its agent id.
+      supabase
+        .from("letta_reports")
+        .select("agent_id")
+        .eq("workflow_id", workflowId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+  await notifyClearLanguageError({
+    workflowId,
+    errorMessage,
+    userName: profile?.username || profile?.email?.split("@")[0] || undefined,
+    lettaUrl: report?.agent_id
+      ? buildLettaConversationUrl(report.agent_id, workflow?.conversation_id)
+      : undefined,
+  });
+}

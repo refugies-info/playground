@@ -5,7 +5,7 @@ import { logger } from "@playground/shared-types";
  *
  * One webhook per channel, configured by environment variable:
  *   - SLACK_WEBHOOK_LOGS_BOMO → #logs-bomo: successful RCO publications
- *   - SLACK_WEBHOOK_DEV       → #dev: publication, translation and Airtable failures
+ *   - SLACK_WEBHOOK_DEV       → #dev: publication, translation, clear language and Airtable failures
  */
 
 const ENV_WEBHOOK_LOGS_BOMO = "SLACK_WEBHOOK_LOGS_BOMO";
@@ -127,6 +127,27 @@ export async function notifyTranslationPublicationError(params: {
       : [`traduction: \`${params.translationId}\``]),
     ...(params.userEmail ? [`par ${params.userEmail}`] : []),
     `erreur: ${params.errorMessage}`,
+  ].join("\n");
+
+  await postSlackMessage(process.env[ENV_WEBHOOK_DEV], ENV_WEBHOOK_DEV, text);
+}
+
+/** Notifies #dev that a clear language rewrite failed after all retries. */
+export async function notifyClearLanguageError(params: {
+  workflowId: string;
+  errorMessage: string;
+  userName?: string;
+  lettaUrl?: string;
+}): Promise<void> {
+  const bomoUrl = getBomoDocumentUrl(params.workflowId);
+  const text = [
+    `[${getEnvironmentLabel()}] Langage clair non généré${params.userName ? ` (demandé par ${params.userName})` : ""}`,
+    ...(bomoUrl
+      ? [`fiche BOMO : ${bomoUrl}`]
+      : [`workflow : \`${params.workflowId}\``]),
+    ...(params.lettaUrl ? [`conversation Letta : ${params.lettaUrl}`] : []),
+    // Letta errors can carry a full stack trace
+    `\`\`\`${params.errorMessage.slice(0, 2000)}\`\`\``,
   ].join("\n");
 
   await postSlackMessage(process.env[ENV_WEBHOOK_DEV], ENV_WEBHOOK_DEV, text);

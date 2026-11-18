@@ -4,12 +4,15 @@ import {
   ACTIVITY_LOG_TYPES,
   type ActivityLogType,
   dayKey,
+  formatCarbonImpact,
   LANGUAGES,
+  SOURCE_SYSTEM_LABELS,
   TYPE_ASSIGNMENT,
   TYPE_COMPLIANCE_HUMAN,
   TYPE_COMPLIANCE_IA,
   TYPE_NOTE,
   TYPE_PUBLICATION_LANGUE,
+  TYPE_SOURCE_MIGRATION,
   TYPE_TRANSLATION_ERROR,
   TYPE_UPDATE_COMPLIANCE,
 } from "@playground/shared-types";
@@ -87,6 +90,15 @@ function formatActivityText(entry: ActivityLogEntry): string {
       // "%s a publié la fiche en %s"
       values = [author, langLabel];
       break;
+    case TYPE_SOURCE_MIGRATION:
+      // "Ce dispositif a été migré de l'API %s vers l'API %s"
+      values = entry.sourceMigration
+        ? [
+            SOURCE_SYSTEM_LABELS[entry.sourceMigration.from],
+            SOURCE_SYSTEM_LABELS[entry.sourceMigration.to],
+          ]
+        : [];
+      break;
     case TYPE_TRANSLATION_ERROR:
       // "La traduction en %s n'a pas fonctionné"
       values = [langLabel];
@@ -108,13 +120,16 @@ function formatAiConsumption(entry: ActivityLogEntry): string | null {
   if (!report) return null;
 
   const model = report.model?.trim();
-  const tokenCost = report.tokenCost?.toLocaleString("fr-FR");
+  const details = [
+    report.tokenCost != null &&
+      `${report.tokenCost.toLocaleString("fr-FR")} tokens`,
+    report.carbonImpact && formatCarbonImpact(report.carbonImpact),
+  ]
+    .filter(Boolean)
+    .join(", ");
 
-  if (!model && tokenCost == null) return null;
-  if (!model) return `${tokenCost} tokens`;
-  if (tokenCost == null) return model;
-
-  return `${model} (${tokenCost} tokens)`;
+  if (!model) return details || null;
+  return details ? `${model} (${details})` : model;
 }
 
 export function ActivityLogsView({

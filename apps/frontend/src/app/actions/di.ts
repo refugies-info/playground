@@ -2,32 +2,10 @@
 
 import { logger } from "@playground/shared-types";
 import { createSupabaseServerClient } from "@playground/supabase";
-import {
-  diIngestionWorkflow,
-  forceArbitrationWorkflow,
-} from "@playground/workflows";
+import { forceArbitrationWorkflow } from "@playground/workflows";
 import { start } from "@workflow/core/runtime";
 import { cookies } from "next/headers";
 import { buildWorkflowDashboardUrl } from "@/lib/workflow-utils";
-
-export async function triggerDiIngestionAction() {
-  try {
-    const result = await start(diIngestionWorkflow, []);
-    const dashboardUrl = buildWorkflowDashboardUrl(result.runId);
-
-    return {
-      success: true,
-      workflowId: result.runId,
-      dashboardUrl,
-    };
-  } catch (error) {
-    logger.error(error, "Failed to trigger DI ingestion workflow");
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
 
 export async function forceArbitrationAction(workflowId: string) {
   try {

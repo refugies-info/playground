@@ -4,8 +4,12 @@ import {
   parseDocumentSortField,
   parseSearchField,
 } from "@playground/shared-types";
-import { getQueryParam } from "@/lib/search-params";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { getIngestionSource } from "@/lib/ingestion-source";
+import { getQueryParam, WORKFLOW_FILTERS_COOKIE } from "@/lib/search-params";
 import { getDocuments } from "@/services/documents";
+import { getLatestIngestionRun } from "@/services/ingestion-runs";
 import { WorkflowClient } from "./workflow-client";
 
 interface PageProps {
@@ -18,6 +22,9 @@ const MAX_PAGE_SIZE = 100;
 
 export default async function WorkflowPage(props: PageProps) {
   const searchParams = await props.searchParams;
+  const savedQuery = (await cookies()).get(WORKFLOW_FILTERS_COOKIE)?.value;
+  if (Object.keys(searchParams).length === 0 && savedQuery)
+    redirect(`/workflow?${savedQuery}`);
   const page =
     typeof searchParams.page === "string"
       ? Number.parseInt(searchParams.page, 10) || 1
@@ -31,22 +38,23 @@ export default async function WorkflowPage(props: PageProps) {
     MAX_PAGE_SIZE,
   );
 
-  const search = getQueryParam(searchParams.search);
-  const searchField = parseSearchField(getQueryParam(searchParams.searchField));
-  // Filtre de date composite : type + condition + une ou deux dates.
-  // Les parsers rejettent les valeurs hors énumération d'une URL bricolée.
-  const dateFilterType = parseDateFilterType(
-    getQueryParam(searchParams.dateType),
-  );
-  const dateFilterCondition = parseDateFilterCondition(
-    getQueryParam(searchParams.dateCondition),
-  );
-  const dateFrom = getQueryParam(searchParams.dateFrom);
-  const dateTo = getQueryParam(searchParams.dateTo);
-  // Type d'entrée : "0" (dates fixes) ou "1" (à tout moment).
-  const modalitesEntreesSorties = getQueryParam(
-    searchParams.modalitesEntreesSorties,
-  );
+  // Parsers reject values outside their enum (hand-crafted URLs).
+  const filters = {
+    search: getQueryParam(searchParams.search),
+    searchField: parseSearchField(getQueryParam(searchParams.searchField)),
+    dateFilterType: parseDateFilterType(getQueryParam(searchParams.dateType)),
+    dateFilterCondition: parseDateFilterCondition(
+      getQueryParam(searchParams.dateCondition),
+    ),
+    dateFrom: getQueryParam(searchParams.dateFrom),
+    dateTo: getQueryParam(searchParams.dateTo),
+    // "0" (dates fixes) or "1" (à tout moment).
+    modalitesEntreesSorties: getQueryParam(
+      searchParams.modalitesEntreesSorties,
+    ),
+    origin: getQueryParam(searchParams.origin),
+    excludedContent: getQueryParam(searchParams.excludedContent),
+  };
 
   // Parse and validate sort parameters (server-side sort).
   const sortBy = parseDocumentSortField(
@@ -59,26 +67,22 @@ export default async function WorkflowPage(props: PageProps) {
       ? sortOrderParam
       : "asc";
 
-  const {
-    data: inProgressDocuments,
-    total,
-    totalPages,
-  } = await getDocuments({
-    page,
-    pageSize,
-    complianceStatus: ["pending", "error", null], // Include pending, error, and NULL (unevaluated)
-    sortBy,
-    sortOrder,
-    search,
-    searchField,
-    searchInContent: true, // texte étendu : titre, structure, commune, id + markdown
-    dateFilterType,
-    dateFilterCondition,
-    dateFrom,
-    dateTo,
-    modalitesEntreesSorties,
-    includePreviewFields: true,
-  });
+  const ingestionSource = getIngestionSource();
+  const [{ data: inProgressDocuments, total, totalPages }, latestIngestionRun] =
+    await Promise.all([
+      getDocuments({
+        page,
+        pageSize,
+        complianceStatus: ["pending", "error", null], // Include pending, error, and NULL (unevaluated)
+        sortBy,
+        sortOrder,
+        ...filters,
+        excludedContent: filters.excludedContent.split(","),
+        searchInContent: true, // texte étendu : titre, structure, commune, id + markdown
+        includePreviewFields: true,
+      }),
+      getLatestIngestionRun(ingestionSource),
+    ]);
 
   return (
     <WorkflowClient
@@ -90,14 +94,18 @@ export default async function WorkflowPage(props: PageProps) {
       sortBy={sortBy}
       sortOrder={sortOrder}
       initialFilters={{
-        search,
-        searchField: searchField ?? "",
-        dateType: dateFilterType ?? "",
-        dateCondition: dateFilterCondition ?? "",
-        dateFrom,
-        dateTo,
-        modalitesEntreesSorties,
+        search: filters.search,
+        searchField: filters.searchField ?? "",
+        dateType: filters.dateFilterType ?? "",
+        dateCondition: filters.dateFilterCondition ?? "",
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
+        modalitesEntreesSorties: filters.modalitesEntreesSorties,
+        origin: filters.origin,
+        excludedContent: filters.excludedContent,
       }}
+      ingestionSource={ingestionSource}
+      latestIngestionRun={latestIngestionRun}
     />
   );
 }

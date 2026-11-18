@@ -35,10 +35,30 @@ tr[data-empty-warning]:has(+ tr[data-empty-warning]) > td[data-metadata-value] {
   border-bottom-style: hidden;
 }
 
-/* BlockNote editor styles */
+/* BlockNote editor styles — doubled class beats BlockNote's Inter default */
+.bn-container.bn-container {
+  --bn-font-family: Marianne, arial, sans-serif;
+}
+
 .bn-container {
+  .bn-default-styles {
+    font-family: var(--bn-font-family);
+  }
+
   a {
     @apply underline text-blue-800;
+  }
+
+  /* BlockNote defaults are 3em / 2em */
+  [data-content-type="heading"]:not([data-level]),
+  [data-content-type="heading"][data-level="1"] {
+    --level: 28px;
+  }
+  [data-content-type="heading"]:is([data-level="2"], [data-level="3"]) {
+    --level: 24px;
+  }
+  [data-content-type="heading"] :is(h1, h2, h3) {
+    line-height: normal;
   }
 
   [data-node-type="blockContainer"]:has([data-content-type="toggleListItem"]) {

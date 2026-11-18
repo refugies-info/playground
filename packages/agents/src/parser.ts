@@ -123,7 +123,6 @@ function quoteUnsafeScalar(value: string): string {
  * silently becomes data.
  */
 export function reindentFlatYaml(yaml: string): string {
-  // ponytail: key layout duplicated from MetadataRiSchema, update both together
   type Frame = { spec: IndentSpec; indent: number; isListItem: boolean };
   const stack: Frame[] = [
     { spec: FLAT_FRONTMATTER_SPEC, indent: 0, isListItem: false },

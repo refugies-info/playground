@@ -3,7 +3,6 @@
 import { BlockNoteEditor } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import { SuggestionMenuController } from "@blocknote/react";
-import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { isRtlLanguage } from "@playground/shared-types";
 import { Loader2 } from "lucide-react";

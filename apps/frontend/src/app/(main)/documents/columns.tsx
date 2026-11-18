@@ -12,6 +12,7 @@ import {
   createModalitesEntreesSortiesColumn,
   createOnlineStatusColumn,
   createSessionPeriodColumn,
+  createSourceColumn,
   createStructureNameColumn,
   createTitleColumn,
   createWordCountColumn,
@@ -27,7 +28,7 @@ import type { Profile } from "@/lib/profile";
  * Ordre et intitulés exacts (header row 1255:8745) :
  *   Assigné·e=80 | Statut=136 | État=121 | Version=80 | Mots=76 | Titre=fill |
  *   Structure=148 | Ville=120 | Date de session=121 | Type d'entrée=154 |
- *   Date d'arbitrage=121 | Conformité=149 | ID=80
+ *   Date d'arbitrage=121 | Source=121 (RI-1690) | Conformité=149 | ID=80
  */
 export function getColumns(
   editors: Profile[],
@@ -60,6 +61,7 @@ export function getColumns(
       }),
       size: 121,
     },
+    { ...createSourceColumn(), size: 121 },
     { ...createComplianceStatusColumn(), size: 149 }, // "Conformité"
     { ...createExternalIdColumn(), size: 80 }, // "ID"
   ];

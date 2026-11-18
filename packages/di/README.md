@@ -2,6 +2,8 @@
 
 TypeScript client for the [Data Inclusion API](https://api.data.inclusion.gouv.fr/).
 
+Kept as a fallback (`INGESTION_SOURCE=di`): the main source is the RCO API in `packages/rco-offre-info`. The `CarifOref` in function names here means DI records filtered on `source = "carif-oref"`, not a call to the Carif-Oref API itself.
+
 ## Environment Variables
 
 The client requires the following environment variables in the **root `.env`** file:
@@ -163,6 +165,6 @@ pnpm di:ingest --type services --limit 50
 
 ### Database Tables
 
-- `di_structures` / `di_services` - Main data tables with version history
-- `di_structures_latest` / `di_services_latest` - Views for current versions only
+- `structures` / `services` - Main data tables with version history
+- `structures_latest` / `services_latest` - Views for current versions only
 - `di_ingestion_runs` - Tracks each ingestion run with stats

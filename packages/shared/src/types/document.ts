@@ -1,3 +1,7 @@
+import type { SourceSystem } from "../constants/sources";
+import type { CarbonImpact } from "../lib/carbon";
+import type { ArbitrationReport } from "./arbitration-report";
+
 export type ComplianceStatus =
   | "compliant"
   | "non_compliant"
@@ -54,6 +58,18 @@ export interface Document {
   content: string;
   ingestionContent?: string; // Immutable original content from ingestion_records
   complianceReport?: string; // Markdown content of the compliance report
+  /** RCO only: structured compliance report, for reports generated since RI-1642 */
+  arbitrationReport?: ArbitrationReport;
+  /** RCO only: the fiche fields sent to the arbitration agents */
+  arbitrationSource?: Record<string, unknown>;
+  /** RCO only: the fiche fields sent to the metadata agent */
+  metadataSource?: Record<string, unknown>;
+  /** RCO only: every field the API returned for the fiche */
+  rcoSource?: Record<string, unknown>;
+  /** RCO only: the fiche exactly as the API returned it (debug panel) */
+  rcoApiData?: Record<string, unknown>;
+  /** RCO only: the fiche fields sent to the plain language agent */
+  plainLanguageSource?: Record<string, unknown>;
   metadata: Record<string, unknown>;
   /** Metadata from editorial_records only (user edits) */
   editorialMetadata?: Record<string, unknown>;
@@ -82,7 +98,8 @@ export interface Document {
   structureName?: string;
   sessionStartDate?: string;
   sessionEndDate?: string | null;
-  sourceSystem: "RCO" | "DI";
+  sourceSystem: SourceSystem | null;
+  sourceMigratedAt?: string | null;
   updated_at: string;
   assigneeEmail?: string;
   assigneeAvatar?: string;
@@ -103,6 +120,20 @@ export interface Document {
   hasPendingIngestionUpdate?: boolean;
   /** Vercel Workflow runId when an AI editorial rewrite is in progress or waiting for user decision */
   activeRunId?: string;
+  /** At least one metadata generation was attempted (Letta conversation exists) */
+  hasMetadataRun?: boolean;
+  /** At least one clear language rewrite was attempted (Letta conversation exists) */
+  hasEditorialRun?: boolean;
+  metadataModel?: string | null;
+  /** Letta model handle of the last clear language rewrite */
+  editorialModel?: string | null;
+  /** The last clear language rewrite failed: model/tokens are the failed run's */
+  editorialFailed?: boolean;
+  totalTokens?: number | null;
+  totalTokensSince?: string | null;
+  editorialCarbonImpact?: CarbonImpact | null;
+  /** Sections of the last clear language rewrite meant for editors, not readers */
+  editorialNotes?: string;
   /** User ID currently holding the edit lock on this fiche (NULL if free) */
   currentEditorId?: string | null;
   /** Display name of the user currently holding the edit lock on this fiche (NULL if free) */
