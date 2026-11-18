@@ -37,6 +37,8 @@ Duplicating a widget copies its content with a `(1)` suffix and creates it as `a
 - The "Configuration et accès" section (`WidgetConfigurationSection`) is common to every type; each type adds its own sections after it, inside `WidgetEditorLayout` (header, menu, content frame).
 - Thumbnail: the content is searched by keyword or by RI id (`searchDispositifsAction`, `getDispositifsByIdsAction`). `externalTitle` is not an input, it takes the title of the chosen fiche on every save (until a fiche is chosen it keeps the title typed in the popover). A thumbnail without fiche displays nothing in the widget API.
 
+- The preview panel (open by default, desktop / mobile switch) shows the **saved** widget in an iframe on `<WIDGET_BASE_URL>/w/<publicId>?preview=1&v=<n>`. The autosave is what keeps it up to date: `v` changes after each successful save and reloads the iframe. Without `WIDGET_BASE_URL` the panel is hidden. `preview=1` is for the widget service to ignore the visit in its traffic and to allow the Bomo to frame the page.
+
 ## Things to know
 
 - Every server action checks the Supabase session before using the RI secret, reads included.
