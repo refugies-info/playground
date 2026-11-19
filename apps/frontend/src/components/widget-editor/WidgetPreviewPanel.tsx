@@ -84,7 +84,7 @@ export function WidgetPreviewPanel({ src }: WidgetPreviewPanelProps) {
   }
 
   return (
-    <aside className="flex w-[596px] shrink-0 flex-col items-center gap-4 rounded-tl-2xl border-l border-t border-(--border-default-grey) bg-(--background-alt-blue-france) shadow-[-1px_0_3px_rgba(0,0,18,0.06)]">
+    <aside className="sticky top-20 flex h-[calc(100vh-5rem)] w-[596px] shrink-0 flex-col items-center gap-4 self-start rounded-tl-2xl border-l border-t border-(--border-default-grey) bg-(--background-alt-blue-france) shadow-[-1px_0_3px_rgba(0,0,18,0.06)]">
       <div className="relative flex h-[84px] w-full items-center justify-center p-2">
         <Button
           type="button"
@@ -104,22 +104,27 @@ export function WidgetPreviewPanel({ src }: WidgetPreviewPanelProps) {
       </div>
       <div
         ref={observeArea}
-        className="relative mx-9 mb-10 min-h-[480px] w-[calc(100%-72px)] flex-1"
+        className="mx-9 mb-10 min-h-0 w-[calc(100%-72px)] flex-1 overflow-y-auto"
       >
         {area.width > 0 && (
-          <iframe
-            ref={iframeRef}
-            title="Aperçu du widget"
-            src={src}
-            className="absolute top-0 bg-white shadow-[0_4px_12px_rgba(0,0,18,0.16)]"
-            style={{
-              width: frameWidth,
-              height: contentHeight ?? area.height / scale,
-              left: (area.width - frameWidth * scale) / 2,
-              transform: `scale(${scale})`,
-              transformOrigin: "top left",
-            }}
-          />
+          <div
+            className="relative"
+            style={{ height: (contentHeight ?? area.height / scale) * scale }}
+          >
+            <iframe
+              ref={iframeRef}
+              title="Aperçu du widget"
+              src={src}
+              className="absolute top-0 bg-white shadow-[0_4px_12px_rgba(0,0,18,0.16)]"
+              style={{
+                width: frameWidth,
+                height: contentHeight ?? area.height / scale,
+                left: (area.width - frameWidth * scale) / 2,
+                transform: `scale(${scale})`,
+                transformOrigin: "top left",
+              }}
+            />
+          </div>
         )}
       </div>
     </aside>
