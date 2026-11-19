@@ -1,3 +1,4 @@
+import { isAdmin } from "@playground/shared-types";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import {
@@ -12,7 +13,7 @@ interface PageProps {
 
 export default async function WidgetPage(props: PageProps) {
   const currentUser = await getCurrentUser();
-  if (currentUser.role !== "admin") redirect("/");
+  if (!isAdmin(currentUser.role)) redirect("/");
 
   const { id } = await props.params;
   const result = await getWidgetConfigAction(id);
@@ -26,7 +27,7 @@ export default async function WidgetPage(props: PageProps) {
   }
 
   const widget = result.data;
-  // The "Liste" widget has no edit page yet (RI-1623).
+  // Only the "thumbnail" (Vignette) type can be edited for now: the edit page for the "list" type comes with RI-1623.
   if (widget.type !== "thumbnail") notFound();
 
   const dispositifs = widget.dispositifId
