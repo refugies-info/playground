@@ -29,6 +29,14 @@ The status shown is not the `status` stored by RI:
 
 Duplicating a widget copies its content with a `(1)` suffix and creates it as `active`, so that it starts without status.
 
+## Widget pages
+
+- Confirming the "Créer un widget" popover creates the widget on the RI side (`active`, with the title and partner typed, no domain, `externalTitle` = title) and opens `/widgets/<id>`. A thumbnail is created without content (`dispositifId` is optional on creation); a list takes default display values (`buildWidgetDraft`), to confirm with the product team.
+- `/widgets/<id>` edits an existing widget. Only the `thumbnail` type has a page for now, a `list` widget returns a 404.
+- Changes are autosaved 800 ms after the last edit, when the title and the partner are filled. After a failed save, the next edit or a click on the save indicator retries.
+- The "Configuration et accès" section (`WidgetConfigurationSection`) is common to every type; each type adds its own sections after it, inside `WidgetEditorLayout` (header, menu, content frame).
+- Thumbnail: the content is searched by keyword or by RI id (`searchDispositifsAction`, `getDispositifsByIdsAction`). `externalTitle` is not an input, it takes the title of the chosen fiche on every save (until a fiche is chosen it keeps the title typed in the popover). A thumbnail without fiche displays nothing in the widget API.
+
 ## Things to know
 
 - Every server action checks the Supabase session before using the RI secret, reads included.

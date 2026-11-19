@@ -1,6 +1,6 @@
 "use client";
 
-import { LANGUAGES } from "@playground/shared-types";
+import { isAdmin, LANGUAGES } from "@playground/shared-types";
 import type { UserRole } from "@playground/shared-types/constants/roles";
 import { cva } from "class-variance-authority";
 import { format } from "date-fns";
@@ -386,7 +386,7 @@ export function UserCard({
                 </div>
               )}
               <div className="absolute -bottom-1 -right-1 bg-white p-1 rounded-full shadow-sm">
-                {formData.role === "admin" && (
+                {isAdmin(formData.role) && (
                   <Shield
                     size={14}
                     className="text-pink-600"
@@ -407,7 +407,7 @@ export function UserCard({
                 <span
                   className={cn(
                     "text-xs font-medium uppercase tracking-wider",
-                    formData.role === "admin"
+                    isAdmin(formData.role)
                       ? "text-pink-600"
                       : formData.role === "translator"
                         ? "text-orange-600"

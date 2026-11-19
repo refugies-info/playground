@@ -105,6 +105,7 @@ export function WidgetsList({
         onSortChange={(field, order) =>
           navigate({ sortBy: field, sortOrder: order, page: "1" })
         }
+        onRowClick={(widget) => router.push(`/widgets/${widget._id}`)}
         emptyTitle="Aucun widget"
         emptyDescription="Aucun widget ne correspond à cette vue."
       />
