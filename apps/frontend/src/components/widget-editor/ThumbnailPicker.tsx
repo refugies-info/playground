@@ -1,16 +1,9 @@
 import type { RiDispositifSummary } from "@playground/shared-types";
 import { AsyncSearchInput } from "@playground/ui/forms";
-import { Button } from "@playground/ui/primitives";
+import { RiGovernmentLine } from "@playground/ui/icons";
+import { Tag } from "@playground/ui/primitives";
 import { getDispositifTitle } from "@/lib/widget-form";
 import { WidgetEditorSection } from "./WidgetEditorSection";
-
-const TYPE_LABELS: Record<RiDispositifSummary["type"], string> = {
-  dispositif: "Dispositif",
-  demarche: "Démarche",
-};
-
-const describe = ({ sponsorName, type, status }: RiDispositifSummary) =>
-  [sponsorName, TYPE_LABELS[type], status].filter(Boolean).join(" · ");
 
 interface ThumbnailPickerProps {
   selected: RiDispositifSummary | null;
@@ -32,24 +25,16 @@ export function ThumbnailPicker({
     >
       <div className="flex flex-col gap-2">
         {selected ? (
-          <div className="flex items-start justify-between gap-4 rounded-t-[4px] border-b-2 border-(--border-plain-grey) bg-(--background-contrast-grey) px-4 py-2">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium leading-6 text-(--text-title-grey)">
-                {getDispositifTitle(selected)}
-              </p>
-              <p className="text-xs leading-5 text-(--text-mention-grey)">
-                {describe(selected)}
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="tertiaire"
-              size="sm"
-              onClick={() => onSelect(null)}
-            >
-              Changer de fiche
-            </Button>
-          </div>
+          <Tag
+            status="selected"
+            className="self-start"
+            detail={selected.sponsorName}
+            detailIcon={RiGovernmentLine}
+            dismissLabel="Retirer la fiche"
+            onDismiss={() => onSelect(null)}
+          >
+            {getDispositifTitle(selected)}
+          </Tag>
         ) : (
           <AsyncSearchInput
             onSearch={onSearch}
@@ -57,12 +42,14 @@ export function ThumbnailPicker({
             getResultKey={(dispositif) => dispositif.id}
             renderResult={(dispositif) => (
               <>
-                <span className="text-sm font-medium leading-6 text-(--text-title-grey)">
+                <span className="truncate text-sm leading-6 text-(--text-default-grey)">
                   {getDispositifTitle(dispositif)}
                 </span>
-                <span className="text-xs leading-5 text-(--text-mention-grey)">
-                  {describe(dispositif)}
-                </span>
+                {dispositif.sponsorName && (
+                  <span className="truncate text-xs leading-5 text-(--text-disabled-grey)">
+                    {dispositif.sponsorName}
+                  </span>
+                )}
               </>
             )}
             placeholder="Rechercher une fiche par mot-clé ou ID"

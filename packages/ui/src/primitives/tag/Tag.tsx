@@ -1,5 +1,7 @@
+import type { RemixiconComponentType } from "@remixicon/react";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
+import { RiCloseCircleFill } from "../../icons";
 import { cn } from "../../utils";
 
 /**
@@ -16,6 +18,7 @@ import { cn } from "../../utils";
  *   publie      → Vert succès plein  (background-flat-success)
  *   attention   → Orange d'alerte    (background-flat-warning)
  *   na          → Tiret gris         (pas de fond)
+ *   selected    → Bleu France plein  (valeur choisie, retirable avec `onDismiss`)
  *
  * Toutes les couleurs référencent les variables DSFR directement.
  * Source : @gouvfr/dsfr/dist/core/core.css
@@ -75,6 +78,13 @@ const tagVariants = cva(
           "text-[var(--text-disabled-grey)]",
           "font-bold rounded px-2 h-6 text-xs",
         ].join(" "),
+
+        // Figma (Interfaces-Front, node 38426:271491) : valeur choisie dans un champ de recherche
+        selected: [
+          "bg-[var(--background-action-high-blue-france)]",
+          "text-[var(--text-inverted-grey)]",
+          "max-w-full rounded-[20px] py-1 pr-2 pl-3 h-6 text-xs leading-5",
+        ].join(" "),
       },
     },
     defaultVariants: {
@@ -93,19 +103,71 @@ export const TAG_LABELS: Record<TagStatus, string> = {
   publie: "Publié",
   attention: "Attention",
   na: "—",
+  selected: "Sélectionné",
 };
 
-export interface TagProps
+interface TagBaseProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof tagVariants> {}
+    VariantProps<typeof tagVariants> {
+  detail?: string;
+  detailIcon?: RemixiconComponentType;
+}
+type TagDismissProps =
+  | { onDismiss: () => void; dismissLabel: string }
+  | { onDismiss?: undefined; dismissLabel?: undefined };
+
+export type TagProps = TagBaseProps & TagDismissProps;
 
 const Tag = React.forwardRef<HTMLDivElement, TagProps>(
-  ({ className, status, children, ...props }, ref) => {
+  (
+    {
+      className,
+      status,
+      children,
+      detail,
+      detailIcon: DetailIcon,
+      onDismiss,
+      dismissLabel,
+      ...props
+    },
+    ref,
+  ) => {
     const label = children ?? (status ? TAG_LABELS[status] : "—");
 
     return (
-      <div ref={ref} className="inline-flex items-center" {...props}>
-        <span className={cn(tagVariants({ status }), className)}>{label}</span>
+      <div
+        ref={ref}
+        className="inline-flex max-w-full min-w-0 items-center"
+        {...props}
+      >
+        <span className={cn(tagVariants({ status }), className)}>
+          <span
+            className={cn(
+              "min-w-0 truncate",
+              status === "selected" && "font-bold",
+            )}
+          >
+            {label}
+          </span>
+          {detail && (
+            <span className="ml-1 flex min-w-0 shrink-[2] items-center gap-1 font-normal">
+              {DetailIcon && (
+                <DetailIcon className="size-3 shrink-0" aria-hidden={true} />
+              )}
+              <span className="truncate">{detail}</span>
+            </span>
+          )}
+          {onDismiss && (
+            <button
+              type="button"
+              onClick={onDismiss}
+              aria-label={dismissLabel}
+              className="ml-1 shrink-0 cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+            >
+              <RiCloseCircleFill className="size-4" aria-hidden={true} />
+            </button>
+          )}
+        </span>
       </div>
     );
   },

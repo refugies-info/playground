@@ -22,7 +22,7 @@ export interface AsyncSearchInputProps<T> {
   delayInMs?: number;
 }
 
-const messageClassName = "px-4 py-3 text-sm text-[var(--text-mention-grey)]";
+const messageClassName = "px-2 py-1 text-sm text-[var(--text-mention-grey)]";
 
 /**
  * AsyncSearchInput — A text field that sends a request while the user types and lists the
@@ -121,7 +121,7 @@ export function AsyncSearchInput<T>({
         aria-label={ariaLabel}
         error={error}
         autoComplete="off"
-        className="pr-10"
+        className="pr-10 [&::-webkit-search-cancel-button]:appearance-none"
       />
       <RiSearchLine
         className="pointer-events-none absolute right-4 top-3 size-4 text-[var(--text-default-grey)]"
@@ -129,7 +129,7 @@ export function AsyncSearchInput<T>({
       />
       <div aria-live="polite">
         {isOpen && search.status !== "idle" && (
-          <div className="absolute inset-x-0 top-full z-10 max-h-80 overflow-auto border border-[var(--border-default-grey)] bg-white shadow-md">
+          <div className="absolute inset-x-0 top-full z-10 max-h-80 overflow-auto rounded-[2px] border border-[var(--border-default-grey)] bg-white p-2 shadow-[0_4px_12px_0_rgba(0,0,18,0.16)]">
             <SearchResults
               search={search}
               getResultKey={getResultKey}
@@ -169,13 +169,13 @@ function SearchResults<T>({
     return <p className={messageClassName}>Aucun résultat</p>;
   }
   return (
-    <ul>
+    <ul className="flex flex-col gap-2">
       {search.results.map((result) => (
         <li key={getResultKey(result)}>
           <button
             type="button"
             onClick={() => onSelect(result)}
-            className="flex w-full cursor-pointer flex-col px-4 py-2 text-left transition-colors hover:bg-[var(--background-alt-blue-france)]"
+            className="flex w-full cursor-pointer flex-col px-2 text-left transition-colors hover:bg-[var(--background-alt-blue-france)]"
           >
             {renderResult(result)}
           </button>
