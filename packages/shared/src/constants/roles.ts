@@ -9,5 +9,5 @@ export const USER_ROLES = ["admin", "editor", "translator"] as const;
 /** Union of all valid user roles. */
 export type UserRole = (typeof USER_ROLES)[number];
 
-export const isAdmin = (role: UserRole | null | undefined): boolean =>
+export const isAdmin = (role: string | null | undefined): boolean =>
   role === "admin";
