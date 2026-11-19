@@ -1,10 +1,11 @@
 "use client";
 
 import type { RiDispositifSummary } from "@playground/shared-types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ThumbnailPicker } from "@/components/widget-editor/ThumbnailPicker";
 import { WidgetConfigurationSection } from "@/components/widget-editor/WidgetConfigurationSection";
 import { WidgetEditorLayout } from "@/components/widget-editor/WidgetEditorLayout";
+import { useWidgetAutosave } from "@/hooks/useWidgetAutosave";
 import {
   buildThumbnailUpdate,
   hasThumbnailChanges,
@@ -16,15 +17,7 @@ import { buildPreviewUrl } from "@/lib/widget-preview";
 import {
   getDispositifsByIdsAction,
   searchDispositifsAction,
-  updateWidgetConfigAction,
 } from "@/services/widget-config-actions";
-
-interface SaveError {
-  message: string;
-  fieldErrors: Record<string, string>;
-}
-
-const AUTOSAVE_DELAY_IN_MS = 800;
 
 const REQUIRED_MESSAGES = {
   internalTitle: "Le titre est obligatoire",
@@ -57,25 +50,28 @@ export function ThumbnailWidgetForm({
 }: ThumbnailWidgetFormProps) {
   const [values, setValues] = useState(initialValues);
   const [dispositif, setDispositif] = useState(initialDispositif);
-  const [savedState, setSavedState] = useState({
-    values: initialValues,
-    dispositifId: initialDispositif?.id ?? null,
-  });
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<SaveError | null>(null);
-  const [hasEdited, setHasEdited] = useState(false);
-  const [showRequired, setShowRequired] = useState(false);
   const [previewVersion, setPreviewVersion] = useState(0);
 
-  const currentState = { values, dispositifId: dispositif?.id ?? null };
-  const isDirty = hasThumbnailChanges(savedState, currentState);
-  const saveStatus = isSaving
-    ? "saving"
-    : saveError
-      ? "error"
-      : isDirty
-        ? "unsaved"
-        : "saved";
+  const { saveStatus, saveError, showRequired, markEdited } = useWidgetAutosave(
+    {
+      widgetId,
+      state: { values, dispositif },
+      initialState: { values: initialValues, dispositif: initialDispositif },
+      hasChanges: (saved, current) =>
+        hasThumbnailChanges(
+          { values: saved.values, dispositifId: saved.dispositif?.id ?? null },
+          {
+            values: current.values,
+            dispositifId: current.dispositif?.id ?? null,
+          },
+        ),
+      isComplete:
+        values.internalTitle.trim() !== "" &&
+        values.structureName.trim() !== "",
+      toUpdate: (state) => buildThumbnailUpdate(state.values, state.dispositif),
+      onSaved: () => setPreviewVersion((version) => version + 1),
+    },
+  );
 
   const requiredErrors = {
     internalTitle:
@@ -87,61 +83,9 @@ export function ThumbnailWidgetForm({
         ? REQUIRED_MESSAGES.structureName
         : undefined,
   };
-  const isComplete = Object.values(requiredErrors).every((error) => !error);
   const shown = (field: keyof typeof requiredErrors) =>
     (showRequired ? requiredErrors[field] : undefined) ??
     saveError?.fieldErrors[field];
-
-  useEffect(() => {
-    if (!hasEdited || !isDirty || isSaving || saveError) return;
-
-    const save = async () => {
-      if (!isComplete) {
-        setShowRequired(true);
-        return;
-      }
-      setIsSaving(true);
-      const state = { values, dispositifId: dispositif?.id ?? null };
-      const result = await updateWidgetConfigAction(
-        widgetId,
-        buildThumbnailUpdate(values, dispositif),
-      );
-
-      if (!result.success) {
-        setIsSaving(false);
-        setSaveError({
-          message: result.error,
-          fieldErrors: Object.fromEntries(
-            (result.fieldErrors ?? []).map(({ key, message }) => [
-              key,
-              message,
-            ]),
-          ),
-        });
-        return;
-      }
-      setSavedState(state);
-      setIsSaving(false);
-      setPreviewVersion((version) => version + 1);
-    };
-
-    const timer = setTimeout(save, AUTOSAVE_DELAY_IN_MS);
-    return () => clearTimeout(timer);
-  }, [
-    hasEdited,
-    isDirty,
-    isSaving,
-    saveError,
-    isComplete,
-    values,
-    dispositif,
-    widgetId,
-  ]);
-
-  const handleEdit = () => {
-    setHasEdited(true);
-    setSaveError(null);
-  };
 
   return (
     <WidgetEditorLayout
@@ -149,7 +93,7 @@ export function ThumbnailWidgetForm({
       typeLabel={WIDGET_TYPE_LABELS.thumbnail}
       widgetHref={`/widgets/${widgetId}`}
       saveStatus={saveStatus}
-      onSave={handleEdit}
+      onSave={markEdited}
       previewSrc={
         widgetBaseUrl
           ? buildPreviewUrl(widgetBaseUrl, publicId, previewVersion)
@@ -168,7 +112,7 @@ export function ThumbnailWidgetForm({
         values={values}
         onChange={(changes) => {
           setValues((current) => ({ ...current, ...changes }));
-          handleEdit();
+          markEdited();
         }}
         errors={{
           internalTitle: shown("internalTitle"),
@@ -180,7 +124,7 @@ export function ThumbnailWidgetForm({
         selected={dispositif}
         onSelect={(next) => {
           setDispositif(next);
-          handleEdit();
+          markEdited();
         }}
         onSearch={searchDispositifs}
         error={

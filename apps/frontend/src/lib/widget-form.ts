@@ -3,11 +3,28 @@ import type {
   RiDispositifSummary,
   ThumbnailWidgetConfigFields,
   WidgetConfigFields,
+  WidgetConfigFilterBarOption,
+  WidgetConfigFilters,
+  WidgetConfigPageSize,
+  WidgetConfigSortOption,
   WidgetConfigType,
   WidgetConfigUpdateInput,
 } from "@playground/shared-types";
 
 export const MAX_WIDGET_FIELD_LENGTH = 50;
+export const MAX_EXTERNAL_TITLE_LENGTH = 100;
+export const MAX_DESCRIPTION_LENGTH = 300;
+
+export const PAGE_SIZE_OPTIONS: readonly WidgetConfigPageSize[] = [4, 8, 12];
+export const DEFAULT_PAGE_SIZE: WidgetConfigPageSize = 12;
+
+export const SORT_OPTIONS: readonly {
+  value: WidgetConfigSortOption;
+  label: string;
+}[] = [
+  { value: "date", label: "Date de mise à jour" },
+  { value: "views", label: "Popularité" },
+];
 
 /** The "Configuration et accès" section, common to every widget type. */
 export interface WidgetConfigurationValues {
@@ -26,10 +43,10 @@ const LIST_DRAFT_DEFAULTS: Omit<
   filters: {},
   selectedDispositifIds: [],
   excludedDispositifIds: [],
-  pageSize: 8,
+  pageSize: DEFAULT_PAGE_SIZE,
   sortBy: "date",
   displayShareModule: true,
-  displayFilterBar: true,
+  displayFilterBar: false,
   filterBarOptions: [
     "keyword",
     "location",
@@ -108,3 +125,72 @@ export const hasThumbnailChanges = (
   initial.values.structureName !== current.values.structureName ||
   initial.values.authorizedDomains.join("\n") !==
     current.values.authorizedDomains.join("\n");
+
+export interface ListFormValues extends WidgetConfigurationValues {
+  externalTitle: string;
+  displayDescription: boolean;
+  description: string;
+  filters: WidgetConfigFilters;
+  pageSize: WidgetConfigPageSize;
+  displayShareModule: boolean;
+  displayFilterBar: boolean;
+  filterBarOptions: WidgetConfigFilterBarOption[];
+  sortBy: WidgetConfigSortOption;
+}
+
+export const FILTER_BAR_CRITERIA: readonly {
+  option: WidgetConfigFilterBarOption;
+  label: string;
+  fixedBy?: keyof WidgetConfigFilters;
+}[] = [
+  { option: "keyword", label: "Rechercher par mot-clé" },
+  { option: "location", label: "Localisation", fixedBy: "departments" },
+  { option: "theme", label: "Thèmes", fixedBy: "themes" },
+  { option: "public", label: "Public", fixedBy: "publics" },
+  { option: "status", label: "Statut", fixedBy: "statuses" },
+  {
+    option: "frenchLevel",
+    label: "Niveau de français",
+    fixedBy: "frenchLevels",
+  },
+  { option: "age", label: "Âge", fixedBy: "ages" },
+];
+
+export const isFilterBarOptionFixed = (
+  option: WidgetConfigFilterBarOption,
+  filters: WidgetConfigFilters,
+) => {
+  const fixedBy = FILTER_BAR_CRITERIA.find(
+    (criterion) => criterion.option === option,
+  )?.fixedBy;
+  return fixedBy !== undefined && (filters[fixedBy]?.length ?? 0) > 0;
+};
+
+export const getActiveFilterBarOptions = (
+  options: WidgetConfigFilterBarOption[],
+  filters: WidgetConfigFilters,
+) => options.filter((option) => !isFilterBarOptionFixed(option, filters));
+
+export const buildListUpdate = (
+  values: ListFormValues,
+): WidgetConfigUpdateInput => ({
+  internalTitle: values.internalTitle.trim(),
+  structureName: values.structureName.trim(),
+  authorizedDomains: values.authorizedDomains,
+  externalTitle: values.externalTitle.trim(),
+  displayDescription: values.displayDescription,
+  ...(values.displayDescription && { description: values.description.trim() }),
+  pageSize: values.pageSize,
+  displayShareModule: values.displayShareModule,
+  displayFilterBar: values.displayFilterBar,
+  filterBarOptions: getActiveFilterBarOptions(
+    values.filterBarOptions,
+    values.filters,
+  ),
+  sortBy: values.sortBy,
+});
+
+export const hasListChanges = (
+  initial: ListFormValues,
+  current: ListFormValues,
+) => JSON.stringify(initial) !== JSON.stringify(current);
