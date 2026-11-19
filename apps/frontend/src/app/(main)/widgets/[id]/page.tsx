@@ -1,10 +1,11 @@
 import { isAdmin } from "@playground/shared-types";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import {
   getDispositifsByIdsAction,
   getWidgetConfigAction,
 } from "@/services/widget-config-actions";
+import { ListWidgetForm } from "../list-widget-form";
 import { ThumbnailWidgetForm } from "../thumbnail-widget-form";
 
 interface PageProps {
@@ -27,8 +28,30 @@ export default async function WidgetPage(props: PageProps) {
   }
 
   const widget = result.data;
-  // Only the "thumbnail" (Vignette) type can be edited for now: the edit page for the "list" type comes with RI-1623.
-  if (widget.type !== "thumbnail") notFound();
+
+  if (widget.type === "list") {
+    return (
+      <ListWidgetForm
+        widgetId={widget._id}
+        publicId={widget.publicId}
+        widgetBaseUrl={process.env.WIDGET_BASE_URL}
+        initialValues={{
+          internalTitle: widget.internalTitle,
+          structureName: widget.structureName,
+          authorizedDomains: widget.authorizedDomains,
+          externalTitle: widget.externalTitle,
+          displayDescription: widget.displayDescription,
+          description: widget.description ?? "",
+          filters: widget.filters,
+          pageSize: widget.pageSize,
+          displayShareModule: widget.displayShareModule,
+          displayFilterBar: widget.displayFilterBar,
+          filterBarOptions: widget.filterBarOptions,
+          sortBy: widget.sortBy,
+        }}
+      />
+    );
+  }
 
   const dispositifs = widget.dispositifId
     ? await getDispositifsByIdsAction([widget.dispositifId])
