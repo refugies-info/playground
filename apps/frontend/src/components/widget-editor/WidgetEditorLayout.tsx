@@ -6,10 +6,13 @@ import { RiArrowLeftSLine } from "@playground/ui/icons";
 import { Badge, Button } from "@playground/ui/primitives";
 import Link from "next/link";
 import type { ComponentProps } from "react";
+import type { WidgetDisplayedStatus } from "@/lib/widget-list";
 import { WidgetEditorNavigation } from "./WidgetEditorNavigation";
 import { WidgetPreviewPanel } from "./WidgetPreviewPanel";
 
 interface WidgetEditorLayoutProps {
+  widgetId: string;
+  displayedStatus: WidgetDisplayedStatus;
   title: string;
   typeLabel: string;
   widgetHref: string;
@@ -20,6 +23,8 @@ interface WidgetEditorLayoutProps {
 }
 
 export function WidgetEditorLayout({
+  widgetId,
+  displayedStatus,
   title,
   typeLabel,
   widgetHref,
@@ -56,7 +61,11 @@ export function WidgetEditorLayout({
         }
       />
       <div className="flex flex-1 flex-row">
-        <WidgetEditorNavigation widgetHref={widgetHref} />
+        <WidgetEditorNavigation
+          widgetId={widgetId}
+          widgetHref={widgetHref}
+          displayedStatus={displayedStatus}
+        />
         <div className="flex min-w-0 flex-1 bg-(--background-contrast-info)">
           <div className="min-w-0 flex-1 py-10 pr-6 pl-10">
             <div className="flex max-w-[650px] flex-col gap-6">{children}</div>

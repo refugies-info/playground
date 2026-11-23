@@ -12,7 +12,10 @@ import {
   hasListChanges,
   type ListFormValues,
 } from "@/lib/widget-form";
-import { WIDGET_TYPE_LABELS } from "@/lib/widget-list";
+import {
+  WIDGET_TYPE_LABELS,
+  type WidgetDisplayedStatus,
+} from "@/lib/widget-list";
 import { buildPreviewUrl } from "@/lib/widget-preview";
 
 const REQUIRED_MESSAGES = {
@@ -25,6 +28,7 @@ const REQUIRED_MESSAGES = {
 interface ListWidgetFormProps {
   widgetId: string;
   publicId: string;
+  displayedStatus: WidgetDisplayedStatus;
   widgetBaseUrl?: string;
   initialValues: ListFormValues;
   themes: { value: string; label: string }[];
@@ -33,6 +37,7 @@ interface ListWidgetFormProps {
 export function ListWidgetForm({
   widgetId,
   publicId,
+  displayedStatus,
   widgetBaseUrl,
   initialValues,
   themes,
@@ -82,6 +87,8 @@ export function ListWidgetForm({
 
   return (
     <WidgetEditorLayout
+      widgetId={widgetId}
+      displayedStatus={displayedStatus}
       title={values.internalTitle.trim() || "Widget sans titre"}
       typeLabel={WIDGET_TYPE_LABELS.list}
       widgetHref={`/widgets/${widgetId}`}
