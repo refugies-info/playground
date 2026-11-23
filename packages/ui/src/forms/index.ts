@@ -3,6 +3,7 @@ export {
   type AsyncSearchInputProps,
 } from "./AsyncSearchInput";
 export { ComboboxInput, type ComboboxInputProps } from "./ComboboxInput";
+export { CopyField, type CopyFieldProps } from "./CopyField";
 export { DatePicker, type DatePickerProps } from "./DatePicker";
 export * from "./date-range-picker";
 export { EditableField, type EditableFieldProps } from "./EditableField";

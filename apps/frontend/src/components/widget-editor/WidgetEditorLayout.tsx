@@ -8,6 +8,7 @@ import Link from "next/link";
 import type { ComponentProps } from "react";
 import type { WidgetDisplayedStatus } from "@/lib/widget-list";
 import { WidgetEditorNavigation } from "./WidgetEditorNavigation";
+import { WidgetEmbedPopover } from "./WidgetEmbedPopover";
 import { WidgetPreviewPanel } from "./WidgetPreviewPanel";
 
 interface WidgetEditorLayoutProps {
@@ -19,6 +20,7 @@ interface WidgetEditorLayoutProps {
   saveStatus: ComponentProps<typeof SaveIndicator>["status"];
   onSave: () => void;
   previewSrc?: string;
+  embedUrl?: string;
   children: React.ReactNode;
 }
 
@@ -31,6 +33,7 @@ export function WidgetEditorLayout({
   saveStatus,
   onSave,
   previewSrc,
+  embedUrl,
   children,
 }: WidgetEditorLayoutProps) {
   return (
@@ -51,6 +54,7 @@ export function WidgetEditorLayout({
             <SaveIndicator status={saveStatus} onSave={onSave} />
           </>
         }
+        right={embedUrl && <WidgetEmbedPopover embedUrl={embedUrl} />}
         center={
           <span className="inline-flex items-center gap-2">
             {title}

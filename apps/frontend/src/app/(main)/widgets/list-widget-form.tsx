@@ -7,6 +7,7 @@ import { WidgetEditorLayout } from "@/components/widget-editor/WidgetEditorLayou
 import { WidgetOptionsSection } from "@/components/widget-editor/WidgetOptionsSection";
 import { WidgetTitleSection } from "@/components/widget-editor/WidgetTitleSection";
 import { useWidgetAutosave } from "@/hooks/useWidgetAutosave";
+import { buildEmbedUrl } from "@/lib/widget-embed";
 import {
   buildListUpdate,
   hasListChanges,
@@ -94,6 +95,9 @@ export function ListWidgetForm({
       widgetHref={`/widgets/${widgetId}`}
       saveStatus={saveStatus}
       onSave={markEdited}
+      embedUrl={
+        widgetBaseUrl ? buildEmbedUrl(widgetBaseUrl, publicId) : undefined
+      }
       previewSrc={
         widgetBaseUrl
           ? buildPreviewUrl(widgetBaseUrl, publicId, previewVersion)
