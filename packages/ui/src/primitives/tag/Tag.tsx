@@ -80,7 +80,6 @@ const tagVariants = cva(
           "font-bold rounded px-2 h-6 text-xs",
         ].join(" "),
 
-        // Figma (Interfaces-Front, node 38795:188928) : choix d'un filtre, activable
         choice: "rounded-full px-2 h-6 text-xs",
 
         // Figma (Interfaces-Front, node 38426:271491) : valeur choisie dans un champ de recherche
@@ -102,7 +101,6 @@ const tagVariants = cva(
         ],
       },
       {
-        // The dark body and its check badge are drawn by `ChoiceCheckDecoration`
         status: "choice",
         pressed: true,
         className: "relative text-[var(--text-inverted-grey)]",
@@ -143,10 +141,6 @@ type TagDismissProps =
 
 export type TagProps = TagBaseProps & TagDismissProps;
 
-/**
- * Selected look of a `choice` tag (Figma Interfaces-Front, node 38795:188928): a dark body with a
- * ring-check badge on its top-right corner, cut out of the body.
- */
 function ChoiceCheckDecoration() {
   return (
     <>
@@ -163,11 +157,10 @@ function ChoiceCheckDecoration() {
         className="absolute -top-[3px] right-[-6px] text-[var(--background-action-high-blue-france)]"
       >
         <path d="M0 3C2.1841 3 4.22999 3.58683 5.99414 4.60645C5.89064 5.05432 5.83496 5.52067 5.83496 6C5.83496 9.28979 8.41186 11.9764 11.6572 12.1543C11.8792 13.0667 12 14.0192 12 15C12 21.6274 6.62742 27 0 27V3Z" />
-        <path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="M12 11C9.2385 11 7 8.7615 7 6C7 3.2385 9.2385 1 12 1C14.7615 1 17 3.2385 17 6C17 8.7615 14.7615 11 12 11ZM12 10C14.2091 10 16 8.20914 16 6C16 3.79086 14.2091 2 12 2C9.79086 2 8 3.79086 8 6C8 8.20914 9.79086 10 12 10ZM11.5015 8L9.38 5.8785L10.087 5.1715L11.5015 6.586L14.3295 3.7575L15.037 4.4645L11.5015 8Z"
-        />
+        <g fill="none" stroke="currentColor" strokeWidth="1">
+          <circle cx="12" cy="6" r="4.5" />
+          <polyline points="9.7335,5.525 11.5015,7.293 14.683,4.111" />
+        </g>
       </svg>
     </>
   );
