@@ -7,12 +7,16 @@ import { ThumbnailPicker } from "@/components/widget-editor/ThumbnailPicker";
 import { WidgetConfigurationSection } from "@/components/widget-editor/WidgetConfigurationSection";
 import { WidgetEditorLayout } from "@/components/widget-editor/WidgetEditorLayout";
 import { useWidgetAutosave } from "@/hooks/useWidgetAutosave";
+import { buildEmbedUrl } from "@/lib/widget-embed";
 import {
   buildThumbnailUpdate,
   hasThumbnailChanges,
   type ThumbnailFormValues,
 } from "@/lib/widget-form";
-import { WIDGET_TYPE_LABELS } from "@/lib/widget-list";
+import {
+  WIDGET_TYPE_LABELS,
+  type WidgetDisplayedStatus,
+} from "@/lib/widget-list";
 import { buildPreviewUrl } from "@/lib/widget-preview";
 
 const REQUIRED_MESSAGES = {
@@ -24,6 +28,7 @@ const REQUIRED_MESSAGES = {
 interface ThumbnailWidgetFormProps {
   widgetId: string;
   publicId: string;
+  displayedStatus: WidgetDisplayedStatus;
   widgetBaseUrl?: string;
   initialValues: ThumbnailFormValues;
   initialDispositif: RiDispositifSummary | null;
@@ -32,6 +37,7 @@ interface ThumbnailWidgetFormProps {
 export function ThumbnailWidgetForm({
   widgetId,
   publicId,
+  displayedStatus,
   widgetBaseUrl,
   initialValues,
   initialDispositif,
@@ -77,11 +83,16 @@ export function ThumbnailWidgetForm({
 
   return (
     <WidgetEditorLayout
+      widgetId={widgetId}
+      displayedStatus={displayedStatus}
       title={values.internalTitle.trim() || "Widget sans titre"}
       typeLabel={WIDGET_TYPE_LABELS.thumbnail}
       widgetHref={`/widgets/${widgetId}`}
       saveStatus={saveStatus}
       onSave={markEdited}
+      embedUrl={
+        widgetBaseUrl ? buildEmbedUrl(widgetBaseUrl, publicId) : undefined
+      }
       previewSrc={
         widgetBaseUrl
           ? buildPreviewUrl(widgetBaseUrl, publicId, previewVersion)
