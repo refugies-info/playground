@@ -7,6 +7,7 @@ import { ThumbnailPicker } from "@/components/widget-editor/ThumbnailPicker";
 import { WidgetConfigurationSection } from "@/components/widget-editor/WidgetConfigurationSection";
 import { WidgetEditorLayout } from "@/components/widget-editor/WidgetEditorLayout";
 import { useWidgetAutosave } from "@/hooks/useWidgetAutosave";
+import { buildEmbedUrl } from "@/lib/widget-embed";
 import {
   buildThumbnailUpdate,
   hasThumbnailChanges,
@@ -89,6 +90,9 @@ export function ThumbnailWidgetForm({
       widgetHref={`/widgets/${widgetId}`}
       saveStatus={saveStatus}
       onSave={markEdited}
+      embedUrl={
+        widgetBaseUrl ? buildEmbedUrl(widgetBaseUrl, publicId) : undefined
+      }
       previewSrc={
         widgetBaseUrl
           ? buildPreviewUrl(widgetBaseUrl, publicId, previewVersion)
