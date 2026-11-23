@@ -1,6 +1,7 @@
 import { isAdmin } from "@playground/shared-types";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { fetchRiReferenceData } from "@/services/ri/reference-data";
 import {
   getDispositifsByIdsAction,
   getWidgetConfigAction,
@@ -30,8 +31,28 @@ export default async function WidgetPage(props: PageProps) {
   const widget = result.data;
 
   if (widget.type === "list") {
+    const [referenceData, dispositifs] = await Promise.all([
+      fetchRiReferenceData(),
+      getDispositifsByIdsAction([
+        ...widget.selectedDispositifIds,
+        ...widget.excludedDispositifIds,
+      ]),
+    ]);
+    const dispositifsById = new Map(
+      (dispositifs.success ? dispositifs.data : []).map((dispositif) => [
+        dispositif.id,
+        dispositif,
+      ]),
+    );
+    const findDispositifs = (ids: string[]) =>
+      ids.flatMap((id) => dispositifsById.get(id) ?? []);
+
     return (
       <ListWidgetForm
+        themes={Object.entries(referenceData.themes).map(([value, label]) => ({
+          value,
+          label,
+        }))}
         widgetId={widget._id}
         publicId={widget.publicId}
         widgetBaseUrl={process.env.WIDGET_BASE_URL}
@@ -43,6 +64,8 @@ export default async function WidgetPage(props: PageProps) {
           displayDescription: widget.displayDescription,
           description: widget.description ?? "",
           filters: widget.filters,
+          selectedDispositifs: findDispositifs(widget.selectedDispositifIds),
+          excludedDispositifs: findDispositifs(widget.excludedDispositifIds),
           pageSize: widget.pageSize,
           displayShareModule: widget.displayShareModule,
           displayFilterBar: widget.displayFilterBar,

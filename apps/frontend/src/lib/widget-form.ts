@@ -10,6 +10,7 @@ import type {
   WidgetConfigType,
   WidgetConfigUpdateInput,
 } from "@playground/shared-types";
+import { normalizeFilters } from "./widget-filters";
 
 export const MAX_WIDGET_FIELD_LENGTH = 50;
 export const MAX_EXTERNAL_TITLE_LENGTH = 100;
@@ -131,6 +132,8 @@ export interface ListFormValues extends WidgetConfigurationValues {
   displayDescription: boolean;
   description: string;
   filters: WidgetConfigFilters;
+  selectedDispositifs: RiDispositifSummary[];
+  excludedDispositifs: RiDispositifSummary[];
   pageSize: WidgetConfigPageSize;
   displayShareModule: boolean;
   displayFilterBar: boolean;
@@ -180,6 +183,9 @@ export const buildListUpdate = (
   externalTitle: values.externalTitle.trim(),
   displayDescription: values.displayDescription,
   ...(values.displayDescription && { description: values.description.trim() }),
+  filters: normalizeFilters(values.filters),
+  selectedDispositifIds: values.selectedDispositifs.map(({ id }) => id),
+  excludedDispositifIds: values.excludedDispositifs.map(({ id }) => id),
   pageSize: values.pageSize,
   displayShareModule: values.displayShareModule,
   displayFilterBar: values.displayFilterBar,

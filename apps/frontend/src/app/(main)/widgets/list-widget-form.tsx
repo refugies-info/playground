@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { WidgetConfigurationSection } from "@/components/widget-editor/WidgetConfigurationSection";
+import { WidgetContentSection } from "@/components/widget-editor/WidgetContentSection";
 import { WidgetEditorLayout } from "@/components/widget-editor/WidgetEditorLayout";
 import { WidgetOptionsSection } from "@/components/widget-editor/WidgetOptionsSection";
 import { WidgetTitleSection } from "@/components/widget-editor/WidgetTitleSection";
@@ -26,6 +27,7 @@ interface ListWidgetFormProps {
   publicId: string;
   widgetBaseUrl?: string;
   initialValues: ListFormValues;
+  themes: { value: string; label: string }[];
 }
 
 export function ListWidgetForm({
@@ -33,6 +35,7 @@ export function ListWidgetForm({
   publicId,
   widgetBaseUrl,
   initialValues,
+  themes,
 }: ListWidgetFormProps) {
   const [values, setValues] = useState(initialValues);
   const [previewVersion, setPreviewVersion] = useState(0);
@@ -114,6 +117,11 @@ export function ListWidgetForm({
           externalTitle: shown("externalTitle"),
           description: shown("description"),
         }}
+      />
+      <WidgetContentSection
+        values={values}
+        onChange={handleChange}
+        themes={themes}
       />
       <WidgetOptionsSection values={values} onChange={handleChange} />
     </WidgetEditorLayout>

@@ -161,6 +161,8 @@ const listValues: ListFormValues = {
   displayDescription: true,
   description: " Trouvez un cours ",
   filters: {},
+  selectedDispositifs: [],
+  excludedDispositifs: [],
   pageSize: 12,
   displayShareModule: true,
   displayFilterBar: true,
@@ -188,6 +190,25 @@ describe("buildListUpdate", () => {
     });
     expect(update).toMatchObject({ displayDescription: false });
     expect(update).not.toHaveProperty("description");
+  });
+
+  it("sends every filter category and the ids of the forced and excluded fiches", () => {
+    const update = buildListUpdate({
+      ...listValues,
+      filters: { departments: ["Gironde"], themes: ["theme-id"] },
+      selectedDispositifs: [dispositif],
+      excludedDispositifs: [{ ...dispositif, id: "other-id" }],
+    });
+    expect(update).toMatchObject({
+      filters: {
+        departments: ["Gironde"],
+        themes: ["theme-id"],
+        ages: [],
+        languages: [],
+      },
+      selectedDispositifIds: ["6a8aa3791f5d9938b6b54ac3"],
+      excludedDispositifIds: ["other-id"],
+    });
   });
 
   it("drops the filter bar criteria already fixed by the widget content", () => {

@@ -2,6 +2,7 @@
 
 import type { RiDispositifSummary } from "@playground/shared-types";
 import { useState } from "react";
+import { searchDispositifs } from "@/components/widget-editor/searchDispositifs";
 import { ThumbnailPicker } from "@/components/widget-editor/ThumbnailPicker";
 import { WidgetConfigurationSection } from "@/components/widget-editor/WidgetConfigurationSection";
 import { WidgetEditorLayout } from "@/components/widget-editor/WidgetEditorLayout";
@@ -9,28 +10,15 @@ import { useWidgetAutosave } from "@/hooks/useWidgetAutosave";
 import {
   buildThumbnailUpdate,
   hasThumbnailChanges,
-  isDispositifId,
   type ThumbnailFormValues,
 } from "@/lib/widget-form";
 import { WIDGET_TYPE_LABELS } from "@/lib/widget-list";
 import { buildPreviewUrl } from "@/lib/widget-preview";
-import {
-  getDispositifsByIdsAction,
-  searchDispositifsAction,
-} from "@/services/widget-config-actions";
 
 const REQUIRED_MESSAGES = {
   internalTitle: "Le titre est obligatoire",
   structureName: "Le partenaire est obligatoire",
   dispositif: "Choisir la fiche affichée dans le widget",
-};
-
-const searchDispositifs = async (text: string) => {
-  const result = isDispositifId(text)
-    ? await getDispositifsByIdsAction([text.trim()])
-    : await searchDispositifsAction(text);
-  if (!result.success) throw new Error(result.error);
-  return result.data;
 };
 
 interface ThumbnailWidgetFormProps {
