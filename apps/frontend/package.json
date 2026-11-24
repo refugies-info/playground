@@ -30,7 +30,7 @@
     "flag-icons": "^7.6.0",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.554.0",
-    "next": "16.4.5",
+    "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "remark-directive": "^4.0.0",
@@ -39,7 +39,7 @@
     "remark-stringify": "^11.0.0",
     "server-only": "^0.0.1",
     "unified": "^11.0.5",
-    "zod": "^4.6.7"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.4",
