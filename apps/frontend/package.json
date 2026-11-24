@@ -30,7 +30,7 @@
     "flag-icons": "^7.6.0",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.554.0",
-    "next": "16.4.3",
+    "next": "16.4.5",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "remark-directive": "^4.0.0",
