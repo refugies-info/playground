@@ -5,13 +5,13 @@ import { getDispositifTitle } from "@/lib/widget-form";
 interface DispositifSearchInputProps {
   onSearch: (text: string) => Promise<RiDispositifSummary[]>;
   onSelect: (dispositif: RiDispositifSummary) => void;
-  "aria-label"?: string;
+  ariaLabel?: string;
 }
 
 export function DispositifSearchInput({
   onSearch,
   onSelect,
-  "aria-label": ariaLabel = "Rechercher une fiche par mot-clé ou ID",
+  ariaLabel = "Rechercher une fiche par mot-clé ou ID",
 }: DispositifSearchInputProps) {
   return (
     <AsyncSearchInput

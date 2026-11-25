@@ -100,7 +100,7 @@ export function WidgetLifecycleAction({
             className={cn(
               "w-full",
               !action.isDestructive &&
-                "text-[var(--text-action-high-blue-france)] hover:text-[var(--text-action-high-blue-france)]",
+                "text-(--text-action-high-blue-france) hover:text-(--text-action-high-blue-france)",
             )}
             onClick={() => setIsConfirmOpen(true)}
           />
