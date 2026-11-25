@@ -62,13 +62,13 @@ export function DomainsInput({ value, onChange, error }: DomainsInputProps) {
           }}
           onKeyDown={handleKeyDown}
           error={draftError ?? error}
-          className="pr-[91px]"
+          className="pr-28"
           autoComplete="off"
         />
         <button
           type="button"
           onClick={handleAdd}
-          className="absolute right-0 top-0 h-[42px] w-[75px] cursor-pointer rounded-tr-[4px] border-b-2 border-(--border-plain-grey) bg-(--background-disabled-grey) px-3 text-sm font-medium text-(--text-mention-grey) transition-colors hover:text-(--text-action-high-blue-france)"
+          className="absolute right-0 top-0 h-[42px] min-w-[75px] cursor-pointer whitespace-nowrap rounded-tr-[4px] border-b-2 border-(--border-plain-grey) bg-(--background-disabled-grey) px-4 text-sm font-medium text-(--text-mention-grey) transition-colors hover:text-(--text-action-high-blue-france)"
         >
           Ajouter
         </button>

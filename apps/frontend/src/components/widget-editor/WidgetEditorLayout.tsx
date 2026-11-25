@@ -7,6 +7,7 @@ import { Badge, Button } from "@playground/ui/primitives";
 import Link from "next/link";
 import type { ComponentProps } from "react";
 import { WidgetEditorNavigation } from "./WidgetEditorNavigation";
+import { WidgetPreviewPanel } from "./WidgetPreviewPanel";
 
 interface WidgetEditorLayoutProps {
   title: string;
@@ -14,16 +15,17 @@ interface WidgetEditorLayoutProps {
   widgetHref: string;
   saveStatus: ComponentProps<typeof SaveIndicator>["status"];
   onSave: () => void;
+  previewSrc?: string;
   children: React.ReactNode;
 }
 
-/** Header, menu and content frame shared by every widget type. */
 export function WidgetEditorLayout({
   title,
   typeLabel,
   widgetHref,
   saveStatus,
   onSave,
+  previewSrc,
   children,
 }: WidgetEditorLayoutProps) {
   return (
@@ -55,8 +57,11 @@ export function WidgetEditorLayout({
       />
       <div className="flex flex-1 flex-row">
         <WidgetEditorNavigation widgetHref={widgetHref} />
-        <div className="min-w-0 flex-1 bg-(--background-alt-blue-france) p-10">
-          <div className="flex max-w-[650px] flex-col gap-6">{children}</div>
+        <div className="flex min-w-0 flex-1 bg-(--background-contrast-info)">
+          <div className="min-w-0 flex-1 py-10 pr-6 pl-10">
+            <div className="flex max-w-[650px] flex-col gap-6">{children}</div>
+          </div>
+          {previewSrc && <WidgetPreviewPanel src={previewSrc} />}
         </div>
       </div>
     </div>

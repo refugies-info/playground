@@ -12,6 +12,7 @@ import {
   type ThumbnailFormValues,
 } from "@/lib/widget-form";
 import { WIDGET_TYPE_LABELS } from "@/lib/widget-list";
+import { buildPreviewUrl } from "@/lib/widget-preview";
 import {
   getDispositifsByIdsAction,
   searchDispositifsAction,
@@ -41,12 +42,16 @@ const searchDispositifs = async (text: string) => {
 
 interface ThumbnailWidgetFormProps {
   widgetId: string;
+  publicId: string;
+  widgetBaseUrl?: string;
   initialValues: ThumbnailFormValues;
   initialDispositif: RiDispositifSummary | null;
 }
 
 export function ThumbnailWidgetForm({
   widgetId,
+  publicId,
+  widgetBaseUrl,
   initialValues,
   initialDispositif,
 }: ThumbnailWidgetFormProps) {
@@ -60,6 +65,7 @@ export function ThumbnailWidgetForm({
   const [saveError, setSaveError] = useState<SaveError | null>(null);
   const [hasEdited, setHasEdited] = useState(false);
   const [showRequired, setShowRequired] = useState(false);
+  const [previewVersion, setPreviewVersion] = useState(0);
 
   const currentState = { values, dispositifId: dispositif?.id ?? null };
   const isDirty = hasThumbnailChanges(savedState, currentState);
@@ -116,6 +122,7 @@ export function ThumbnailWidgetForm({
       }
       setSavedState(state);
       setIsSaving(false);
+      setPreviewVersion((version) => version + 1);
     };
 
     const timer = setTimeout(save, AUTOSAVE_DELAY_IN_MS);
@@ -143,6 +150,11 @@ export function ThumbnailWidgetForm({
       widgetHref={`/widgets/${widgetId}`}
       saveStatus={saveStatus}
       onSave={handleEdit}
+      previewSrc={
+        widgetBaseUrl
+          ? buildPreviewUrl(widgetBaseUrl, publicId, previewVersion)
+          : undefined
+      }
     >
       {saveError && (
         <p

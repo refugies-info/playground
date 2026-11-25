@@ -40,6 +40,8 @@ export default async function WidgetPage(props: PageProps) {
   return (
     <ThumbnailWidgetForm
       widgetId={widget._id}
+      publicId={widget.publicId}
+      widgetBaseUrl={process.env.WIDGET_BASE_URL}
       initialValues={{
         internalTitle: widget.internalTitle,
         structureName: widget.structureName,
