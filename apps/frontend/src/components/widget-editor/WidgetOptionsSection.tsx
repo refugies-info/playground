@@ -63,15 +63,10 @@ export function WidgetOptionsSection({
           />
         </div>
 
-        <SwitchField
-          label="Afficher le module de partage"
-          checked={values.displayShareModule}
-          onChange={(displayShareModule) => onChange({ displayShareModule })}
-        />
-
         <div className="flex flex-col gap-4">
           <SwitchField
             label="Afficher la barre de filtres"
+            className="flex-row-reverse justify-between"
             checked={values.displayFilterBar}
             onChange={(displayFilterBar) => onChange({ displayFilterBar })}
           />

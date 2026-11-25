@@ -46,7 +46,7 @@ const LIST_DRAFT_DEFAULTS: Omit<
   excludedDispositifIds: [],
   pageSize: DEFAULT_PAGE_SIZE,
   sortBy: "date",
-  displayShareModule: true,
+  displayShareModule: false,
   displayFilterBar: false,
   filterBarOptions: [
     "keyword",
