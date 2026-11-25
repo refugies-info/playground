@@ -30,6 +30,7 @@ interface ListWidgetFormProps {
   widgetId: string;
   publicId: string;
   displayedStatus: WidgetDisplayedStatus;
+  isDeletable: boolean;
   widgetBaseUrl?: string;
   initialValues: ListFormValues;
   themes: { value: string; label: string }[];
@@ -39,6 +40,7 @@ export function ListWidgetForm({
   widgetId,
   publicId,
   displayedStatus,
+  isDeletable,
   widgetBaseUrl,
   initialValues,
   themes,
@@ -90,6 +92,7 @@ export function ListWidgetForm({
     <WidgetEditorLayout
       widgetId={widgetId}
       displayedStatus={displayedStatus}
+      isDeletable={isDeletable}
       title={values.internalTitle.trim() || "Widget sans titre"}
       typeLabel={WIDGET_TYPE_LABELS.list}
       widgetHref={`/widgets/${widgetId}`}

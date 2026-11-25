@@ -29,6 +29,7 @@ interface ThumbnailWidgetFormProps {
   widgetId: string;
   publicId: string;
   displayedStatus: WidgetDisplayedStatus;
+  isDeletable: boolean;
   widgetBaseUrl?: string;
   initialValues: ThumbnailFormValues;
   initialDispositif: RiDispositifSummary | null;
@@ -38,6 +39,7 @@ export function ThumbnailWidgetForm({
   widgetId,
   publicId,
   displayedStatus,
+  isDeletable,
   widgetBaseUrl,
   initialValues,
   initialDispositif,
@@ -85,6 +87,7 @@ export function ThumbnailWidgetForm({
     <WidgetEditorLayout
       widgetId={widgetId}
       displayedStatus={displayedStatus}
+      isDeletable={isDeletable}
       title={values.internalTitle.trim() || "Widget sans titre"}
       typeLabel={WIDGET_TYPE_LABELS.thumbnail}
       widgetHref={`/widgets/${widgetId}`}

@@ -17,7 +17,7 @@ export function DepartmentsField({
 }: DepartmentsFieldProps) {
   return (
     <div className="flex flex-col gap-2">
-      <span className="py-1 text-sm font-medium leading-6 text-(--text-default-grey)">
+      <span className="py-1 text-base font-medium leading-6 text-(--text-default-grey)">
         Localisation
       </span>
       <AsyncSearchInput

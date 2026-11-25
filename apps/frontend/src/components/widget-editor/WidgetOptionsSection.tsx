@@ -1,7 +1,7 @@
 "use client";
 
 import type { WidgetConfigPageSize } from "@playground/shared-types";
-import { SelectInput, SwitchField } from "@playground/ui/forms";
+import { CheckboxField, SelectInput, SwitchField } from "@playground/ui/forms";
 import {
   FILTER_BAR_CRITERIA,
   isFilterBarOptionFixed,
@@ -26,6 +26,9 @@ interface WidgetOptionsSectionProps {
   onChange: (changes: Partial<OptionsValues>) => void;
 }
 
+const SELECT_CLASS_NAME =
+  "w-auto rounded-t-[4px] bg-(--background-contrast-grey) py-2 pr-10 pl-4 leading-6";
+
 export function WidgetOptionsSection({
   values,
   onChange,
@@ -43,15 +46,19 @@ export function WidgetOptionsSection({
   return (
     <WidgetEditorSection
       title="Options et apparence"
-      description="Personnalisation et options du widget."
+      description="Personnalisation & options du widget"
     >
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium" htmlFor="widget-page-size">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-8">
+          <label
+            className="text-base font-medium leading-6 text-(--text-default-grey)"
+            htmlFor="widget-page-size"
+          >
             Nombre de fiches par page
           </label>
           <SelectInput
             id="widget-page-size"
+            className={SELECT_CLASS_NAME}
             value={String(values.pageSize)}
             options={PAGE_SIZE_OPTIONS.map((size) => ({
               value: String(size),
@@ -63,24 +70,36 @@ export function WidgetOptionsSection({
           />
         </div>
 
-        <SwitchField
-          label="Afficher le module de partage"
-          checked={values.displayShareModule}
-          onChange={(displayShareModule) => onChange({ displayShareModule })}
-        />
+        <div className="flex items-center justify-between gap-8">
+          <label
+            className="text-base font-medium leading-6 text-(--text-default-grey)"
+            htmlFor="widget-sort-by"
+          >
+            Trier les résultats par
+          </label>
+          <SelectInput
+            id="widget-sort-by"
+            className={SELECT_CLASS_NAME}
+            value={values.sortBy}
+            options={SORT_OPTIONS}
+            onChange={(sortBy) =>
+              onChange({ sortBy: sortBy as ListFormValues["sortBy"] })
+            }
+          />
+        </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
           <SwitchField
-            label="Afficher la barre de filtres"
+            label="Afficher la barre de filtre"
             checked={values.displayFilterBar}
             onChange={(displayFilterBar) => onChange({ displayFilterBar })}
           />
           {values.displayFilterBar && (
-            <div className="flex flex-col gap-4 pl-6">
+            <div className="flex flex-col pl-[26px]">
               {FILTER_BAR_CRITERIA.map(({ option, label }) => {
                 const isFixed = isFilterBarOptionFixed(option, values.filters);
                 return (
-                  <SwitchField
+                  <CheckboxField
                     key={option}
                     label={label}
                     checked={
@@ -100,20 +119,6 @@ export function WidgetOptionsSection({
               })}
             </div>
           )}
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium" htmlFor="widget-sort-by">
-            Trier par
-          </label>
-          <SelectInput
-            id="widget-sort-by"
-            value={values.sortBy}
-            options={SORT_OPTIONS}
-            onChange={(sortBy) =>
-              onChange({ sortBy: sortBy as ListFormValues["sortBy"] })
-            }
-          />
         </div>
       </div>
     </WidgetEditorSection>

@@ -4,6 +4,7 @@ import { riWebhookRequest } from "./webhook-client";
 import {
   countRiFilterMatches,
   createRiWidgetConfig,
+  deleteRiWidgetConfig,
   getRiDispositifsByIds,
   listRiWidgetConfigs,
   updateRiWidgetConfig,
@@ -129,6 +130,17 @@ describe("ri/widget-configs", () => {
 
     expect(request).toHaveBeenCalledWith("/api/webhook/dispositif/search", {
       query: { ids: "a,b" },
+    });
+  });
+
+  it("deletes a widget config on behalf of the editor", async () => {
+    request.mockResolvedValue({ id: "w1" });
+
+    await deleteRiWidgetConfig("editor@refugies.info", "w1");
+
+    expect(request).toHaveBeenCalledWith("/api/webhook/widget-config/delete", {
+      method: "DELETE",
+      body: { email: "editor@refugies.info", widgetConfig: { _id: "w1" } },
     });
   });
 });

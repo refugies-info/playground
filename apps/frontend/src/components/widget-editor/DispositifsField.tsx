@@ -21,10 +21,10 @@ export function DispositifsField({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-col">
-        <span className="text-sm font-medium leading-6 text-(--text-default-grey)">
+        <span className="text-base font-medium leading-6 text-(--text-default-grey)">
           {label}
         </span>
-        <span className="text-xs leading-5 text-(--text-mention-grey)">
+        <span className="text-sm leading-6 text-(--text-mention-grey)">
           {description}
         </span>
       </div>

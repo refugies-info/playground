@@ -16,6 +16,7 @@ import type { RiWebhookError } from "./ri/webhook-client";
 import {
   countRiFilterMatches,
   createRiWidgetConfig,
+  deleteRiWidgetConfig,
   getRiDispositifsByIds,
   getRiWidgetConfigById,
   listRiWidgetConfigs,
@@ -29,6 +30,7 @@ const ACTION_NAMES = {
   createWidgetConfig: "createWidgetConfig",
   updateWidgetConfig: "updateWidgetConfig",
   duplicateWidgetConfig: "duplicateWidgetConfig",
+  deleteWidgetConfig: "deleteWidgetConfig",
   searchDispositifs: "searchDispositifs",
   getDispositifsByIds: "getDispositifsByIds",
   countFilterMatches: "countFilterMatches",
@@ -41,6 +43,14 @@ export type WidgetConfigActionResult<T> =
       error: string;
       fieldErrors?: { key: string; message: string }[];
     };
+
+const ERROR_MESSAGES: Partial<Record<number, string>> = {
+  400: "Les données du widget sont invalides",
+  409: "Ce widget a déjà été actif : il ne peut pas être supprimé",
+};
+
+const getErrorMessage = (status = 0) =>
+  ERROR_MESSAGES[status] ?? "Impossible de joindre Refugies.info";
 
 async function runAsAuthenticatedUser<T>(
   actionName: (typeof ACTION_NAMES)[keyof typeof ACTION_NAMES],
@@ -63,10 +73,7 @@ async function runAsAuthenticatedUser<T>(
     const { status, details } = error as Partial<RiWebhookError>;
     return {
       success: false,
-      error:
-        status === 400
-          ? "Les données du widget sont invalides"
-          : "Impossible de joindre Refugies.info",
+      error: getErrorMessage(status),
       fieldErrors: Array.isArray(details) ? details : undefined,
     };
   }
@@ -137,5 +144,11 @@ export async function duplicateWidgetConfigAction(id: string) {
         email,
         buildDuplicate(await getRiWidgetConfigById(id)),
       ),
+  );
+}
+
+export async function deleteWidgetConfigAction(id: string) {
+  return runAsAuthenticatedUser(ACTION_NAMES.deleteWidgetConfig, (email) =>
+    deleteRiWidgetConfig(email, id),
   );
 }

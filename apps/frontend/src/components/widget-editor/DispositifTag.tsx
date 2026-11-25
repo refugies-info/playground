@@ -1,5 +1,5 @@
 import type { RiDispositifSummary } from "@playground/shared-types";
-import { RiGovernmentLine } from "@playground/ui/icons";
+import { RiBuildingLine } from "@playground/ui/icons";
 import { Tag } from "@playground/ui/primitives";
 import { getDispositifTitle } from "@/lib/widget-form";
 
@@ -20,7 +20,7 @@ export function DispositifTag({
       status="selected"
       className={className}
       detail={dispositif.sponsorName}
-      detailIcon={RiGovernmentLine}
+      detailIcon={RiBuildingLine}
       dismissLabel={`Retirer ${title}`}
       onDismiss={onRemove}
     >

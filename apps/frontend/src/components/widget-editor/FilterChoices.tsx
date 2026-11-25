@@ -15,7 +15,7 @@ export function FilterChoices<Value extends string>({
 }: FilterChoicesProps<Value>) {
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="py-1 text-sm font-medium leading-6 text-(--text-default-grey)">
+      <legend className="py-1 text-base font-medium leading-6 text-(--text-default-grey)">
         {label}
       </legend>
       <div className="flex flex-wrap gap-2">
