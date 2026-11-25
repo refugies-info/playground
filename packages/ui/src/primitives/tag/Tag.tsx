@@ -84,8 +84,8 @@ const tagVariants = cva(
 
         // Figma (Interfaces-Front, node 38426:271491) : valeur choisie dans un champ de recherche
         selected: [
-          "bg-[var(--background-action-high-blue-france)]",
-          "text-[var(--text-inverted-grey)]",
+          "bg-(--background-action-high-blue-france)",
+          "text-(--text-inverted-grey)",
           "max-w-full rounded-[20px] py-1 pr-2 pl-3 h-6 text-xs leading-5",
         ].join(" "),
       },

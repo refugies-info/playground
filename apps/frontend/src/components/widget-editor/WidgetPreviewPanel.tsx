@@ -86,7 +86,7 @@ export function WidgetPreviewPanel({
           className={cn(
             "sticky top-20 flex h-[calc(100vh-5rem)] w-full flex-col items-center gap-4 overflow-hidden rounded-tl-2xl border-(--border-default-grey) bg-(--background-alt-blue-france) transition-opacity duration-200",
             isOpen
-              ? "border-l border-t opacity-100 shadow-[-1px_0_3px_rgba(0,0,18,0.06)]"
+              ? "border-l border-t opacity-100 shadow-[-1px_0_3px_var(--shadow-color)]"
               : "opacity-0",
           )}
         >
@@ -122,7 +122,7 @@ export function WidgetPreviewPanel({
                   ref={iframeRef}
                   title="Aperçu du widget"
                   src={src}
-                  className="absolute top-0 bg-white shadow-[0_4px_12px_rgba(0,0,18,0.16)]"
+                  className="absolute top-0 bg-white shadow-[0_4px_12px_var(--shadow-color)]"
                   style={{
                     width: frameWidth,
                     height: contentHeight ?? area.height / scale,
