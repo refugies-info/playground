@@ -1,5 +1,5 @@
 interface RiWebhookRequestOptions {
-  method?: "GET" | "POST" | "PATCH";
+  method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   query?: Record<string, string | undefined>;
   revalidateSeconds?: number;

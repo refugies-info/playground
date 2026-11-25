@@ -14,6 +14,7 @@ import { WidgetPreviewPanel } from "./WidgetPreviewPanel";
 interface WidgetEditorLayoutProps {
   widgetId: string;
   displayedStatus: WidgetDisplayedStatus;
+  isDeletable: boolean;
   title: string;
   typeLabel: string;
   widgetHref: string;
@@ -27,6 +28,7 @@ interface WidgetEditorLayoutProps {
 export function WidgetEditorLayout({
   widgetId,
   displayedStatus,
+  isDeletable,
   title,
   typeLabel,
   widgetHref,
@@ -72,6 +74,7 @@ export function WidgetEditorLayout({
           widgetId={widgetId}
           widgetHref={widgetHref}
           displayedStatus={displayedStatus}
+          isDeletable={isDeletable}
         />
         {/* Same split as the document editor: without the preview, the right padding
             makes up for the navigation so the form stays centred on the page */}

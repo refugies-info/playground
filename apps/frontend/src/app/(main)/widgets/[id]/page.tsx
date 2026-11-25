@@ -1,7 +1,7 @@
 import { isAdmin } from "@playground/shared-types";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getDisplayedStatus } from "@/lib/widget-list";
+import { canDeleteWidget, getDisplayedStatus } from "@/lib/widget-list";
 import { fetchRiReferenceData } from "@/services/ri/reference-data";
 import {
   getDispositifsByIdsAction,
@@ -31,6 +31,7 @@ export default async function WidgetPage(props: PageProps) {
 
   const widget = result.data;
   const displayedStatus = getDisplayedStatus(widget, new Date());
+  const isDeletable = canDeleteWidget(widget);
 
   if (widget.type === "list") {
     const [referenceData, dispositifs] = await Promise.all([
@@ -58,6 +59,7 @@ export default async function WidgetPage(props: PageProps) {
         widgetId={widget._id}
         publicId={widget.publicId}
         displayedStatus={displayedStatus}
+        isDeletable={isDeletable}
         widgetBaseUrl={process.env.WIDGET_BASE_URL}
         initialValues={{
           internalTitle: widget.internalTitle,
@@ -91,6 +93,7 @@ export default async function WidgetPage(props: PageProps) {
       widgetId={widget._id}
       publicId={widget.publicId}
       displayedStatus={displayedStatus}
+      isDeletable={isDeletable}
       widgetBaseUrl={process.env.WIDGET_BASE_URL}
       initialValues={{
         internalTitle: widget.internalTitle,

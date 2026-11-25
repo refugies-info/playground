@@ -4,6 +4,7 @@ import type { WidgetConfigStatus } from "@playground/shared-types";
 import { cn } from "@playground/ui";
 import {
   RiCloseLine,
+  RiDeleteBinLine,
   RiGlobalLine,
   RiGlobalOffLine,
 } from "@playground/ui/icons";
@@ -17,39 +18,58 @@ import { BoutonMenu, Button } from "@playground/ui/primitives";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { WidgetDisplayedStatus } from "@/lib/widget-list";
-import { updateWidgetConfigAction } from "@/services/widget-config-actions";
+import {
+  deleteWidgetConfigAction,
+  updateWidgetConfigAction,
+  type WidgetConfigActionResult,
+} from "@/services/widget-config-actions";
 
 interface LifecycleAction {
   label: string;
   icon: typeof RiGlobalLine;
   isDestructive: boolean;
-  newStatus: WidgetConfigStatus;
   confirmation: string[];
+  run: (widgetId: string) => Promise<WidgetConfigActionResult<unknown>>;
+  redirectTo?: string;
 }
+
+const setStatus = (status: WidgetConfigStatus) => (widgetId: string) =>
+  updateWidgetConfigAction(widgetId, { status });
 
 const DEACTIVATE: LifecycleAction = {
   label: "Désactiver",
   icon: RiGlobalOffLine,
   isDestructive: true,
-  newStatus: "inactive",
   confirmation: [
     "Êtes-vous sûr de vouloir désactiver ce widget ?",
     "Pensez à prévenir votre partenaire, car il ne sera plus visible sur son site.",
   ],
+  run: setStatus("inactive"),
 };
 
 const REACTIVATE: LifecycleAction = {
   label: "Réactiver",
   icon: RiGlobalLine,
   isDestructive: false,
-  newStatus: "active",
   confirmation: [
     "Êtes-vous sûr de vouloir réactiver ce widget ?",
     "Si votre partenaire ne l’a pas supprimé de son site, il sera de nouveau visible par les usagers.",
   ],
+  run: setStatus("active"),
 };
 
-const getLifecycleAction = (
+const DELETE: LifecycleAction = {
+  label: "Supprimer",
+  icon: RiDeleteBinLine,
+  isDestructive: true,
+  confirmation: [
+    "Êtes-vous sûr de vouloir supprimer ce widget ? Cette action est irréversible.",
+  ],
+  run: deleteWidgetConfigAction,
+  redirectTo: "/widgets",
+};
+
+const getStatusAction = (
   displayedStatus: WidgetDisplayedStatus,
 ): LifecycleAction | null => {
   if (displayedStatus === "disabled") return REACTIVATE;
@@ -57,34 +77,61 @@ const getLifecycleAction = (
   return DEACTIVATE;
 };
 
-interface WidgetLifecycleActionProps {
+interface WidgetLifecycleActionsProps {
   widgetId: string;
   displayedStatus: WidgetDisplayedStatus;
+  isDeletable: boolean;
 }
 
-export function WidgetLifecycleAction({
+export function WidgetLifecycleActions({
   widgetId,
   displayedStatus,
-}: WidgetLifecycleActionProps) {
+  isDeletable,
+}: WidgetLifecycleActionsProps) {
+  const actions = [
+    getStatusAction(displayedStatus),
+    isDeletable ? DELETE : null,
+  ].filter((action) => action !== null);
+
+  return (
+    <div className="flex flex-col gap-2">
+      {actions.map((action) => (
+        <ConfirmedAction
+          key={action.label}
+          widgetId={widgetId}
+          action={action}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ConfirmedAction({
+  widgetId,
+  action,
+}: {
+  widgetId: string;
+  action: LifecycleAction;
+}) {
   const router = useRouter();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const action = getLifecycleAction(displayedStatus);
-  if (!action) return null;
-
   const handleConfirm = async () => {
     setIsLoading(true);
     setError(null);
-    const result = await updateWidgetConfigAction(widgetId, {
-      status: action.newStatus,
-    });
-    setIsLoading(false);
+    const result = await action.run(widgetId);
     if (!result.success) {
+      setIsLoading(false);
       setError(result.error);
       return;
     }
+    if (action.redirectTo) {
+      router.replace(action.redirectTo);
+      return;
+    }
+    setIsLoading(false);
     setIsConfirmOpen(false);
     router.refresh();
   };

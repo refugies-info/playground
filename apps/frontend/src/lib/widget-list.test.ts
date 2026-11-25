@@ -6,6 +6,7 @@ import type {
 import { describe, expect, it } from "vitest";
 import {
   buildDuplicate,
+  canDeleteWidget,
   countByView,
   filterByView,
   getDisplayedStatus,
@@ -30,6 +31,18 @@ const summary = (
   updatedAt: "2026-10-01T00:00:00Z",
   statusUpdatedAt: "2026-10-01T00:00:00Z",
   ...overrides,
+});
+
+describe("canDeleteWidget", () => {
+  it("allows deleting a widget that has never had traffic", () => {
+    expect(canDeleteWidget({})).toBe(true);
+  });
+
+  it("refuses to delete a widget that has been active", () => {
+    expect(canDeleteWidget({ lastTrafficAt: "2026-11-01T10:00:00.000Z" })).toBe(
+      false,
+    );
+  });
 });
 
 describe("getDisplayedStatus", () => {

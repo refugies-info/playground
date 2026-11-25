@@ -17,6 +17,7 @@ export const CONTENT_TYPE_OPTIONS: readonly Option<
 >[] = [
   { value: "demarche", label: "Démarches" },
   { value: "dispositif", label: "Dispositifs" },
+  { value: "online", label: "Ressources en ligne" },
 ];
 
 export const STATUS_OPTIONS: readonly Option<FilterValue<"statuses">>[] = [
