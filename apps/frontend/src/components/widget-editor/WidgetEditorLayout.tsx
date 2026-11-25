@@ -1,11 +1,11 @@
 "use client";
 
-import { SaveIndicator } from "@playground/ui";
+import { cn, SaveIndicator } from "@playground/ui";
 import { HeaderFiche } from "@playground/ui/composites";
 import { RiArrowLeftSLine } from "@playground/ui/icons";
 import { Badge, Button } from "@playground/ui/primitives";
 import Link from "next/link";
-import type { ComponentProps } from "react";
+import { type ComponentProps, useState } from "react";
 import type { WidgetDisplayedStatus } from "@/lib/widget-list";
 import { WidgetEditorNavigation } from "./WidgetEditorNavigation";
 import { WidgetEmbedPopover } from "./WidgetEmbedPopover";
@@ -36,6 +36,9 @@ export function WidgetEditorLayout({
   embedUrl,
   children,
 }: WidgetEditorLayoutProps) {
+  const [isPreviewOpen, setIsPreviewOpen] = useState(true);
+  const isPreviewShown = Boolean(previewSrc) && isPreviewOpen;
+
   return (
     <div className="flex flex-1 flex-col">
       <HeaderFiche
@@ -70,12 +73,25 @@ export function WidgetEditorLayout({
           widgetHref={widgetHref}
           displayedStatus={displayedStatus}
         />
-        <div className="flex min-w-0 flex-1 bg-(--background-contrast-info)">
-          <div className="min-w-0 flex-1 py-10 pr-6 pl-10">
-            <div className="flex max-w-[650px] flex-col gap-6">{children}</div>
+        {/* Same split as the document editor: without the preview, the right padding
+            makes up for the navigation so the form stays centred on the page */}
+        <div
+          className={cn(
+            "min-w-0 flex-1 bg-(--background-contrast-info) p-10 transition-[padding] duration-300",
+            !isPreviewShown && "pr-65",
+          )}
+        >
+          <div className="mx-auto flex w-full max-w-[800px] flex-col gap-6">
+            {children}
           </div>
-          {previewSrc && <WidgetPreviewPanel src={previewSrc} />}
         </div>
+        {previewSrc && (
+          <WidgetPreviewPanel
+            src={previewSrc}
+            isOpen={isPreviewOpen}
+            onOpenChange={setIsPreviewOpen}
+          />
+        )}
       </div>
     </div>
   );
