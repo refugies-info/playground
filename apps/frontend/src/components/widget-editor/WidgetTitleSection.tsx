@@ -1,6 +1,12 @@
 "use client";
 
-import { SwitchField, TextArea, TextInput } from "@playground/ui/forms";
+import { cn } from "@playground/ui";
+import {
+  FieldMessage,
+  SwitchField,
+  TextArea,
+  TextInput,
+} from "@playground/ui/forms";
 import { useId } from "react";
 import {
   type ListFormValues,
@@ -39,6 +45,7 @@ export function WidgetTitleSection({
           value={values.externalTitle}
           onChange={(externalTitle) => onChange({ externalTitle })}
           maxLength={MAX_EXTERNAL_TITLE_LENGTH}
+          hint={`${MAX_EXTERNAL_TITLE_LENGTH} caractères max`}
           error={errors.externalTitle}
           required
         />
@@ -49,7 +56,13 @@ export function WidgetTitleSection({
         />
         {values.displayDescription && (
           <div className="space-y-1">
-            <label className="text-sm font-medium" htmlFor={descriptionId}>
+            <label
+              className={cn(
+                "text-base font-medium leading-6",
+                errors.description && "text-(--text-default-error)",
+              )}
+              htmlFor={descriptionId}
+            >
               Description *
             </label>
             <TextArea
@@ -62,10 +75,12 @@ export function WidgetTitleSection({
               error={errors.description}
               required
             />
-            {errors.description && (
-              <p className="text-[12px] leading-[20px] text-(--text-default-error)">
-                {errors.description}
-              </p>
+            {errors.description ? (
+              <FieldMessage variant="error">{errors.description}</FieldMessage>
+            ) : (
+              <FieldMessage variant="info">
+                {MAX_DESCRIPTION_LENGTH} caractères max
+              </FieldMessage>
             )}
           </div>
         )}

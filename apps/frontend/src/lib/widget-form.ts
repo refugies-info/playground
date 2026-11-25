@@ -146,10 +146,10 @@ export const FILTER_BAR_CRITERIA: readonly {
   label: string;
   fixedBy?: keyof WidgetConfigFilters;
 }[] = [
-  { option: "keyword", label: "Rechercher par mot-clé" },
+  { option: "keyword", label: "Recherche par mot-clé" },
   { option: "location", label: "Localisation", fixedBy: "departments" },
-  { option: "theme", label: "Thèmes", fixedBy: "themes" },
-  { option: "public", label: "Public", fixedBy: "publics" },
+  { option: "theme", label: "Thème", fixedBy: "themes" },
+  { option: "public", label: "Public spécifique", fixedBy: "publics" },
   { option: "status", label: "Statut", fixedBy: "statuses" },
   {
     option: "frenchLevel",
@@ -157,6 +157,7 @@ export const FILTER_BAR_CRITERIA: readonly {
     fixedBy: "frenchLevels",
   },
   { option: "age", label: "Âge", fixedBy: "ages" },
+  { option: "language", label: "Traduit en", fixedBy: "languages" },
 ];
 
 export const isFilterBarOptionFixed = (

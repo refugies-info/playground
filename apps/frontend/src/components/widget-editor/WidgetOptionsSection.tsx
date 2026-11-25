@@ -1,7 +1,7 @@
 "use client";
 
 import type { WidgetConfigPageSize } from "@playground/shared-types";
-import { SelectInput, SwitchField } from "@playground/ui/forms";
+import { CheckboxField, SelectInput, SwitchField } from "@playground/ui/forms";
 import {
   FILTER_BAR_CRITERIA,
   isFilterBarOptionFixed,
@@ -47,7 +47,7 @@ export function WidgetOptionsSection({
     >
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium" htmlFor="widget-page-size">
+          <label className="text-base font-medium" htmlFor="widget-page-size">
             Nombre de fiches par page
           </label>
           <SelectInput
@@ -76,11 +76,11 @@ export function WidgetOptionsSection({
             onChange={(displayFilterBar) => onChange({ displayFilterBar })}
           />
           {values.displayFilterBar && (
-            <div className="flex flex-col gap-4 pl-6">
+            <div className="flex flex-col pl-4">
               {FILTER_BAR_CRITERIA.map(({ option, label }) => {
                 const isFixed = isFilterBarOptionFixed(option, values.filters);
                 return (
-                  <SwitchField
+                  <CheckboxField
                     key={option}
                     label={label}
                     checked={
@@ -103,7 +103,7 @@ export function WidgetOptionsSection({
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium" htmlFor="widget-sort-by">
+          <label className="text-base font-medium" htmlFor="widget-sort-by">
             Trier par
           </label>
           <SelectInput

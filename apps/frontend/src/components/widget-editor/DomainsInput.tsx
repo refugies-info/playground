@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@playground/ui";
 import { TextInput } from "@playground/ui/forms";
 import { RiCloseCircleFill } from "@playground/ui/icons";
 import { useId, useState } from "react";
@@ -16,11 +17,13 @@ export function DomainsInput({ value, onChange, error }: DomainsInputProps) {
   const [draft, setDraft] = useState("");
   const [draftError, setDraftError] = useState<string>();
 
+  const shownError = draftError ?? error;
+
   const handleAdd = () => {
     if (draft.trim() === "") return;
     const domain = normalizeDomain(draft);
     if (!domain) {
-      setDraftError("Saisir un nom de domaine valide, par exemple exemple.org");
+      setDraftError("Le domaine doit être une URL.");
       return;
     }
     if (value.includes(domain)) {
@@ -43,11 +46,16 @@ export function DomainsInput({ value, onChange, error }: DomainsInputProps) {
       <div>
         <label
           htmlFor={inputId}
-          className="block text-sm font-medium leading-6 text-(--text-default-grey)"
+          className={cn(
+            "block text-base font-medium leading-6",
+            shownError
+              ? "text-(--text-default-error)"
+              : "text-(--text-default-grey)",
+          )}
         >
           Domaines autorisés
         </label>
-        <p className="text-xs leading-5 text-(--text-mention-grey)">
+        <p className="text-sm leading-6 text-(--text-mention-grey)">
           Noms de domaines du partenaire autorisés à exploiter le widget.
         </p>
       </div>
@@ -61,7 +69,7 @@ export function DomainsInput({ value, onChange, error }: DomainsInputProps) {
             setDraftError(undefined);
           }}
           onKeyDown={handleKeyDown}
-          error={draftError ?? error}
+          error={shownError}
           className="pr-28"
           autoComplete="off"
         />

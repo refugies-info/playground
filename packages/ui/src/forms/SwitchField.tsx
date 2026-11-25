@@ -37,7 +37,7 @@ export function SwitchField({
         onChange={onChange}
         disabled={disabled}
       />
-      <label htmlFor={id} className="text-sm">
+      <label htmlFor={id} className="text-base">
         {label}
       </label>
       {hint && (

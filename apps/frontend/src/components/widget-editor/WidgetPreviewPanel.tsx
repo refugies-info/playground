@@ -84,7 +84,7 @@ export function WidgetPreviewPanel({ src }: WidgetPreviewPanelProps) {
   }
 
   return (
-    <aside className="sticky top-20 flex h-[calc(100vh-5rem)] w-[596px] shrink-0 flex-col items-center gap-4 self-start rounded-tl-2xl border-l border-t border-(--border-default-grey) bg-(--background-alt-blue-france) shadow-[-1px_0_3px_rgba(0,0,18,0.06)]">
+    <aside className="sticky top-20 flex h-[calc(100vh-5rem)] w-[clamp(596px,40vw,1118px)] shrink-0 flex-col items-center gap-4 self-start rounded-tl-2xl border-l border-t border-(--border-default-grey) bg-(--background-alt-blue-france) shadow-[-1px_0_3px_rgba(0,0,18,0.06)]">
       <div className="relative flex h-[84px] w-full items-center justify-center p-2">
         <Button
           type="button"
