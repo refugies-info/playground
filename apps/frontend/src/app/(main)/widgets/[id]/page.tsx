@@ -1,4 +1,4 @@
-import { isAdmin } from "@playground/shared-types";
+import { canManageWidgets } from "@playground/shared-types";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { canDeleteWidget, getDisplayedStatus } from "@/lib/widget-list";
@@ -16,7 +16,7 @@ interface PageProps {
 
 export default async function WidgetPage(props: PageProps) {
   const currentUser = await getCurrentUser();
-  if (!isAdmin(currentUser.role)) redirect("/");
+  if (!canManageWidgets(currentUser.role)) redirect("/");
 
   const { id } = await props.params;
   const result = await getWidgetConfigAction(id);

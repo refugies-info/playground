@@ -1,6 +1,6 @@
 "use client";
 
-import { isAdmin } from "@playground/shared-types";
+import { canManageWidgets, isAdmin } from "@playground/shared-types";
 import {
   AppLogo,
   Avatar,
@@ -168,7 +168,7 @@ export function AppSidebar({
         />
       )}
 
-      {userIsAdmin && (
+      {canManageWidgets(userRole) && (
         <BoutonMenu
           icon={RiCodeSSlashLine}
           label="Widgets"
