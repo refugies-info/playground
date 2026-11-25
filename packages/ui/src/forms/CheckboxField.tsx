@@ -30,8 +30,8 @@ export function CheckboxField({
   const id = React.useId();
 
   return (
-    <div className={cn("flex items-center gap-2 py-2", className)}>
-      <span className="relative flex size-[18px] shrink-0">
+    <div className={cn("flex items-start gap-2 py-2", className)}>
+      <span className="relative mt-[3px] flex size-[18px] shrink-0">
         <input
           id={id}
           type="checkbox"
@@ -45,15 +45,22 @@ export function CheckboxField({
           className="pointer-events-none absolute inset-[2px] hidden size-3.5 text-(--text-inverted-blue-france) peer-checked:block peer-disabled:text-(--text-disabled-grey)"
         />
       </span>
-      <label
-        htmlFor={id}
-        className="cursor-pointer text-base leading-6 text-(--text-default-grey) peer-disabled:cursor-not-allowed"
-      >
-        {label}
-      </label>
-      {hint && (
-        <span className="text-sm text-(--text-mention-grey)">{hint}</span>
-      )}
+      <div className="flex flex-col">
+        <label
+          htmlFor={id}
+          className={cn(
+            "text-base leading-6 text-(--text-default-grey)",
+            disabled ? "cursor-not-allowed" : "cursor-pointer",
+          )}
+        >
+          {label}
+        </label>
+        {hint && (
+          <span className="text-sm leading-6 text-(--text-mention-grey)">
+            {hint}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

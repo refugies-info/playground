@@ -23,8 +23,9 @@ export const SORT_OPTIONS: readonly {
   value: WidgetConfigSortOption;
   label: string;
 }[] = [
-  { value: "date", label: "Date de mise à jour" },
+  { value: "date", label: "Date" },
   { value: "views", label: "Popularité" },
+  { value: "theme", label: "Thématique" },
 ];
 
 /** The "Configuration et accès" section, common to every widget type. */
@@ -149,14 +150,14 @@ export const FILTER_BAR_CRITERIA: readonly {
   { option: "keyword", label: "Recherche par mot-clé" },
   { option: "location", label: "Localisation", fixedBy: "departments" },
   { option: "theme", label: "Thème", fixedBy: "themes" },
-  { option: "public", label: "Public spécifique", fixedBy: "publics" },
   { option: "status", label: "Statut", fixedBy: "statuses" },
+  { option: "public", label: "Public spécifique", fixedBy: "publics" },
+  { option: "age", label: "Âge", fixedBy: "ages" },
   {
     option: "frenchLevel",
     label: "Niveau de français",
     fixedBy: "frenchLevels",
   },
-  { option: "age", label: "Âge", fixedBy: "ages" },
   { option: "language", label: "Traduit en", fixedBy: "languages" },
 ];
 

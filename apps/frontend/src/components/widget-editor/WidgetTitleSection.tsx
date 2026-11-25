@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@playground/ui";
 import {
   FieldMessage,
   SwitchField,
@@ -49,41 +48,37 @@ export function WidgetTitleSection({
           error={errors.externalTitle}
           required
         />
-        <SwitchField
-          label="Afficher la description"
-          checked={values.displayDescription}
-          onChange={(displayDescription) => onChange({ displayDescription })}
-        />
-        {values.displayDescription && (
-          <div className="space-y-1">
-            <label
-              className={cn(
-                "text-base font-medium leading-6",
-                errors.description && "text-(--text-default-error)",
+        <div>
+          <SwitchField
+            label="Afficher la description"
+            checked={values.displayDescription}
+            onChange={(displayDescription) => onChange({ displayDescription })}
+          />
+          {values.displayDescription && (
+            <div className="space-y-2">
+              <TextArea
+                id={descriptionId}
+                aria-label="Description"
+                variant="dsfr"
+                rows={3}
+                value={values.description}
+                onChange={(description) => onChange({ description })}
+                maxLength={MAX_DESCRIPTION_LENGTH}
+                error={errors.description}
+                required
+              />
+              {errors.description ? (
+                <FieldMessage id={`${descriptionId}-error`} variant="error">
+                  {errors.description}
+                </FieldMessage>
+              ) : (
+                <FieldMessage variant="info">
+                  {MAX_DESCRIPTION_LENGTH} caractères max
+                </FieldMessage>
               )}
-              htmlFor={descriptionId}
-            >
-              Description *
-            </label>
-            <TextArea
-              id={descriptionId}
-              variant="dsfr"
-              rows={4}
-              value={values.description}
-              onChange={(description) => onChange({ description })}
-              maxLength={MAX_DESCRIPTION_LENGTH}
-              error={errors.description}
-              required
-            />
-            {errors.description ? (
-              <FieldMessage variant="error">{errors.description}</FieldMessage>
-            ) : (
-              <FieldMessage variant="info">
-                {MAX_DESCRIPTION_LENGTH} caractères max
-              </FieldMessage>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     </WidgetEditorSection>
   );

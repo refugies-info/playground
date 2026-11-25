@@ -30,19 +30,26 @@ export function SwitchField({
   const id = React.useId();
 
   return (
-    <div className={cn("flex items-center gap-3", className)}>
+    <div
+      className={cn("flex items-center justify-between gap-8 py-2", className)}
+    >
+      <div className="flex flex-wrap items-center gap-x-3">
+        <label
+          htmlFor={id}
+          className="text-base font-medium leading-6 text-(--text-default-grey)"
+        >
+          {label}
+        </label>
+        {hint && (
+          <span className="text-xs text-(--text-mention-grey)">{hint}</span>
+        )}
+      </div>
       <Switch
         id={id}
         checked={checked}
         onChange={onChange}
         disabled={disabled}
       />
-      <label htmlFor={id} className="text-base">
-        {label}
-      </label>
-      {hint && (
-        <span className="text-xs text-(--text-mention-grey)">{hint}</span>
-      )}
     </div>
   );
 }

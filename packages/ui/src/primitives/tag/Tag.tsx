@@ -80,7 +80,7 @@ const tagVariants = cva(
           "font-bold rounded px-2 h-6 text-xs",
         ].join(" "),
 
-        choice: "rounded-full px-2 h-6 text-xs",
+        choice: "rounded-full px-2 h-6 text-xs font-normal",
 
         // Figma (Interfaces-Front, node 38426:271491) : valeur choisie dans un champ de recherche
         selected: [
