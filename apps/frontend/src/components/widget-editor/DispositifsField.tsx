@@ -31,7 +31,7 @@ export function DispositifsField({
       <DispositifSearchInput
         onSearch={searchDispositifs}
         onSelect={onAdd}
-        aria-label={`${label} : rechercher une fiche par mot-clé ou ID`}
+        ariaLabel={`${label} : rechercher une fiche par mot-clé ou ID`}
       />
       {dispositifs.length > 0 && (
         <ul className="flex flex-col items-start gap-2">

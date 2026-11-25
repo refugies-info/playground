@@ -28,6 +28,25 @@ export const SORT_OPTIONS: readonly {
   { value: "theme", label: "Thématique" },
 ];
 
+export const FILTER_BAR_CRITERIA: readonly {
+  option: WidgetConfigFilterBarOption;
+  label: string;
+  fixedBy?: keyof WidgetConfigFilters;
+}[] = [
+  { option: "keyword", label: "Recherche par mot-clé" },
+  { option: "location", label: "Localisation", fixedBy: "departments" },
+  { option: "theme", label: "Thème", fixedBy: "themes" },
+  { option: "status", label: "Statut", fixedBy: "statuses" },
+  { option: "public", label: "Public spécifique", fixedBy: "publics" },
+  { option: "age", label: "Âge", fixedBy: "ages" },
+  {
+    option: "frenchLevel",
+    label: "Niveau de français",
+    fixedBy: "frenchLevels",
+  },
+  { option: "language", label: "Traduit en", fixedBy: "languages" },
+];
+
 /** The "Configuration et accès" section, common to every widget type. */
 export interface WidgetConfigurationValues {
   internalTitle: string;
@@ -141,25 +160,6 @@ export interface ListFormValues extends WidgetConfigurationValues {
   filterBarOptions: WidgetConfigFilterBarOption[];
   sortBy: WidgetConfigSortOption;
 }
-
-export const FILTER_BAR_CRITERIA: readonly {
-  option: WidgetConfigFilterBarOption;
-  label: string;
-  fixedBy?: keyof WidgetConfigFilters;
-}[] = [
-  { option: "keyword", label: "Recherche par mot-clé" },
-  { option: "location", label: "Localisation", fixedBy: "departments" },
-  { option: "theme", label: "Thème", fixedBy: "themes" },
-  { option: "status", label: "Statut", fixedBy: "statuses" },
-  { option: "public", label: "Public spécifique", fixedBy: "publics" },
-  { option: "age", label: "Âge", fixedBy: "ages" },
-  {
-    option: "frenchLevel",
-    label: "Niveau de français",
-    fixedBy: "frenchLevels",
-  },
-  { option: "language", label: "Traduit en", fixedBy: "languages" },
-];
 
 export const isFilterBarOptionFixed = (
   option: WidgetConfigFilterBarOption,

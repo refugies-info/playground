@@ -96,14 +96,14 @@ const tagVariants = cva(
         status: "choice",
         pressed: false,
         className: [
-          "bg-[var(--background-action-low-blue-france)]",
-          "text-[var(--text-action-high-blue-france)]",
+          "bg-(--background-action-low-blue-france)",
+          "text-(--text-action-high-blue-france)",
         ],
       },
       {
         status: "choice",
         pressed: true,
-        className: "relative text-[var(--text-inverted-grey)]",
+        className: "relative text-(--text-inverted-grey)",
       },
     ],
     defaultVariants: {
@@ -146,7 +146,7 @@ function ChoiceCheckDecoration() {
     <>
       <span
         aria-hidden="true"
-        className="absolute inset-y-0 left-0 right-3 rounded-l-xl bg-[var(--background-action-high-blue-france)]"
+        className="absolute inset-y-0 left-0 right-3 rounded-l-xl bg-(--background-action-high-blue-france)"
       />
       <svg
         aria-hidden="true"
@@ -154,7 +154,7 @@ function ChoiceCheckDecoration() {
         height="27"
         viewBox="0 0 18 27"
         fill="currentColor"
-        className="absolute -top-[3px] right-[-6px] text-[var(--background-action-high-blue-france)]"
+        className="absolute -top-[3px] right-[-6px] text-(--background-action-high-blue-france)"
       >
         <path d="M0 3C2.1841 3 4.22999 3.58683 5.99414 4.60645C5.89064 5.05432 5.83496 5.52067 5.83496 6C5.83496 9.28979 8.41186 11.9764 11.6572 12.1543C11.8792 13.0667 12 14.0192 12 15C12 21.6274 6.62742 27 0 27V3Z" />
         <g fill="none" stroke="currentColor" strokeWidth="1">

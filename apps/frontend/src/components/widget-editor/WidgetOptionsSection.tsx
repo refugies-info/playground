@@ -108,7 +108,7 @@ export function WidgetOptionsSection({
                     disabled={isFixed}
                     hint={
                       isFixed
-                        ? "Indisponible : ce critère est déjà fixé dans la section Contenu du widget."
+                        ? "Indisponible : vous filtrez déjà les fiches sur ce critère dans la section « Choix des fiches »."
                         : undefined
                     }
                     onChange={(checked) =>
