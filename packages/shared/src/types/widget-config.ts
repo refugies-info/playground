@@ -59,7 +59,7 @@ export interface ListWidgetConfigFields extends WidgetConfigCommonFields {
 
 export interface ThumbnailWidgetConfigFields extends WidgetConfigCommonFields {
   type: "thumbnail";
-  dispositifId: string;
+  dispositifId?: string;
 }
 
 export type WidgetConfigFields =

@@ -1,5 +1,6 @@
 "use client";
 
+import { isAdmin } from "@playground/shared-types";
 import {
   AppLogo,
   Avatar,
@@ -56,7 +57,7 @@ export function AppSidebar({
     router.push("/login");
   };
 
-  const isAdmin = userRole === "admin";
+  const userIsAdmin = isAdmin(userRole);
   const isTranslator = userRole === "translator";
 
   const userAvatar = (
@@ -125,7 +126,7 @@ export function AppSidebar({
         />
       }
     >
-      {isAdmin && (
+      {userIsAdmin && (
         <BoutonMenu
           icon={RiDownloadLine}
           label="Importer"
@@ -156,7 +157,7 @@ export function AppSidebar({
         linkComponent={Link}
       />
 
-      {isAdmin && (
+      {userIsAdmin && (
         <BoutonMenu
           icon={RiAccountCircleLine}
           label="Utilisateurs"
@@ -167,7 +168,7 @@ export function AppSidebar({
         />
       )}
 
-      {isAdmin && (
+      {userIsAdmin && (
         <BoutonMenu
           icon={RiCodeSSlashLine}
           label="Widgets"

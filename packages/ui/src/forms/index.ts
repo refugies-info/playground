@@ -1,3 +1,7 @@
+export {
+  AsyncSearchInput,
+  type AsyncSearchInputProps,
+} from "./AsyncSearchInput";
 export { ComboboxInput, type ComboboxInputProps } from "./ComboboxInput";
 export { DatePicker, type DatePickerProps } from "./DatePicker";
 export * from "./date-range-picker";

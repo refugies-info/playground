@@ -1,6 +1,7 @@
 import { TAG_LABELS, Tag, type TagStatus } from "@playground/ui";
+import { RiGovernmentLine } from "@playground/ui/icons";
 import type { Meta, StoryObj } from "@storybook/react";
-import { expect } from "storybook/test";
+import { expect, fn } from "storybook/test";
 
 const FIGMA_URL =
   "https://www.figma.com/design/mVdElBMCLe9RLRJF9ayP5Z/Wireframes_RCO?node-id=1256-5829";
@@ -104,6 +105,54 @@ export const Publie: Story = {
 export const NA: Story = {
   name: "NA (vide)",
   args: { status: "na" },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Valeur sélectionnée (retirable)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SELECTED_FIGMA_URL =
+  "https://www.figma.com/design/JYHSDjSDp1g1D5NxFGs5ox8r/Interfaces-Front?node-id=38426-271491";
+
+/**
+ * Valeur choisie dans un champ de recherche : le tag remplace le champ,
+ * la croix le retire et fait réapparaître le champ.
+ */
+export const Selected: Story = {
+  name: "Sélectionné (retirable)",
+  parameters: { design: { type: "figma", url: SELECTED_FIGMA_URL } },
+  args: {
+    status: "selected",
+    children: "Demander un titre de voyage",
+    dismissLabel: "Retirer",
+    onDismiss: fn(),
+  },
+};
+
+export const SelectedWithDetail: Story = {
+  name: "Sélectionné avec détail",
+  args: {
+    ...Selected.args,
+    detail: "Ministère de l’Intérieur",
+    detailIcon: RiGovernmentLine,
+  },
+};
+
+export const SelectedLongLabel: Story = {
+  name: "Sélectionné, titre long",
+  args: {
+    ...SelectedWithDetail.args,
+    children:
+      "Apprendre le français et être accompagné dans son projet professionnel",
+    detail: "Paroles voyageuses",
+  },
+  decorators: [
+    (Story) => (
+      <div className="w-[360px]">
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
