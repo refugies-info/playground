@@ -1,11 +1,15 @@
 import type { RiDispositifSummary } from "@playground/shared-types";
 import { describe, expect, it } from "vitest";
 import {
+  buildListUpdate,
   buildThumbnailUpdate,
   buildWidgetDraft,
+  getActiveFilterBarOptions,
   getDispositifTitle,
+  hasListChanges,
   hasThumbnailChanges,
   isDispositifId,
+  type ListFormValues,
   normalizeDomain,
 } from "./widget-form";
 
@@ -100,8 +104,9 @@ describe("buildWidgetDraft", () => {
       filters: {},
       selectedDispositifIds: [],
       excludedDispositifIds: [],
-      pageSize: 8,
+      pageSize: 12,
       sortBy: "date",
+      displayFilterBar: false,
     });
   });
 });
@@ -145,5 +150,89 @@ describe("hasThumbnailChanges", () => {
     expect(
       hasThumbnailChanges(initial, { values: nextValues, dispositifId }),
     ).toBe(true);
+  });
+});
+
+const listValues: ListFormValues = {
+  internalTitle: " Widget cours ",
+  structureName: " Partenaire ",
+  authorizedDomains: ["exemple.org"],
+  externalTitle: " Apprendre le français ",
+  displayDescription: true,
+  description: " Trouvez un cours ",
+  filters: {},
+  selectedDispositifs: [],
+  excludedDispositifs: [],
+  pageSize: 12,
+  displayShareModule: true,
+  displayFilterBar: true,
+  filterBarOptions: ["keyword", "location", "theme"],
+  sortBy: "date",
+};
+
+describe("buildListUpdate", () => {
+  it("trims the texts and never sends the type nor the status", () => {
+    const update = buildListUpdate(listValues);
+    expect(update).toMatchObject({
+      internalTitle: "Widget cours",
+      structureName: "Partenaire",
+      externalTitle: "Apprendre le français",
+      description: "Trouvez un cours",
+    });
+    expect(update).not.toHaveProperty("type");
+    expect(update).not.toHaveProperty("status");
+  });
+
+  it("leaves the description untouched when it is not displayed", () => {
+    const update = buildListUpdate({
+      ...listValues,
+      displayDescription: false,
+    });
+    expect(update).toMatchObject({ displayDescription: false });
+    expect(update).not.toHaveProperty("description");
+  });
+
+  it("sends every filter category and the ids of the forced and excluded fiches", () => {
+    const update = buildListUpdate({
+      ...listValues,
+      filters: { departments: ["Gironde"], themes: ["theme-id"] },
+      selectedDispositifs: [dispositif],
+      excludedDispositifs: [{ ...dispositif, id: "other-id" }],
+    });
+    expect(update).toMatchObject({
+      filters: {
+        departments: ["Gironde"],
+        themes: ["theme-id"],
+        ages: [],
+        languages: [],
+      },
+      selectedDispositifIds: ["6a8aa3791f5d9938b6b54ac3"],
+      excludedDispositifIds: ["other-id"],
+    });
+  });
+
+  it("drops the filter bar criteria already fixed by the widget content", () => {
+    const update = buildListUpdate({
+      ...listValues,
+      filters: { departments: ["75 - Paris"] },
+    });
+    expect(update).toMatchObject({ filterBarOptions: ["keyword", "theme"] });
+  });
+});
+
+describe("getActiveFilterBarOptions", () => {
+  it("ignores empty filters", () => {
+    expect(
+      getActiveFilterBarOptions(["location", "age"], { departments: [] }),
+    ).toEqual(["location", "age"]);
+  });
+});
+
+describe("hasListChanges", () => {
+  it("detects an edited value", () => {
+    expect(hasListChanges(listValues, { ...listValues })).toBe(false);
+    expect(hasListChanges(listValues, { ...listValues, pageSize: 8 })).toBe(
+      true,
+    );
   });
 });

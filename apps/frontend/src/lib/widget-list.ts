@@ -101,6 +101,10 @@ export const getDisplayedStatus = (
   return daysWithoutTraffic < INACTIVITY_DELAY_IN_DAYS ? "active" : "inactive";
 };
 
+export const canDeleteWidget = ({
+  lastTrafficAt,
+}: Pick<WidgetConfigSummary, "lastTrafficAt">) => !lastTrafficAt;
+
 /**
  * The start of the current activity period of an active widget needs more than
  * `lastTrafficAt` and is not available yet.

@@ -17,7 +17,7 @@ export type WidgetConfigFilterBarOption =
  * values of a category are OR-ed, categories are AND-ed.
  */
 export interface WidgetConfigFilters {
-  contentTypes?: ("dispositif" | "demarche")[];
+  contentTypes?: ("dispositif" | "demarche" | "online")[];
   departments?: string[];
   themes?: string[];
   needs?: string[];

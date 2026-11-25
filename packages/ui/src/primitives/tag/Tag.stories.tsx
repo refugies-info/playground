@@ -155,6 +155,24 @@ export const SelectedLongLabel: Story = {
   ],
 };
 
+/** Choix d'un filtre : un tag activable, plein avec une coche une fois choisi. */
+export const Choice: Story = {
+  name: "Choix (activable)",
+  parameters: {
+    design: {
+      type: "figma",
+      url: "https://www.figma.com/design/JYHSDjSDp1g1D5NxFGs5ox8r/Interfaces-Front?node-id=38795-188928",
+    },
+  },
+  args: { status: "choice", children: "Démarches", onToggle: fn() },
+  render: (args) => (
+    <div className="flex flex-wrap items-center gap-2">
+      <Tag {...args} pressed />
+      <Tag {...args}>Dispositifs</Tag>
+    </div>
+  ),
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Tableau de référence
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@playground/ui";
 import {
   RiArrowLeftDoubleLine,
   RiArrowRightDoubleLine,
@@ -30,10 +31,15 @@ const DEVICE_WIDTH_IN_PX: Record<PreviewDevice, number> = {
 
 interface WidgetPreviewPanelProps {
   src: string;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
 }
 
-export function WidgetPreviewPanel({ src }: WidgetPreviewPanelProps) {
-  const [isOpen, setIsOpen] = useState(true);
+export function WidgetPreviewPanel({
+  src,
+  isOpen,
+  onOpenChange,
+}: WidgetPreviewPanelProps) {
   const [device, setDevice] = useState<PreviewDevice>("desktop");
   const [area, setArea] = useState({ width: 0, height: 0 });
   const [contentHeight, setContentHeight] = useState<number | null>(null);
@@ -66,67 +72,84 @@ export function WidgetPreviewPanel({ src }: WidgetPreviewPanelProps) {
   const frameWidth = DEVICE_WIDTH_IN_PX[device];
   const scale = Math.min(1, area.width / frameWidth);
 
-  if (!isOpen) {
-    return (
-      <aside className="flex w-[396px] shrink-0 justify-end pr-10 pt-10">
-        <Button
-          type="button"
-          variant="quatrieme"
-          size="sm"
-          className="bg-white"
-          leftIcon={RiArrowLeftDoubleLine}
-          onClick={() => setIsOpen(true)}
-        >
-          Aperçu
-        </Button>
-      </aside>
-    );
-  }
-
+  // Sized like the source panel of the document editor: a third of the page, or nothing
   return (
-    <aside className="sticky top-20 flex h-[calc(100vh-5rem)] w-[596px] shrink-0 flex-col items-center gap-4 self-start rounded-tl-2xl border-l border-t border-(--border-default-grey) bg-(--background-alt-blue-france) shadow-[-1px_0_3px_var(--shadow-color)]">
-      <div className="relative flex h-[84px] w-full items-center justify-center p-2">
-        <Button
-          type="button"
-          variant="quatrieme"
-          className="absolute left-5 top-[18px] h-12 w-12 text-(--text-disabled-grey)"
-          aria-label="Refermer l'aperçu"
-          onClick={() => setIsOpen(false)}
-        >
-          <RiArrowRightDoubleLine className="size-6" aria-hidden="true" />
-        </Button>
-        <SegmentedControl
-          options={DEVICE_OPTIONS}
-          value={device}
-          onChange={setDevice}
-          aria-label="Appareil de l'aperçu"
-        />
-      </div>
+    <>
       <div
-        ref={observeArea}
-        className="mx-9 mb-10 min-h-0 w-[calc(100%-72px)] flex-1 overflow-y-auto"
+        inert={!isOpen}
+        className={cn(
+          "shrink-0 bg-(--background-contrast-info) transition-[width] duration-500 ease-expo-out",
+          isOpen ? "w-1/3" : "w-0",
+        )}
       >
-        {area.width > 0 && (
-          <div
-            className="relative"
-            style={{ height: (contentHeight ?? area.height / scale) * scale }}
-          >
-            <iframe
-              ref={iframeRef}
-              title="Aperçu du widget"
-              src={src}
-              className="absolute top-0 bg-white shadow-[0_4px_12px_var(--shadow-color)]"
-              style={{
-                width: frameWidth,
-                height: contentHeight ?? area.height / scale,
-                left: (area.width - frameWidth * scale) / 2,
-                transform: `scale(${scale})`,
-                transformOrigin: "top left",
-              }}
+        <aside
+          className={cn(
+            "sticky top-20 flex h-[calc(100vh-5rem)] w-full flex-col items-center gap-4 overflow-hidden rounded-tl-2xl border-(--border-default-grey) bg-(--background-alt-blue-france) transition-opacity duration-200",
+            isOpen
+              ? "border-l border-t opacity-100 shadow-[-1px_0_3px_var(--shadow-color)]"
+              : "opacity-0",
+          )}
+        >
+          <div className="relative flex h-[84px] w-full items-center justify-center p-2">
+            <Button
+              type="button"
+              variant="quatrieme"
+              className="absolute left-5 top-[18px] h-12 w-12 text-(--text-disabled-grey)"
+              aria-label="Refermer l'aperçu"
+              onClick={() => onOpenChange(false)}
+            >
+              <RiArrowRightDoubleLine className="size-6" aria-hidden="true" />
+            </Button>
+            <SegmentedControl
+              options={DEVICE_OPTIONS}
+              value={device}
+              onChange={setDevice}
+              aria-label="Appareil de l'aperçu"
             />
           </div>
-        )}
+          <div
+            ref={observeArea}
+            className="mx-9 mb-10 min-h-0 w-[calc(100%-72px)] flex-1 overflow-y-auto"
+          >
+            {area.width > 0 && (
+              <div
+                className="relative"
+                style={{
+                  height: (contentHeight ?? area.height / scale) * scale,
+                }}
+              >
+                <iframe
+                  ref={iframeRef}
+                  title="Aperçu du widget"
+                  src={src}
+                  className="absolute top-0 bg-white shadow-[0_4px_12px_var(--shadow-color)]"
+                  style={{
+                    width: frameWidth,
+                    height: contentHeight ?? area.height / scale,
+                    left: (area.width - frameWidth * scale) / 2,
+                    transform: `scale(${scale})`,
+                    transformOrigin: "top left",
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </aside>
       </div>
-    </aside>
+      {!isOpen && (
+        <div className="fixed top-24 right-6">
+          <Button
+            type="button"
+            variant="quatrieme"
+            size="sm"
+            className="bg-white"
+            leftIcon={RiArrowLeftDoubleLine}
+            onClick={() => onOpenChange(true)}
+          >
+            Aperçu
+          </Button>
+        </div>
+      )}
+    </>
   );
 }

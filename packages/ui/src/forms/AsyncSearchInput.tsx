@@ -121,7 +121,7 @@ export function AsyncSearchInput<T>({
         aria-label={ariaLabel}
         error={error}
         autoComplete="off"
-        className="pr-10 [&::-webkit-search-cancel-button]:appearance-none"
+        className="pr-10 placeholder:font-medium placeholder:text-[var(--text-disabled-grey)] [&::-webkit-search-cancel-button]:appearance-none"
       />
       <RiSearchLine
         className="pointer-events-none absolute right-4 top-3 size-4 text-(--text-default-grey)"

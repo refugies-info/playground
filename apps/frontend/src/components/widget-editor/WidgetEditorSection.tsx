@@ -15,7 +15,7 @@ export function WidgetEditorSection({
         <h2 className="text-xl font-bold leading-7 text-(--text-title-grey)">
           {title}
         </h2>
-        <p className="text-xs leading-5 text-(--text-title-grey)">
+        <p className="text-sm leading-6 text-(--text-title-grey)">
           {description}
         </p>
       </div>
