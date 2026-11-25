@@ -1,4 +1,4 @@
-import { isAdmin } from "@playground/shared-types";
+import { canManageWidgets } from "@playground/shared-types";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import {
@@ -20,7 +20,7 @@ const PAGE_SIZE = 50;
 
 export default async function WidgetsPage(props: PageProps) {
   const currentUser = await getCurrentUser();
-  if (!isAdmin(currentUser.role)) redirect("/");
+  if (!canManageWidgets(currentUser.role)) redirect("/");
 
   const { view, sortBy, sortOrder, page } = parseWidgetListParams(
     await props.searchParams,
