@@ -1,6 +1,7 @@
 import { canManageWidgets } from "@playground/shared-types";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { toExternalTitleInput } from "@/lib/widget-form";
 import { canDeleteWidget, getDisplayedStatus } from "@/lib/widget-list";
 import { fetchRiReferenceData } from "@/services/ri/reference-data";
 import {
@@ -65,7 +66,7 @@ export default async function WidgetPage(props: PageProps) {
           internalTitle: widget.internalTitle,
           structureName: widget.structureName,
           authorizedDomains: widget.authorizedDomains,
-          externalTitle: widget.externalTitle,
+          externalTitle: toExternalTitleInput(widget.externalTitle),
           displayDescription: widget.displayDescription,
           description: widget.description ?? "",
           filters: widget.filters,

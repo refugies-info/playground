@@ -11,6 +11,7 @@ import {
   isDispositifId,
   type ListFormValues,
   normalizeDomain,
+  toExternalTitleInput,
 } from "./widget-form";
 
 const dispositif: RiDispositifSummary = {
@@ -91,7 +92,7 @@ describe("buildWidgetDraft", () => {
       internalTitle: "Titre de voyage",
       structureName: "SP",
       authorizedDomains: [],
-      externalTitle: "Titre de voyage",
+      externalTitle: "Titre à compléter",
     });
   });
 
@@ -100,7 +101,7 @@ describe("buildWidgetDraft", () => {
       type: "list",
       status: "active",
       internalTitle: "Titre de voyage",
-      externalTitle: "Titre de voyage",
+      externalTitle: "Titre à compléter",
       filters: {},
       selectedDispositifIds: [],
       excludedDispositifIds: [],
@@ -108,6 +109,16 @@ describe("buildWidgetDraft", () => {
       sortBy: "date",
       displayFilterBar: false,
     });
+  });
+});
+
+describe("toExternalTitleInput", () => {
+  it("leaves the field empty while the title is not typed", () => {
+    expect(toExternalTitleInput("Titre à compléter")).toBe("");
+  });
+
+  it("keeps a typed title", () => {
+    expect(toExternalTitleInput("Les cours")).toBe("Les cours");
   });
 });
 

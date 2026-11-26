@@ -16,6 +16,12 @@ export const MAX_WIDGET_FIELD_LENGTH = 50;
 export const MAX_EXTERNAL_TITLE_LENGTH = 100;
 export const MAX_DESCRIPTION_LENGTH = 300;
 
+/** The displayed title of a widget until one is typed: the API requires one. */
+export const EXTERNAL_TITLE_PLACEHOLDER = "Titre à compléter";
+
+export const toExternalTitleInput = (externalTitle: string) =>
+  externalTitle === EXTERNAL_TITLE_PLACEHOLDER ? "" : externalTitle;
+
 export const PAGE_SIZE_OPTIONS: readonly WidgetConfigPageSize[] = [4, 8, 12];
 export const DEFAULT_PAGE_SIZE: WidgetConfigPageSize = 12;
 
@@ -131,7 +137,7 @@ export const buildWidgetDraft = (
     internalTitle: title.trim(),
     structureName: structureName.trim(),
     authorizedDomains: [],
-    externalTitle: title.trim(),
+    externalTitle: EXTERNAL_TITLE_PLACEHOLDER,
   };
   if (type === "thumbnail") return { type, ...common };
   return { type, ...common, ...LIST_DRAFT_DEFAULTS };
