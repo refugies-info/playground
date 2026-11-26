@@ -59,3 +59,9 @@ export const updateRiWidgetConfig = (
     method: "PATCH",
     body: { email, widgetConfig: { _id: id, ...changes } },
   });
+
+export const deleteRiWidgetConfig = (email: string, id: string) =>
+  riWebhookRequest<{ id: string }>(`${WIDGET_CONFIG_PATH}/delete`, {
+    method: "DELETE",
+    body: { email, widgetConfig: { _id: id } },
+  });

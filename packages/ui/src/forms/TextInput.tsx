@@ -2,6 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
 import { cn } from "../utils";
+import { FieldMessage } from "./FieldMessage";
 
 /**
  * Variants for the TextInput component.
@@ -21,6 +22,11 @@ const textInputVariants = cva("w-full outline-none", {
     },
   },
   compoundVariants: [
+    {
+      variant: "dsfr",
+      hasError: true,
+      className: "border-(--border-plain-error)",
+    },
     {
       variant: "inline",
       hasError: true,
@@ -50,6 +56,9 @@ export interface TextInputProps
 
   /** Label to display above the input */
   label?: string;
+
+  /** Helper text shown under the input while there is no error (dsfr variant) */
+  hint?: string;
 }
 
 /**
@@ -80,6 +89,7 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
       variant = "default",
       type = "text",
       label,
+      hint,
       id: idProp,
       ...props
     },
@@ -99,7 +109,14 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
     return (
       <div className="space-y-1">
         {label && (
-          <label className="text-sm font-medium" htmlFor={id}>
+          <label
+            className={cn(
+              "font-medium",
+              variant === "dsfr" ? "text-base leading-6" : "text-sm",
+              variant === "dsfr" && error && "text-(--text-default-error)",
+            )}
+            htmlFor={id}
+          >
             {label}
           </label>
         )}
@@ -118,14 +135,20 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
           aria-describedby={error ? `${id}-error` : undefined}
           {...props}
         />
-        {error && (
-          <p
-            id={`${id}-error`}
-            className="text-[12px] leading-[20px] text-(--text-default-error)"
-          >
-            {error}
-          </p>
-        )}
+        {error &&
+          (variant === "dsfr" ? (
+            <FieldMessage id={`${id}-error`} variant="error">
+              {error}
+            </FieldMessage>
+          ) : (
+            <p
+              id={`${id}-error`}
+              className="text-[12px] leading-[20px] text-(--text-default-error)"
+            >
+              {error}
+            </p>
+          ))}
+        {!error && hint && <FieldMessage variant="info">{hint}</FieldMessage>}
       </div>
     );
   },

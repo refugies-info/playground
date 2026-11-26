@@ -169,7 +169,12 @@ function SegmentedControl<T extends string>({
                     "whitespace-nowrap rounded-xs border px-3 text-sm font-medium leading-6",
                     isActive
                       ? "border-(--border-active-blue-france) text-(--text-active-blue-france)"
-                      : "border-transparent text-(--text-action-high-grey)",
+                      : [
+                          "border-transparent",
+                          option.icon
+                            ? "text-(--text-action-high-blue-france)"
+                            : "text-(--text-action-high-grey)",
+                        ],
                   ],
             )}
           >

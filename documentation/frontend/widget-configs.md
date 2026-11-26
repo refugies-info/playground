@@ -3,7 +3,7 @@
 Embeddable widgets are configured in the Playground but **stored by Refugies.info** (`widget_config` collection). The Playground never writes to Mongo directly: it goes through the Refugies.info webhooks, like document publication (see [publish.md](publication/publish.md)).
 
 ```
-UI (upcoming) → services/widget-config-actions.ts → services/ri/widget-configs.ts → services/ri/webhook-client.ts → RI webhooks
+UI (`/widgets`, admins only) → services/widget-config-actions.ts → services/ri/widget-configs.ts → services/ri/webhook-client.ts → RI webhooks
 ```
 
 Payloads and defaults are documented in `documentation/client/webhooks.md` (Karfu'R repository, sections 7 and 8). Config reuses `RI_BASE_URL` and `RI_WEBHOOK_SECRET`.
@@ -16,6 +16,28 @@ The fields of a config depend on its `type`, which cannot be changed once the wi
 - `thumbnail`: a single content, chosen by `dispositifId`, with the common fields only (`internalTitle`, `structureName`, `authorizedDomains`, `externalTitle`, `status`).
 
 RI rejects a field that does not belong to the type of the widget.
+
+## Widgets list
+
+`/widgets` loads every config once (`listWidgetConfigsAction`), then filters by view, sorts and paginates in the page (`lib/widget-list.ts`), as the API does not paginate.
+
+The status shown is not the `status` stored by RI:
+
+- `status = inactive` is shown as **Désactivé** (the widget API no longer serves it), dated `statusUpdatedAt`.
+- Otherwise it comes from `lastTrafficAt`, written by the widget API: no value means no status, a visit in the last 3 days means **Actif**, else **Inactif** (dated `lastTrafficAt`).
+- The start date of an active widget is not available yet, nothing writes `lastTrafficAt` for now (RI-1682).
+
+Duplicating a widget copies its content with a `(1)` suffix and creates it as `active`, so that it starts without status.
+
+## Widget pages
+
+- Confirming the "Créer un widget" popover creates the widget on the RI side (`active`, with the title and partner typed, no domain, `externalTitle` = title) and opens `/widgets/<id>`. A thumbnail is created without content (`dispositifId` is optional on creation); a list takes default display values (`buildWidgetDraft`), to confirm with the product team.
+- `/widgets/<id>` edits an existing widget. Only the `thumbnail` type has a page for now, a `list` widget returns a 404.
+- Changes are autosaved 800 ms after the last edit, when the title and the partner are filled. After a failed save, the next edit or a click on the save indicator retries.
+- The "Configuration et accès" section (`WidgetConfigurationSection`) is common to every type; each type adds its own sections after it, inside `WidgetEditorLayout` (header, menu, content frame).
+- Thumbnail: the content is searched by keyword or by RI id (`searchDispositifsAction`, `getDispositifsByIdsAction`). `externalTitle` is not an input, it takes the title of the chosen fiche on every save (until a fiche is chosen it keeps the title typed in the popover). A thumbnail without fiche displays nothing in the widget API.
+
+- The preview panel (open by default, desktop / mobile switch) shows the **saved** widget in an iframe on `<WIDGET_BASE_URL>/w/<publicId>?preview=1&v=<n>`. The autosave is what keeps it up to date: `v` changes after each successful save and reloads the iframe. Without `WIDGET_BASE_URL` the panel is hidden. `preview=1` is for the widget service to ignore the visit in its traffic and to allow the Bomo to frame the page.
 
 ## Things to know
 

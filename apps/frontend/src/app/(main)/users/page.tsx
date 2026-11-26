@@ -1,3 +1,4 @@
+import { isAdmin } from "@playground/shared-types";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getAllProfilesForAdmin } from "@/services/profiles";
@@ -11,7 +12,7 @@ export default async function UsersPage() {
     getAllProfilesForAdmin(),
   ]);
 
-  if (currentUser.role !== "admin") {
+  if (!isAdmin(currentUser.role)) {
     redirect("/");
   }
 

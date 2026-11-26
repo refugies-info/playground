@@ -17,7 +17,7 @@ export type WidgetConfigFilterBarOption =
  * values of a category are OR-ed, categories are AND-ed.
  */
 export interface WidgetConfigFilters {
-  contentTypes?: ("dispositif" | "demarche")[];
+  contentTypes?: ("dispositif" | "demarche" | "online")[];
   departments?: string[];
   themes?: string[];
   needs?: string[];
@@ -59,7 +59,7 @@ export interface ListWidgetConfigFields extends WidgetConfigCommonFields {
 
 export interface ThumbnailWidgetConfigFields extends WidgetConfigCommonFields {
   type: "thumbnail";
-  dispositifId: string;
+  dispositifId?: string;
 }
 
 export type WidgetConfigFields =
@@ -74,6 +74,7 @@ interface WidgetConfigMetadata {
   _id: string;
   publicId: string;
   statusUpdatedAt: string;
+  lastTrafficAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -88,7 +89,10 @@ export type WidgetConfigSummary = Pick<
   | "type"
   | "status"
   | "structureName"
+  | "createdAt"
   | "updatedAt"
+  | "statusUpdatedAt"
+  | "lastTrafficAt"
 >;
 
 export interface CreatedWidgetConfigResponse {

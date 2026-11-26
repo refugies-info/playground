@@ -1,6 +1,7 @@
 "use server";
 
 import {
+  canManageWidgets,
   logger,
   type RiDispositifSummary,
   type WidgetConfig,
@@ -9,12 +10,13 @@ import {
   type WidgetConfigSummary,
   type WidgetConfigUpdateInput,
 } from "@playground/shared-types";
-import { createSupabaseServerClient } from "@playground/supabase";
-import { cookies } from "next/headers";
+import { getCurrentUser } from "@/lib/auth";
+import { buildDuplicate } from "@/lib/widget-list";
 import type { RiWebhookError } from "./ri/webhook-client";
 import {
   countRiFilterMatches,
   createRiWidgetConfig,
+  deleteRiWidgetConfig,
   getRiDispositifsByIds,
   getRiWidgetConfigById,
   listRiWidgetConfigs,
@@ -27,6 +29,8 @@ const ACTION_NAMES = {
   getWidgetConfig: "getWidgetConfig",
   createWidgetConfig: "createWidgetConfig",
   updateWidgetConfig: "updateWidgetConfig",
+  duplicateWidgetConfig: "duplicateWidgetConfig",
+  deleteWidgetConfig: "deleteWidgetConfig",
   searchDispositifs: "searchDispositifs",
   getDispositifsByIds: "getDispositifsByIds",
   countFilterMatches: "countFilterMatches",
@@ -40,31 +44,37 @@ export type WidgetConfigActionResult<T> =
       fieldErrors?: { key: string; message: string }[];
     };
 
-async function runAsAuthenticatedUser<T>(
+const ERROR_MESSAGES: Partial<Record<number, string>> = {
+  400: "Les données du widget sont invalides",
+  409: "Ce widget a déjà été actif : il ne peut pas être supprimé",
+};
+
+const getErrorMessage = (status = 0) =>
+  ERROR_MESSAGES[status] ?? "Impossible de joindre Refugies.info";
+
+/** A server action can be called without going through the page: it checks the role itself. */
+async function runAsWidgetManager<T>(
   actionName: (typeof ACTION_NAMES)[keyof typeof ACTION_NAMES],
   action: (email: string) => Promise<T>,
 ): Promise<WidgetConfigActionResult<T>> {
-  const cookieStore = await cookies();
-  const supabase = createSupabaseServerClient(cookieStore);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { id, email, role } = await getCurrentUser();
 
-  if (!user?.email) {
-    return { success: false, error: "Utilisateur non authentifié" };
+  if (!canManageWidgets(role)) {
+    logger.warn(
+      { userId: id, role },
+      `Unauthorized widget config action: ${actionName}`,
+    );
+    return { success: false, error: "Accès refusé" };
   }
 
   try {
-    return { success: true, data: await action(user.email) };
+    return { success: true, data: await action(email) };
   } catch (error) {
     logger.error(error, `Widget config action failed: ${actionName}`);
     const { status, details } = error as Partial<RiWebhookError>;
     return {
       success: false,
-      error:
-        status === 400
-          ? "Les données du widget sont invalides"
-          : "Impossible de joindre Refugies.info",
+      error: getErrorMessage(status),
       fieldErrors: Array.isArray(details) ? details : undefined,
     };
   }
@@ -73,7 +83,7 @@ async function runAsAuthenticatedUser<T>(
 export async function searchDispositifsAction(
   text: string,
 ): Promise<WidgetConfigActionResult<RiDispositifSummary[]>> {
-  return runAsAuthenticatedUser(ACTION_NAMES.searchDispositifs, () =>
+  return runAsWidgetManager(ACTION_NAMES.searchDispositifs, () =>
     searchRiDispositifs(text),
   );
 }
@@ -81,7 +91,7 @@ export async function searchDispositifsAction(
 export async function getDispositifsByIdsAction(
   ids: string[],
 ): Promise<WidgetConfigActionResult<RiDispositifSummary[]>> {
-  return runAsAuthenticatedUser(ACTION_NAMES.getDispositifsByIds, () =>
+  return runAsWidgetManager(ACTION_NAMES.getDispositifsByIds, () =>
     getRiDispositifsByIds(ids),
   );
 }
@@ -89,7 +99,7 @@ export async function getDispositifsByIdsAction(
 export async function countFilterMatchesAction(
   filters: WidgetConfigFilters,
 ): Promise<WidgetConfigActionResult<number>> {
-  return runAsAuthenticatedUser(ACTION_NAMES.countFilterMatches, () =>
+  return runAsWidgetManager(ACTION_NAMES.countFilterMatches, () =>
     countRiFilterMatches(filters),
   );
 }
@@ -97,7 +107,7 @@ export async function countFilterMatchesAction(
 export async function listWidgetConfigsAction(): Promise<
   WidgetConfigActionResult<WidgetConfigSummary[]>
 > {
-  return runAsAuthenticatedUser(ACTION_NAMES.listWidgetConfigs, () =>
+  return runAsWidgetManager(ACTION_NAMES.listWidgetConfigs, () =>
     listRiWidgetConfigs(),
   );
 }
@@ -105,7 +115,7 @@ export async function listWidgetConfigsAction(): Promise<
 export async function getWidgetConfigAction(
   id: string,
 ): Promise<WidgetConfigActionResult<WidgetConfig>> {
-  return runAsAuthenticatedUser(ACTION_NAMES.getWidgetConfig, () =>
+  return runAsWidgetManager(ACTION_NAMES.getWidgetConfig, () =>
     getRiWidgetConfigById(id),
   );
 }
@@ -113,7 +123,7 @@ export async function getWidgetConfigAction(
 export async function createWidgetConfigAction(
   widgetConfig: WidgetConfigFields,
 ) {
-  return runAsAuthenticatedUser(ACTION_NAMES.createWidgetConfig, (email) =>
+  return runAsWidgetManager(ACTION_NAMES.createWidgetConfig, (email) =>
     createRiWidgetConfig(email, widgetConfig),
   );
 }
@@ -122,7 +132,22 @@ export async function updateWidgetConfigAction(
   id: string,
   changes: WidgetConfigUpdateInput,
 ) {
-  return runAsAuthenticatedUser(ACTION_NAMES.updateWidgetConfig, (email) =>
+  return runAsWidgetManager(ACTION_NAMES.updateWidgetConfig, (email) =>
     updateRiWidgetConfig(email, id, changes),
+  );
+}
+
+export async function duplicateWidgetConfigAction(id: string) {
+  return runAsWidgetManager(ACTION_NAMES.duplicateWidgetConfig, async (email) =>
+    createRiWidgetConfig(
+      email,
+      buildDuplicate(await getRiWidgetConfigById(id)),
+    ),
+  );
+}
+
+export async function deleteWidgetConfigAction(id: string) {
+  return runAsWidgetManager(ACTION_NAMES.deleteWidgetConfig, (email) =>
+    deleteRiWidgetConfig(email, id),
   );
 }

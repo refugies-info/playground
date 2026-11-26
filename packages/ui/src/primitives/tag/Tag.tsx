@@ -1,5 +1,7 @@
+import type { RemixiconComponentType } from "@remixicon/react";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
+import { RiCloseCircleFill } from "../../icons";
 import { cn } from "../../utils";
 
 /**
@@ -14,7 +16,10 @@ import { cn } from "../../utils";
  *   archive     → Gris désactivé     (background-disabled-grey)
  *   a-relire    → Violet glycine     (purple-glycine-925-125)
  *   publie      → Vert succès plein  (background-flat-success)
+ *   attention   → Orange d'alerte    (background-flat-warning)
  *   na          → Tiret gris         (pas de fond)
+ *   selected    → Bleu France plein  (valeur choisie, retirable avec `onDismiss`)
+ *   choice      → Bleu France clair  (choix d'un filtre : `onToggle` + `pressed`, plein avec une coche une fois choisi)
  *
  * Toutes les couleurs référencent les variables DSFR directement.
  * Source : @gouvfr/dsfr/dist/core/core.css
@@ -62,15 +67,48 @@ const tagVariants = cva(
           "rounded-full px-3 h-6 text-xs",
         ].join(" "),
 
+        // Orange d'alerte (widget inactif) : background/flat/warning + texte inversé
+        attention: [
+          "bg-[var(--background-flat-warning)]",
+          "text-[var(--text-inverted-grey)]",
+          "rounded-full px-3 h-6 text-xs",
+        ].join(" "),
+
         // Figma : pas de fond, texte tiret, text/disabled-grey bold
         na: [
           "text-[var(--text-disabled-grey)]",
           "font-bold rounded px-2 h-6 text-xs",
         ].join(" "),
+
+        choice: "rounded-full px-2 h-6 text-xs font-normal",
+
+        // Figma (Interfaces-Front, node 38426:271491) : valeur choisie dans un champ de recherche
+        selected: [
+          "bg-(--background-action-high-blue-france)",
+          "text-(--text-inverted-grey)",
+          "max-w-full rounded-[20px] py-1 pr-2 pl-3 h-6 text-xs leading-5",
+        ].join(" "),
       },
+      pressed: { true: "", false: "" },
     },
+    compoundVariants: [
+      {
+        status: "choice",
+        pressed: false,
+        className: [
+          "bg-(--background-action-low-blue-france)",
+          "text-(--text-action-high-blue-france)",
+        ],
+      },
+      {
+        status: "choice",
+        pressed: true,
+        className: "relative text-(--text-inverted-grey)",
+      },
+    ],
     defaultVariants: {
       status: "na",
+      pressed: false,
     },
   },
 );
@@ -83,20 +121,126 @@ export const TAG_LABELS: Record<TagStatus, string> = {
   archive: "Archivé",
   "a-relire": "À relire",
   publie: "Publié",
+  attention: "Attention",
   na: "—",
+  selected: "Sélectionné",
+  choice: "Choix",
 };
 
-export interface TagProps
+interface TagBaseProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof tagVariants> {}
+    VariantProps<typeof tagVariants> {
+  detail?: string;
+  detailIcon?: RemixiconComponentType;
+  onToggle?: () => void;
+  pressed?: boolean;
+}
+type TagDismissProps =
+  | { onDismiss: () => void; dismissLabel: string }
+  | { onDismiss?: undefined; dismissLabel?: undefined };
+
+export type TagProps = TagBaseProps & TagDismissProps;
+
+function ChoiceCheckDecoration() {
+  return (
+    <>
+      <span
+        aria-hidden="true"
+        className="absolute inset-y-0 left-0 right-3 rounded-l-xl bg-(--background-action-high-blue-france)"
+      />
+      <svg
+        aria-hidden="true"
+        width="18"
+        height="27"
+        viewBox="0 0 18 27"
+        fill="currentColor"
+        className="absolute -top-[3px] right-[-6px] text-(--background-action-high-blue-france)"
+      >
+        <path d="M0 3C2.1841 3 4.22999 3.58683 5.99414 4.60645C5.89064 5.05432 5.83496 5.52067 5.83496 6C5.83496 9.28979 8.41186 11.9764 11.6572 12.1543C11.8792 13.0667 12 14.0192 12 15C12 21.6274 6.62742 27 0 27V3Z" />
+        <g fill="none" stroke="currentColor" strokeWidth="1">
+          <circle cx="12" cy="6" r="4.5" />
+          <polyline points="9.7335,5.525 11.5015,7.293 14.683,4.111" />
+        </g>
+      </svg>
+    </>
+  );
+}
 
 const Tag = React.forwardRef<HTMLDivElement, TagProps>(
-  ({ className, status, children, ...props }, ref) => {
+  (
+    {
+      className,
+      status,
+      children,
+      detail,
+      detailIcon: DetailIcon,
+      onToggle,
+      pressed = false,
+      onDismiss,
+      dismissLabel,
+      ...props
+    },
+    ref,
+  ) => {
     const label = children ?? (status ? TAG_LABELS[status] : "—");
+    const tagClassName = cn(
+      tagVariants({ status, pressed }),
+      onToggle && "cursor-pointer",
+      className,
+    );
+
+    const isChoicePressed = status === "choice" && pressed;
+    const content = (
+      <>
+        {isChoicePressed && <ChoiceCheckDecoration />}
+        <span
+          className={cn(
+            "min-w-0 truncate",
+            isChoicePressed && "relative",
+            status === "selected" && "font-bold",
+          )}
+        >
+          {label}
+        </span>
+        {detail && (
+          <span className="ml-1 flex min-w-0 shrink-[2] items-center gap-1 font-normal">
+            {DetailIcon && (
+              <DetailIcon className="size-3 shrink-0" aria-hidden={true} />
+            )}
+            <span className="truncate">{detail}</span>
+          </span>
+        )}
+        {onDismiss && (
+          <button
+            type="button"
+            onClick={onDismiss}
+            aria-label={dismissLabel}
+            className="ml-1 shrink-0 cursor-pointer rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+          >
+            <RiCloseCircleFill className="size-4" aria-hidden={true} />
+          </button>
+        )}
+      </>
+    );
 
     return (
-      <div ref={ref} className="inline-flex items-center" {...props}>
-        <span className={cn(tagVariants({ status }), className)}>{label}</span>
+      <div
+        ref={ref}
+        className="inline-flex max-w-full min-w-0 items-center"
+        {...props}
+      >
+        {onToggle ? (
+          <button
+            type="button"
+            aria-pressed={pressed}
+            onClick={onToggle}
+            className={tagClassName}
+          >
+            {content}
+          </button>
+        ) : (
+          <span className={tagClassName}>{content}</span>
+        )}
       </div>
     );
   },

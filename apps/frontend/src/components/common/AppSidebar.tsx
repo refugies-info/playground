@@ -1,5 +1,6 @@
 "use client";
 
+import { canManageWidgets, isAdmin } from "@playground/shared-types";
 import {
   AppLogo,
   Avatar,
@@ -13,6 +14,7 @@ import {
 } from "@playground/ui";
 import {
   RiAccountCircleLine,
+  RiCodeSSlashLine,
   RiDownloadLine,
   RiFileTextLine,
   RiLogoutBoxRLine,
@@ -55,7 +57,7 @@ export function AppSidebar({
     router.push("/login");
   };
 
-  const isAdmin = userRole === "admin";
+  const userIsAdmin = isAdmin(userRole);
   const isTranslator = userRole === "translator";
 
   const userAvatar = (
@@ -124,7 +126,7 @@ export function AppSidebar({
         />
       }
     >
-      {isAdmin && (
+      {userIsAdmin && (
         <BoutonMenu
           icon={RiDownloadLine}
           label="Importer"
@@ -155,13 +157,24 @@ export function AppSidebar({
         linkComponent={Link}
       />
 
-      {isAdmin && (
+      {userIsAdmin && (
         <BoutonMenu
           icon={RiAccountCircleLine}
           label="Utilisateurs"
           active={pathname === "/users"}
           iconOnly={isCollapsed}
           href="/users"
+          linkComponent={Link}
+        />
+      )}
+
+      {canManageWidgets(userRole) && (
+        <BoutonMenu
+          icon={RiCodeSSlashLine}
+          label="Widgets"
+          active={pathname?.startsWith("/widgets") ?? false}
+          iconOnly={isCollapsed}
+          href="/widgets"
           linkComponent={Link}
         />
       )}

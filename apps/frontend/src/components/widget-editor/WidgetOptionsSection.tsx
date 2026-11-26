@@ -1,0 +1,126 @@
+"use client";
+
+import type { WidgetConfigPageSize } from "@playground/shared-types";
+import { CheckboxField, SelectInput, SwitchField } from "@playground/ui/forms";
+import {
+  FILTER_BAR_CRITERIA,
+  isFilterBarOptionFixed,
+  type ListFormValues,
+  PAGE_SIZE_OPTIONS,
+  SORT_OPTIONS,
+} from "@/lib/widget-form";
+import { WidgetEditorSection } from "./WidgetEditorSection";
+
+type OptionsValues = Pick<
+  ListFormValues,
+  | "pageSize"
+  | "displayShareModule"
+  | "displayFilterBar"
+  | "filterBarOptions"
+  | "sortBy"
+  | "filters"
+>;
+
+interface WidgetOptionsSectionProps {
+  values: OptionsValues;
+  onChange: (changes: Partial<OptionsValues>) => void;
+}
+
+const SELECT_CLASS_NAME =
+  "w-auto rounded-t-[4px] bg-(--background-contrast-grey) py-2 pr-10 pl-4 leading-6";
+
+export function WidgetOptionsSection({
+  values,
+  onChange,
+}: WidgetOptionsSectionProps) {
+  const toggleFilterBarOption = (
+    option: (typeof FILTER_BAR_CRITERIA)[number]["option"],
+    checked: boolean,
+  ) =>
+    onChange({
+      filterBarOptions: checked
+        ? [...values.filterBarOptions, option]
+        : values.filterBarOptions.filter((current) => current !== option),
+    });
+
+  return (
+    <WidgetEditorSection
+      title="Options et apparence"
+      description="Personnalisation & options du widget"
+    >
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-8">
+          <label
+            className="text-base font-medium leading-6 text-(--text-default-grey)"
+            htmlFor="widget-page-size"
+          >
+            Nombre de fiches par page
+          </label>
+          <SelectInput
+            id="widget-page-size"
+            className={SELECT_CLASS_NAME}
+            value={String(values.pageSize)}
+            options={PAGE_SIZE_OPTIONS.map((size) => ({
+              value: String(size),
+              label: String(size),
+            }))}
+            onChange={(size) =>
+              onChange({ pageSize: Number(size) as WidgetConfigPageSize })
+            }
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-8">
+          <label
+            className="text-base font-medium leading-6 text-(--text-default-grey)"
+            htmlFor="widget-sort-by"
+          >
+            Trier les résultats par
+          </label>
+          <SelectInput
+            id="widget-sort-by"
+            className={SELECT_CLASS_NAME}
+            value={values.sortBy}
+            options={SORT_OPTIONS}
+            onChange={(sortBy) =>
+              onChange({ sortBy: sortBy as ListFormValues["sortBy"] })
+            }
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <SwitchField
+            label="Afficher la barre de filtre"
+            checked={values.displayFilterBar}
+            onChange={(displayFilterBar) => onChange({ displayFilterBar })}
+          />
+          {values.displayFilterBar && (
+            <div className="flex flex-col pl-[26px]">
+              {FILTER_BAR_CRITERIA.map(({ option, label }) => {
+                const isFixed = isFilterBarOptionFixed(option, values.filters);
+                return (
+                  <CheckboxField
+                    key={option}
+                    label={label}
+                    checked={
+                      !isFixed && values.filterBarOptions.includes(option)
+                    }
+                    disabled={isFixed}
+                    hint={
+                      isFixed
+                        ? "Indisponible : vous filtrez déjà les fiches sur ce critère dans la section « Choix des fiches »."
+                        : undefined
+                    }
+                    onChange={(checked) =>
+                      toggleFilterBarOption(option, checked)
+                    }
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </WidgetEditorSection>
+  );
+}
