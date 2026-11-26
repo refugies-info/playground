@@ -23,6 +23,11 @@ const textInputVariants = cva("w-full outline-none", {
   },
   compoundVariants: [
     {
+      variant: "dsfr",
+      hasError: true,
+      className: "border-(--border-plain-error)",
+    },
+    {
       variant: "inline",
       hasError: true,
       className: "ring-red-300",

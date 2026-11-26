@@ -60,7 +60,7 @@ const LIST_DRAFT_DEFAULTS: Omit<
   ListWidgetConfigFields,
   keyof ThumbnailWidgetConfigFields
 > = {
-  displayDescription: true,
+  displayDescription: false,
   filters: {},
   selectedDispositifIds: [],
   excludedDispositifIds: [],

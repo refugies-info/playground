@@ -101,6 +101,7 @@ export function WidgetPreviewPanel({
               <RiArrowRightDoubleLine className="size-6" aria-hidden="true" />
             </Button>
             <SegmentedControl
+              variant="outlined"
               options={DEVICE_OPTIONS}
               value={device}
               onChange={setDevice}

@@ -42,7 +42,13 @@ export function DomainsInput({ value, onChange, error }: DomainsInputProps) {
   };
 
   return (
-    <div className="flex flex-col gap-2 py-2">
+    <div className="relative flex flex-col gap-2 py-2">
+      {shownError && (
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-0 -left-3.5 w-0.5 bg-(--border-plain-error)"
+        />
+      )}
       <div>
         <label
           htmlFor={inputId}
@@ -76,7 +82,7 @@ export function DomainsInput({ value, onChange, error }: DomainsInputProps) {
         <button
           type="button"
           onClick={handleAdd}
-          className="absolute right-0 top-0 h-[42px] min-w-[75px] cursor-pointer whitespace-nowrap rounded-tr-[4px] border-b-2 border-(--border-plain-grey) bg-(--background-disabled-grey) px-4 text-sm font-medium text-(--text-mention-grey) transition-colors hover:text-(--text-action-high-blue-france)"
+          className="absolute right-0 top-0 h-10 min-w-[75px] cursor-pointer whitespace-nowrap rounded-tr-[4px] bg-(--background-action-high-blue-france) px-3 text-sm font-medium text-(--text-inverted-blue-france) transition-colors hover:bg-(--background-action-high-blue-france-hover)"
         >
           Ajouter
         </button>
