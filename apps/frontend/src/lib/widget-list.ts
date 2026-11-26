@@ -105,16 +105,13 @@ export const canDeleteWidget = ({
   lastTrafficAt,
 }: Pick<WidgetConfigSummary, "lastTrafficAt">) => !lastTrafficAt;
 
-/**
- * The start of the current activity period of an active widget needs more than
- * `lastTrafficAt` and is not available yet.
- */
 const getSince = (
   widget: WidgetConfigSummary,
   displayedStatus: WidgetDisplayedStatus,
 ): string | null => {
   if (displayedStatus === "disabled") return widget.statusUpdatedAt;
   if (displayedStatus === "inactive") return widget.lastTrafficAt ?? null;
+  if (displayedStatus === "active") return widget.activeSinceAt ?? null;
   return null;
 };
 
