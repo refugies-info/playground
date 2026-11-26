@@ -92,6 +92,18 @@ describe("toWidgetRow", () => {
     ).toBe("2026-10-26T00:00:00Z");
   });
 
+  it("shows the start of the activity period of an active widget", () => {
+    expect(
+      toWidgetRow(
+        summary({
+          activeSinceAt: "2026-11-01T00:00:00Z",
+          lastTrafficAt: "2026-11-12T00:00:00Z",
+        }),
+        now,
+      ).since,
+    ).toBe("2026-11-01T00:00:00Z");
+  });
+
   it("shows no date without traffic", () => {
     expect(toWidgetRow(summary(), now).since).toBeNull();
   });
