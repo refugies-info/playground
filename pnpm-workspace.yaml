@@ -77,7 +77,7 @@ overrides:
   sharp@<0.35.0: 0.35.5
   uuid@8: 11.1.1
   esbuild@0.27: 0.28.1
-  next@16: 16.4.3
+  next@16: 16.4.5
 
 onlyBuiltDependencies:
   - "@swc/core"
