@@ -1,7 +1,6 @@
 import type { Letta } from "@letta-ai/letta-client";
 import { SOURCE_MODEL_HANDLE } from "@playground/shared-types";
-// v4 API (shipped in zod 3.25) for z.toJSONSchema.
-import { z } from "zod/v4";
+import { z } from "zod";
 import { createConversation, sendMessageToConversation } from "./agents";
 import type { LettaUsage } from "./types";
 

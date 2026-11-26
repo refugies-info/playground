@@ -12,7 +12,8 @@
     "@letta-ai/letta-client": "1.12.1",
     "@playground/shared-types": "workspace:*",
     "dotenv": "^17.4.2",
-    "gray-matter": "^4.0.3"
+    "gray-matter": "^4.0.3",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
