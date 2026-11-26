@@ -10,12 +10,19 @@ describe("buildEmbedUrl", () => {
 });
 
 describe("buildEmbedCode", () => {
-  it("is an iframe on the url, allowed to geolocate", () => {
+  it("is an iframe on the url, allowed to geolocate, then the resize script", () => {
     const code = buildEmbedCode("https://widget.example.org/w/abc");
     expect(code).toMatch(
       /^<iframe src="https:\/\/widget\.example\.org\/w\/abc"/,
     );
     expect(code).toContain('allow="geolocation"');
-    expect(code).toMatch(/<\/iframe>$/);
+    expect(code).toContain(
+      '</iframe>\n<script src="https://widget.example.org/embed.js" async></script>',
+    );
+  });
+
+  it("keeps the path of the widget service in the url of the script", () => {
+    const code = buildEmbedCode("https://example.org/widget/w/abc");
+    expect(code).toContain('src="https://example.org/widget/embed.js"');
   });
 });

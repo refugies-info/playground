@@ -43,6 +43,7 @@ export function WidgetPreviewPanel({
   const [device, setDevice] = useState<PreviewDevice>("desktop");
   const [area, setArea] = useState({ width: 0, height: 0 });
   const [contentHeight, setContentHeight] = useState<number | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -51,8 +52,13 @@ export function WidgetPreviewPanel({
       if (event.origin !== widgetOrigin) {
         return;
       }
-      setContentHeight(event.data.height);
+      if (event.data?.type === "widget-fullscreen") {
+        setIsFullscreen(event.data.active === true);
+      } else if (typeof event.data?.height === "number") {
+        setContentHeight(event.data.height);
+      }
     };
+    setIsFullscreen(false);
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [src]);
@@ -71,6 +77,10 @@ export function WidgetPreviewPanel({
 
   const frameWidth = DEVICE_WIDTH_IN_PX[device];
   const scale = Math.min(1, area.width / frameWidth);
+  const frameHeight =
+    isFullscreen || contentHeight === null
+      ? area.height / scale
+      : contentHeight;
 
   // Sized like the source panel of the document editor: a third of the page, or nothing
   return (
@@ -112,12 +122,7 @@ export function WidgetPreviewPanel({
             className="mx-9 mb-10 min-h-0 w-[calc(100%-72px)] flex-1 overflow-y-auto"
           >
             {area.width > 0 && (
-              <div
-                className="relative"
-                style={{
-                  height: (contentHeight ?? area.height / scale) * scale,
-                }}
-              >
+              <div className="relative" style={{ height: frameHeight * scale }}>
                 <iframe
                   ref={iframeRef}
                   title="Aperçu du widget"
@@ -125,7 +130,7 @@ export function WidgetPreviewPanel({
                   className="absolute top-0 bg-white shadow-[0_4px_12px_var(--shadow-color)]"
                   style={{
                     width: frameWidth,
-                    height: contentHeight ?? area.height / scale,
+                    height: frameHeight,
                     left: (area.width - frameWidth * scale) / 2,
                     transform: `scale(${scale})`,
                     transformOrigin: "top left",
