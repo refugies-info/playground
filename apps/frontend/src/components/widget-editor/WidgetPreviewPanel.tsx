@@ -25,7 +25,7 @@ const DEVICE_OPTIONS: ComponentProps<
 ];
 
 const DEVICE_WIDTH_IN_PX: Record<PreviewDevice, number> = {
-  desktop: 1024,
+  desktop: 1340,
   mobile: 375,
 };
 
@@ -72,14 +72,13 @@ export function WidgetPreviewPanel({
   const frameWidth = DEVICE_WIDTH_IN_PX[device];
   const scale = Math.min(1, area.width / frameWidth);
 
-  // Sized like the source panel of the document editor: a third of the page, or nothing
   return (
     <>
       <div
         inert={!isOpen}
         className={cn(
           "shrink-0 bg-(--background-contrast-info) transition-[width] duration-500 ease-expo-out",
-          isOpen ? "w-1/3" : "w-0",
+          isOpen ? "w-[min(calc((100%-var(--spacing)*65)*0.6),1100px)]" : "w-0",
         )}
       >
         <aside
@@ -94,7 +93,7 @@ export function WidgetPreviewPanel({
             <Button
               type="button"
               variant="quatrieme"
-              className="absolute left-5 top-[18px] h-12 w-12 text-(--text-disabled-grey)"
+              className="absolute left-5 top-[18px] h-12 w-12 p-3 text-(--text-disabled-grey)"
               aria-label="Refermer l'aperçu"
               onClick={() => onOpenChange(false)}
             >

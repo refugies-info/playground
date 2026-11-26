@@ -16,7 +16,6 @@ export const MAX_WIDGET_FIELD_LENGTH = 50;
 export const MAX_EXTERNAL_TITLE_LENGTH = 100;
 export const MAX_DESCRIPTION_LENGTH = 300;
 
-/** The displayed title of a widget until one is typed: the API requires one. */
 export const EXTERNAL_TITLE_PLACEHOLDER = "Titre à compléter";
 
 export const toExternalTitleInput = (externalTitle: string) =>

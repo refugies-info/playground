@@ -84,7 +84,7 @@ export function WidgetEditorLayout({
             !isPreviewShown && "pr-65",
           )}
         >
-          <div className="mx-auto flex w-full max-w-[800px] flex-col gap-6">
+          <div className="mx-auto flex w-full max-w-[720px] flex-col gap-6">
             {children}
           </div>
         </div>
